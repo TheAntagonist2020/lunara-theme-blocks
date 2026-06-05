@@ -1,0 +1,35 @@
+# Local/editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Local QA/browser artifacts
+.playwright-cli/
+test-results/
+coverage/
+screenshots/
+output/
+
+# Build/release artifacts
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Historical hand backups kept outside source control
+*.bak
+*.bak-*
+*.orig
+*.rej

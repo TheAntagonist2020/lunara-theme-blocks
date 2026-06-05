@@ -1,0 +1,30 @@
+/**
+ * Stackable compatibility layer for Lunara.
+ */
+
+.stk-block,
+.stk-container,
+.stk-column-wrapper {
+    --stk-container-background-color: var(--lunara-bg-card);
+    --stk-block-background-color: var(--lunara-bg-card);
+    --stk-button-background-color: var(--lunara-gold);
+    --stk-button-text-color: var(--lunara-bg-deep);
+    --stk-heading-color: var(--lunara-text);
+    --stk-subtitle-color: var(--lunara-text-muted);
+    --stk-text-color: var(--lunara-text);
+}
+
+.stk-block .stk-block-heading__text,
+.stk-block .stk-block-subtitle__text,
+.stk-block .stk-block-text__text {
+    letter-spacing: 0;
+}
+
+.stk-block .stk-button,
+.stk-block .stk-button__inner-text {
+    letter-spacing: 0;
+}
+
+.stk-block a:not(.stk-button) {
+    color: var(--lunara-gold-light);
+}

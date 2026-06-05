@@ -1,0 +1,70 @@
+.customize-control.lunara-range-enhanced input[type="range"].lunara-range-slider {
+	width: 100%;
+	margin-bottom: 8px;
+}
+
+.customize-control .lunara-range-accessory {
+	margin-top: 8px;
+	padding: 10px 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 10px;
+	background: #f6f7f7;
+}
+
+.customize-control .lunara-range-accessory-row {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.customize-control .lunara-range-number-label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.customize-control .lunara-range-number-title {
+	font-size: 12px;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: #50575e;
+}
+
+.customize-control .lunara-range-number {
+	width: 98px;
+	min-height: 36px;
+	padding: 4px 8px;
+	border-radius: 6px;
+}
+
+.customize-control .lunara-range-unit {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 36px;
+	padding: 0 10px;
+	border-radius: 999px;
+	background: #dcdcde;
+	color: #1d2327;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.customize-control .lunara-range-meta,
+.customize-control .lunara-range-hint {
+	margin: 8px 0 0;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.customize-control .lunara-range-meta {
+	color: #1d2327;
+}
+
+.customize-control .lunara-range-hint {
+	color: #50575e;
+}
