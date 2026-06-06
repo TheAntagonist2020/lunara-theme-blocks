@@ -3980,6 +3980,38 @@ function lunara_output_review_pair_it_with_polish_css() {
         white-space: normal !important;
     }
 
+    body.single-review .lunara-review-single-debrief--pairings .lunara-oscar-ledger {
+        display: inline-flex !important;
+        flex: 0 1 auto !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 6px !important;
+        max-width: 100% !important;
+        text-decoration: none !important;
+    }
+
+    body.single-review .lunara-review-single-debrief--pairings .lunara-oscar-ledger-pill {
+        min-height: 0 !important;
+        padding: 5px 8px !important;
+        border: 1px solid rgba(224, 196, 129, 0.3) !important;
+        border-radius: 999px !important;
+        background: rgba(224, 196, 129, 0.08) !important;
+        color: rgba(224, 196, 129, 0.96) !important;
+        font-size: 0.66rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.1em !important;
+        line-height: 1 !important;
+        text-transform: uppercase !important;
+    }
+
+    body.single-review .lunara-review-single-debrief--pairings .lunara-oscar-ledger-counts {
+        display: inline-block !important;
+        color: rgba(244, 239, 227, 0.66) !important;
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+        white-space: normal !important;
+    }
+
     @media (min-width: 1120px) {
         body.single-review .lunara-review-single-debrief--pairings .lunara-debrief-list--pairings {
             grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -4031,6 +4063,11 @@ function lunara_output_review_pair_it_with_polish_css() {
         body.single-review .lunara-review-single-debrief--pairings .lunara-debrief-note {
             font-size: 0.86rem !important;
             line-height: 1.44 !important;
+        }
+
+        body.single-review .lunara-review-single-debrief--pairings .lunara-oscar-ledger-counts {
+            flex-basis: 100% !important;
+            font-size: 0.68rem !important;
         }
     }
     </style>

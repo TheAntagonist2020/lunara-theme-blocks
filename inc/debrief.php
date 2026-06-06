@@ -817,6 +817,9 @@ function lunara_debrief_shortcode( $atts ) {
         $clean = preg_replace( '#\s*\|\s*https?://(www\.)?imdb\.com/title/' . preg_quote( $tt, '#' ) . '/?\s*$#i', '', $clean );
         $clean = preg_replace( '#\s*https?://(www\.)?imdb\.com/title/' . preg_quote( $tt, '#' ) . '/?\s*#i', ' ', $clean );
         $clean = preg_replace( '/\s*\b' . preg_quote( $tt, '/' ) . '\b\s*/i', ' ', $clean );
+        $clean = preg_replace( '/\s*\|\s*(?:imdb|imdb id|imdb title id)\s*:?\s*$/i', '', $clean );
+        $clean = preg_replace( '/\s*(?:imdb|imdb id|imdb title id)\s*:?\s*$/i', '', $clean );
+        $clean = preg_replace( '/\s*\|\s*$/', '', $clean );
         $clean = trim( preg_replace( '/\s{2,}/', ' ', $clean ) );
     }
     if ( $lb !== '' ) {
