@@ -408,6 +408,47 @@ function lunara_control_desk_get_source_status() {
     );
 }
 
+function lunara_control_desk_get_source_control_status() {
+    return array(
+        array(
+            'label' => __( 'Theme repo', 'lunara-film' ),
+            'value' => __( 'main / active rollout', 'lunara-film' ),
+            'state' => 'ready',
+            'note'  => 'github.com/TheAntagonist2020/lunara-theme-blocks',
+        ),
+        array(
+            'label' => __( 'Core repo', 'lunara-film' ),
+            'value' => 'main @ 1ff3197',
+            'state' => 'ready',
+            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-core',
+        ),
+        array(
+            'label' => __( 'Oscars repo', 'lunara-film' ),
+            'value' => 'main @ e1d5db6',
+            'state' => 'ready',
+            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-oscars-ledger',
+        ),
+        array(
+            'label' => __( 'Dispatch repo', 'lunara-film' ),
+            'value' => 'main @ 1e270d6',
+            'state' => 'ready',
+            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-dispatch',
+        ),
+        array(
+            'label' => __( 'IMDb Guard repo', 'lunara-film' ),
+            'value' => 'main @ 75aae10',
+            'state' => 'ready',
+            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-imdb-guard',
+        ),
+        array(
+            'label' => __( 'AI Classic repo', 'lunara-film' ),
+            'value' => 'main @ 1b041f3',
+            'state' => 'ready',
+            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-ai-assistant-classic',
+        ),
+    );
+}
+
 function lunara_control_desk_get_request_key( $key, $default = '' ) {
     if ( ! isset( $_GET[ $key ] ) ) {
         return $default;
@@ -2674,6 +2715,15 @@ function lunara_control_desk_render_system_status_tab() {
             <h2><?php esc_html_e( 'Edit the right code, deploy the right target', 'lunara-film' ); ?></h2>
         </div>
         <?php lunara_control_desk_render_status_cards( lunara_control_desk_get_source_status() ); ?>
+    </section>
+
+    <section class="lunara-control-desk-panel">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Source Control', 'lunara-film' ); ?></p>
+            <h2><?php esc_html_e( 'Private GitHub baselines for the custom stack', 'lunara-film' ); ?></h2>
+            <p class="lunara-control-desk-intro"><?php esc_html_e( 'These are the last recorded source-control anchors for the theme and load-bearing custom plugins. Update this panel after future commits that become the blessed working baseline.', 'lunara-film' ); ?></p>
+        </div>
+        <?php lunara_control_desk_render_status_cards( lunara_control_desk_get_source_control_status() ); ?>
     </section>
 
     <section class="lunara-control-desk-panel">
