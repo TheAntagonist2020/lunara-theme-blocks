@@ -989,15 +989,15 @@ function lunara_debrief_shortcode( $atts ) {
                 <li class="lunara-debrief-pair-header">Pair It With</li>
 
                 <?php if ( $theme_echo ) : ?>
-                    <li><strong>Theme Echo:</strong><span class="lunara-debrief-value"><?php echo $format_pairing( $theme_echo ); ?></span></li>
+                    <li class="lunara-debrief-pair-row lunara-debrief-pair-row--theme"><strong class="lunara-debrief-pair-type">Theme Echo</strong><span class="lunara-debrief-value"><?php echo $format_pairing( $theme_echo ); ?></span></li>
                 <?php endif; ?>
 
                 <?php if ( $counter ) : ?>
-                    <li><strong>Counter-Program:</strong><span class="lunara-debrief-value"><?php echo $format_pairing( $counter ); ?></span></li>
+                    <li class="lunara-debrief-pair-row lunara-debrief-pair-row--counter"><strong class="lunara-debrief-pair-type">Counter-Program</strong><span class="lunara-debrief-value"><?php echo $format_pairing( $counter ); ?></span></li>
                 <?php endif; ?>
 
                 <?php if ( $craft ) : ?>
-                    <li><strong>Career Context:</strong><span class="lunara-debrief-value"><?php echo $format_pairing( $craft ); ?></span></li>
+                    <li class="lunara-debrief-pair-row lunara-debrief-pair-row--career"><strong class="lunara-debrief-pair-type">Career Context</strong><span class="lunara-debrief-value"><?php echo $format_pairing( $craft ); ?></span></li>
                 <?php endif; ?>
             <?php endif; ?>
         </ul>
