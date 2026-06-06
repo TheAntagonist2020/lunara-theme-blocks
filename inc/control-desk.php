@@ -274,13 +274,25 @@ function lunara_control_desk_plugin_file_version( $relative_file ) {
     return ! empty( $data['Version'] ) ? $data['Version'] : '';
 }
 
+function lunara_control_desk_is_plugin_active( $relative_file ) {
+    if ( ! function_exists( 'is_plugin_active' ) ) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+
+    return function_exists( 'is_plugin_active' ) && is_plugin_active( ltrim( $relative_file, '/\\' ) );
+}
+
 function lunara_control_desk_get_system_status() {
     $theme        = wp_get_theme();
     $parent       = $theme->parent();
+    $core_version = lunara_control_desk_plugin_file_version( 'lunara-core/lunara-core.php' );
+    $core_active  = lunara_control_desk_is_plugin_active( 'lunara-core/lunara-core.php' );
     $aat_version  = defined( 'AAT_VERSION' ) ? AAT_VERSION : lunara_control_desk_plugin_file_version( 'academy-awards-table-optimized/academy-awards-table.php' );
     $ai_version   = lunara_control_desk_plugin_file_version( 'lunara-ai-assistant-classic/lunara-ai-assistant-classic.php' );
     $active_theme = get_stylesheet();
     $parent_slug  = get_template();
+    $review_model = post_type_exists( 'review' ) && taxonomy_exists( 'lunara_director' ) && taxonomy_exists( 'lunara_review_year' );
+    $carousel_model = taxonomy_exists( 'lunara_slide_set' );
 
     return array(
         array(
@@ -304,6 +316,18 @@ function lunara_control_desk_get_system_status() {
             'value' => $ai_version ? $ai_version : __( 'Not detected', 'lunara-film' ),
             'state' => $ai_version ? 'ready' : 'needs',
             'note'  => __( 'Owns provider calls and private suggestion snapshots.', 'lunara-film' ),
+        ),
+        array(
+            'label' => __( 'Lunara Core plugin', 'lunara-film' ),
+            'value' => $core_version ? $core_version : __( 'Not detected', 'lunara-film' ),
+            'state' => $core_active ? 'ready' : 'weak',
+            'note'  => $core_active ? __( 'Active load-bearing plugin; do not deactivate live without staging checks.', 'lunara-film' ) : __( 'Inactive: theme fallbacks should carry Review models, but this needs staging verification.', 'lunara-film' ),
+        ),
+        array(
+            'label' => __( 'Review model layer', 'lunara-film' ),
+            'value' => $review_model && $carousel_model ? __( 'Registered', 'lunara-film' ) : __( 'Incomplete', 'lunara-film' ),
+            'state' => $review_model && $carousel_model ? 'ready' : 'needs',
+            'note'  => __( 'Checks Review CPT, director/year taxonomies, and slide-set taxonomy after init.', 'lunara-film' ),
         ),
         array(
             'label' => __( 'Academy Awards plugin', 'lunara-film' ),
