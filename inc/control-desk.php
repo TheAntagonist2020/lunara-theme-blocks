@@ -308,8 +308,8 @@ function lunara_control_desk_get_system_status() {
         array(
             'label' => __( 'Academy Awards plugin', 'lunara-film' ),
             'value' => $aat_version ? $aat_version : __( 'Not detected', 'lunara-film' ),
-            'state' => '2.7.2' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
-            'note'  => __( 'The active source for new work is the 2.7.2 plugin tree under 01_ACTIVE_PROJECTS.', 'lunara-film' ),
+            'state' => '2.7.8' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
+            'note'  => __( 'The active source is now the GitHub-backed 2.7.8 work tree under G:\\lunara-backups\\work.', 'lunara-film' ),
         ),
         array(
             'label' => __( 'Object cache', 'lunara-film' ),
@@ -332,6 +332,7 @@ function lunara_control_desk_get_source_status() {
             'label' => __( 'Theme source', 'lunara-film' ),
             'value' => 'G:\\lunara-backups\\work\\lunara-theme-blocks-20260513-2300',
             'state' => 'ready',
+            'note'  => 'github.com/TheAntagonist2020/lunara-theme-blocks',
         ),
         array(
             'label' => __( 'Live theme', 'lunara-film' ),
@@ -340,18 +341,45 @@ function lunara_control_desk_get_source_status() {
         ),
         array(
             'label' => __( 'AI plugin source', 'lunara-film' ),
-            'value' => 'C:\\Users\\silve_i21do49\\OneDrive\\Documents\\New project\\plugins\\lunara-ai-assistant-classic',
+            'value' => 'G:\\lunara-backups\\work\\lunara-ai-assistant-classic',
             'state' => 'ready',
+            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-ai-assistant-classic',
+        ),
+        array(
+            'label' => __( 'Core plugin source', 'lunara-film' ),
+            'value' => 'G:\\lunara-backups\\work\\lunara-core',
+            'state' => 'ready',
+            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-core',
         ),
         array(
             'label' => __( 'Oscars plugin source', 'lunara-film' ),
-            'value' => 'C:\\Users\\silve_i21do49\\OneDrive\\Desktop\\New folder\\01_ACTIVE_PROJECTS\\lunara-world-site\\wordpress\\wp-content\\plugins\\academy-awards-table-optimized',
+            'value' => 'G:\\lunara-backups\\work\\academy-awards-table-optimized',
             'state' => 'ready',
+            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-oscars-ledger',
+        ),
+        array(
+            'label' => __( 'Dispatch plugin source', 'lunara-film' ),
+            'value' => 'G:\\lunara-backups\\work\\lunara-dispatch',
+            'state' => 'ready',
+            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-dispatch',
+        ),
+        array(
+            'label' => __( 'IMDb Guard source', 'lunara-film' ),
+            'value' => 'G:\\lunara-backups\\work\\lunara-imdb-guard',
+            'state' => 'ready',
+            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-imdb-guard',
+        ),
+        array(
+            'label' => __( 'Legacy AI source reference', 'lunara-film' ),
+            'value' => 'C:\\Users\\silve_i21do49\\OneDrive\\Documents\\New project\\plugins\\lunara-ai-assistant-classic',
+            'state' => 'weak',
+            'note'  => __( 'Historical source location only; use the G: work tree for new edits.', 'lunara-film' ),
         ),
         array(
             'label' => __( 'Stale Oscars copy warning', 'lunara-film' ),
             'value' => 'C:\\Users\\silve_i21do49\\OneDrive\\Desktop\\New folder\\academy-awards-table-optimized',
             'state' => 'weak',
+            'note'  => __( 'This root-level copy is stale; do not edit it for live work.', 'lunara-film' ),
         ),
     );
 }
