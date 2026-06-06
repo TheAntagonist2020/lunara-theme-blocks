@@ -246,6 +246,40 @@ $research_cards = array(
         'backdrop' => $portal_backdrops['Categories'] ?? '',
     ),
 );
+
+$best_picture_category_url = home_url( '/oscars/category/best-picture/' );
+$profile_file_url          = trim( (string) ( $hero_title_card['url'] ?? '' ) );
+
+if ( '' === $profile_file_url ) {
+    $profile_file_url = $database_landing_url;
+}
+
+$command_cards = array(
+    array(
+        'kicker' => 'Premium Category',
+        'title'  => 'Best Picture Dossier',
+        'meta'   => 'Winners, nominees, eras',
+        'url'    => $best_picture_category_url,
+    ),
+    array(
+        'kicker' => 'Current Race',
+        'title'  => $ceremony_label,
+        'meta'   => '' !== $year_label ? $year_label : 'Latest ceremony',
+        'url'    => $ceremony_url,
+    ),
+    array(
+        'kicker' => 'Profile File',
+        'title'  => ! empty( $hero_title_card['title'] ) ? $hero_title_card['title'] : 'Featured Title',
+        'meta'   => 'Film ledger profile',
+        'url'    => $profile_file_url,
+    ),
+    array(
+        'kicker' => 'Research Table',
+        'title'  => 'Full Ledger',
+        'meta'   => number_format_i18n( intval( $database_spotlight['records_total'] ?? 0 ) ) . ' rows',
+        'url'    => $database_table_url,
+    ),
+);
 ?>
 <main id="primary" class="site-main lunara-oscars-portal">
     <?php if ( empty( $snapshot ) && empty( $database_spotlight ) ) : ?>
@@ -320,6 +354,16 @@ $research_cards = array(
                         </div>
                     </a>
                 <?php endif; ?>
+
+                <nav class="lunara-oscars-command-rail" aria-label="<?php esc_attr_e( 'Oscar Ledger command routes', 'lunara-film' ); ?>">
+                    <?php foreach ( $command_cards as $command_card ) : ?>
+                        <a class="lunara-oscars-command-card" href="<?php echo esc_url( $command_card['url'] ); ?>">
+                            <span class="lunara-oscars-command-kicker"><?php echo esc_html( $command_card['kicker'] ); ?></span>
+                            <strong><?php echo esc_html( $command_card['title'] ); ?></strong>
+                            <span class="lunara-oscars-command-meta"><?php echo esc_html( $command_card['meta'] ); ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                </nav>
             </div>
         </section>
         <?php endif; ?>
