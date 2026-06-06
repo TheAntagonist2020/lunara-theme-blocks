@@ -2367,6 +2367,392 @@ function lunara_output_os_responsive_guardrail_css() {
 add_action( 'wp_head', 'lunara_output_os_responsive_guardrail_css', 999 );
 
 /**
+ * Reviews archive authority package polish.
+ */
+function lunara_output_review_archive_authority_css() {
+    if ( is_admin() || is_feed() ) {
+        return;
+    }
+
+    $is_reviews_archive = is_post_type_archive( 'review' )
+        || is_page_template( 'page-reviews.php' )
+        || is_page( 'reviews' );
+
+    if ( ! $is_reviews_archive ) {
+        return;
+    }
+    ?>
+    <style id="lunara-review-archive-authority-css">
+    body.post-type-archive-review .lunara-review-archive-page,
+    body.page-template-page-reviews .lunara-review-archive-page {
+        gap: clamp(30px, 4vw, 52px) !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-page > .lunara-home-section,
+    body.page-template-page-reviews .lunara-review-archive-page > .lunara-home-section {
+        margin-bottom: clamp(22px, 2.8vw, 36px) !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-hero,
+    body.page-template-page-reviews .lunara-review-archive-hero {
+        padding-bottom: clamp(18px, 2.8vw, 34px) !important;
+        padding-top: clamp(34px, 4.8vw, 58px) !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-hero-shell,
+    body.page-template-page-reviews .lunara-review-archive-hero-shell {
+        padding: clamp(24px, 3vw, 34px) clamp(24px, 3.2vw, 38px) !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-shell,
+    body.page-template-page-reviews .lunara-review-archive-shell {
+        display: grid !important;
+        gap: clamp(28px, 4vw, 46px) !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-spotlight,
+    body.page-template-page-reviews .lunara-review-archive-spotlight {
+        display: grid !important;
+        gap: clamp(20px, 2.6vw, 32px) !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        margin-top: 0 !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-run,
+    body.page-template-page-reviews .lunara-review-archive-run {
+        display: grid !important;
+        gap: clamp(20px, 2.4vw, 30px) !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-run-head,
+    body.page-template-page-reviews .lunara-review-archive-run-head {
+        margin: 0 !important;
+    }
+
+    body.post-type-archive-review .lunara-review-feature-card.is-lead,
+    body.page-template-page-reviews .lunara-review-feature-card.is-lead {
+        min-height: 0 !important;
+        width: 100% !important;
+    }
+
+    body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-link,
+    body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-link {
+        min-height: 100% !important;
+    }
+
+    body.post-type-archive-review .lunara-review-feature-card.is-compact,
+    body.page-template-page-reviews .lunara-review-feature-card.is-compact {
+        min-height: 0 !important;
+    }
+
+    body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-link,
+    body.page-template-page-reviews .lunara-review-feature-card.is-compact .lunara-review-feature-link {
+        display: grid !important;
+        grid-template-columns: 116px minmax(0, 1fr) !important;
+        min-height: 154px !important;
+    }
+
+    body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-media,
+    body.page-template-page-reviews .lunara-review-feature-card.is-compact .lunara-review-feature-media {
+        aspect-ratio: auto !important;
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        height: 154px !important;
+        max-width: 116px !important;
+        min-height: 154px !important;
+        min-width: 0 !important;
+        width: 116px !important;
+    }
+
+    body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-image,
+    body.page-template-page-reviews .lunara-review-feature-card.is-compact .lunara-review-feature-image {
+        display: block !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        width: 100% !important;
+    }
+
+    body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-copy,
+    body.page-template-page-reviews .lunara-review-feature-card.is-compact .lunara-review-feature-copy {
+        align-content: center !important;
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        min-width: 0 !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-run-grid,
+    body.page-template-page-reviews .lunara-review-archive-run-grid {
+        margin-top: 0 !important;
+    }
+
+    body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-link,
+    body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-link {
+        display: grid !important;
+        grid-template-columns: minmax(270px, 0.4fr) minmax(0, 1fr) !important;
+        grid-template-rows: minmax(0, 1fr) !important;
+    }
+
+    body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-media,
+    body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-media {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        width: 100% !important;
+    }
+
+    body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-image,
+    body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-image {
+        display: block !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        object-fit: cover !important;
+        width: 100% !important;
+    }
+
+    body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-copy,
+    body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-copy {
+        align-content: center !important;
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        min-width: 0 !important;
+        padding: clamp(24px, 3.6vw, 46px) !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-rail,
+    body.page-template-page-reviews .lunara-review-archive-rail {
+        display: grid !important;
+        gap: clamp(14px, 1.7vw, 22px) !important;
+        grid-template-columns: minmax(230px, 0.56fr) repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-rail-shell,
+    body.page-template-page-reviews .lunara-review-archive-rail-shell {
+        align-content: center !important;
+        display: grid !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-rail-shell .lunara-section-title,
+    body.page-template-page-reviews .lunara-review-archive-rail-shell .lunara-section-title {
+        font-size: clamp(1.18rem, 2vw, 1.66rem) !important;
+        line-height: 1.12 !important;
+        max-width: 17ch !important;
+    }
+
+    @media (max-width: 820px) {
+        body.post-type-archive-review .lunara-review-archive-hero-shell,
+        body.page-template-page-reviews .lunara-review-archive-hero-shell {
+            gap: 16px !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-debrief-list,
+        body.page-template-page-reviews .lunara-review-archive-debrief-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-debrief-list li,
+        body.page-template-page-reviews .lunara-review-archive-debrief-list li {
+            border: 1px solid rgba(201, 169, 97, 0.13) !important;
+            border-radius: 12px !important;
+            padding: 10px 11px !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-debrief-list span,
+        body.page-template-page-reviews .lunara-review-archive-debrief-list span {
+            text-align: left !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-lead,
+        body.page-template-page-reviews .lunara-review-feature-card.is-lead {
+            min-height: 0 !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-link,
+        body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-link {
+            grid-template-columns: minmax(124px, 0.38fr) minmax(0, 1fr) !important;
+            min-height: 0 !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-media,
+        body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-media {
+            aspect-ratio: 3 / 4 !important;
+            height: auto !important;
+            min-height: 0 !important;
+            width: 100% !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-copy,
+        body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-copy {
+            align-content: center !important;
+            gap: 10px !important;
+            padding: 18px !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-excerpt,
+        body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-excerpt,
+        body.post-type-archive-review .lunara-review-grid-excerpt,
+        body.page-template-page-reviews .lunara-review-grid-excerpt {
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-excerpt,
+        body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-excerpt {
+            -webkit-line-clamp: 3 !important;
+        }
+
+        body.post-type-archive-review .lunara-review-grid-excerpt,
+        body.page-template-page-reviews .lunara-review-grid-excerpt {
+            -webkit-line-clamp: 2 !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-uniform.lunara-review-grid,
+        body.page-template-page-reviews .lunara-review-archive-uniform.lunara-review-grid {
+            display: grid !important;
+            gap: 12px !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-uniform .lunara-review-grid-link,
+        body.page-template-page-reviews .lunara-review-archive-uniform .lunara-review-grid-link {
+            display: grid !important;
+            grid-template-columns: 104px minmax(0, 1fr) !important;
+            min-height: 148px !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-uniform .lunara-review-grid-poster-wrap,
+        body.page-template-page-reviews .lunara-review-archive-uniform .lunara-review-grid-poster-wrap {
+            aspect-ratio: auto !important;
+            border-radius: 14px 0 0 14px !important;
+            height: 148px !important;
+            min-height: 148px !important;
+            width: 104px !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-uniform .lunara-review-grid-copy,
+        body.page-template-page-reviews .lunara-review-archive-uniform .lunara-review-grid-copy {
+            align-content: center !important;
+            gap: 7px !important;
+            min-width: 0 !important;
+            padding: 12px 13px !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-uniform .lunara-review-grid-title,
+        body.page-template-page-reviews .lunara-review-archive-uniform .lunara-review-grid-title {
+            font-size: clamp(0.96rem, 4.4vw, 1.12rem) !important;
+            line-height: 1.16 !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-rail,
+        body.page-template-page-reviews .lunara-review-archive-rail {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-rail-shell .lunara-section-title,
+        body.page-template-page-reviews .lunara-review-archive-rail-shell .lunara-section-title {
+            font-size: clamp(1.28rem, 6.4vw, 1.72rem) !important;
+            line-height: 1.08 !important;
+            max-width: 12ch !important;
+        }
+    }
+
+    @media (max-width: 540px) {
+        body.post-type-archive-review .lunara-review-archive-debrief-list,
+        body.page-template-page-reviews .lunara-review-archive-debrief-list {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-link,
+        body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-link {
+            grid-template-columns: 118px minmax(0, 1fr) !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-title,
+        body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-title {
+            font-size: clamp(1.16rem, 6vw, 1.52rem) !important;
+            line-height: 1.08 !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-excerpt,
+        body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-excerpt {
+            -webkit-line-clamp: 2 !important;
+            font-size: 0.9rem !important;
+            line-height: 1.44 !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-footer,
+        body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-footer,
+        body.post-type-archive-review .lunara-review-archive-uniform .lunara-review-grid-footer,
+        body.page-template-page-reviews .lunara-review-archive-uniform .lunara-review-grid-footer {
+            display: none !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-rail,
+        body.page-template-page-reviews .lunara-review-archive-rail {
+            gap: 10px !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-rail-shell,
+        body.page-template-page-reviews .lunara-review-archive-rail-shell,
+        body.post-type-archive-review .lunara-review-archive-run-head,
+        body.page-template-page-reviews .lunara-review-archive-run-head {
+            padding: 16px !important;
+            border-radius: 16px !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-link,
+        body.page-template-page-reviews .lunara-review-feature-card.is-compact .lunara-review-feature-link {
+            grid-template-columns: 88px minmax(0, 1fr) !important;
+            min-height: 132px !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-media,
+        body.page-template-page-reviews .lunara-review-feature-card.is-compact .lunara-review-feature-media {
+            height: 132px !important;
+            max-width: 88px !important;
+            min-height: 132px !important;
+            width: 88px !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-copy,
+        body.page-template-page-reviews .lunara-review-feature-card.is-compact .lunara-review-feature-copy {
+            align-content: center !important;
+            gap: 6px !important;
+            overflow: hidden !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-title,
+        body.page-template-page-reviews .lunara-review-feature-card.is-compact .lunara-review-feature-title {
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 3 !important;
+            font-size: clamp(0.86rem, 4.5vw, 1rem) !important;
+            line-height: 1.1 !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-excerpt,
+        body.page-template-page-reviews .lunara-review-feature-card.is-compact .lunara-review-feature-excerpt {
+            display: none !important;
+        }
+
+        body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-footer,
+        body.page-template-page-reviews .lunara-review-feature-card.is-compact .lunara-review-feature-footer {
+            display: none !important;
+        }
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_footer', 'lunara_output_review_archive_authority_css', 5 );
+
+/**
  * Public review Debrief polish.
  *
  * The Debrief is a retention module, not a raw metadata dump. Keep this layer

@@ -2906,13 +2906,21 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
         $posts = array_values( array_filter( (array) $args['posts'], static function ( $post_item ) {
             return $post_item instanceof WP_Post;
         } ) );
-        $copy          = '';
-        $classes       = trim( 'site-main lunara-archive-page ' . (string) $args['classes'] );
-        $total_reviews = wp_count_posts( 'review' );
-        $total_reviews = isset( $total_reviews->publish ) ? intval( $total_reviews->publish ) : 0;
-        $visible_count = count( $posts );
-        $current_sort  = isset( $args['current_sort'] ) ? sanitize_key( (string) $args['current_sort'] ) : lunara_get_review_archive_sort();
-        $sort_options  = isset( $args['sort_options'] ) && is_array( $args['sort_options'] ) ? $args['sort_options'] : lunara_get_review_archive_sort_options();
+        $copy            = '';
+        $classes         = trim( 'site-main lunara-archive-page ' . (string) $args['classes'] );
+        $total_reviews   = wp_count_posts( 'review' );
+        $total_reviews   = isset( $total_reviews->publish ) ? intval( $total_reviews->publish ) : 0;
+        $visible_count   = count( $posts );
+        $lead_post       = ! empty( $posts ) ? array_shift( $posts ) : null;
+        $support_posts   = array_slice( $posts, 0, 2 );
+        $remaining_posts = array_slice( $posts, 2 );
+        $has_posts       = $lead_post instanceof WP_Post;
+        $classes        .= $has_posts ? ' lunara-review-archive-has-posts' : ' lunara-review-archive-is-empty';
+        $archive_mode    = $has_posts
+            ? ( ! empty( $remaining_posts ) ? __( 'Lead / Rail / Archive Run', 'lunara-film' ) : __( 'Lead / Rail', 'lunara-film' ) )
+            : __( 'Standby', 'lunara-film' );
+        $current_sort    = isset( $args['current_sort'] ) ? sanitize_key( (string) $args['current_sort'] ) : lunara_get_review_archive_sort();
+        $sort_options    = isset( $args['sort_options'] ) && is_array( $args['sort_options'] ) ? $args['sort_options'] : lunara_get_review_archive_sort_options();
         $section_order = function_exists( 'lunara_get_reviews_archive_section_order_map' )
             ? lunara_get_reviews_archive_section_order_map()
             : array();
@@ -2956,6 +2964,10 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                                 <strong><?php esc_html_e( 'Sorted By', 'lunara-film' ); ?></strong>
                                 <span><?php echo esc_html( $sort_label ); ?></span>
                             </li>
+                            <li>
+                                <strong><?php esc_html_e( 'Desk Shape', 'lunara-film' ); ?></strong>
+                                <span><?php echo esc_html( $archive_mode ); ?></span>
+                            </li>
                         </ul>
                     </aside>
                 </div>
@@ -2985,12 +2997,38 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                         </div>
                     </div>
                 <?php endif; ?>
-                <?php if ( ! empty( $posts ) ) : ?>
-                    <div class="lunara-review-grid lunara-review-archive-grid lunara-review-archive-uniform">
-                        <?php foreach ( $posts as $review_index => $review_post ) : ?>
-                            <?php echo lunara_render_review_grid_card( $review_post->ID, $review_index + 1 ); ?>
-                        <?php endforeach; ?>
+                <?php if ( $lead_post instanceof WP_Post ) : ?>
+                    <div class="lunara-review-archive-spotlight" data-lunara-section="spotlight">
+                        <?php echo lunara_render_review_feature_card( $lead_post->ID, array( 'variant' => 'lead', 'excerpt_words' => 44 ) ); ?>
+
+                        <?php if ( ! empty( $support_posts ) ) : ?>
+                            <div class="lunara-review-archive-rail">
+                                <div class="lunara-review-archive-rail-shell">
+                                    <p class="lunara-home-section-kicker"><?php esc_html_e( 'On The Desk', 'lunara-film' ); ?></p>
+                                    <h2 class="lunara-section-title"><?php esc_html_e( 'Reviews Beside The Lead', 'lunara-film' ); ?></h2>
+                                </div>
+                                <?php foreach ( $support_posts as $support_post ) : ?>
+                                    <?php echo lunara_render_review_feature_card( $support_post->ID, array( 'variant' => 'compact', 'excerpt_words' => 22 ) ); ?>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
+
+                    <?php if ( ! empty( $remaining_posts ) ) : ?>
+                        <div class="lunara-review-archive-run" data-lunara-section="run">
+                            <div class="lunara-home-section-head lunara-review-archive-run-head">
+                                <div>
+                                    <p class="lunara-home-section-kicker"><?php esc_html_e( 'Criticism Run', 'lunara-film' ); ?></p>
+                                    <h2 class="lunara-section-title"><?php esc_html_e( 'More Lunara Reviews', 'lunara-film' ); ?></h2>
+                                </div>
+                            </div>
+                            <div class="lunara-review-grid lunara-review-archive-grid lunara-review-archive-uniform lunara-review-archive-run-grid">
+                                <?php foreach ( $remaining_posts as $review_index => $review_post ) : ?>
+                                    <?php echo lunara_render_review_grid_card( $review_post->ID, $review_index + 4 ); ?>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 <?php else : ?>
                     <div class="lunara-archive-empty">
                         <h2><?php echo esc_html( $args['empty_title'] ); ?></h2>
