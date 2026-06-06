@@ -2787,6 +2787,428 @@ function lunara_output_review_reader_spine_css() {
 add_action( 'wp_head', 'lunara_output_review_reader_spine_css', 1002 );
 
 /**
+ * Single Review mobile editorial repair.
+ *
+ * Phone readers should get a confident article package, not a shrunken
+ * desktop proof. Keep the poster strong, compress utility modules, and make
+ * related criticism behave like a retention lane instead of full-page posters.
+ */
+function lunara_output_review_mobile_editorial_repair_css() {
+    if ( is_admin() || is_feed() || ! is_singular( 'review' ) ) {
+        return;
+    }
+    ?>
+    <style id="lunara-review-mobile-editorial-repair-css">
+    @media (max-width: 760px) {
+        body.single-review,
+        body.single-review #main-container {
+            background: #07131f !important;
+            overflow-x: hidden !important;
+        }
+
+        body.single-review main.lunara-review-single-page,
+        body.single-review .lunara-review-single-page {
+            max-width: 100vw !important;
+            margin-left: calc(50% - 50vw) !important;
+            margin-right: calc(50% - 50vw) !important;
+            padding: 0 16px 52px !important;
+            width: 100vw !important;
+        }
+
+        body.single-review .lunara-review-single-hero {
+            margin: 0 -16px 0 !important;
+            padding: 22px 22px 18px !important;
+            width: calc(100% + 32px) !important;
+            border-bottom: 1px solid rgba(224, 196, 129, 0.16) !important;
+            background:
+                radial-gradient(circle at 86% 0%, rgba(224, 196, 129, 0.12), transparent 34%),
+                linear-gradient(180deg, rgba(17, 31, 46, 0.98), rgba(7, 19, 31, 0.98)) !important;
+        }
+
+        body.single-review .lunara-review-single-hero-inner {
+            gap: 12px !important;
+            max-width: 100% !important;
+        }
+
+        body.single-review .lunara-review-single-title {
+            font-size: clamp(2.05rem, 10vw, 2.65rem) !important;
+            line-height: 0.98 !important;
+            max-width: 11ch !important;
+            text-wrap: balance !important;
+        }
+
+        body.single-review .lunara-review-single-meta {
+            gap: 9px !important;
+            line-height: 1.35 !important;
+        }
+
+        body.single-review .lunara-review-single-body {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 auto !important;
+            padding: 20px 0 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+        }
+
+        body.single-review .lunara-review-single-body-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 22px !important;
+            width: 100% !important;
+        }
+
+        body.single-review .lunara-review-single-content {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            gap: 0 !important;
+        }
+
+        body.single-review .lunara-review-single-cinematic-hero {
+            order: -3 !important;
+            margin: 0 auto 24px !important;
+            width: min(100%, 318px) !important;
+            max-width: 318px !important;
+        }
+
+        body.single-review .lunara-review-single-cinematic-hero .lunara-review-visual--poster-hero,
+        body.single-review .lunara-review-single-cinematic-hero .lunara-review-visual-frame {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        body.single-review .lunara-review-single-cinematic-hero .lunara-review-visual-frame {
+            padding: 8px !important;
+            border: 1px solid rgba(224, 196, 129, 0.2) !important;
+            border-radius: 8px !important;
+            background: linear-gradient(180deg, rgba(11, 24, 38, 0.98), rgba(4, 11, 19, 0.98)) !important;
+            box-shadow: 0 18px 38px rgba(0, 0, 0, 0.32) !important;
+        }
+
+        body.single-review .lunara-review-single-cinematic-hero .lunara-review-visual-image {
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            object-fit: contain !important;
+        }
+
+        body.single-review .lunara-reader-toc {
+            order: -2 !important;
+            margin: 0 0 24px !important;
+            padding: 14px 14px 16px !important;
+            border-radius: 8px !important;
+            background: linear-gradient(180deg, rgba(16, 31, 48, 0.92), rgba(8, 18, 30, 0.96)) !important;
+        }
+
+        body.single-review .lunara-reader-toc-title,
+        body.single-review .lunara-reader-toc-kicker {
+            margin-bottom: 10px !important;
+            text-align: left !important;
+        }
+
+        body.single-review .lunara-reader-toc-links,
+        body.single-review .lunara-reader-toc-list {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            gap: 8px !important;
+            overflow-x: auto !important;
+            padding: 0 0 4px !important;
+            scroll-snap-type: x proximity !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+
+        body.single-review .lunara-reader-toc-links .lunara-reader-toc-link,
+        body.single-review .lunara-reader-toc-item {
+            flex: 0 0 auto !important;
+            margin: 0 !important;
+            scroll-snap-align: start !important;
+        }
+
+        body.single-review .lunara-reader-toc-link {
+            display: inline-flex !important;
+            align-items: center !important;
+            min-height: 42px !important;
+            max-width: 220px !important;
+            padding: 9px 12px !important;
+            border-radius: 999px !important;
+            font-size: 0.9rem !important;
+            line-height: 1.22 !important;
+            white-space: normal !important;
+        }
+
+        body.single-review .lunara-review-single-content > p,
+        body.single-review .lunara-review-single-content > ul,
+        body.single-review .lunara-review-single-content > ol,
+        body.single-review .lunara-review-single-content > blockquote {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            color: rgba(250, 251, 252, 0.96) !important;
+            font-size: 1.05rem !important;
+            line-height: 1.76 !important;
+        }
+
+        body.single-review .lunara-review-single-content > h2,
+        body.single-review .lunara-review-single-content > h3 {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 30px 0 14px !important;
+            color: #e0c481 !important;
+            text-wrap: balance !important;
+        }
+
+        body.single-review .lunara-review-single-content > h2 {
+            font-size: clamp(1.36rem, 6.2vw, 1.58rem) !important;
+            line-height: 1.12 !important;
+        }
+
+        body.single-review .lunara-review-single-content > h3 {
+            font-size: clamp(1.24rem, 5.8vw, 1.5rem) !important;
+            line-height: 1.18 !important;
+        }
+
+        body.single-review .lunara-review-single-rail {
+            display: none !important;
+        }
+
+        body.single-review .lunara-review-single-rail-sticky {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 10px !important;
+            position: static !important;
+        }
+
+        body.single-review .lunara-review-single-rail .lunara-journal-rail-card {
+            padding: 13px 14px !important;
+            border-radius: 8px !important;
+            background: linear-gradient(180deg, rgba(13, 28, 44, 0.94), rgba(8, 18, 30, 0.96)) !important;
+        }
+
+        body.single-review .lunara-review-single-where-card {
+            display: none !important;
+        }
+
+        body.single-review .lunara-review-single-rail-actions {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+        }
+
+        body.single-review .lunara-review-single-rail-actions .lunara-btn {
+            min-height: 42px !important;
+            padding: 9px 11px !important;
+            border-radius: 8px !important;
+            font-size: 0.78rem !important;
+            letter-spacing: 0.08em !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-section {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 38px auto 42px !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-wrap,
+        body.single-review .lunara-review-single-debrief--pairings {
+            padding: 16px !important;
+            border-radius: 10px !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-wrap.has-signature-media {
+            grid-template-columns: 112px minmax(0, 1fr) !important;
+            align-items: start !important;
+            gap: 14px !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-media,
+        body.single-review .lunara-review-single-debrief-wrap.has-signature-media > .lunara-review-single-debrief {
+            grid-column: auto !important;
+            grid-row: 1 !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-poster-shell {
+            max-width: 112px !important;
+            justify-self: start !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-media-copy {
+            display: none !important;
+        }
+
+        body.single-review .lunara-review-single-debrief .lunara-debrief-block--signature .lunara-debrief-heading {
+            max-width: 100% !important;
+            font-size: clamp(1.18rem, 5.8vw, 1.42rem) !important;
+            line-height: 1.04 !important;
+        }
+
+        body.single-review .lunara-review-single-debrief .lunara-debrief-list--signature li,
+        body.single-review .lunara-review-single-debrief--pairings .lunara-debrief-list > li {
+            padding: 12px !important;
+            border-radius: 8px !important;
+        }
+
+        body.single-review .lunara-review-single-debrief .lunara-debrief-pairing {
+            display: grid !important;
+            grid-template-columns: 58px minmax(0, 1fr) !important;
+            gap: 12px !important;
+            align-items: start !important;
+        }
+
+        body.single-review .lunara-review-single-debrief .lunara-debrief-thumb {
+            width: 58px !important;
+            border-radius: 7px !important;
+        }
+
+        body.single-review .lunara-review-single-debrief--pairings .lunara-debrief-list {
+            gap: 10px !important;
+        }
+
+        body.single-review .lunara-review-single-debrief--pairings .lunara-debrief-note {
+            font-size: 0.88rem !important;
+            line-height: 1.48 !important;
+        }
+
+        body.single-review .lunara-review-related {
+            display: grid !important;
+            gap: 16px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 34px 0 0 !important;
+            padding: 18px 0 0 !important;
+            border: 0 !important;
+            border-top: 1px solid rgba(224, 196, 129, 0.18) !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+        }
+
+        body.single-review .lunara-review-related::before {
+            display: none !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-home-section-head {
+            display: flex !important;
+            align-items: end !important;
+            justify-content: space-between !important;
+            gap: 14px !important;
+            margin: 0 !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-section-title {
+            font-size: clamp(1.32rem, 7vw, 1.68rem) !important;
+            line-height: 1.08 !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-section-link {
+            flex: 0 0 auto !important;
+            font-size: 0.75rem !important;
+            white-space: nowrap !important;
+        }
+
+        body.single-review .lunara-review-related-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 10px !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-review-grid-card {
+            width: 100% !important;
+            min-height: 0 !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            background: linear-gradient(180deg, rgba(14, 28, 43, 0.92), rgba(8, 18, 30, 0.96)) !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-review-grid-link {
+            display: grid !important;
+            grid-template-columns: 96px minmax(0, 1fr) !important;
+            align-items: stretch !important;
+            min-height: 142px !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-review-grid-poster-wrap {
+            width: 96px !important;
+            min-width: 96px !important;
+            height: 142px !important;
+            max-height: 142px !important;
+            aspect-ratio: auto !important;
+            border-radius: 0 !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-review-grid-poster,
+        body.single-review .lunara-review-related .lunara-review-grid-poster-wrap img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-review-grid-copy {
+            display: grid !important;
+            align-content: center !important;
+            gap: 7px !important;
+            min-width: 0 !important;
+            padding: 12px 14px !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-review-grid-title {
+            font-size: 1rem !important;
+            line-height: 1.16 !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-review-grid-excerpt {
+            display: none !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-review-grid-meta {
+            font-size: 0.78rem !important;
+            line-height: 1.35 !important;
+        }
+    }
+
+    @media (max-width: 380px) {
+        body.single-review main.lunara-review-single-page,
+        body.single-review .lunara-review-single-page {
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+        }
+
+        body.single-review .lunara-review-single-hero {
+            margin-left: -14px !important;
+            margin-right: -14px !important;
+            width: calc(100% + 28px) !important;
+        }
+
+        body.single-review .lunara-review-single-cinematic-hero {
+            width: min(100%, 294px) !important;
+            max-width: 294px !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-review-grid-link {
+            grid-template-columns: 86px minmax(0, 1fr) !important;
+            min-height: 128px !important;
+        }
+
+        body.single-review .lunara-review-related .lunara-review-grid-poster-wrap {
+            width: 86px !important;
+            min-width: 86px !important;
+            height: 128px !important;
+            max-height: 128px !important;
+        }
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_output_review_mobile_editorial_repair_css', 1003 );
+
+/**
  * Compact Oscars portal guardrails.
  *
  * The /oscars/ front door inherits several homepage-scale components; keep this
