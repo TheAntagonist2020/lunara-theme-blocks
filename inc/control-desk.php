@@ -424,7 +424,7 @@ function lunara_control_desk_get_source_control_status() {
         ),
         array(
             'label' => __( 'Oscars repo', 'lunara-film' ),
-            'value' => 'main @ dc225bb',
+            'value' => 'main @ 708743e',
             'state' => 'ready',
             'note'  => 'github.com/TheAntagonist2020/lunara-plugin-oscars-ledger',
         ),
