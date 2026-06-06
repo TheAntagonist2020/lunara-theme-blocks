@@ -299,10 +299,16 @@ if ( have_posts() ) :
             <?php endif; ?>
 
                 <?php if ( $related_query instanceof WP_Query && $related_query->have_posts() ) : ?>
-                    <section class="lunara-home-section lunara-review-related">
+                    <?php
+                    $related_kicker = trim( (string) get_theme_mod( 'lunara_review_related_kicker', __( 'Further Reading', 'lunara-film' ) ) );
+                    if ( '' === $related_kicker || 'Continue Watching' === $related_kicker ) {
+                        $related_kicker = __( 'Further Reading', 'lunara-film' );
+                    }
+                    ?>
+                    <section class="lunara-home-section lunara-review-related lunara-review-related--retention">
                         <div class="lunara-home-section-head">
                             <div>
-                                <p class="lunara-home-section-kicker"><?php echo esc_html( get_theme_mod( 'lunara_review_related_kicker', __( 'Continue Watching', 'lunara-film' ) ) ); ?></p>
+                                <p class="lunara-home-section-kicker"><?php echo esc_html( $related_kicker ); ?></p>
                                 <h2 class="lunara-section-title"><?php echo esc_html( get_theme_mod( 'lunara_review_related_title', __( 'More Lunara Criticism', 'lunara-film' ) ) ); ?></h2>
                             </div>
                             <a class="lunara-section-link" href="<?php echo esc_url( $archive_url ); ?>">

@@ -2329,13 +2329,13 @@ function lunara_render_review_grid_card( $post_id, $card_index = null ) {
                 <?php if ( '' !== $updated ) : ?>
                     <p class="lunara-review-grid-updated"><?php echo esc_html( $updated ); ?></p>
                 <?php endif; ?>
-                <?php if ( '' !== $ledger_pill ) : ?>
-                    <div class="lunara-review-grid-footer">
-                        <div class="lunara-review-grid-ledger"><?php echo wp_kses_post( $ledger_pill ); ?></div>
-                    </div>
-                <?php endif; ?>
             </div>
         </a>
+        <?php if ( '' !== $ledger_pill ) : ?>
+            <div class="lunara-review-grid-footer">
+                <div class="lunara-review-grid-ledger"><?php echo wp_kses_post( $ledger_pill ); ?></div>
+            </div>
+        <?php endif; ?>
     </article>
     <?php
 
