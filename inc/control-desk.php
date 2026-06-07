@@ -332,8 +332,8 @@ function lunara_control_desk_get_system_status() {
         array(
             'label' => __( 'Academy Awards plugin', 'lunara-film' ),
             'value' => $aat_version ? $aat_version : __( 'Not detected', 'lunara-film' ),
-            'state' => '2.7.8' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
-            'note'  => __( 'The active source is now the GitHub-backed 2.7.8 work tree under G:\\lunara-backups\\work.', 'lunara-film' ),
+            'state' => '2.7.13' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
+            'note'  => __( 'The active source is the GitHub-backed Oscars Ledger work tree under G:\\lunara-backups\\work.', 'lunara-film' ),
         ),
         array(
             'label' => __( 'Object cache', 'lunara-film' ),
@@ -412,13 +412,13 @@ function lunara_control_desk_get_source_control_status() {
     return array(
         array(
             'label' => __( 'Theme repo', 'lunara-film' ),
-            'value' => __( 'main / active rollout', 'lunara-film' ),
+            'value' => 'main @ 611c9f0',
             'state' => 'ready',
             'note'  => 'github.com/TheAntagonist2020/lunara-theme-blocks',
         ),
         array(
             'label' => __( 'Core repo', 'lunara-film' ),
-            'value' => 'main @ 1ff3197',
+            'value' => 'main @ b5b0114',
             'state' => 'ready',
             'note'  => 'github.com/TheAntagonist2020/lunara-plugin-core',
         ),
