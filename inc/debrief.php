@@ -99,6 +99,25 @@ if ( ! defined( 'LUNARA_CORE_VERSION' ) ) {
             .lunara-meta-section h4 { margin: 0 0 15px; color: #c9a961; }
             .lunara-meta-row { display: flex; gap: 20px; }
             .lunara-meta-row .lunara-meta-field { flex: 1; }
+            .lunara-pair-preview { margin-top: 18px; border: 1px solid #d8c38a; border-radius: 10px; background: #071523; overflow: hidden; color: #f7f1dd; }
+            .lunara-pair-preview-head { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: 1px solid rgba(216, 195, 138, 0.28); background: rgba(216, 195, 138, 0.08); }
+            .lunara-pair-preview-head strong { color: #e4c875; text-transform: uppercase; letter-spacing: .08em; }
+            .lunara-pair-preview-head span { color: #b8c3cf; font-size: 12px; }
+            .lunara-pair-preview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 14px; }
+            .lunara-pair-preview-card { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 12px; min-height: 122px; padding: 10px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: rgba(255,255,255,.045); }
+            .lunara-pair-preview-card.is-warning { border-color: rgba(214, 126, 70, .85); }
+            .lunara-pair-preview-card.is-empty { opacity: .72; }
+            .lunara-pair-preview-media { width: 74px; aspect-ratio: 2 / 3; border-radius: 6px; overflow: hidden; background: rgba(255,255,255,.07); display: flex; align-items: center; justify-content: center; color: #8f9aa7; font-size: 11px; text-align: center; }
+            .lunara-pair-preview-thumb { display: block; width: 100%; height: 100%; object-fit: cover; }
+            .lunara-pair-preview-role { margin: 0 0 4px; color: #e4c875; font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+            .lunara-pair-preview-title { margin: 0 0 5px; color: #fff; font-size: 14px; line-height: 1.25; }
+            .lunara-pair-preview-note { margin: 0 0 8px; color: #c8d0d8; font-size: 12px; line-height: 1.35; }
+            .lunara-pair-preview-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+            .lunara-pair-preview-chip { display: inline-flex; align-items: center; min-height: 20px; padding: 2px 7px; border: 1px solid rgba(228, 200, 117, .42); border-radius: 999px; color: #f2d986; font-size: 11px; line-height: 1.2; text-decoration: none; }
+            .lunara-pair-preview-chip.is-muted { border-color: rgba(255,255,255,.18); color: #aeb8c4; }
+            .lunara-pair-preview-warnings { margin: 8px 0 0; padding-left: 16px; color: #ffb07b; font-size: 12px; }
+            .lunara-pair-preview-warnings li { margin: 0 0 4px; }
+            @media (max-width: 1100px) { .lunara-pair-preview-grid { grid-template-columns: 1fr; } }
         </style>
 
         <div class="lunara-meta-row">
@@ -203,6 +222,19 @@ if ( ! defined( 'LUNARA_CORE_VERSION' ) ) {
                 <input type="text" id="lunara_career_context" name="lunara_career_context" value="<?php echo esc_attr( $craft ); ?>" placeholder="Film that clarifies this artist's career or creative trajectory">
                 <p class="description">Tip: optionally add <code>| tt1234567</code> (or an IMDb URL) to enable direct links. No punctuation is required after the IMDb ID before your note.</p>
             </div>
+
+            <?php
+            if ( function_exists( 'lunara_render_pair_it_with_admin_preview' ) ) {
+                echo lunara_render_pair_it_with_admin_preview(
+                    $post->ID,
+                    array(
+                        'Theme Echo'      => $theme_echo,
+                        'Counter-Program' => $counter,
+                        'Career Context'  => $craft,
+                    )
+                );
+            }
+            ?>
         </div>
         <?php
     }
@@ -748,6 +780,298 @@ if ( ! function_exists( 'lunara_get_title_poster_html' ) ) {
         }
 
         return '';
+    }
+}
+
+if ( ! function_exists( 'lunara_parse_pair_it_with_value' ) ) {
+    /**
+     * Parse a Pair It With field into the parts needed for preview and QA.
+     *
+     * @param string $value Raw meta value.
+     * @param int    $post_id Current review post ID.
+     * @return array<string,mixed>
+     */
+    function lunara_parse_pair_it_with_value( $value, $post_id = 0 ) {
+        $raw      = trim( (string) $value );
+        $warnings = array();
+
+        $out = array(
+            'raw'             => $raw,
+            'clean'           => '',
+            'tt'              => '',
+            'title'           => '',
+            'title_base'      => '',
+            'year'            => '',
+            'note'            => '',
+            'internal_href'   => '',
+            'imdb_href'       => '',
+            'title_href'      => '',
+            'title_href_type' => 'none',
+            'counts'          => array( 'noms' => 0, 'wins' => 0 ),
+            'poster_html'     => '',
+            'resolved_title'  => '',
+            'warnings'        => array(),
+        );
+
+        if ( '' === $raw ) {
+            return $out;
+        }
+
+        $tt = '';
+        if ( preg_match( '/\btt\d{7,8}\b/i', $raw, $m ) ) {
+            $tt = strtolower( $m[0] );
+        } elseif ( preg_match( '#imdb\.com/title/(tt\d{7,8})#i', $raw, $m ) ) {
+            $tt = strtolower( $m[1] );
+        }
+
+        $lb = '';
+        if ( preg_match( '#letterboxd\.com/film/[^\s\|\)\]]+/?#i', $raw, $m ) ) {
+            $lb = $m[0];
+            if ( stripos( $lb, 'http' ) !== 0 ) {
+                $lb = 'https://' . ltrim( $lb, '/' );
+            }
+        }
+
+        $clean = $raw;
+        if ( '' !== $tt ) {
+            $clean = preg_replace( '/\[\s*' . preg_quote( $tt, '/' ) . '\s*\]/i', '', $clean );
+            $clean = preg_replace( '/\(\s*' . preg_quote( $tt, '/' ) . '\s*\)/i', '', $clean );
+            $clean = preg_replace( '/\s*\|\s*\b' . preg_quote( $tt, '/' ) . '\b\s*$/i', '', $clean );
+            $clean = preg_replace( '#\s*\|\s*https?://(www\.)?imdb\.com/title/' . preg_quote( $tt, '#' ) . '/?\s*$#i', '', $clean );
+            $clean = preg_replace( '#\s*https?://(www\.)?imdb\.com/title/' . preg_quote( $tt, '#' ) . '/?\s*#i', ' ', $clean );
+            $clean = preg_replace( '/\s*\b' . preg_quote( $tt, '/' ) . '\b\s*/i', ' ', $clean );
+            $clean = preg_replace( '/\s*\|\s*(?:imdb|imdb id|imdb title id)\s*:?\s*$/i', '', $clean );
+            $clean = preg_replace( '/\s*(?:imdb|imdb id|imdb title id)\s*:?\s*$/i', '', $clean );
+            $clean = preg_replace( '/\s*\|\s*$/', '', $clean );
+        }
+
+        if ( '' !== $lb ) {
+            $clean = preg_replace( '#\s*\|\s*lb:\s*' . preg_quote( $lb, '#' ) . '\s*$#i', '', $clean );
+            $clean = preg_replace( '#\s*\|\s*' . preg_quote( $lb, '#' ) . '\s*$#i', '', $clean );
+            $clean = preg_replace( '#\s*' . preg_quote( $lb, '#' ) . '\s*#i', ' ', $clean );
+        }
+
+        $clean = preg_replace( '/\s+([,.;:!?])/', '$1', (string) $clean );
+        $clean = trim( preg_replace( '/\s{2,}/', ' ', (string) $clean ) );
+
+        $parts = preg_split( '/\s+(?:-|\x{2013}|\x{2014}|â€”)\s+/u', $clean, 2 );
+        $title = trim( $parts[0] ?? '' );
+        $note  = trim( $parts[1] ?? '' );
+
+        if ( '' === $note && '' !== $tt ) {
+            $tail_pattern = '/^(.*?)\b' . preg_quote( $tt, '/' ) . '\b(?:\s*[.:;\-\x{2013}\x{2014}]\s*|\s+)(.+)$/iu';
+            if ( preg_match( $tail_pattern, $raw, $m3 ) ) {
+                $raw_title = trim( wp_strip_all_tags( $m3[1] ) );
+                $raw_title = preg_replace( '/\s*(?:\||:|-|\x{2013}|\x{2014})\s*$/u', '', $raw_title );
+                $raw_title = preg_replace( '/\s{2,}/', ' ', (string) $raw_title );
+                $title     = trim( (string) $raw_title );
+                $note      = trim( wp_strip_all_tags( $m3[2] ) );
+            }
+        }
+
+        if ( '' === $note && preg_match( '/^(.*?\(\d{4}\))\s*[.:;\-\x{2013}\x{2014}]+\s*(.+)$/u', $title, $m4 ) ) {
+            $title = trim( $m4[1] );
+            $note  = trim( $m4[2] );
+        }
+
+        $title_base = $title;
+        $year       = '';
+        if ( preg_match( '/^(.*?)(?:\s*\((\d{4})\))\s*$/', $title, $m2 ) ) {
+            $title_base = trim( $m2[1] );
+            $year       = trim( $m2[2] );
+        }
+
+        if ( '' === $tt && '' !== $title_base ) {
+            $map = lunara_imdb_title_map();
+            if ( '' !== $year ) {
+                $key = lunara_normalize_title_key( $title_base ) . '|' . $year;
+                if ( isset( $map[ $key ] ) ) {
+                    $tt = strtolower( $map[ $key ] );
+                }
+            } else {
+                $prefix  = lunara_normalize_title_key( $title_base ) . '|';
+                $matches = array();
+                foreach ( $map as $k => $val ) {
+                    if ( strpos( $k, $prefix ) === 0 ) {
+                        $matches[] = $val;
+                    }
+                }
+                $matches = array_values( array_unique( $matches ) );
+                if ( count( $matches ) === 1 ) {
+                    $tt = strtolower( $matches[0] );
+                }
+            }
+        }
+
+        $internal_href = '';
+        $imdb_href     = '';
+        if ( '' !== $tt ) {
+            $imdb_href = 'https://www.imdb.com/title/' . $tt . '/';
+            if ( function_exists( 'lunara_get_internal_title_reference_url' ) ) {
+                $internal_href = lunara_get_internal_title_reference_url( $tt, $post_id );
+            }
+        } elseif ( '' !== $title_base ) {
+            $q = $title_base;
+            if ( '' !== $year ) {
+                $q .= ' ' . $year;
+            }
+            $imdb_href = 'https://www.imdb.com/find/?q=' . rawurlencode( $q ) . '&s=tt';
+            $warnings[] = __( 'Missing IMDb title ID. Append | tt1234567 to lock poster and link accuracy.', 'lunara-film' );
+        }
+
+        $title_href      = '' !== $internal_href ? $internal_href : $imdb_href;
+        $title_href_type = 'none';
+        if ( '' !== $internal_href ) {
+            $title_href_type = false !== strpos( $internal_href, '/reviews/' ) ? 'review' : 'oscar';
+        } elseif ( '' !== $imdb_href ) {
+            $title_href_type = 'imdb';
+        }
+
+        $counts = array( 'noms' => 0, 'wins' => 0 );
+        if ( '' !== $tt && function_exists( 'lunara_get_oscar_ledger_counts' ) ) {
+            $counts = lunara_get_oscar_ledger_counts( $tt );
+        }
+
+        $poster_html = '';
+        if ( '' !== $tt && function_exists( 'lunara_get_title_poster_html' ) ) {
+            $poster_html = lunara_get_title_poster_html( $tt, 'medium', 'lunara-pair-preview-thumb', $title );
+            if ( '' === trim( $poster_html ) ) {
+                $warnings[] = __( 'No poster resolved for this IMDb ID yet.', 'lunara-film' );
+            }
+        }
+
+        $resolved_title = '';
+        if ( '' !== $tt && class_exists( 'Academy_Awards_Table' ) ) {
+            $aat = Academy_Awards_Table::get_instance();
+            if ( $aat && method_exists( $aat, 'get_title_visual_package' ) ) {
+                $visual = $aat->get_title_visual_package( $tt, 'thumbnail' );
+                if ( is_array( $visual ) && ! empty( $visual['title'] ) ) {
+                    $resolved_title = trim( (string) $visual['title'] );
+                    if ( '' !== $title_base && lunara_normalize_title_key( $resolved_title ) !== lunara_normalize_title_key( $title_base ) ) {
+                        $warnings[] = sprintf(
+                            /* translators: %s: resolved film title */
+                            __( 'IMDb ID resolves as "%s"; check this if the poster looks wrong.', 'lunara-film' ),
+                            $resolved_title
+                        );
+                    }
+                }
+            }
+        }
+
+        $out['clean']           = $clean;
+        $out['tt']              = $tt;
+        $out['title']           = $title;
+        $out['title_base']      = $title_base;
+        $out['year']            = $year;
+        $out['note']            = $note;
+        $out['internal_href']   = $internal_href;
+        $out['imdb_href']       = $imdb_href;
+        $out['title_href']      = $title_href;
+        $out['title_href_type'] = $title_href_type;
+        $out['counts']          = $counts;
+        $out['poster_html']     = $poster_html;
+        $out['resolved_title']  = $resolved_title;
+        $out['warnings']        = array_values( array_unique( array_filter( $warnings ) ) );
+
+        return $out;
+    }
+}
+
+if ( ! function_exists( 'lunara_render_pair_it_with_admin_preview' ) ) {
+    /**
+     * Render a read-only Pair It With QA preview in the Review editor.
+     *
+     * @param int                  $post_id Review post ID.
+     * @param array<string,string> $pairings Label => raw value.
+     * @return string
+     */
+    function lunara_render_pair_it_with_admin_preview( $post_id, $pairings ) {
+        if ( ! is_array( $pairings ) ) {
+            return '';
+        }
+
+        ob_start();
+        ?>
+        <div class="lunara-pair-preview">
+            <div class="lunara-pair-preview-head">
+                <strong><?php esc_html_e( 'Pair It With Preview', 'lunara-film' ); ?></strong>
+                <span><?php esc_html_e( 'Read-only check for title, poster, link, and Oscar Ledger status.', 'lunara-film' ); ?></span>
+            </div>
+            <div class="lunara-pair-preview-grid">
+                <?php foreach ( $pairings as $label => $value ) : ?>
+                    <?php
+                    $preview  = lunara_parse_pair_it_with_value( $value, $post_id );
+                    $is_empty = '' === $preview['raw'];
+                    $warnings = is_array( $preview['warnings'] ) ? $preview['warnings'] : array();
+                    $classes  = array( 'lunara-pair-preview-card' );
+                    if ( $is_empty ) {
+                        $classes[] = 'is-empty';
+                    } elseif ( ! empty( $warnings ) ) {
+                        $classes[] = 'is-warning';
+                    } else {
+                        $classes[] = 'is-ready';
+                    }
+
+                    $title = '' !== $preview['title'] ? $preview['title'] : __( 'Not filled yet', 'lunara-film' );
+                    $noms  = (int) ( $preview['counts']['noms'] ?? 0 );
+                    $wins  = (int) ( $preview['counts']['wins'] ?? 0 );
+                    ?>
+                    <article class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+                        <div class="lunara-pair-preview-media">
+                            <?php
+                            if ( ! empty( $preview['poster_html'] ) ) {
+                                echo wp_kses_post( $preview['poster_html'] );
+                            } else {
+                                esc_html_e( 'No poster', 'lunara-film' );
+                            }
+                            ?>
+                        </div>
+                        <div>
+                            <p class="lunara-pair-preview-role"><?php echo esc_html( (string) $label ); ?></p>
+                            <p class="lunara-pair-preview-title">
+                                <?php if ( ! $is_empty && '' !== $preview['title_href'] ) : ?>
+                                    <a href="<?php echo esc_url( $preview['title_href'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $title ); ?></a>
+                                <?php else : ?>
+                                    <?php echo esc_html( $title ); ?>
+                                <?php endif; ?>
+                            </p>
+                            <?php if ( ! empty( $preview['note'] ) ) : ?>
+                                <p class="lunara-pair-preview-note"><?php echo esc_html( $preview['note'] ); ?></p>
+                            <?php endif; ?>
+                            <div class="lunara-pair-preview-chips">
+                                <?php if ( ! empty( $preview['tt'] ) ) : ?>
+                                    <span class="lunara-pair-preview-chip"><?php echo esc_html( strtoupper( $preview['tt'] ) ); ?></span>
+                                <?php endif; ?>
+                                <?php if ( ! empty( $preview['poster_html'] ) ) : ?>
+                                    <span class="lunara-pair-preview-chip"><?php esc_html_e( 'Poster ready', 'lunara-film' ); ?></span>
+                                <?php endif; ?>
+                                <?php if ( $noms > 0 ) : ?>
+                                    <span class="lunara-pair-preview-chip"><?php echo esc_html( sprintf( __( 'Oscar Ledger: %1$d noms / %2$d wins', 'lunara-film' ), $noms, $wins ) ); ?></span>
+                                <?php elseif ( ! empty( $preview['tt'] ) ) : ?>
+                                    <span class="lunara-pair-preview-chip is-muted"><?php esc_html_e( 'No Oscar Ledger data', 'lunara-film' ); ?></span>
+                                <?php endif; ?>
+                                <?php if ( 'review' === $preview['title_href_type'] ) : ?>
+                                    <span class="lunara-pair-preview-chip"><?php esc_html_e( 'Links to Lunara review', 'lunara-film' ); ?></span>
+                                <?php elseif ( 'oscar' === $preview['title_href_type'] ) : ?>
+                                    <span class="lunara-pair-preview-chip"><?php esc_html_e( 'Links to Oscar page', 'lunara-film' ); ?></span>
+                                <?php elseif ( 'imdb' === $preview['title_href_type'] ) : ?>
+                                    <span class="lunara-pair-preview-chip is-muted"><?php esc_html_e( 'IMDb fallback', 'lunara-film' ); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ( ! empty( $warnings ) ) : ?>
+                                <ul class="lunara-pair-preview-warnings">
+                                    <?php foreach ( $warnings as $warning ) : ?>
+                                        <li><?php echo esc_html( $warning ); ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
     }
 }
 
