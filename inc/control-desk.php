@@ -350,6 +350,91 @@ function lunara_control_desk_get_system_status() {
     );
 }
 
+function lunara_control_desk_get_omdb_review_state_cards() {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        return array(
+            array(
+                'label' => __( 'OMDb review queue', 'lunara-film' ),
+                'value' => __( 'Admin only', 'lunara-film' ),
+                'state' => 'weak',
+                'note'  => __( 'Review-state counts are restricted to administrators.', 'lunara-film' ),
+            ),
+        );
+    }
+
+    global $wpdb;
+
+    $table  = $wpdb->prefix . 'aat_omdb_reviews';
+    $exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
+
+    if ( $exists !== $table ) {
+        return array(
+            array(
+                'label' => __( 'OMDb review queue', 'lunara-film' ),
+                'value' => __( 'Not initialized', 'lunara-film' ),
+                'state' => 'weak',
+                'note'  => __( 'Open Academy Awards > OMDb Audit once to initialize the review table.', 'lunara-film' ),
+            ),
+        );
+    }
+
+    $rows = $wpdb->get_results( "SELECT review_state, COUNT(*) AS count FROM {$table} GROUP BY review_state", ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    $counts = array(
+        'needs_review'     => 0,
+        'verified_bad_id'  => 0,
+        'omdb_source_gap'  => 0,
+        'poster_gap_only'  => 0,
+        'resolved'         => 0,
+        'ignore_accept'    => 0,
+    );
+
+    foreach ( is_array( $rows ) ? $rows : array() as $row ) {
+        $state = sanitize_key( (string) ( $row['review_state'] ?? '' ) );
+        if ( isset( $counts[ $state ] ) ) {
+            $counts[ $state ] = absint( $row['count'] ?? 0 );
+        }
+    }
+
+    $total_reviewed = array_sum( $counts );
+    $last_reviewed  = $wpdb->get_var( "SELECT MAX(reviewed_at) FROM {$table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    $last_label     = $last_reviewed
+        ? wp_date( 'M j, Y g:i a', strtotime( $last_reviewed ) )
+        : __( 'No reviewed rows yet', 'lunara-film' );
+
+    return array(
+        array(
+            'label' => __( 'OMDb reviewed', 'lunara-film' ),
+            'value' => sprintf( __( '%d rows', 'lunara-film' ), $total_reviewed ),
+            'state' => $total_reviewed > 0 ? 'ready' : 'weak',
+            'note'  => __( 'Private annotations only; Oscar rows remain untouched.', 'lunara-film' ),
+        ),
+        array(
+            'label' => __( 'Verified bad IDs', 'lunara-film' ),
+            'value' => (string) $counts['verified_bad_id'],
+            'state' => $counts['verified_bad_id'] > 0 ? 'needs' : 'ready',
+            'note'  => __( 'Rows that need correct IMDb IDs before any dataset mutation.', 'lunara-film' ),
+        ),
+        array(
+            'label' => __( 'Ignore / accept', 'lunara-film' ),
+            'value' => (string) $counts['ignore_accept'],
+            'state' => $counts['ignore_accept'] > 0 ? 'ready' : 'weak',
+            'note'  => __( 'Reviewed rows accepted as source/year drift rather than bad IDs.', 'lunara-film' ),
+        ),
+        array(
+            'label' => __( 'Resolved', 'lunara-film' ),
+            'value' => (string) $counts['resolved'],
+            'state' => $counts['resolved'] > 0 ? 'ready' : 'weak',
+            'note'  => __( 'Rows confirmed handled after a future correction pass.', 'lunara-film' ),
+        ),
+        array(
+            'label' => __( 'Last reviewed', 'lunara-film' ),
+            'value' => $last_label,
+            'state' => $last_reviewed ? 'ready' : 'weak',
+            'note'  => __( 'Use Academy Awards > OMDb Audit for row-by-row notes.', 'lunara-film' ),
+        ),
+    );
+}
+
 function lunara_control_desk_get_source_status() {
     return array(
         array(
@@ -2724,6 +2809,15 @@ function lunara_control_desk_render_system_status_tab() {
             <p class="lunara-control-desk-intro"><?php esc_html_e( 'These are the last recorded source-control anchors for the theme and load-bearing custom plugins. Update this panel after future commits that become the blessed working baseline.', 'lunara-film' ); ?></p>
         </div>
         <?php lunara_control_desk_render_status_cards( lunara_control_desk_get_source_control_status() ); ?>
+    </section>
+
+    <section class="lunara-control-desk-panel">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'OMDb Review Queue', 'lunara-film' ); ?></p>
+            <h2><?php esc_html_e( 'Reviewed-state counts without opening the audit table', 'lunara-film' ); ?></h2>
+            <p class="lunara-control-desk-intro"><?php esc_html_e( 'This reads the private OMDb review annotations only. It does not scan OMDb, expose keys, or mutate Oscar rows.', 'lunara-film' ); ?></p>
+        </div>
+        <?php lunara_control_desk_render_status_cards( lunara_control_desk_get_omdb_review_state_cards() ); ?>
     </section>
 
     <section class="lunara-control-desk-panel">
