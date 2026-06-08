@@ -661,11 +661,12 @@ if ( ! function_exists( 'lunara_get_internal_title_reference_url' ) ) {
 }
 
 if ( ! function_exists( 'lunara_get_title_poster_html' ) ) {
-    function lunara_get_title_poster_html( $tt, $size = 'medium', $class = 'lunara-debrief-thumb', $title = '' ) {
-        $tt    = strtolower( trim( (string) $tt ) );
-        $size  = trim( (string) $size );
-        $class = trim( (string) $class );
-        $title = trim( (string) $title );
+    function lunara_get_title_poster_html( $tt, $size = 'medium', $class = 'lunara-debrief-thumb', $title = '', $loading = 'lazy' ) {
+        $tt      = strtolower( trim( (string) $tt ) );
+        $size    = trim( (string) $size );
+        $class   = trim( (string) $class );
+        $title   = trim( (string) $title );
+        $loading = 'eager' === trim( (string) $loading ) ? 'eager' : 'lazy';
 
         if ( ! preg_match( '/^tt\d{7,8}$/', $tt ) ) {
             return '';
@@ -679,7 +680,7 @@ if ( ! function_exists( 'lunara_get_title_poster_html' ) ) {
             $class = 'lunara-debrief-thumb';
         }
 
-        $build_img = static function( $url, $resolved_title ) use ( $class ) {
+        $build_img = static function( $url, $resolved_title ) use ( $class, $loading ) {
             $url = trim( (string) $url );
             if ( '' === $url ) {
                 return '';
@@ -688,10 +689,11 @@ if ( ! function_exists( 'lunara_get_title_poster_html' ) ) {
             $alt = '' !== $resolved_title ? $resolved_title . ' poster' : __( 'Film poster', 'lunara-film' );
 
             return sprintf(
-                '<img class="%1$s" src="%2$s" alt="%3$s" loading="lazy" decoding="async">',
+                '<img class="%1$s" src="%2$s" alt="%3$s" loading="%4$s" decoding="async" data-no-lazy="1" data-skip-lazy="1">',
                 esc_attr( $class ),
                 esc_url( $url ),
-                esc_attr( $alt )
+                esc_attr( $alt ),
+                esc_attr( $loading )
             );
         };
 
@@ -713,6 +715,13 @@ if ( ! function_exists( 'lunara_get_title_poster_html' ) ) {
                     if ( ! empty( $visual['poster_html'] ) && is_string( $visual['poster_html'] ) ) {
                         $poster_html = $visual['poster_html'];
                         $poster_html = preg_replace( '/\sclass="[^"]*"/i', ' class="' . esc_attr( $class ) . '"', $poster_html, 1 );
+                        $poster_html = preg_replace( '/\sloading="[^"]*"/i', ' loading="' . esc_attr( $loading ) . '"', $poster_html, 1 );
+                        if ( false === stripos( $poster_html, ' loading=' ) ) {
+                            $poster_html = preg_replace( '/<img\b/i', '<img loading="' . esc_attr( $loading ) . '"', $poster_html, 1 );
+                        }
+                        if ( false === stripos( $poster_html, ' data-no-lazy=' ) ) {
+                            $poster_html = preg_replace( '/<img\b/i', '<img data-no-lazy="1" data-skip-lazy="1"', $poster_html, 1 );
+                        }
 
                         if ( '' !== $resolved_title ) {
                             $poster_html = preg_replace(
@@ -734,8 +743,10 @@ if ( ! function_exists( 'lunara_get_title_poster_html' ) ) {
                     $size,
                     array(
                         'class'    => $class,
-                        'loading'  => 'lazy',
+                        'loading'  => $loading,
                         'decoding' => 'async',
+                        'data-no-lazy'   => '1',
+                        'data-skip-lazy' => '1',
                     )
                 );
 
@@ -1259,7 +1270,7 @@ function lunara_debrief_shortcode( $atts ) {
     // Every paired film should show a poster regardless of Oscar history.
     $poster_html = '';
     if ( $tt !== '' && function_exists( 'lunara_get_title_poster_html' ) ) {
-        $poster_html = lunara_get_title_poster_html( $tt, 'medium', 'lunara-debrief-thumb', $title );
+        $poster_html = lunara_get_title_poster_html( $tt, 'medium', 'lunara-debrief-thumb', $title, 'eager' );
     }
 
     // IMPORTANT UX FIX:
