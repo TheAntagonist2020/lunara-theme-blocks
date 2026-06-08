@@ -3023,6 +3023,61 @@ function lunara_output_review_debrief_polish_css() {
             width: 76px !important;
         }
     }
+
+    @media (max-width: 520px) {
+        body.single-review .lunara-review-single-debrief-section {
+            margin: 42px auto 46px !important;
+            width: min(100%, calc(100vw - 28px)) !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-wrap {
+            padding: 16px !important;
+            border-radius: 16px !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-wrap.has-signature-media {
+            gap: 16px !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-media {
+            justify-items: center !important;
+            gap: 12px !important;
+            text-align: center !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-poster-shell {
+            width: min(100%, 188px) !important;
+            max-width: 188px !important;
+            margin-inline: auto !important;
+            border-radius: 14px !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-media-copy {
+            width: 100% !important;
+            padding-top: 12px !important;
+            text-align: center !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-media-kicker {
+            margin-bottom: 8px !important;
+            letter-spacing: 0.14em !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-media-title,
+        body.single-review .lunara-review-single-debrief .lunara-debrief-block--signature .lunara-debrief-heading {
+            max-width: none !important;
+            text-align: center !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-media-meta {
+            letter-spacing: 0.04em !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        body.single-review .lunara-review-single-debrief .lunara-debrief-list--signature li {
+            padding: 12px 13px !important;
+        }
+    }
     </style>
     <?php
 }
@@ -3871,6 +3926,7 @@ function lunara_output_review_pair_it_with_polish_css() {
 
     body.single-review .lunara-review-single-debrief--pairings .lunara-debrief-list--pairings {
         display: grid !important;
+        align-items: start !important;
         grid-template-columns: repeat(auto-fit, minmax(min(100%, 252px), 1fr)) !important;
         gap: clamp(12px, 1.7vw, 16px) !important;
         margin: 0 !important;
@@ -3882,7 +3938,8 @@ function lunara_output_review_pair_it_with_polish_css() {
         align-content: start !important;
         gap: 12px !important;
         min-width: 0 !important;
-        min-height: 100% !important;
+        min-height: 0 !important;
+        height: auto !important;
         padding: clamp(13px, 1.5vw, 16px) !important;
         border: 1px solid rgba(224, 196, 129, 0.2) !important;
         border-radius: 14px !important;
@@ -4439,6 +4496,57 @@ function lunara_output_review_related_retention_css() {
     <?php
 }
 add_action( 'wp_head', 'lunara_output_review_related_retention_css', 1006 );
+
+/**
+ * Single Review full-scroll rhythm guardrails.
+ */
+function lunara_output_review_full_scroll_rhythm_css() {
+    if ( is_admin() || is_feed() || ! is_singular( 'review' ) ) {
+        return;
+    }
+    ?>
+    <style id="lunara-review-full-scroll-rhythm-css">
+    @media (max-width: 520px) {
+        body.single-review .lunara-review-single-debrief-wrap.has-signature-media {
+            grid-template-columns: minmax(0, 1fr) !important;
+            align-items: start !important;
+            gap: 16px !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-media,
+        body.single-review .lunara-review-single-debrief-wrap.has-signature-media > .lunara-review-single-debrief {
+            grid-column: 1 / -1 !important;
+            grid-row: auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-media {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            justify-items: center !important;
+            text-align: center !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-poster-shell {
+            width: min(68vw, 188px) !important;
+            max-width: 188px !important;
+            min-width: 0 !important;
+            margin-inline: auto !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-media-copy {
+            width: 100% !important;
+            max-width: 28ch !important;
+            margin-inline: auto !important;
+            text-align: center !important;
+        }
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_output_review_full_scroll_rhythm_css', 1007 );
 
 /**
  * Compact Oscars portal guardrails.
