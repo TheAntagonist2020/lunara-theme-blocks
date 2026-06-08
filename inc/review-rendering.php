@@ -2183,6 +2183,148 @@ if ( ! function_exists( 'lunara_get_review_imdb_title_id' ) ) {
 }
 
 /**
+ * Find Review categories intended for full spoiler-review companions.
+ */
+if ( ! function_exists( 'lunara_get_spoiler_review_category_ids' ) ) {
+    function lunara_get_spoiler_review_category_ids() {
+        $terms = get_terms(
+            array(
+                'taxonomy'   => 'category',
+                'hide_empty' => false,
+                'fields'     => 'all',
+            )
+        );
+
+        if ( is_wp_error( $terms ) || empty( $terms ) ) {
+            return array();
+        }
+
+        $ids = array();
+        foreach ( $terms as $term ) {
+            if ( ! $term instanceof WP_Term ) {
+                continue;
+            }
+
+            $haystack = strtolower( $term->slug . ' ' . $term->name );
+            if ( false !== strpos( $haystack, 'spoiler' ) ) {
+                $ids[] = (int) $term->term_id;
+            }
+        }
+
+        return array_values( array_unique( array_filter( $ids ) ) );
+    }
+}
+
+/**
+ * Resolve the full spoiler review link for a spoiler-free Review.
+ */
+if ( ! function_exists( 'lunara_get_linked_spoiler_review' ) ) {
+    function lunara_get_linked_spoiler_review( $post_id ) {
+        $post_id = intval( $post_id );
+        if ( $post_id <= 0 ) {
+            return array();
+        }
+
+        $manual_url   = trim( (string) get_post_meta( $post_id, '_lunara_spoiler_review_url', true ) );
+        $manual_label = trim( (string) get_post_meta( $post_id, '_lunara_spoiler_review_label', true ) );
+
+        if ( '' !== $manual_url ) {
+            return array(
+                'url'     => esc_url_raw( $manual_url ),
+                'label'   => '' !== $manual_label ? $manual_label : __( 'Read the full spoiler review', 'lunara-film' ),
+                'title'   => '',
+                'source'  => 'manual',
+                'post_id' => 0,
+            );
+        }
+
+        $review_tt = function_exists( 'lunara_get_review_imdb_title_id' ) ? lunara_get_review_imdb_title_id( $post_id ) : '';
+        if ( '' === $review_tt ) {
+            return array();
+        }
+
+        $spoiler_category_ids = lunara_get_spoiler_review_category_ids();
+        if ( empty( $spoiler_category_ids ) ) {
+            return array();
+        }
+
+        $candidate_ids = get_posts(
+            array(
+                'post_type'              => 'review',
+                'post_status'            => 'publish',
+                'posts_per_page'         => 12,
+                'post__not_in'           => array( $post_id ),
+                'category__in'           => $spoiler_category_ids,
+                'fields'                 => 'ids',
+                'orderby'                => 'date',
+                'order'                  => 'DESC',
+                'ignore_sticky_posts'    => true,
+                'no_found_rows'          => true,
+                'update_post_meta_cache' => false,
+                'update_post_term_cache' => false,
+            )
+        );
+
+        foreach ( array_map( 'intval', is_array( $candidate_ids ) ? $candidate_ids : array() ) as $candidate_id ) {
+            if ( $candidate_id <= 0 || $candidate_id === $post_id ) {
+                continue;
+            }
+
+            if ( $review_tt !== lunara_get_review_imdb_title_id( $candidate_id ) ) {
+                continue;
+            }
+
+            return array(
+                'url'     => get_permalink( $candidate_id ),
+                'label'   => '' !== $manual_label ? $manual_label : __( 'Read the full spoiler review', 'lunara-film' ),
+                'title'   => get_the_title( $candidate_id ),
+                'source'  => 'auto',
+                'post_id' => $candidate_id,
+            );
+        }
+
+        return array();
+    }
+}
+
+/**
+ * Render a compact retention bridge from a spoiler-free Review to its full spoiler companion.
+ */
+if ( ! function_exists( 'lunara_render_spoiler_review_bridge' ) ) {
+    function lunara_render_spoiler_review_bridge( $post_id ) {
+        $link = lunara_get_linked_spoiler_review( $post_id );
+        if ( empty( $link['url'] ) ) {
+            return '';
+        }
+
+        $title_line = '';
+        if ( ! empty( $link['title'] ) ) {
+            $title_line = sprintf(
+                '<p class="lunara-spoiler-review-bridge-source">%s</p>',
+                esc_html( sprintf( __( 'Companion file: %s', 'lunara-film' ), $link['title'] ) )
+            );
+        }
+
+        ob_start();
+        ?>
+        <aside class="lunara-spoiler-review-bridge" aria-label="<?php esc_attr_e( 'Full spoiler review', 'lunara-film' ); ?>">
+            <div class="lunara-spoiler-review-bridge-copy">
+                <p class="lunara-spoiler-review-bridge-kicker"><?php esc_html_e( 'Spoiler File', 'lunara-film' ); ?></p>
+                <h2 class="lunara-spoiler-review-bridge-title"><?php esc_html_e( 'Ready for the full breakdown?', 'lunara-film' ); ?></h2>
+                <p class="lunara-spoiler-review-bridge-text"><?php esc_html_e( 'For readers who have seen the film, continue into the ending, reversals, and full argument without pulling the spoiler-free review out of shape.', 'lunara-film' ); ?></p>
+                <?php echo $title_line; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            </div>
+            <a class="lunara-spoiler-review-bridge-link" href="<?php echo esc_url( $link['url'] ); ?>">
+                <?php echo esc_html( ! empty( $link['label'] ) ? $link['label'] : __( 'Read the full spoiler review', 'lunara-film' ) ); ?>
+            </a>
+        </aside>
+        <?php
+
+        return trim( ob_get_clean() );
+    }
+}
+
+/**
  * Query related reviews using director/year affinity first, then recent fallback.
  */
 if ( ! function_exists( 'lunara_get_related_review_posts' ) ) {

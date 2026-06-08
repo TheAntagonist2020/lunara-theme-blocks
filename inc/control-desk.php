@@ -418,7 +418,7 @@ function lunara_control_desk_get_source_control_status() {
         ),
         array(
             'label' => __( 'Core repo', 'lunara-film' ),
-            'value' => 'main @ b5b0114',
+            'value' => 'main @ d88777b',
             'state' => 'ready',
             'note'  => 'github.com/TheAntagonist2020/lunara-plugin-core',
         ),

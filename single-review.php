@@ -226,6 +226,9 @@ if ( have_posts() ) :
                                 $review_content_html = lunara_insert_trailer_into_content_html( $review_content_html, $post_id );
                             }
                             echo $review_content_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                            if ( function_exists( 'lunara_render_spoiler_review_bridge' ) ) {
+                                echo lunara_render_spoiler_review_bridge( $post_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                            }
                             ?>
                         </div>
 
