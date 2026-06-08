@@ -1671,7 +1671,8 @@ if ( ! function_exists( 'lunara_get_review_debrief_signature_media_html' ) ) {
                 $title_id,
                 'large',
                 'lunara-review-single-debrief-poster',
-                get_the_title( $post_id )
+                get_the_title( $post_id ),
+                'eager'
             );
         }
 
@@ -1679,7 +1680,7 @@ if ( ! function_exists( 'lunara_get_review_debrief_signature_media_html' ) ) {
             $poster_source  = (string) get_the_post_thumbnail_url( $post_id, 'full' );
             $poster_attrs   = array(
                 'class'    => 'lunara-review-single-debrief-poster',
-                'loading'  => 'lazy',
+                'loading'  => 'eager',
                 'decoding' => 'async',
                 'width'    => isset( $poster_profile['width'] ) ? absint( $poster_profile['width'] ) : 1000,
                 'height'   => isset( $poster_profile['height'] ) ? absint( $poster_profile['height'] ) : 1500,

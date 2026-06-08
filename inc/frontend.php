@@ -4506,6 +4506,55 @@ function lunara_output_review_full_scroll_rhythm_css() {
     }
     ?>
     <style id="lunara-review-full-scroll-rhythm-css">
+    body.single-review .lunara-review-single-debrief-wrap.has-signature-media {
+        grid-template-columns: minmax(240px, 340px) minmax(0, 1fr) !important;
+    }
+
+    body.single-review .lunara-review-single-debrief-media {
+        align-content: center !important;
+        justify-items: center !important;
+        text-align: center !important;
+    }
+
+    body.single-review .lunara-review-single-debrief-poster-shell {
+        position: relative !important;
+        width: min(100%, 320px) !important;
+        max-width: 320px !important;
+        margin-inline: auto !important;
+        border-color: rgba(244, 210, 126, 0.34) !important;
+        background:
+            radial-gradient(circle at 50% 18%, rgba(244, 210, 126, 0.13), transparent 45%),
+            rgba(255, 255, 255, 0.05) !important;
+        box-shadow:
+            0 28px 56px rgba(0, 0, 0, 0.42),
+            0 0 0 1px rgba(255, 255, 255, 0.045) inset !important;
+    }
+
+    body.single-review .lunara-review-single-debrief-poster {
+        filter: brightness(1.06) contrast(1.08) saturate(1.08) !important;
+        object-position: center center !important;
+    }
+
+    body.single-review .lunara-review-single-debrief-media-copy {
+        width: 100% !important;
+        max-width: 30ch !important;
+        margin-inline: auto !important;
+        text-align: center !important;
+    }
+
+    @media (min-width: 1040px) {
+        body.single-review .lunara-review-single-debrief-wrap.has-signature-media {
+            grid-template-columns: minmax(260px, 360px) minmax(0, 1fr) !important;
+        }
+    }
+
+    @media (min-width: 521px) and (max-width: 900px) {
+        body.single-review .lunara-review-single-debrief-poster-shell {
+            width: min(42vw, 240px) !important;
+            max-width: 240px !important;
+        }
+    }
+
     @media (max-width: 520px) {
         body.single-review .lunara-review-single-debrief-wrap.has-signature-media {
             grid-template-columns: minmax(0, 1fr) !important;
@@ -4530,8 +4579,8 @@ function lunara_output_review_full_scroll_rhythm_css() {
         }
 
         body.single-review .lunara-review-single-debrief-poster-shell {
-            width: min(68vw, 188px) !important;
-            max-width: 188px !important;
+            width: min(72vw, 210px) !important;
+            max-width: 210px !important;
             min-width: 0 !important;
             margin-inline: auto !important;
         }
