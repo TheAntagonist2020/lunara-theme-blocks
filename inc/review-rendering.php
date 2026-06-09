@@ -2217,12 +2217,30 @@ if ( ! function_exists( 'lunara_get_spoiler_review_category_ids' ) ) {
 }
 
 /**
+ * Determine whether a Review is explicitly marked as a full spoiler companion.
+ */
+if ( ! function_exists( 'lunara_is_full_spoiler_review' ) ) {
+    function lunara_is_full_spoiler_review( $post_id ) {
+        $post_id = intval( $post_id );
+        if ( $post_id <= 0 ) {
+            return false;
+        }
+
+        return 'full_spoiler' === get_post_meta( $post_id, '_lunara_review_spoiler_mode', true );
+    }
+}
+
+/**
  * Resolve the full spoiler review link for a spoiler-free Review.
  */
 if ( ! function_exists( 'lunara_get_linked_spoiler_review' ) ) {
     function lunara_get_linked_spoiler_review( $post_id ) {
         $post_id = intval( $post_id );
         if ( $post_id <= 0 ) {
+            return array();
+        }
+
+        if ( function_exists( 'lunara_is_full_spoiler_review' ) && lunara_is_full_spoiler_review( $post_id ) ) {
             return array();
         }
 
@@ -2244,18 +2262,12 @@ if ( ! function_exists( 'lunara_get_linked_spoiler_review' ) ) {
             return array();
         }
 
-        $spoiler_category_ids = lunara_get_spoiler_review_category_ids();
-        if ( empty( $spoiler_category_ids ) ) {
-            return array();
-        }
-
         $candidate_ids = get_posts(
             array(
                 'post_type'              => 'review',
                 'post_status'            => 'publish',
-                'posts_per_page'         => 12,
+                'posts_per_page'         => 6,
                 'post__not_in'           => array( $post_id ),
-                'category__in'           => $spoiler_category_ids,
                 'fields'                 => 'ids',
                 'orderby'                => 'date',
                 'order'                  => 'DESC',
@@ -2263,8 +2275,40 @@ if ( ! function_exists( 'lunara_get_linked_spoiler_review' ) ) {
                 'no_found_rows'          => true,
                 'update_post_meta_cache' => false,
                 'update_post_term_cache' => false,
+                'meta_query'             => array(
+                    array(
+                        'key'     => '_lunara_imdb_title_id',
+                        'value'   => $review_tt,
+                        'compare' => '=',
+                    ),
+                    array(
+                        'key'     => '_lunara_review_spoiler_mode',
+                        'value'   => 'full_spoiler',
+                        'compare' => '=',
+                    ),
+                ),
             )
         );
+
+        $spoiler_category_ids = lunara_get_spoiler_review_category_ids();
+        if ( empty( $candidate_ids ) && ! empty( $spoiler_category_ids ) ) {
+            $candidate_ids = get_posts(
+                array(
+                    'post_type'              => 'review',
+                    'post_status'            => 'publish',
+                    'posts_per_page'         => 12,
+                    'post__not_in'           => array( $post_id ),
+                    'category__in'           => $spoiler_category_ids,
+                    'fields'                 => 'ids',
+                    'orderby'                => 'date',
+                    'order'                  => 'DESC',
+                    'ignore_sticky_posts'    => true,
+                    'no_found_rows'          => true,
+                    'update_post_meta_cache' => false,
+                    'update_post_term_cache' => false,
+                )
+            );
+        }
 
         foreach ( array_map( 'intval', is_array( $candidate_ids ) ? $candidate_ids : array() ) as $candidate_id ) {
             if ( $candidate_id <= 0 || $candidate_id === $post_id ) {
@@ -2285,6 +2329,96 @@ if ( ! function_exists( 'lunara_get_linked_spoiler_review' ) ) {
         }
 
         return array();
+    }
+}
+
+/**
+ * Render the top-of-review spoiler warning for full spoiler companion files.
+ */
+if ( ! function_exists( 'lunara_render_full_spoiler_review_warning' ) ) {
+    function lunara_render_full_spoiler_review_warning( $post_id ) {
+        if ( ! function_exists( 'lunara_is_full_spoiler_review' ) || ! lunara_is_full_spoiler_review( $post_id ) ) {
+            return '';
+        }
+
+        $review_tt      = function_exists( 'lunara_get_review_imdb_title_id' ) ? lunara_get_review_imdb_title_id( $post_id ) : '';
+        $related_link   = '';
+        $spoiler_free   = null;
+        $candidate_args = array(
+            'post_type'              => 'review',
+            'post_status'            => 'publish',
+            'posts_per_page'         => 8,
+            'post__not_in'           => array( intval( $post_id ) ),
+            'fields'                 => 'ids',
+            'orderby'                => 'date',
+            'order'                  => 'DESC',
+            'ignore_sticky_posts'    => true,
+            'no_found_rows'          => true,
+            'update_post_meta_cache' => false,
+            'update_post_term_cache' => false,
+            'meta_query'             => array(
+                array(
+                    'key'     => '_lunara_review_spoiler_mode',
+                    'value'   => 'full_spoiler',
+                    'compare' => '!=',
+                ),
+            ),
+        );
+
+        if ( '' !== $review_tt ) {
+            $candidate_args['meta_query'] = array(
+                'relation' => 'AND',
+                array(
+                    'key'     => '_lunara_imdb_title_id',
+                    'value'   => $review_tt,
+                    'compare' => '=',
+                ),
+                array(
+                    'relation' => 'OR',
+                    array(
+                        'key'     => '_lunara_review_spoiler_mode',
+                        'value'   => 'full_spoiler',
+                        'compare' => '!=',
+                    ),
+                    array(
+                        'key'     => '_lunara_review_spoiler_mode',
+                        'compare' => 'NOT EXISTS',
+                    ),
+                ),
+            );
+        }
+
+        $candidate_ids = get_posts( $candidate_args );
+        foreach ( array_map( 'intval', is_array( $candidate_ids ) ? $candidate_ids : array() ) as $candidate_id ) {
+            if ( $candidate_id <= 0 || ( function_exists( 'lunara_is_full_spoiler_review' ) && lunara_is_full_spoiler_review( $candidate_id ) ) ) {
+                continue;
+            }
+
+            $spoiler_free = $candidate_id;
+            break;
+        }
+
+        if ( $spoiler_free ) {
+            $related_link = sprintf(
+                '<a class="lunara-full-spoiler-warning-link" href="%s">%s</a>',
+                esc_url( get_permalink( $spoiler_free ) ),
+                esc_html__( 'Read the spoiler-free review instead', 'lunara-film' )
+            );
+        }
+
+        ob_start();
+        ?>
+        <aside class="lunara-full-spoiler-warning" role="note" aria-label="<?php esc_attr_e( 'Full spoiler warning', 'lunara-film' ); ?>">
+            <div class="lunara-full-spoiler-warning-copy">
+                <p class="lunara-full-spoiler-warning-kicker"><?php esc_html_e( 'Full Spoiler Review', 'lunara-film' ); ?></p>
+                <h2 class="lunara-full-spoiler-warning-title"><?php esc_html_e( 'This file discusses the ending openly.', 'lunara-film' ); ?></h2>
+                <p class="lunara-full-spoiler-warning-text"><?php esc_html_e( 'Proceed only if you are ready for plot revelations, final images, deaths, reversals, and the complete critical argument.', 'lunara-film' ); ?></p>
+            </div>
+            <?php echo $related_link; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+        </aside>
+        <?php
+
+        return trim( ob_get_clean() );
     }
 }
 
@@ -2489,6 +2623,7 @@ function lunara_render_review_grid_card( $post_id, $card_index = null ) {
     $score        = get_post_meta( $post_id, '_lunara_score', true );
     $quote        = lunara_get_review_card_pull_quote( $post_id, 26 );
     $updated      = lunara_get_review_card_modified_label( $post_id );
+    $is_spoiler   = function_exists( 'lunara_is_full_spoiler_review' ) && lunara_is_full_spoiler_review( $post_id );
     $review_tt    = function_exists( 'lunara_get_review_imdb_title_id' ) ? lunara_get_review_imdb_title_id( $post_id ) : '';
     $thumb_attrs  = array(
         'class'    => 'lunara-review-grid-poster',
@@ -2513,7 +2648,7 @@ function lunara_render_review_grid_card( $post_id, $card_index = null ) {
 
     ob_start();
     ?>
-    <article class="lunara-review-grid-card lunara-review-archive-card">
+    <article class="lunara-review-grid-card lunara-review-archive-card<?php echo $is_spoiler ? ' is-full-spoiler-review' : ''; ?>">
         <a class="lunara-review-grid-link" href="<?php echo esc_url( get_permalink( $post_id ) ); ?>">
             <div class="lunara-review-grid-poster-wrap<?php echo $use_fallback_bg ? ' has-poster-bg has-fallback-bg' : ''; ?>"<?php if ( $use_fallback_bg ) : ?> style="background-image: url('<?php echo esc_url( $thumb_url ); ?>');"<?php endif; ?>>
                 <?php if ( $has_thumb_html ) : ?>
@@ -2526,7 +2661,7 @@ function lunara_render_review_grid_card( $post_id, $card_index = null ) {
                 <?php endif; ?>
             </div>
             <div class="lunara-review-grid-copy">
-                <p class="lunara-review-grid-kicker"><?php esc_html_e( 'Lunara Review', 'lunara-film' ); ?></p>
+                <p class="lunara-review-grid-kicker"><?php echo esc_html( $is_spoiler ? __( 'Full Spoiler Review', 'lunara-film' ) : __( 'Lunara Review', 'lunara-film' ) ); ?></p>
                 <?php if ( function_exists( 'lunara_render_trailer_card_badge' ) ) : ?>
                     <?php echo lunara_render_trailer_card_badge( $post_id, 'review-card' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 <?php endif; ?>

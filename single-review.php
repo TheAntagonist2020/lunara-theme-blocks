@@ -37,6 +37,7 @@ if ( have_posts() ) :
         $runtime          = trim( (string) get_post_meta( $post_id, '_lunara_runtime', true ) );
         $studio           = trim( (string) get_post_meta( $post_id, '_lunara_studio', true ) );
         $where            = trim( (string) get_post_meta( $post_id, '_lunara_where', true ) );
+        $is_full_spoiler  = function_exists( 'lunara_is_full_spoiler_review' ) && lunara_is_full_spoiler_review( $post_id );
         $review_meta_line = lunara_get_review_card_meta( $post_id );
         $review_label     = trim( (string) get_post_meta( $post_id, '_lunara_review_lane_label_override', true ) );
         $standfirst       = trim( (string) get_post_meta( $post_id, '_lunara_review_standfirst', true ) );
@@ -177,12 +178,16 @@ if ( have_posts() ) :
         $show_where_card = $has_where && ! $hide_where_card && $show_where_default;
         $show_detail_card = ! empty( $detail_items ) && ! $hide_detail_card && $show_details_default;
         $show_ledger_card = '' !== $ledger_pill;
+        $display_label    = '' !== $review_label ? $review_label : $default_label;
+        if ( $is_full_spoiler && '' === $review_label ) {
+            $display_label = __( 'Full Spoiler Review', 'lunara-film' );
+        }
         ?>
-        <main id="primary" class="site-main lunara-archive-page lunara-review-single-page">
-            <article <?php post_class( 'lunara-journal-single lunara-review-single' ); ?>>
+        <main id="primary" class="site-main lunara-archive-page lunara-review-single-page<?php echo $is_full_spoiler ? ' lunara-review-single-page--full-spoiler' : ''; ?>">
+            <article <?php post_class( 'lunara-journal-single lunara-review-single' . ( $is_full_spoiler ? ' lunara-review-single--full-spoiler' : '' ) ); ?>>
                 <section class="lunara-review-single-hero">
                     <div class="lunara-review-single-hero-inner">
-                        <p class="lunara-archive-hero-kicker"><?php echo esc_html( '' !== $review_label ? $review_label : $default_label ); ?></p>
+                        <p class="lunara-archive-hero-kicker"><?php echo esc_html( $display_label ); ?></p>
                         <h1 class="lunara-review-single-title"><?php the_title(); ?></h1>
 
                         <?php if ( '' !== trim( $excerpt ) ) : ?>
@@ -210,6 +215,10 @@ if ( have_posts() ) :
                                 </div>
                             <?php endif; ?>
                             <?php
+                            if ( function_exists( 'lunara_render_full_spoiler_review_warning' ) ) {
+                                echo lunara_render_full_spoiler_review_warning( $post_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                            }
+
                             $review_raw_content = get_the_content();
 
                             if (
