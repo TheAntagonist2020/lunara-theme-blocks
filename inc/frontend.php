@@ -4249,6 +4249,207 @@ function lunara_output_review_spoiler_bridge_css() {
 add_action( 'wp_head', 'lunara_output_review_spoiler_bridge_css', 1006 );
 
 /**
+ * Single Review owned share strip.
+ */
+function lunara_output_review_share_strip_css() {
+    if ( is_admin() || is_feed() || ! is_singular( 'review' ) ) {
+        return;
+    }
+    ?>
+    <style id="lunara-review-share-strip-css">
+    body.single-review .lunara-review-share-strip {
+        box-sizing: border-box !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: clamp(14px, 2vw, 22px) !important;
+        max-width: min(100%, 72ch) !important;
+        margin: clamp(28px, 4vw, 46px) auto clamp(8px, 2vw, 16px) !important;
+        padding: clamp(14px, 2vw, 20px) !important;
+        border: 1px solid rgba(224, 196, 129, 0.24) !important;
+        border-radius: 14px !important;
+        background:
+            linear-gradient(90deg, rgba(224, 196, 129, 0.1), transparent 38%),
+            rgba(9, 22, 36, 0.92) !important;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.04),
+            0 16px 34px rgba(0, 0, 0, 0.16) !important;
+    }
+
+    body.single-review .lunara-review-share-strip-copy {
+        display: grid !important;
+        gap: 6px !important;
+        min-width: 0 !important;
+    }
+
+    body.single-review .lunara-review-share-strip-kicker,
+    body.single-review .lunara-review-share-strip-title,
+    body.single-review .lunara-review-share-status {
+        margin: 0 !important;
+    }
+
+    body.single-review .lunara-review-share-strip-kicker {
+        color: rgba(224, 196, 129, 0.88) !important;
+        font-size: 0.68rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.16em !important;
+        line-height: 1 !important;
+        text-transform: uppercase !important;
+    }
+
+    body.single-review .lunara-review-share-strip-title {
+        color: rgba(248, 244, 234, 0.96) !important;
+        font-family: var(--lunara-heading-font, inherit) !important;
+        font-size: clamp(1.04rem, 1.35vw, 1.18rem) !important;
+        font-weight: 800 !important;
+        line-height: 1.15 !important;
+        text-wrap: pretty !important;
+    }
+
+    body.single-review .lunara-review-share-strip-actions {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+    }
+
+    body.single-review .lunara-review-share-link {
+        appearance: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 34px !important;
+        max-width: 100% !important;
+        padding: 8px 11px !important;
+        border: 1px solid rgba(224, 196, 129, 0.3) !important;
+        border-radius: 999px !important;
+        background: rgba(224, 196, 129, 0.075) !important;
+        color: rgba(244, 216, 143, 0.98) !important;
+        cursor: pointer !important;
+        font-family: var(--lunara-body-font, inherit) !important;
+        font-size: 0.68rem !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.09em !important;
+        line-height: 1 !important;
+        text-align: center !important;
+        text-decoration: none !important;
+        text-transform: uppercase !important;
+        white-space: normal !important;
+    }
+
+    body.single-review .lunara-review-share-link:hover,
+    body.single-review .lunara-review-share-link:focus-visible {
+        border-color: rgba(244, 216, 143, 0.85) !important;
+        background: rgba(224, 196, 129, 0.16) !important;
+        color: #fff6dc !important;
+    }
+
+    body.single-review .lunara-review-share-copy.is-copied {
+        border-color: rgba(160, 210, 172, 0.8) !important;
+        color: rgba(198, 238, 206, 0.98) !important;
+    }
+
+    body.single-review .lunara-review-share-status {
+        grid-column: 1 / -1 !important;
+        min-height: 1em !important;
+        color: rgba(244, 239, 227, 0.66) !important;
+        font-size: 0.72rem !important;
+        line-height: 1.2 !important;
+    }
+
+    body.single-review .sharedaddy.sd-sharing-enabled {
+        display: none !important;
+    }
+
+    @media (max-width: 760px) {
+        body.single-review .lunara-review-share-strip {
+            grid-template-columns: minmax(0, 1fr) !important;
+            align-items: stretch !important;
+            padding: 14px !important;
+            border-radius: 12px !important;
+        }
+
+        body.single-review .lunara-review-share-strip-actions {
+            justify-content: flex-start !important;
+        }
+
+        body.single-review .lunara-review-share-link {
+            flex: 1 1 calc(50% - 8px) !important;
+            min-width: 118px !important;
+        }
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_output_review_share_strip_css', 1007 );
+
+/**
+ * Single Review owned share strip behavior.
+ */
+function lunara_output_review_share_strip_script() {
+    if ( is_admin() || is_feed() || ! is_singular( 'review' ) ) {
+        return;
+    }
+    ?>
+    <script id="lunara-review-share-strip-js">
+    (function() {
+        var buttons = document.querySelectorAll('[data-lunara-copy-share]');
+        if (!buttons.length) {
+            return;
+        }
+
+        buttons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                var url = button.getAttribute('data-share-url') || window.location.href;
+                var strip = button.closest('.lunara-review-share-strip');
+                var status = strip ? strip.querySelector('.lunara-review-share-status') : null;
+                var setStatus = function(message) {
+                    if (status) {
+                        status.textContent = message;
+                    }
+                };
+                var markCopied = function() {
+                    button.classList.add('is-copied');
+                    button.textContent = 'Copied';
+                    setStatus('Link copied.');
+                    window.setTimeout(function() {
+                        button.classList.remove('is-copied');
+                        button.textContent = 'Copy Link';
+                        setStatus('');
+                    }, 1800);
+                };
+                var fallbackCopy = function() {
+                    var input = document.createElement('textarea');
+                    input.value = url;
+                    input.setAttribute('readonly', 'readonly');
+                    input.style.position = 'fixed';
+                    input.style.left = '-9999px';
+                    document.body.appendChild(input);
+                    input.select();
+                    try {
+                        document.execCommand('copy');
+                        markCopied();
+                    } catch (error) {
+                        setStatus('Copy failed.');
+                    }
+                    document.body.removeChild(input);
+                };
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).then(markCopied).catch(fallbackCopy);
+                } else {
+                    fallbackCopy();
+                }
+            });
+        });
+    }());
+    </script>
+    <?php
+}
+add_action( 'wp_footer', 'lunara_output_review_share_strip_script', 100 );
+
+/**
  * Single Review lower retention shelf polish.
  */
 function lunara_output_review_related_retention_css() {

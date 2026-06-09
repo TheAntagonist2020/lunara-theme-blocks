@@ -229,6 +229,9 @@ if ( have_posts() ) :
                             if ( function_exists( 'lunara_render_spoiler_review_bridge' ) ) {
                                 echo lunara_render_spoiler_review_bridge( $post_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                             }
+                            if ( function_exists( 'lunara_render_review_share_strip' ) ) {
+                                echo lunara_render_review_share_strip( $post_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                            }
                             ?>
                         </div>
 

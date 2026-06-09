@@ -2326,6 +2326,71 @@ if ( ! function_exists( 'lunara_render_spoiler_review_bridge' ) ) {
 }
 
 /**
+ * Render Lunara-owned share controls for single Reviews.
+ */
+if ( ! function_exists( 'lunara_render_review_share_strip' ) ) {
+    function lunara_render_review_share_strip( $post_id ) {
+        $post_id = intval( $post_id );
+        if ( $post_id <= 0 ) {
+            return '';
+        }
+
+        $url   = get_permalink( $post_id );
+        $title = trim( html_entity_decode( wp_strip_all_tags( get_the_title( $post_id ) ), ENT_QUOTES, get_bloginfo( 'charset' ) ) );
+        if ( empty( $url ) || '' === $title ) {
+            return '';
+        }
+
+        $share_text      = sprintf( __( '%s - Lunara Film', 'lunara-film' ), $title );
+        $share_text_url  = rawurlencode( $share_text );
+        $share_url       = rawurlencode( $url );
+        $share_body      = rawurlencode( $share_text . "\n\n" . $url );
+        $share_bluesky   = rawurlencode( $share_text . ' ' . $url );
+        $share_platforms = array(
+            array(
+                'label' => __( 'X', 'lunara-film' ),
+                'url'   => 'https://twitter.com/intent/tweet?text=' . $share_text_url . '&url=' . $share_url,
+            ),
+            array(
+                'label' => __( 'Bluesky', 'lunara-film' ),
+                'url'   => 'https://bsky.app/intent/compose?text=' . $share_bluesky,
+            ),
+            array(
+                'label' => __( 'Facebook', 'lunara-film' ),
+                'url'   => 'https://www.facebook.com/sharer/sharer.php?u=' . $share_url,
+            ),
+            array(
+                'label' => __( 'Email', 'lunara-film' ),
+                'url'   => 'mailto:?subject=' . $share_text_url . '&body=' . $share_body,
+            ),
+        );
+
+        ob_start();
+        ?>
+        <aside class="lunara-review-share-strip" aria-label="<?php esc_attr_e( 'Share this review', 'lunara-film' ); ?>">
+            <div class="lunara-review-share-strip-copy">
+                <p class="lunara-review-share-strip-kicker"><?php esc_html_e( 'Share File', 'lunara-film' ); ?></p>
+                <p class="lunara-review-share-strip-title"><?php esc_html_e( 'Put this review in circulation', 'lunara-film' ); ?></p>
+            </div>
+            <div class="lunara-review-share-strip-actions">
+                <button class="lunara-review-share-link lunara-review-share-copy" type="button" data-lunara-copy-share data-share-url="<?php echo esc_url( $url ); ?>">
+                    <?php esc_html_e( 'Copy Link', 'lunara-film' ); ?>
+                </button>
+                <?php foreach ( $share_platforms as $platform ) : ?>
+                    <a class="lunara-review-share-link" href="<?php echo esc_url( $platform['url'] ); ?>" target="_blank" rel="noopener noreferrer nofollow">
+                        <?php echo esc_html( $platform['label'] ); ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+            <p class="lunara-review-share-status" role="status" aria-live="polite"></p>
+        </aside>
+        <?php
+
+        return trim( ob_get_clean() );
+    }
+}
+
+/**
  * Query related reviews using director/year affinity first, then recent fallback.
  */
 if ( ! function_exists( 'lunara_get_related_review_posts' ) ) {
