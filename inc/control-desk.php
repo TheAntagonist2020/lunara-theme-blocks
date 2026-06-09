@@ -515,7 +515,7 @@ function lunara_control_desk_get_source_control_status() {
         ),
         array(
             'label' => __( 'Dispatch repo', 'lunara-film' ),
-            'value' => 'main @ 1555af2',
+            'value' => 'main @ 2c2dbc7',
             'state' => 'ready',
             'note'  => 'github.com/TheAntagonist2020/lunara-plugin-dispatch',
         ),
