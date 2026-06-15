@@ -141,13 +141,67 @@ function lunara_theme_asset_version( $path ) {
 }
 
 /**
+ * Repair common UTF-8 mojibake sequences in stored editorial labels.
+ */
+if ( ! function_exists( 'lunara_repair_mojibake_text' ) ) {
+    function lunara_repair_mojibake_text( $value ) {
+        $value = (string) $value;
+
+        if ( '' === $value ) {
+            return $value;
+        }
+
+        $entities = array(
+            'mdash'  => html_entity_decode( '&mdash;', ENT_QUOTES, 'UTF-8' ),
+            'ndash'  => html_entity_decode( '&ndash;', ENT_QUOTES, 'UTF-8' ),
+            'lsquo'  => html_entity_decode( '&lsquo;', ENT_QUOTES, 'UTF-8' ),
+            'rsquo'  => html_entity_decode( '&rsquo;', ENT_QUOTES, 'UTF-8' ),
+            'ldquo'  => html_entity_decode( '&ldquo;', ENT_QUOTES, 'UTF-8' ),
+            'rdquo'  => html_entity_decode( '&rdquo;', ENT_QUOTES, 'UTF-8' ),
+            'hellip' => html_entity_decode( '&hellip;', ENT_QUOTES, 'UTF-8' ),
+        );
+
+        return strtr(
+            $value,
+            array(
+                "\xC3\xA2\xE2\x82\xAC\xE2\x80\x9D" => $entities['mdash'],
+                "\xC3\xA2\xE2\x82\xAC\xE2\x80\x9C" => $entities['ndash'],
+                "\xC3\xA2\xE2\x82\xAC\xCB\x9C"     => $entities['lsquo'],
+                "\xC3\xA2\xE2\x82\xAC\xE2\x84\xA2" => $entities['rsquo'],
+                "\xC3\xA2\xE2\x82\xAC\xC5\x93"     => $entities['ldquo'],
+                "\xC3\xA2\xE2\x82\xAC\xC2\x9D"     => $entities['rdquo'],
+                "\xC3\xA2\xE2\x82\xAC\xC2\xA6"     => $entities['hellip'],
+                "\xC3\x82 "                         => ' ',
+                "\xC3\x83\xC2\xA2\xC3\xA2\xE2\x80\x9A\xC2\xAC\xC3\xA2\xE2\x82\xAC\xC2\x9D" => $entities['mdash'],
+                "\xC3\x83\xC2\xA2\xC3\xA2\xE2\x80\x9A\xC2\xAC\xC3\x82\xC2\xA6"             => $entities['hellip'],
+            )
+        );
+    }
+}
+
+/**
+ * Repair common mojibake sequences in selected string arguments.
+ */
+if ( ! function_exists( 'lunara_repair_mojibake_args' ) ) {
+    function lunara_repair_mojibake_args( $args, $keys ) {
+        foreach ( (array) $keys as $key ) {
+            if ( isset( $args[ $key ] ) && is_string( $args[ $key ] ) ) {
+                $args[ $key ] = lunara_repair_mojibake_text( $args[ $key ] );
+            }
+        }
+
+        return $args;
+    }
+}
+
+/**
  * Return a non-empty theme mod string or a fallback.
  */
 if ( ! function_exists( 'lunara_theme_mod_text' ) ) {
     function lunara_theme_mod_text( $setting, $default = '' ) {
         $value = trim( (string) get_theme_mod( $setting, '' ) );
 
-        return $value !== '' ? $value : $default;
+        return $value !== '' ? lunara_repair_mojibake_text( $value ) : lunara_repair_mojibake_text( $default );
     }
 }
 
@@ -13041,7 +13095,7 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 			'cta_url'  => home_url( '/oscars/' ),
 			'count'    => 12,
 		);
-		$args  = wp_parse_args( $args, $defaults );
+		$args  = lunara_repair_mojibake_args( wp_parse_args( $args, $defaults ), array( 'kicker', 'heading', 'summary', 'cta_text' ) );
 		$query = lunara_get_oscar_picks( array( 'posts_per_page' => (int) $args['count'] ) );
 
 		if ( ! $query->have_posts() ) {
@@ -13386,7 +13440,7 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 			'cta_url'  => home_url( '/oscars/' ),
 			'count'    => 8,
 		);
-		$args  = wp_parse_args( $args, $defaults );
+		$args  = lunara_repair_mojibake_args( wp_parse_args( $args, $defaults ), array( 'kicker', 'heading', 'summary', 'cta_text' ) );
 		$query = lunara_get_oscar_facts( array( 'posts_per_page' => (int) $args['count'], 'orderby' => 'rand' ) );
 
 		if ( ! $query->have_posts() ) {
@@ -13417,7 +13471,8 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 					$cat_terms   = get_the_terms( $pid, 'oscar_fact_category' );
 					$category    = ( $cat_terms && ! is_wp_error( $cat_terms ) ) ? $cat_terms[0]->name : '';
 					$body        = wp_strip_all_tags( get_the_content() );
-					$body_short  = wp_trim_words( $body, 28, 'â€¦' );
+					$excerpt_more = html_entity_decode( '&hellip;', ENT_QUOTES, 'UTF-8' );
+					$body_short  = lunara_repair_mojibake_text( wp_trim_words( $body, 28, $excerpt_more ) );
 					$visual_ok   = '1' === (string) get_post_meta( $pid, '_lunara_fact_visual_verified', true );
 					$has_image   = $visual_ok && has_post_thumbnail( $pid );
 					$card_class  = 'lunara-oscar-fact-card' . ( $has_image ? ' has-poster' : '' );

@@ -1763,6 +1763,12 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
             $cta_url = home_url( '/reviews/' );
         }
 
+        if ( function_exists( 'lunara_repair_mojibake_text' ) ) {
+            $heading   = lunara_repair_mojibake_text( $heading );
+            $kicker    = lunara_repair_mojibake_text( $kicker );
+            $cta_label = lunara_repair_mojibake_text( $cta_label );
+        }
+
         if ( $has_current_release && function_exists( 'lunara_home_latest_reviews_query' ) ) {
             $latest = lunara_home_latest_reviews_query( $count );
             $source = 'current-release';
