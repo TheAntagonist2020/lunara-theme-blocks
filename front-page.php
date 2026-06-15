@@ -24,7 +24,15 @@ get_header();
 ?>
 
 <main id="primary" class="site-main lunara-front-page">
-	<h1 class="screen-reader-text lunara-screen-reader-text"><?php echo esc_html( get_bloginfo( 'name' ) ? get_bloginfo( 'name' ) : __( 'Lunara Film', 'lunara-film' ) ); ?></h1>
+	<?php
+	if ( function_exists( 'lunara_render_home_front_door' ) ) {
+		echo lunara_render_home_front_door(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	} else {
+		?>
+		<h1 class="screen-reader-text lunara-screen-reader-text"><?php echo esc_html( get_bloginfo( 'name' ) ? get_bloginfo( 'name' ) : __( 'Lunara Film', 'lunara-film' ) ); ?></h1>
+		<?php
+	}
+	?>
 	<?php
 	while ( have_posts() ) :
 		the_post();

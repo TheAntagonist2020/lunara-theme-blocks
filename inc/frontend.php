@@ -9,6 +9,99 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+function lunara_front_page_document_title( $title ) {
+    if ( is_front_page() ) {
+        return __( 'Lunara Film - Film Criticism and a Living Oscar Ledger', 'lunara-film' );
+    }
+
+    return $title;
+}
+add_filter( 'pre_get_document_title', 'lunara_front_page_document_title', 99 );
+
+function lunara_render_home_front_door() {
+    $reviews_url = get_post_type_archive_link( 'review' ) ?: home_url( '/reviews/' );
+    $journal_url = get_post_type_archive_link( 'journal' ) ?: home_url( '/journal/' );
+
+    $routes = array(
+        array(
+            'label' => __( 'Criticism', 'lunara-film' ),
+            'title' => __( 'Read Reviews', 'lunara-film' ),
+            'copy'  => __( 'Spoiler-free arguments, scores, trailers, Debrief notes, and full-spoiler files when the movie needs a second door.', 'lunara-film' ),
+            'url'   => $reviews_url,
+        ),
+        array(
+            'label' => __( 'Journal', 'lunara-film' ),
+            'title' => __( 'Open Journal', 'lunara-film' ),
+            'copy'  => __( 'Industry movement, trailers, quick reactions, and larger files from the desk without flattening everything into reviews.', 'lunara-film' ),
+            'url'   => $journal_url,
+        ),
+        array(
+            'label' => __( 'Oscar Ledger', 'lunara-film' ),
+            'title' => __( 'Explore Ledger', 'lunara-film' ),
+            'copy'  => __( 'Films, people, categories, and ceremonies connected across the record, then routed back into the criticism.', 'lunara-film' ),
+            'url'   => home_url( '/oscars/' ),
+        ),
+    );
+
+    ob_start();
+    ?>
+    <section class="lunara-home-masthead" aria-labelledby="lunara-home-masthead-title">
+        <div class="lunara-home-masthead-panel">
+            <div class="lunara-home-masthead-copy">
+                <p class="lunara-home-masthead-kicker"><?php esc_html_e( 'Independent film publication', 'lunara-film' ); ?></p>
+                <h1 id="lunara-home-masthead-title" class="lunara-home-masthead-title"><?php esc_html_e( 'Lunara Film', 'lunara-film' ); ?></h1>
+                <p class="lunara-home-masthead-dek"><?php esc_html_e( 'Long-form reviews, Journal files, and a living Oscar ledger, built so judgment and the record stay connected.', 'lunara-film' ); ?></p>
+                <p class="lunara-home-masthead-standard">
+                    <?php esc_html_e( 'Independently published.', 'lunara-film' ); ?>
+                    <a href="<?php echo esc_url( home_url( '/editorial-policy/' ) ); ?>"><?php esc_html_e( 'Read the editorial policy', 'lunara-film' ); ?></a>
+                </p>
+            </div>
+            <nav class="lunara-home-masthead-routes" aria-label="<?php esc_attr_e( 'Lunara front door', 'lunara-film' ); ?>">
+                <?php foreach ( $routes as $route ) : ?>
+                    <a class="lunara-home-masthead-route" href="<?php echo esc_url( $route['url'] ); ?>">
+                        <span class="lunara-home-masthead-route-label"><?php echo esc_html( $route['label'] ); ?></span>
+                        <strong><?php echo esc_html( $route['title'] ); ?></strong>
+                        <span><?php echo esc_html( $route['copy'] ); ?></span>
+                    </a>
+                <?php endforeach; ?>
+            </nav>
+        </div>
+    </section>
+    <?php
+
+    return (string) ob_get_clean();
+}
+
+function lunara_home_front_door_css() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+    ?>
+    <style id="lunara-home-front-door-css">
+    body.home .lunara-home-masthead{width:min(calc(100% - clamp(32px,7vw,104px)),1360px);margin:clamp(26px,4vw,54px) auto clamp(34px,5vw,68px);box-sizing:border-box;}
+    body.home .lunara-home-masthead-panel{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:clamp(22px,4vw,56px);align-items:stretch;overflow:hidden;padding:clamp(22px,4.2vw,54px);border:1px solid rgba(201,169,97,.22);border-radius:8px;background:radial-gradient(circle at 92% 4%,rgba(201,169,97,.14),transparent 28%),linear-gradient(135deg,rgba(15,29,46,.96),rgba(6,14,24,.98) 58%,rgba(24,37,54,.94));}
+    body.home .lunara-home-masthead-panel::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(201,169,97,.16),transparent 18%,transparent 82%,rgba(244,239,227,.08));opacity:.72;}
+    body.home .lunara-home-masthead-copy,body.home .lunara-home-masthead-routes{position:relative;z-index:1;}
+    body.home .lunara-home-masthead-copy{display:grid;align-content:center;gap:clamp(13px,1.8vw,20px);max-width:760px;}
+    body.home .lunara-home-masthead-kicker{margin:0;color:var(--lunara-gold-light,#e0c481);font-size:clamp(.74rem,.8vw,.86rem);font-weight:800;letter-spacing:.14em;text-transform:uppercase;}
+    body.home .lunara-home-masthead-title{max-width:12ch;margin:0;color:var(--lunara-gold,#c9a961);font-family:var(--lunara-serif,Georgia,serif);font-size:clamp(3.1rem,7.6vw,5.85rem);line-height:.9;letter-spacing:0;text-wrap:balance;}
+    body.home .lunara-home-masthead-dek{max-width:54ch;margin:0;color:var(--lunara-text,#FAFBFC);font-size:clamp(1.05rem,1.55vw,1.45rem);line-height:1.48;text-wrap:pretty;}
+    body.home .lunara-home-masthead-standard{margin:clamp(2px,.8vw,8px) 0 0;color:rgba(244,239,227,.72);font-size:.95rem;line-height:1.55;}
+    body.home .lunara-home-masthead-standard a{color:var(--lunara-gold-light,#e0c481);text-decoration:none;border-bottom:1px solid rgba(224,196,129,.38);}
+    body.home .lunara-home-masthead-routes{display:grid;gap:12px;align-content:center;}
+    body.home .lunara-home-masthead-route{display:grid;gap:7px;min-width:0;padding:16px 17px;border:1px solid rgba(201,169,97,.18);border-radius:8px;background:rgba(6,14,24,.62);color:var(--lunara-text,#FAFBFC)!important;text-decoration:none!important;transition:border-color .18s ease,background .18s ease,transform .18s ease;}
+    body.home .lunara-home-masthead-route:hover,body.home .lunara-home-masthead-route:focus-visible{border-color:rgba(224,196,129,.5);background:rgba(201,169,97,.1);transform:translateY(-1px);}
+    body.home .lunara-home-masthead-route-label{color:var(--lunara-gold-light,#e0c481);font-size:.72rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;}
+    body.home .lunara-home-masthead-route strong{color:var(--lunara-text,#FAFBFC);font-size:clamp(1.02rem,1.2vw,1.18rem);line-height:1.18;}
+    body.home .lunara-home-masthead-route span:last-child{color:rgba(244,239,227,.72);font-size:.9rem;line-height:1.45;}
+    @media(max-width:820px){body.home .lunara-home-masthead{width:100%;margin:22px auto 30px;padding-inline:0;}body.home .lunara-home-masthead-panel{grid-template-columns:minmax(0,1fr);gap:20px;padding:24px 18px;border-left:0;border-right:0;border-radius:0;}body.home .lunara-home-masthead-title{max-width:100%;font-size:clamp(2.8rem,16vw,4.35rem);}body.home .lunara-home-masthead-dek{font-size:1.04rem;line-height:1.55;}body.home .lunara-home-masthead-routes{grid-template-columns:minmax(0,1fr);}}
+    @media(min-width:821px) and (max-width:1100px){body.home .lunara-home-masthead-panel{grid-template-columns:minmax(0,1fr);}body.home .lunara-home-masthead-routes{grid-template-columns:repeat(3,minmax(0,1fr));}}
+    @media(prefers-reduced-motion:reduce){body.home .lunara-home-masthead-route{transition:none;}body.home .lunara-home-masthead-route:hover,body.home .lunara-home-masthead-route:focus-visible{transform:none;}}
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_home_front_door_css', 45 );
+
 /**
  * Footer fallback.
  */
