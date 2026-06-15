@@ -18,6 +18,8 @@ function lunara_footer_menu_fallback() {
     echo '<li><a href="' . esc_url( home_url( '/reviews/' ) ) . '">Reviews</a></li>';
     echo '<li><a href="' . esc_url( home_url( '/oscars/' ) ) . '">Oscar Ledger</a></li>';
     echo '<li><a href="' . esc_url( home_url( '/about/' ) ) . '">About</a></li>';
+    echo '<li><a href="' . esc_url( home_url( '/editorial-policy/' ) ) . '">Editorial Policy</a></li>';
+    echo '<li><a href="' . esc_url( home_url( '/contact/' ) ) . '">Contact</a></li>';
     echo '</ul>';
 }
 
@@ -90,6 +92,8 @@ function lunara_render_custom_footer() {
                         array( 'label' => __( 'Home', 'lunara-film' ), 'url' => home_url( '/' ) ),
                         array( 'label' => __( 'Reviews', 'lunara-film' ), 'url' => get_post_type_archive_link( 'review' ) ?: home_url( '/reviews/' ) ),
                         array( 'label' => __( 'Journal', 'lunara-film' ), 'url' => get_post_type_archive_link( 'journal' ) ?: home_url( '/journal/' ) ),
+                        array( 'label' => __( 'About', 'lunara-film' ), 'url' => home_url( '/about/' ) ),
+                        array( 'label' => __( 'Editorial Policy', 'lunara-film' ), 'url' => home_url( '/editorial-policy/' ) ),
                     ) );
                     ?>
                 </div>
@@ -113,6 +117,7 @@ function lunara_render_custom_footer() {
                     <?php
                     $utility_links = array(
                         array( 'label' => __( 'Search', 'lunara-film' ), 'url' => home_url( '/?s=' ) ),
+                        array( 'label' => __( 'Contact', 'lunara-film' ), 'url' => home_url( '/contact/' ) ),
                         array( 'label' => __( 'RSS Feed', 'lunara-film' ), 'url' => get_bloginfo( 'rss2_url' ) ),
                     );
                     $privacy_url = get_privacy_policy_url();
