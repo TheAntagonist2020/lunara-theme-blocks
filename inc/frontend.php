@@ -102,6 +102,23 @@ function lunara_home_front_door_css() {
 }
 add_action( 'wp_head', 'lunara_home_front_door_css', 45 );
 
+function lunara_home_card_media_hygiene_css() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+    ?>
+    <style id="lunara-home-card-media-hygiene-css">
+    body.home .lunara-review-grid-card.has-no-visual .lunara-review-grid-link,body.home .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-link,body.home .lunara-oscar-pick-card.has-no-visual .lunara-oscar-pick-card-link{grid-template-rows:1fr!important;}
+    body.home .lunara-review-grid-card.has-no-visual .lunara-review-grid-copy,body.home .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-copy,body.home .lunara-oscar-pick-card.has-no-visual .lunara-oscar-pick-card-copy{align-content:start!important;min-height:clamp(210px,24vw,320px)!important;padding:clamp(18px,2.4vw,26px)!important;}
+    body.home .lunara-journal-home-card.has-no-visual.is-lead .lunara-journal-home-card-copy{min-height:clamp(260px,28vw,380px)!important;}
+    body.home .lunara-review-grid-card.has-no-visual,body.home .lunara-journal-home-card.has-no-visual,body.home .lunara-oscar-pick-card.has-no-visual{background:radial-gradient(circle at 92% 0%,rgba(201,169,97,.09),transparent 31%),linear-gradient(180deg,rgba(17,32,49,.96),rgba(7,15,26,.98))!important;}
+    body.home .lunara-review-grid-card.has-no-visual .lunara-score-badge.is-inline-score,body.home .lunara-oscar-pick-card.has-no-visual .lunara-oscar-pick-card-status.is-inline-status{position:static!important;display:inline-flex!important;justify-self:start!important;width:auto!important;max-width:100%!important;margin:0 0 4px!important;}
+    body.home .lunara-oscar-pick-card.has-no-visual .lunara-oscar-pick-card-status.is-inline-status{min-height:0!important;padding:6px 10px!important;border-radius:999px!important;background:rgba(6,14,24,.72)!important;}
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_home_card_media_hygiene_css', 47 );
+
 /**
  * Footer fallback.
  */

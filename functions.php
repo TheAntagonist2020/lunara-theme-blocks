@@ -13129,25 +13129,27 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 					$cat_terms   = get_the_terms( $pid, 'oscar_pick_category' );
 					$category    = ( $cat_terms && ! is_wp_error( $cat_terms ) ) ? $cat_terms[0]->name : '';
 					$card_url    = lunara_resolve_oscar_pick_ledger_url( $pid, $film, $person, $year, $category );
-					$thumb_url   = has_post_thumbnail( $pid ) ? get_the_post_thumbnail_url( $pid, 'newspack-article-block-landscape-intermediate' ) : '';
+					$has_visual  = has_post_thumbnail( $pid );
+					$thumb_url   = $has_visual ? get_the_post_thumbnail_url( $pid, 'newspack-article-block-landscape-intermediate' ) : '';
 					$thumb_attrs = array(
 						'class'    => 'lunara-oscar-pick-card-image',
-						'loading'  => 'lazy',
+						'loading'  => 'eager',
 						'decoding' => 'async',
 						'sizes'    => '(max-width: 420px) 92vw, (max-width: 760px) 44vw, (max-width: 1180px) 42vw, 360px',
 					);
 					?>
-					<article class="lunara-oscar-pick-card is-status-<?php echo esc_attr( $status ); ?>" role="listitem">
+					<article class="lunara-oscar-pick-card is-status-<?php echo esc_attr( $status ); ?> <?php echo $has_visual ? 'has-visual' : 'has-no-visual'; ?>" role="listitem">
 						<a class="lunara-oscar-pick-card-link" href="<?php echo esc_url( $card_url ); ?>">
-							<div class="lunara-oscar-pick-card-media">
-								<?php if ( has_post_thumbnail( $pid ) ) : ?>
+							<?php if ( $has_visual ) : ?>
+								<div class="lunara-oscar-pick-card-media">
 									<?php echo get_the_post_thumbnail( $pid, 'newspack-article-block-landscape-intermediate', $thumb_attrs ); ?>
-								<?php else : ?>
-									<div class="lunara-oscar-pick-card-placeholder"><span><?php echo esc_html( $category ?: 'Pick' ); ?></span></div>
-								<?php endif; ?>
-								<span class="lunara-oscar-pick-card-status"><?php echo esc_html( strtoupper( $status ) ); ?></span>
-							</div>
+									<span class="lunara-oscar-pick-card-status"><?php echo esc_html( strtoupper( $status ) ); ?></span>
+								</div>
+							<?php endif; ?>
 							<div class="lunara-oscar-pick-card-copy">
+								<?php if ( ! $has_visual ) : ?>
+									<span class="lunara-oscar-pick-card-status is-inline-status"><?php echo esc_html( strtoupper( $status ) ); ?></span>
+								<?php endif; ?>
 								<?php if ( '' !== $category ) : ?>
 									<p class="lunara-oscar-pick-card-kicker"><?php echo esc_html( $category ); ?></p>
 								<?php endif; ?>
@@ -13480,7 +13482,7 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 					$thumb_url   = $has_image ? get_the_post_thumbnail_url( $pid, 'newspack-article-block-landscape-small' ) : '';
 					$thumb_attrs = array(
 						'class'    => 'lunara-oscar-fact-card-poster-image',
-						'loading'  => 'lazy',
+						'loading'  => 'eager',
 						'decoding' => 'async',
 						'sizes'    => '(max-width: 420px) 92vw, (max-width: 760px) 44vw, (max-width: 1180px) 42vw, 360px',
 					);
@@ -15008,25 +15010,22 @@ if ( ! function_exists( 'lunara_render_homepage_journal_lane' ) ) {
 					$is_lead     = ( 0 === $dispatch_index );
 					$card_url    = get_permalink( $pid );
 					$thumb_size  = 'newspack-article-block-landscape-small';
-					$thumb_url   = has_post_thumbnail( $pid ) ? get_the_post_thumbnail_url( $pid, $thumb_size ) : '';
+					$has_visual  = has_post_thumbnail( $pid );
+					$thumb_url   = $has_visual ? get_the_post_thumbnail_url( $pid, $thumb_size ) : '';
 					$thumb_attrs = array(
-						'class'    => 'lunara-journal-home-card-image',
-						'loading'  => 'lazy',
+						'class'    => 'lunara-journal-home-card-image skip-lazy no-lazy',
+						'loading'  => 'eager',
 						'decoding' => 'async',
 						'sizes'    => '(max-width: 420px) 92vw, (max-width: 760px) 44vw, (max-width: 1180px) 42vw, 360px',
 					);
 					?>
-					<article class="lunara-journal-home-card<?php echo $is_lead ? ' is-lead' : ''; ?>">
+					<article class="lunara-journal-home-card<?php echo $is_lead ? ' is-lead' : ''; ?> <?php echo $has_visual ? 'has-visual' : 'has-no-visual'; ?>">
 						<a class="lunara-journal-home-card-link" href="<?php echo esc_url( $card_url ); ?>">
-							<div class="lunara-journal-home-card-media">
-								<?php if ( has_post_thumbnail( $pid ) ) : ?>
+							<?php if ( $has_visual ) : ?>
+								<div class="lunara-journal-home-card-media">
 									<?php echo get_the_post_thumbnail( $pid, $thumb_size, $thumb_attrs ); ?>
-								<?php else : ?>
-									<div class="lunara-journal-home-card-placeholder">
-										<span><?php echo esc_html( $dispatch_display_type( $pid ) ); ?></span>
-									</div>
-								<?php endif; ?>
-							</div>
+								</div>
+							<?php endif; ?>
 							<div class="lunara-journal-home-card-copy">
 								<p class="lunara-journal-home-card-kicker"><?php echo esc_html( $is_lead ? __( 'Lead file', 'lunara-film' ) : __( 'From the desk', 'lunara-film' ) ); ?></p>
 								<p class="lunara-dispatch-type"><?php echo esc_html( $dispatch_display_type( $pid ) ); ?></p>

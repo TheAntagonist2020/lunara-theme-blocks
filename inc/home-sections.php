@@ -1820,7 +1820,7 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
                         : wp_trim_words( wp_strip_all_tags( get_the_excerpt( $rid ) ), 22, '...' );
                     $thumb_attrs        = array(
                         'class'    => 'lunara-review-grid-poster',
-                        'loading'  => 0 === $review_index ? 'eager' : 'lazy',
+                        'loading'  => 'eager',
                         'decoding' => 'async',
                         'sizes'    => '(max-width: 520px) 46vw, (max-width: 900px) 42vw, (max-width: 1180px) 30vw, 340px',
                     );
@@ -1838,19 +1838,25 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
                     $thumb_url       = isset( $image_data['url'] ) ? (string) $image_data['url'] : '';
                     $has_thumb_html  = ! empty( $image_data['html'] );
                     $use_fallback_bg = '' !== $thumb_url && ! $has_thumb_html;
+                    $has_card_media  = $has_thumb_html || $use_fallback_bg;
                     ?>
-                    <article class="lunara-review-grid-card<?php echo $is_current_release ? ' is-current-release-spotlight' : ''; ?>">
+                    <article class="lunara-review-grid-card<?php echo $is_current_release ? ' is-current-release-spotlight' : ''; ?> <?php echo $has_card_media ? 'has-visual' : 'has-no-visual'; ?>">
                         <a class="lunara-review-grid-link" href="<?php the_permalink(); ?>">
-                            <div class="lunara-review-grid-poster-wrap<?php echo $use_fallback_bg ? ' has-poster-bg has-fallback-bg' : ''; ?>"<?php if ( $use_fallback_bg ) : ?> style="background-image: url('<?php echo esc_url( $thumb_url ); ?>');"<?php endif; ?>>
-                                <?php if ( $has_thumb_html ) : ?>
-                                    <?php echo $image_data['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                                <?php endif; ?>
-                                <?php if ( $score && function_exists( 'lunara_render_stars' ) ) : ?>
-                                    <span class="lunara-score-badge"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
-                                <?php endif; ?>
-                            </div>
+                            <?php if ( $has_card_media ) : ?>
+                                <div class="lunara-review-grid-poster-wrap<?php echo $use_fallback_bg ? ' has-poster-bg has-fallback-bg' : ''; ?>"<?php if ( $use_fallback_bg ) : ?> style="background-image: url('<?php echo esc_url( $thumb_url ); ?>');"<?php endif; ?>>
+                                    <?php if ( $has_thumb_html ) : ?>
+                                        <?php echo $image_data['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                    <?php endif; ?>
+                                    <?php if ( $score && function_exists( 'lunara_render_stars' ) ) : ?>
+                                        <span class="lunara-score-badge"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                             <div class="lunara-review-grid-copy">
                                 <p class="lunara-review-grid-kicker"><?php esc_html_e( 'Lunara Review', 'lunara-film' ); ?></p>
+                                <?php if ( ! $has_card_media && $score && function_exists( 'lunara_render_stars' ) ) : ?>
+                                    <span class="lunara-score-badge is-inline-score"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
+                                <?php endif; ?>
                                 <?php if ( function_exists( 'lunara_render_trailer_card_badge' ) ) : ?>
                                     <?php echo lunara_render_trailer_card_badge( $rid, 'review-card' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                 <?php endif; ?>
