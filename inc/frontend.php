@@ -6690,3 +6690,185 @@ function lunara_news_grid_content_filter( $content ) {
     return $grid_html;
 }
 add_filter( 'the_content', 'lunara_news_grid_content_filter', 8 );
+
+/**
+ * Homepage Oscar Facts carousel polish.
+ *
+ * The homepage critical CSS still treats Oscar Facts as a static grid. This late,
+ * scoped layer turns only the Facts lane into a premium rotating card surface.
+ */
+function lunara_output_home_oscar_facts_carousel_css() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+    ?>
+    <style id="lunara-home-oscar-facts-carousel-css">
+    body.home .lunara-oscar-facts-section {
+        overflow: hidden;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel {
+        position: relative;
+        width: min(100%, 1120px);
+        margin: 0 auto;
+        outline: none;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-facts-track {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+        scroll-snap-type: none !important;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.lunara-carousel-slide {
+        grid-area: 1 / 1;
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateX(18px);
+        transition: opacity 420ms ease, transform 420ms ease, visibility 420ms ease;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.lunara-carousel-slide.active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateX(0);
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-link {
+        display: grid !important;
+        grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+        align-items: stretch;
+        min-height: clamp(360px, 34vw, 470px);
+        background:
+            radial-gradient(circle at 14% 20%, rgba(219, 180, 103, 0.16), transparent 34%),
+            linear-gradient(135deg, rgba(10, 25, 39, 0.98), rgba(15, 31, 48, 0.92));
+        border: 1px solid rgba(219, 180, 103, 0.3);
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18);
+        overflow: hidden;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card:not(.has-poster) .lunara-oscar-fact-card-link {
+        grid-template-columns: minmax(0, 1fr);
+        min-height: clamp(300px, 28vw, 400px);
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster {
+        aspect-ratio: auto !important;
+        min-height: 100% !important;
+        border-radius: 0 !important;
+        background: #081522;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster-image,
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster img {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        object-fit: cover !important;
+        transform: scale(1.015);
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-text {
+        justify-content: center;
+        padding: clamp(24px, 4vw, 56px) !important;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-kicker {
+        color: #d7b66f !important;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-title {
+        max-width: 13em;
+        color: #f6efe2 !important;
+        font-size: clamp(1.65rem, 3.2vw, 3.1rem) !important;
+        line-height: 0.98 !important;
+        text-wrap: balance;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-body {
+        max-width: 58ch;
+        color: rgba(246, 239, 226, 0.86) !important;
+        font-size: clamp(0.98rem, 1.15vw, 1.08rem) !important;
+        line-height: 1.7 !important;
+        text-wrap: pretty;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-foot {
+        align-items: center;
+        color: rgba(246, 239, 226, 0.72) !important;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-cta {
+        color: #d7b66f !important;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-facts-dots {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-carousel-dot {
+        width: 9px;
+        height: 9px;
+        padding: 0;
+        border-radius: 999px;
+        border: 1px solid rgba(215, 182, 111, 0.65);
+        background: transparent;
+        cursor: pointer;
+        transition: width 220ms ease, background-color 220ms ease, border-color 220ms ease;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-carousel-dot.active {
+        width: 30px;
+        background: #d7b66f;
+        border-color: #d7b66f;
+    }
+
+    @media (max-width: 780px) {
+        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-link {
+            grid-template-columns: minmax(0, 1fr);
+            min-height: 0;
+        }
+
+        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster {
+            aspect-ratio: 16 / 10 !important;
+            min-height: 0 !important;
+        }
+
+        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster-image,
+        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster img {
+            min-height: 0 !important;
+        }
+
+        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-title {
+            max-width: 100%;
+            font-size: clamp(1.45rem, 8vw, 2.2rem) !important;
+        }
+
+        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-body {
+            font-size: 0.98rem !important;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.lunara-carousel-slide,
+        body.home .lunara-oscar-facts-section .lunara-carousel-dot {
+            transition: none !important;
+        }
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_footer', 'lunara_output_home_oscar_facts_carousel_css', 120 );

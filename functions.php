@@ -13449,9 +13449,23 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 			return '';
 		}
 
+		$carousel_js = lunara_resolve_theme_asset(
+			'assets/js/lunara-carousel.js',
+			array( 'lunara-carousel.js' )
+		);
+		if ( $carousel_js['path'] ) {
+			wp_enqueue_script(
+				'lunara-carousel',
+				$carousel_js['uri'],
+				array(),
+				lunara_theme_asset_version( $carousel_js['path'] ),
+				true
+			);
+		}
+
 		ob_start();
 		?>
-		<section class="lunara-home-section lunara-home-slot-oscar-facts lunara-oscar-facts-section" aria-label="Oscar Facts" data-lunara-carousel data-lunara-carousel-autoplay="0">
+		<section class="lunara-home-section lunara-home-slot-oscar-facts lunara-oscar-facts-section" aria-label="Oscar Facts">
 			<div class="lunara-home-section-head is-with-summary">
 				<div>
 					<p class="lunara-home-section-kicker"><?php echo esc_html( $args['kicker'] ); ?></p>
@@ -13463,7 +13477,8 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 				<a class="lunara-section-link" href="<?php echo esc_url( $args['cta_url'] ); ?>"><?php echo esc_html( $args['cta_text'] ); ?></a>
 			</div>
 
-			<div class="lunara-oscar-facts-track" role="list">
+			<div class="lunara-oscar-facts-carousel lunara-carousel" data-autoplay="6500" aria-label="<?php esc_attr_e( 'Rotating Oscar facts', 'lunara-film' ); ?>">
+				<div class="lunara-oscar-facts-track" role="list">
 				<?php while ( $query->have_posts() ) :
 					$query->the_post();
 					$fact_index  = max( 0, (int) $query->current_post );
@@ -13477,21 +13492,20 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 					$body_short  = lunara_repair_mojibake_text( wp_trim_words( $body, 28, $excerpt_more ) );
 					$visual_ok   = '1' === (string) get_post_meta( $pid, '_lunara_fact_visual_verified', true );
 					$has_image   = $visual_ok && has_post_thumbnail( $pid );
-					$card_class  = 'lunara-oscar-fact-card' . ( $has_image ? ' has-poster' : '' );
+					$card_class  = 'lunara-oscar-fact-card lunara-carousel-slide' . ( 0 === $fact_index ? ' active' : '' ) . ( $has_image ? ' has-poster' : '' );
 					$card_url    = lunara_resolve_oscar_fact_ledger_url( $pid, $category, $year );
-					$thumb_url   = $has_image ? get_the_post_thumbnail_url( $pid, 'newspack-article-block-landscape-small' ) : '';
 					$thumb_attrs = array(
 						'class'    => 'lunara-oscar-fact-card-poster-image',
 						'loading'  => 'eager',
 						'decoding' => 'async',
-						'sizes'    => '(max-width: 420px) 92vw, (max-width: 760px) 44vw, (max-width: 1180px) 42vw, 360px',
+						'sizes'    => '(max-width: 640px) 92vw, (max-width: 980px) 44vw, 480px',
 					);
 					?>
 					<article class="<?php echo esc_attr( $card_class ); ?>" role="listitem">
 						<a class="lunara-oscar-fact-card-link" href="<?php echo esc_url( $card_url ); ?>">
 							<?php if ( $has_image ) : ?>
 								<div class="lunara-oscar-fact-card-poster">
-									<?php echo get_the_post_thumbnail( $pid, 'newspack-article-block-landscape-small', $thumb_attrs ); ?>
+									<?php echo get_the_post_thumbnail( $pid, 'lunara-hero-spotlight', $thumb_attrs ); ?>
 								</div>
 							<?php endif; ?>
 							<div class="lunara-oscar-fact-card-text">
@@ -13514,6 +13528,14 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 						</a>
 					</article>
 				<?php endwhile; wp_reset_postdata(); ?>
+				</div>
+				<?php if ( $query->post_count > 1 ) : ?>
+					<div class="lunara-oscar-facts-dots lunara-carousel-dots" aria-label="<?php esc_attr_e( 'Oscar fact slides', 'lunara-film' ); ?>">
+						<?php for ( $dot_index = 0; $dot_index < (int) $query->post_count; $dot_index++ ) : ?>
+							<button class="lunara-carousel-dot <?php echo 0 === $dot_index ? 'active' : ''; ?>" type="button" aria-label="<?php echo esc_attr( sprintf( __( 'Show Oscar fact %d', 'lunara-film' ), $dot_index + 1 ) ); ?>"></button>
+						<?php endfor; ?>
+					</div>
+				<?php endif; ?>
 			</div>
 		</section>
 		<?php
