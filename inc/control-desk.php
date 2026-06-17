@@ -230,7 +230,7 @@ function lunara_control_desk_brand_number_specs() {
     return array(
         'lunara_logo_max_height'               => array(
             'label'   => __( 'Header logo max height', 'lunara-film' ),
-            'default' => 50,
+            'default' => 56,
             'min'     => 24,
             'max'     => 110,
             'step'    => 1,
