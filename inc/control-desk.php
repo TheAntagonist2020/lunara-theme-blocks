@@ -659,7 +659,7 @@ function lunara_control_desk_get_source_control_status() {
     return array(
         array(
             'label' => __( 'Theme repo', 'lunara-film' ),
-            'value' => 'main @ 3b531dd',
+            'value' => 'main @ 64c5406',
             'state' => 'ready',
             'note'  => 'github.com/TheAntagonist2020/lunara-theme-blocks',
         ),
