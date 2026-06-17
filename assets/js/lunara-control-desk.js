@@ -468,6 +468,127 @@
         frame.open();
     }
 
+    function normalizeMediaAttachment(model) {
+        var attachment = model && model.toJSON ? model.toJSON() : (model || {});
+        var sizes = attachment.sizes || {};
+        var thumb = sizes.medium && sizes.medium.url ? sizes.medium.url : (sizes.thumbnail && sizes.thumbnail.url ? sizes.thumbnail.url : attachment.url);
+        var width = attachment.width || '';
+        var height = attachment.height || '';
+
+        if ((!width || !height) && sizes.full) {
+            width = width || sizes.full.width || '';
+            height = height || sizes.full.height || '';
+        }
+
+        return {
+            id: attachment.id || '',
+            title: attachment.title || attachment.filename || ('Attachment #' + (attachment.id || '')),
+            thumb: thumb || '',
+            meta: 'Attachment #' + (attachment.id || '') + (width && height ? ' / ' + width + 'x' + height : '')
+        };
+    }
+
+    function renderBrandMedia(control, attachment) {
+        var input = qs('[data-lunara-brand-media-input]', control);
+        var preview = qs('[data-lunara-brand-media-preview]', control);
+        var thumb = qs('.lunara-control-desk-brand-thumb', control);
+        var title = qs('[data-lunara-brand-media-title]', control);
+        var meta = qs('[data-lunara-brand-media-meta]', control);
+
+        if (input) {
+            input.value = attachment.id || '0';
+        }
+
+        if (thumb) {
+            thumb.innerHTML = attachment.thumb ? '<img src="' + escapeAttr(attachment.thumb) + '" alt="" />' : '';
+        }
+
+        if (title) {
+            title.textContent = attachment.title || 'Using fallback/default';
+        }
+
+        if (meta) {
+            meta.textContent = attachment.meta || 'No custom image selected here.';
+        }
+
+        if (preview) {
+            preview.classList.toggle('is-ready', !!attachment.id);
+            preview.classList.toggle('is-empty', !attachment.id);
+        }
+    }
+
+    function openBrandMediaPicker(button) {
+        var control = button.closest('[data-lunara-brand-media-control]');
+        var frame;
+
+        if (!control || !window.wp || !window.wp.media) {
+            return;
+        }
+
+        frame = window.wp.media({
+            title: button.getAttribute('data-title') || 'Choose image',
+            button: { text: button.getAttribute('data-button') || 'Use image' },
+            library: { type: 'image' },
+            multiple: false
+        });
+
+        frame.on('select', function () {
+            var model = frame.state().get('selection').first();
+
+            if (!model) {
+                return;
+            }
+
+            renderBrandMedia(control, normalizeMediaAttachment(model));
+        });
+
+        frame.open();
+    }
+
+    function clearBrandMedia(button) {
+        var control = button.closest('[data-lunara-brand-media-control]');
+
+        if (!control) {
+            return;
+        }
+
+        renderBrandMedia(control, {
+            id: 0,
+            title: 'Using fallback/default',
+            thumb: '',
+            meta: 'No custom image selected here.'
+        });
+    }
+
+    function clampNumber(value, min, max) {
+        value = parseInt(value, 10);
+        min = parseInt(min, 10);
+        max = parseInt(max, 10);
+
+        if (isNaN(value)) {
+            value = min;
+        }
+
+        return Math.min(Math.max(value, min), max);
+    }
+
+    function syncBrandNumber(control, source) {
+        var range = qs('[data-lunara-brand-range]', control);
+        var number = qs('[data-lunara-brand-number]', control);
+        var sourceInput = source || range || number;
+        var min = sourceInput ? sourceInput.getAttribute('min') : 0;
+        var max = sourceInput ? sourceInput.getAttribute('max') : 9999;
+        var value = clampNumber(sourceInput ? sourceInput.value : 0, min, max);
+
+        if (range) {
+            range.value = value;
+        }
+
+        if (number) {
+            number.value = value;
+        }
+    }
+
     function moveCarouselItem(button) {
         var item = button.closest('[data-lunara-carousel-item]');
         var form = button.closest('[data-lunara-carousel-form]');
@@ -517,6 +638,8 @@
             var historyButton = event.target.closest('[data-lunara-snapshot-select]');
             var copyButton = event.target.closest('[data-lunara-copy]');
             var printButton = event.target.closest('[data-lunara-print]');
+            var brandPicker = event.target.closest('[data-lunara-brand-media-picker]');
+            var brandClear = event.target.closest('[data-lunara-brand-media-clear]');
             var carouselPicker = event.target.closest('[data-lunara-carousel-picker]');
             var carouselMove = event.target.closest('[data-lunara-carousel-move]');
             var carouselRemove = event.target.closest('[data-lunara-carousel-remove]');
@@ -533,6 +656,16 @@
 
             if (printButton) {
                 window.print();
+                return;
+            }
+
+            if (brandPicker) {
+                openBrandMediaPicker(brandPicker);
+                return;
+            }
+
+            if (brandClear) {
+                clearBrandMedia(brandClear);
                 return;
             }
 
@@ -555,6 +688,26 @@
             form.addEventListener('submit', function () {
                 syncCarouselIds(form);
             });
+        });
+
+        qsa('[data-lunara-brand-number-control]').forEach(function (control) {
+            var range = qs('[data-lunara-brand-range]', control);
+            var number = qs('[data-lunara-brand-number]', control);
+
+            if (range) {
+                range.addEventListener('input', function () {
+                    syncBrandNumber(control, range);
+                });
+            }
+
+            if (number) {
+                number.addEventListener('input', function () {
+                    syncBrandNumber(control, number);
+                });
+                number.addEventListener('change', function () {
+                    syncBrandNumber(control, number);
+                });
+            }
         });
     });
 })();

@@ -28,6 +28,20 @@ function lunara_get_home_identity_logo_id() {
     return absint( get_theme_mod( 'custom_logo' ) );
 }
 
+function lunara_home_brand_number_setting( $key, $default, $min, $max ) {
+    $value = absint( get_theme_mod( $key, $default ) );
+
+    if ( $value < $min ) {
+        return absint( $min );
+    }
+
+    if ( $value > $max ) {
+        return absint( $max );
+    }
+
+    return $value;
+}
+
 function lunara_render_home_front_door() {
     $reviews_url = get_post_type_archive_link( 'review' ) ?: home_url( '/reviews/' );
     $journal_url = get_post_type_archive_link( 'journal' ) ?: home_url( '/journal/' );
@@ -111,6 +125,12 @@ function lunara_home_front_door_css() {
     if ( ! is_front_page() ) {
         return;
     }
+    $desktop_logo_width   = lunara_home_brand_number_setting( 'lunara_home_logo_desktop_max_width', 1180, 520, 1600 );
+    $desktop_logo_height  = lunara_home_brand_number_setting( 'lunara_home_logo_desktop_max_height', 312, 140, 420 );
+    $tablet_logo_width    = min( $desktop_logo_width, 1040 );
+    $mobile_logo_width    = lunara_home_brand_number_setting( 'lunara_home_logo_mobile_max_width', 720, 280, 920 );
+    $mobile_logo_height   = lunara_home_brand_number_setting( 'lunara_home_logo_mobile_max_height', 148, 88, 240 );
+    $identity_logo_gap    = lunara_home_brand_number_setting( 'lunara_home_logo_vertical_gap', 20, 8, 48 );
     ?>
     <style id="lunara-home-front-door-css">
     body.home .lunara-home-masthead{width:100%;margin:0 auto clamp(30px,4.8vw,66px);box-sizing:border-box;}
@@ -118,10 +138,10 @@ function lunara_home_front_door_css() {
     body.home .lunara-home-masthead-panel::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(201,169,97,.14),transparent 19%,transparent 81%,rgba(244,239,227,.08));opacity:.74;}
     body.home .lunara-home-masthead-panel::after{content:"";position:absolute;left:clamp(18px,5vw,76px);right:clamp(18px,5vw,76px);bottom:clamp(82px,8vw,116px);height:1px;background:linear-gradient(90deg,transparent,rgba(224,196,129,.38),transparent);opacity:.9;}
     body.home .lunara-home-masthead-identity,body.home .lunara-home-masthead-routes{position:relative;z-index:1;}
-    body.home .lunara-home-masthead-identity{display:grid;justify-items:center;gap:clamp(12px,1.8vw,20px);text-align:center;}
+    body.home .lunara-home-masthead-identity{display:grid;justify-items:center;gap:clamp(12px,1.8vw,<?php echo esc_html( $identity_logo_gap ); ?>px);text-align:center;}
     body.home .lunara-home-masthead-kicker{margin:0;color:var(--lunara-gold-light,#e0c481);font-size:clamp(.72rem,.82vw,.86rem);font-weight:800;letter-spacing:.13em;text-transform:uppercase;}
     body.home .lunara-home-masthead-logo-frame{display:grid;place-items:center;width:min(100%,1280px);margin-inline:auto;}
-    body.home .lunara-home-masthead-logo{display:block;width:min(100%,1180px);height:auto;max-height:clamp(118px,22vw,312px);object-fit:contain;filter:drop-shadow(0 18px 34px rgba(0,0,0,.36));}
+    body.home .lunara-home-masthead-logo{display:block;width:min(100%,<?php echo esc_html( $desktop_logo_width ); ?>px);height:auto;max-height:clamp(118px,22vw,<?php echo esc_html( $desktop_logo_height ); ?>px);object-fit:contain;filter:drop-shadow(0 18px 34px rgba(0,0,0,.36));}
     body.home .lunara-home-masthead-logo-fallback{color:var(--lunara-gold,#c9a961);font-family:var(--lunara-serif,Georgia,serif);font-size:clamp(3.1rem,9vw,6rem);line-height:.92;letter-spacing:0;}
     body.home .lunara-home-masthead-dek{max-width:58ch;margin:0 auto;color:rgba(250,251,252,.88);font-size:clamp(1rem,1.35vw,1.22rem);line-height:1.58;text-wrap:pretty;}
     body.home .lunara-home-masthead-standard{display:inline-flex;align-items:center;justify-content:center;margin:0;color:var(--lunara-gold-light,#e0c481)!important;font-size:.92rem;font-weight:700;letter-spacing:.02em;text-decoration:none!important;border-bottom:1px solid rgba(224,196,129,.38);}
@@ -131,8 +151,8 @@ function lunara_home_front_door_css() {
     body.home .lunara-home-masthead-route-label{color:var(--lunara-gold-light,#e0c481);font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;}
     body.home .lunara-home-masthead-route strong{color:var(--lunara-text,#FAFBFC);font-size:clamp(1rem,1.15vw,1.16rem);line-height:1.18;}
     body.home .lunara-home-masthead-route span:last-child{color:rgba(244,239,227,.74);font-size:.88rem;line-height:1.42;}
-    @media(max-width:820px){body.home .lunara-home-masthead{margin-bottom:30px;}body.home .lunara-home-masthead-panel{padding:22px 16px 20px;border-radius:0;}body.home .lunara-home-masthead-panel::after{left:16px;right:16px;bottom:auto;top:clamp(154px,42vw,218px);}body.home .lunara-home-masthead-logo-frame{width:100%;}body.home .lunara-home-masthead-logo{width:100%;max-width:100%;max-height:clamp(106px,31vw,148px);object-fit:contain;}body.home .lunara-home-masthead-dek{font-size:1rem;line-height:1.54;}body.home .lunara-home-masthead-routes{grid-template-columns:minmax(0,1fr);gap:10px;margin-top:10px;}body.home .lunara-home-masthead-route{padding:13px 14px;}}
-    @media(min-width:821px) and (max-width:1100px){body.home .lunara-home-masthead-routes{grid-template-columns:repeat(3,minmax(0,1fr));}body.home .lunara-home-masthead-logo{width:min(100%,1040px);}}
+    @media(max-width:820px){body.home .lunara-home-masthead{margin-bottom:30px;}body.home .lunara-home-masthead-panel{padding:22px 16px 20px;border-radius:0;}body.home .lunara-home-masthead-panel::after{left:16px;right:16px;bottom:auto;top:clamp(154px,42vw,218px);}body.home .lunara-home-masthead-logo-frame{width:100%;}body.home .lunara-home-masthead-logo{width:min(100%,<?php echo esc_html( $mobile_logo_width ); ?>px);max-width:100%;max-height:clamp(106px,31vw,<?php echo esc_html( $mobile_logo_height ); ?>px);object-fit:contain;}body.home .lunara-home-masthead-dek{font-size:1rem;line-height:1.54;}body.home .lunara-home-masthead-routes{grid-template-columns:minmax(0,1fr);gap:10px;margin-top:10px;}body.home .lunara-home-masthead-route{padding:13px 14px;}}
+    @media(min-width:821px) and (max-width:1100px){body.home .lunara-home-masthead-routes{grid-template-columns:repeat(3,minmax(0,1fr));}body.home .lunara-home-masthead-logo{width:min(100%,<?php echo esc_html( $tablet_logo_width ); ?>px);}}
     @media(prefers-reduced-motion:reduce){body.home .lunara-home-masthead-route{transition:none;}body.home .lunara-home-masthead-route:hover,body.home .lunara-home-masthead-route:focus-visible{transform:none;}}
     </style>
     <?php

@@ -757,6 +757,219 @@
     margin: 0;
 }
 
+.lunara-control-desk-brand-console {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f5ee 100%);
+    border: 1px solid rgba(155, 118, 45, 0.24);
+    border-radius: 8px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    margin: 14px 0 16px;
+    padding: 16px;
+    scroll-margin-top: 42px;
+}
+
+.lunara-control-desk-brand-console:target {
+    box-shadow: 0 0 0 2px rgba(155, 118, 45, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.lunara-control-desk-brand-form {
+    display: grid;
+    gap: 14px;
+}
+
+.lunara-control-desk-brand-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.lunara-control-desk-brand-card,
+.lunara-control-desk-brand-tuning,
+.lunara-control-desk-brand-footer {
+    background: #ffffff;
+    border: 1px solid var(--lcd-line);
+    border-radius: 8px;
+    min-width: 0;
+    padding: 12px;
+}
+
+.lunara-control-desk-brand-card {
+    display: grid;
+    gap: 10px;
+}
+
+.lunara-control-desk-brand-preview {
+    align-items: center;
+    background: #f6f7f7;
+    border: 1px solid var(--lcd-line);
+    border-radius: 8px;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 86px minmax(0, 1fr);
+    min-height: 82px;
+    padding: 9px;
+}
+
+.lunara-control-desk-brand-preview.is-ready {
+    border-color: rgba(70, 180, 80, 0.34);
+}
+
+.lunara-control-desk-brand-preview.is-empty {
+    border-style: dashed;
+}
+
+.lunara-control-desk-brand-thumb {
+    align-items: center;
+    background: #0b1724;
+    border: 1px solid rgba(155, 118, 45, 0.22);
+    border-radius: 6px;
+    display: flex;
+    height: 64px;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.lunara-control-desk-brand-thumb img {
+    display: block;
+    height: 100%;
+    object-fit: contain;
+    width: 100%;
+}
+
+.lunara-control-desk-brand-preview strong,
+.lunara-control-desk-brand-preview span,
+.lunara-control-desk-brand-affects strong,
+.lunara-control-desk-brand-affects span,
+.lunara-control-desk-brand-footer strong,
+.lunara-control-desk-brand-footer span {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.lunara-control-desk-brand-preview strong {
+    color: var(--lcd-ink);
+    font-size: 13px;
+}
+
+.lunara-control-desk-brand-preview span {
+    color: var(--lcd-muted);
+    font-size: 12px;
+    line-height: 1.35;
+    margin-top: 3px;
+}
+
+.lunara-control-desk-brand-affects {
+    background: #fffaf0;
+    border: 1px solid rgba(155, 118, 45, 0.2);
+    border-radius: 8px;
+    padding: 9px 10px;
+}
+
+.lunara-control-desk-brand-affects strong {
+    color: var(--lcd-ink);
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.lunara-control-desk-brand-affects span {
+    color: var(--lcd-muted);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.lunara-control-desk-brand-tuning {
+    display: grid;
+    gap: 12px;
+}
+
+.lunara-control-desk-brand-number-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.lunara-control-desk-brand-number {
+    align-items: center;
+    background: #f6f7f7;
+    border: 1px solid var(--lcd-line);
+    border-radius: 8px;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(140px, 0.8fr) auto auto;
+    padding: 10px;
+}
+
+.lunara-control-desk-brand-number > span:first-child strong,
+.lunara-control-desk-brand-number > span:first-child small {
+    display: block;
+}
+
+.lunara-control-desk-brand-number strong {
+    color: var(--lcd-ink);
+    font-size: 13px;
+}
+
+.lunara-control-desk-brand-number small {
+    color: var(--lcd-muted);
+    font-size: 11px;
+    line-height: 1.35;
+    margin-top: 3px;
+}
+
+.lunara-control-desk-brand-number input[type="range"] {
+    width: 100%;
+}
+
+.lunara-control-desk-brand-number-value {
+    align-items: center;
+    display: inline-flex;
+    gap: 5px;
+}
+
+.lunara-control-desk-brand-number-value input {
+    max-width: 82px;
+}
+
+.lunara-control-desk-brand-number-value em,
+.lunara-control-desk-brand-reset em {
+    color: var(--lcd-muted);
+    font-size: 11px;
+    font-style: normal;
+}
+
+.lunara-control-desk-brand-reset {
+    display: grid;
+    gap: 3px;
+    justify-items: end;
+}
+
+.lunara-control-desk-brand-reset label {
+    align-items: center;
+    color: var(--lcd-ink);
+    display: inline-flex;
+    font-size: 12px;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.lunara-control-desk-brand-footer {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.lunara-control-desk-brand-footer strong {
+    color: var(--lcd-ink);
+    font-size: 13px;
+}
+
+.lunara-control-desk-brand-footer span {
+    color: var(--lcd-muted);
+    font-size: 12px;
+    line-height: 1.35;
+    margin-top: 3px;
+}
+
 .lunara-control-desk-studio-nav {
     display: grid;
     gap: 8px;
@@ -2983,6 +3196,8 @@
 
     .lunara-control-desk-stats,
     .lunara-control-desk-ai-grid,
+    .lunara-control-desk-brand-grid,
+    .lunara-control-desk-brand-number-grid,
     .lunara-control-desk-card-grid,
     .lunara-control-desk-field-grid,
     .lunara-control-desk-journal-grid,
@@ -3025,6 +3240,7 @@
     }
 
     .lunara-control-desk-card-head,
+    .lunara-control-desk-brand-footer,
     .lunara-control-desk-review-brief-head,
     .lunara-control-desk-review-brief-section-head,
     .lunara-control-desk-review-session-banner {
@@ -3033,9 +3249,22 @@
 }
 
 @media (max-width: 600px) {
+    .lunara-control-desk-brand-number,
     .lunara-control-desk-carousel-item,
     .lunara-control-desk-carousel-fields {
         grid-template-columns: 1fr;
+    }
+
+    .lunara-control-desk-brand-preview {
+        grid-template-columns: 72px minmax(0, 1fr);
+    }
+
+    .lunara-control-desk-brand-thumb {
+        height: 54px;
+    }
+
+    .lunara-control-desk-brand-reset {
+        justify-items: start;
     }
 
     .lunara-control-desk-carousel-title-row {

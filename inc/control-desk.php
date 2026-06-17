@@ -226,6 +226,168 @@ function lunara_control_desk_save_journal_carousel() {
 }
 add_action( 'admin_post_lunara_save_journal_carousel', 'lunara_control_desk_save_journal_carousel' );
 
+function lunara_control_desk_brand_number_specs() {
+    return array(
+        'lunara_logo_max_height'               => array(
+            'label'   => __( 'Header logo max height', 'lunara-film' ),
+            'default' => 50,
+            'min'     => 24,
+            'max'     => 110,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Affects the public header mark across desktop and mobile.', 'lunara-film' ),
+        ),
+        'lunara_home_logo_desktop_max_width'   => array(
+            'label'   => __( 'Homepage logo desktop max width', 'lunara-film' ),
+            'default' => 1180,
+            'min'     => 520,
+            'max'     => 1600,
+            'step'    => 10,
+            'unit'    => 'px',
+            'note'    => __( 'Caps the wide homepage identity mark on desktop viewports.', 'lunara-film' ),
+        ),
+        'lunara_home_logo_desktop_max_height'  => array(
+            'label'   => __( 'Homepage logo desktop max height', 'lunara-film' ),
+            'default' => 312,
+            'min'     => 140,
+            'max'     => 420,
+            'step'    => 4,
+            'unit'    => 'px',
+            'note'    => __( 'Prevents the homepage logo from overwhelming the front door.', 'lunara-film' ),
+        ),
+        'lunara_home_logo_mobile_max_width'    => array(
+            'label'   => __( 'Homepage logo mobile max width', 'lunara-film' ),
+            'default' => 720,
+            'min'     => 280,
+            'max'     => 920,
+            'step'    => 10,
+            'unit'    => 'px',
+            'note'    => __( 'Keeps the mark responsive without shrinking tablet layouts too far.', 'lunara-film' ),
+        ),
+        'lunara_home_logo_mobile_max_height'   => array(
+            'label'   => __( 'Homepage logo mobile max height', 'lunara-film' ),
+            'default' => 148,
+            'min'     => 88,
+            'max'     => 240,
+            'step'    => 4,
+            'unit'    => 'px',
+            'note'    => __( 'Controls the 390px and small-screen logo chamber.', 'lunara-film' ),
+        ),
+        'lunara_home_logo_vertical_gap'        => array(
+            'label'   => __( 'Homepage logo vertical spacing', 'lunara-film' ),
+            'default' => 20,
+            'min'     => 8,
+            'max'     => 48,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Tunes the breathing room around the homepage identity stack.', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_brand_clamp_number( $key, $value ) {
+    $specs = lunara_control_desk_brand_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    $spec  = $specs[ $key ];
+    if ( is_array( $value ) ) {
+        $value = reset( $value );
+    }
+    $value = absint( $value );
+
+    if ( $value < $spec['min'] ) {
+        return absint( $spec['min'] );
+    }
+
+    if ( $value > $spec['max'] ) {
+        return absint( $spec['max'] );
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_brand_number_value( $key ) {
+    $specs = lunara_control_desk_brand_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    return lunara_control_desk_brand_clamp_number(
+        $key,
+        get_theme_mod( $key, $specs[ $key ]['default'] )
+    );
+}
+
+function lunara_control_desk_brand_image_is_valid( $attachment_id ) {
+    $attachment_id = absint( $attachment_id );
+
+    if ( ! $attachment_id ) {
+        return true;
+    }
+
+    $mime = (string) get_post_mime_type( $attachment_id );
+
+    return 0 === strpos( $mime, 'image/' );
+}
+
+function lunara_control_desk_save_brand_controls() {
+    $redirect = lunara_control_desk_admin_url(
+        array(
+            'tab' => 'theme-studio',
+        )
+    ) . '#lunara-theme-studio-brand-console';
+
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        wp_safe_redirect( add_query_arg( 'lunara_notice', 'brand_controls_forbidden', $redirect ) );
+        exit;
+    }
+
+    check_admin_referer( 'lunara_save_brand_controls', 'lunara_brand_nonce' );
+
+    $header_logo_id = isset( $_POST['lunara_brand_header_logo_id'] ) ? absint( wp_unslash( $_POST['lunara_brand_header_logo_id'] ) ) : 0;
+    $home_logo_id   = isset( $_POST['lunara_brand_home_logo_id'] ) ? absint( wp_unslash( $_POST['lunara_brand_home_logo_id'] ) ) : 0;
+    $site_icon_id   = isset( $_POST['lunara_brand_site_icon_id'] ) ? absint( wp_unslash( $_POST['lunara_brand_site_icon_id'] ) ) : 0;
+    $image_ids      = array( $header_logo_id, $home_logo_id, $site_icon_id );
+
+    foreach ( $image_ids as $image_id ) {
+        if ( ! lunara_control_desk_brand_image_is_valid( $image_id ) ) {
+            wp_safe_redirect( add_query_arg( 'lunara_notice', 'brand_controls_invalid_image', $redirect ) );
+            exit;
+        }
+    }
+
+    $header_logo_id ? set_theme_mod( 'custom_logo', $header_logo_id ) : remove_theme_mod( 'custom_logo' );
+    $home_logo_id ? update_option( 'lunara_home_identity_logo_id', $home_logo_id, false ) : delete_option( 'lunara_home_identity_logo_id' );
+    $site_icon_id ? update_option( 'site_icon', $site_icon_id, false ) : delete_option( 'site_icon' );
+
+    $raw_numbers = isset( $_POST['lunara_brand_number'] ) && is_array( $_POST['lunara_brand_number'] )
+        ? wp_unslash( $_POST['lunara_brand_number'] )
+        : array();
+    $raw_resets  = isset( $_POST['lunara_brand_reset'] ) && is_array( $_POST['lunara_brand_reset'] )
+        ? wp_unslash( $_POST['lunara_brand_reset'] )
+        : array();
+    $resets      = array_map( 'sanitize_key', array_keys( $raw_resets ) );
+
+    foreach ( lunara_control_desk_brand_number_specs() as $key => $spec ) {
+        if ( in_array( $key, $resets, true ) ) {
+            remove_theme_mod( $key );
+            continue;
+        }
+
+        if ( array_key_exists( $key, $raw_numbers ) ) {
+            set_theme_mod( $key, (string) lunara_control_desk_brand_clamp_number( $key, $raw_numbers[ $key ] ) );
+        }
+    }
+
+    wp_safe_redirect( add_query_arg( 'lunara_notice', 'brand_controls_saved', $redirect ) );
+    exit;
+}
+add_action( 'admin_post_lunara_save_brand_controls', 'lunara_control_desk_save_brand_controls' );
+
 function lunara_control_desk_post_types() {
     return array_values(
         array_filter(
@@ -3910,6 +4072,235 @@ function lunara_control_desk_render_review_pipeline_tab( $rows ) {
     <?php
 }
 
+function lunara_control_desk_brand_media_summary( $attachment_id ) {
+    $attachment_id = absint( $attachment_id );
+
+    if ( ! $attachment_id ) {
+        return array(
+            'id'     => 0,
+            'title'  => __( 'Using fallback/default', 'lunara-film' ),
+            'meta'   => __( 'No custom image selected here.', 'lunara-film' ),
+            'thumb'  => '',
+            'status' => 'empty',
+        );
+    }
+
+    $title = get_the_title( $attachment_id );
+    $image = wp_get_attachment_image_src( $attachment_id, 'medium' );
+    $full  = wp_get_attachment_image_src( $attachment_id, 'full' );
+    $meta  = '';
+
+    if ( ! empty( $full[1] ) && ! empty( $full[2] ) ) {
+        $meta = sprintf(
+            /* translators: 1: attachment ID, 2: image dimensions. */
+            __( 'Attachment #%1$d / %2$s', 'lunara-film' ),
+            $attachment_id,
+            absint( $full[1] ) . 'x' . absint( $full[2] )
+        );
+    } else {
+        $meta = sprintf(
+            /* translators: %d: attachment ID. */
+            __( 'Attachment #%d', 'lunara-film' ),
+            $attachment_id
+        );
+    }
+
+    return array(
+        'id'     => $attachment_id,
+        'title'  => $title ? $title : sprintf( __( 'Attachment #%d', 'lunara-film' ), $attachment_id ),
+        'meta'   => $meta,
+        'thumb'  => ! empty( $image[0] ) ? $image[0] : '',
+        'status' => 'ready',
+    );
+}
+
+function lunara_control_desk_render_brand_media_control( $control ) {
+    $summary = lunara_control_desk_brand_media_summary( $control['value'] );
+    ?>
+    <article class="lunara-control-desk-brand-card" data-lunara-brand-media-control>
+        <div class="lunara-control-desk-card-head">
+            <div>
+                <p class="lunara-control-desk-kicker"><?php echo esc_html( $control['eyebrow'] ); ?></p>
+                <h3><?php echo esc_html( $control['label'] ); ?></h3>
+                <p class="lunara-control-desk-subtle"><?php echo esc_html( $control['note'] ); ?></p>
+            </div>
+        </div>
+        <div class="lunara-control-desk-brand-preview is-<?php echo esc_attr( $summary['status'] ); ?>" data-lunara-brand-media-preview>
+            <div class="lunara-control-desk-brand-thumb">
+                <?php if ( $summary['thumb'] ) : ?>
+                    <img src="<?php echo esc_url( $summary['thumb'] ); ?>" alt="" />
+                <?php endif; ?>
+            </div>
+            <div>
+                <strong data-lunara-brand-media-title><?php echo esc_html( $summary['title'] ); ?></strong>
+                <span data-lunara-brand-media-meta><?php echo esc_html( $summary['meta'] ); ?></span>
+            </div>
+        </div>
+        <input data-lunara-brand-media-input type="hidden" name="<?php echo esc_attr( $control['field'] ); ?>" value="<?php echo esc_attr( absint( $control['value'] ) ); ?>" />
+        <div class="lunara-control-desk-brand-affects">
+            <strong><?php esc_html_e( 'What this affects', 'lunara-film' ); ?></strong>
+            <span><?php echo esc_html( $control['affects'] ); ?></span>
+        </div>
+        <div class="lunara-control-desk-actions">
+            <button
+                type="button"
+                class="button button-secondary"
+                data-lunara-brand-media-picker
+                data-title="<?php echo esc_attr( $control['picker_title'] ); ?>"
+                data-button="<?php echo esc_attr( $control['picker_button'] ); ?>"
+            >
+                <?php esc_html_e( 'Choose Image', 'lunara-film' ); ?>
+            </button>
+            <button type="button" class="button" data-lunara-brand-media-clear><?php esc_html_e( 'Clear Field', 'lunara-film' ); ?></button>
+        </div>
+    </article>
+    <?php
+}
+
+function lunara_control_desk_render_brand_number_control( $key, $spec ) {
+    $value     = lunara_control_desk_brand_number_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <label class="lunara-control-desk-brand-number" data-lunara-brand-number-control>
+        <span>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+        </span>
+        <input
+            type="range"
+            min="<?php echo esc_attr( $spec['min'] ); ?>"
+            max="<?php echo esc_attr( $spec['max'] ); ?>"
+            step="<?php echo esc_attr( $spec['step'] ); ?>"
+            value="<?php echo esc_attr( $value ); ?>"
+            data-lunara-brand-range
+        />
+        <span class="lunara-control-desk-brand-number-value">
+            <input
+                type="number"
+                name="lunara_brand_number[<?php echo esc_attr( $key ); ?>]"
+                min="<?php echo esc_attr( $spec['min'] ); ?>"
+                max="<?php echo esc_attr( $spec['max'] ); ?>"
+                step="<?php echo esc_attr( $spec['step'] ); ?>"
+                value="<?php echo esc_attr( $value ); ?>"
+                data-lunara-brand-number
+            />
+            <em><?php echo esc_html( $spec['unit'] ); ?></em>
+        </span>
+        <span class="lunara-control-desk-brand-reset">
+            <label>
+                <input type="checkbox" name="lunara_brand_reset[<?php echo esc_attr( $key ); ?>]" value="1" />
+                <?php
+                printf(
+                    /* translators: %d: setting default value. */
+                    esc_html__( 'Reset to %d', 'lunara-film' ),
+                    absint( $spec['default'] )
+                );
+                ?>
+            </label>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </span>
+    </label>
+    <?php
+}
+
+function lunara_control_desk_render_brand_console() {
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        ?>
+        <section id="lunara-theme-studio-brand-console" class="lunara-control-desk-brand-console">
+            <div class="lunara-control-desk-panel-header">
+                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Brand Console', 'lunara-film' ); ?></p>
+                <h3><?php esc_html_e( 'Brand controls require theme editing permission', 'lunara-film' ); ?></h3>
+                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'The map below remains available, but direct logo and identity changes are limited to administrators.', 'lunara-film' ); ?></p>
+            </div>
+        </section>
+        <?php
+        return;
+    }
+
+    $custom_logo_id = absint( get_theme_mod( 'custom_logo' ) );
+    $home_logo_id   = absint( get_option( 'lunara_home_identity_logo_id', 0 ) );
+    $site_icon_id   = absint( get_option( 'site_icon', 0 ) );
+    $controls       = array(
+        array(
+            'eyebrow'       => __( 'Header', 'lunara-film' ),
+            'label'         => __( 'Header logo media', 'lunara-film' ),
+            'field'         => 'lunara_brand_header_logo_id',
+            'value'         => $custom_logo_id,
+            'note'          => __( 'Uses the existing WordPress custom_logo setting.', 'lunara-film' ),
+            'affects'       => __( 'The public site header, mobile header, and any Blocksy surface reading the WordPress custom logo.', 'lunara-film' ),
+            'picker_title'  => __( 'Choose header logo', 'lunara-film' ),
+            'picker_button' => __( 'Use as header logo', 'lunara-film' ),
+        ),
+        array(
+            'eyebrow'       => __( 'Homepage', 'lunara-film' ),
+            'label'         => __( 'Homepage identity logo', 'lunara-film' ),
+            'field'         => 'lunara_brand_home_logo_id',
+            'value'         => $home_logo_id,
+            'note'          => __( 'Uses lunara_home_identity_logo_id; when empty, the homepage falls back to the header logo.', 'lunara-film' ),
+            'affects'       => __( 'The large homepage masthead identity mark only.', 'lunara-film' ),
+            'picker_title'  => __( 'Choose homepage identity logo', 'lunara-film' ),
+            'picker_button' => __( 'Use on homepage', 'lunara-film' ),
+        ),
+        array(
+            'eyebrow'       => __( 'Social Preview', 'lunara-film' ),
+            'label'         => __( 'Site icon and social fallback', 'lunara-film' ),
+            'field'         => 'lunara_brand_site_icon_id',
+            'value'         => $site_icon_id,
+            'note'          => __( 'Uses the existing site_icon option and the current brand fallback behavior.', 'lunara-film' ),
+            'affects'       => __( 'Browser icon, WordPress site icon output, and social fallback identity when no stronger image is available.', 'lunara-film' ),
+            'picker_title'  => __( 'Choose site icon', 'lunara-film' ),
+            'picker_button' => __( 'Use as site icon', 'lunara-film' ),
+        ),
+    );
+    ?>
+    <section id="lunara-theme-studio-brand-console" class="lunara-control-desk-brand-console">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Brand Console', 'lunara-film' ); ?></p>
+            <h3><?php esc_html_e( 'Direct logo controls without a code edit', 'lunara-film' ); ?></h3>
+            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'This is the first Theme Studio control surface: bounded, reversible, and wired to the same storage the public site already reads.', 'lunara-film' ); ?></p>
+        </div>
+        <form class="lunara-control-desk-brand-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+            <input type="hidden" name="action" value="lunara_save_brand_controls" />
+            <?php wp_nonce_field( 'lunara_save_brand_controls', 'lunara_brand_nonce' ); ?>
+
+            <div class="lunara-control-desk-brand-grid">
+                <?php foreach ( $controls as $control ) : ?>
+                    <?php lunara_control_desk_render_brand_media_control( $control ); ?>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="lunara-control-desk-brand-tuning">
+                <div class="lunara-control-desk-card-head">
+                    <div>
+                        <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Sizing', 'lunara-film' ); ?></p>
+                        <h3><?php esc_html_e( 'Logo geometry and spacing', 'lunara-film' ); ?></h3>
+                        <p class="lunara-control-desk-subtle"><?php esc_html_e( 'All values are clamped server-side so the logo can be tuned without creating crop, blur-stretch, or overflow risk.', 'lunara-film' ); ?></p>
+                    </div>
+                </div>
+                <div class="lunara-control-desk-brand-number-grid">
+                    <?php foreach ( lunara_control_desk_brand_number_specs() as $key => $spec ) : ?>
+                        <?php lunara_control_desk_render_brand_number_control( $key, $spec ); ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="lunara-control-desk-brand-footer">
+                <div>
+                    <strong><?php esc_html_e( 'Preview after saving', 'lunara-film' ); ?></strong>
+                    <span><?php esc_html_e( 'Desktop and 390px links stay close so logo changes can be judged immediately.', 'lunara-film' ); ?></span>
+                </div>
+                <div class="lunara-control-desk-actions">
+                    <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Brand Controls', 'lunara-film' ); ?></button>
+                    <a class="button" href="<?php echo esc_url( home_url( '/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Homepage Desktop', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', home_url( '/' ) ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Homepage 390px', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Header Preview', 'lunara-film' ); ?></a>
+                </div>
+            </div>
+        </form>
+    </section>
+    <?php
+}
+
 function lunara_control_desk_theme_studio_groups() {
     return array(
         array(
@@ -4746,9 +5137,10 @@ function lunara_control_desk_render_theme_studio_tab() {
         <div class="lunara-control-desk-panel-header">
             <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Theme Studio', 'lunara-film' ); ?></p>
             <h2><?php esc_html_e( 'The important design controls without the hunting', 'lunara-film' ); ?></h2>
-            <p class="lunara-control-desk-intro"><?php esc_html_e( 'This map keeps existing Customizer ownership intact. It does not create duplicate settings storage.', 'lunara-film' ); ?></p>
+            <p class="lunara-control-desk-intro"><?php esc_html_e( 'Brand controls now sit beside the existing ownership map, with direct storage only where the public site already reads it.', 'lunara-film' ); ?></p>
         </div>
         <?php lunara_control_desk_render_status_cards( lunara_control_desk_theme_studio_summary_cards( $groups ) ); ?>
+        <?php lunara_control_desk_render_brand_console(); ?>
         <div class="lunara-control-desk-studio-nav" aria-label="<?php echo esc_attr__( 'Theme Studio groups', 'lunara-film' ); ?>">
             <?php foreach ( $groups as $group ) : ?>
                 <?php $counts = lunara_control_desk_theme_studio_group_counts( $group ); ?>
@@ -6784,6 +7176,18 @@ function lunara_control_desk_render_notice() {
         'journal_carousel_forbidden' => array(
             'class'   => 'notice-error',
             'message' => __( 'You can view the Control Desk, but editing this Journal visual file requires permission to edit the selected entry.', 'lunara-film' ),
+        ),
+        'brand_controls_saved' => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Brand controls saved. Header, homepage, and icon surfaces now read the updated values.', 'lunara-film' ),
+        ),
+        'brand_controls_invalid_image' => array(
+            'class'   => 'notice-error',
+            'message' => __( 'Brand controls were not saved because one selected media item was not an image attachment.', 'lunara-film' ),
+        ),
+        'brand_controls_forbidden' => array(
+            'class'   => 'notice-error',
+            'message' => __( 'You can view the Control Desk, but changing brand controls requires theme editing permission.', 'lunara-film' ),
         ),
     );
 
