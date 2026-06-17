@@ -1239,31 +1239,31 @@ if ( ! function_exists( 'lunara_get_review_image_profile' ) ) {
     function lunara_get_review_image_profile( $class_string = '' ) {
         $class_string = (string) $class_string;
         $profile      = array(
-            'size'   => 'lunara-review-card',
-            'width'  => 750,
-            'height' => 1000,
+            'size'   => 'lunara-review-card-retina',
+            'width'  => 1500,
+            'height' => 2000,
             'sizes'  => '(max-width: 520px) 46vw, (max-width: 900px) 42vw, (max-width: 1180px) 30vw, 340px',
         );
 
         if ( false !== stripos( $class_string, 'lunara-review-feature-image' ) ) {
             $profile = array(
                 'size'   => 'lunara-review-feature',
-                'width'  => 750,
-                'height' => 1000,
+                'width'  => 1500,
+                'height' => 2000,
                 'sizes'  => '(max-width: 900px) 88vw, 520px',
             );
         } elseif ( false !== stripos( $class_string, 'lunara-review-single-debrief-poster' ) ) {
             $profile = array(
                 'size'   => 'lunara-poster-library',
-                'width'  => 1000,
-                'height' => 1500,
+                'width'  => 2000,
+                'height' => 3000,
                 'sizes'  => '(max-width: 900px) 42vw, 320px',
             );
         } elseif ( false !== stripos( $class_string, 'lunara-review-visual--poster-hero' ) ) {
             $profile = array(
                 'size'   => 'lunara-poster-library',
-                'width'  => 1000,
-                'height' => 1500,
+                'width'  => 2000,
+                'height' => 3000,
                 'sizes'  => '(max-width: 900px) min(78vw, 420px), 460px',
             );
         } elseif ( false !== stripos( $class_string, 'lunara-review-visual-image' ) ) {

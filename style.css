@@ -15296,6 +15296,23 @@ body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-winner-circle-
     }
 }
 
+/* Homepage Journal title rhythm - keep the lead and support cards typographically uniform. */
+body.home .lunara-journal-home-card-title,
+body.home .lunara-journal-home-card.is-lead .lunara-journal-home-card-title {
+    font-size: clamp(1.25rem, 1.9vw, 1.62rem) !important;
+    line-height: 1.12 !important;
+    letter-spacing: 0 !important;
+    min-height: calc(1.12em * 3) !important;
+}
+
+@media (max-width: 760px) {
+    body.home .lunara-journal-home-card-title,
+    body.home .lunara-journal-home-card.is-lead .lunara-journal-home-card-title {
+        font-size: clamp(1.25rem, 5.2vw, 1.36rem) !important;
+        min-height: calc(1.12em * 3) !important;
+    }
+}
+
 /* ---- Journal desk polish + Oscar Ledger affordances -------------------- */
 .lunara-journal-home-deskbar,
 .lunara-journal-archive-deskbar {

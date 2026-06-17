@@ -157,6 +157,23 @@ function lunara_home_card_media_hygiene_css() {
 add_action( 'wp_head', 'lunara_home_card_media_hygiene_css', 47 );
 
 /**
+ * Keep homepage Journal card headlines on one shared type scale.
+ */
+function lunara_home_journal_title_rhythm_css() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+    ?>
+    <style id="lunara-home-journal-title-rhythm-css">
+    body.home .lunara-front-page .lunara-journal-home-grid .lunara-journal-home-card .lunara-journal-home-card-title,
+    body.home .lunara-front-page .lunara-journal-home-grid .lunara-journal-home-card.is-lead .lunara-journal-home-card-title{font-size:clamp(1.25rem,1.9vw,1.62rem)!important;line-height:1.12!important;letter-spacing:0!important;min-height:calc(1.12em * 3)!important;}
+    @media(max-width:760px){body.home .lunara-front-page .lunara-journal-home-grid .lunara-journal-home-card .lunara-journal-home-card-title,body.home .lunara-front-page .lunara-journal-home-grid .lunara-journal-home-card.is-lead .lunara-journal-home-card-title{font-size:clamp(1.25rem,5.2vw,1.36rem)!important;line-height:1.12!important;}}
+    </style>
+    <?php
+}
+add_action( 'wp_footer', 'lunara_home_journal_title_rhythm_css', 125 );
+
+/**
  * Footer fallback.
  */
 function lunara_footer_menu_fallback() {
