@@ -1728,6 +1728,113 @@ if ( ! function_exists( 'lunara_filter_review_jetpack_seo_meta_tags' ) ) {
 }
 add_filter( 'jetpack_seo_meta_tags', 'lunara_filter_review_jetpack_seo_meta_tags', 20 );
 
+if ( ! function_exists( 'lunara_get_brand_social_image_url' ) ) {
+    function lunara_get_brand_social_image_url() {
+        $candidate_ids = array(
+            (int) get_option( 'site_icon' ),
+            (int) get_option( 'lunara_home_identity_logo_id' ),
+            (int) get_theme_mod( 'custom_logo' ),
+        );
+
+        foreach ( $candidate_ids as $attachment_id ) {
+            if ( $attachment_id <= 0 ) {
+                continue;
+            }
+
+            $image_url = wp_get_attachment_image_url( $attachment_id, 'full' );
+            if ( $image_url ) {
+                return (string) $image_url;
+            }
+        }
+
+        return '';
+    }
+}
+
+if ( ! function_exists( 'lunara_should_use_brand_social_image_fallback' ) ) {
+    function lunara_should_use_brand_social_image_fallback() {
+        if ( is_singular( 'review' ) ) {
+            return false;
+        }
+
+        if ( is_singular() ) {
+            $post_id = get_queried_object_id();
+            if ( $post_id > 0 && has_post_thumbnail( $post_id ) ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
+
+if ( ! function_exists( 'lunara_filter_brand_jetpack_seo_meta_tags' ) ) {
+    function lunara_filter_brand_jetpack_seo_meta_tags( $meta ) {
+        if ( ! is_array( $meta ) || ! lunara_should_use_brand_social_image_fallback() ) {
+            return $meta;
+        }
+
+        $image_url = lunara_get_brand_social_image_url();
+        if ( '' === $image_url ) {
+            return $meta;
+        }
+
+        if ( empty( $meta['twitter:image'] ) ) {
+            $meta['twitter:image'] = $image_url;
+        }
+
+        if ( empty( $meta['twitter:card'] ) ) {
+            $meta['twitter:card'] = 'summary_large_image';
+        }
+
+        return $meta;
+    }
+}
+add_filter( 'jetpack_seo_meta_tags', 'lunara_filter_brand_jetpack_seo_meta_tags', 30 );
+
+if ( ! function_exists( 'lunara_filter_brand_jetpack_open_graph_tags' ) ) {
+    function lunara_filter_brand_jetpack_open_graph_tags( $tags ) {
+        if ( ! is_array( $tags ) || ! lunara_should_use_brand_social_image_fallback() ) {
+            return $tags;
+        }
+
+        $image_url = lunara_get_brand_social_image_url();
+        if ( '' === $image_url ) {
+            return $tags;
+        }
+
+        if ( empty( $tags['og:image'] ) ) {
+            $tags['og:image'] = $image_url;
+        }
+
+        if ( empty( $tags['og:image:alt'] ) ) {
+            $tags['og:image:alt'] = __( 'Lunara Film icon', 'lunara-film' );
+        }
+
+        return $tags;
+    }
+}
+add_filter( 'jetpack_open_graph_tags', 'lunara_filter_brand_jetpack_open_graph_tags', 30 );
+
+if ( ! function_exists( 'lunara_output_brand_social_image_fallback_meta' ) ) {
+    function lunara_output_brand_social_image_fallback_meta() {
+        if ( ! lunara_should_use_brand_social_image_fallback() ) {
+            return;
+        }
+
+        $image_url = lunara_get_brand_social_image_url();
+        if ( '' === $image_url ) {
+            return;
+        }
+
+        echo "\n" . '<meta property="og:image" content="' . esc_url( $image_url ) . '">' . "\n";
+        echo '<meta property="og:image:alt" content="' . esc_attr__( 'Lunara Film icon', 'lunara-film' ) . '">' . "\n";
+        echo '<meta name="twitter:image" content="' . esc_url( $image_url ) . '">' . "\n";
+        echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
+    }
+}
+add_action( 'wp_head', 'lunara_output_brand_social_image_fallback_meta', 99 );
+
 if ( ! function_exists( 'lunara_filter_review_jetpack_open_graph_tags' ) ) {
     function lunara_filter_review_jetpack_open_graph_tags( $tags ) {
         if ( ! is_singular( 'review' ) || ! is_array( $tags ) ) {
