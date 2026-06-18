@@ -991,6 +991,145 @@
     margin: 12px 0;
 }
 
+.lunara-control-desk-image-filter-panel {
+    background: #ffffff;
+    border: 1px solid var(--lcd-line);
+    border-radius: 8px;
+    margin: 12px 0;
+    padding: 12px;
+}
+
+.lunara-control-desk-image-filter-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.lunara-control-desk-image-filter-grid section {
+    background: #f6f7f7;
+    border: 1px solid var(--lcd-line);
+    border-radius: 8px;
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+    padding: 10px;
+}
+
+.lunara-control-desk-image-filter-grid h5 {
+    color: var(--lcd-muted);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    margin: 0 0 2px;
+    text-transform: uppercase;
+}
+
+.lunara-control-desk-image-filter {
+    background: #ffffff;
+    border: 1px solid var(--lcd-line);
+    border-radius: 7px;
+    color: var(--lcd-ink);
+    display: grid;
+    gap: 2px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 8px;
+    text-decoration: none;
+}
+
+.lunara-control-desk-image-filter:hover,
+.lunara-control-desk-image-filter:focus,
+.lunara-control-desk-image-filter.is-active {
+    border-color: var(--lcd-gold);
+    box-shadow: 0 0 0 1px rgba(155, 118, 45, 0.16);
+}
+
+.lunara-control-desk-image-filter.is-active {
+    background: #fffaf0;
+}
+
+.lunara-control-desk-image-filter strong {
+    font-size: 12px;
+    line-height: 1.25;
+    min-width: 0;
+}
+
+.lunara-control-desk-image-filter span {
+    color: var(--lcd-muted);
+    font-size: 11px;
+    grid-column: 1 / 2;
+    line-height: 1.3;
+    min-width: 0;
+}
+
+.lunara-control-desk-image-filter em {
+    align-items: center;
+    align-self: start;
+    background: #f6f7f7;
+    border: 1px solid var(--lcd-line);
+    border-radius: 999px;
+    color: var(--lcd-ink);
+    display: inline-flex;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 700;
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
+    justify-content: center;
+    min-width: 28px;
+    padding: 2px 7px;
+}
+
+.lunara-control-desk-image-filter.is-active em {
+    background: var(--lcd-ink);
+    border-color: var(--lcd-ink);
+    color: #ffffff;
+}
+
+.lunara-control-desk-image-priority-lanes {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 10px;
+}
+
+.lunara-control-desk-image-priority-lanes a {
+    align-items: center;
+    background: #0b1724;
+    border: 1px solid rgba(155, 118, 45, 0.28);
+    border-radius: 8px;
+    color: #ffffff;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 9px 10px;
+    text-decoration: none;
+}
+
+.lunara-control-desk-image-priority-lanes a:hover,
+.lunara-control-desk-image-priority-lanes a:focus {
+    border-color: var(--lcd-gold);
+}
+
+.lunara-control-desk-image-priority-lanes strong {
+    color: #ffffff;
+    font-size: 12px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.lunara-control-desk-image-priority-lanes span {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    color: #e0c481;
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 30px;
+    padding: 2px 8px;
+    text-align: center;
+}
+
 .lunara-control-desk-image-targets article {
     background: #ffffff;
     border: 1px solid var(--lcd-line);
@@ -3505,6 +3644,8 @@
     .lunara-control-desk-studio-evidence-grid,
     .lunara-control-desk-studio-glossary-grid,
     .lunara-control-desk-studio-packet-grid,
+    .lunara-control-desk-image-filter-grid,
+    .lunara-control-desk-image-priority-lanes,
     .lunara-control-desk-review-grid,
     .lunara-control-desk-review-filters,
     .lunara-control-desk-review-issue-grid,
