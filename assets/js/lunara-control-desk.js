@@ -560,6 +560,78 @@
         });
     }
 
+    function renderImageSource(control, attachment) {
+        var input = qs('[data-lunara-image-source-input]', control);
+        var preview = qs('[data-lunara-image-source-preview]', control);
+        var thumb = qs('.lunara-control-desk-image-source-thumb', control);
+        var title = qs('[data-lunara-image-source-title]', control);
+        var meta = qs('[data-lunara-image-source-meta]', control);
+
+        if (input) {
+            input.value = attachment.id || '0';
+        }
+
+        if (thumb) {
+            thumb.innerHTML = attachment.thumb ? '<img src="' + escapeAttr(attachment.thumb) + '" alt="" />' : '';
+        }
+
+        if (title) {
+            title.textContent = attachment.title || 'No replacement selected';
+        }
+
+        if (meta) {
+            meta.textContent = attachment.meta || 'Choose a Media Library image, then save this row.';
+        }
+
+        if (preview) {
+            preview.classList.toggle('is-ready', !!attachment.id);
+            preview.classList.toggle('is-empty', !attachment.id);
+        }
+    }
+
+    function openImageSourcePicker(button) {
+        var control = button.closest('[data-lunara-image-source-control]');
+        var frame;
+
+        if (!control || !window.wp || !window.wp.media) {
+            return;
+        }
+
+        frame = window.wp.media({
+            title: button.getAttribute('data-title') || 'Choose image',
+            button: { text: button.getAttribute('data-button') || 'Use image' },
+            library: { type: 'image' },
+            multiple: false
+        });
+
+        frame.on('select', function () {
+            var model = frame.state().get('selection').first();
+
+            if (!model) {
+                return;
+            }
+
+            renderImageSource(control, normalizeMediaAttachment(model));
+        });
+
+        frame.open();
+    }
+
+    function clearImageSource(button) {
+        var control = button.closest('[data-lunara-image-source-control]');
+
+        if (!control) {
+            return;
+        }
+
+        renderImageSource(control, {
+            id: 0,
+            title: 'No replacement selected',
+            thumb: '',
+            meta: 'Choose a Media Library image, then save this row.'
+        });
+    }
+
     function clampNumber(value, min, max) {
         value = parseInt(value, 10);
         min = parseInt(min, 10);
@@ -640,6 +712,8 @@
             var printButton = event.target.closest('[data-lunara-print]');
             var brandPicker = event.target.closest('[data-lunara-brand-media-picker]');
             var brandClear = event.target.closest('[data-lunara-brand-media-clear]');
+            var imageSourcePicker = event.target.closest('[data-lunara-image-source-picker]');
+            var imageSourceClear = event.target.closest('[data-lunara-image-source-clear]');
             var carouselPicker = event.target.closest('[data-lunara-carousel-picker]');
             var carouselMove = event.target.closest('[data-lunara-carousel-move]');
             var carouselRemove = event.target.closest('[data-lunara-carousel-remove]');
@@ -666,6 +740,16 @@
 
             if (brandClear) {
                 clearBrandMedia(brandClear);
+                return;
+            }
+
+            if (imageSourcePicker) {
+                openImageSourcePicker(imageSourcePicker);
+                return;
+            }
+
+            if (imageSourceClear) {
+                clearImageSource(imageSourceClear);
                 return;
             }
 
