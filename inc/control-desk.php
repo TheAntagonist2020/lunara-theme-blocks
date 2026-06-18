@@ -4301,6 +4301,369 @@ function lunara_control_desk_render_brand_console() {
     <?php
 }
 
+function lunara_control_desk_image_quality_targets() {
+    return array(
+        'review-card' => array(
+            'label'   => __( 'Review/home/archive cards', 'lunara-film' ),
+            'size'    => 'lunara-review-card-retina',
+            'width'   => 1500,
+            'height'  => 2000,
+            'ratio'   => '3:4',
+            'surface' => __( 'Review archive cards, homepage review cards, and card-style editorial placements.', 'lunara-film' ),
+        ),
+        'poster'      => array(
+            'label'   => __( 'Poster library modules', 'lunara-film' ),
+            'size'    => 'lunara-poster-library',
+            'width'   => 2000,
+            'height'  => 3000,
+            'ratio'   => '2:3',
+            'surface' => __( 'Debrief posters, Oscar title/person modules, poster grids, and sidebar poster chambers.', 'lunara-film' ),
+        ),
+        'hero'        => array(
+            'label'   => __( 'Hero, Journal, and spotlight images', 'lunara-film' ),
+            'size'    => 'lunara-hero-spotlight',
+            'width'   => 1920,
+            'height'  => 1080,
+            'ratio'   => '16:9',
+            'surface' => __( 'Journal hero images, spotlight artwork, trailer backdrops, and wide editorial media.', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_image_quality_attachment_dimensions( $attachment_id ) {
+    $attachment_id = absint( $attachment_id );
+
+    if ( ! $attachment_id ) {
+        return array(
+            'width'  => 0,
+            'height' => 0,
+        );
+    }
+
+    $metadata = wp_get_attachment_metadata( $attachment_id );
+
+    return array(
+        'width'  => isset( $metadata['width'] ) ? absint( $metadata['width'] ) : 0,
+        'height' => isset( $metadata['height'] ) ? absint( $metadata['height'] ) : 0,
+    );
+}
+
+function lunara_control_desk_image_quality_state( $attachment_id, $target, $external_url = '' ) {
+    $attachment_id = absint( $attachment_id );
+    $external_url  = trim( (string) $external_url );
+    $target_width  = isset( $target['width'] ) ? absint( $target['width'] ) : 0;
+    $target_height = isset( $target['height'] ) ? absint( $target['height'] ) : 0;
+    $dimensions    = lunara_control_desk_image_quality_attachment_dimensions( $attachment_id );
+
+    if ( ! $attachment_id && '' !== $external_url ) {
+        return array(
+            'state'      => 'weak',
+            'label'      => __( 'External URL', 'lunara-film' ),
+            'note'       => __( 'The site can render it, but WordPress cannot report source dimensions. Prefer a Media Library image for quality control.', 'lunara-film' ),
+            'dimensions' => $dimensions,
+        );
+    }
+
+    if ( ! $attachment_id ) {
+        return array(
+            'state'      => 'weak',
+            'label'      => __( 'Missing', 'lunara-film' ),
+            'note'       => __( 'No inspectable source image is attached to this placement.', 'lunara-film' ),
+            'dimensions' => $dimensions,
+        );
+    }
+
+    if ( $dimensions['width'] >= $target_width && $dimensions['height'] >= $target_height ) {
+        return array(
+            'state'      => 'ready',
+            'label'      => __( 'Ready', 'lunara-film' ),
+            'note'       => __( 'The source file meets the Lunara target for this surface.', 'lunara-film' ),
+            'dimensions' => $dimensions,
+        );
+    }
+
+    if ( $dimensions['width'] >= (int) round( $target_width * 0.85 ) && $dimensions['height'] >= (int) round( $target_height * 0.85 ) ) {
+        return array(
+            'state'      => 'weak',
+            'label'      => __( 'Near target', 'lunara-film' ),
+            'note'       => __( 'Usable in a pinch, but not the premium source standard.', 'lunara-film' ),
+            'dimensions' => $dimensions,
+        );
+    }
+
+    return array(
+        'state'      => 'weak',
+        'label'      => __( 'Replace source', 'lunara-film' ),
+        'note'       => __( 'This source is below the target and can read soft or blurry in high-visibility placements.', 'lunara-film' ),
+        'dimensions' => $dimensions,
+    );
+}
+
+function lunara_control_desk_review_card_source( $post_id ) {
+    $post_id       = absint( $post_id );
+    $card_url      = trim( (string) get_post_meta( $post_id, '_lunara_review_card_image', true ) );
+    $attachment_id = '' !== $card_url ? absint( attachment_url_to_postid( $card_url ) ) : 0;
+    $source_label  = '' !== $card_url ? __( 'Card image override', 'lunara-film' ) : '';
+
+    if ( ! $attachment_id && has_post_thumbnail( $post_id ) ) {
+        $attachment_id = absint( get_post_thumbnail_id( $post_id ) );
+        $source_label  = __( 'Featured image fallback', 'lunara-film' );
+    }
+
+    if ( '' === $source_label ) {
+        $source_label = __( 'No source selected', 'lunara-film' );
+    }
+
+    return array(
+        'attachment_id' => $attachment_id,
+        'external_url'  => $attachment_id ? '' : $card_url,
+        'source_label'  => $source_label,
+    );
+}
+
+function lunara_control_desk_post_status_label( $post ) {
+    $status = get_post_status( $post );
+    $object = $status ? get_post_status_object( $status ) : null;
+
+    if ( $object && ! empty( $object->label ) ) {
+        return (string) $object->label;
+    }
+
+    return $status ? ucwords( str_replace( array( '-', '_' ), ' ', (string) $status ) ) : __( 'Unknown', 'lunara-film' );
+}
+
+function lunara_control_desk_image_quality_rows( $surface, $limit = 8 ) {
+    $targets = lunara_control_desk_image_quality_targets();
+    $surface = sanitize_key( $surface );
+    $limit   = max( 1, min( 16, absint( $limit ) ) );
+    $rows    = array();
+
+    if ( 'reviews' === $surface ) {
+        $target = $targets['review-card'];
+        $posts  = get_posts(
+            array(
+                'post_type'      => 'review',
+                'post_status'    => array( 'publish', 'draft', 'pending', 'future' ),
+                'posts_per_page' => $limit,
+                'orderby'        => 'modified',
+                'order'          => 'DESC',
+                'no_found_rows'  => true,
+            )
+        );
+
+        foreach ( $posts as $post ) {
+            $source = lunara_control_desk_review_card_source( $post->ID );
+            $state  = lunara_control_desk_image_quality_state( $source['attachment_id'], $target, $source['external_url'] );
+            $rows[] = array(
+                'surface'       => __( 'Review card', 'lunara-film' ),
+                'title'         => get_the_title( $post ),
+                'post_id'       => absint( $post->ID ),
+                'status_label'  => lunara_control_desk_post_status_label( $post ),
+                'edit_url'      => get_edit_post_link( $post->ID, '' ),
+                'view_url'      => get_permalink( $post ),
+                'media_url'     => $source['attachment_id'] ? get_edit_post_link( $source['attachment_id'], '' ) : '',
+                'attachment_id' => $source['attachment_id'],
+                'source_label'  => $source['source_label'],
+                'status'        => $state,
+                'target'        => $target,
+            );
+        }
+    } elseif ( 'journal' === $surface ) {
+        $target = $targets['hero'];
+        $posts  = get_posts(
+            array(
+                'post_type'      => 'journal',
+                'post_status'    => array( 'publish', 'draft', 'pending', 'future' ),
+                'posts_per_page' => $limit,
+                'orderby'        => 'modified',
+                'order'          => 'DESC',
+                'no_found_rows'  => true,
+            )
+        );
+
+        foreach ( $posts as $post ) {
+            $attachment_id = has_post_thumbnail( $post->ID ) ? absint( get_post_thumbnail_id( $post->ID ) ) : 0;
+            $state         = lunara_control_desk_image_quality_state( $attachment_id, $target );
+            $rows[]        = array(
+                'surface'       => __( 'Journal hero', 'lunara-film' ),
+                'title'         => get_the_title( $post ),
+                'post_id'       => absint( $post->ID ),
+                'status_label'  => lunara_control_desk_post_status_label( $post ),
+                'edit_url'      => get_edit_post_link( $post->ID, '' ),
+                'view_url'      => get_permalink( $post ),
+                'media_url'     => $attachment_id ? get_edit_post_link( $attachment_id, '' ) : '',
+                'attachment_id' => $attachment_id,
+                'source_label'  => $attachment_id ? __( 'Featured image', 'lunara-film' ) : __( 'No featured image', 'lunara-film' ),
+                'status'        => $state,
+                'target'        => $target,
+            );
+        }
+    }
+
+    return $rows;
+}
+
+function lunara_control_desk_image_quality_summary_cards( $rows ) {
+    $ready = 0;
+    $weak  = 0;
+
+    foreach ( $rows as $row ) {
+        $state = isset( $row['status']['state'] ) ? (string) $row['status']['state'] : 'weak';
+        if ( 'ready' === $state ) {
+            $ready++;
+        } else {
+            $weak++;
+        }
+    }
+
+    return array(
+        array(
+            'label' => __( 'Sources checked', 'lunara-film' ),
+            'value' => (string) count( $rows ),
+            'state' => 'ready',
+            'note'  => __( 'Recent Review and Journal media inspected from WordPress metadata, including drafts.', 'lunara-film' ),
+        ),
+        array(
+            'label' => __( 'At target', 'lunara-film' ),
+            'value' => (string) $ready,
+            'state' => 'ready',
+            'note'  => __( 'Meets the current Lunara source-size rule.', 'lunara-film' ),
+        ),
+        array(
+            'label' => __( 'Needs attention', 'lunara-film' ),
+            'value' => (string) $weak,
+            'state' => $weak ? 'weak' : 'ready',
+            'note'  => __( 'Missing, external, or below target source files.', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_render_image_quality_targets() {
+    ?>
+    <div class="lunara-control-desk-image-targets" aria-label="<?php echo esc_attr__( 'Lunara image targets', 'lunara-film' ); ?>">
+        <?php foreach ( lunara_control_desk_image_quality_targets() as $target ) : ?>
+            <article>
+                <p class="lunara-control-desk-kicker"><?php echo esc_html( $target['ratio'] ); ?></p>
+                <h4><?php echo esc_html( $target['label'] ); ?></h4>
+                <strong><?php echo esc_html( sprintf( '%1$d x %2$d', absint( $target['width'] ), absint( $target['height'] ) ) ); ?></strong>
+                <code><?php echo esc_html( $target['size'] ); ?></code>
+                <span><?php echo esc_html( $target['surface'] ); ?></span>
+            </article>
+        <?php endforeach; ?>
+    </div>
+    <?php
+}
+
+function lunara_control_desk_render_image_quality_row( $row ) {
+    $status        = isset( $row['status'] ) && is_array( $row['status'] ) ? $row['status'] : array();
+    $state         = isset( $status['state'] ) ? sanitize_html_class( $status['state'] ) : 'weak';
+    $dimensions    = isset( $status['dimensions'] ) && is_array( $status['dimensions'] ) ? $status['dimensions'] : array();
+    $width         = isset( $dimensions['width'] ) ? absint( $dimensions['width'] ) : 0;
+    $height        = isset( $dimensions['height'] ) ? absint( $dimensions['height'] ) : 0;
+    $target        = isset( $row['target'] ) && is_array( $row['target'] ) ? $row['target'] : array();
+    $attachment_id = isset( $row['attachment_id'] ) ? absint( $row['attachment_id'] ) : 0;
+    $thumb_html    = $attachment_id ? wp_get_attachment_image(
+        $attachment_id,
+        'thumbnail',
+        false,
+        array(
+            'class'    => 'lunara-control-desk-image-thumb-img',
+            'loading'  => 'lazy',
+            'decoding' => 'async',
+        )
+    ) : '';
+    ?>
+    <article class="lunara-control-desk-image-row is-<?php echo esc_attr( $state ); ?>">
+        <div class="lunara-control-desk-image-thumb">
+            <?php if ( $thumb_html ) : ?>
+                <?php echo $thumb_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <?php else : ?>
+                <span><?php esc_html_e( 'No image', 'lunara-film' ); ?></span>
+            <?php endif; ?>
+        </div>
+        <div class="lunara-control-desk-image-row-main">
+            <p class="lunara-control-desk-kicker"><?php echo esc_html( isset( $row['surface'] ) ? $row['surface'] : '' ); ?></p>
+            <h4><?php echo esc_html( isset( $row['title'] ) ? $row['title'] : __( 'Untitled', 'lunara-film' ) ); ?></h4>
+            <div class="lunara-control-desk-image-row-meta">
+                <span><strong><?php esc_html_e( 'Source', 'lunara-film' ); ?></strong><?php echo esc_html( isset( $row['source_label'] ) ? $row['source_label'] : '' ); ?></span>
+                <span><strong><?php esc_html_e( 'Post status', 'lunara-film' ); ?></strong><?php echo esc_html( isset( $row['status_label'] ) ? $row['status_label'] : __( 'Unknown', 'lunara-film' ) ); ?></span>
+                <span><strong><?php esc_html_e( 'Current', 'lunara-film' ); ?></strong><?php echo esc_html( $width && $height ? sprintf( '%1$d x %2$d', $width, $height ) : __( 'Unknown', 'lunara-film' ) ); ?></span>
+                <span><strong><?php esc_html_e( 'Target', 'lunara-film' ); ?></strong><?php echo esc_html( sprintf( '%1$d x %2$d', absint( $target['width'] ?? 0 ), absint( $target['height'] ?? 0 ) ) ); ?></span>
+            </div>
+            <p class="lunara-control-desk-image-note">
+                <strong><?php echo esc_html( isset( $status['label'] ) ? $status['label'] : __( 'Needs attention', 'lunara-film' ) ); ?></strong>
+                <?php echo esc_html( isset( $status['note'] ) ? $status['note'] : '' ); ?>
+            </p>
+            <div class="lunara-control-desk-actions">
+                <?php if ( ! empty( $row['edit_url'] ) ) : ?>
+                    <a class="button button-small button-primary" href="<?php echo esc_url( $row['edit_url'] ); ?>"><?php esc_html_e( 'Edit Post', 'lunara-film' ); ?></a>
+                <?php endif; ?>
+                <?php if ( ! empty( $row['view_url'] ) ) : ?>
+                    <a class="button button-small" href="<?php echo esc_url( $row['view_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View', 'lunara-film' ); ?></a>
+                <?php endif; ?>
+                <?php if ( ! empty( $row['media_url'] ) ) : ?>
+                    <a class="button button-small" href="<?php echo esc_url( $row['media_url'] ); ?>"><?php esc_html_e( 'Open Media', 'lunara-film' ); ?></a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </article>
+    <?php
+}
+
+function lunara_control_desk_render_image_quality_group( $label, $rows ) {
+    ?>
+    <section class="lunara-control-desk-image-group">
+        <div class="lunara-control-desk-card-head">
+            <div>
+                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Source Audit', 'lunara-film' ); ?></p>
+                <h3><?php echo esc_html( $label ); ?></h3>
+            </div>
+        </div>
+        <div class="lunara-control-desk-image-row-list">
+            <?php if ( empty( $rows ) ) : ?>
+                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'No recent items found for this surface.', 'lunara-film' ); ?></p>
+            <?php else : ?>
+                <?php foreach ( $rows as $row ) : ?>
+                    <?php lunara_control_desk_render_image_quality_row( $row ); ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    </section>
+    <?php
+}
+
+function lunara_control_desk_render_image_quality_console() {
+    $review_rows  = lunara_control_desk_image_quality_rows( 'reviews', 8 );
+    $journal_rows = lunara_control_desk_image_quality_rows( 'journal', 8 );
+    $all_rows     = array_merge( $review_rows, $journal_rows );
+    ?>
+    <section id="lunara-theme-studio-image-quality" class="lunara-control-desk-image-console">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Image Quality Console', 'lunara-film' ); ?></p>
+            <h3><?php esc_html_e( 'Find the soft source before it reaches the public surface', 'lunara-film' ); ?></h3>
+            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'The renderer already requests the large Lunara sizes; this console checks whether the selected source file is good enough to survive that treatment.', 'lunara-film' ); ?></p>
+        </div>
+        <?php lunara_control_desk_render_status_cards( lunara_control_desk_image_quality_summary_cards( $all_rows ) ); ?>
+        <?php lunara_control_desk_render_image_quality_targets(); ?>
+        <div class="lunara-control-desk-image-groups">
+            <?php lunara_control_desk_render_image_quality_group( __( 'Recent review card sources', 'lunara-film' ), $review_rows ); ?>
+            <?php lunara_control_desk_render_image_quality_group( __( 'Recent Journal hero sources', 'lunara-film' ), $journal_rows ); ?>
+        </div>
+        <div class="lunara-control-desk-image-footer">
+            <div>
+                <strong><?php esc_html_e( 'Next control layer', 'lunara-film' ); ?></strong>
+                <span><?php esc_html_e( 'After this read-only pass proves the audit shape, the next step is one-click source replacement from this same console.', 'lunara-film' ); ?></span>
+            </div>
+            <div class="lunara-control-desk-actions">
+                <a class="button" href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Reviews Archive', 'lunara-film' ); ?></a>
+                <a class="button" href="<?php echo esc_url( home_url( '/journal/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Journal Archive', 'lunara-film' ); ?></a>
+                <a class="button" href="<?php echo esc_url( admin_url( 'upload.php' ) ); ?>"><?php esc_html_e( 'Media Library', 'lunara-film' ); ?></a>
+            </div>
+        </div>
+    </section>
+    <?php
+}
+
 function lunara_control_desk_theme_studio_groups() {
     return array(
         array(
@@ -4838,8 +5201,14 @@ function lunara_control_desk_render_theme_studio_goal_guide() {
 }
 
 function lunara_control_desk_theme_studio_visual_evidence() {
-    $artifact_root        = get_option( 'lunara_control_desk_last_visual_qa_path', 'C:\\Users\\silve_i21do49\\OneDrive\\Documents\\New project\\output\\lunara-os-phase1-visual-qa-final' );
-    $theme_studio_capture = 'C:\\Users\\silve_i21do49\\OneDrive\\Documents\\New project\\output\\lunara-os-phase3-5-goal-guide-browser.png';
+    $default_artifact_root = 'C:\\Users\\silve_i21do49\\OneDrive\\Desktop\\New folder\\10_VISUAL_EVIDENCE\\lunara-os-phase1-visual-qa-final';
+    $artifact_root         = get_option( 'lunara_control_desk_last_visual_qa_path', $default_artifact_root );
+
+    if ( false !== strpos( (string) $artifact_root, 'Documents\\New project' ) ) {
+        $artifact_root = $default_artifact_root;
+    }
+
+    $theme_studio_capture = 'C:\\Users\\silve_i21do49\\OneDrive\\Desktop\\New folder\\10_VISUAL_EVIDENCE\\lunara-theme-studio-brand-controls-20260617\\theme-studio-admin-1280.png';
     $checked             = get_option( 'lunara_control_desk_last_visual_qa_checked', '2026-05-28' );
 
     return array(
@@ -5137,10 +5506,11 @@ function lunara_control_desk_render_theme_studio_tab() {
         <div class="lunara-control-desk-panel-header">
             <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Theme Studio', 'lunara-film' ); ?></p>
             <h2><?php esc_html_e( 'The important design controls without the hunting', 'lunara-film' ); ?></h2>
-            <p class="lunara-control-desk-intro"><?php esc_html_e( 'Brand controls now sit beside the existing ownership map, with direct storage only where the public site already reads it.', 'lunara-film' ); ?></p>
+            <p class="lunara-control-desk-intro"><?php esc_html_e( 'Brand controls and image-quality checks now sit beside the existing ownership map, with direct storage only where the public site already reads it.', 'lunara-film' ); ?></p>
         </div>
         <?php lunara_control_desk_render_status_cards( lunara_control_desk_theme_studio_summary_cards( $groups ) ); ?>
         <?php lunara_control_desk_render_brand_console(); ?>
+        <?php lunara_control_desk_render_image_quality_console(); ?>
         <div class="lunara-control-desk-studio-nav" aria-label="<?php echo esc_attr__( 'Theme Studio groups', 'lunara-film' ); ?>">
             <?php foreach ( $groups as $group ) : ?>
                 <?php $counts = lunara_control_desk_theme_studio_group_counts( $group ); ?>
