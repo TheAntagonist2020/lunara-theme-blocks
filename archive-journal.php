@@ -178,7 +178,7 @@ $type_terms = get_terms( array(
 				$updated_label = function_exists( 'lunara_get_editorial_card_updated_label' )
 					? lunara_get_editorial_card_updated_label( $pid )
 					: '';
-				$thumb_url     = has_post_thumbnail( $pid ) ? get_the_post_thumbnail_url( $pid, 'newspack-article-block-landscape-intermediate' ) : '';
+				$thumb_url     = has_post_thumbnail( $pid ) ? get_the_post_thumbnail_url( $pid, 'lunara-hero-spotlight' ) : '';
 				$thumb_loading = $journal_card_index <= 2 ? 'eager' : 'lazy';
 				?>
 				<article class="lunara-review-grid-card lunara-journal-archive-card<?php echo 1 === $journal_card_index ? ' is-lead' : ''; ?>">
@@ -190,7 +190,7 @@ $type_terms = get_terms( array(
 									'class'    => 'lunara-review-grid-poster',
 									'loading'  => $thumb_loading,
 									'decoding' => 'async',
-									'sizes'    => '(max-width: 720px) 92vw, (max-width: 1180px) 42vw, 360px',
+									'sizes'    => '(max-width: 640px) 92vw, (max-width: 980px) 46vw, (max-width: 1280px) 31vw, 380px',
 								);
 
 								if ( 1 === $journal_card_index ) {
@@ -198,7 +198,7 @@ $type_terms = get_terms( array(
 								}
 
 								the_post_thumbnail(
-									'newspack-article-block-landscape-intermediate',
+									'lunara-hero-spotlight',
 									$journal_thumb_attrs
 								);
 								?>

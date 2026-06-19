@@ -15085,14 +15085,14 @@ if ( ! function_exists( 'lunara_render_homepage_journal_lane' ) ) {
 					$pid         = (int) $dispatch_post->ID;
 					$is_lead     = ( 0 === $dispatch_index );
 					$card_url    = get_permalink( $pid );
-					$thumb_size  = 'newspack-article-block-landscape-small';
+					$thumb_size  = 'lunara-hero-spotlight';
 					$has_visual  = has_post_thumbnail( $pid );
 					$thumb_url   = $has_visual ? get_the_post_thumbnail_url( $pid, $thumb_size ) : '';
 					$thumb_attrs = array(
 						'class'    => 'lunara-journal-home-card-image skip-lazy no-lazy',
 						'loading'  => 'eager',
 						'decoding' => 'async',
-						'sizes'    => '(max-width: 420px) 92vw, (max-width: 760px) 44vw, (max-width: 1180px) 42vw, 360px',
+						'sizes'    => '(max-width: 640px) 92vw, (max-width: 980px) 46vw, (max-width: 1280px) 46vw, 620px',
 					);
 					?>
 					<article class="lunara-journal-home-card<?php echo $is_lead ? ' is-lead' : ''; ?> <?php echo $has_visual ? 'has-visual' : 'has-no-visual'; ?>">
