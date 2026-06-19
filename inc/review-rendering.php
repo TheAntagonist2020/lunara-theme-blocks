@@ -3382,6 +3382,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                         </div>
                     </div>
                     <div class="lunara-review-archive-sort" aria-label="<?php esc_attr_e( 'Sort reviews', 'lunara-film' ); ?>">
+                        <span class="lunara-review-archive-sort-label"><?php esc_html_e( 'Sort by', 'lunara-film' ); ?></span>
                         <?php foreach ( $sort_options as $sort_key => $sort_option_label ) : ?>
                             <?php
                             $is_active = $sort_key === $current_sort;
@@ -3403,19 +3404,35 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                         <?php echo lunara_render_review_feature_card( $lead_post->ID, array( 'variant' => 'lead', 'excerpt_words' => 44 ) ); ?>
 
                         <?php if ( ! empty( $support_posts ) ) : ?>
-                            <div class="lunara-review-archive-support-head">
-                                <p class="lunara-home-section-kicker"><?php esc_html_e( 'Filed Beside The Lead', 'lunara-film' ); ?></p>
-                                <h2 class="lunara-section-title"><?php esc_html_e( 'Two more reviews carrying the current desk rhythm.', 'lunara-film' ); ?></h2>
-                            </div>
-                            <div class="lunara-review-archive-rail">
-                                <?php foreach ( $support_posts as $support_index => $support_post ) : ?>
-                                    <?php echo lunara_render_review_grid_card( $support_post->ID, $support_index + 2 ); ?>
-                                <?php endforeach; ?>
+                            <div class="lunara-review-archive-support-suite">
+                                <div class="lunara-review-archive-support-head">
+                                    <p class="lunara-home-section-kicker"><?php esc_html_e( 'On The Desk', 'lunara-film' ); ?></p>
+                                    <h2 class="lunara-section-title"><?php esc_html_e( 'Current companion files.', 'lunara-film' ); ?></h2>
+                                </div>
+                                <div class="lunara-review-archive-rail">
+                                    <?php foreach ( $support_posts as $support_index => $support_post ) : ?>
+                                        <?php echo lunara_render_review_grid_card( $support_post->ID, $support_index + 2 ); ?>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
                         <?php endif; ?>
                     </div>
 
                     <?php if ( ! empty( $remaining_posts ) ) : ?>
+                        <?php
+                        $remaining_count = count( $remaining_posts );
+                        $retention_span  = 0 !== $remaining_count % 3 ? 3 - ( $remaining_count % 3 ) : 0;
+                        $run_grid_classes = array(
+                            'lunara-review-grid',
+                            'lunara-review-archive-grid',
+                            'lunara-review-archive-uniform',
+                            'lunara-review-archive-run-grid',
+                        );
+                        if ( $retention_span > 0 ) {
+                            $run_grid_classes[] = 'has-retention-fill';
+                            $run_grid_classes[] = 'has-retention-fill-' . $retention_span;
+                        }
+                        ?>
                         <div id="lunara-review-archive-run" class="lunara-review-archive-run" data-lunara-section="run">
                             <div class="lunara-home-section-head lunara-review-archive-run-head">
                                 <div>
@@ -3423,10 +3440,24 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                                     <h2 class="lunara-section-title"><?php esc_html_e( 'The archive keeps moving.', 'lunara-film' ); ?></h2>
                                 </div>
                             </div>
-                            <div class="lunara-review-grid lunara-review-archive-grid lunara-review-archive-uniform lunara-review-archive-run-grid">
+                            <div class="<?php echo esc_attr( implode( ' ', $run_grid_classes ) ); ?>">
                                 <?php foreach ( $remaining_posts as $review_index => $review_post ) : ?>
                                     <?php echo lunara_render_review_grid_card( $review_post->ID, $review_index + 4 ); ?>
                                 <?php endforeach; ?>
+                                <?php if ( $retention_span > 0 ) : ?>
+                                    <aside class="lunara-review-archive-retention-card spans-<?php echo esc_attr( (string) $retention_span ); ?>" aria-label="<?php esc_attr_e( 'More Lunara destinations', 'lunara-film' ); ?>">
+                                        <div class="lunara-review-archive-retention-copy">
+                                            <p class="lunara-home-section-kicker"><?php esc_html_e( 'Keep Moving', 'lunara-film' ); ?></p>
+                                            <h3><?php esc_html_e( 'More routes through the desk.', 'lunara-film' ); ?></h3>
+                                            <p><?php esc_html_e( 'Follow the latest updates, jump into the Journal, or cross-reference the Oscar Ledger.', 'lunara-film' ); ?></p>
+                                        </div>
+                                        <div class="lunara-review-archive-retention-actions">
+                                            <a href="<?php echo esc_url( add_query_arg( 'sort', 'date_desc', $sort_base_url ) ); ?>"><?php esc_html_e( 'Recently Updated', 'lunara-film' ); ?></a>
+                                            <a href="<?php echo esc_url( home_url( '/journal/' ) ); ?>"><?php esc_html_e( 'Journal Desk', 'lunara-film' ); ?></a>
+                                            <a href="<?php echo esc_url( home_url( '/oscars/' ) ); ?>"><?php esc_html_e( 'Oscar Ledger', 'lunara-film' ); ?></a>
+                                        </div>
+                                    </aside>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endif; ?>
