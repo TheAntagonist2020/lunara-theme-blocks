@@ -2957,6 +2957,45 @@ function lunara_output_review_archive_authority_css() {
     }
 
     @media (max-width: 540px) {
+        body.post-type-archive-review .lunara-review-archive-page,
+        body.page-template-page-reviews .lunara-review-archive-page {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-page > .lunara-home-section,
+        body.page-template-page-reviews .lunara-review-archive-page > .lunara-home-section,
+        body.post-type-archive-review .lunara-review-archive-hero,
+        body.page-template-page-reviews .lunara-review-archive-hero,
+        body.post-type-archive-review .lunara-review-archive-shell,
+        body.page-template-page-reviews .lunara-review-archive-shell {
+            margin-left: auto !important;
+            margin-right: auto !important;
+            max-width: calc(100vw - 24px) !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            width: calc(100vw - 24px) !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-hero-shell,
+        body.page-template-page-reviews .lunara-review-archive-hero-shell {
+            max-width: 100% !important;
+            padding: 18px !important;
+            width: 100% !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-spotlight,
+        body.page-template-page-reviews .lunara-review-archive-spotlight,
+        body.post-type-archive-review .lunara-review-archive-rail,
+        body.page-template-page-reviews .lunara-review-archive-rail,
+        body.post-type-archive-review .lunara-review-archive-uniform.lunara-review-grid,
+        body.page-template-page-reviews .lunara-review-archive-uniform.lunara-review-grid,
+        body.post-type-archive-review .lunara-review-archive-grid,
+        body.page-template-page-reviews .lunara-review-archive-grid {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+
         body.post-type-archive-review .lunara-review-archive-debrief-list,
         body.page-template-page-reviews .lunara-review-archive-debrief-list {
             grid-template-columns: minmax(0, 1fr) !important;
