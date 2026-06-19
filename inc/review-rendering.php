@@ -2342,7 +2342,7 @@ if ( ! function_exists( 'lunara_get_linked_spoiler_review' ) ) {
 }
 
 /**
- * Render the top-of-review spoiler warning for full spoiler companion files.
+ * Render the active top-of-review spoiler shield for full spoiler companion files.
  */
 if ( ! function_exists( 'lunara_render_full_spoiler_review_warning' ) ) {
     function lunara_render_full_spoiler_review_warning( $post_id ) {
@@ -2417,13 +2417,30 @@ if ( ! function_exists( 'lunara_render_full_spoiler_review_warning' ) ) {
 
         ob_start();
         ?>
-        <aside class="lunara-full-spoiler-warning" role="note" aria-label="<?php esc_attr_e( 'Full spoiler warning', 'lunara-film' ); ?>">
-            <div class="lunara-full-spoiler-warning-copy">
-                <p class="lunara-full-spoiler-warning-kicker"><?php esc_html_e( 'Full Spoiler Review', 'lunara-film' ); ?></p>
-                <h2 class="lunara-full-spoiler-warning-title"><?php esc_html_e( 'This file discusses the ending openly.', 'lunara-film' ); ?></h2>
-                <p class="lunara-full-spoiler-warning-text"><?php esc_html_e( 'Proceed only if you are ready for plot revelations, final images, deaths, reversals, and the complete critical argument.', 'lunara-film' ); ?></p>
+        <aside
+            id="lunara-spoiler-shield-<?php echo esc_attr( intval( $post_id ) ); ?>"
+            class="lunara-full-spoiler-warning lunara-full-spoiler-shield"
+            role="note"
+            aria-label="<?php esc_attr_e( 'Full spoiler warning', 'lunara-film' ); ?>"
+            data-lunara-spoiler-shield
+            data-lunara-spoiler-post="<?php echo esc_attr( intval( $post_id ) ); ?>"
+        >
+            <div class="lunara-full-spoiler-warning-copy lunara-full-spoiler-shield-copy">
+                <p class="lunara-full-spoiler-warning-kicker lunara-full-spoiler-shield-kicker"><?php esc_html_e( 'Full Spoiler Review', 'lunara-film' ); ?></p>
+                <h2 class="lunara-full-spoiler-warning-title lunara-full-spoiler-shield-title"><?php esc_html_e( 'This file discusses the ending openly.', 'lunara-film' ); ?></h2>
+                <p class="lunara-full-spoiler-warning-text lunara-full-spoiler-shield-text"><?php esc_html_e( 'Continue only if you are ready for plot revelations, final images, deaths, reversals, and the complete critical argument.', 'lunara-film' ); ?></p>
             </div>
-            <?php echo $related_link; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <div class="lunara-full-spoiler-shield-actions">
+                <button
+                    class="lunara-full-spoiler-shield-button"
+                    type="button"
+                    data-lunara-spoiler-reveal
+                    aria-controls="lunara-spoiler-protected-<?php echo esc_attr( intval( $post_id ) ); ?>"
+                >
+                    <?php esc_html_e( 'I understand. Reveal the spoiler review.', 'lunara-film' ); ?>
+                </button>
+                <?php echo $related_link; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            </div>
         </aside>
         <?php
 

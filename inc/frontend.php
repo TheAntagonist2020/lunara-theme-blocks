@@ -4806,6 +4806,81 @@ function lunara_output_full_spoiler_review_css() {
         color: #fff6dc !important;
     }
 
+    body.single-review .lunara-full-spoiler-shield-actions {
+        display: grid !important;
+        gap: 10px !important;
+        justify-items: stretch !important;
+        min-width: min(285px, 100%) !important;
+    }
+
+    body.single-review .lunara-full-spoiler-shield-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 48px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 12px 18px !important;
+        border: 1px solid rgba(244, 216, 143, 0.82) !important;
+        border-radius: 999px !important;
+        background: linear-gradient(135deg, rgba(244, 216, 143, 0.98), rgba(171, 126, 47, 0.96)) !important;
+        color: rgba(8, 17, 29, 0.98) !important;
+        cursor: pointer !important;
+        font-family: var(--lunara-body-font, inherit) !important;
+        font-size: 0.76rem !important;
+        font-weight: 950 !important;
+        letter-spacing: 0.08em !important;
+        line-height: 1.12 !important;
+        text-align: center !important;
+        text-transform: uppercase !important;
+        white-space: normal !important;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.28),
+            0 16px 32px rgba(0, 0, 0, 0.24) !important;
+    }
+
+    body.single-review .lunara-full-spoiler-shield-button:hover,
+    body.single-review .lunara-full-spoiler-shield-button:focus-visible {
+        background: linear-gradient(135deg, rgba(255, 231, 163, 1), rgba(193, 145, 52, 0.98)) !important;
+        color: rgba(5, 14, 25, 1) !important;
+        outline: 2px solid rgba(255, 246, 220, 0.62) !important;
+        outline-offset: 3px !important;
+    }
+
+    body.has-lunara-spoiler-gate .lunara-spoiler-protected-content:not(.is-revealed) {
+        display: none !important;
+    }
+
+    body.has-lunara-spoiler-gate .lunara-full-spoiler-shield.is-acknowledged {
+        display: none !important;
+    }
+
+    body.has-lunara-spoiler-gate .lunara-spoiler-protected-content.is-revealed {
+        scroll-margin-top: clamp(88px, 12vh, 148px) !important;
+        animation: lunaraSpoilerReveal 220ms ease-out both;
+    }
+
+    body.single-review .lunara-spoiler-protected-content:focus {
+        outline: none !important;
+    }
+
+    @keyframes lunaraSpoilerReveal {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        body.has-lunara-spoiler-gate .lunara-spoiler-protected-content.is-revealed {
+            animation: none !important;
+        }
+    }
+
     .lunara-review-grid-card.is-full-spoiler-review .lunara-review-grid-kicker {
         color: rgba(244, 216, 143, 0.98) !important;
     }
@@ -4842,8 +4917,98 @@ function lunara_output_full_spoiler_review_css() {
         body.single-review .lunara-full-spoiler-warning-link {
             width: 100% !important;
         }
+
+        body.single-review .lunara-full-spoiler-shield-actions {
+            min-width: 0 !important;
+        }
     }
     </style>
+    <script id="lunara-full-spoiler-shield-js">
+    (function() {
+        function keyFor(postId) {
+            return 'lunaraFullSpoilerAcknowledged:' + postId;
+        }
+
+        function getStored(postId) {
+            try {
+                return window.sessionStorage && window.sessionStorage.getItem(keyFor(postId)) === '1';
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function setStored(postId) {
+            try {
+                if (window.sessionStorage) {
+                    window.sessionStorage.setItem(keyFor(postId), '1');
+                }
+            } catch (error) {
+                return false;
+            }
+
+            return true;
+        }
+
+        function getProtected(postId) {
+            var nodes = document.querySelectorAll('[data-lunara-spoiler-protected]');
+            return Array.prototype.filter.call(nodes, function(node) {
+                return node.getAttribute('data-lunara-spoiler-post') === String(postId);
+            });
+        }
+
+        function applyState(shield, isRevealed) {
+            var postId = shield.getAttribute('data-lunara-spoiler-post');
+            var protectedNodes = getProtected(postId);
+
+            shield.classList.toggle('is-acknowledged', isRevealed);
+            shield.setAttribute('aria-hidden', isRevealed ? 'true' : 'false');
+
+            protectedNodes.forEach(function(node) {
+                node.classList.toggle('is-revealed', isRevealed);
+                node.setAttribute('aria-hidden', isRevealed ? 'false' : 'true');
+            });
+        }
+
+        function initSpoilerShields() {
+            var shields = document.querySelectorAll('[data-lunara-spoiler-shield]');
+            if (!shields.length || !document.body) {
+                return;
+            }
+
+            document.body.classList.add('has-lunara-spoiler-gate');
+
+            shields.forEach(function(shield) {
+                var postId = shield.getAttribute('data-lunara-spoiler-post');
+                var button = shield.querySelector('[data-lunara-spoiler-reveal]');
+
+                applyState(shield, getStored(postId));
+
+                if (!button) {
+                    return;
+                }
+
+                button.addEventListener('click', function() {
+                    setStored(postId);
+                    applyState(shield, true);
+
+                    var firstProtected = getProtected(postId)[0];
+                    if (firstProtected) {
+                        var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                        firstProtected.setAttribute('tabindex', '-1');
+                        firstProtected.focus({ preventScroll: true });
+                        firstProtected.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' });
+                    }
+                });
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initSpoilerShields);
+        } else {
+            initSpoilerShields();
+        }
+    })();
+    </script>
     <?php
 }
 add_action( 'wp_head', 'lunara_output_full_spoiler_review_css', 1006 );

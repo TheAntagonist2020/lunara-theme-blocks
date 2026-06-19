@@ -219,6 +219,17 @@ if ( have_posts() ) :
                                 echo lunara_render_full_spoiler_review_warning( $post_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                             }
 
+                            if ( $is_full_spoiler ) :
+                                ?>
+                                <div
+                                    id="lunara-spoiler-protected-<?php echo esc_attr( $post_id ); ?>"
+                                    class="lunara-spoiler-protected-content lunara-spoiler-protected-content--body"
+                                    data-lunara-spoiler-protected
+                                    data-lunara-spoiler-post="<?php echo esc_attr( $post_id ); ?>"
+                                >
+                                <?php
+                            endif;
+
                             $review_raw_content = get_the_content();
 
                             if (
@@ -241,6 +252,12 @@ if ( have_posts() ) :
                             if ( function_exists( 'lunara_render_review_share_strip' ) ) {
                                 echo lunara_render_review_share_strip( $post_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                             }
+
+                            if ( $is_full_spoiler ) :
+                                ?>
+                                </div>
+                                <?php
+                            endif;
                             ?>
                         </div>
 
@@ -296,7 +313,7 @@ if ( have_posts() ) :
                 </section>
 
                 <?php if ( '' !== trim( wp_strip_all_tags( $debrief_block ) ) ) : ?>
-                <section class="lunara-review-single-debrief-section lunara-review-single-debrief-shell">
+                <section class="lunara-review-single-debrief-section lunara-review-single-debrief-shell<?php echo $is_full_spoiler ? ' lunara-spoiler-protected-content lunara-spoiler-protected-content--module' : ''; ?>"<?php echo $is_full_spoiler ? ' data-lunara-spoiler-protected data-lunara-spoiler-post="' . esc_attr( $post_id ) . '"' : ''; ?>>
                     <div class="lunara-review-single-debrief-wrap<?php echo '' !== $debrief_media ? ' has-signature-media' : ''; ?>">
                         <?php if ( '' !== $debrief_media ) : ?>
                             <?php echo $debrief_media; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -320,7 +337,7 @@ if ( have_posts() ) :
                         $related_kicker = __( 'Further Reading', 'lunara-film' );
                     }
                     ?>
-                    <section class="lunara-home-section lunara-review-related lunara-review-related--retention">
+                    <section class="lunara-home-section lunara-review-related lunara-review-related--retention<?php echo $is_full_spoiler ? ' lunara-spoiler-protected-content lunara-spoiler-protected-content--module' : ''; ?>"<?php echo $is_full_spoiler ? ' data-lunara-spoiler-protected data-lunara-spoiler-post="' . esc_attr( $post_id ) . '"' : ''; ?>>
                         <div class="lunara-home-section-head">
                             <div>
                                 <p class="lunara-home-section-kicker"><?php echo esc_html( $related_kicker ); ?></p>
