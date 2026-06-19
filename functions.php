@@ -3937,7 +3937,7 @@ if ( ! function_exists( 'lunara_render_review_where_links' ) ) {
             } elseif ( isset( $provider_map[ $token_lc ] ) ) {
                 $mapped = $provider_map[ $token_lc ];
                 if ( '' !== $mapped ) {
-                    $url = false !== strpos( $mapped, '%s' ) ? sprintf( $mapped, rawurlencode( $title ) ) : $mapped;
+                    $url = false !== strpos( $mapped, '%s' ) ? str_replace( '%s', rawurlencode( $title ), $mapped ) : $mapped;
                 } elseif ( '' !== $watch_url ) {
                     $url = $watch_url;
                 }

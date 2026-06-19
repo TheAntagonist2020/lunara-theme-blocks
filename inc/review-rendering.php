@@ -201,7 +201,7 @@ if ( ! function_exists( 'lunara_normalize_review_where_entry' ) ) {
             if ( preg_match( $pattern, $entry_lc ) ) {
                 $url = (string) $provider['url'];
                 if ( false !== strpos( $url, '%s' ) ) {
-                    $url = sprintf( $url, $search_title );
+                    $url = str_replace( '%s', $search_title, $url );
                 }
 
                 $item['label']    = (string) $provider['label'];
