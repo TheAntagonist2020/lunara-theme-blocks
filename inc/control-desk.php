@@ -422,10 +422,69 @@ function lunara_control_desk_image_source_redirect_url( $post_id = 0, $surface =
     ) . '#' . $anchor;
 }
 
+function lunara_control_desk_image_quality_accept_meta_key( $surface ) {
+    $surface = sanitize_key( $surface );
+
+    if ( ! in_array( $surface, array( 'review-card', 'journal-hero' ), true ) ) {
+        return '';
+    }
+
+    return '_lunara_image_quality_accept_' . str_replace( '-', '_', $surface );
+}
+
+function lunara_control_desk_image_quality_target_for_surface( $surface ) {
+    $targets = lunara_control_desk_image_quality_targets();
+    $surface = sanitize_key( $surface );
+
+    if ( 'review-card' === $surface ) {
+        return $targets['review-card'];
+    }
+
+    if ( 'journal-hero' === $surface ) {
+        return $targets['hero'];
+    }
+
+    return array();
+}
+
+function lunara_control_desk_image_quality_apply_accepted_state( $post_id, $surface, $status ) {
+    $meta_key = lunara_control_desk_image_quality_accept_meta_key( $surface );
+
+    if ( ! $meta_key || empty( $status['reason'] ) || 'near-target' !== $status['reason'] || ! get_post_meta( $post_id, $meta_key, true ) ) {
+        return $status;
+    }
+
+    $status['state']    = 'ready';
+    $status['label']    = __( 'Accepted near-target', 'lunara-film' );
+    $status['note']     = __( 'Theme Studio accepts this exact source as visually faithful while no stronger replacement is available.', 'lunara-film' );
+    $status['accepted'] = true;
+
+    return $status;
+}
+
+function lunara_control_desk_save_image_quality_acceptance( $post_id, $surface, $attachment_id, $accept_requested ) {
+    $meta_key = lunara_control_desk_image_quality_accept_meta_key( $surface );
+
+    if ( ! $meta_key ) {
+        return;
+    }
+
+    $target = lunara_control_desk_image_quality_target_for_surface( $surface );
+    $status = $target ? lunara_control_desk_image_quality_state( $attachment_id, $target ) : array();
+
+    if ( $accept_requested && ! empty( $status['reason'] ) && 'near-target' === $status['reason'] ) {
+        update_post_meta( $post_id, $meta_key, '1' );
+        return;
+    }
+
+    delete_post_meta( $post_id, $meta_key );
+}
+
 function lunara_control_desk_save_image_source() {
     $post_id       = isset( $_POST['lunara_image_source_post_id'] ) ? absint( wp_unslash( $_POST['lunara_image_source_post_id'] ) ) : 0;
     $surface       = isset( $_POST['lunara_image_source_surface'] ) ? sanitize_key( wp_unslash( $_POST['lunara_image_source_surface'] ) ) : '';
     $attachment_id = isset( $_POST['lunara_image_source_attachment_id'] ) ? absint( wp_unslash( $_POST['lunara_image_source_attachment_id'] ) ) : 0;
+    $accept_near_target = ! empty( $_POST['lunara_image_source_accept_near_target'] );
     $visual_ok     = ! empty( $_POST['lunara_image_source_visual_verified'] );
     $visual_treatment = isset( $_POST['lunara_image_source_visual_treatment'] ) ? sanitize_key( wp_unslash( $_POST['lunara_image_source_visual_treatment'] ) ) : '';
     $visual_treatment = 'archival' === $visual_treatment ? 'archival' : '';
@@ -501,6 +560,7 @@ function lunara_control_desk_save_image_source() {
         }
     }
 
+    lunara_control_desk_save_image_quality_acceptance( $post_id, $surface, $attachment_id, $accept_near_target );
     clean_post_cache( $post_id );
 
     wp_safe_redirect( add_query_arg( 'lunara_notice', 'image_source_saved', $redirect ) );
@@ -4488,6 +4548,7 @@ function lunara_control_desk_image_quality_state( $attachment_id, $target, $exte
             'state'      => 'weak',
             'label'      => __( 'External URL', 'lunara-film' ),
             'note'       => __( 'The site can render it, but WordPress cannot report source dimensions. Prefer a Media Library image for quality control.', 'lunara-film' ),
+            'reason'     => 'external',
             'dimensions' => $dimensions,
         );
     }
@@ -4497,6 +4558,7 @@ function lunara_control_desk_image_quality_state( $attachment_id, $target, $exte
             'state'      => 'weak',
             'label'      => __( 'Missing', 'lunara-film' ),
             'note'       => __( 'No inspectable source image is attached to this placement.', 'lunara-film' ),
+            'reason'     => 'missing',
             'dimensions' => $dimensions,
         );
     }
@@ -4506,6 +4568,7 @@ function lunara_control_desk_image_quality_state( $attachment_id, $target, $exte
             'state'      => 'ready',
             'label'      => __( 'Ready', 'lunara-film' ),
             'note'       => __( 'The source file meets the Lunara target for this surface.', 'lunara-film' ),
+            'reason'     => 'at-target',
             'dimensions' => $dimensions,
         );
     }
@@ -4515,6 +4578,7 @@ function lunara_control_desk_image_quality_state( $attachment_id, $target, $exte
             'state'      => 'weak',
             'label'      => __( 'Near target', 'lunara-film' ),
             'note'       => __( 'Usable in a pinch, but not the premium source standard.', 'lunara-film' ),
+            'reason'     => 'near-target',
             'dimensions' => $dimensions,
         );
     }
@@ -4523,6 +4587,7 @@ function lunara_control_desk_image_quality_state( $attachment_id, $target, $exte
         'state'      => 'weak',
         'label'      => __( 'Replace source', 'lunara-film' ),
         'note'       => __( 'This source is below the target and can read soft or blurry in high-visibility placements.', 'lunara-film' ),
+        'reason'     => 'below-target',
         'dimensions' => $dimensions,
     );
 }
@@ -4618,6 +4683,7 @@ function lunara_control_desk_image_quality_rows( $surface, $limit = 8 ) {
         foreach ( $posts as $post ) {
             $source = lunara_control_desk_review_card_source( $post->ID );
             $state  = lunara_control_desk_image_quality_state( $source['attachment_id'], $target, $source['external_url'] );
+            $state  = lunara_control_desk_image_quality_apply_accepted_state( $post->ID, 'review-card', $state );
             $rows[] = array(
                 'surface'       => __( 'Review card', 'lunara-film' ),
                 'surface_key'   => 'review-card',
@@ -4650,6 +4716,7 @@ function lunara_control_desk_image_quality_rows( $surface, $limit = 8 ) {
         foreach ( $posts as $post ) {
             $attachment_id = has_post_thumbnail( $post->ID ) ? absint( get_post_thumbnail_id( $post->ID ) ) : 0;
             $state         = lunara_control_desk_image_quality_state( $attachment_id, $target );
+            $state         = lunara_control_desk_image_quality_apply_accepted_state( $post->ID, 'journal-hero', $state );
             $rows[]        = array(
                 'surface'       => __( 'Journal hero', 'lunara-film' ),
                 'surface_key'   => 'journal-hero',
@@ -4964,6 +5031,10 @@ function lunara_control_desk_render_image_source_control( $row ) {
     $visual_ok     = ! empty( $row['visual_verified'] );
     $visual_treatment = isset( $row['visual_treatment'] ) && 'archival' === $row['visual_treatment'] ? 'archival' : 'wide';
     $surfaces      = lunara_control_desk_image_source_surfaces();
+    $status        = isset( $row['status'] ) && is_array( $row['status'] ) ? $row['status'] : array();
+    $accept_meta_key = lunara_control_desk_image_quality_accept_meta_key( $surface );
+    $accept_available = $attachment_id && $accept_meta_key && ! empty( $status['reason'] ) && 'near-target' === $status['reason'];
+    $accept_checked = $accept_available && ( ! empty( $status['accepted'] ) || get_post_meta( $post_id, $accept_meta_key, true ) );
 
     if ( ! $post_id || empty( $surfaces[ $surface ] ) || ! current_user_can( 'edit_theme_options' ) || ! current_user_can( 'edit_post', $post_id ) ) {
         return;
@@ -5025,6 +5096,15 @@ function lunara_control_desk_render_image_source_control( $row ) {
             <button type="submit" class="button button-primary button-small"><?php esc_html_e( 'Save Source', 'lunara-film' ); ?></button>
             <button type="button" class="button button-small" data-lunara-image-source-clear><?php esc_html_e( 'Clear', 'lunara-film' ); ?></button>
         </div>
+        <?php if ( $accept_available ) : ?>
+            <label class="lunara-control-desk-image-source-verify">
+                <input type="checkbox" name="lunara_image_source_accept_near_target" value="1" <?php checked( $accept_checked ); ?> />
+                <span>
+                    <strong><?php esc_html_e( 'Accept near-target source', 'lunara-film' ); ?></strong>
+                    <em><?php esc_html_e( 'Use only when this exact image is visually faithful and no stronger source is available.', 'lunara-film' ); ?></em>
+                </span>
+            </label>
+        <?php endif; ?>
         <?php if ( 'oscar-fact' === $surface ) : ?>
             <label class="lunara-control-desk-image-source-verify">
                 <input type="checkbox" name="lunara_image_source_visual_verified" value="1" <?php checked( $visual_ok ); ?> />
