@@ -427,6 +427,8 @@ function lunara_control_desk_save_image_source() {
     $surface       = isset( $_POST['lunara_image_source_surface'] ) ? sanitize_key( wp_unslash( $_POST['lunara_image_source_surface'] ) ) : '';
     $attachment_id = isset( $_POST['lunara_image_source_attachment_id'] ) ? absint( wp_unslash( $_POST['lunara_image_source_attachment_id'] ) ) : 0;
     $visual_ok     = ! empty( $_POST['lunara_image_source_visual_verified'] );
+    $visual_treatment = isset( $_POST['lunara_image_source_visual_treatment'] ) ? sanitize_key( wp_unslash( $_POST['lunara_image_source_visual_treatment'] ) ) : '';
+    $visual_treatment = 'archival' === $visual_treatment ? 'archival' : '';
     $redirect      = lunara_control_desk_image_source_redirect_url( $post_id, $surface );
     $surfaces      = lunara_control_desk_image_source_surfaces();
 
@@ -486,9 +488,16 @@ function lunara_control_desk_save_image_source() {
             } else {
                 delete_post_meta( $post_id, '_lunara_fact_visual_verified' );
             }
+
+            if ( 'archival' === $visual_treatment ) {
+                update_post_meta( $post_id, '_lunara_fact_visual_treatment', 'archival' );
+            } else {
+                delete_post_meta( $post_id, '_lunara_fact_visual_treatment' );
+            }
         } else {
             delete_post_thumbnail( $post_id );
             delete_post_meta( $post_id, '_lunara_fact_visual_verified' );
+            delete_post_meta( $post_id, '_lunara_fact_visual_treatment' );
         }
     }
 
@@ -4551,9 +4560,10 @@ function lunara_control_desk_post_status_label( $post ) {
     return $status ? ucwords( str_replace( array( '-', '_' ), ' ', (string) $status ) ) : __( 'Unknown', 'lunara-film' );
 }
 
-function lunara_control_desk_oscar_fact_visual_state( $attachment_id, $target, $visual_verified ) {
+function lunara_control_desk_oscar_fact_visual_state( $attachment_id, $target, $visual_verified, $visual_treatment = 'wide' ) {
     $attachment_id   = absint( $attachment_id );
     $visual_verified = (bool) $visual_verified;
+    $visual_treatment = 'archival' === $visual_treatment ? 'archival' : 'wide';
     $dimensions      = lunara_control_desk_image_quality_attachment_dimensions( $attachment_id );
 
     if ( ! $attachment_id ) {
@@ -4570,6 +4580,15 @@ function lunara_control_desk_oscar_fact_visual_state( $attachment_id, $target, $
             'state'      => 'weak',
             'label'      => __( 'Needs visual verification', 'lunara-film' ),
             'note'       => __( 'A featured image is staged, but the public carousel will keep it hidden until it is marked as the verified public visual.', 'lunara-film' ),
+            'dimensions' => $dimensions,
+        );
+    }
+
+    if ( 'archival' === $visual_treatment ) {
+        return array(
+            'state'      => 'ready',
+            'label'      => __( 'Archival fit', 'lunara-film' ),
+            'note'       => __( 'This verified visual is preserved in a framed archival treatment instead of being cropped to the wide carousel target.', 'lunara-film' ),
             'dimensions' => $dimensions,
         );
     }
@@ -4663,7 +4682,8 @@ function lunara_control_desk_image_quality_rows( $surface, $limit = 8 ) {
         foreach ( $posts as $post ) {
             $attachment_id   = has_post_thumbnail( $post->ID ) ? absint( get_post_thumbnail_id( $post->ID ) ) : 0;
             $visual_verified = '1' === (string) get_post_meta( $post->ID, '_lunara_fact_visual_verified', true );
-            $state           = lunara_control_desk_oscar_fact_visual_state( $attachment_id, $target, $visual_verified );
+            $visual_treatment = 'archival' === (string) get_post_meta( $post->ID, '_lunara_fact_visual_treatment', true ) ? 'archival' : 'wide';
+            $state           = lunara_control_desk_oscar_fact_visual_state( $attachment_id, $target, $visual_verified, $visual_treatment );
             $rows[]          = array(
                 'surface'         => __( 'Oscar Fact visual', 'lunara-film' ),
                 'surface_key'     => 'oscar-fact',
@@ -4675,10 +4695,11 @@ function lunara_control_desk_image_quality_rows( $surface, $limit = 8 ) {
                 'view_url'        => get_permalink( $post ),
                 'media_url'       => $attachment_id ? get_edit_post_link( $attachment_id, '' ) : '',
                 'attachment_id'   => $attachment_id,
-                'source_label'    => $attachment_id ? ( $visual_verified ? __( 'Verified featured image', 'lunara-film' ) : __( 'Featured image, hidden until verified', 'lunara-film' ) ) : __( 'No featured image', 'lunara-film' ),
+                'source_label'    => $attachment_id ? ( $visual_verified ? ( 'archival' === $visual_treatment ? __( 'Verified archival image', 'lunara-film' ) : __( 'Verified featured image', 'lunara-film' ) ) : __( 'Featured image, hidden until verified', 'lunara-film' ) ) : __( 'No featured image', 'lunara-film' ),
                 'status'          => $state,
                 'target'          => $target,
                 'visual_verified' => $visual_verified,
+                'visual_treatment' => $visual_treatment,
             );
         }
     }
@@ -4932,6 +4953,7 @@ function lunara_control_desk_render_image_source_control( $row ) {
     $surface       = isset( $row['surface_key'] ) ? sanitize_key( $row['surface_key'] ) : '';
     $attachment_id = isset( $row['attachment_id'] ) ? absint( $row['attachment_id'] ) : 0;
     $visual_ok     = ! empty( $row['visual_verified'] );
+    $visual_treatment = isset( $row['visual_treatment'] ) && 'archival' === $row['visual_treatment'] ? 'archival' : 'wide';
     $surfaces      = lunara_control_desk_image_source_surfaces();
 
     if ( ! $post_id || empty( $surfaces[ $surface ] ) || ! current_user_can( 'edit_theme_options' ) || ! current_user_can( 'edit_post', $post_id ) ) {
@@ -5000,6 +5022,16 @@ function lunara_control_desk_render_image_source_control( $row ) {
                 <span>
                     <strong><?php esc_html_e( 'Verified public visual', 'lunara-film' ); ?></strong>
                     <em><?php esc_html_e( 'Only check this after the image truly matches the fact. The homepage carousel hides unverified fact images.', 'lunara-film' ); ?></em>
+                </span>
+            </label>
+            <label class="lunara-control-desk-image-source-verify">
+                <span>
+                    <strong><?php esc_html_e( 'Public visual treatment', 'lunara-film' ); ?></strong>
+                    <select name="lunara_image_source_visual_treatment">
+                        <option value="wide" <?php selected( $visual_treatment, 'wide' ); ?>><?php esc_html_e( 'Wide carousel crop', 'lunara-film' ); ?></option>
+                        <option value="archival" <?php selected( $visual_treatment, 'archival' ); ?>><?php esc_html_e( 'Archival fit', 'lunara-film' ); ?></option>
+                    </select>
+                    <em><?php esc_html_e( 'Use Archival fit for portraits, ceremony stills, and exact source images that should stay intact instead of being cropped.', 'lunara-film' ); ?></em>
                 </span>
             </label>
         <?php endif; ?>

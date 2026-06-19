@@ -6921,6 +6921,40 @@ function lunara_output_home_oscar_facts_carousel_css() {
         transform: scale(1.015);
     }
 
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster {
+        position: relative;
+        display: grid;
+        place-items: center;
+        padding: clamp(20px, 3vw, 42px);
+        background:
+            radial-gradient(circle at 50% 42%, rgba(215, 182, 111, 0.18), transparent 38%),
+            linear-gradient(140deg, rgba(7, 18, 29, 0.98), rgba(18, 34, 50, 0.94));
+        overflow: hidden;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster::before {
+        content: "";
+        position: absolute;
+        inset: clamp(14px, 2vw, 26px);
+        border: 1px solid rgba(215, 182, 111, 0.28);
+        box-shadow: inset 0 0 0 1px rgba(246, 239, 226, 0.05);
+        pointer-events: none;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster-image,
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster img {
+        position: relative;
+        z-index: 1;
+        width: auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-width: min(88%, 520px) !important;
+        max-height: clamp(260px, 28vw, 390px) !important;
+        object-fit: contain !important;
+        transform: none !important;
+        box-shadow: 0 18px 32px rgba(0, 0, 0, 0.32);
+    }
+
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-text {
         justify-content: center;
         padding: clamp(24px, 4vw, 56px) !important;
@@ -6994,6 +7028,16 @@ function lunara_output_home_oscar_facts_carousel_css() {
         body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster-image,
         body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster img {
             min-height: 0 !important;
+        }
+
+        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster {
+            padding: 18px;
+        }
+
+        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster-image,
+        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster img {
+            max-width: 92% !important;
+            max-height: 260px !important;
         }
 
         body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-title {

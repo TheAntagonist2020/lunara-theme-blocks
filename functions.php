@@ -13294,6 +13294,7 @@ if ( ! function_exists( 'lunara_oscar_fact_meta_box_callback' ) ) {
 		$citation    = (string) get_post_meta( $post->ID, '_lunara_fact_citation', true );
 		$year        = (string) get_post_meta( $post->ID, '_lunara_fact_year', true );
 		$visual_ok   = '1' === (string) get_post_meta( $post->ID, '_lunara_fact_visual_verified', true );
+		$treatment   = 'archival' === (string) get_post_meta( $post->ID, '_lunara_fact_visual_treatment', true ) ? 'archival' : 'wide';
 		?>
 		<p>
 			<label for="lunara_fact_attribution"><strong><?php esc_html_e( 'Subject (film or person)', 'lunara-film' ); ?></strong></label><br>
@@ -13315,6 +13316,14 @@ if ( ! function_exists( 'lunara_oscar_fact_meta_box_callback' ) ) {
 			</label><br>
 			<span class="description"><?php esc_html_e( 'Only check this when the featured image directly matches the fact. Unchecked facts render as text-led public cards.', 'lunara-film' ); ?></span>
 		</p>
+		<p>
+			<label for="lunara_fact_visual_treatment"><strong><?php esc_html_e( 'Public visual treatment', 'lunara-film' ); ?></strong></label><br>
+			<select id="lunara_fact_visual_treatment" name="lunara_fact_visual_treatment" class="widefat">
+				<option value="wide" <?php selected( $treatment, 'wide' ); ?>><?php esc_html_e( 'Wide carousel crop', 'lunara-film' ); ?></option>
+				<option value="archival" <?php selected( $treatment, 'archival' ); ?>><?php esc_html_e( 'Archival fit, preserve full source', 'lunara-film' ); ?></option>
+			</select>
+			<span class="description"><?php esc_html_e( 'Use archival fit for portraits, ceremony photos, documents, and exact source images that should not be cropped into a wide still.', 'lunara-film' ); ?></span>
+		</p>
 		<?php
 	}
 }
@@ -13331,11 +13340,13 @@ if ( ! function_exists( 'lunara_oscar_fact_save_meta' ) ) {
 			return;
 		}
 
-		$fields = array(
+		$visual_treatment = isset( $_POST['lunara_fact_visual_treatment'] ) ? sanitize_key( wp_unslash( $_POST['lunara_fact_visual_treatment'] ) ) : '';
+		$fields           = array(
 			'_lunara_fact_attribution' => isset( $_POST['lunara_fact_attribution'] ) ? sanitize_text_field( wp_unslash( $_POST['lunara_fact_attribution'] ) ) : '',
 			'_lunara_fact_citation'    => isset( $_POST['lunara_fact_citation'] ) ? esc_url_raw( wp_unslash( $_POST['lunara_fact_citation'] ) ) : '',
 			'_lunara_fact_year'        => isset( $_POST['lunara_fact_year'] ) ? absint( $_POST['lunara_fact_year'] ) : 0,
 			'_lunara_fact_visual_verified' => isset( $_POST['lunara_fact_visual_verified'] ) ? '1' : '',
+			'_lunara_fact_visual_treatment' => 'archival' === $visual_treatment ? 'archival' : '',
 		);
 
 		foreach ( $fields as $key => $value ) {
@@ -13379,8 +13390,9 @@ if ( ! function_exists( 'lunara_oscar_fact_admin_columns' ) ) {
 			case 'lunara_fact_visual':
 				$has_image = has_post_thumbnail( $post_id );
 				$verified  = '1' === (string) get_post_meta( $post_id, '_lunara_fact_visual_verified', true );
+				$treatment = 'archival' === (string) get_post_meta( $post_id, '_lunara_fact_visual_treatment', true ) ? 'archival' : 'wide';
 				if ( $verified && $has_image ) {
-					esc_html_e( 'Verified', 'lunara-film' );
+					echo 'archival' === $treatment ? esc_html__( 'Verified / Archival fit', 'lunara-film' ) : esc_html__( 'Verified', 'lunara-film' );
 				} elseif ( $has_image ) {
 					esc_html_e( 'Hidden until verified', 'lunara-film' );
 				} else {
@@ -13531,7 +13543,9 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 					$body_short  = lunara_repair_mojibake_text( wp_trim_words( $body, 28, $excerpt_more ) );
 					$visual_ok   = '1' === (string) get_post_meta( $pid, '_lunara_fact_visual_verified', true );
 					$has_image   = $visual_ok && has_post_thumbnail( $pid );
-					$card_class  = 'lunara-oscar-fact-card lunara-carousel-slide' . ( 0 === $fact_index ? ' active' : '' ) . ( $has_image ? ' has-poster' : '' );
+					$visual_treatment = 'archival' === (string) get_post_meta( $pid, '_lunara_fact_visual_treatment', true ) ? 'archival' : 'wide';
+					$is_archival_visual = $has_image && 'archival' === $visual_treatment;
+					$card_class  = 'lunara-oscar-fact-card lunara-carousel-slide' . ( 0 === $fact_index ? ' active' : '' ) . ( $has_image ? ' has-poster' : '' ) . ( $is_archival_visual ? ' has-archival-visual' : '' );
 					$card_url    = lunara_resolve_oscar_fact_ledger_url( $pid, $category, $year );
 					$thumb_attrs = array(
 						'class'    => 'lunara-oscar-fact-card-poster-image',
@@ -13539,12 +13553,13 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 						'decoding' => 'async',
 						'sizes'    => '(max-width: 640px) 92vw, (max-width: 980px) 44vw, 480px',
 					);
+					$thumb_size = $is_archival_visual ? 'full' : 'lunara-hero-spotlight';
 					?>
-					<article class="<?php echo esc_attr( $card_class ); ?>" role="listitem">
+					<article class="<?php echo esc_attr( $card_class ); ?>" role="listitem" data-visual-treatment="<?php echo esc_attr( $visual_treatment ); ?>">
 						<a class="lunara-oscar-fact-card-link" href="<?php echo esc_url( $card_url ); ?>">
 							<?php if ( $has_image ) : ?>
 								<div class="lunara-oscar-fact-card-poster">
-									<?php echo get_the_post_thumbnail( $pid, 'lunara-hero-spotlight', $thumb_attrs ); ?>
+									<?php echo get_the_post_thumbnail( $pid, $thumb_size, $thumb_attrs ); ?>
 								</div>
 							<?php endif; ?>
 							<div class="lunara-oscar-fact-card-text">
