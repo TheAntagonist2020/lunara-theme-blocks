@@ -4774,9 +4774,50 @@ function lunara_control_desk_image_quality_rows( $surface, $limit = 8 ) {
     return $rows;
 }
 
-function lunara_control_desk_image_quality_summary_cards( $rows ) {
+function lunara_control_desk_review_archive_image_quality_rows( $limit = 200 ) {
+    $targets = lunara_control_desk_image_quality_targets();
+    $target  = $targets['review-card'];
+    $limit   = max( 1, min( 300, absint( $limit ) ) );
+    $rows    = array();
+    $posts   = get_posts(
+        array(
+            'post_type'      => 'review',
+            'post_status'    => 'publish',
+            'posts_per_page' => $limit,
+            'orderby'        => 'date',
+            'order'          => 'DESC',
+            'no_found_rows'  => true,
+        )
+    );
+
+    foreach ( $posts as $post ) {
+        $source = lunara_control_desk_review_card_source( $post->ID );
+        $state  = lunara_control_desk_image_quality_state( $source['attachment_id'], $target, $source['external_url'] );
+        $state  = lunara_control_desk_image_quality_apply_accepted_state( $post->ID, 'review-card', $state );
+        $rows[] = array(
+            'surface'       => __( 'Review card', 'lunara-film' ),
+            'surface_key'   => 'review-card',
+            'title'         => get_the_title( $post ),
+            'post_id'       => absint( $post->ID ),
+            'post_status'   => (string) get_post_status( $post ),
+            'status_label'  => lunara_control_desk_post_status_label( $post ),
+            'edit_url'      => get_edit_post_link( $post->ID, '' ),
+            'view_url'      => get_permalink( $post ),
+            'media_url'     => $source['attachment_id'] ? get_edit_post_link( $source['attachment_id'], '' ) : '',
+            'attachment_id' => $source['attachment_id'],
+            'source_label'  => $source['source_label'],
+            'status'        => $state,
+            'target'        => $target,
+        );
+    }
+
+    return $rows;
+}
+
+function lunara_control_desk_image_quality_summary_cards( $rows, $scope = 'recent' ) {
     $ready = 0;
     $weak  = 0;
+    $scope = sanitize_key( $scope );
 
     foreach ( $rows as $row ) {
         $state = isset( $row['status']['state'] ) ? (string) $row['status']['state'] : 'weak';
@@ -4792,7 +4833,7 @@ function lunara_control_desk_image_quality_summary_cards( $rows ) {
             'label' => __( 'Sources checked', 'lunara-film' ),
             'value' => (string) count( $rows ),
             'state' => 'ready',
-            'note'  => __( 'Recent Review, Journal, and Oscar Fact media inspected from WordPress metadata, including drafts.', 'lunara-film' ),
+            'note'  => 'review-archive' === $scope ? __( 'All published Review archive card sources inspected from WordPress metadata.', 'lunara-film' ) : __( 'Recent Review, Journal, and Oscar Fact media inspected from WordPress metadata, including drafts.', 'lunara-film' ),
         ),
         array(
             'label' => __( 'At target', 'lunara-film' ),
@@ -4810,9 +4851,14 @@ function lunara_control_desk_image_quality_summary_cards( $rows ) {
 }
 
 function lunara_control_desk_image_quality_filters() {
+    $scope      = lunara_control_desk_get_request_key( 'lcd_iq_scope', 'recent' );
     $surface     = lunara_control_desk_get_request_key( 'lcd_iq_surface', 'all' );
     $post_status = lunara_control_desk_get_request_key( 'lcd_iq_status', 'all' );
     $state       = lunara_control_desk_get_request_key( 'lcd_iq_state', 'all' );
+
+    if ( ! in_array( $scope, array( 'recent', 'review-archive' ), true ) ) {
+        $scope = 'recent';
+    }
 
     if ( ! in_array( $surface, array( 'all', 'editorial', 'review-card', 'journal-hero', 'oscar-fact' ), true ) ) {
         $surface = 'all';
@@ -4827,6 +4873,7 @@ function lunara_control_desk_image_quality_filters() {
     }
 
     return array(
+        'scope'       => $scope,
         'surface'     => $surface,
         'post_status' => $post_status,
         'state'       => $state,
@@ -4882,6 +4929,7 @@ function lunara_control_desk_filter_image_quality_rows( $rows, $filters ) {
 function lunara_control_desk_image_quality_filter_url( $filters, $overrides = array() ) {
     $filters = array_merge(
         array(
+            'scope'       => 'recent',
             'surface'     => 'all',
             'post_status' => 'all',
             'state'       => 'all',
@@ -4893,6 +4941,10 @@ function lunara_control_desk_image_quality_filter_url( $filters, $overrides = ar
     $args = array(
         'tab' => 'theme-studio',
     );
+
+    if ( 'recent' !== $filters['scope'] ) {
+        $args['lcd_iq_scope'] = sanitize_key( $filters['scope'] );
+    }
 
     if ( 'all' !== $filters['surface'] ) {
         $args['lcd_iq_surface'] = sanitize_key( $filters['surface'] );
@@ -4986,6 +5038,10 @@ function lunara_control_desk_render_image_quality_filters( $rows, $filters ) {
             <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'surface' => 'editorial', 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?>">
                 <strong><?php esc_html_e( 'Editorial gaps', 'lunara-film' ); ?></strong>
                 <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $rows, $filters, array( 'surface' => 'editorial', 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?></span>
+            </a>
+            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'scope' => 'review-archive', 'surface' => 'review-card', 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?>">
+                <strong><?php esc_html_e( 'Review archive backlog', 'lunara-film' ); ?></strong>
+                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( lunara_control_desk_review_archive_image_quality_rows(), array(), array( 'surface' => 'review-card', 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?></span>
             </a>
             <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?>">
                 <strong><?php esc_html_e( 'Published gaps', 'lunara-film' ); ?></strong>
@@ -5208,15 +5264,26 @@ function lunara_control_desk_render_image_quality_group( $label, $rows, $empty_m
 }
 
 function lunara_control_desk_render_image_quality_console() {
-    $filters      = lunara_control_desk_image_quality_filters();
-    $review_rows  = lunara_control_desk_image_quality_rows( 'reviews', 16 );
-    $journal_rows = lunara_control_desk_image_quality_rows( 'journal', 16 );
-    $fact_rows    = lunara_control_desk_image_quality_rows( 'oscar-facts', 48 );
-    $all_rows     = array_merge( $review_rows, $journal_rows, $fact_rows );
-    $filtered     = lunara_control_desk_filter_image_quality_rows( $all_rows, $filters );
-    $review_rows  = lunara_control_desk_filter_image_quality_rows( $review_rows, $filters );
-    $journal_rows = lunara_control_desk_filter_image_quality_rows( $journal_rows, $filters );
-    $fact_rows    = lunara_control_desk_filter_image_quality_rows( $fact_rows, $filters );
+    $filters             = lunara_control_desk_image_quality_filters();
+    $scope               = isset( $filters['scope'] ) ? sanitize_key( $filters['scope'] ) : 'recent';
+    $review_rows         = lunara_control_desk_image_quality_rows( 'reviews', 16 );
+    $review_archive_rows = lunara_control_desk_review_archive_image_quality_rows();
+    $journal_rows        = lunara_control_desk_image_quality_rows( 'journal', 16 );
+    $fact_rows           = lunara_control_desk_image_quality_rows( 'oscar-facts', 48 );
+
+    if ( 'review-archive' === $scope ) {
+        $all_rows     = $review_archive_rows;
+        $filtered     = lunara_control_desk_filter_image_quality_rows( $all_rows, $filters );
+        $review_rows  = $filtered;
+        $journal_rows = array();
+        $fact_rows    = array();
+    } else {
+        $all_rows     = array_merge( $review_rows, $journal_rows, $fact_rows );
+        $filtered     = lunara_control_desk_filter_image_quality_rows( $all_rows, $filters );
+        $review_rows  = lunara_control_desk_filter_image_quality_rows( $review_rows, $filters );
+        $journal_rows = lunara_control_desk_filter_image_quality_rows( $journal_rows, $filters );
+        $fact_rows    = lunara_control_desk_filter_image_quality_rows( $fact_rows, $filters );
+    }
     ?>
     <section id="lunara-theme-studio-image-quality" class="lunara-control-desk-image-console">
         <div class="lunara-control-desk-panel-header">
@@ -5224,13 +5291,17 @@ function lunara_control_desk_render_image_quality_console() {
             <h3><?php esc_html_e( 'Find the soft source before it reaches the public surface', 'lunara-film' ); ?></h3>
             <p class="lunara-control-desk-subtle"><?php esc_html_e( 'The renderer already requests the large Lunara sizes; this console checks whether the selected source file is good enough to survive that treatment.', 'lunara-film' ); ?></p>
         </div>
-        <?php lunara_control_desk_render_status_cards( lunara_control_desk_image_quality_summary_cards( $filtered ) ); ?>
+        <?php lunara_control_desk_render_status_cards( lunara_control_desk_image_quality_summary_cards( $filtered, $scope ) ); ?>
         <?php lunara_control_desk_render_image_quality_filters( $all_rows, $filters ); ?>
         <?php lunara_control_desk_render_image_quality_targets(); ?>
         <div class="lunara-control-desk-image-groups">
-            <?php lunara_control_desk_render_image_quality_group( __( 'Recent review card sources', 'lunara-film' ), $review_rows, __( 'No review card rows match the current filters.', 'lunara-film' ) ); ?>
-            <?php lunara_control_desk_render_image_quality_group( __( 'Recent Journal hero sources', 'lunara-film' ), $journal_rows, __( 'No Journal hero rows match the current filters.', 'lunara-film' ) ); ?>
-            <?php lunara_control_desk_render_image_quality_group( __( 'Oscar Facts carousel visuals', 'lunara-film' ), $fact_rows, __( 'No Oscar Fact rows match the current filters.', 'lunara-film' ) ); ?>
+            <?php if ( 'review-archive' === $scope ) : ?>
+                <?php lunara_control_desk_render_image_quality_group( __( 'Published Review archive backlog', 'lunara-film' ), $review_rows, __( 'No published Review archive rows match the current filters.', 'lunara-film' ) ); ?>
+            <?php else : ?>
+                <?php lunara_control_desk_render_image_quality_group( __( 'Recent review card sources', 'lunara-film' ), $review_rows, __( 'No review card rows match the current filters.', 'lunara-film' ) ); ?>
+                <?php lunara_control_desk_render_image_quality_group( __( 'Recent Journal hero sources', 'lunara-film' ), $journal_rows, __( 'No Journal hero rows match the current filters.', 'lunara-film' ) ); ?>
+                <?php lunara_control_desk_render_image_quality_group( __( 'Oscar Facts carousel visuals', 'lunara-film' ), $fact_rows, __( 'No Oscar Fact rows match the current filters.', 'lunara-film' ) ); ?>
+            <?php endif; ?>
         </div>
         <div class="lunara-control-desk-image-footer">
             <div>
