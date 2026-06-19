@@ -10,15 +10,14 @@ $review_sort = function_exists( 'lunara_get_review_archive_sort' )
     : 'release_desc';
 
 $archive_kicker = function_exists( 'lunara_theme_mod_text' )
-    ? lunara_theme_mod_text( 'lunara_reviews_archive_kicker', 'Review Archive' )
-    : 'Review Archive';
+    ? lunara_theme_mod_text( 'lunara_reviews_archive_kicker', 'Criticism Desk' )
+    : 'Criticism Desk';
 $archive_title = function_exists( 'lunara_theme_mod_text' )
-    ? lunara_theme_mod_text( 'lunara_reviews_archive_title', 'The Review Archive' )
-    : 'The Review Archive';
+    ? lunara_theme_mod_text( 'lunara_reviews_archive_title', 'Lunara Reviews' )
+    : 'Lunara Reviews';
 $archive_copy = function_exists( 'lunara_theme_mod_text' )
-    ? lunara_theme_mod_text( 'lunara_reviews_archive_copy', '' )
-    : '';
-$archive_copy = '';
+    ? lunara_theme_mod_text( 'lunara_reviews_archive_copy', 'Spoiler-free criticism, full-spoiler companion files, festival finds, and the films that deserve a longer argument after the credits roll.' )
+    : 'Spoiler-free criticism, full-spoiler companion files, festival finds, and the films that deserve a longer argument after the credits roll.';
 
 echo lunara_render_review_archive_shell(
     array(

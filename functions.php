@@ -1425,21 +1425,21 @@ function lunara_customize_register( $wp_customize ) {
     $editorial_archive_controls = array(
         array(
             'setting'  => 'lunara_reviews_archive_kicker',
-            'default'  => 'Review Archive',
+            'default'  => 'Criticism Desk',
             'label'    => __( 'Reviews Archive Kicker', 'lunara-film' ),
             'type'     => 'text',
             'sanitize' => 'sanitize_text_field',
         ),
         array(
             'setting'  => 'lunara_reviews_archive_title',
-            'default'  => 'The Review Archive',
+            'default'  => 'Lunara Reviews',
             'label'    => __( 'Reviews Archive Title', 'lunara-film' ),
             'type'     => 'text',
             'sanitize' => 'sanitize_text_field',
         ),
         array(
             'setting'     => 'lunara_reviews_archive_copy',
-            'default'     => 'Poster-led criticism, cataloged so readers can move through the writing as an evolving record instead of a pile of disconnected posts.',
+            'default'     => 'Spoiler-free criticism, full-spoiler companion files, festival finds, and the films that deserve a longer argument after the credits roll.',
             'label'       => __( 'Reviews Archive Intro', 'lunara-film' ),
             'type'        => 'textarea',
             'sanitize'    => 'sanitize_textarea_field',
