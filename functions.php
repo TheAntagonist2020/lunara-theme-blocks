@@ -13424,6 +13424,45 @@ if ( ! function_exists( 'lunara_get_oscar_facts' ) ) {
 			);
 		}
 
+		if ( 'visual_priority' === $args['orderby'] ) {
+			$limit         = max( 1, (int) $args['posts_per_page'] );
+			$priority_args = $query_args;
+
+			$priority_args['fields']         = 'ids';
+			$priority_args['posts_per_page'] = $limit;
+			$priority_args['meta_query']     = array(
+				'relation' => 'AND',
+				array(
+					'key'     => '_lunara_fact_visual_verified',
+					'value'   => '1',
+					'compare' => '=',
+				),
+				array(
+					'key'     => '_thumbnail_id',
+					'compare' => 'EXISTS',
+				),
+			);
+			$priority_args['orderby']        = 'date';
+
+			$ordered_ids = array_map( 'absint', get_posts( $priority_args ) );
+
+			if ( count( $ordered_ids ) < $limit ) {
+				$filler_args                   = $query_args;
+				$filler_args['fields']         = 'ids';
+				$filler_args['posts_per_page'] = $limit - count( $ordered_ids );
+				$filler_args['post__not_in']   = $ordered_ids;
+				$filler_args['orderby']        = 'date';
+
+				$ordered_ids = array_merge( $ordered_ids, array_map( 'absint', get_posts( $filler_args ) ) );
+			}
+
+			if ( ! empty( $ordered_ids ) ) {
+				$query_args['post__in']       = $ordered_ids;
+				$query_args['posts_per_page'] = count( $ordered_ids );
+				$query_args['orderby']        = 'post__in';
+			}
+		}
+
 		return new WP_Query( $query_args );
 	}
 }
@@ -13443,7 +13482,7 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 			'count'    => 8,
 		);
 		$args  = lunara_repair_mojibake_args( wp_parse_args( $args, $defaults ), array( 'kicker', 'heading', 'summary', 'cta_text' ) );
-		$query = lunara_get_oscar_facts( array( 'posts_per_page' => (int) $args['count'], 'orderby' => 'rand' ) );
+		$query = lunara_get_oscar_facts( array( 'posts_per_page' => (int) $args['count'], 'orderby' => 'visual_priority' ) );
 
 		if ( ! $query->have_posts() ) {
 			return '';
