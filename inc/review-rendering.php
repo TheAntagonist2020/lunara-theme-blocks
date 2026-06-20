@@ -3302,8 +3302,8 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
             $latest_ts = max( $latest_ts, (int) get_post_modified_time( 'U', true, $post_item ) );
         }
         $lead_post       = ! empty( $posts ) ? array_shift( $posts ) : null;
-        $support_posts   = array_slice( $posts, 0, 2 );
-        $remaining_posts = array_slice( $posts, 2 );
+        $support_posts   = array_slice( $posts, 0, 4 );
+        $remaining_posts = array_slice( $posts, 4 );
         $has_posts       = $lead_post instanceof WP_Post;
         $classes        .= $has_posts ? ' lunara-review-archive-has-posts' : ' lunara-review-archive-is-empty';
         $archive_mode    = $has_posts
@@ -3409,10 +3409,44 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                                     <p class="lunara-home-section-kicker"><?php esc_html_e( 'On The Desk', 'lunara-film' ); ?></p>
                                     <h2 class="lunara-section-title"><?php esc_html_e( 'Current companion files.', 'lunara-film' ); ?></h2>
                                 </div>
-                                <div class="lunara-review-archive-rail">
+                                <div
+                                    class="lunara-review-archive-rail lunara-review-archive-dynamic-rail"
+                                    data-lunara-review-dynamic-rail
+                                    data-lunara-dynamic-rail
+                                    data-lunara-dynamic-rail-autoplay="6800"
+                                    aria-label="<?php esc_attr_e( 'Current companion review files', 'lunara-film' ); ?>"
+                                >
+                                    <?php if ( count( $support_posts ) > 1 ) : ?>
+                                        <div class="lunara-review-archive-rail-controls">
+                                            <button type="button" class="lunara-review-archive-rail-control" data-lunara-dynamic-rail-prev aria-label="<?php esc_attr_e( 'Previous companion review', 'lunara-film' ); ?>">
+                                                <span aria-hidden="true">&lsaquo;</span>
+                                            </button>
+                                            <button type="button" class="lunara-review-archive-rail-control" data-lunara-dynamic-rail-next aria-label="<?php esc_attr_e( 'Next companion review', 'lunara-film' ); ?>">
+                                                <span aria-hidden="true">&rsaquo;</span>
+                                            </button>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="lunara-review-archive-rail-track" data-lunara-dynamic-rail-track tabindex="0">
                                     <?php foreach ( $support_posts as $support_index => $support_post ) : ?>
-                                        <?php echo lunara_render_review_grid_card( $support_post->ID, $support_index + 2 ); ?>
+                                        <div class="lunara-review-archive-rail-item" data-lunara-dynamic-rail-item>
+                                            <?php echo lunara_render_review_grid_card( $support_post->ID, $support_index + 2 ); ?>
+                                        </div>
                                     <?php endforeach; ?>
+                                    </div>
+                                    <?php if ( count( $support_posts ) > 1 ) : ?>
+                                        <div class="lunara-review-archive-rail-dots" aria-label="<?php esc_attr_e( 'Companion review position', 'lunara-film' ); ?>">
+                                            <?php foreach ( $support_posts as $support_index => $support_post ) : ?>
+                                                <button
+                                                    type="button"
+                                                    class="lunara-review-archive-rail-dot<?php echo 0 === $support_index ? ' is-active' : ''; ?>"
+                                                    data-lunara-dynamic-rail-dot
+                                                    data-lunara-dynamic-rail-index="<?php echo esc_attr( (string) $support_index ); ?>"
+                                                    aria-label="<?php echo esc_attr( sprintf( __( 'Go to companion review %d', 'lunara-film' ), $support_index + 1 ) ); ?>"
+                                                    <?php echo 0 === $support_index ? 'aria-current="true"' : ''; ?>
+                                                ></button>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -3442,7 +3476,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                             </div>
                             <div class="<?php echo esc_attr( implode( ' ', $run_grid_classes ) ); ?>">
                                 <?php foreach ( $remaining_posts as $review_index => $review_post ) : ?>
-                                    <?php echo lunara_render_review_grid_card( $review_post->ID, $review_index + 4 ); ?>
+                                    <?php echo lunara_render_review_grid_card( $review_post->ID, $review_index + count( $support_posts ) + 2 ); ?>
                                 <?php endforeach; ?>
                                 <?php if ( $retention_span > 0 ) : ?>
                                     <aside class="lunara-review-archive-retention-card spans-<?php echo esc_attr( (string) $retention_span ); ?>" aria-label="<?php esc_attr_e( 'More Lunara destinations', 'lunara-film' ); ?>">

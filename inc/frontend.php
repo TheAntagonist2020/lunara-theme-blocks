@@ -2736,6 +2736,36 @@ add_action( 'wp_head', 'lunara_output_os_responsive_guardrail_css', 999 );
 /**
  * Reviews archive authority package polish.
  */
+function lunara_enqueue_review_archive_dynamic_rails() {
+    if ( is_admin() || is_feed() ) {
+        return;
+    }
+
+    $is_reviews_archive = is_post_type_archive( 'review' )
+        || is_page_template( 'page-reviews.php' )
+        || is_page( 'reviews' );
+
+    if ( ! $is_reviews_archive ) {
+        return;
+    }
+
+    $rail_js = lunara_resolve_theme_asset(
+        'assets/js/lunara-dynamic-rails.js',
+        array( 'lunara-dynamic-rails.js' )
+    );
+
+    if ( $rail_js['uri'] ) {
+        wp_enqueue_script(
+            'lunara-dynamic-rails',
+            $rail_js['uri'],
+            array(),
+            lunara_theme_asset_version( $rail_js['path'] ),
+            true
+        );
+    }
+}
+add_action( 'wp_enqueue_scripts', 'lunara_enqueue_review_archive_dynamic_rails' );
+
 function lunara_output_review_archive_authority_css() {
     if ( is_admin() || is_feed() ) {
         return;
@@ -3484,6 +3514,142 @@ function lunara_output_review_archive_authority_css() {
         color: #fff4cf !important;
     }
 
+    .lunara-review-archive-page .lunara-review-archive-support-suite {
+        align-items: stretch !important;
+        display: grid !important;
+        gap: clamp(16px, 2vw, 24px) !important;
+        grid-template-columns: minmax(210px, 0.32fr) minmax(0, 1fr) !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        padding: clamp(16px, 2.1vw, 24px) !important;
+        border: 1px solid rgba(224, 196, 129, 0.14) !important;
+        border-radius: 20px !important;
+        background: linear-gradient(135deg, rgba(7, 18, 30, 0.72), rgba(14, 29, 44, 0.64)) !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-support-head {
+        align-content: center !important;
+        display: grid !important;
+        min-width: 0 !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-dynamic-rail,
+    body.page-template-page-reviews .lunara-review-archive-dynamic-rail,
+    .lunara-review-archive-page .lunara-review-archive-dynamic-rail {
+        align-content: start !important;
+        display: grid !important;
+        gap: 12px !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: auto minmax(0, 1fr) auto !important;
+        min-width: 0 !important;
+        position: relative !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-rail-controls {
+        display: flex !important;
+        gap: 8px !important;
+        justify-content: flex-end !important;
+        min-width: 0 !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-rail-control {
+        align-items: center !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        padding: 0 !important;
+        border: 1px solid rgba(224, 196, 129, 0.32) !important;
+        border-radius: 999px !important;
+        background: rgba(6, 16, 27, 0.82) !important;
+        color: rgba(239, 222, 173, 0.96) !important;
+        cursor: pointer !important;
+        display: inline-grid !important;
+        font-size: 1.32rem !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-rail-control:hover,
+    .lunara-review-archive-page .lunara-review-archive-rail-control:focus-visible {
+        background: rgba(224, 196, 129, 0.16) !important;
+        border-color: rgba(224, 196, 129, 0.58) !important;
+        color: #fff4cf !important;
+        outline: 2px solid rgba(224, 196, 129, 0.28) !important;
+        outline-offset: 2px !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-rail-track {
+        display: flex !important;
+        gap: clamp(12px, 1.6vw, 18px) !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        overscroll-behavior-x: contain !important;
+        padding: 1px 1px 8px !important;
+        scroll-behavior: smooth !important;
+        scroll-snap-type: x mandatory !important;
+        scrollbar-width: none !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-rail-track::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-rail-track:focus-visible {
+        outline: 2px solid rgba(224, 196, 129, 0.38) !important;
+        outline-offset: 4px !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-rail-item {
+        display: grid !important;
+        flex: 0 0 min(360px, calc((100% - 18px) / 2)) !important;
+        min-width: 0 !important;
+        scroll-snap-align: start !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-rail-item > .lunara-review-grid-card {
+        height: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-rail-item .lunara-review-grid-link {
+        height: 100% !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-rail-dots {
+        align-items: center !important;
+        display: flex !important;
+        gap: 8px !important;
+        justify-content: center !important;
+        min-width: 0 !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-rail-dot {
+        width: 9px !important;
+        height: 9px !important;
+        min-width: 9px !important;
+        padding: 0 !important;
+        border: 1px solid rgba(224, 196, 129, 0.6) !important;
+        border-radius: 999px !important;
+        background: rgba(244, 239, 227, 0.13) !important;
+        cursor: pointer !important;
+        transition: width 180ms ease, background-color 180ms ease, border-color 180ms ease !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-rail-dot.is-active {
+        width: 30px !important;
+        background: #d7b66f !important;
+        border-color: #d7b66f !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-run {
+        margin-top: clamp(4px, 1vw, 12px) !important;
+    }
+
     @media (max-width: 900px) {
         .lunara-review-archive-page .lunara-review-archive-hero-shell,
         .lunara-review-archive-page .lunara-review-archive-toolbar {
@@ -3497,6 +3663,14 @@ function lunara_output_review_archive_authority_css() {
         .lunara-review-archive-page .lunara-review-archive-support-suite,
         .lunara-review-archive-page .lunara-review-archive-rail {
             grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        .lunara-review-archive-page .lunara-review-archive-support-suite {
+            overflow: hidden !important;
+        }
+
+        .lunara-review-archive-page .lunara-review-archive-rail-item {
+            flex-basis: min(78vw, 340px) !important;
         }
     }
 
@@ -3513,6 +3687,10 @@ function lunara_output_review_archive_authority_css() {
 
         .lunara-review-archive-page .lunara-review-archive-support-head {
             padding: 16px 0 12px !important;
+        }
+
+        .lunara-review-archive-page .lunara-review-archive-rail-controls {
+            justify-content: flex-start !important;
         }
 
         .lunara-review-archive-page .lunara-review-archive-run-grid {
@@ -3559,12 +3737,32 @@ function lunara_output_review_archive_authority_css() {
         .lunara-review-archive-page .lunara-review-archive-retention-card {
             padding: 18px !important;
         }
+
+        .lunara-review-archive-page .lunara-review-archive-rail-item {
+            flex-basis: min(82vw, 300px) !important;
+        }
     }
 
     @media (min-width: 681px) and (max-width: 900px) {
-        body.post-type-archive-review .lunara-review-archive-page .lunara-review-archive-support-suite .lunara-review-archive-rail,
-        body.page-template-page-reviews .lunara-review-archive-page .lunara-review-archive-support-suite .lunara-review-archive-rail {
+        body.post-type-archive-review .lunara-review-archive-page .lunara-review-archive-support-suite .lunara-review-archive-rail:not(.lunara-review-archive-dynamic-rail),
+        body.page-template-page-reviews .lunara-review-archive-page .lunara-review-archive-support-suite .lunara-review-archive-rail:not(.lunara-review-archive-dynamic-rail) {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        body.post-type-archive-review .lunara-review-archive-page .lunara-review-archive-support-suite .lunara-review-archive-dynamic-rail,
+        body.page-template-page-reviews .lunara-review-archive-page .lunara-review-archive-support-suite .lunara-review-archive-dynamic-rail {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .lunara-review-archive-page .lunara-review-archive-rail-track {
+            scroll-behavior: auto !important;
+        }
+
+        .lunara-review-archive-page .lunara-review-archive-rail-control,
+        .lunara-review-archive-page .lunara-review-archive-rail-dot {
+            transition: none !important;
         }
     }
     </style>
