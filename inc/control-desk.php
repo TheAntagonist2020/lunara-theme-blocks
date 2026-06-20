@@ -1072,7 +1072,7 @@ function lunara_control_desk_get_source_status() {
             'label' => __( 'Oscars plugin source', 'lunara-film' ),
             'value' => 'G:\\lunara-backups\\work\\academy-awards-table-optimized-ceremony-depth',
             'state' => 'ready',
-            'note'  => 'feat/ceremony-depth-thesis @ 47275cf; ceremony editorial write-ups workflow; Deployer for Git Pro is inactive; original source folder has pre-existing SQL drift and was not the deploy source.',
+            'note'  => 'feat/ceremony-depth-thesis @ 6797226; ceremony write-up queue polish; Deployer for Git Pro is inactive; original source folder has pre-existing SQL drift and was not the deploy source.',
         ),
         array(
             'label' => __( 'Dispatch plugin source', 'lunara-film' ),
@@ -1105,7 +1105,7 @@ function lunara_control_desk_get_source_control_status() {
     return array(
         array(
             'label' => __( 'Theme repo', 'lunara-film' ),
-            'value' => 'main @ 7d7e9b0',
+            'value' => 'main @ 61785c7',
             'state' => 'ready',
             'note'  => 'github.com/TheAntagonist2020/lunara-theme-blocks',
         ),
@@ -1117,7 +1117,7 @@ function lunara_control_desk_get_source_control_status() {
         ),
         array(
             'label' => __( 'Oscars repo', 'lunara-film' ),
-            'value' => 'feat/ceremony-depth-thesis @ 8b69e1d',
+            'value' => 'feat/ceremony-depth-thesis @ 6797226',
             'state' => 'ready',
             'note'  => 'github.com/TheAntagonist2020/lunara-plugin-oscars-ledger',
         ),
