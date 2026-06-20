@@ -13407,6 +13407,12 @@ if ( ! function_exists( 'lunara_oscar_fact_admin_columns' ) ) {
 /**
  * Query helper.
  */
+if ( ! function_exists( 'lunara_oscar_fact_visual_hold_ids' ) ) {
+	function lunara_oscar_fact_visual_hold_ids() {
+		return array( 31305, 31313, 31316, 31342, 31343 );
+	}
+}
+
 if ( ! function_exists( 'lunara_get_oscar_facts' ) ) {
 	function lunara_get_oscar_facts( $args = array() ) {
 		$defaults = array(
@@ -13438,10 +13444,12 @@ if ( ! function_exists( 'lunara_get_oscar_facts' ) ) {
 
 		if ( 'visual_priority' === $args['orderby'] ) {
 			$limit         = max( 1, (int) $args['posts_per_page'] );
+			$held_ids      = function_exists( 'lunara_oscar_fact_visual_hold_ids' ) ? lunara_oscar_fact_visual_hold_ids() : array();
 			$priority_args = $query_args;
 
 			$priority_args['fields']         = 'ids';
 			$priority_args['posts_per_page'] = $limit;
+			$priority_args['post__not_in']   = array_map( 'absint', $held_ids );
 			$priority_args['meta_query']     = array(
 				'relation' => 'AND',
 				array(
@@ -13462,7 +13470,7 @@ if ( ! function_exists( 'lunara_get_oscar_facts' ) ) {
 				$filler_args                   = $query_args;
 				$filler_args['fields']         = 'ids';
 				$filler_args['posts_per_page'] = $limit - count( $ordered_ids );
-				$filler_args['post__not_in']   = $ordered_ids;
+				$filler_args['post__not_in']   = array_merge( $ordered_ids, array_map( 'absint', $held_ids ) );
 				$filler_args['orderby']        = 'date';
 
 				$ordered_ids = array_merge( $ordered_ids, array_map( 'absint', get_posts( $filler_args ) ) );
@@ -13541,7 +13549,8 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 					$body        = wp_strip_all_tags( get_the_content() );
 					$excerpt_more = html_entity_decode( '&hellip;', ENT_QUOTES, 'UTF-8' );
 					$body_short  = lunara_repair_mojibake_text( wp_trim_words( $body, 28, $excerpt_more ) );
-					$visual_ok   = '1' === (string) get_post_meta( $pid, '_lunara_fact_visual_verified', true );
+					$held_ids    = function_exists( 'lunara_oscar_fact_visual_hold_ids' ) ? lunara_oscar_fact_visual_hold_ids() : array();
+					$visual_ok   = '1' === (string) get_post_meta( $pid, '_lunara_fact_visual_verified', true ) && ! in_array( $pid, array_map( 'absint', $held_ids ), true );
 					$has_image   = $visual_ok && has_post_thumbnail( $pid );
 					$visual_treatment = 'archival' === (string) get_post_meta( $pid, '_lunara_fact_visual_treatment', true ) ? 'archival' : 'wide';
 					$is_archival_visual = $has_image && 'archival' === $visual_treatment;
@@ -13555,7 +13564,7 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 					);
 					$thumb_size = $is_archival_visual ? 'full' : 'lunara-hero-spotlight';
 					?>
-					<article class="<?php echo esc_attr( $card_class ); ?>" role="listitem" data-visual-treatment="<?php echo esc_attr( $visual_treatment ); ?>">
+					<article class="<?php echo esc_attr( $card_class ); ?>" role="listitem" data-fact-id="<?php echo esc_attr( (string) $pid ); ?>" data-visual-treatment="<?php echo esc_attr( $visual_treatment ); ?>">
 						<a class="lunara-oscar-fact-card-link" href="<?php echo esc_url( $card_url ); ?>">
 							<?php if ( $has_image ) : ?>
 								<div class="lunara-oscar-fact-card-poster">

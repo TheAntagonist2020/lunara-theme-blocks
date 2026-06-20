@@ -388,6 +388,272 @@ function lunara_control_desk_save_brand_controls() {
 }
 add_action( 'admin_post_lunara_save_brand_controls', 'lunara_control_desk_save_brand_controls' );
 
+function lunara_control_desk_homepage_select_specs() {
+    return array(
+        'lunara_home_front_door_density'      => array(
+            'label'   => __( 'Front-door density', 'lunara-film' ),
+            'default' => 'editorial',
+            'note'    => __( 'Controls how tightly the identity, premise, and route cards travel together.', 'lunara-film' ),
+            'options' => array(
+                'compact'   => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'Sharper first-screen compression for days when the masthead feels too tall.', 'lunara-film' ),
+                ),
+                'editorial' => array(
+                    'label' => __( 'Editorial', 'lunara-film' ),
+                    'copy'  => __( 'The default publication rhythm: confident, dense, and still breathable.', 'lunara-film' ),
+                ),
+                'showcase'  => array(
+                    'label' => __( 'Showcase', 'lunara-film' ),
+                    'copy'  => __( 'A slightly roomier identity read for logo-forward presentation.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_home_route_card_prominence'   => array(
+            'label'   => __( 'Route-card prominence', 'lunara-film' ),
+            'default' => 'strong',
+            'note'    => __( 'Tunes how much authority the Reviews, Journal, and Oscar Ledger doors carry.', 'lunara-film' ),
+            'options' => array(
+                'quiet'    => array(
+                    'label' => __( 'Quiet', 'lunara-film' ),
+                    'copy'  => __( 'Lower-contrast cards when the masthead art should dominate.', 'lunara-film' ),
+                ),
+                'standard' => array(
+                    'label' => __( 'Standard', 'lunara-film' ),
+                    'copy'  => __( 'Balanced cards with clear route access.', 'lunara-film' ),
+                ),
+                'strong'   => array(
+                    'label' => __( 'Strong', 'lunara-film' ),
+                    'copy'  => __( 'Premium front-door cards that read as core publication departments.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_home_first_section_rhythm'    => array(
+            'label'   => __( 'First-section rhythm', 'lunara-film' ),
+            'default' => 'tight',
+            'note'    => __( 'Controls the vertical handoff from masthead into the first live content lane.', 'lunara-film' ),
+            'options' => array(
+                'tight'    => array(
+                    'label' => __( 'Tight', 'lunara-film' ),
+                    'copy'  => __( 'Gets readers from identity to active coverage faster.', 'lunara-film' ),
+                ),
+                'balanced' => array(
+                    'label' => __( 'Balanced', 'lunara-film' ),
+                    'copy'  => __( 'A moderate pause between brand and feed.', 'lunara-film' ),
+                ),
+                'spacious' => array(
+                    'label' => __( 'Spacious', 'lunara-film' ),
+                    'copy'  => __( 'More ceremony when the front door needs a calmer read.', 'lunara-film' ),
+                ),
+            ),
+        ),
+    );
+}
+
+function lunara_control_desk_homepage_select_value( $key ) {
+    $specs = lunara_control_desk_homepage_select_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return '';
+    }
+
+    $value = sanitize_key( (string) get_theme_mod( $key, $specs[ $key ]['default'] ) );
+
+    if ( ! isset( $specs[ $key ]['options'][ $value ] ) ) {
+        return (string) $specs[ $key ]['default'];
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_homepage_number_specs() {
+    return array(
+        'lunara_home_masthead_top_padding'    => array(
+            'label'   => __( 'Masthead top padding', 'lunara-film' ),
+            'default' => 36,
+            'min'     => 16,
+            'max'     => 72,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Space above the homepage identity lockup.', 'lunara-film' ),
+        ),
+        'lunara_home_masthead_bottom_padding' => array(
+            'label'   => __( 'Masthead bottom padding', 'lunara-film' ),
+            'default' => 32,
+            'min'     => 12,
+            'max'     => 70,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Space below the route cards inside the masthead chamber.', 'lunara-film' ),
+        ),
+        'lunara_home_masthead_bottom_gap'     => array(
+            'label'   => __( 'Masthead-to-content gap', 'lunara-film' ),
+            'default' => 26,
+            'min'     => 10,
+            'max'     => 72,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'The public handoff from front-door identity into the first content lane.', 'lunara-film' ),
+        ),
+        'lunara_home_route_card_min_height'   => array(
+            'label'   => __( 'Route-card minimum height', 'lunara-film' ),
+            'default' => 126,
+            'min'     => 88,
+            'max'     => 190,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Keeps the three front-door departments visually even.', 'lunara-film' ),
+        ),
+        'lunara_home_section_gap'             => array(
+            'label'   => __( 'Homepage section rhythm', 'lunara-film' ),
+            'default' => 38,
+            'min'     => 20,
+            'max'     => 90,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Global spacing between major homepage modules after the masthead.', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_homepage_clamp_number( $key, $value ) {
+    $specs = lunara_control_desk_homepage_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    if ( is_array( $value ) ) {
+        $value = reset( $value );
+    }
+
+    $spec  = $specs[ $key ];
+    $value = absint( $value );
+
+    if ( $value < $spec['min'] ) {
+        return absint( $spec['min'] );
+    }
+
+    if ( $value > $spec['max'] ) {
+        return absint( $spec['max'] );
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_homepage_number_value( $key ) {
+    $specs = lunara_control_desk_homepage_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    return lunara_control_desk_homepage_clamp_number(
+        $key,
+        get_theme_mod( $key, $specs[ $key ]['default'] )
+    );
+}
+
+function lunara_control_desk_homepage_visibility_specs() {
+    return array(
+        'lunara_home_show_latest_reviews'  => array(
+            'label'   => __( 'Latest Reviews', 'lunara-film' ),
+            'default' => true,
+            'copy'    => __( 'The review-first desktop lane and criticism signal.', 'lunara-film' ),
+        ),
+        'lunara_home_show_dispatch'        => array(
+            'label'   => __( 'Journal Lane', 'lunara-film' ),
+            'default' => true,
+            'copy'    => __( 'The mobile-first live desk and Journal signal.', 'lunara-film' ),
+        ),
+        'lunara_home_show_oscar_spotlight' => array(
+            'label'   => __( 'Oscar Spotlight', 'lunara-film' ),
+            'default' => true,
+            'copy'    => __( 'The Oscar route-family bridge before deeper ledger modules.', 'lunara-film' ),
+        ),
+        'lunara_home_show_database'        => array(
+            'label'   => __( 'Database Spotlight', 'lunara-film' ),
+            'default' => true,
+            'copy'    => __( 'The searchable archive/database invitation.', 'lunara-film' ),
+        ),
+        'lunara_home_show_ledger'          => array(
+            'label'   => __( 'From the Ledger', 'lunara-film' ),
+            'default' => true,
+            'copy'    => __( 'The Oscar historical record lane.', 'lunara-film' ),
+        ),
+        'lunara_home_show_deep_cuts'       => array(
+            'label'   => __( 'Deep Cut Stats', 'lunara-film' ),
+            'default' => true,
+            'copy'    => __( 'The statistics and discovery lane.', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_save_homepage_studio() {
+    $redirect = lunara_control_desk_admin_url(
+        array(
+            'tab' => 'theme-studio',
+        )
+    ) . '#lunara-theme-studio-homepage-studio';
+
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        wp_safe_redirect( add_query_arg( 'lunara_notice', 'homepage_studio_forbidden', $redirect ) );
+        exit;
+    }
+
+    check_admin_referer( 'lunara_save_homepage_studio', 'lunara_homepage_nonce' );
+
+    $raw_selects = isset( $_POST['lunara_homepage_select'] ) && is_array( $_POST['lunara_homepage_select'] )
+        ? wp_unslash( $_POST['lunara_homepage_select'] )
+        : array();
+
+    foreach ( lunara_control_desk_homepage_select_specs() as $key => $spec ) {
+        $value = isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'];
+        if ( ! isset( $spec['options'][ $value ] ) ) {
+            $value = (string) $spec['default'];
+        }
+        set_theme_mod( $key, $value );
+    }
+
+    $raw_numbers = isset( $_POST['lunara_homepage_number'] ) && is_array( $_POST['lunara_homepage_number'] )
+        ? wp_unslash( $_POST['lunara_homepage_number'] )
+        : array();
+    $raw_resets  = isset( $_POST['lunara_homepage_reset'] ) && is_array( $_POST['lunara_homepage_reset'] )
+        ? wp_unslash( $_POST['lunara_homepage_reset'] )
+        : array();
+    $resets      = array_map( 'sanitize_key', array_keys( $raw_resets ) );
+
+    foreach ( lunara_control_desk_homepage_number_specs() as $key => $spec ) {
+        if ( in_array( $key, $resets, true ) ) {
+            remove_theme_mod( $key );
+            continue;
+        }
+
+        if ( array_key_exists( $key, $raw_numbers ) ) {
+            set_theme_mod( $key, (string) lunara_control_desk_homepage_clamp_number( $key, $raw_numbers[ $key ] ) );
+        }
+    }
+
+    $raw_visible = isset( $_POST['lunara_homepage_visibility'] ) && is_array( $_POST['lunara_homepage_visibility'] )
+        ? wp_unslash( $_POST['lunara_homepage_visibility'] )
+        : array();
+    $raw_known   = isset( $_POST['lunara_homepage_visibility_keys'] ) && is_array( $_POST['lunara_homepage_visibility_keys'] )
+        ? wp_unslash( $_POST['lunara_homepage_visibility_keys'] )
+        : array();
+    $known       = array_map( 'sanitize_key', $raw_known );
+
+    foreach ( lunara_control_desk_homepage_visibility_specs() as $key => $spec ) {
+        if ( ! in_array( $key, $known, true ) ) {
+            continue;
+        }
+        set_theme_mod( $key, isset( $raw_visible[ $key ] ) ? '1' : '0' );
+    }
+
+    wp_safe_redirect( add_query_arg( 'lunara_notice', 'homepage_studio_saved', $redirect ) );
+    exit;
+}
+add_action( 'admin_post_lunara_save_homepage_studio', 'lunara_control_desk_save_homepage_studio' );
+
 function lunara_control_desk_image_source_surfaces() {
     return array(
         'review-card'  => array(
@@ -4481,6 +4747,221 @@ function lunara_control_desk_render_brand_console() {
     <?php
 }
 
+function lunara_control_desk_render_homepage_select_control( $key, $spec ) {
+    $value     = lunara_control_desk_homepage_select_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <fieldset class="lunara-control-desk-homepage-choice">
+        <legend>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </legend>
+        <div class="lunara-control-desk-homepage-choice-options">
+            <?php foreach ( $spec['options'] as $option_key => $option ) : ?>
+                <label class="<?php echo $value === $option_key ? 'is-selected' : ''; ?>">
+                    <input
+                        type="radio"
+                        name="lunara_homepage_select[<?php echo esc_attr( $key ); ?>]"
+                        value="<?php echo esc_attr( $option_key ); ?>"
+                        <?php checked( $value, $option_key ); ?>
+                    />
+                    <span>
+                        <strong><?php echo esc_html( $option['label'] ); ?></strong>
+                        <small><?php echo esc_html( $option['copy'] ); ?></small>
+                    </span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+    </fieldset>
+    <?php
+}
+
+function lunara_control_desk_render_homepage_number_control( $key, $spec ) {
+    $value     = lunara_control_desk_homepage_number_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <label class="lunara-control-desk-homepage-number" data-lunara-brand-number-control>
+        <span>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+        </span>
+        <input
+            type="range"
+            min="<?php echo esc_attr( $spec['min'] ); ?>"
+            max="<?php echo esc_attr( $spec['max'] ); ?>"
+            step="<?php echo esc_attr( $spec['step'] ); ?>"
+            value="<?php echo esc_attr( $value ); ?>"
+            data-lunara-brand-range
+        />
+        <span class="lunara-control-desk-brand-number-value">
+            <input
+                type="number"
+                name="lunara_homepage_number[<?php echo esc_attr( $key ); ?>]"
+                min="<?php echo esc_attr( $spec['min'] ); ?>"
+                max="<?php echo esc_attr( $spec['max'] ); ?>"
+                step="<?php echo esc_attr( $spec['step'] ); ?>"
+                value="<?php echo esc_attr( $value ); ?>"
+                data-lunara-brand-number
+            />
+            <em><?php echo esc_html( $spec['unit'] ); ?></em>
+        </span>
+        <span class="lunara-control-desk-brand-reset">
+            <label>
+                <input type="checkbox" name="lunara_homepage_reset[<?php echo esc_attr( $key ); ?>]" value="1" />
+                <?php
+                printf(
+                    /* translators: %d: setting default value. */
+                    esc_html__( 'Reset to %d', 'lunara-film' ),
+                    absint( $spec['default'] )
+                );
+                ?>
+            </label>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </span>
+    </label>
+    <?php
+}
+
+function lunara_control_desk_render_homepage_studio() {
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        ?>
+        <section id="lunara-theme-studio-homepage-studio" class="lunara-control-desk-homepage-studio">
+            <div class="lunara-control-desk-panel-header">
+                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Homepage Studio', 'lunara-film' ); ?></p>
+                <h3><?php esc_html_e( 'Homepage controls require theme editing permission', 'lunara-film' ); ?></h3>
+                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'The map below remains available, but direct homepage rhythm changes are limited to administrators.', 'lunara-film' ); ?></p>
+            </div>
+        </section>
+        <?php
+        return;
+    }
+
+    $desktop_order = array(
+        __( 'Identity masthead', 'lunara-film' ),
+        __( 'Route cards', 'lunara-film' ),
+        __( 'Latest Reviews', 'lunara-film' ),
+        __( 'Journal lane', 'lunara-film' ),
+        __( 'Oscar Facts', 'lunara-film' ),
+    );
+    $mobile_order  = array(
+        __( 'Identity masthead', 'lunara-film' ),
+        __( 'Route cards', 'lunara-film' ),
+        __( 'Journal lane', 'lunara-film' ),
+        __( 'Latest Reviews', 'lunara-film' ),
+        __( 'Oscar Facts', 'lunara-film' ),
+    );
+    ?>
+    <section id="lunara-theme-studio-homepage-studio" class="lunara-control-desk-homepage-studio">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Homepage Studio', 'lunara-film' ); ?></p>
+            <h3><?php esc_html_e( 'Front-door rhythm and signature lane controls', 'lunara-film' ); ?></h3>
+            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Use these bounded controls to keep the homepage curated, dense, and alive without touching code or raw CSS.', 'lunara-film' ); ?></p>
+        </div>
+        <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+            <input type="hidden" name="action" value="lunara_save_homepage_studio" />
+            <?php wp_nonce_field( 'lunara_save_homepage_studio', 'lunara_homepage_nonce' ); ?>
+
+            <div class="lunara-control-desk-homepage-grid">
+                <div class="lunara-control-desk-homepage-card">
+                    <div class="lunara-control-desk-card-head">
+                        <div>
+                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Rhythm', 'lunara-film' ); ?></p>
+                            <h3><?php esc_html_e( 'Editorial density and route emphasis', 'lunara-film' ); ?></h3>
+                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'These choices preserve the existing homepage architecture while tuning how confidently the front door reads.', 'lunara-film' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="lunara-control-desk-homepage-choice-grid">
+                        <?php foreach ( lunara_control_desk_homepage_select_specs() as $key => $spec ) : ?>
+                            <?php lunara_control_desk_render_homepage_select_control( $key, $spec ); ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="lunara-control-desk-homepage-card">
+                    <div class="lunara-control-desk-card-head">
+                        <div>
+                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Spacing', 'lunara-film' ); ?></p>
+                            <h3><?php esc_html_e( 'Masthead geometry and section handoff', 'lunara-film' ); ?></h3>
+                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Every number is clamped server-side so the homepage can be tightened without crop, overflow, or empty-space risk.', 'lunara-film' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="lunara-control-desk-homepage-number-grid">
+                        <?php foreach ( lunara_control_desk_homepage_number_specs() as $key => $spec ) : ?>
+                            <?php lunara_control_desk_render_homepage_number_control( $key, $spec ); ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lunara-control-desk-homepage-card">
+                <div class="lunara-control-desk-card-head">
+                    <div>
+                        <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Shortcuts', 'lunara-film' ); ?></p>
+                        <h3><?php esc_html_e( 'Section visibility', 'lunara-film' ); ?></h3>
+                        <p class="lunara-control-desk-subtle"><?php esc_html_e( 'These mirror the existing homepage theme switches; they do not delete blocks or change URLs.', 'lunara-film' ); ?></p>
+                    </div>
+                </div>
+                <div class="lunara-control-desk-homepage-visibility-grid">
+                    <?php foreach ( lunara_control_desk_homepage_visibility_specs() as $key => $spec ) : ?>
+                        <?php $enabled = (bool) get_theme_mod( $key, $spec['default'] ); ?>
+                        <label class="<?php echo $enabled ? 'is-enabled' : 'is-disabled'; ?>">
+                            <input type="hidden" name="lunara_homepage_visibility_keys[]" value="<?php echo esc_attr( $key ); ?>" />
+                            <input type="checkbox" name="lunara_homepage_visibility[<?php echo esc_attr( $key ); ?>]" value="1" <?php checked( $enabled ); ?> />
+                            <span>
+                                <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+                                <small><?php echo esc_html( $spec['copy'] ); ?></small>
+                            </span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="lunara-control-desk-homepage-card">
+                <div class="lunara-control-desk-card-head">
+                    <div>
+                        <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Order Preview', 'lunara-film' ); ?></p>
+                        <h3><?php esc_html_e( 'Current desktop and mobile rhythm', 'lunara-film' ); ?></h3>
+                        <p class="lunara-control-desk-subtle"><?php esc_html_e( 'This pass keeps desktop Reviews-first and mobile Journal-first unless a later control explicitly changes it.', 'lunara-film' ); ?></p>
+                    </div>
+                </div>
+                <div class="lunara-control-desk-homepage-order-grid">
+                    <article>
+                        <strong><?php esc_html_e( 'Desktop', 'lunara-film' ); ?></strong>
+                        <ol>
+                            <?php foreach ( $desktop_order as $item ) : ?>
+                                <li><?php echo esc_html( $item ); ?></li>
+                            <?php endforeach; ?>
+                        </ol>
+                    </article>
+                    <article>
+                        <strong><?php esc_html_e( '390px Mobile', 'lunara-film' ); ?></strong>
+                        <ol>
+                            <?php foreach ( $mobile_order as $item ) : ?>
+                                <li><?php echo esc_html( $item ); ?></li>
+                            <?php endforeach; ?>
+                        </ol>
+                    </article>
+                </div>
+            </div>
+
+            <div class="lunara-control-desk-homepage-footer">
+                <div>
+                    <strong><?php esc_html_e( 'Preview after saving', 'lunara-film' ); ?></strong>
+                    <span><?php esc_html_e( 'The homepage should feel like one deliberate front door before the reader reaches the live lanes.', 'lunara-film' ); ?></span>
+                </div>
+                <div class="lunara-control-desk-actions">
+                    <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Homepage Studio', 'lunara-film' ); ?></button>
+                    <a class="button" href="<?php echo esc_url( home_url( '/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Homepage Desktop', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', home_url( '/' ) ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Homepage 390px', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( home_url( '/oscars/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Oscar Portal', 'lunara-film' ); ?></a>
+                </div>
+            </div>
+        </form>
+    </section>
+    <?php
+}
+
 function lunara_control_desk_image_quality_targets() {
     return array(
         'review-card' => array(
@@ -6165,6 +6646,7 @@ function lunara_control_desk_render_theme_studio_tab() {
         </div>
         <?php lunara_control_desk_render_status_cards( lunara_control_desk_theme_studio_summary_cards( $groups ) ); ?>
         <?php lunara_control_desk_render_brand_console(); ?>
+        <?php lunara_control_desk_render_homepage_studio(); ?>
         <?php lunara_control_desk_render_image_quality_console(); ?>
         <div class="lunara-control-desk-studio-nav" aria-label="<?php echo esc_attr__( 'Theme Studio groups', 'lunara-film' ); ?>">
             <?php foreach ( $groups as $group ) : ?>
@@ -8213,6 +8695,14 @@ function lunara_control_desk_render_notice() {
         'brand_controls_forbidden' => array(
             'class'   => 'notice-error',
             'message' => __( 'You can view the Control Desk, but changing brand controls requires theme editing permission.', 'lunara-film' ),
+        ),
+        'homepage_studio_saved' => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Homepage Studio saved. The front-door rhythm and section shortcuts now read the updated values.', 'lunara-film' ),
+        ),
+        'homepage_studio_forbidden' => array(
+            'class'   => 'notice-error',
+            'message' => __( 'You can view the Control Desk, but changing Homepage Studio controls requires theme editing permission.', 'lunara-film' ),
         ),
     );
 
