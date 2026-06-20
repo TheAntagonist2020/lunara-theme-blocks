@@ -90,6 +90,47 @@ $type_terms = get_terms( array(
 	'orderby'    => 'count',
 	'order'      => 'DESC',
 ) );
+
+$latest_journal_url = ! empty( $latest_journal[0] ) ? get_permalink( (int) $latest_journal[0] ) : get_post_type_archive_link( 'journal' );
+$trailer_lane_url   = get_post_type_archive_link( 'journal' );
+
+if ( $type_terms && ! is_wp_error( $type_terms ) ) {
+	foreach ( $type_terms as $type_term ) {
+		if ( ! $type_term instanceof WP_Term || 'trailer' !== sanitize_title( $type_term->slug ) ) {
+			continue;
+		}
+
+		$term_link = get_term_link( $type_term );
+
+		if ( ! is_wp_error( $term_link ) ) {
+			$trailer_lane_url = $term_link;
+		}
+
+		break;
+	}
+}
+
+$reviews_archive_url = get_post_type_archive_link( 'review' );
+$journal_retention_cards = array(
+	array(
+		'kicker' => __( 'Latest File', 'lunara-film' ),
+		'title'  => __( 'Open the newest desk entry', 'lunara-film' ),
+		'copy'   => __( 'Stay with the freshest reported movement before it settles into the wider conversation.', 'lunara-film' ),
+		'url'    => $latest_journal_url,
+	),
+	array(
+		'kicker' => __( 'Trailer Lane', 'lunara-film' ),
+		'title'  => __( 'Watch what just moved', 'lunara-film' ),
+		'copy'   => __( 'Jump to trailer-backed files where the image, hook, and industry signal belong together.', 'lunara-film' ),
+		'url'    => $trailer_lane_url,
+	),
+	array(
+		'kicker' => __( 'Review Desk', 'lunara-film' ),
+		'title'  => __( 'Move into the criticism', 'lunara-film' ),
+		'copy'   => __( 'Follow the conversation from quick dispatches into full Lunara reviews and context.', 'lunara-film' ),
+		'url'    => $reviews_archive_url ? $reviews_archive_url : home_url( '/reviews/' ),
+	),
+);
 ?>
 
 <main class="lunara-archive-page lunara-journal-archive-page">
@@ -180,10 +221,11 @@ $type_terms = get_terms( array(
 					: '';
 				$thumb_url     = has_post_thumbnail( $pid ) ? get_the_post_thumbnail_url( $pid, 'lunara-hero-spotlight' ) : '';
 				$thumb_loading = $journal_card_index <= 2 ? 'eager' : 'lazy';
+				$has_media     = '' !== $thumb_url;
 				?>
-				<article class="lunara-review-grid-card lunara-journal-archive-card<?php echo 1 === $journal_card_index ? ' is-lead' : ''; ?>">
+				<article class="lunara-review-grid-card lunara-journal-archive-card<?php echo 1 === $journal_card_index ? ' is-lead' : ''; ?><?php echo $has_media ? ' has-media' : ' is-text-brief'; ?>">
 					<a class="lunara-review-grid-link" href="<?php the_permalink(); ?>">
-						<?php if ( has_post_thumbnail() ) : ?>
+						<?php if ( $has_media ) : ?>
 							<div class="lunara-review-grid-poster-wrap">
 								<?php
 								$journal_thumb_attrs = array(
@@ -202,10 +244,6 @@ $type_terms = get_terms( array(
 									$journal_thumb_attrs
 								);
 								?>
-							</div>
-						<?php else : ?>
-							<div class="lunara-review-grid-poster-wrap">
-								<div class="lunara-review-grid-poster-placeholder" aria-hidden="true"></div>
 							</div>
 						<?php endif; ?>
 						<div class="lunara-review-grid-copy">
@@ -239,6 +277,22 @@ $type_terms = get_terms( array(
 			<?php wp_reset_postdata(); ?>
 		</section>
 		<?php endif; ?>
+
+		<section class="lunara-journal-archive-retention" aria-label="<?php esc_attr_e( 'Continue reading the Journal', 'lunara-film' ); ?>">
+			<div class="lunara-journal-archive-retention-head">
+				<p class="lunara-home-section-kicker"><?php esc_html_e( 'Desk Channels', 'lunara-film' ); ?></p>
+				<h2 class="lunara-section-title"><?php esc_html_e( 'Keep the file moving', 'lunara-film' ); ?></h2>
+			</div>
+			<div class="lunara-journal-archive-retention-grid">
+				<?php foreach ( $journal_retention_cards as $retention_card ) : ?>
+					<a class="lunara-journal-archive-retention-card" href="<?php echo esc_url( $retention_card['url'] ); ?>">
+						<span class="lunara-journal-archive-retention-kicker"><?php echo esc_html( $retention_card['kicker'] ); ?></span>
+						<strong><?php echo esc_html( $retention_card['title'] ); ?></strong>
+						<span><?php echo esc_html( $retention_card['copy'] ); ?></span>
+					</a>
+				<?php endforeach; ?>
+			</div>
+		</section>
 
 		<?php if ( $show_pagination ) : ?>
 		<nav class="lunara-archive-pagination lunara-journal-archive-slot-pagination" aria-label="<?php esc_attr_e( 'Journal pagination', 'lunara-film' ); ?>">
