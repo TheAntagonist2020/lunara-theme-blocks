@@ -1528,8 +1528,31 @@
     padding: 8px;
 }
 
+.lunara-control-desk-image-source-framing {
+    background: #f9fbfb;
+    border: 1px solid rgba(48, 83, 112, 0.14);
+    border-radius: 8px;
+    display: grid;
+    gap: 8px;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 8px;
+}
+
+.lunara-control-desk-image-source-framing .lunara-control-desk-image-source-verify {
+    grid-column: auto;
+    height: 100%;
+}
+
 .lunara-control-desk-image-source-verify input {
     margin-top: 2px;
+}
+
+.lunara-control-desk-image-source-verify select {
+    margin-top: 5px;
+    max-width: 100%;
+    min-height: 30px;
+    width: 100%;
 }
 
 .lunara-control-desk-image-source-verify strong,
@@ -3872,6 +3895,7 @@
     .lunara-control-desk-homepage-number,
     .lunara-control-desk-image-row,
     .lunara-control-desk-image-source-form,
+    .lunara-control-desk-image-source-framing,
     .lunara-control-desk-carousel-item,
     .lunara-control-desk-carousel-fields {
         grid-template-columns: 1fr;

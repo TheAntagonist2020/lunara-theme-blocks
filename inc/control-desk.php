@@ -754,6 +754,8 @@ function lunara_control_desk_save_image_source() {
     $visual_ok     = ! empty( $_POST['lunara_image_source_visual_verified'] );
     $visual_treatment = isset( $_POST['lunara_image_source_visual_treatment'] ) ? sanitize_key( wp_unslash( $_POST['lunara_image_source_visual_treatment'] ) ) : '';
     $visual_treatment = 'archival' === $visual_treatment ? 'archival' : '';
+    $visual_focus  = isset( $_POST['lunara_image_source_visual_focus'] ) ? sanitize_key( wp_unslash( $_POST['lunara_image_source_visual_focus'] ) ) : 'center';
+    $visual_focus  = function_exists( 'lunara_sanitize_oscar_fact_visual_focus' ) ? lunara_sanitize_oscar_fact_visual_focus( $visual_focus ) : 'center';
     $redirect      = lunara_control_desk_image_source_redirect_url( $post_id, $surface );
     $surfaces      = lunara_control_desk_image_source_surfaces();
 
@@ -819,10 +821,17 @@ function lunara_control_desk_save_image_source() {
             } else {
                 delete_post_meta( $post_id, '_lunara_fact_visual_treatment' );
             }
+
+            if ( 'center' !== $visual_focus ) {
+                update_post_meta( $post_id, '_lunara_fact_visual_focus', $visual_focus );
+            } else {
+                delete_post_meta( $post_id, '_lunara_fact_visual_focus' );
+            }
         } else {
             delete_post_thumbnail( $post_id );
             delete_post_meta( $post_id, '_lunara_fact_visual_verified' );
             delete_post_meta( $post_id, '_lunara_fact_visual_treatment' );
+            delete_post_meta( $post_id, '_lunara_fact_visual_focus' );
         }
     }
 
@@ -5231,6 +5240,7 @@ function lunara_control_desk_image_quality_rows( $surface, $limit = 8 ) {
             $attachment_id   = has_post_thumbnail( $post->ID ) ? absint( get_post_thumbnail_id( $post->ID ) ) : 0;
             $visual_verified = '1' === (string) get_post_meta( $post->ID, '_lunara_fact_visual_verified', true );
             $visual_treatment = 'archival' === (string) get_post_meta( $post->ID, '_lunara_fact_visual_treatment', true ) ? 'archival' : 'wide';
+            $visual_focus    = function_exists( 'lunara_sanitize_oscar_fact_visual_focus' ) ? lunara_sanitize_oscar_fact_visual_focus( get_post_meta( $post->ID, '_lunara_fact_visual_focus', true ) ) : 'center';
             $state           = lunara_control_desk_oscar_fact_visual_state( $attachment_id, $target, $visual_verified, $visual_treatment );
             $rows[]          = array(
                 'surface'         => __( 'Oscar Fact visual', 'lunara-film' ),
@@ -5248,6 +5258,7 @@ function lunara_control_desk_image_quality_rows( $surface, $limit = 8 ) {
                 'target'          => $target,
                 'visual_verified' => $visual_verified,
                 'visual_treatment' => $visual_treatment,
+                'visual_focus'    => $visual_focus,
             );
         }
     }
@@ -5567,6 +5578,13 @@ function lunara_control_desk_render_image_source_control( $row ) {
     $attachment_id = isset( $row['attachment_id'] ) ? absint( $row['attachment_id'] ) : 0;
     $visual_ok     = ! empty( $row['visual_verified'] );
     $visual_treatment = isset( $row['visual_treatment'] ) && 'archival' === $row['visual_treatment'] ? 'archival' : 'wide';
+    $visual_focus  = isset( $row['visual_focus'] ) && function_exists( 'lunara_sanitize_oscar_fact_visual_focus' ) ? lunara_sanitize_oscar_fact_visual_focus( $row['visual_focus'] ) : 'center';
+    $visual_focus_options = function_exists( 'lunara_oscar_fact_visual_focus_options' ) ? lunara_oscar_fact_visual_focus_options() : array(
+        'center' => array(
+            'label' => __( 'Center', 'lunara-film' ),
+            'css'   => 'center center',
+        ),
+    );
     $surfaces      = lunara_control_desk_image_source_surfaces();
     $status        = isset( $row['status'] ) && is_array( $row['status'] ) ? $row['status'] : array();
     $accept_meta_key = lunara_control_desk_image_quality_accept_meta_key( $surface );
@@ -5643,23 +5661,36 @@ function lunara_control_desk_render_image_source_control( $row ) {
             </label>
         <?php endif; ?>
         <?php if ( 'oscar-fact' === $surface ) : ?>
-            <label class="lunara-control-desk-image-source-verify">
-                <input type="checkbox" name="lunara_image_source_visual_verified" value="1" <?php checked( $visual_ok ); ?> />
-                <span>
-                    <strong><?php esc_html_e( 'Verified public visual', 'lunara-film' ); ?></strong>
-                    <em><?php esc_html_e( 'Only check this after the image truly matches the fact. The homepage carousel hides unverified fact images.', 'lunara-film' ); ?></em>
-                </span>
-            </label>
-            <label class="lunara-control-desk-image-source-verify">
-                <span>
-                    <strong><?php esc_html_e( 'Public visual treatment', 'lunara-film' ); ?></strong>
-                    <select name="lunara_image_source_visual_treatment">
-                        <option value="wide" <?php selected( $visual_treatment, 'wide' ); ?>><?php esc_html_e( 'Wide carousel crop', 'lunara-film' ); ?></option>
-                        <option value="archival" <?php selected( $visual_treatment, 'archival' ); ?>><?php esc_html_e( 'Archival fit', 'lunara-film' ); ?></option>
-                    </select>
-                    <em><?php esc_html_e( 'Use Archival fit for portraits, ceremony stills, and exact source images that should stay intact instead of being cropped.', 'lunara-film' ); ?></em>
-                </span>
-            </label>
+            <div class="lunara-control-desk-image-source-framing" aria-label="<?php echo esc_attr__( 'Oscar Fact public framing controls', 'lunara-film' ); ?>">
+                <label class="lunara-control-desk-image-source-verify">
+                    <input type="checkbox" name="lunara_image_source_visual_verified" value="1" <?php checked( $visual_ok ); ?> />
+                    <span>
+                        <strong><?php esc_html_e( 'Verified public visual', 'lunara-film' ); ?></strong>
+                        <em><?php esc_html_e( 'Only check this after the image truly matches the fact. The homepage carousel hides unverified fact images.', 'lunara-film' ); ?></em>
+                    </span>
+                </label>
+                <label class="lunara-control-desk-image-source-verify">
+                    <span>
+                        <strong><?php esc_html_e( 'Public visual treatment', 'lunara-film' ); ?></strong>
+                        <select name="lunara_image_source_visual_treatment">
+                            <option value="wide" <?php selected( $visual_treatment, 'wide' ); ?>><?php esc_html_e( 'Wide carousel crop', 'lunara-film' ); ?></option>
+                            <option value="archival" <?php selected( $visual_treatment, 'archival' ); ?>><?php esc_html_e( 'Archival fit', 'lunara-film' ); ?></option>
+                        </select>
+                        <em><?php esc_html_e( 'Use Archival fit for portraits, ceremony stills, and exact source images that should stay intact instead of being cropped.', 'lunara-film' ); ?></em>
+                    </span>
+                </label>
+                <label class="lunara-control-desk-image-source-verify">
+                    <span>
+                        <strong><?php esc_html_e( 'Public crop focus', 'lunara-film' ); ?></strong>
+                        <select name="lunara_image_source_visual_focus">
+                            <?php foreach ( $visual_focus_options as $focus_key => $focus_data ) : ?>
+                                <option value="<?php echo esc_attr( $focus_key ); ?>" <?php selected( $visual_focus, $focus_key ); ?>><?php echo esc_html( isset( $focus_data['label'] ) ? $focus_data['label'] : $focus_key ); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <em><?php esc_html_e( 'Use this to keep faces, groups, or key image action in frame when the public card crops wide.', 'lunara-film' ); ?></em>
+                    </span>
+                </label>
+            </div>
         <?php endif; ?>
     </form>
     <?php
