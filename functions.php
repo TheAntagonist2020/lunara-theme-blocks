@@ -13409,7 +13409,7 @@ if ( ! function_exists( 'lunara_oscar_fact_admin_columns' ) ) {
  */
 if ( ! function_exists( 'lunara_oscar_fact_visual_hold_ids' ) ) {
 	function lunara_oscar_fact_visual_hold_ids() {
-		return array( 31305, 31313, 31316, 31342, 31343 );
+		return array( 31313, 31316, 31342 );
 	}
 }
 

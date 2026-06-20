@@ -7705,8 +7705,9 @@ function lunara_output_home_oscar_facts_carousel_css() {
 
     @media (max-width: 780px) {
         body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-link {
-            grid-template-columns: minmax(0, 1fr);
-            min-height: 0;
+            grid-template-columns: minmax(0, 1fr) !important;
+            grid-template-rows: auto 1fr !important;
+            min-height: 0 !important;
         }
 
         body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster {
