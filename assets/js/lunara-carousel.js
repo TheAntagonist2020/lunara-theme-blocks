@@ -39,7 +39,17 @@
 		var autoplayMs = parseInt(root.dataset.autoplay || '5000', 10);
 		var timer = null;
 
+		function splideOwnsRoot() {
+			return root.classList.contains('lunara-splide-ready') ||
+				root.getAttribute('data-lunara-splide-pilot-active') === 'ready';
+		}
+
 		function show(n) {
+			if (splideOwnsRoot()) {
+				stopAutoplay();
+				return;
+			}
+
 			current = (n + slides.length) % slides.length;
 			slides.forEach(function (el, k) {
 				el.classList.toggle('active', k === current);

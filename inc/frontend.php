@@ -251,6 +251,7 @@ function lunara_homepage_studio_signature_css() {
     body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel{width:min(100%,1160px)!important;padding:clamp(10px,1.5vw,18px);border:1px solid rgba(224,196,129,.26);border-radius:12px;background:linear-gradient(180deg,rgba(13,27,43,.88),rgba(6,14,24,.92));box-shadow:0 28px 70px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.04);}
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-link{overflow:hidden;border:1px solid rgba(224,196,129,.22);border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035);}
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-poster .lunara-oscar-fact-card-poster{min-height:clamp(330px,36vw,500px)!important;}
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-poster.has-archival-visual .lunara-oscar-fact-card-poster{min-height:clamp(260px,28vw,360px)!important;}
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster{background:linear-gradient(135deg,rgba(6,14,24,.98),rgba(16,29,43,.96))!important;}
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-title{letter-spacing:0!important;}
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-body{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
@@ -2732,6 +2733,57 @@ function lunara_output_os_responsive_guardrail_css() {
     <?php
 }
 add_action( 'wp_head', 'lunara_output_os_responsive_guardrail_css', 999 );
+
+/**
+ * Scoped Splide pilot for the homepage Oscar Facts signature lane.
+ */
+function lunara_enqueue_home_splide_pilot_assets() {
+	if ( ! is_front_page() ) {
+		return;
+	}
+
+	$splide_css = lunara_resolve_theme_asset(
+		'assets/vendor/splide/splide-core.min.css',
+		array( 'assets/vendor/splide/splide-core.min.css' )
+	);
+	if ( $splide_css['uri'] ) {
+		wp_enqueue_style(
+			'lunara-splide-core',
+			$splide_css['uri'],
+			array(),
+			lunara_theme_asset_version( $splide_css['path'] )
+		);
+	}
+
+	$splide_js = lunara_resolve_theme_asset(
+		'assets/vendor/splide/splide.min.js',
+		array( 'assets/vendor/splide/splide.min.js' )
+	);
+	if ( $splide_js['uri'] ) {
+		wp_enqueue_script(
+			'lunara-splide',
+			$splide_js['uri'],
+			array(),
+			lunara_theme_asset_version( $splide_js['path'] ),
+			true
+		);
+	}
+
+	$pilot_js = lunara_resolve_theme_asset(
+		'assets/js/lunara-splide-pilot.js',
+		array( 'lunara-splide-pilot.js' )
+	);
+	if ( $pilot_js['uri'] ) {
+		wp_enqueue_script(
+			'lunara-home-splide-pilot',
+			$pilot_js['uri'],
+			array( 'lunara-splide' ),
+			lunara_theme_asset_version( $pilot_js['path'] ),
+			true
+		);
+	}
+}
+add_action( 'wp_enqueue_scripts', 'lunara_enqueue_home_splide_pilot_assets', 20 );
 
 /**
  * Reviews archive authority package polish.
@@ -7738,12 +7790,16 @@ function lunara_output_home_oscar_facts_carousel_css() {
         overflow: hidden;
     }
 
-    body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel {
-        position: relative;
-        width: min(100%, 1120px);
-        margin: 0 auto;
-        outline: none;
-    }
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel {
+		position: relative;
+		width: min(100%, 1120px);
+		margin: 0 auto;
+		outline: none;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel[data-lunara-splide-pilot] {
+		isolation: isolate;
+	}
 
     body.home .lunara-oscar-facts-section .lunara-oscar-facts-track {
         display: grid !important;
@@ -7767,12 +7823,67 @@ function lunara_output_home_oscar_facts_carousel_css() {
         transition: opacity 420ms ease, transform 420ms ease, visibility 420ms ease;
     }
 
-    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.lunara-carousel-slide.active {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-        transform: translateX(0);
-    }
+	body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.lunara-carousel-slide.active {
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+		transform: translateX(0);
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel.lunara-splide-ready {
+		height: auto !important;
+		min-height: 0 !important;
+		max-height: none !important;
+		padding-bottom: 46px;
+		overflow: visible;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel.lunara-splide-ready .lunara-oscar-facts-track {
+		display: block !important;
+		overflow: hidden !important;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel.lunara-splide-ready .lunara-oscar-facts-splide-list {
+		display: flex !important;
+		align-items: flex-start !important;
+		gap: 0 !important;
+		width: 100%;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel.lunara-splide-ready .lunara-oscar-fact-card.lunara-carousel-slide {
+		grid-area: auto !important;
+		width: 100% !important;
+		max-width: 100% !important;
+		flex: 0 0 100% !important;
+		box-sizing: border-box;
+		min-width: 0 !important;
+		opacity: 1 !important;
+		visibility: visible !important;
+		pointer-events: auto !important;
+		transform: none !important;
+		transition: none !important;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel.lunara-splide-ready .splide__slide {
+		display: flex !important;
+		height: auto !important;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel.lunara-splide-ready .lunara-oscar-fact-card-link {
+		grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
+		width: 100% !important;
+		max-width: 100% !important;
+		box-sizing: border-box;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel.lunara-splide-ready .lunara-oscar-fact-card-link > * {
+		min-width: 0;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel.lunara-splide-ready .lunara-oscar-fact-card-text {
+		min-width: 0;
+		overflow: visible;
+	}
 
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-link {
         display: grid !important;
@@ -7792,6 +7903,17 @@ function lunara_output_home_oscar_facts_carousel_css() {
         min-height: clamp(300px, 28vw, 400px);
     }
 
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-link {
+        min-height: clamp(340px, 30vw, 430px);
+    }
+
+    @media (min-width: 781px) {
+        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster {
+            min-height: clamp(260px, 28vw, 360px) !important;
+            align-self: center;
+        }
+    }
+
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster {
         aspect-ratio: auto !important;
         min-height: 100% !important;
@@ -7802,17 +7924,18 @@ function lunara_output_home_oscar_facts_carousel_css() {
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster-image,
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster img {
         width: 100% !important;
-        height: 100% !important;
-        min-height: 100% !important;
-        object-fit: cover !important;
-        transform: scale(1.015);
-    }
+		height: 100% !important;
+		min-height: 100% !important;
+		object-fit: cover !important;
+		object-position: var(--lunara-fact-image-position, center center) !important;
+		transform: scale(1.015);
+	}
 
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster {
         position: relative;
         display: grid;
         place-items: center;
-        padding: clamp(20px, 3vw, 42px);
+        padding: clamp(12px, 1.8vw, 24px);
         background:
             radial-gradient(circle at 50% 42%, rgba(215, 182, 111, 0.18), transparent 38%),
             linear-gradient(140deg, rgba(7, 18, 29, 0.98), rgba(18, 34, 50, 0.94));
@@ -7823,24 +7946,40 @@ function lunara_output_home_oscar_facts_carousel_css() {
         content: "";
         position: absolute;
         inset: clamp(14px, 2vw, 26px);
+        z-index: 3;
         border: 1px solid rgba(215, 182, 111, 0.28);
         box-shadow: inset 0 0 0 1px rgba(246, 239, 226, 0.05);
+        pointer-events: none;
+    }
+
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background-image: var(--lunara-fact-image-url, none);
+        background-position: var(--lunara-fact-image-position, center center);
+        background-size: cover;
+        filter: blur(18px) saturate(1.04);
+        opacity: 0.24;
+        transform: scale(1.08);
         pointer-events: none;
     }
 
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster-image,
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster img {
         position: relative;
-        z-index: 1;
-        width: auto !important;
-        height: auto !important;
+        z-index: 2;
+        width: 100% !important;
+        height: 100% !important;
         min-height: 0 !important;
-        max-width: min(88%, 520px) !important;
-        max-height: clamp(260px, 28vw, 390px) !important;
-        object-fit: contain !important;
-        transform: none !important;
-        box-shadow: 0 18px 32px rgba(0, 0, 0, 0.32);
-    }
+		max-width: 100% !important;
+		max-height: 100% !important;
+		object-fit: contain !important;
+		object-position: var(--lunara-fact-image-position, center center) !important;
+		transform: none !important;
+		box-shadow: 0 18px 32px rgba(0, 0, 0, 0.32);
+	}
 
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-text {
         justify-content: center;
@@ -7851,13 +7990,16 @@ function lunara_output_home_oscar_facts_carousel_css() {
         color: #d7b66f !important;
     }
 
-    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-title {
-        max-width: 13em;
-        color: #f6efe2 !important;
-        font-size: clamp(1.65rem, 3.2vw, 3.1rem) !important;
-        line-height: 0.98 !important;
-        text-wrap: balance;
-    }
+	body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-title {
+		max-width: min(100%, 13em);
+		color: #f6efe2 !important;
+		font-size: clamp(1.65rem, 2.75vw, 2.65rem) !important;
+		line-height: 1.04 !important;
+		overflow-wrap: anywhere;
+		white-space: normal !important;
+		word-break: normal;
+		text-wrap: balance;
+	}
 
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-body {
         max-width: 58ch;
@@ -7895,55 +8037,131 @@ function lunara_output_home_oscar_facts_carousel_css() {
         transition: width 220ms ease, background-color 220ms ease, border-color 220ms ease;
     }
 
-    body.home .lunara-oscar-facts-section .lunara-carousel-dot.active {
-        width: 30px;
-        background: #d7b66f;
-        border-color: #d7b66f;
-    }
+	body.home .lunara-oscar-facts-section .lunara-carousel-dot.active {
+		width: 30px;
+		background: #d7b66f;
+		border-color: #d7b66f;
+	}
 
-    @media (max-width: 780px) {
+	body.home .lunara-oscar-facts-section .lunara-splide-arrow {
+		position: absolute;
+		top: 50%;
+		z-index: 4;
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		margin: 0;
+		padding: 0;
+		border: 1px solid rgba(215, 182, 111, 0.54);
+		border-radius: 999px;
+		background: rgba(6, 14, 24, 0.86);
+		color: #f6efe2;
+		box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+		opacity: 1;
+		transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-splide-arrow:hover,
+	body.home .lunara-oscar-facts-section .lunara-splide-arrow:focus-visible {
+		background: rgba(215, 182, 111, 0.2);
+		border-color: rgba(246, 239, 226, 0.82);
+		outline: 2px solid rgba(215, 182, 111, 0.34);
+		outline-offset: 3px;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-splide-arrow svg {
+		width: 16px;
+		height: 16px;
+		fill: currentColor;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-splide-arrow-prev {
+		left: 14px;
+		transform: translateY(-50%);
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-splide-arrow-next {
+		right: 14px;
+		transform: translateY(-50%);
+	}
+
+	@media (max-width: 780px) {
         body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-link {
             grid-template-columns: minmax(0, 1fr) !important;
             grid-template-rows: auto 1fr !important;
             min-height: 0 !important;
         }
 
-        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster {
-            aspect-ratio: 16 / 10 !important;
-            min-height: 0 !important;
-        }
+		body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster {
+			aspect-ratio: 16 / 10 !important;
+			height: clamp(190px, 56vw, 240px) !important;
+			min-height: 0 !important;
+		}
 
-        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster-image,
-        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster img {
-            min-height: 0 !important;
-        }
+		body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster-image,
+		body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-poster img {
+			height: 100% !important;
+			min-height: 0 !important;
+		}
 
         body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster {
-            padding: 18px;
+            padding: 12px;
         }
 
         body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster-image,
         body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster img {
-            max-width: 92% !important;
-            max-height: 260px !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
         }
 
-        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-title {
-            max-width: 100%;
-            font-size: clamp(1.45rem, 8vw, 2.2rem) !important;
-        }
+		body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-title {
+			max-width: 100%;
+			font-size: clamp(1.28rem, 6.4vw, 1.82rem) !important;
+			line-height: 1.08 !important;
+		}
 
-        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-body {
-            font-size: 0.98rem !important;
-        }
-    }
+		body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-body {
+			font-size: 0.98rem !important;
+		}
 
-    @media (prefers-reduced-motion: reduce) {
-        body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.lunara-carousel-slide,
-        body.home .lunara-oscar-facts-section .lunara-carousel-dot {
-            transition: none !important;
-        }
-    }
+		body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel.lunara-splide-ready .lunara-oscar-fact-card-text {
+			padding-bottom: 92px !important;
+		}
+
+		body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel.lunara-splide-ready {
+			padding-bottom: 12px;
+		}
+
+		body.home .lunara-oscar-facts-section .lunara-oscar-facts-dots {
+			margin-bottom: 54px;
+		}
+
+		body.home .lunara-oscar-facts-section .lunara-splide-arrow {
+			top: auto;
+			bottom: 8px;
+			width: 38px;
+			height: 38px;
+		}
+
+		body.home .lunara-oscar-facts-section .lunara-splide-arrow-prev {
+			left: calc(50% - 58px);
+			transform: none;
+		}
+
+		body.home .lunara-oscar-facts-section .lunara-splide-arrow-next {
+			right: calc(50% - 58px);
+			transform: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.lunara-carousel-slide,
+		body.home .lunara-oscar-facts-section .lunara-carousel-dot,
+		body.home .lunara-oscar-facts-section .lunara-splide-arrow {
+			transition: none !important;
+		}
+	}
     </style>
     <?php
 }
