@@ -5347,6 +5347,7 @@ function lunara_control_desk_image_quality_filters() {
     $surface     = lunara_control_desk_get_request_key( 'lcd_iq_surface', 'all' );
     $post_status = lunara_control_desk_get_request_key( 'lcd_iq_status', 'all' );
     $state       = lunara_control_desk_get_request_key( 'lcd_iq_state', 'all' );
+    $fact_state  = lunara_control_desk_get_request_key( 'lcd_iq_fact_state', 'all' );
 
     if ( ! in_array( $scope, array( 'recent', 'review-archive' ), true ) ) {
         $scope = 'recent';
@@ -5364,11 +5365,16 @@ function lunara_control_desk_image_quality_filters() {
         $state = 'all';
     }
 
+    if ( ! in_array( $fact_state, array( 'all', 'verified', 'unverified', 'needs-image' ), true ) ) {
+        $fact_state = 'all';
+    }
+
     return array(
         'scope'       => $scope,
         'surface'     => $surface,
         'post_status' => $post_status,
         'state'       => $state,
+        'fact_state'  => $fact_state,
     );
 }
 
@@ -5376,6 +5382,7 @@ function lunara_control_desk_image_quality_row_matches_filters( $row, $filters )
     $surface     = isset( $filters['surface'] ) ? sanitize_key( $filters['surface'] ) : 'all';
     $post_status = isset( $filters['post_status'] ) ? sanitize_key( $filters['post_status'] ) : 'all';
     $state       = isset( $filters['state'] ) ? sanitize_key( $filters['state'] ) : 'all';
+    $fact_state  = isset( $filters['fact_state'] ) ? sanitize_key( $filters['fact_state'] ) : 'all';
     $row_surface = isset( $row['surface_key'] ) ? sanitize_key( $row['surface_key'] ) : '';
     $row_status  = isset( $row['post_status'] ) ? sanitize_key( $row['post_status'] ) : '';
     $row_state   = isset( $row['status']['state'] ) ? sanitize_key( $row['status']['state'] ) : 'weak';
@@ -5404,6 +5411,28 @@ function lunara_control_desk_image_quality_row_matches_filters( $row, $filters )
         return false;
     }
 
+    if ( 'all' !== $fact_state ) {
+        if ( 'oscar-fact' !== $row_surface ) {
+            return false;
+        }
+
+        $has_fact_image    = ! empty( $row['attachment_id'] );
+        $is_fact_verified  = ! empty( $row['visual_verified'] );
+        $fact_state_match  = false;
+
+        if ( 'verified' === $fact_state ) {
+            $fact_state_match = $has_fact_image && $is_fact_verified;
+        } elseif ( 'unverified' === $fact_state ) {
+            $fact_state_match = $has_fact_image && ! $is_fact_verified;
+        } elseif ( 'needs-image' === $fact_state ) {
+            $fact_state_match = ! $has_fact_image;
+        }
+
+        if ( ! $fact_state_match ) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -5425,6 +5454,7 @@ function lunara_control_desk_image_quality_filter_url( $filters, $overrides = ar
             'surface'     => 'all',
             'post_status' => 'all',
             'state'       => 'all',
+            'fact_state'  => 'all',
         ),
         is_array( $filters ) ? $filters : array(),
         is_array( $overrides ) ? $overrides : array()
@@ -5450,6 +5480,10 @@ function lunara_control_desk_image_quality_filter_url( $filters, $overrides = ar
         $args['lcd_iq_state'] = sanitize_key( $filters['state'] );
     }
 
+    if ( 'all' !== $filters['fact_state'] ) {
+        $args['lcd_iq_fact_state'] = sanitize_key( $filters['fact_state'] );
+    }
+
     return lunara_control_desk_url( $args ) . '#lunara-theme-studio-image-quality';
 }
 
@@ -5460,12 +5494,18 @@ function lunara_control_desk_image_quality_filter_count( $rows, $filters, $overr
 }
 
 function lunara_control_desk_render_image_quality_filter_link( $rows, $filters, $group_key, $value, $label, $note ) {
+    $overrides = array( $group_key => $value );
+
+    if ( 'surface' === $group_key ) {
+        $overrides['fact_state'] = 'all';
+    }
+
     $active = isset( $filters[ $group_key ] ) && $filters[ $group_key ] === $value;
-    $count  = lunara_control_desk_image_quality_filter_count( $rows, $filters, array( $group_key => $value ) );
+    $count  = lunara_control_desk_image_quality_filter_count( $rows, $filters, $overrides );
     ?>
     <a
         class="lunara-control-desk-image-filter<?php echo $active ? ' is-active' : ''; ?>"
-        href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( $group_key => $value ) ) ); ?>"
+        href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, $overrides ) ); ?>"
     >
         <strong><?php echo esc_html( $label ); ?></strong>
         <span><?php echo esc_html( $note ); ?></span>
@@ -5475,7 +5515,14 @@ function lunara_control_desk_render_image_quality_filter_link( $rows, $filters, 
 }
 
 function lunara_control_desk_render_image_quality_filters( $rows, $filters ) {
-    $visible_count = count( lunara_control_desk_filter_image_quality_rows( $rows, $filters ) );
+    $visible_count   = count( lunara_control_desk_filter_image_quality_rows( $rows, $filters ) );
+    $fact_lane_rows  = lunara_control_desk_image_quality_rows( 'oscar-facts', 48 );
+    $fact_lane_reset = array(
+        'scope'       => 'recent',
+        'surface'     => 'oscar-fact',
+        'post_status' => 'all',
+        'state'       => 'all',
+    );
     ?>
     <div class="lunara-control-desk-image-filter-panel" aria-label="<?php echo esc_attr__( 'Image quality filters', 'lunara-film' ); ?>">
         <div class="lunara-control-desk-card-head">
@@ -5525,31 +5572,89 @@ function lunara_control_desk_render_image_quality_filters( $rows, $filters ) {
                 lunara_control_desk_render_image_quality_filter_link( $rows, $filters, 'surface', 'oscar-fact', __( 'Oscar Facts', 'lunara-film' ), __( 'Homepage fact carousel visuals.', 'lunara-film' ) );
                 ?>
             </section>
+            <section>
+                <h5><?php esc_html_e( 'Oscar Fact state', 'lunara-film' ); ?></h5>
+                <a
+                    class="lunara-control-desk-image-filter<?php echo ( 'recent' === $filters['scope'] && 'oscar-fact' === $filters['surface'] && 'all' === $filters['fact_state'] ) ? ' is-active' : ''; ?>"
+                    href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array_merge( $fact_lane_reset, array( 'fact_state' => 'all' ) ) ) ); ?>"
+                >
+                    <strong><?php esc_html_e( 'All facts', 'lunara-film' ); ?></strong>
+                    <span><?php esc_html_e( 'Every inspected Oscar Fact visual.', 'lunara-film' ); ?></span>
+                    <em><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $fact_lane_rows, array(), array_merge( $fact_lane_reset, array( 'fact_state' => 'all' ) ) ) ); ?></em>
+                </a>
+                <?php
+                $fact_filter_options = array(
+                    'verified'    => array(
+                        'label' => __( 'Verified', 'lunara-film' ),
+                        'note'  => __( 'Approved to appear with image.', 'lunara-film' ),
+                    ),
+                    'unverified'  => array(
+                        'label' => __( 'Unverified', 'lunara-film' ),
+                        'note'  => __( 'Has image, held from public display.', 'lunara-film' ),
+                    ),
+                    'needs-image' => array(
+                        'label' => __( 'Needs image', 'lunara-film' ),
+                        'note'  => __( 'No featured image selected.', 'lunara-film' ),
+                    ),
+                );
+
+                foreach ( $fact_filter_options as $fact_value => $fact_option ) :
+                    $fact_overrides = array_merge(
+                        $fact_lane_reset,
+                        array(
+                            'fact_state' => $fact_value,
+                        )
+                    );
+                    ?>
+                    <a
+                        class="lunara-control-desk-image-filter<?php echo ( 'recent' === $filters['scope'] && 'oscar-fact' === $filters['surface'] && $fact_value === $filters['fact_state'] ) ? ' is-active' : ''; ?>"
+                        href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, $fact_overrides ) ); ?>"
+                    >
+                        <strong><?php echo esc_html( $fact_option['label'] ); ?></strong>
+                        <span><?php echo esc_html( $fact_option['note'] ); ?></span>
+                        <em><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $fact_lane_rows, array(), $fact_overrides ) ); ?></em>
+                    </a>
+                    <?php
+                endforeach;
+                ?>
+            </section>
         </div>
         <div class="lunara-control-desk-image-priority-lanes">
-            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'surface' => 'editorial', 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?>">
+            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'surface' => 'editorial', 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?>">
                 <strong><?php esc_html_e( 'Editorial gaps', 'lunara-film' ); ?></strong>
-                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $rows, $filters, array( 'surface' => 'editorial', 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?></span>
+                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $rows, $filters, array( 'surface' => 'editorial', 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?></span>
             </a>
-            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'scope' => 'review-archive', 'surface' => 'review-card', 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?>">
+            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'scope' => 'review-archive', 'surface' => 'review-card', 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?>">
                 <strong><?php esc_html_e( 'Review archive backlog', 'lunara-film' ); ?></strong>
-                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( lunara_control_desk_review_archive_image_quality_rows(), array(), array( 'surface' => 'review-card', 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?></span>
+                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( lunara_control_desk_review_archive_image_quality_rows(), array(), array( 'surface' => 'review-card', 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?></span>
             </a>
-            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?>">
+            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?>">
                 <strong><?php esc_html_e( 'Published gaps', 'lunara-film' ); ?></strong>
-                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $rows, $filters, array( 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?></span>
+                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $rows, $filters, array( 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?></span>
             </a>
-            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'post_status' => 'drafts', 'state' => 'needs' ) ) ); ?>">
+            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'post_status' => 'drafts', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?>">
                 <strong><?php esc_html_e( 'Draft cleanup', 'lunara-film' ); ?></strong>
-                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $rows, $filters, array( 'post_status' => 'drafts', 'state' => 'needs' ) ) ); ?></span>
+                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $rows, $filters, array( 'post_status' => 'drafts', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?></span>
             </a>
-            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'post_status' => 'publish', 'state' => 'ready' ) ) ); ?>">
+            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'post_status' => 'publish', 'state' => 'ready', 'fact_state' => 'all' ) ) ); ?>">
                 <strong><?php esc_html_e( 'Published ready', 'lunara-film' ); ?></strong>
-                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $rows, $filters, array( 'post_status' => 'publish', 'state' => 'ready' ) ) ); ?></span>
+                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $rows, $filters, array( 'post_status' => 'publish', 'state' => 'ready', 'fact_state' => 'all' ) ) ); ?></span>
             </a>
-            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'surface' => 'oscar-fact', 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?>">
+            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'scope' => 'recent', 'surface' => 'oscar-fact', 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?>">
                 <strong><?php esc_html_e( 'Fact visuals', 'lunara-film' ); ?></strong>
-                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $rows, $filters, array( 'surface' => 'oscar-fact', 'post_status' => 'publish', 'state' => 'needs' ) ) ); ?></span>
+                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $fact_lane_rows, array(), array( 'surface' => 'oscar-fact', 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?></span>
+            </a>
+            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array_merge( $fact_lane_reset, array( 'fact_state' => 'verified' ) ) ) ); ?>">
+                <strong><?php esc_html_e( 'Verified facts', 'lunara-film' ); ?></strong>
+                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $fact_lane_rows, array(), array_merge( $fact_lane_reset, array( 'fact_state' => 'verified' ) ) ) ); ?></span>
+            </a>
+            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array_merge( $fact_lane_reset, array( 'fact_state' => 'unverified' ) ) ) ); ?>">
+                <strong><?php esc_html_e( 'Unverified facts', 'lunara-film' ); ?></strong>
+                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $fact_lane_rows, array(), array_merge( $fact_lane_reset, array( 'fact_state' => 'unverified' ) ) ) ); ?></span>
+            </a>
+            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array_merge( $fact_lane_reset, array( 'fact_state' => 'needs-image' ) ) ) ); ?>">
+                <strong><?php esc_html_e( 'Needs image', 'lunara-film' ); ?></strong>
+                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $fact_lane_rows, array(), array_merge( $fact_lane_reset, array( 'fact_state' => 'needs-image' ) ) ) ); ?></span>
             </a>
         </div>
     </div>
