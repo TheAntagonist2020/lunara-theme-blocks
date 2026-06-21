@@ -5637,6 +5637,38 @@ function lunara_control_desk_render_oscar_fact_visual_preview( $attachment_id, $
     <?php
 }
 
+function lunara_control_desk_oscar_fact_focus_picker_order() {
+    return array(
+        'left-high',
+        'center-high',
+        'right-high',
+        'left',
+        'center',
+        'right',
+        'left-low',
+        'center-low',
+        'right-low',
+    );
+}
+
+function lunara_control_desk_render_oscar_fact_focus_picker( $visual_focus, $visual_focus_options ) {
+    $focus_order = lunara_control_desk_oscar_fact_focus_picker_order();
+    ?>
+    <div class="lunara-control-desk-oscar-fact-focus-picker" role="radiogroup" aria-label="<?php echo esc_attr__( 'Public crop focus', 'lunara-film' ); ?>">
+        <?php foreach ( $focus_order as $focus_key ) : ?>
+            <?php if ( empty( $visual_focus_options[ $focus_key ] ) ) : ?>
+                <?php continue; ?>
+            <?php endif; ?>
+            <?php $focus_label = isset( $visual_focus_options[ $focus_key ]['label'] ) ? $visual_focus_options[ $focus_key ]['label'] : $focus_key; ?>
+            <label class="lunara-control-desk-oscar-fact-focus-option is-<?php echo esc_attr( $focus_key ); ?>">
+                <input type="radio" name="lunara_image_source_visual_focus" value="<?php echo esc_attr( $focus_key ); ?>" <?php checked( $visual_focus, $focus_key ); ?> />
+                <span><?php echo esc_html( $focus_label ); ?></span>
+            </label>
+        <?php endforeach; ?>
+    </div>
+    <?php
+}
+
 function lunara_control_desk_render_image_source_control( $row ) {
     $post_id       = isset( $row['post_id'] ) ? absint( $row['post_id'] ) : 0;
     $surface       = isset( $row['surface_key'] ) ? sanitize_key( $row['surface_key'] ) : '';
@@ -5748,11 +5780,7 @@ function lunara_control_desk_render_image_source_control( $row ) {
                 <label class="lunara-control-desk-image-source-verify">
                     <span>
                         <strong><?php esc_html_e( 'Public crop focus', 'lunara-film' ); ?></strong>
-                        <select name="lunara_image_source_visual_focus">
-                            <?php foreach ( $visual_focus_options as $focus_key => $focus_data ) : ?>
-                                <option value="<?php echo esc_attr( $focus_key ); ?>" <?php selected( $visual_focus, $focus_key ); ?>><?php echo esc_html( isset( $focus_data['label'] ) ? $focus_data['label'] : $focus_key ); ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <?php lunara_control_desk_render_oscar_fact_focus_picker( $visual_focus, $visual_focus_options ); ?>
                         <em><?php esc_html_e( 'Use this to keep faces, groups, or key image action in frame when the public card crops wide.', 'lunara-film' ); ?></em>
                     </span>
                 </label>

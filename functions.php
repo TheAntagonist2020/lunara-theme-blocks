@@ -13301,6 +13301,14 @@ if ( ! function_exists( 'lunara_oscar_fact_visual_focus_options' ) ) {
 				'label' => __( 'Right high', 'lunara-film' ),
 				'css'   => '62% 38%',
 			),
+			'left-low'     => array(
+				'label' => __( 'Left low', 'lunara-film' ),
+				'css'   => '38% 58%',
+			),
+			'right-low'    => array(
+				'label' => __( 'Right low', 'lunara-film' ),
+				'css'   => '62% 58%',
+			),
 		);
 	}
 }
