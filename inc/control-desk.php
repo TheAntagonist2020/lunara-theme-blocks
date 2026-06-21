@@ -5572,6 +5572,71 @@ function lunara_control_desk_render_image_quality_targets() {
     <?php
 }
 
+function lunara_control_desk_render_oscar_fact_visual_preview( $attachment_id, $visual_focus ) {
+    $attachment_id = absint( $attachment_id );
+
+    if ( ! $attachment_id ) {
+        return;
+    }
+
+    $image_url = wp_get_attachment_image_url( $attachment_id, 'medium_large' );
+
+    if ( ! $image_url ) {
+        $image_url = wp_get_attachment_url( $attachment_id );
+    }
+
+    if ( ! $image_url ) {
+        return;
+    }
+
+    $focus_css = function_exists( 'lunara_oscar_fact_visual_focus_css' ) ? lunara_oscar_fact_visual_focus_css( $visual_focus ) : 'center center';
+    $wide_img  = wp_get_attachment_image(
+        $attachment_id,
+        'medium_large',
+        false,
+        array(
+            'class'    => 'lunara-control-desk-oscar-fact-preview-img',
+            'loading'  => 'lazy',
+            'decoding' => 'async',
+        )
+    );
+    $archival_img = wp_get_attachment_image(
+        $attachment_id,
+        'medium_large',
+        false,
+        array(
+            'class'    => 'lunara-control-desk-oscar-fact-preview-img',
+            'loading'  => 'lazy',
+            'decoding' => 'async',
+        )
+    );
+
+    if ( ! $wide_img || ! $archival_img ) {
+        return;
+    }
+
+    $style = sprintf(
+        '--lunara-admin-fact-image: url(%1$s); --lunara-admin-fact-focus: %2$s;',
+        esc_url_raw( $image_url ),
+        $focus_css
+    );
+    ?>
+    <div class="lunara-control-desk-oscar-fact-preview" style="<?php echo esc_attr( $style ); ?>" aria-label="<?php echo esc_attr__( 'Oscar Fact visual preview', 'lunara-film' ); ?>">
+        <strong><?php esc_html_e( 'Public framing preview', 'lunara-film' ); ?></strong>
+        <div class="lunara-control-desk-oscar-fact-preview-grid">
+            <figure class="lunara-control-desk-oscar-fact-preview-frame is-wide">
+                <span><?php esc_html_e( 'Wide crop', 'lunara-film' ); ?></span>
+                <?php echo $wide_img; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            </figure>
+            <figure class="lunara-control-desk-oscar-fact-preview-frame is-archival">
+                <span><?php esc_html_e( 'Archival fit', 'lunara-film' ); ?></span>
+                <?php echo $archival_img; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            </figure>
+        </div>
+    </div>
+    <?php
+}
+
 function lunara_control_desk_render_image_source_control( $row ) {
     $post_id       = isset( $row['post_id'] ) ? absint( $row['post_id'] ) : 0;
     $surface       = isset( $row['surface_key'] ) ? sanitize_key( $row['surface_key'] ) : '';
@@ -5661,6 +5726,7 @@ function lunara_control_desk_render_image_source_control( $row ) {
             </label>
         <?php endif; ?>
         <?php if ( 'oscar-fact' === $surface ) : ?>
+            <?php lunara_control_desk_render_oscar_fact_visual_preview( $attachment_id, $visual_focus ); ?>
             <div class="lunara-control-desk-image-source-framing" aria-label="<?php echo esc_attr__( 'Oscar Fact public framing controls', 'lunara-film' ); ?>">
                 <label class="lunara-control-desk-image-source-verify">
                     <input type="checkbox" name="lunara_image_source_visual_verified" value="1" <?php checked( $visual_ok ); ?> />
