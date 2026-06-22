@@ -26,7 +26,7 @@ files: `inc/control-desk.php`, `inc/debrief.php`, `assets/css/lunara-control-des
 acceptance: Focused contract, Pair It With controls regression, Review Card Image Focus regression, PHP lint, and `git diff --check` pass.
 spec: `docs/staging/specs/2026-06-22-review-pair-it-with-source-authority.md#review-pair-it-with-source-authority`
 
-- [ ] T5: Deploy, verify, document, and push
+- [x] T5: Deploy, verify, document, and push
 goal: Ship the private pairing source-authority lane with continuity and evidence.
 files: `inc/control-desk.php`, `inc/debrief.php`, `assets/css/lunara-control-desk.css`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\LUNARA_WORLD_CHANGELOG.md`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\09_DOCS_AND_NOTES\SESSION-LOG-2026-06-22.md`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\09_DOCS_AND_NOTES\LUNARA_WEBSITE_HANDOFF.md`
 acceptance: Remote PHP lint, local/remote SHA256 match, cache flush, admin render markers for the lane, public route smoke, no public admin/source leakage, continuity updates, and pushed theme commit.
