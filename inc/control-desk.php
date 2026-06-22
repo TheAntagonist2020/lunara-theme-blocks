@@ -7560,6 +7560,58 @@ function lunara_control_desk_utility_search_key_label( $key ) {
     return $key;
 }
 
+function lunara_control_desk_utility_search_comparison_specs() {
+    return array(
+        'lunara_utility_search_density'        => array(
+            'label' => __( 'Density', 'lunara-film' ),
+        ),
+        'lunara_utility_result_treatment'      => array(
+            'label' => __( 'Result treatment', 'lunara-film' ),
+        ),
+        'lunara_utility_result_media'          => array(
+            'label' => __( 'Result media', 'lunara-film' ),
+        ),
+        'lunara_utility_search_lead_focus'     => array(
+            'label' => __( 'Search lead focus', 'lunara-film' ),
+        ),
+        'lunara_utility_search_spotlight_type' => array(
+            'label' => __( 'Spotlight type', 'lunara-film' ),
+        ),
+        'lunara_utility_reentry_primary'       => array(
+            'label' => __( '404 primary path', 'lunara-film' ),
+        ),
+        'lunara_utility_section_gap'           => array(
+            'label' => __( 'Section gap', 'lunara-film' ),
+        ),
+        'lunara_utility_result_min_height'     => array(
+            'label' => __( 'Result minimum height', 'lunara-film' ),
+        ),
+        'lunara_utility_card_grid_min'         => array(
+            'label' => __( 'Card grid minimum', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_utility_search_comparison_value_label( $key, $value ) {
+    if ( null === $value || '' === (string) $value ) {
+        return __( 'Default', 'lunara-film' );
+    }
+
+    foreach ( array( lunara_control_desk_utility_search_select_specs(), lunara_control_desk_utility_search_focus_select_specs() ) as $spec_group ) {
+        if ( isset( $spec_group[ $key ]['options'][ $value ]['label'] ) ) {
+            return $spec_group[ $key ]['options'][ $value ]['label'];
+        }
+    }
+
+    $number_specs = lunara_control_desk_utility_search_number_specs();
+    if ( isset( $number_specs[ $key ] ) ) {
+        $unit = isset( $number_specs[ $key ]['unit'] ) ? (string) $number_specs[ $key ]['unit'] : '';
+        return trim( absint( $value ) . $unit );
+    }
+
+    return (string) $value;
+}
+
 function lunara_control_desk_utility_search_preset_preview_url( $url, $preset_key, $mobile = false ) {
     $url = add_query_arg( 'lunara-utility-preset', sanitize_key( (string) $preset_key ), $url );
 
@@ -7568,6 +7620,44 @@ function lunara_control_desk_utility_search_preset_preview_url( $url, $preset_ke
     }
 
     return $url;
+}
+
+function lunara_control_desk_render_utility_search_preset_comparison_item( $preset_key, $preset, $active_preset_key ) {
+    $values    = isset( $preset['values'] ) && is_array( $preset['values'] ) ? $preset['values'] : array();
+    $is_active = $preset_key === $active_preset_key;
+    ?>
+    <article class="lunara-control-desk-utility-comparison-item <?php echo $is_active ? 'is-active' : ''; ?>">
+        <header>
+            <strong><?php echo esc_html( isset( $preset['label'] ) ? $preset['label'] : $preset_key ); ?></strong>
+            <span><?php echo esc_html( $is_active ? __( 'active package', 'lunara-film' ) : __( 'available preset', 'lunara-film' ) ); ?></span>
+        </header>
+        <dl>
+            <?php foreach ( lunara_control_desk_utility_search_comparison_specs() as $key => $spec ) : ?>
+                <div>
+                    <dt><?php echo esc_html( $spec['label'] ); ?></dt>
+                    <dd><?php echo esc_html( lunara_control_desk_utility_search_comparison_value_label( $key, isset( $values[ $key ] ) ? $values[ $key ] : '' ) ); ?></dd>
+                </div>
+            <?php endforeach; ?>
+        </dl>
+    </article>
+    <?php
+}
+
+function lunara_control_desk_render_utility_search_preset_comparison_strip( $presets, $active_preset_key ) {
+    $presets = is_array( $presets ) ? $presets : lunara_control_desk_utility_search_preset_specs();
+    ?>
+    <div class="lunara-control-desk-utility-comparison-strip" aria-label="<?php esc_attr_e( 'Utility Search preset comparison', 'lunara-film' ); ?>">
+        <div class="lunara-control-desk-utility-comparison-head">
+            <strong><?php esc_html_e( 'Compare the packages', 'lunara-film' ); ?></strong>
+            <span><?php echo esc_html( $active_preset_key ? __( 'Saved controls match one of these presets.', 'lunara-film' ) : __( 'Current values are custom; compare before saving a preset.', 'lunara-film' ) ); ?></span>
+        </div>
+        <div class="lunara-control-desk-utility-comparison-track">
+            <?php foreach ( $presets as $preset_key => $preset ) : ?>
+                <?php lunara_control_desk_render_utility_search_preset_comparison_item( $preset_key, $preset, $active_preset_key ); ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php
 }
 
 function lunara_control_desk_render_utility_search_preset_card( $preset_key, $preset, $active_preset_key, $search_preview, $ledger_preview, $recovery_preview ) {
@@ -7650,6 +7740,7 @@ function lunara_control_desk_render_utility_search_studio() {
                             <span><?php echo esc_html( $active_label ); ?></span>
                         </div>
                     </div>
+                    <?php lunara_control_desk_render_utility_search_preset_comparison_strip( $presets, $active_preset_key ); ?>
                     <div class="lunara-control-desk-homepage-choice-grid">
                         <?php foreach ( $presets as $preset_key => $preset ) : ?>
                             <?php lunara_control_desk_render_utility_search_preset_card( $preset_key, $preset, $active_preset_key, $search_preview, $ledger_preview, $recovery_preview ); ?>
