@@ -1616,12 +1616,29 @@ function lunara_output_image_fadein_js() {
     <script>
     (function(){
         function markLoaded(img){img.classList.add('lunara-img-loaded');}
+        function hydrateLazySource(img){
+            var dataSrc=img.getAttribute('data-src')||img.getAttribute('data-lazy-src')||'';
+            var dataSrcset=img.getAttribute('data-srcset')||img.getAttribute('data-lazy-srcset')||'';
+            var currentSrc=img.getAttribute('src')||'';
+            if(dataSrcset&&!img.getAttribute('srcset')){
+                img.setAttribute('srcset',dataSrcset);
+            }
+            if(dataSrc&&(!currentSrc||currentSrc.indexOf('data:image/gif')===0)){
+                img.setAttribute('src',dataSrc);
+            }
+        }
         function processImg(img){
-            if(img.complete&&img.naturalWidth>0){markLoaded(img);return;}
+            hydrateLazySource(img);
+            if(img.complete&&img.naturalWidth>1){markLoaded(img);return;}
             img.addEventListener('load',function(){markLoaded(img);});
             img.addEventListener('error',function(){markLoaded(img);});
+            window.setTimeout(function(){
+                if(!img.classList.contains('lunara-img-loaded')){
+                    markLoaded(img);
+                }
+            },1800);
         }
-        var sels='.lunara-review-grid-poster,.lunara-review-feature-image,.lunara-poster-card-image,.lunara-dispatch-archive-thumb,.lunara-dispatch-lead-image,.lunara-home-pulse-poster,.aat-filmography-poster,.aat-entity-poster';
+        var sels='.lunara-review-grid-poster,.lunara-review-feature-image,.lunara-poster-card-image,.lunara-journal-home-card-image,.lunara-dispatch-archive-thumb,.lunara-dispatch-lead-image,.lunara-oscar-pick-card-image,.lunara-oscar-fact-card-poster-image,.lunara-home-pulse-poster,.aat-filmography-poster,.aat-entity-poster';
         document.querySelectorAll(sels).forEach(processImg);
         if(window.MutationObserver){
             new MutationObserver(function(mutations){

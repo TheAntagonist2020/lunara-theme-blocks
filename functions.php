@@ -2228,16 +2228,22 @@ function lunara_reviews_shortcode( $atts ) {
         $thumb_url       = isset( $image_data['url'] ) ? (string) $image_data['url'] : '';
         $has_thumb_html  = ! empty( $image_data['html'] );
         $use_fallback_bg = '' !== $thumb_url && ! $has_thumb_html;
+        $has_card_media  = $has_thumb_html || $use_fallback_bg;
         ?>
-        <article class="lunara-review-grid-card lunara-review-archive-card">
+        <article class="lunara-review-grid-card lunara-review-archive-card <?php echo $has_card_media ? 'has-visual' : 'has-no-visual'; ?>">
             <a class="lunara-review-grid-link" href="<?php the_permalink(); ?>">
-                <div class="lunara-review-grid-poster-wrap<?php echo $use_fallback_bg ? ' has-poster-bg has-fallback-bg' : ''; ?>"<?php if ( $use_fallback_bg ) : ?> style="background-image: url('<?php echo esc_url( $thumb_url ); ?>');"<?php endif; ?>>
-                    <?php if ( $has_thumb_html ) : ?>
-                        <?php echo $image_data['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                    <?php endif; ?>
-                    <?php if ( $score ) : ?><span class="lunara-score-badge"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span><?php endif; ?>
-                </div>
+                <?php if ( $has_card_media ) : ?>
+                    <div class="lunara-review-grid-poster-wrap<?php echo $use_fallback_bg ? ' has-poster-bg has-fallback-bg' : ''; ?>"<?php if ( $use_fallback_bg ) : ?> style="background-image: url('<?php echo esc_url( $thumb_url ); ?>');"<?php endif; ?>>
+                        <?php if ( $has_thumb_html ) : ?>
+                            <?php echo $image_data['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        <?php endif; ?>
+                        <?php if ( $score ) : ?><span class="lunara-score-badge"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span><?php endif; ?>
+                    </div>
+                <?php endif; ?>
                 <div class="lunara-review-grid-copy">
+                    <?php if ( ! $has_card_media && $score && function_exists( 'lunara_render_stars' ) ) : ?>
+                        <span class="lunara-score-badge is-inline-score"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
+                    <?php endif; ?>
                     <h3 class="lunara-review-grid-title"><?php the_title(); ?></h3>
                     <?php if ( '' !== trim( $quote ) ) : ?>
                         <p class="lunara-review-grid-excerpt lunara-review-grid-quote"><?php echo esc_html( $quote ); ?></p>
@@ -5625,7 +5631,10 @@ function lunara_render_review_grid_card( $post_id, $card_index = null ) {
     }
 
     $image_data = lunara_get_review_card_image_data( $post_id, 'medium_large', $thumb_attrs );
-    $thumb_url  = isset( $image_data['url'] ) ? (string) $image_data['url'] : '';
+    $thumb_url       = isset( $image_data['url'] ) ? (string) $image_data['url'] : '';
+    $has_thumb_html  = ! empty( $image_data['html'] );
+    $use_fallback_bg = '' !== $thumb_url && ! $has_thumb_html;
+    $has_card_media  = $has_thumb_html || $use_fallback_bg;
 
     if ( '' !== $review_tt && function_exists( 'lunara_get_oscar_ledger_counts' ) && function_exists( 'lunara_render_oscar_ledger_pill' ) ) {
         $ledger_pill = lunara_render_oscar_ledger_pill( $review_tt, lunara_get_oscar_ledger_counts( $review_tt ) );
@@ -5633,20 +5642,23 @@ function lunara_render_review_grid_card( $post_id, $card_index = null ) {
 
     ob_start();
     ?>
-    <article class="lunara-review-grid-card lunara-review-archive-card">
+    <article class="lunara-review-grid-card lunara-review-archive-card <?php echo $has_card_media ? 'has-visual' : 'has-no-visual'; ?>">
         <a class="lunara-review-grid-link" href="<?php echo esc_url( get_permalink( $post_id ) ); ?>">
-            <div class="lunara-review-grid-poster-wrap<?php echo '' !== $thumb_url ? ' has-poster-bg' : ''; ?>"<?php if ( '' !== $thumb_url ) : ?> style="background-image: url('<?php echo esc_url( $thumb_url ); ?>');"<?php endif; ?>>
-                <?php if ( ! empty( $image_data['html'] ) ) : ?>
-                    <?php echo $image_data['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                <?php else : ?>
-                    <div class="lunara-review-grid-poster-placeholder"><?php echo esc_html( get_the_title( $post_id ) ); ?></div>
-                <?php endif; ?>
-                <?php if ( $score ) : ?>
-                    <span class="lunara-score-badge"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
-                <?php endif; ?>
-            </div>
+            <?php if ( $has_card_media ) : ?>
+                <div class="lunara-review-grid-poster-wrap<?php echo $use_fallback_bg ? ' has-poster-bg has-fallback-bg' : ''; ?>"<?php if ( $use_fallback_bg ) : ?> style="background-image: url('<?php echo esc_url( $thumb_url ); ?>');"<?php endif; ?>>
+                    <?php if ( $has_thumb_html ) : ?>
+                        <?php echo $image_data['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php endif; ?>
+                    <?php if ( $score ) : ?>
+                        <span class="lunara-score-badge"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
             <div class="lunara-review-grid-copy">
                 <p class="lunara-review-grid-kicker"><?php esc_html_e( 'Lunara Review', 'lunara-film' ); ?></p>
+                <?php if ( ! $has_card_media && $score && function_exists( 'lunara_render_stars' ) ) : ?>
+                    <span class="lunara-score-badge is-inline-score"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
+                <?php endif; ?>
                 <h3 class="lunara-review-grid-title"><?php echo esc_html( get_the_title( $post_id ) ); ?></h3>
                 <?php if ( '' !== trim( $quote ) ) : ?>
                     <p class="lunara-review-grid-excerpt lunara-review-grid-quote"><?php echo esc_html( $quote ); ?></p>
@@ -15746,19 +15758,25 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
 					$thumb_url       = isset( $image_data['url'] ) ? (string) $image_data['url'] : '';
 					$has_thumb_html  = ! empty( $image_data['html'] );
 					$use_fallback_bg = '' !== $thumb_url && ! $has_thumb_html;
+					$has_card_media  = $has_thumb_html || $use_fallback_bg;
 					?>
-					<article class="lunara-review-grid-card">
+					<article class="lunara-review-grid-card <?php echo $has_card_media ? 'has-visual' : 'has-no-visual'; ?>">
 						<a class="lunara-review-grid-link" href="<?php the_permalink(); ?>">
-							<div class="lunara-review-grid-poster-wrap<?php echo $use_fallback_bg ? ' has-poster-bg has-fallback-bg' : ''; ?>"<?php if ( $use_fallback_bg ) : ?> style="background-image: url('<?php echo esc_url( $thumb_url ); ?>');"<?php endif; ?>>
-								<?php if ( $has_thumb_html ) : ?>
-									<?php echo $image_data['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-								<?php endif; ?>
-								<?php if ( $score && function_exists( 'lunara_render_stars' ) ) : ?>
-									<span class="lunara-score-badge"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
-								<?php endif; ?>
-							</div>
+							<?php if ( $has_card_media ) : ?>
+								<div class="lunara-review-grid-poster-wrap<?php echo $use_fallback_bg ? ' has-poster-bg has-fallback-bg' : ''; ?>"<?php if ( $use_fallback_bg ) : ?> style="background-image: url('<?php echo esc_url( $thumb_url ); ?>');"<?php endif; ?>>
+									<?php if ( $has_thumb_html ) : ?>
+										<?php echo $image_data['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+									<?php endif; ?>
+									<?php if ( $score && function_exists( 'lunara_render_stars' ) ) : ?>
+										<span class="lunara-score-badge"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
+									<?php endif; ?>
+								</div>
+							<?php endif; ?>
 							<div class="lunara-review-grid-copy">
 								<p class="lunara-review-grid-kicker"><?php esc_html_e( 'Lunara Review', 'lunara-film' ); ?></p>
+								<?php if ( ! $has_card_media && $score && function_exists( 'lunara_render_stars' ) ) : ?>
+									<span class="lunara-score-badge is-inline-score"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
+								<?php endif; ?>
 								<h3 class="lunara-review-grid-title"><?php the_title(); ?></h3>
 								<?php if ( '' !== trim( $quote ) ) : ?>
 									<p class="lunara-review-grid-excerpt lunara-review-grid-quote"><?php echo esc_html( $quote ); ?></p>

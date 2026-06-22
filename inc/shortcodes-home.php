@@ -80,16 +80,22 @@ function lunara_reviews_shortcode( $atts ) {
         $thumb_url       = isset( $image_data['url'] ) ? (string) $image_data['url'] : '';
         $has_thumb_html  = ! empty( $image_data['html'] );
         $use_fallback_bg = '' !== $thumb_url && ! $has_thumb_html;
+        $has_card_media  = $has_thumb_html || $use_fallback_bg;
         ?>
-        <article class="lunara-review-grid-card lunara-review-archive-card">
+        <article class="lunara-review-grid-card lunara-review-archive-card <?php echo $has_card_media ? 'has-visual' : 'has-no-visual'; ?>">
             <a class="lunara-review-grid-link" href="<?php the_permalink(); ?>">
-                <div class="lunara-review-grid-poster-wrap<?php echo $use_fallback_bg ? ' has-poster-bg has-fallback-bg' : ''; ?>"<?php if ( $use_fallback_bg ) : ?> style="background-image: url('<?php echo esc_url( $thumb_url ); ?>');"<?php endif; ?>>
-                    <?php if ( $has_thumb_html ) : ?>
-                        <?php echo $image_data['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                    <?php endif; ?>
-                    <?php if ( $score ) : ?><span class="lunara-score-badge"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span><?php endif; ?>
-                </div>
+                <?php if ( $has_card_media ) : ?>
+                    <div class="lunara-review-grid-poster-wrap<?php echo $use_fallback_bg ? ' has-poster-bg has-fallback-bg' : ''; ?>"<?php if ( $use_fallback_bg ) : ?> style="background-image: url('<?php echo esc_url( $thumb_url ); ?>');"<?php endif; ?>>
+                        <?php if ( $has_thumb_html ) : ?>
+                            <?php echo $image_data['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        <?php endif; ?>
+                        <?php if ( $score ) : ?><span class="lunara-score-badge"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span><?php endif; ?>
+                    </div>
+                <?php endif; ?>
                 <div class="lunara-review-grid-copy">
+                    <?php if ( ! $has_card_media && $score && function_exists( 'lunara_render_stars' ) ) : ?>
+                        <span class="lunara-score-badge is-inline-score"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
+                    <?php endif; ?>
                     <h3 class="lunara-review-grid-title"><?php the_title(); ?></h3>
                     <?php if ( '' !== trim( $quote ) ) : ?>
                         <p class="lunara-review-grid-excerpt lunara-review-grid-quote"><?php echo esc_html( $quote ); ?></p>
