@@ -26,7 +26,7 @@ files: `inc/frontend.php`
 acceptance: Focus contract passes for scoped CSS variables/classes and `git diff --check` passes.
 spec: `docs/staging/specs/2026-06-22-utility-search-focus-controls.md#public-surface`
 
-- [ ] T5: Verify, deploy, document, and push.
+- [x] T5: Verify, deploy, document, and push.
 goal: Ship the focus controls with lint, local/remote hashes, cache flush, route smoke, visual evidence, continuity docs, and GitHub commits.
 files: `LUNARA_WORLD_CHANGELOG.md`, `09_DOCS_AND_NOTES\SESSION-LOG-2026-06-22.md`, `09_DOCS_AND_NOTES\LUNARA_WEBSITE_HANDOFF.md`
 acceptance: Public smoke and evidence confirm no overflow, one H1, no private leakage, and Utility CSS only on Search/404.
