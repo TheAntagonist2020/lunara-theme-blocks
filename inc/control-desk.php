@@ -1348,6 +1348,172 @@ function lunara_control_desk_review_single_number_specs() {
     );
 }
 
+function lunara_control_desk_review_pair_with_select_specs() {
+    return array(
+        'lunara_review_pair_with_layout'       => array(
+            'label'   => __( 'Pair It With layout', 'lunara-film' ),
+            'default' => 'wide',
+            'note'    => __( 'Controls how much visual room the pairing module receives.', 'lunara-film' ),
+            'options' => array(
+                'contained' => array(
+                    'label' => __( 'Contained', 'lunara-film' ),
+                    'copy'  => __( 'Keeps the module aligned to the review column.', 'lunara-film' ),
+                ),
+                'wide'      => array(
+                    'label' => __( 'Wide', 'lunara-film' ),
+                    'copy'  => __( 'Lets pairings breathe as a stronger retention band.', 'lunara-film' ),
+                ),
+                'feature'   => array(
+                    'label' => __( 'Feature', 'lunara-film' ),
+                    'copy'  => __( 'A magazine-style pairing chamber for marquee reviews.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_review_pair_with_text_depth'   => array(
+            'label'   => __( 'Pairing text depth', 'lunara-film' ),
+            'default' => 'balanced',
+            'note'    => __( 'Controls how much companion-note copy shows before clamping.', 'lunara-film' ),
+            'options' => array(
+                'tight'    => array(
+                    'label' => __( 'Tight', 'lunara-film' ),
+                    'copy'  => __( 'Keeps notes brisk for fast scanning.', 'lunara-film' ),
+                ),
+                'balanced' => array(
+                    'label' => __( 'Balanced', 'lunara-film' ),
+                    'copy'  => __( 'Default editorial note depth.', 'lunara-film' ),
+                ),
+                'full'     => array(
+                    'label' => __( 'Full', 'lunara-film' ),
+                    'copy'  => __( 'Gives recommendations more room to sell the connection.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_review_pair_with_mobile_stack' => array(
+            'label'   => __( 'Mobile pairing stack', 'lunara-film' ),
+            'default' => 'editorial',
+            'note'    => __( 'Tunes the poster/text relationship on phones.', 'lunara-film' ),
+            'options' => array(
+                'compact'    => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'Small thumb, tight text, fastest mobile pass.', 'lunara-film' ),
+                ),
+                'editorial'  => array(
+                    'label' => __( 'Editorial', 'lunara-film' ),
+                    'copy'  => __( 'Balanced mobile layout for most reviews.', 'lunara-film' ),
+                ),
+                'poster-led' => array(
+                    'label' => __( 'Poster-Led', 'lunara-film' ),
+                    'copy'  => __( 'Lets poster art lead the pairing card on mobile.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_review_pair_with_image_focus'  => array(
+            'label'   => __( 'Pairing image focus', 'lunara-film' ),
+            'default' => 'center-center',
+            'note'    => __( 'Adjusts existing pairing thumb crops without changing source images.', 'lunara-film' ),
+            'options' => array(
+                'center-center' => array(
+                    'label' => __( 'Center', 'lunara-film' ),
+                    'copy'  => __( 'Balanced default crop.', 'lunara-film' ),
+                ),
+                'center-top'    => array(
+                    'label' => __( 'Top', 'lunara-film' ),
+                    'copy'  => __( 'Protects faces or title art near the top.', 'lunara-film' ),
+                ),
+                'center-bottom' => array(
+                    'label' => __( 'Bottom', 'lunara-film' ),
+                    'copy'  => __( 'Protects lower-frame poster composition.', 'lunara-film' ),
+                ),
+                'left-center'   => array(
+                    'label' => __( 'Left', 'lunara-film' ),
+                    'copy'  => __( 'Favors left-weighted artwork.', 'lunara-film' ),
+                ),
+                'right-center'  => array(
+                    'label' => __( 'Right', 'lunara-film' ),
+                    'copy'  => __( 'Favors right-weighted artwork.', 'lunara-film' ),
+                ),
+            ),
+        ),
+    );
+}
+
+function lunara_control_desk_review_pair_with_number_specs() {
+    return array(
+        'lunara_review_pair_with_columns'     => array(
+            'label'   => __( 'Pairing columns', 'lunara-film' ),
+            'default' => 1,
+            'min'     => 1,
+            'max'     => 3,
+            'step'    => 1,
+            'unit'    => __( 'cols', 'lunara-film' ),
+            'note'    => __( 'Desktop column count for the Pair It With lane.', 'lunara-film' ),
+        ),
+        'lunara_review_pair_with_thumb_width' => array(
+            'label'   => __( 'Pairing thumb width', 'lunara-film' ),
+            'default' => 96,
+            'min'     => 64,
+            'max'     => 140,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Poster/thumb width inside each pairing card.', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_review_pair_with_select_value( $key ) {
+    $specs = lunara_control_desk_review_pair_with_select_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return '';
+    }
+
+    $value = sanitize_key( (string) get_theme_mod( $key, $specs[ $key ]['default'] ) );
+
+    if ( ! isset( $specs[ $key ]['options'][ $value ] ) ) {
+        return (string) $specs[ $key ]['default'];
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_review_pair_with_clamp_number( $key, $value ) {
+    $specs = lunara_control_desk_review_pair_with_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    if ( is_array( $value ) ) {
+        $value = reset( $value );
+    }
+
+    $spec  = $specs[ $key ];
+    $value = absint( $value );
+
+    if ( $value < $spec['min'] ) {
+        return absint( $spec['min'] );
+    }
+
+    if ( $value > $spec['max'] ) {
+        return absint( $spec['max'] );
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_review_pair_with_number_value( $key ) {
+    $specs = lunara_control_desk_review_pair_with_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    return lunara_control_desk_review_pair_with_clamp_number(
+        $key,
+        get_theme_mod( $key, $specs[ $key ]['default'] )
+    );
+}
+
 function lunara_control_desk_review_single_preset_specs() {
     return array(
         'editorial-balance' => array(
@@ -1359,11 +1525,17 @@ function lunara_control_desk_review_single_preset_specs() {
                 'lunara_review_single_rail_mode'          => 'balanced',
                 'lunara_review_single_debrief_prominence' => 'standard',
                 'lunara_review_single_pairing_density'    => 'editorial',
+                'lunara_review_pair_with_layout'          => 'wide',
+                'lunara_review_pair_with_text_depth'      => 'balanced',
+                'lunara_review_pair_with_mobile_stack'    => 'editorial',
+                'lunara_review_pair_with_image_focus'     => 'center-center',
                 'lunara_review_single_spoiler_treatment'  => 'standard',
                 'lunara_review_single_trailer_prominence' => 'centered',
                 'lunara_review_single_section_gap'        => 48,
                 'lunara_review_single_debrief_poster_width' => 320,
                 'lunara_review_related_count'             => 4,
+                'lunara_review_pair_with_columns'         => 1,
+                'lunara_review_pair_with_thumb_width'     => 96,
             ),
         ),
         'cinematic-feature' => array(
@@ -1375,11 +1547,17 @@ function lunara_control_desk_review_single_preset_specs() {
                 'lunara_review_single_rail_mode'          => 'metadata-forward',
                 'lunara_review_single_debrief_prominence' => 'signature-forward',
                 'lunara_review_single_pairing_density'    => 'showcase',
+                'lunara_review_pair_with_layout'          => 'feature',
+                'lunara_review_pair_with_text_depth'      => 'full',
+                'lunara_review_pair_with_mobile_stack'    => 'poster-led',
+                'lunara_review_pair_with_image_focus'     => 'center-center',
                 'lunara_review_single_spoiler_treatment'  => 'shield-forward',
                 'lunara_review_single_trailer_prominence' => 'feature',
                 'lunara_review_single_section_gap'        => 64,
                 'lunara_review_single_debrief_poster_width' => 360,
                 'lunara_review_related_count'             => 5,
+                'lunara_review_pair_with_columns'         => 3,
+                'lunara_review_pair_with_thumb_width'     => 112,
             ),
         ),
         'compact-dispatch'  => array(
@@ -1391,11 +1569,17 @@ function lunara_control_desk_review_single_preset_specs() {
                 'lunara_review_single_rail_mode'          => 'minimal',
                 'lunara_review_single_debrief_prominence' => 'standard',
                 'lunara_review_single_pairing_density'    => 'compact',
+                'lunara_review_pair_with_layout'          => 'contained',
+                'lunara_review_pair_with_text_depth'      => 'tight',
+                'lunara_review_pair_with_mobile_stack'    => 'compact',
+                'lunara_review_pair_with_image_focus'     => 'center-top',
                 'lunara_review_single_spoiler_treatment'  => 'standard',
                 'lunara_review_single_trailer_prominence' => 'centered',
                 'lunara_review_single_section_gap'        => 36,
                 'lunara_review_single_debrief_poster_width' => 280,
                 'lunara_review_related_count'             => 3,
+                'lunara_review_pair_with_columns'         => 1,
+                'lunara_review_pair_with_thumb_width'     => 76,
             ),
         ),
         'spoiler-shield'    => array(
@@ -1407,11 +1591,17 @@ function lunara_control_desk_review_single_preset_specs() {
                 'lunara_review_single_rail_mode'          => 'balanced',
                 'lunara_review_single_debrief_prominence' => 'poster-forward',
                 'lunara_review_single_pairing_density'    => 'editorial',
+                'lunara_review_pair_with_layout'          => 'wide',
+                'lunara_review_pair_with_text_depth'      => 'balanced',
+                'lunara_review_pair_with_mobile_stack'    => 'editorial',
+                'lunara_review_pair_with_image_focus'     => 'center-center',
                 'lunara_review_single_spoiler_treatment'  => 'high-contrast',
                 'lunara_review_single_trailer_prominence' => 'feature',
                 'lunara_review_single_section_gap'        => 56,
                 'lunara_review_single_debrief_poster_width' => 340,
                 'lunara_review_related_count'             => 4,
+                'lunara_review_pair_with_columns'         => 2,
+                'lunara_review_pair_with_thumb_width'     => 104,
             ),
         ),
     );
@@ -1462,8 +1652,16 @@ function lunara_control_desk_review_single_current_values() {
         $values[ $key ] = lunara_control_desk_review_single_select_value( $key );
     }
 
+    foreach ( lunara_control_desk_review_pair_with_select_specs() as $key => $spec ) {
+        $values[ $key ] = lunara_control_desk_review_pair_with_select_value( $key );
+    }
+
     foreach ( lunara_control_desk_review_single_number_specs() as $key => $spec ) {
         $values[ $key ] = lunara_control_desk_review_single_number_value( $key );
+    }
+
+    foreach ( lunara_control_desk_review_pair_with_number_specs() as $key => $spec ) {
+        $values[ $key ] = lunara_control_desk_review_pair_with_number_value( $key );
     }
 
     return $values;
@@ -1507,9 +1705,26 @@ function lunara_control_desk_apply_review_single_values( $values ) {
         }
     }
 
+    foreach ( lunara_control_desk_review_pair_with_select_specs() as $key => $spec ) {
+        if ( ! array_key_exists( $key, $values ) ) {
+            continue;
+        }
+
+        $value = sanitize_key( (string) $values[ $key ] );
+        if ( isset( $spec['options'][ $value ] ) ) {
+            set_theme_mod( $key, $value );
+        }
+    }
+
     foreach ( lunara_control_desk_review_single_number_specs() as $key => $spec ) {
         if ( array_key_exists( $key, $values ) ) {
             set_theme_mod( $key, (string) lunara_control_desk_review_single_clamp_number( $key, $values[ $key ] ) );
+        }
+    }
+
+    foreach ( lunara_control_desk_review_pair_with_number_specs() as $key => $spec ) {
+        if ( array_key_exists( $key, $values ) ) {
+            set_theme_mod( $key, (string) lunara_control_desk_review_pair_with_clamp_number( $key, $values[ $key ] ) );
         }
     }
 }
@@ -1549,6 +1764,18 @@ function lunara_control_desk_save_review_single_studio() {
         set_theme_mod( $key, $value );
     }
 
+    $raw_pair_selects = isset( $_POST['lunara_review_pair_with_select'] ) && is_array( $_POST['lunara_review_pair_with_select'] )
+        ? wp_unslash( $_POST['lunara_review_pair_with_select'] )
+        : array();
+
+    foreach ( lunara_control_desk_review_pair_with_select_specs() as $key => $spec ) {
+        $value = isset( $raw_pair_selects[ $key ] ) ? sanitize_key( $raw_pair_selects[ $key ] ) : (string) $spec['default'];
+        if ( ! isset( $spec['options'][ $value ] ) ) {
+            $value = (string) $spec['default'];
+        }
+        set_theme_mod( $key, $value );
+    }
+
     $raw_numbers = isset( $_POST['lunara_review_single_number'] ) && is_array( $_POST['lunara_review_single_number'] )
         ? wp_unslash( $_POST['lunara_review_single_number'] )
         : array();
@@ -1565,6 +1792,25 @@ function lunara_control_desk_save_review_single_studio() {
 
         if ( array_key_exists( $key, $raw_numbers ) ) {
             set_theme_mod( $key, (string) lunara_control_desk_review_single_clamp_number( $key, $raw_numbers[ $key ] ) );
+        }
+    }
+
+    $raw_pair_numbers = isset( $_POST['lunara_review_pair_with_number'] ) && is_array( $_POST['lunara_review_pair_with_number'] )
+        ? wp_unslash( $_POST['lunara_review_pair_with_number'] )
+        : array();
+    $raw_pair_resets  = isset( $_POST['lunara_review_pair_with_reset'] ) && is_array( $_POST['lunara_review_pair_with_reset'] )
+        ? wp_unslash( $_POST['lunara_review_pair_with_reset'] )
+        : array();
+    $pair_resets      = array_map( 'sanitize_key', array_keys( $raw_pair_resets ) );
+
+    foreach ( lunara_control_desk_review_pair_with_number_specs() as $key => $spec ) {
+        if ( in_array( $key, $pair_resets, true ) ) {
+            remove_theme_mod( $key );
+            continue;
+        }
+
+        if ( array_key_exists( $key, $raw_pair_numbers ) ) {
+            set_theme_mod( $key, (string) lunara_control_desk_review_pair_with_clamp_number( $key, $raw_pair_numbers[ $key ] ) );
         }
     }
 
@@ -7487,6 +7733,106 @@ function lunara_control_desk_render_review_single_number_control( $key, $spec ) 
     <?php
 }
 
+function lunara_control_desk_render_review_pair_with_select_control( $key, $spec ) {
+    $value     = lunara_control_desk_review_pair_with_select_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <fieldset class="lunara-control-desk-homepage-choice">
+        <legend>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </legend>
+        <div class="lunara-control-desk-homepage-choice-options">
+            <?php foreach ( $spec['options'] as $option_key => $option ) : ?>
+                <label class="<?php echo $value === $option_key ? 'is-selected' : ''; ?>">
+                    <input
+                        type="radio"
+                        name="lunara_review_pair_with_select[<?php echo esc_attr( $key ); ?>]"
+                        value="<?php echo esc_attr( $option_key ); ?>"
+                        <?php checked( $value, $option_key ); ?>
+                    />
+                    <span>
+                        <strong><?php echo esc_html( $option['label'] ); ?></strong>
+                        <small><?php echo esc_html( $option['copy'] ); ?></small>
+                    </span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+    </fieldset>
+    <?php
+}
+
+function lunara_control_desk_render_review_pair_with_number_control( $key, $spec ) {
+    $value     = lunara_control_desk_review_pair_with_number_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <label class="lunara-control-desk-homepage-number" data-lunara-brand-number-control>
+        <span>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+        </span>
+        <input
+            type="range"
+            min="<?php echo esc_attr( $spec['min'] ); ?>"
+            max="<?php echo esc_attr( $spec['max'] ); ?>"
+            step="<?php echo esc_attr( $spec['step'] ); ?>"
+            value="<?php echo esc_attr( $value ); ?>"
+            data-lunara-brand-range
+        />
+        <span class="lunara-control-desk-brand-number-value">
+            <input
+                type="number"
+                name="lunara_review_pair_with_number[<?php echo esc_attr( $key ); ?>]"
+                min="<?php echo esc_attr( $spec['min'] ); ?>"
+                max="<?php echo esc_attr( $spec['max'] ); ?>"
+                step="<?php echo esc_attr( $spec['step'] ); ?>"
+                value="<?php echo esc_attr( $value ); ?>"
+                data-lunara-brand-number
+            />
+            <em><?php echo esc_html( $spec['unit'] ); ?></em>
+        </span>
+        <span class="lunara-control-desk-brand-reset">
+            <label>
+                <input type="checkbox" name="lunara_review_pair_with_reset[<?php echo esc_attr( $key ); ?>]" value="1" />
+                <?php
+                printf(
+                    /* translators: %d: setting default value. */
+                    esc_html__( 'Reset to %d', 'lunara-film' ),
+                    absint( $spec['default'] )
+                );
+                ?>
+            </label>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </span>
+    </label>
+    <?php
+}
+
+function lunara_control_desk_render_review_pair_with_precision_controls() {
+    ?>
+    <div class="lunara-control-desk-homepage-card">
+        <div class="lunara-control-desk-card-head">
+            <div>
+                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Pair It With Precision', 'lunara-film' ); ?></p>
+                <h3><?php esc_html_e( 'Width, poster balance, text depth, and mobile stack', 'lunara-film' ); ?></h3>
+                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Tune the retention module readers respond to without changing its titles, notes, links, Oscar matches, or Debrief source content.', 'lunara-film' ); ?></p>
+            </div>
+        </div>
+        <div class="lunara-control-desk-homepage-choice-grid">
+            <?php foreach ( lunara_control_desk_review_pair_with_select_specs() as $key => $spec ) : ?>
+                <?php lunara_control_desk_render_review_pair_with_select_control( $key, $spec ); ?>
+            <?php endforeach; ?>
+        </div>
+        <div class="lunara-control-desk-homepage-number-grid">
+            <?php foreach ( lunara_control_desk_review_pair_with_number_specs() as $key => $spec ) : ?>
+                <?php lunara_control_desk_render_review_pair_with_number_control( $key, $spec ); ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php
+}
+
 function lunara_control_desk_review_single_preset_preview_url( $path, $preset_key, $mobile = false ) {
     $url = add_query_arg( 'lunara-review-preset', $preset_key, home_url( $path ) );
 
@@ -7507,9 +7853,20 @@ function lunara_control_desk_review_single_value_label( $key, $value ) {
         return $select_specs[ $key ]['options'][ $value ]['label'];
     }
 
+    $pair_select_specs = lunara_control_desk_review_pair_with_select_specs();
+    if ( isset( $pair_select_specs[ $key ]['options'][ $value ]['label'] ) ) {
+        return $pair_select_specs[ $key ]['options'][ $value ]['label'];
+    }
+
     $number_specs = lunara_control_desk_review_single_number_specs();
     if ( isset( $number_specs[ $key ] ) ) {
         $unit = isset( $number_specs[ $key ]['unit'] ) ? $number_specs[ $key ]['unit'] : '';
+        return trim( absint( $value ) . ' ' . $unit );
+    }
+
+    $pair_number_specs = lunara_control_desk_review_pair_with_number_specs();
+    if ( isset( $pair_number_specs[ $key ] ) ) {
+        $unit = isset( $pair_number_specs[ $key ]['unit'] ) ? $pair_number_specs[ $key ]['unit'] : '';
         return trim( absint( $value ) . ' ' . $unit );
     }
 
@@ -7522,9 +7879,19 @@ function lunara_control_desk_review_single_key_label( $key ) {
         return $select_specs[ $key ]['label'];
     }
 
+    $pair_select_specs = lunara_control_desk_review_pair_with_select_specs();
+    if ( isset( $pair_select_specs[ $key ]['label'] ) ) {
+        return $pair_select_specs[ $key ]['label'];
+    }
+
     $number_specs = lunara_control_desk_review_single_number_specs();
     if ( isset( $number_specs[ $key ]['label'] ) ) {
         return $number_specs[ $key ]['label'];
+    }
+
+    $pair_number_specs = lunara_control_desk_review_pair_with_number_specs();
+    if ( isset( $pair_number_specs[ $key ]['label'] ) ) {
+        return $pair_number_specs[ $key ]['label'];
     }
 
     $label = str_replace( array( 'lunara_review_single_', 'lunara_review_' ), '', $key );
@@ -7547,6 +7914,24 @@ function lunara_control_desk_review_single_comparison_specs() {
         ),
         'lunara_review_single_pairing_density'      => array(
             'label' => __( 'Pair It With density', 'lunara-film' ),
+        ),
+        'lunara_review_pair_with_layout'            => array(
+            'label' => __( 'Pair It With layout', 'lunara-film' ),
+        ),
+        'lunara_review_pair_with_columns'           => array(
+            'label' => __( 'Pairing columns', 'lunara-film' ),
+        ),
+        'lunara_review_pair_with_thumb_width'       => array(
+            'label' => __( 'Pairing thumb width', 'lunara-film' ),
+        ),
+        'lunara_review_pair_with_text_depth'        => array(
+            'label' => __( 'Pairing text depth', 'lunara-film' ),
+        ),
+        'lunara_review_pair_with_mobile_stack'      => array(
+            'label' => __( 'Mobile pairing stack', 'lunara-film' ),
+        ),
+        'lunara_review_pair_with_image_focus'       => array(
+            'label' => __( 'Pairing image focus', 'lunara-film' ),
         ),
         'lunara_review_single_spoiler_treatment'    => array(
             'label' => __( 'Spoiler treatment', 'lunara-film' ),
@@ -7714,6 +8099,8 @@ function lunara_control_desk_render_review_single_studio() {
                     </div>
                 </div>
             </div>
+
+            <?php lunara_control_desk_render_review_pair_with_precision_controls(); ?>
 
             <div class="lunara-control-desk-homepage-footer">
                 <div>
