@@ -10,7 +10,7 @@ files: `inc/control-desk.php`, `assets/css/lunara-control-desk.css`
 acceptance: Focused comparison-strip contract passes, plus `php -l inc\control-desk.php`.
 spec: `docs/staging/specs/2026-06-22-oscars-dossier-preset-comparison-strip.md#oscars-dossier-preset-comparison-strip`
 
-- [ ] T3: Verify, deploy, document, and push.
+- [x] T3: Verify, deploy, document, and push.
 goal: Ship the Oscars Dossier comparison strip with lint, cache flush, admin/public smoke, evidence, continuity docs, and GitHub commits.
 files: `LUNARA_WORLD_CHANGELOG.md`, `09_DOCS_AND_NOTES\SESSION-LOG-2026-06-22.md`, `09_DOCS_AND_NOTES\LUNARA_WEBSITE_HANDOFF.md`
 acceptance: Public route smoke confirms no public route behavior or private/admin leakage; Theme Studio evidence is saved under `10_VISUAL_EVIDENCE`.
