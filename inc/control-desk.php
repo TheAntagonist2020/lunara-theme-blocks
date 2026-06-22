@@ -466,6 +466,96 @@ function lunara_control_desk_homepage_select_value( $key ) {
     return $value;
 }
 
+function lunara_control_desk_homepage_order_preset_specs() {
+    return array(
+        'editorial-default' => array(
+            'label'   => __( 'Editorial default', 'lunara-film' ),
+            'copy'    => __( 'Reviews stay first on desktop, Journal stays early, and the Oscar lanes follow as signature retention.', 'lunara-film' ),
+            'order'   => array( 'hero', 'latest-reviews', 'dispatch', 'oscar-picks', 'oscar-facts', 'featured', 'oscar-spotlight', 'database', 'ledger', 'deep-cuts' ),
+            'desktop' => array(
+                __( 'Identity masthead', 'lunara-film' ),
+                __( 'Route cards', 'lunara-film' ),
+                __( 'Latest Reviews', 'lunara-film' ),
+                __( 'Journal lane', 'lunara-film' ),
+                __( 'Oscar Facts', 'lunara-film' ),
+            ),
+            'mobile'  => array(
+                __( 'Identity masthead', 'lunara-film' ),
+                __( 'Route cards', 'lunara-film' ),
+                __( 'Latest Reviews', 'lunara-film' ),
+                __( 'Journal lane', 'lunara-film' ),
+                __( 'Oscar Facts', 'lunara-film' ),
+            ),
+        ),
+        'journal-first'     => array(
+            'label'   => __( 'Journal first', 'lunara-film' ),
+            'copy'    => __( 'Moves the live desk ahead of Reviews when the homepage should feel more immediate and trade-like.', 'lunara-film' ),
+            'order'   => array( 'hero', 'dispatch', 'latest-reviews', 'oscar-picks', 'oscar-facts', 'featured', 'oscar-spotlight', 'database', 'ledger', 'deep-cuts' ),
+            'desktop' => array(
+                __( 'Identity masthead', 'lunara-film' ),
+                __( 'Route cards', 'lunara-film' ),
+                __( 'Journal lane', 'lunara-film' ),
+                __( 'Latest Reviews', 'lunara-film' ),
+                __( 'Oscar Facts', 'lunara-film' ),
+            ),
+            'mobile'  => array(
+                __( 'Identity masthead', 'lunara-film' ),
+                __( 'Route cards', 'lunara-film' ),
+                __( 'Journal lane', 'lunara-film' ),
+                __( 'Latest Reviews', 'lunara-film' ),
+                __( 'Oscar Facts', 'lunara-film' ),
+            ),
+        ),
+        'oscars-forward'    => array(
+            'label'   => __( 'Oscars forward', 'lunara-film' ),
+            'copy'    => __( 'Pushes Oscar Facts and ledger bridges higher when the Academy archive should become the front-door flex.', 'lunara-film' ),
+            'order'   => array( 'hero', 'oscar-facts', 'oscar-picks', 'oscar-spotlight', 'database', 'ledger', 'latest-reviews', 'dispatch', 'featured', 'deep-cuts' ),
+            'desktop' => array(
+                __( 'Identity masthead', 'lunara-film' ),
+                __( 'Route cards', 'lunara-film' ),
+                __( 'Oscar Facts', 'lunara-film' ),
+                __( 'Oscar Picks', 'lunara-film' ),
+                __( 'Oscar Spotlight', 'lunara-film' ),
+            ),
+            'mobile'  => array(
+                __( 'Identity masthead', 'lunara-film' ),
+                __( 'Route cards', 'lunara-film' ),
+                __( 'Oscar Facts', 'lunara-film' ),
+                __( 'Oscar Picks', 'lunara-film' ),
+                __( 'Oscar Spotlight', 'lunara-film' ),
+            ),
+        ),
+    );
+}
+
+function lunara_control_desk_homepage_order_preset_value() {
+    $specs = lunara_control_desk_homepage_order_preset_specs();
+    $value = sanitize_key( (string) get_theme_mod( 'lunara_home_section_order_preset', 'editorial-default' ) );
+
+    if ( ! isset( $specs[ $value ] ) ) {
+        return 'editorial-default';
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_homepage_order_for_preset( $preset ) {
+    $specs  = lunara_control_desk_homepage_order_preset_specs();
+    $preset = sanitize_key( (string) $preset );
+
+    if ( ! isset( $specs[ $preset ] ) ) {
+        $preset = 'editorial-default';
+    }
+
+    $order = implode( ',', $specs[ $preset ]['order'] );
+
+    if ( function_exists( 'lunara_sanitize_home_section_order' ) ) {
+        return lunara_sanitize_home_section_order( $order );
+    }
+
+    return $order;
+}
+
 function lunara_control_desk_homepage_number_specs() {
     return array(
         'lunara_home_masthead_top_padding'    => array(
@@ -614,6 +704,18 @@ function lunara_control_desk_save_homepage_studio() {
         }
         set_theme_mod( $key, $value );
     }
+
+    $order_specs  = lunara_control_desk_homepage_order_preset_specs();
+    $order_preset = isset( $_POST['lunara_homepage_order_preset'] )
+        ? sanitize_key( wp_unslash( $_POST['lunara_homepage_order_preset'] ) )
+        : 'editorial-default';
+
+    if ( ! isset( $order_specs[ $order_preset ] ) ) {
+        $order_preset = 'editorial-default';
+    }
+
+    set_theme_mod( 'lunara_home_section_order_preset', $order_preset );
+    set_theme_mod( 'lunara_home_section_order', lunara_control_desk_homepage_order_for_preset( $order_preset ) );
 
     $raw_numbers = isset( $_POST['lunara_homepage_number'] ) && is_array( $_POST['lunara_homepage_number'] )
         ? wp_unslash( $_POST['lunara_homepage_number'] )
@@ -4786,6 +4888,34 @@ function lunara_control_desk_render_homepage_select_control( $key, $spec ) {
     <?php
 }
 
+function lunara_control_desk_render_homepage_order_preset_control( $current, $specs ) {
+    ?>
+    <fieldset class="lunara-control-desk-homepage-order-choice">
+        <legend>
+            <strong><?php esc_html_e( 'Section-order preset', 'lunara-film' ); ?></strong>
+            <small><?php esc_html_e( 'Choose the front-door flow without touching raw homepage slugs.', 'lunara-film' ); ?></small>
+        </legend>
+        <div class="lunara-control-desk-homepage-order-presets" role="radiogroup" aria-label="<?php esc_attr_e( 'Homepage section-order preset', 'lunara-film' ); ?>">
+            <?php foreach ( $specs as $preset => $spec ) : ?>
+                <?php $selected = $current === $preset; ?>
+                <label class="lunara-control-desk-homepage-order-card <?php echo $selected ? 'is-selected' : ''; ?>">
+                    <input
+                        type="radio"
+                        name="lunara_homepage_order_preset"
+                        value="<?php echo esc_attr( $preset ); ?>"
+                        <?php checked( $selected ); ?>
+                    />
+                    <span>
+                        <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+                        <small><?php echo esc_html( $spec['copy'] ); ?></small>
+                    </span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+    </fieldset>
+    <?php
+}
+
 function lunara_control_desk_render_homepage_number_control( $key, $spec ) {
     $value     = lunara_control_desk_homepage_number_value( $key );
     $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
@@ -4846,20 +4976,11 @@ function lunara_control_desk_render_homepage_studio() {
         return;
     }
 
-    $desktop_order = array(
-        __( 'Identity masthead', 'lunara-film' ),
-        __( 'Route cards', 'lunara-film' ),
-        __( 'Latest Reviews', 'lunara-film' ),
-        __( 'Journal lane', 'lunara-film' ),
-        __( 'Oscar Facts', 'lunara-film' ),
-    );
-    $mobile_order  = array(
-        __( 'Identity masthead', 'lunara-film' ),
-        __( 'Route cards', 'lunara-film' ),
-        __( 'Journal lane', 'lunara-film' ),
-        __( 'Latest Reviews', 'lunara-film' ),
-        __( 'Oscar Facts', 'lunara-film' ),
-    );
+    $order_specs   = lunara_control_desk_homepage_order_preset_specs();
+    $order_preset  = lunara_control_desk_homepage_order_preset_value();
+    $order_current = $order_specs[ $order_preset ];
+    $desktop_order = $order_current['desktop'];
+    $mobile_order  = $order_current['mobile'];
     ?>
     <section id="lunara-theme-studio-homepage-studio" class="lunara-control-desk-homepage-studio">
         <div class="lunara-control-desk-panel-header">
@@ -4930,10 +5051,11 @@ function lunara_control_desk_render_homepage_studio() {
                 <div class="lunara-control-desk-card-head">
                     <div>
                         <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Order Preview', 'lunara-film' ); ?></p>
-                        <h3><?php esc_html_e( 'Current desktop and mobile rhythm', 'lunara-film' ); ?></h3>
-                        <p class="lunara-control-desk-subtle"><?php esc_html_e( 'This pass keeps desktop Reviews-first and mobile Journal-first unless a later control explicitly changes it.', 'lunara-film' ); ?></p>
+                        <h3><?php esc_html_e( 'Shared section rhythm', 'lunara-film' ); ?></h3>
+                        <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Presets write the existing section-order setting so the public homepage changes cleanly after save. Per-breakpoint ordering stays deferred for a later Studio pass.', 'lunara-film' ); ?></p>
                     </div>
                 </div>
+                <?php lunara_control_desk_render_homepage_order_preset_control( $order_preset, $order_specs ); ?>
                 <div class="lunara-control-desk-homepage-order-grid">
                     <article>
                         <strong><?php esc_html_e( 'Desktop', 'lunara-film' ); ?></strong>
