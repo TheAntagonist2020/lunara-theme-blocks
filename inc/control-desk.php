@@ -7233,6 +7233,127 @@ function lunara_control_desk_theme_studio_summary_cards( $groups ) {
     );
 }
 
+function lunara_control_desk_theme_studio_command_index_items() {
+    return array(
+        array(
+            'label'              => __( 'Brand Console', 'lunara-film' ),
+            'status'             => __( 'Live controls', 'lunara-film' ),
+            'surface'            => __( 'Identity', 'lunara-film' ),
+            'affects'            => __( 'Header logo, homepage identity mark, site icon, social fallback, and logo geometry.', 'lunara-film' ),
+            'anchor'             => '#lunara-theme-studio-brand-console',
+            'preview_url'        => home_url( '/' ),
+            'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/' ) ),
+            'next'               => __( 'Next frontier: route-specific brand placement and social preview tuning.', 'lunara-film' ),
+        ),
+        array(
+            'label'              => __( 'Homepage Studio', 'lunara-film' ),
+            'status'             => __( 'Live controls', 'lunara-film' ),
+            'surface'            => __( 'Curated front door', 'lunara-film' ),
+            'affects'            => __( 'Front-door rhythm, route ordering, signature-lane density, visibility shortcuts, and mobile order.', 'lunara-film' ),
+            'anchor'             => '#lunara-theme-studio-homepage-studio',
+            'preview_url'        => home_url( '/' ),
+            'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/' ) ),
+            'next'               => __( 'Next frontier: carousel behavior and per-lane feature prominence presets.', 'lunara-film' ),
+        ),
+        array(
+            'label'              => __( 'Journal Archive Studio', 'lunara-film' ),
+            'status'             => __( 'Live controls', 'lunara-film' ),
+            'surface'            => __( 'Live trade desk', 'lunara-film' ),
+            'affects'            => __( 'Journal archive density, lead-file prominence, desk rhythm, card height, and wide media chambers.', 'lunara-film' ),
+            'anchor'             => '#lunara-theme-studio-journal-archive-studio',
+            'preview_url'        => home_url( '/journal/' ),
+            'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/journal/' ) ),
+            'next'               => __( 'Next frontier: Journal single-page media and dispatch-lane control.', 'lunara-film' ),
+        ),
+        array(
+            'label'              => __( 'Reviews Archive Studio', 'lunara-film' ),
+            'status'             => __( 'Live controls', 'lunara-film' ),
+            'surface'            => __( 'Authority package archive', 'lunara-film' ),
+            'affects'            => __( 'Reviews archive density, lead review force, companion rail density, and archive card rhythm.', 'lunara-film' ),
+            'anchor'             => '#lunara-theme-studio-reviews-archive-studio',
+            'preview_url'        => home_url( '/reviews/' ),
+            'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/reviews/' ) ),
+            'next'               => __( 'Next frontier: Review single-page Debrief, Pair It With, and spoiler bridge controls.', 'lunara-film' ),
+        ),
+        array(
+            'label'              => __( 'Image Authority', 'lunara-film' ),
+            'status'             => __( 'Quality gate', 'lunara-film' ),
+            'surface'            => __( 'Private visual QA', 'lunara-film' ),
+            'affects'            => __( 'Review card sources, Journal hero sources, Oscar Fact visuals, near-target approvals, and visual readiness lanes.', 'lunara-film' ),
+            'anchor'             => '#lunara-theme-studio-image-quality',
+            'preview_url'        => home_url( '/review/sinners-2025/' ),
+            'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/review/sinners-2025/' ) ),
+            'next'               => __( 'Next frontier: older Oscars poster chambers and route-family image backlog triage.', 'lunara-film' ),
+        ),
+        array(
+            'label'              => __( 'Oscar Facts', 'lunara-film' ),
+            'status'             => __( 'Signature lane', 'lunara-film' ),
+            'surface'            => __( 'Homepage carousel', 'lunara-film' ),
+            'affects'            => __( 'Verified public visuals, archival treatment, focus picker, working lanes, and homepage fact-card polish.', 'lunara-film' ),
+            'anchor'             => '#lunara-theme-studio-image-quality',
+            'preview_url'        => home_url( '/oscars/' ),
+            'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/oscars/' ) ),
+            'next'               => __( 'Next frontier: carousel behavior controls and ceremony-dossier visual treatment.', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_render_theme_studio_command_index() {
+    $items    = lunara_control_desk_theme_studio_command_index_items();
+    $base_url = lunara_control_desk_admin_url(
+        array(
+            'tab' => 'theme-studio',
+        )
+    );
+
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        ?>
+        <section id="lunara-theme-studio-command-index" class="lunara-control-desk-command-index">
+            <div class="lunara-control-desk-panel-header">
+                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Theme Studio Command Index', 'lunara-film' ); ?></p>
+                <h3><?php esc_html_e( 'Customization cockpit requires theme editing permission', 'lunara-film' ); ?></h3>
+                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'The public surfaces remain available, but direct control navigation is limited to administrators.', 'lunara-film' ); ?></p>
+            </div>
+        </section>
+        <?php
+        return;
+    }
+    ?>
+    <section id="lunara-theme-studio-command-index" class="lunara-control-desk-command-index">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Theme Studio Command Index', 'lunara-film' ); ?></p>
+            <h3><?php esc_html_e( 'The customization cockpit', 'lunara-film' ); ?></h3>
+            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Jump from surface to controls, preview the public route, and keep the next granular layer visible without hunting through panels.', 'lunara-film' ); ?></p>
+        </div>
+        <div class="lunara-control-desk-command-grid">
+            <?php foreach ( $items as $item ) : ?>
+                <?php
+                $anchor      = isset( $item['anchor'] ) ? (string) $item['anchor'] : '';
+                $control_url = $anchor ? $base_url . $anchor : $base_url;
+                ?>
+                <article class="lunara-control-desk-command-card">
+                    <div class="lunara-control-desk-command-card-head">
+                        <span><?php echo esc_html( $item['status'] ); ?></span>
+                        <em><?php echo esc_html( $item['surface'] ); ?></em>
+                    </div>
+                    <h4><?php echo esc_html( $item['label'] ); ?></h4>
+                    <p><?php echo esc_html( $item['affects'] ); ?></p>
+                    <div class="lunara-control-desk-command-next">
+                        <strong><?php esc_html_e( 'Next layer', 'lunara-film' ); ?></strong>
+                        <span><?php echo esc_html( $item['next'] ); ?></span>
+                    </div>
+                    <div class="lunara-control-desk-command-actions">
+                        <a class="button button-small button-primary" href="<?php echo esc_url( $control_url ); ?>"><?php esc_html_e( 'Open controls', 'lunara-film' ); ?></a>
+                        <a class="button button-small" href="<?php echo esc_url( $item['preview_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Desktop', 'lunara-film' ); ?></a>
+                        <a class="button button-small" href="<?php echo esc_url( $item['mobile_preview_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '390px', 'lunara-film' ); ?></a>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php
+}
+
 function lunara_control_desk_theme_studio_layout_targets() {
     return array(
         array(
@@ -7805,6 +7926,7 @@ function lunara_control_desk_render_theme_studio_tab() {
             <p class="lunara-control-desk-intro"><?php esc_html_e( 'Brand controls and image-quality checks now sit beside the existing ownership map, with direct storage only where the public site already reads it.', 'lunara-film' ); ?></p>
         </div>
         <?php lunara_control_desk_render_status_cards( lunara_control_desk_theme_studio_summary_cards( $groups ) ); ?>
+        <?php lunara_control_desk_render_theme_studio_command_index(); ?>
         <?php lunara_control_desk_render_brand_console(); ?>
         <?php lunara_control_desk_render_homepage_studio(); ?>
         <?php lunara_control_desk_render_journal_archive_studio(); ?>
