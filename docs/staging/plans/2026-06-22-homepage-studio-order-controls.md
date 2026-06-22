@@ -22,7 +22,7 @@
   acceptance: PHP lint passes, contract test passes, and `git diff --check` is clean.
   spec: `docs/staging/specs/2026-06-22-homepage-studio-order-controls.md#test-powershell-executionpolicy-bypass-file-teststheme-studio-homepage-order-controlssps1`
 
-- [ ] T5: Deploy, smoke test, and record continuity
+- [x] T5: Deploy, smoke test, and record continuity
   goal: Deploy only changed theme files, flush cache, verify public routes, update continuity docs, and push the theme repo.
   files: `LUNARA_WORLD_CHANGELOG.md`, `09_DOCS_AND_NOTES/LUNARA_WEBSITE_HANDOFF.md`, active session log
   acceptance: Local/remote hashes match, public smoke routes return 200, evidence lives under `10_VISUAL_EVIDENCE`, and the theme repo is pushed.
