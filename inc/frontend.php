@@ -7845,6 +7845,213 @@ function lunara_output_oscars_portal_compact_css() {
 add_action( 'wp_head', 'lunara_output_oscars_portal_compact_css', 1001 );
 
 /**
+ * Emit bounded Oscars Dossier Studio controls.
+ */
+function lunara_get_oscars_dossier_preview_preset_values() {
+    if ( ! current_user_can( 'edit_theme_options' ) || empty( $_GET['lunara-oscars-preset'] ) ) {
+        return array();
+    }
+
+    $preset_key = sanitize_key( wp_unslash( $_GET['lunara-oscars-preset'] ) );
+    if ( '' === $preset_key || ! function_exists( 'lunara_control_desk_oscars_dossier_preset_specs' ) ) {
+        return array();
+    }
+
+    $presets = lunara_control_desk_oscars_dossier_preset_specs();
+    if ( ! isset( $presets[ $preset_key ]['values'] ) || ! is_array( $presets[ $preset_key ]['values'] ) ) {
+        return array();
+    }
+
+    return $presets[ $preset_key ]['values'];
+}
+
+function lunara_get_oscars_dossier_studio_select_value( $preview_values, $key, $default, $allowed ) {
+    if ( isset( $preview_values[ $key ] ) ) {
+        $value = sanitize_key( (string) $preview_values[ $key ] );
+        if ( in_array( $value, $allowed, true ) ) {
+            return $value;
+        }
+    }
+
+    return lunara_home_select_setting( $key, $default, $allowed );
+}
+
+function lunara_get_oscars_dossier_studio_number_value( $preview_values, $key, $default, $min, $max ) {
+    if ( isset( $preview_values[ $key ] ) ) {
+        return max( absint( $min ), min( absint( $max ), absint( $preview_values[ $key ] ) ) );
+    }
+
+    return lunara_home_brand_number_setting( $key, $default, $min, $max );
+}
+
+function lunara_is_oscars_dossier_surface() {
+    $request_path = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH ) : '';
+
+    if ( is_page( 'oscars' ) ) {
+        return true;
+    }
+
+    return false !== strpos( $request_path, '/oscars/' );
+}
+
+function lunara_output_oscars_dossier_studio_css() {
+    if ( is_admin() || is_feed() || ! lunara_is_oscars_dossier_surface() ) {
+        return;
+    }
+
+    $preview_values = lunara_get_oscars_dossier_preview_preset_values();
+
+    $density = lunara_get_oscars_dossier_studio_select_value(
+        $preview_values,
+        'lunara_oscars_dossier_density',
+        'balanced',
+        array( 'balanced', 'dense', 'showcase' )
+    );
+    $ceremony_rhythm = lunara_get_oscars_dossier_studio_select_value(
+        $preview_values,
+        'lunara_oscars_ceremony_rhythm',
+        'balanced',
+        array( 'balanced', 'editorial', 'ledger' )
+    );
+    $major_race_prominence = lunara_get_oscars_dossier_studio_select_value(
+        $preview_values,
+        'lunara_oscars_major_race_prominence',
+        'standard',
+        array( 'standard', 'feature', 'compact' )
+    );
+    $profile_scale = lunara_get_oscars_dossier_studio_select_value(
+        $preview_values,
+        'lunara_oscars_profile_scale',
+        'standard',
+        array( 'standard', 'cinematic', 'compact' )
+    );
+    $writeup_prominence = lunara_get_oscars_dossier_studio_select_value(
+        $preview_values,
+        'lunara_oscars_writeup_prominence',
+        'inline',
+        array( 'inline', 'feature', 'compact' )
+    );
+    $saved_preset = lunara_get_oscars_dossier_studio_select_value(
+        $preview_values,
+        'lunara_oscars_dossier_preset',
+        'historical-dossier',
+        array( 'historical-dossier', 'ceremony-feature', 'compact-ledger', 'profile-spotlight' )
+    );
+
+    $section_gap = lunara_get_oscars_dossier_studio_number_value( $preview_values, 'lunara_oscars_dossier_section_gap', 48, 24, 96 );
+    $card_min    = lunara_get_oscars_dossier_studio_number_value( $preview_values, 'lunara_oscars_dossier_card_min', 280, 220, 420 );
+
+    $density_scale_map = array(
+        'balanced' => '1',
+        'dense'    => '.88',
+        'showcase' => '1.12',
+    );
+    $hero_max_map      = array(
+        'balanced' => '1040px',
+        'dense'    => '960px',
+        'showcase' => '1180px',
+    );
+    $profile_media_map = array(
+        'standard'  => '340px',
+        'cinematic' => '430px',
+        'compact'   => '280px',
+    );
+    $writeup_max_map   = array(
+        'inline'  => '880px',
+        'feature' => '1020px',
+        'compact' => '760px',
+    );
+    $race_gap_map      = array(
+        'standard' => '18px',
+        'feature'  => '22px',
+        'compact'  => '12px',
+    );
+
+    $density_scale     = isset( $density_scale_map[ $density ] ) ? $density_scale_map[ $density ] : '1';
+    $hero_max          = isset( $hero_max_map[ $density ] ) ? $hero_max_map[ $density ] : '1040px';
+    $profile_media_max = isset( $profile_media_map[ $profile_scale ] ) ? $profile_media_map[ $profile_scale ] : '340px';
+    $writeup_max       = isset( $writeup_max_map[ $writeup_prominence ] ) ? $writeup_max_map[ $writeup_prominence ] : '880px';
+    $race_gap          = isset( $race_gap_map[ $major_race_prominence ] ) ? $race_gap_map[ $major_race_prominence ] : '18px';
+    ?>
+    <style id="lunara-oscars-dossier-studio-css">
+    body.aat-shell-page {
+        --lunara-oscars-dossier-section-gap: <?php echo esc_html( absint( $section_gap ) ); ?>px;
+        --lunara-oscars-dossier-card-min: <?php echo esc_html( absint( $card_min ) ); ?>px;
+        --lunara-oscars-dossier-density-scale: <?php echo esc_html( $density_scale ); ?>;
+        --lunara-oscars-dossier-hero-max: <?php echo esc_html( $hero_max ); ?>;
+        --lunara-oscars-profile-media-max: <?php echo esc_html( $profile_media_max ); ?>;
+        --lunara-oscars-writeup-max: <?php echo esc_html( $writeup_max ); ?>;
+        --lunara-oscars-major-race-gap: <?php echo esc_html( $race_gap ); ?>;
+    }
+
+    body.aat-shell-page .aat-container,
+    body.aat-shell-page .aat-hub-page,
+    body.aat-shell-page .aat-entity-page {
+        gap: var(--lunara-oscars-dossier-section-gap) !important;
+    }
+
+    body.aat-shell-page .aat-ceremony-dossier,
+    body.aat-shell-page .aat-category-dossier,
+    body.aat-shell-page .aat-profile-file {
+        margin-left: auto !important;
+        margin-right: auto !important;
+        max-width: var(--lunara-oscars-dossier-hero-max) !important;
+    }
+
+    body.aat-shell-page .aat-hub-grid,
+    body.aat-shell-page .aat-winner-circle-grid,
+    body.aat-shell-page .aat-crossroads-grid,
+    body.aat-shell-page .aat-profile-grid {
+        gap: calc(18px * var(--lunara-oscars-dossier-density-scale)) !important;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--lunara-oscars-dossier-card-min)), 1fr)) !important;
+    }
+
+    body.aat-shell-page .aat-ceremony-major-races {
+        gap: var(--lunara-oscars-major-race-gap) !important;
+        margin-top: calc(var(--lunara-oscars-dossier-section-gap) * .6) !important;
+    }
+
+    body.aat-shell-page .aat-ceremony-editorial-writeup {
+        margin-left: auto !important;
+        margin-right: auto !important;
+        max-width: var(--lunara-oscars-writeup-max) !important;
+    }
+
+    body.aat-shell-page .aat-profile-file img,
+    body.aat-shell-page .aat-profile-file .aat-profile-media,
+    body.aat-shell-page .aat-entity-poster,
+    body.aat-shell-page .aat-title-poster {
+        max-width: min(100%, var(--lunara-oscars-profile-media-max)) !important;
+    }
+
+    <?php if ( 'editorial' === $ceremony_rhythm || 'feature' === $writeup_prominence ) : ?>
+    body.aat-shell-page .aat-ceremony-editorial-writeup {
+        padding: clamp(22px, 3.4vw, 38px) !important;
+    }
+    <?php endif; ?>
+
+    <?php if ( 'ledger' === $ceremony_rhythm || 'compact-ledger' === $saved_preset ) : ?>
+    body.aat-shell-page .aat-ceremony-dossier,
+    body.aat-shell-page .aat-category-dossier {
+        gap: min(42px, var(--lunara-oscars-dossier-section-gap)) !important;
+    }
+    <?php endif; ?>
+
+    <?php if ( 'compact' === $major_race_prominence ) : ?>
+    body.aat-shell-page .aat-ceremony-major-races {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)) !important;
+    }
+    <?php elseif ( 'feature' === $major_race_prominence ) : ?>
+    body.aat-shell-page .aat-ceremony-major-races {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)) !important;
+    }
+    <?php endif; ?>
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_output_oscars_dossier_studio_css', 1002 );
+
+/**
  * Final mobile-only Oscars guardrails after plugin-injected head styles.
  */
 function lunara_output_os_late_oscars_mobile_guardrail_css() {

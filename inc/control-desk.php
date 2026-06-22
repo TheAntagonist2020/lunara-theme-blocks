@@ -1470,6 +1470,413 @@ function lunara_control_desk_save_review_single_studio() {
 }
 add_action( 'admin_post_lunara_save_review_single_studio', 'lunara_control_desk_save_review_single_studio' );
 
+function lunara_control_desk_oscars_dossier_select_specs() {
+    return array(
+        'lunara_oscars_dossier_preset'           => array(
+            'label'   => __( 'Saved package marker', 'lunara-film' ),
+            'default' => 'historical-dossier',
+            'note'    => __( 'Records which complete Oscars route-family preset should be treated as the saved baseline.', 'lunara-film' ),
+            'options' => array(
+                'historical-dossier' => array(
+                    'label' => __( 'Historical Dossier', 'lunara-film' ),
+                    'copy'  => __( 'Default premium balance for ceremony and category pages.', 'lunara-film' ),
+                ),
+                'ceremony-feature'   => array(
+                    'label' => __( 'Ceremony Feature', 'lunara-film' ),
+                    'copy'  => __( 'A stronger editorial read for ceremony pages and approved write-ups.', 'lunara-film' ),
+                ),
+                'compact-ledger'     => array(
+                    'label' => __( 'Compact Ledger', 'lunara-film' ),
+                    'copy'  => __( 'Tighter information density for fast scanning.', 'lunara-film' ),
+                ),
+                'profile-spotlight'  => array(
+                    'label' => __( 'Profile Spotlight', 'lunara-film' ),
+                    'copy'  => __( 'A more cinematic title and person file treatment.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_oscars_dossier_density'          => array(
+            'label'   => __( 'Dossier density', 'lunara-film' ),
+            'default' => 'balanced',
+            'note'    => __( 'Tunes how tightly Oscars dossier modules stack across ceremony, category, title, and person routes.', 'lunara-film' ),
+            'options' => array(
+                'balanced' => array(
+                    'label' => __( 'Balanced', 'lunara-film' ),
+                    'copy'  => __( 'Premium spacing without letting the ledger go slack.', 'lunara-film' ),
+                ),
+                'dense'    => array(
+                    'label' => __( 'Dense', 'lunara-film' ),
+                    'copy'  => __( 'More modules in view for a sharper research-desk rhythm.', 'lunara-film' ),
+                ),
+                'showcase' => array(
+                    'label' => __( 'Showcase', 'lunara-film' ),
+                    'copy'  => __( 'More room for hero, profile, and editorial modules.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_oscars_ceremony_rhythm'          => array(
+            'label'   => __( 'Ceremony rhythm', 'lunara-film' ),
+            'default' => 'balanced',
+            'note'    => __( 'Controls the emphasis between ceremony context, editorial write-up, major races, and ledger scanning.', 'lunara-film' ),
+            'options' => array(
+                'balanced'  => array(
+                    'label' => __( 'Balanced', 'lunara-film' ),
+                    'copy'  => __( 'The default ceremony dossier mix.', 'lunara-film' ),
+                ),
+                'editorial' => array(
+                    'label' => __( 'Editorial', 'lunara-film' ),
+                    'copy'  => __( 'Gives the ceremony thesis and approved guide copy more authority.', 'lunara-film' ),
+                ),
+                'ledger'    => array(
+                    'label' => __( 'Ledger', 'lunara-film' ),
+                    'copy'  => __( 'Keeps ceremony pages tighter and more data-forward.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_oscars_major_race_prominence'    => array(
+            'label'   => __( 'Major-race prominence', 'lunara-film' ),
+            'default' => 'standard',
+            'note'    => __( 'Tunes Picture, Director, Actor, and Actress race cards when the ceremony page has that package.', 'lunara-film' ),
+            'options' => array(
+                'standard' => array(
+                    'label' => __( 'Standard', 'lunara-film' ),
+                    'copy'  => __( 'A clear premium race module without overtaking the page.', 'lunara-film' ),
+                ),
+                'feature'  => array(
+                    'label' => __( 'Feature', 'lunara-film' ),
+                    'copy'  => __( 'Larger race cards for a stronger awards-season read.', 'lunara-film' ),
+                ),
+                'compact'  => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'Tighter cards when the page needs to move faster.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_oscars_profile_scale'            => array(
+            'label'   => __( 'Profile scale', 'lunara-film' ),
+            'default' => 'standard',
+            'note'    => __( 'Controls the cinematic weight of title, person, and company profile files.', 'lunara-film' ),
+            'options' => array(
+                'standard'  => array(
+                    'label' => __( 'Standard', 'lunara-film' ),
+                    'copy'  => __( 'A balanced Oscar profile file.', 'lunara-film' ),
+                ),
+                'cinematic' => array(
+                    'label' => __( 'Cinematic', 'lunara-film' ),
+                    'copy'  => __( 'More visual authority for title and person hero chambers.', 'lunara-film' ),
+                ),
+                'compact'   => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'Tighter profile files for quick research movement.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_oscars_writeup_prominence'       => array(
+            'label'   => __( 'Write-up prominence', 'lunara-film' ),
+            'default' => 'inline',
+            'note'    => __( 'Tunes how approved Dalton-authored ceremony guide copy sits near the top of ceremony pages.', 'lunara-film' ),
+            'options' => array(
+                'inline'  => array(
+                    'label' => __( 'Inline', 'lunara-film' ),
+                    'copy'  => __( 'The guide reads as part of the dossier flow.', 'lunara-film' ),
+                ),
+                'feature' => array(
+                    'label' => __( 'Feature', 'lunara-film' ),
+                    'copy'  => __( 'The guide becomes a stronger editorial module.', 'lunara-film' ),
+                ),
+                'compact' => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'The guide remains visible but more compressed.', 'lunara-film' ),
+                ),
+            ),
+        ),
+    );
+}
+
+function lunara_control_desk_oscars_dossier_select_value( $key ) {
+    $specs = lunara_control_desk_oscars_dossier_select_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return '';
+    }
+
+    $value = sanitize_key( (string) get_theme_mod( $key, $specs[ $key ]['default'] ) );
+
+    if ( ! isset( $specs[ $key ]['options'][ $value ] ) ) {
+        return (string) $specs[ $key ]['default'];
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_oscars_dossier_number_specs() {
+    return array(
+        'lunara_oscars_dossier_section_gap' => array(
+            'label'   => __( 'Dossier section gap', 'lunara-film' ),
+            'default' => 48,
+            'min'     => 24,
+            'max'     => 96,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Vertical rhythm between ceremony, category, title, and person dossier modules.', 'lunara-film' ),
+        ),
+        'lunara_oscars_dossier_card_min'    => array(
+            'label'   => __( 'Card minimum width', 'lunara-film' ),
+            'default' => 280,
+            'min'     => 220,
+            'max'     => 420,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Minimum card width for responsive Oscars dossier grids and major-race cards.', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_oscars_dossier_clamp_number( $key, $value ) {
+    $specs = lunara_control_desk_oscars_dossier_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    if ( is_array( $value ) ) {
+        $value = reset( $value );
+    }
+
+    $spec  = $specs[ $key ];
+    $value = absint( $value );
+
+    if ( $value < $spec['min'] ) {
+        return absint( $spec['min'] );
+    }
+
+    if ( $value > $spec['max'] ) {
+        return absint( $spec['max'] );
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_oscars_dossier_number_value( $key ) {
+    $specs = lunara_control_desk_oscars_dossier_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    return lunara_control_desk_oscars_dossier_clamp_number(
+        $key,
+        get_theme_mod( $key, $specs[ $key ]['default'] )
+    );
+}
+
+function lunara_control_desk_oscars_dossier_preset_specs() {
+    return array(
+        'historical-dossier' => array(
+            'label'  => __( 'Historical Dossier', 'lunara-film' ),
+            'copy'   => __( 'The default premium ledger balance for ceremony and category pages.', 'lunara-film' ),
+            'values' => array(
+                'lunara_oscars_dossier_preset'        => 'historical-dossier',
+                'lunara_oscars_dossier_density'       => 'balanced',
+                'lunara_oscars_ceremony_rhythm'       => 'balanced',
+                'lunara_oscars_major_race_prominence' => 'standard',
+                'lunara_oscars_profile_scale'         => 'standard',
+                'lunara_oscars_writeup_prominence'    => 'inline',
+                'lunara_oscars_dossier_section_gap'   => 48,
+                'lunara_oscars_dossier_card_min'      => 280,
+            ),
+        ),
+        'ceremony-feature'   => array(
+            'label'  => __( 'Ceremony Feature', 'lunara-film' ),
+            'copy'   => __( 'Raises ceremony thesis, guide copy, and major-race modules for an editorial awards-file read.', 'lunara-film' ),
+            'values' => array(
+                'lunara_oscars_dossier_preset'        => 'ceremony-feature',
+                'lunara_oscars_dossier_density'       => 'showcase',
+                'lunara_oscars_ceremony_rhythm'       => 'editorial',
+                'lunara_oscars_major_race_prominence' => 'feature',
+                'lunara_oscars_profile_scale'         => 'standard',
+                'lunara_oscars_writeup_prominence'    => 'feature',
+                'lunara_oscars_dossier_section_gap'   => 64,
+                'lunara_oscars_dossier_card_min'      => 316,
+            ),
+        ),
+        'compact-ledger'     => array(
+            'label'  => __( 'Compact Ledger', 'lunara-film' ),
+            'copy'   => __( 'Tightens the Oscars surface so the historical record moves quickly without feeling bare.', 'lunara-film' ),
+            'values' => array(
+                'lunara_oscars_dossier_preset'        => 'compact-ledger',
+                'lunara_oscars_dossier_density'       => 'dense',
+                'lunara_oscars_ceremony_rhythm'       => 'ledger',
+                'lunara_oscars_major_race_prominence' => 'compact',
+                'lunara_oscars_profile_scale'         => 'compact',
+                'lunara_oscars_writeup_prominence'    => 'compact',
+                'lunara_oscars_dossier_section_gap'   => 34,
+                'lunara_oscars_dossier_card_min'      => 238,
+            ),
+        ),
+        'profile-spotlight'  => array(
+            'label'  => __( 'Profile Spotlight', 'lunara-film' ),
+            'copy'   => __( 'Lets title and person files breathe while keeping category and ceremony pages disciplined.', 'lunara-film' ),
+            'values' => array(
+                'lunara_oscars_dossier_preset'        => 'profile-spotlight',
+                'lunara_oscars_dossier_density'       => 'balanced',
+                'lunara_oscars_ceremony_rhythm'       => 'balanced',
+                'lunara_oscars_major_race_prominence' => 'standard',
+                'lunara_oscars_profile_scale'         => 'cinematic',
+                'lunara_oscars_writeup_prominence'    => 'inline',
+                'lunara_oscars_dossier_section_gap'   => 56,
+                'lunara_oscars_dossier_card_min'      => 304,
+            ),
+        ),
+    );
+}
+
+function lunara_control_desk_oscars_dossier_key_label( $key ) {
+    $select_specs = lunara_control_desk_oscars_dossier_select_specs();
+    if ( isset( $select_specs[ $key ]['label'] ) ) {
+        return $select_specs[ $key ]['label'];
+    }
+
+    $number_specs = lunara_control_desk_oscars_dossier_number_specs();
+    if ( isset( $number_specs[ $key ]['label'] ) ) {
+        return $number_specs[ $key ]['label'];
+    }
+
+    return $key;
+}
+
+function lunara_control_desk_oscars_dossier_value_label( $key, $value ) {
+    $select_specs = lunara_control_desk_oscars_dossier_select_specs();
+    if ( isset( $select_specs[ $key ]['options'][ $value ]['label'] ) ) {
+        return $select_specs[ $key ]['options'][ $value ]['label'];
+    }
+
+    $number_specs = lunara_control_desk_oscars_dossier_number_specs();
+    if ( isset( $number_specs[ $key ] ) ) {
+        return absint( $value ) . $number_specs[ $key ]['unit'];
+    }
+
+    return (string) $value;
+}
+
+function lunara_control_desk_oscars_dossier_current_values() {
+    $values = array();
+
+    foreach ( lunara_control_desk_oscars_dossier_select_specs() as $key => $spec ) {
+        $values[ $key ] = lunara_control_desk_oscars_dossier_select_value( $key );
+    }
+
+    foreach ( lunara_control_desk_oscars_dossier_number_specs() as $key => $spec ) {
+        $values[ $key ] = lunara_control_desk_oscars_dossier_number_value( $key );
+    }
+
+    return $values;
+}
+
+function lunara_control_desk_oscars_dossier_active_preset_key() {
+    $current = lunara_control_desk_oscars_dossier_current_values();
+
+    foreach ( lunara_control_desk_oscars_dossier_preset_specs() as $preset_key => $preset ) {
+        $values = isset( $preset['values'] ) && is_array( $preset['values'] ) ? $preset['values'] : array();
+        $match  = true;
+
+        foreach ( $values as $key => $value ) {
+            if ( ! array_key_exists( $key, $current ) || (string) $current[ $key ] !== (string) $value ) {
+                $match = false;
+                break;
+            }
+        }
+
+        if ( $match ) {
+            return $preset_key;
+        }
+    }
+
+    return '';
+}
+
+function lunara_control_desk_apply_oscars_dossier_values( $values ) {
+    if ( ! is_array( $values ) ) {
+        return;
+    }
+
+    foreach ( lunara_control_desk_oscars_dossier_select_specs() as $key => $spec ) {
+        if ( ! array_key_exists( $key, $values ) ) {
+            continue;
+        }
+
+        $value = sanitize_key( (string) $values[ $key ] );
+        if ( isset( $spec['options'][ $value ] ) ) {
+            set_theme_mod( $key, $value );
+        }
+    }
+
+    foreach ( lunara_control_desk_oscars_dossier_number_specs() as $key => $spec ) {
+        if ( array_key_exists( $key, $values ) ) {
+            set_theme_mod( $key, (string) lunara_control_desk_oscars_dossier_clamp_number( $key, $values[ $key ] ) );
+        }
+    }
+}
+
+function lunara_control_desk_save_oscars_dossier_studio() {
+    $redirect = lunara_control_desk_admin_url(
+        array(
+            'tab' => 'theme-studio',
+        )
+    ) . '#lunara-theme-studio-oscars-dossier-studio';
+
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        wp_safe_redirect( add_query_arg( 'lunara_notice', 'oscars_dossier_studio_forbidden', $redirect ) );
+        exit;
+    }
+
+    check_admin_referer( 'lunara_save_oscars_dossier_studio', 'lunara_oscars_dossier_nonce' );
+
+    $presets    = lunara_control_desk_oscars_dossier_preset_specs();
+    $preset_key = isset( $_POST['lunara_oscars_dossier_preset'] ) ? sanitize_key( wp_unslash( $_POST['lunara_oscars_dossier_preset'] ) ) : '';
+
+    if ( '' !== $preset_key && isset( $presets[ $preset_key ] ) ) {
+        lunara_control_desk_apply_oscars_dossier_values( $presets[ $preset_key ]['values'] );
+        wp_safe_redirect( add_query_arg( 'lunara_notice', 'oscars_dossier_preset_applied', $redirect ) );
+        exit;
+    }
+
+    $raw_selects = isset( $_POST['lunara_oscars_dossier_select'] ) && is_array( $_POST['lunara_oscars_dossier_select'] )
+        ? wp_unslash( $_POST['lunara_oscars_dossier_select'] )
+        : array();
+
+    foreach ( lunara_control_desk_oscars_dossier_select_specs() as $key => $spec ) {
+        $value = isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'];
+        if ( ! isset( $spec['options'][ $value ] ) ) {
+            $value = (string) $spec['default'];
+        }
+        set_theme_mod( $key, $value );
+    }
+
+    $raw_numbers = isset( $_POST['lunara_oscars_dossier_number'] ) && is_array( $_POST['lunara_oscars_dossier_number'] )
+        ? wp_unslash( $_POST['lunara_oscars_dossier_number'] )
+        : array();
+    $raw_resets  = isset( $_POST['lunara_oscars_dossier_reset'] ) && is_array( $_POST['lunara_oscars_dossier_reset'] )
+        ? wp_unslash( $_POST['lunara_oscars_dossier_reset'] )
+        : array();
+    $resets      = array_map( 'sanitize_key', array_keys( $raw_resets ) );
+
+    foreach ( lunara_control_desk_oscars_dossier_number_specs() as $key => $spec ) {
+        if ( in_array( $key, $resets, true ) ) {
+            remove_theme_mod( $key );
+            continue;
+        }
+
+        if ( array_key_exists( $key, $raw_numbers ) ) {
+            set_theme_mod( $key, (string) lunara_control_desk_oscars_dossier_clamp_number( $key, $raw_numbers[ $key ] ) );
+        }
+    }
+
+    wp_safe_redirect( add_query_arg( 'lunara_notice', 'oscars_dossier_studio_saved', $redirect ) );
+    exit;
+}
+add_action( 'admin_post_lunara_save_oscars_dossier_studio', 'lunara_control_desk_save_oscars_dossier_studio' );
+
 function lunara_control_desk_journal_archive_select_specs() {
     return array(
         'lunara_journal_archive_density'         => array(
@@ -6407,6 +6814,253 @@ function lunara_control_desk_render_review_single_studio() {
     <?php
 }
 
+function lunara_control_desk_oscars_dossier_preset_preview_url( $path, $preset_key, $mobile = false ) {
+    $url = add_query_arg( 'lunara-oscars-preset', $preset_key, home_url( $path ) );
+
+    if ( $mobile ) {
+        $url = add_query_arg( 'lunara-width', '390', $url );
+    }
+
+    return $url;
+}
+
+function lunara_control_desk_render_oscars_dossier_select_control( $key, $spec ) {
+    $value     = lunara_control_desk_oscars_dossier_select_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <fieldset class="lunara-control-desk-homepage-choice">
+        <legend>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </legend>
+        <div class="lunara-control-desk-homepage-choice-options">
+            <?php foreach ( $spec['options'] as $option_key => $option ) : ?>
+                <label class="<?php echo $value === $option_key ? 'is-selected' : ''; ?>">
+                    <input
+                        type="radio"
+                        name="lunara_oscars_dossier_select[<?php echo esc_attr( $key ); ?>]"
+                        value="<?php echo esc_attr( $option_key ); ?>"
+                        <?php checked( $value, $option_key ); ?>
+                    />
+                    <span>
+                        <strong><?php echo esc_html( $option['label'] ); ?></strong>
+                        <small><?php echo esc_html( $option['copy'] ); ?></small>
+                    </span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+    </fieldset>
+    <?php
+}
+
+function lunara_control_desk_render_oscars_dossier_number_control( $key, $spec ) {
+    $value     = lunara_control_desk_oscars_dossier_number_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <label class="lunara-control-desk-homepage-number" data-lunara-brand-number-control>
+        <span>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+        </span>
+        <input
+            type="range"
+            min="<?php echo esc_attr( $spec['min'] ); ?>"
+            max="<?php echo esc_attr( $spec['max'] ); ?>"
+            step="<?php echo esc_attr( $spec['step'] ); ?>"
+            value="<?php echo esc_attr( $value ); ?>"
+            data-lunara-brand-range
+        />
+        <span class="lunara-control-desk-brand-number-value">
+            <input
+                type="number"
+                name="lunara_oscars_dossier_number[<?php echo esc_attr( $key ); ?>]"
+                min="<?php echo esc_attr( $spec['min'] ); ?>"
+                max="<?php echo esc_attr( $spec['max'] ); ?>"
+                step="<?php echo esc_attr( $spec['step'] ); ?>"
+                value="<?php echo esc_attr( $value ); ?>"
+                data-lunara-brand-number
+            />
+            <em><?php echo esc_html( $spec['unit'] ); ?></em>
+        </span>
+        <span class="lunara-control-desk-brand-reset">
+            <label>
+                <input type="checkbox" name="lunara_oscars_dossier_reset[<?php echo esc_attr( $key ); ?>]" value="1" />
+                <?php
+                printf(
+                    /* translators: %d: setting default value. */
+                    esc_html__( 'Reset to %d', 'lunara-film' ),
+                    absint( $spec['default'] )
+                );
+                ?>
+            </label>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </span>
+    </label>
+    <?php
+}
+
+function lunara_control_desk_render_oscars_dossier_preset_card( $preset_key, $preset, $active_preset_key ) {
+    $is_active = $preset_key === $active_preset_key;
+    $values    = isset( $preset['values'] ) && is_array( $preset['values'] ) ? $preset['values'] : array();
+    ?>
+    <fieldset class="lunara-control-desk-homepage-choice <?php echo $is_active ? 'is-selected' : ''; ?>">
+        <legend>
+            <strong><?php echo esc_html( $preset['label'] ); ?></strong>
+            <small><?php echo esc_html( $preset['copy'] ); ?></small>
+            <em><?php echo esc_html( $is_active ? __( 'active', 'lunara-film' ) : __( 'preset', 'lunara-film' ) ); ?></em>
+        </legend>
+        <div class="lunara-control-desk-source-grid">
+            <?php foreach ( $values as $key => $value ) : ?>
+                <span class="lunara-control-desk-source-pill">
+                    <strong><?php echo esc_html( lunara_control_desk_oscars_dossier_key_label( $key ) ); ?></strong>
+                    <?php echo esc_html( lunara_control_desk_oscars_dossier_value_label( $key, $value ) ); ?>
+                </span>
+            <?php endforeach; ?>
+        </div>
+        <div class="lunara-control-desk-actions">
+            <button type="submit" class="button" name="lunara_oscars_dossier_preset" value="<?php echo esc_attr( $preset_key ); ?>">
+                <?php echo esc_html( $is_active ? __( 'Reapply preset', 'lunara-film' ) : __( 'Apply preset', 'lunara-film' ) ); ?>
+            </button>
+            <a class="button" href="<?php echo esc_url( lunara_control_desk_oscars_dossier_preset_preview_url( '/oscars/ceremony/98/', $preset_key ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Ceremony', 'lunara-film' ); ?></a>
+            <a class="button" href="<?php echo esc_url( lunara_control_desk_oscars_dossier_preset_preview_url( '/oscars/ceremony/98/', $preset_key, true ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '390px', 'lunara-film' ); ?></a>
+            <a class="button" href="<?php echo esc_url( lunara_control_desk_oscars_dossier_preset_preview_url( '/oscars/category/best-picture/', $preset_key ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Best Picture', 'lunara-film' ); ?></a>
+        </div>
+    </fieldset>
+    <?php
+}
+
+function lunara_control_desk_render_oscars_dossier_studio() {
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        ?>
+        <section id="lunara-theme-studio-oscars-dossier-studio" class="lunara-control-desk-homepage-studio lunara-control-desk-oscars-dossier-studio">
+            <div class="lunara-control-desk-panel-header">
+                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Oscars Dossier Studio', 'lunara-film' ); ?></p>
+                <h3><?php esc_html_e( 'Oscars controls require theme editing permission', 'lunara-film' ); ?></h3>
+                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'The public Oscar Ledger remains visible, but direct dossier rhythm changes are limited to administrators.', 'lunara-film' ); ?></p>
+            </div>
+        </section>
+        <?php
+        return;
+    }
+
+    $presets           = lunara_control_desk_oscars_dossier_preset_specs();
+    $active_preset_key = lunara_control_desk_oscars_dossier_active_preset_key();
+    $active_label      = $active_preset_key && isset( $presets[ $active_preset_key ] )
+        ? $presets[ $active_preset_key ]['label']
+        : __( 'Custom dossier', 'lunara-film' );
+    $preview_routes    = array(
+        array(
+            'label' => __( 'Oscars Portal', 'lunara-film' ),
+            'url'   => home_url( '/oscars/' ),
+        ),
+        array(
+            'label' => __( 'Ceremony Dossier', 'lunara-film' ),
+            'url'   => home_url( '/oscars/ceremony/98/' ),
+        ),
+        array(
+            'label' => __( 'Best Picture', 'lunara-film' ),
+            'url'   => home_url( '/oscars/category/best-picture/' ),
+        ),
+        array(
+            'label' => __( 'Title File', 'lunara-film' ),
+            'url'   => home_url( '/oscars/title/tt0110912/' ),
+        ),
+        array(
+            'label' => __( 'Person File', 'lunara-film' ),
+            'url'   => home_url( '/oscars/name/nm0000233/' ),
+        ),
+    );
+    ?>
+    <section id="lunara-theme-studio-oscars-dossier-studio" class="lunara-control-desk-homepage-studio lunara-control-desk-oscars-dossier-studio">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Oscars Dossier Studio', 'lunara-film' ); ?></p>
+            <h3><?php esc_html_e( 'Route-family rhythm for the Oscar Ledger', 'lunara-film' ); ?></h3>
+            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Tune ceremony, category, title, and person pages as a premium historical dossier system while the Academy plugin keeps owning the data.', 'lunara-film' ); ?></p>
+        </div>
+        <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+            <input type="hidden" name="action" value="lunara_save_oscars_dossier_studio" />
+            <?php wp_nonce_field( 'lunara_save_oscars_dossier_studio', 'lunara_oscars_dossier_nonce' ); ?>
+
+            <div class="lunara-control-desk-homepage-card">
+                <div class="lunara-control-desk-card-head">
+                    <div>
+                        <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Dossier Presets', 'lunara-film' ); ?></p>
+                        <h3><?php esc_html_e( 'Apply or preview a complete Oscars route package', 'lunara-film' ); ?></h3>
+                        <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Presets save the same bounded controls below. Preview links are request-only and only affect admins with theme editing permission.', 'lunara-film' ); ?></p>
+                    </div>
+                    <div class="lunara-control-desk-status-pill">
+                        <strong><?php esc_html_e( 'Current dossier', 'lunara-film' ); ?></strong>
+                        <span><?php echo esc_html( $active_label ); ?></span>
+                    </div>
+                </div>
+                <div class="lunara-control-desk-oscars-preset-grid">
+                    <?php foreach ( $presets as $preset_key => $preset ) : ?>
+                        <?php lunara_control_desk_render_oscars_dossier_preset_card( $preset_key, $preset, $active_preset_key ); ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="lunara-control-desk-oscars-grid">
+                <div class="lunara-control-desk-homepage-card">
+                    <div class="lunara-control-desk-card-head">
+                        <div>
+                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Editorial Dossier', 'lunara-film' ); ?></p>
+                            <h3><?php esc_html_e( 'Density, ceremony rhythm, profiles, and write-ups', 'lunara-film' ); ?></h3>
+                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'These controls change presentation only. They do not mutate Oscar result data, route slugs, write-up status, or source metadata.', 'lunara-film' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="lunara-control-desk-homepage-choice-grid">
+                        <?php foreach ( lunara_control_desk_oscars_dossier_select_specs() as $key => $spec ) : ?>
+                            <?php lunara_control_desk_render_oscars_dossier_select_control( $key, $spec ); ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="lunara-control-desk-homepage-card">
+                    <div class="lunara-control-desk-card-head">
+                        <div>
+                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Geometry', 'lunara-film' ); ?></p>
+                            <h3><?php esc_html_e( 'Spacing and responsive card width', 'lunara-film' ); ?></h3>
+                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Values clamp server-side so the ledger can become denser without causing mobile overflow or dead ledger space.', 'lunara-film' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="lunara-control-desk-homepage-number-grid">
+                        <?php foreach ( lunara_control_desk_oscars_dossier_number_specs() as $key => $spec ) : ?>
+                            <?php lunara_control_desk_render_oscars_dossier_number_control( $key, $spec ); ?>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="lunara-control-desk-oscars-preview-grid">
+                        <?php foreach ( $preview_routes as $route ) : ?>
+                            <?php $mobile_url = add_query_arg( 'lunara-width', '390', $route['url'] ); ?>
+                            <span>
+                                <strong><?php echo esc_html( $route['label'] ); ?></strong>
+                                <a href="<?php echo esc_url( $route['url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Desktop', 'lunara-film' ); ?></a>
+                                <a href="<?php echo esc_url( $mobile_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '390px', 'lunara-film' ); ?></a>
+                            </span>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lunara-control-desk-homepage-footer">
+                <div>
+                    <strong><?php esc_html_e( 'Preview after saving', 'lunara-film' ); ?></strong>
+                    <span><?php esc_html_e( 'Check the portal, a ceremony dossier, Best Picture, one title file, and one person file after each change.', 'lunara-film' ); ?></span>
+                </div>
+                <div class="lunara-control-desk-actions">
+                    <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Oscars Dossier Studio', 'lunara-film' ); ?></button>
+                    <a class="button" href="<?php echo esc_url( home_url( '/oscars/ceremony/98/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Ceremony', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( home_url( '/oscars/category/best-picture/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Best Picture', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( home_url( '/oscars/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Oscars Portal', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', home_url( '/oscars/ceremony/98/' ) ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '390px', 'lunara-film' ); ?></a>
+                </div>
+            </div>
+        </form>
+    </section>
+    <?php
+}
+
 function lunara_control_desk_render_journal_archive_select_control( $key, $spec ) {
     $value     = lunara_control_desk_journal_archive_select_value( $key );
     $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
@@ -7941,6 +8595,16 @@ function lunara_control_desk_theme_studio_command_index_items() {
             'next'               => __( 'Next frontier: older Oscars poster chambers and route-family image backlog triage.', 'lunara-film' ),
         ),
         array(
+            'label'              => __( 'Oscars Dossier Studio', 'lunara-film' ),
+            'status'             => __( 'Live controls', 'lunara-film' ),
+            'surface'            => __( 'Premium historical ledger', 'lunara-film' ),
+            'affects'            => __( 'Ceremony dossiers, Best Picture/category pages, title files, person files, write-up prominence, and major-race rhythm.', 'lunara-film' ),
+            'anchor'             => '#lunara-theme-studio-oscars-dossier-studio',
+            'preview_url'        => home_url( '/oscars/ceremony/98/' ),
+            'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/oscars/ceremony/98/' ) ),
+            'next'               => __( 'Next frontier: per-route poster and backdrop focus controls plus ceremony major-race editorial packets.', 'lunara-film' ),
+        ),
+        array(
             'label'              => __( 'Oscar Facts', 'lunara-film' ),
             'status'             => __( 'Signature lane', 'lunara-film' ),
             'surface'            => __( 'Homepage carousel', 'lunara-film' ),
@@ -8587,6 +9251,7 @@ function lunara_control_desk_render_theme_studio_tab() {
         <?php lunara_control_desk_render_journal_archive_studio(); ?>
         <?php lunara_control_desk_render_reviews_archive_studio(); ?>
         <?php lunara_control_desk_render_review_single_studio(); ?>
+        <?php lunara_control_desk_render_oscars_dossier_studio(); ?>
         <?php lunara_control_desk_render_image_quality_console(); ?>
         <div class="lunara-control-desk-studio-nav" aria-label="<?php echo esc_attr__( 'Theme Studio groups', 'lunara-film' ); ?>">
             <?php foreach ( $groups as $group ) : ?>
@@ -10663,6 +11328,18 @@ function lunara_control_desk_render_notice() {
         'review_single_studio_forbidden' => array(
             'class'   => 'notice-error',
             'message' => __( 'You can view the Control Desk, but changing Review Single Studio controls requires theme editing permission.', 'lunara-film' ),
+        ),
+        'oscars_dossier_studio_saved' => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Oscars Dossier Studio saved. Ceremony, category, title, and person routes now read the updated route-family rhythm.', 'lunara-film' ),
+        ),
+        'oscars_dossier_preset_applied' => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Oscars Dossier Studio preset applied. The selected historical-ledger package now drives the saved Oscars rhythm.', 'lunara-film' ),
+        ),
+        'oscars_dossier_studio_forbidden' => array(
+            'class'   => 'notice-error',
+            'message' => __( 'You can view the Control Desk, but changing Oscars Dossier Studio controls requires theme editing permission.', 'lunara-film' ),
         ),
         'journal_archive_studio_saved' => array(
             'class'   => 'notice-success',
