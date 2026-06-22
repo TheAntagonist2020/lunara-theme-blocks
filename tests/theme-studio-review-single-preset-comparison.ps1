@@ -57,8 +57,8 @@ foreach ($label in @(
 Assert-True ($controlDesk -match 'lunara_control_desk_review_single_preset_specs\(\)') 'Comparison strip must reuse the existing Review Single preset specs.'
 Assert-True ($controlDesk -match "__\(\s*'Default'\s*,\s*'lunara-film'\s*\)") 'Comparison strip must have a Default fallback for missing preset values.'
 Assert-True ($controlDesk -match 'esc_html') 'Comparison strip output must escape labels and values.'
-Assert-True ($controlDesk -match "lunara_control_desk_review_single_preset_preview_url\(\s*'/review/sinners-2025/'") 'Sinners preset preview links must use the singular Review smoke-test path.'
-Assert-True ($controlDesk -notmatch "lunara_control_desk_review_single_preset_preview_url\(\s*'/reviews/sinners-2025/'") 'Sinners preset preview links must not use the old plural Review sample path.'
+Assert-True ($controlDesk -match "lunara_control_desk_review_single_preset_preview_url\(\s*'/reviews/sinners-2025/'") 'Sinners preset preview links must use the canonical Review route.'
+Assert-True ($controlDesk -notmatch "lunara_control_desk_review_single_preset_preview_url\(\s*'/review/sinners-2025/'") 'Sinners preset preview links must not use the broken singular Review sample path.'
 Assert-True ($controlDesk -notmatch 'lunara-review-compare') 'Comparison strip must not introduce a new public comparison query variable.'
 Assert-True ($controlDesk -notmatch '<textarea[^>]+lunara_review_single') 'Comparison strip must not expose raw CSS textareas.'
 

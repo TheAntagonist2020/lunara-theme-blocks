@@ -4277,6 +4277,89 @@ function lunara_output_review_archive_authority_css() {
 }
 add_action( 'wp_footer', 'lunara_output_review_archive_authority_css', 5 );
 
+function lunara_review_card_image_focus_position( $value ) {
+    $value = sanitize_key( (string) $value );
+
+    $positions = array(
+        'center-center' => 'center center',
+        'center-top'    => 'center top',
+        'center-bottom' => 'center bottom',
+        'left-center'   => 'left center',
+        'right-center'  => 'right center',
+    );
+
+    return isset( $positions[ $value ] ) ? $positions[ $value ] : $positions['center-center'];
+}
+
+function lunara_review_card_image_focus_setting( $key ) {
+    $allowed = array( 'center-center', 'center-top', 'center-bottom', 'left-center', 'right-center' );
+    $value   = sanitize_key( (string) get_theme_mod( $key, 'center-center' ) );
+
+    if ( ! in_array( $value, $allowed, true ) ) {
+        return 'center-center';
+    }
+
+    return $value;
+}
+
+function lunara_output_review_card_image_focus_css() {
+    if ( is_admin() || is_feed() ) {
+        return;
+    }
+
+    $is_review_focus_surface = is_post_type_archive( 'review' ) || is_page( 'reviews' ) || is_singular( 'review' ) || is_front_page();
+
+    if ( ! $is_review_focus_surface ) {
+        return;
+    }
+
+    $archive_focus = lunara_review_card_image_focus_position( lunara_review_card_image_focus_setting( 'lunara_review_archive_image_focus' ) );
+    $rail_focus    = lunara_review_card_image_focus_position( lunara_review_card_image_focus_setting( 'lunara_review_rail_image_focus' ) );
+    $related_focus = lunara_review_card_image_focus_position( lunara_review_card_image_focus_setting( 'lunara_review_related_image_focus' ) );
+    $feature_focus = lunara_review_card_image_focus_position( lunara_review_card_image_focus_setting( 'lunara_review_feature_image_focus' ) );
+    ?>
+    <style id="lunara-review-card-image-focus-css">
+    body.post-type-archive-review .lunara-review-archive-page,
+    body.page-template-page-reviews .lunara-review-archive-page,
+    body.home .lunara-front-page,
+    body.single-review .lunara-review-single-page {
+        --lunara-review-archive-image-focus: <?php echo esc_html( $archive_focus ); ?>;
+        --lunara-review-rail-image-focus: <?php echo esc_html( $rail_focus ); ?>;
+        --lunara-review-related-image-focus: <?php echo esc_html( $related_focus ); ?>;
+        --lunara-review-feature-image-focus: <?php echo esc_html( $feature_focus ); ?>;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-run-grid .lunara-review-grid-poster,
+    body.page-template-page-reviews .lunara-review-archive-run-grid .lunara-review-grid-poster,
+    body.post-type-archive-review .lunara-review-grid .lunara-review-grid-poster,
+    body.page-template-page-reviews .lunara-review-grid .lunara-review-grid-poster,
+    body.home .lunara-latest-reviews-section .lunara-review-grid-poster {
+        object-position: var(--lunara-review-archive-image-focus) !important;
+    }
+
+    body.post-type-archive-review .lunara-review-archive-rail .lunara-review-grid-poster,
+    body.page-template-page-reviews .lunara-review-archive-rail .lunara-review-grid-poster,
+    body.post-type-archive-review .lunara-review-archive-rail-track .lunara-review-grid-poster,
+    body.page-template-page-reviews .lunara-review-archive-rail-track .lunara-review-grid-poster {
+        object-position: var(--lunara-review-rail-image-focus) !important;
+    }
+
+    body.single-review .lunara-review-related .lunara-review-grid-poster,
+    body.single-review .lunara-review-related-grid .lunara-review-grid-poster {
+        object-position: var(--lunara-review-related-image-focus) !important;
+    }
+
+    body.post-type-archive-review .lunara-review-feature-image,
+    body.page-template-page-reviews .lunara-review-feature-image,
+    body.single-review .lunara-review-feature-image,
+    body.single-review .lunara-review-visual-image {
+        object-position: var(--lunara-review-feature-image-focus) !important;
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_output_review_card_image_focus_css', 1009 );
+
 /**
  * Public review Debrief polish.
  *

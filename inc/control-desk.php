@@ -1059,6 +1059,109 @@ function lunara_control_desk_save_reviews_archive_studio() {
 }
 add_action( 'admin_post_lunara_save_reviews_archive_studio', 'lunara_control_desk_save_reviews_archive_studio' );
 
+function lunara_control_desk_review_card_image_focus_options() {
+    return array(
+        'center-center' => array(
+            'label' => __( 'Center', 'lunara-film' ),
+            'copy'  => __( 'Balanced crop focus for most review card art.', 'lunara-film' ),
+        ),
+        'center-top'    => array(
+            'label' => __( 'Top', 'lunara-film' ),
+            'copy'  => __( 'Protect faces, title text, and poster composition near the top.', 'lunara-film' ),
+        ),
+        'center-bottom' => array(
+            'label' => __( 'Bottom', 'lunara-film' ),
+            'copy'  => __( 'Favor lower poster or still composition when the top is empty.', 'lunara-film' ),
+        ),
+        'left-center'   => array(
+            'label' => __( 'Left', 'lunara-film' ),
+            'copy'  => __( 'Hold important figures or title art on the left side.', 'lunara-film' ),
+        ),
+        'right-center'  => array(
+            'label' => __( 'Right', 'lunara-film' ),
+            'copy'  => __( 'Hold important figures or title art on the right side.', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_review_card_image_focus_specs() {
+    $options = lunara_control_desk_review_card_image_focus_options();
+
+    return array(
+        'lunara_review_archive_image_focus' => array(
+            'label'   => __( 'Archive card focus', 'lunara-film' ),
+            'default' => 'center-center',
+            'note'    => __( 'Tunes poster crops in the main Reviews archive run and shared review-card grids.', 'lunara-film' ),
+            'options' => $options,
+        ),
+        'lunara_review_rail_image_focus'    => array(
+            'label'   => __( 'Companion rail focus', 'lunara-film' ),
+            'default' => 'center-center',
+            'note'    => __( 'Tunes crops inside the moving companion rail on the Reviews archive.', 'lunara-film' ),
+            'options' => $options,
+        ),
+        'lunara_review_related_image_focus' => array(
+            'label'   => __( 'Related card focus', 'lunara-film' ),
+            'default' => 'center-center',
+            'note'    => __( 'Tunes related-review crops below single Review packages.', 'lunara-film' ),
+            'options' => $options,
+        ),
+        'lunara_review_feature_image_focus' => array(
+            'label'   => __( 'Feature image focus', 'lunara-film' ),
+            'default' => 'center-center',
+            'note'    => __( 'Tunes lead, feature, and hero-like Review image chambers without changing the source art.', 'lunara-film' ),
+            'options' => $options,
+        ),
+    );
+}
+
+function lunara_control_desk_review_card_image_focus_value( $key ) {
+    $specs = lunara_control_desk_review_card_image_focus_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 'center-center';
+    }
+
+    $value = sanitize_key( (string) get_theme_mod( $key, $specs[ $key ]['default'] ) );
+
+    if ( ! isset( $specs[ $key ]['options'][ $value ] ) ) {
+        return (string) $specs[ $key ]['default'];
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_save_review_card_image_focus_controls() {
+    $redirect = lunara_control_desk_admin_url(
+        array(
+            'tab' => 'theme-studio',
+        )
+    ) . '#lunara-theme-studio-review-card-image-focus';
+
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        wp_safe_redirect( add_query_arg( 'lunara_notice', 'review_card_image_focus_forbidden', $redirect ) );
+        exit;
+    }
+
+    check_admin_referer( 'lunara_save_review_card_image_focus_controls', 'lunara_review_card_image_focus_nonce' );
+
+    $raw_selects = isset( $_POST['lunara_review_card_image_focus_select'] ) && is_array( $_POST['lunara_review_card_image_focus_select'] )
+        ? wp_unslash( $_POST['lunara_review_card_image_focus_select'] )
+        : array();
+
+    foreach ( lunara_control_desk_review_card_image_focus_specs() as $key => $spec ) {
+        $value = isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'];
+        if ( ! isset( $spec['options'][ $value ] ) ) {
+            $value = (string) $spec['default'];
+        }
+        set_theme_mod( $key, $value );
+    }
+
+    wp_safe_redirect( add_query_arg( 'lunara_notice', 'review_card_image_focus_saved', $redirect ) );
+    exit;
+}
+add_action( 'admin_post_lunara_save_review_card_image_focus_controls', 'lunara_control_desk_save_review_card_image_focus_controls' );
+
 function lunara_control_desk_review_single_select_specs() {
     return array(
         'lunara_review_single_density'             => array(
@@ -7220,6 +7323,94 @@ function lunara_control_desk_render_reviews_archive_studio() {
     <?php
 }
 
+function lunara_control_desk_render_review_card_image_focus_control( $key, $spec ) {
+    $value     = lunara_control_desk_review_card_image_focus_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <fieldset class="lunara-control-desk-homepage-choice">
+        <legend>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </legend>
+        <div class="lunara-control-desk-homepage-choice-options">
+            <?php foreach ( $spec['options'] as $option_key => $option ) : ?>
+                <label class="<?php echo $value === $option_key ? 'is-selected' : ''; ?>">
+                    <input
+                        type="radio"
+                        name="lunara_review_card_image_focus_select[<?php echo esc_attr( $key ); ?>]"
+                        value="<?php echo esc_attr( $option_key ); ?>"
+                        <?php checked( $value, $option_key ); ?>
+                    />
+                    <span>
+                        <strong><?php echo esc_html( $option['label'] ); ?></strong>
+                        <small><?php echo esc_html( $option['copy'] ); ?></small>
+                    </span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+    </fieldset>
+    <?php
+}
+
+function lunara_control_desk_render_review_card_image_focus_controls() {
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        ?>
+        <section id="lunara-theme-studio-review-card-image-focus" class="lunara-control-desk-homepage-studio">
+            <div class="lunara-control-desk-panel-header">
+                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Review Card Image Focus', 'lunara-film' ); ?></p>
+                <h3><?php esc_html_e( 'Review card focus controls require theme editing permission', 'lunara-film' ); ?></h3>
+                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'The public review cards remain visible, but crop-focus controls are limited to administrators.', 'lunara-film' ); ?></p>
+            </div>
+        </section>
+        <?php
+        return;
+    }
+    ?>
+    <section id="lunara-theme-studio-review-card-image-focus" class="lunara-control-desk-homepage-studio">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Review Card Image Focus', 'lunara-film' ); ?></p>
+            <h3><?php esc_html_e( 'Crop focus for review cards and feature chambers', 'lunara-film' ); ?></h3>
+            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Tune how existing Review art sits inside public card chambers. These controls never change source images, Review fields, trailers, spoilers, Debrief, or Pair It With data.', 'lunara-film' ); ?></p>
+        </div>
+        <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+            <input type="hidden" name="action" value="lunara_save_review_card_image_focus_controls" />
+            <?php wp_nonce_field( 'lunara_save_review_card_image_focus_controls', 'lunara_review_card_image_focus_nonce' ); ?>
+
+            <div class="lunara-control-desk-homepage-card">
+                <div class="lunara-control-desk-card-head">
+                    <div>
+                        <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Image Authority', 'lunara-film' ); ?></p>
+                        <h3><?php esc_html_e( 'Keep the art sharp without stretching it', 'lunara-film' ); ?></h3>
+                        <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Use these after selecting high-quality art: archive and homepage cards stay 3:4, related cards stay in their card chamber, and feature images keep their existing source priority.', 'lunara-film' ); ?></p>
+                    </div>
+                </div>
+                <div class="lunara-control-desk-homepage-choice-grid">
+                    <?php foreach ( lunara_control_desk_review_card_image_focus_specs() as $key => $spec ) : ?>
+                        <?php lunara_control_desk_render_review_card_image_focus_control( $key, $spec ); ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="lunara-control-desk-homepage-footer">
+                <div>
+                    <strong><?php esc_html_e( 'Preview after saving', 'lunara-film' ); ?></strong>
+                    <span><?php esc_html_e( 'Check archive cards, moving rail cards, homepage review cards, and related cards before calling the image pass clean.', 'lunara-film' ); ?></span>
+                </div>
+                <div class="lunara-control-desk-actions">
+                    <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Review Card Image Focus', 'lunara-film' ); ?></button>
+                    <a class="button" href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Reviews Desktop', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', home_url( '/reviews/' ) ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Reviews 390px', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( home_url( '/reviews/sinners-2025/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Review Single', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( home_url( '/reviews/bugonia-the-full-spoiler/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Spoiler Review', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( home_url( '/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Homepage', 'lunara-film' ); ?></a>
+                </div>
+            </div>
+        </form>
+    </section>
+    <?php
+}
+
 function lunara_control_desk_render_review_single_select_control( $key, $spec ) {
     $value     = lunara_control_desk_review_single_select_value( $key );
     $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
@@ -7435,8 +7626,8 @@ function lunara_control_desk_render_review_single_preset_card( $preset_key, $pre
             <button type="submit" class="button" name="lunara_review_single_preset" value="<?php echo esc_attr( $preset_key ); ?>">
                 <?php echo esc_html( $is_active ? __( 'Reapply preset', 'lunara-film' ) : __( 'Apply preset', 'lunara-film' ) ); ?>
             </button>
-            <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/review/sinners-2025/', $preset_key ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners preview', 'lunara-film' ); ?></a>
-            <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/review/sinners-2025/', $preset_key, true ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '390px', 'lunara-film' ); ?></a>
+        <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/reviews/sinners-2025/', $preset_key ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners preview', 'lunara-film' ); ?></a>
+        <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/reviews/sinners-2025/', $preset_key, true ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '390px', 'lunara-film' ); ?></a>
             <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/reviews/bugonia-the-full-spoiler/', $preset_key ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Spoiler preview', 'lunara-film' ); ?></a>
         </div>
     </fieldset>
@@ -7531,8 +7722,8 @@ function lunara_control_desk_render_review_single_studio() {
                 </div>
                 <div class="lunara-control-desk-actions">
                     <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Review Single Studio', 'lunara-film' ); ?></button>
-                    <a class="button" href="<?php echo esc_url( home_url( '/review/sinners-2025/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners Desktop', 'lunara-film' ); ?></a>
-                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', home_url( '/review/sinners-2025/' ) ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners 390px', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( home_url( '/reviews/sinners-2025/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners Desktop', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', home_url( '/reviews/sinners-2025/' ) ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners 390px', 'lunara-film' ); ?></a>
                     <a class="button" href="<?php echo esc_url( home_url( '/reviews/bugonia-the-full-spoiler/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Spoiler Review', 'lunara-film' ); ?></a>
                     <a class="button" href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Reviews Archive', 'lunara-film' ); ?></a>
                 </div>
@@ -9790,8 +9981,8 @@ function lunara_control_desk_theme_studio_command_index_items() {
             'surface'            => __( 'Private visual QA', 'lunara-film' ),
             'affects'            => __( 'Review card sources, Journal hero sources, Oscar Fact visuals, near-target approvals, and visual readiness lanes.', 'lunara-film' ),
             'anchor'             => '#lunara-theme-studio-image-quality',
-            'preview_url'        => home_url( '/review/sinners-2025/' ),
-            'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/review/sinners-2025/' ) ),
+            'preview_url'        => home_url( '/reviews/sinners-2025/' ),
+            'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/reviews/sinners-2025/' ) ),
             'next'               => __( 'Next frontier: older Oscars poster chambers and route-family image backlog triage.', 'lunara-film' ),
         ),
         array(
@@ -10450,6 +10641,7 @@ function lunara_control_desk_render_theme_studio_tab() {
         <?php lunara_control_desk_render_homepage_studio(); ?>
         <?php lunara_control_desk_render_journal_archive_studio(); ?>
         <?php lunara_control_desk_render_reviews_archive_studio(); ?>
+        <?php lunara_control_desk_render_review_card_image_focus_controls(); ?>
         <?php lunara_control_desk_render_review_single_studio(); ?>
         <?php lunara_control_desk_render_utility_search_studio(); ?>
         <?php lunara_control_desk_render_oscars_dossier_studio(); ?>
@@ -12517,6 +12709,14 @@ function lunara_control_desk_render_notice() {
         'reviews_archive_studio_forbidden' => array(
             'class'   => 'notice-error',
             'message' => __( 'You can view the Control Desk, but changing Reviews Archive Studio controls requires theme editing permission.', 'lunara-film' ),
+        ),
+        'review_card_image_focus_saved' => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Review Card Image Focus saved. Review card crops now read the updated focus values.', 'lunara-film' ),
+        ),
+        'review_card_image_focus_forbidden' => array(
+            'class'   => 'notice-error',
+            'message' => __( 'You can view the Control Desk, but changing Review Card Image Focus controls requires theme editing permission.', 'lunara-film' ),
         ),
         'review_single_studio_saved' => array(
             'class'   => 'notice-success',
