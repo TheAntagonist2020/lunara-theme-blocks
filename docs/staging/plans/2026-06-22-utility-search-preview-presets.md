@@ -20,7 +20,7 @@ files: `inc/frontend.php`, `search.php`, `404.php`
 acceptance: Focused preset contract passes for admin-only preview guards and public route scoping.
 spec: `docs/staging/specs/2026-06-22-utility-search-preview-presets.md#public-surface`
 
-- [ ] T4: Verify, deploy, document, and push.
+- [x] T4: Verify, deploy, document, and push.
 goal: Ship the preset layer with lint, hashes, cache flush, route smoke, evidence, continuity docs, and GitHub commits.
 files: `LUNARA_WORLD_CHANGELOG.md`, `09_DOCS_AND_NOTES\SESSION-LOG-2026-06-22.md`, `09_DOCS_AND_NOTES\LUNARA_WEBSITE_HANDOFF.md`
 acceptance: Public smoke confirms anonymous preset query does not leak private controls, Utility CSS stays Search/404-only, and evidence is saved under `10_VISUAL_EVIDENCE`.
