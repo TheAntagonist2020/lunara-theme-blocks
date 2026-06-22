@@ -35,6 +35,20 @@ function lunara_get_home_section_registry() {
             'description'  => __( 'The mixed editorial lane for journal entries, essays, reactions, and audio.', 'lunara-film' ),
             'aliases'      => array( 'dispatches', 'journal' ),
         ),
+        'oscar-picks' => array(
+            'label'        => __( 'Oscar Picks', 'lunara-film' ),
+            'toggle_label' => __( 'Show Oscar Picks', 'lunara-film' ),
+            'setting'      => 'lunara_home_show_oscar_picks',
+            'description'  => __( 'The editorial Oscar picks carousel and awards-season prediction lane.', 'lunara-film' ),
+            'aliases'      => array( 'oscar-pick', 'picks' ),
+        ),
+        'oscar-facts' => array(
+            'label'        => __( 'Oscar Facts', 'lunara-film' ),
+            'toggle_label' => __( 'Show Oscar Facts', 'lunara-film' ),
+            'setting'      => 'lunara_home_show_oscar_facts',
+            'description'  => __( 'The rotating Oscar facts and film-history signature lane.', 'lunara-film' ),
+            'aliases'      => array( 'oscar-fact', 'facts' ),
+        ),
         'oscar-spotlight' => array(
             'label'        => __( 'Oscar Spotlight', 'lunara-film' ),
             'toggle_label' => __( 'Show Oscar Spotlight', 'lunara-film' ),

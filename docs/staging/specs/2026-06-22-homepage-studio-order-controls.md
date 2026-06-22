@@ -16,4 +16,4 @@ test: PHP lint `inc\control-desk.php` and `functions.php` if touched.
 
 test: `/`, `/journal/`, `/reviews/`, `/reviews/sinners-2025/`, and `/oscars/` return 200 after deploy, with no Control Desk/admin leakage.
 
-deferred: Drag-and-drop custom section ordering, per-breakpoint section ordering, and full homepage block migration out of Gutenberg.
+deferred: Drag-and-drop custom section ordering, freeform per-breakpoint order editing, and full homepage block migration out of Gutenberg.

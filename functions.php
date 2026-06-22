@@ -452,6 +452,34 @@ function lunara_get_home_section_order_map() {
 }
 
 /**
+ * Resolve mobile homepage section order into a slug => order map.
+ */
+if ( ! function_exists( 'lunara_get_home_section_mobile_order_map' ) ) {
+function lunara_get_home_section_mobile_order_map() {
+    $defaults = lunara_get_home_section_slugs();
+    $fallback = array( 'hero', 'dispatch', 'latest-reviews', 'oscar-picks', 'oscar-facts', 'featured', 'oscar-spotlight', 'database', 'ledger', 'deep-cuts' );
+    $raw      = (string) get_theme_mod( 'lunara_home_section_mobile_order', implode( ',', $fallback ) );
+    $ordered  = explode( ',', lunara_sanitize_home_section_order( $raw ) );
+
+    foreach ( $defaults as $default_slug ) {
+        if ( '' !== $default_slug && ! in_array( $default_slug, $ordered, true ) ) {
+            $ordered[] = $default_slug;
+        }
+    }
+
+    $map = array();
+    foreach ( $ordered as $index => $slug ) {
+        if ( '' === $slug ) {
+            continue;
+        }
+        $map[ $slug ] = $index + 1;
+    }
+
+    return $map;
+}
+}
+
+/**
  * Sanitize a comma-separated order string against a known list of tokens.
  */
 function lunara_sanitize_token_order( $value, $recognized ) {
@@ -1944,6 +1972,7 @@ function lunara_output_runtime_customizer_css() {
     $mobile_home_pad   = min( $home_side_pad, 24 );
     $mobile_shell_pad  = min( $shell_pad, 24 );
     $section_order     = lunara_get_home_section_order_map();
+    $mobile_order      = lunara_get_home_section_mobile_order_map();
     $css               = '';
 
     $css .= ':root{';
@@ -2036,6 +2065,15 @@ function lunara_output_runtime_customizer_css() {
     foreach ( lunara_get_home_section_slugs() as $slug ) {
         $order = isset( $section_order[ $slug ] ) ? intval( $section_order[ $slug ] ) : 99;
         $css  .= '.lunara-front-page > .lunara-home-slot-' . $slug . '{order:' . $order . ';}';
+    }
+
+    $mobile_order_css = '';
+    foreach ( lunara_get_home_section_slugs() as $slug ) {
+        $order             = isset( $mobile_order[ $slug ] ) ? intval( $mobile_order[ $slug ] ) : 99;
+        $mobile_order_css .= '.lunara-front-page > .lunara-home-slot-' . $slug . '{order:' . $order . ';}';
+    }
+    if ( '' !== $mobile_order_css ) {
+        $css .= '@media(max-width:820px){' . $mobile_order_css . '}';
     }
 
     if ( ! get_theme_mod( 'lunara_show_logo', true ) ) {

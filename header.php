@@ -185,20 +185,19 @@
             gap: clamp(48px, 6vw, 86px) !important;
         }
 
-        body.home .lunara-home-slot-hero { order: 1 !important; }
-        body.home .lunara-home-slot-latest-reviews { order: 2 !important; }
-        body.home .lunara-home-slot-dispatch { order: 3 !important; }
-        body.home .lunara-home-slot-oscar-picks { order: 4 !important; }
-        body.home .lunara-home-slot-oscar-facts { order: 5 !important; }
-        body.home .lunara-home-slot-featured { order: 6 !important; }
-        body.home .lunara-home-slot-oscar-spotlight { order: 7 !important; }
-        body.home .lunara-home-slot-database { order: 8 !important; }
-        body.home .lunara-home-slot-ledger { order: 9 !important; }
-        body.home .lunara-home-slot-deep-cuts { order: 10 !important; }
+        <?php
+        $lunara_home_sections     = function_exists( 'lunara_get_home_section_slugs' ) ? lunara_get_home_section_slugs() : array();
+        $lunara_home_order_map    = function_exists( 'lunara_get_home_section_order_map' ) ? lunara_get_home_section_order_map() : array();
+        $lunara_home_mobile_order = function_exists( 'lunara_get_home_section_mobile_order_map' ) ? lunara_get_home_section_mobile_order_map() : $lunara_home_order_map;
+        ?>
+        <?php foreach ( $lunara_home_sections as $lunara_home_section_slug ) : ?>
+            body.home .lunara-home-slot-<?php echo esc_html( sanitize_html_class( $lunara_home_section_slug ) ); ?> { order: <?php echo esc_html( isset( $lunara_home_order_map[ $lunara_home_section_slug ] ) ? absint( $lunara_home_order_map[ $lunara_home_section_slug ] ) : 99 ); ?> !important; }
+        <?php endforeach; ?>
 
         @media (max-width: 820px) {
-            body.home .lunara-home-slot-dispatch { order: 2 !important; }
-            body.home .lunara-home-slot-latest-reviews { order: 3 !important; }
+            <?php foreach ( $lunara_home_sections as $lunara_home_section_slug ) : ?>
+                body.home .lunara-home-slot-<?php echo esc_html( sanitize_html_class( $lunara_home_section_slug ) ); ?> { order: <?php echo esc_html( isset( $lunara_home_mobile_order[ $lunara_home_section_slug ] ) ? absint( $lunara_home_mobile_order[ $lunara_home_section_slug ] ) : 99 ); ?> !important; }
+            <?php endforeach; ?>
         }
 
         body.home .lunara-front-page > .lunara-home-section,
