@@ -1059,6 +1059,280 @@ function lunara_control_desk_save_reviews_archive_studio() {
 }
 add_action( 'admin_post_lunara_save_reviews_archive_studio', 'lunara_control_desk_save_reviews_archive_studio' );
 
+function lunara_control_desk_review_single_select_specs() {
+    return array(
+        'lunara_review_single_density'             => array(
+            'label'   => __( 'Review package density', 'lunara-film' ),
+            'default' => 'editorial',
+            'note'    => __( 'Controls the total single-review rhythm: body, rail, Debrief, and retention lanes.', 'lunara-film' ),
+            'options' => array(
+                'compact'   => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'A tighter criticism package when the review should move quickly.', 'lunara-film' ),
+                ),
+                'editorial' => array(
+                    'label' => __( 'Editorial', 'lunara-film' ),
+                    'copy'  => __( 'The default authority package: dense, readable, and visually held.', 'lunara-film' ),
+                ),
+                'feature'   => array(
+                    'label' => __( 'Feature', 'lunara-film' ),
+                    'copy'  => __( 'A roomier read for marquee reviews with stronger modules.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_review_single_hero_scale'          => array(
+            'label'   => __( 'Hero image scale', 'lunara-film' ),
+            'default' => 'standard',
+            'note'    => __( 'Tunes how forcefully the visual lead enters before the criticism.', 'lunara-film' ),
+            'options' => array(
+                'standard'       => array(
+                    'label' => __( 'Standard', 'lunara-film' ),
+                    'copy'  => __( 'Balanced hero sizing for most reviews.', 'lunara-film' ),
+                ),
+                'poster-forward' => array(
+                    'label' => __( 'Poster Forward', 'lunara-film' ),
+                    'copy'  => __( 'Keeps poster-led reviews crisp without stretching them wide.', 'lunara-film' ),
+                ),
+                'wide-forward'   => array(
+                    'label' => __( 'Wide Forward', 'lunara-film' ),
+                    'copy'  => __( 'Gives backdrop and trailer-friendly reviews a stronger cinematic chamber.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_review_single_rail_mode'           => array(
+            'label'   => __( 'Right rail mode', 'lunara-film' ),
+            'default' => 'balanced',
+            'note'    => __( 'Controls how much supporting metadata competes with the review body.', 'lunara-film' ),
+            'options' => array(
+                'balanced'         => array(
+                    'label' => __( 'Balanced', 'lunara-film' ),
+                    'copy'  => __( 'Ledger, watch, details, and archive actions share the rail evenly.', 'lunara-film' ),
+                ),
+                'minimal'          => array(
+                    'label' => __( 'Minimal', 'lunara-film' ),
+                    'copy'  => __( 'A calmer rail when the criticism should dominate.', 'lunara-film' ),
+                ),
+                'metadata-forward' => array(
+                    'label' => __( 'Metadata Forward', 'lunara-film' ),
+                    'copy'  => __( 'Stronger rail framing for Oscar and availability context.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_review_single_debrief_prominence'  => array(
+            'label'   => __( 'Debrief prominence', 'lunara-film' ),
+            'default' => 'standard',
+            'note'    => __( 'Tunes the signature Debrief module without changing Debrief data.', 'lunara-film' ),
+            'options' => array(
+                'standard'        => array(
+                    'label' => __( 'Standard', 'lunara-film' ),
+                    'copy'  => __( 'Balanced Debrief presence below the main review.', 'lunara-film' ),
+                ),
+                'poster-forward'  => array(
+                    'label' => __( 'Poster Forward', 'lunara-film' ),
+                    'copy'  => __( 'Larger poster chamber with more visual confidence.', 'lunara-film' ),
+                ),
+                'signature-forward' => array(
+                    'label' => __( 'Signature Forward', 'lunara-film' ),
+                    'copy'  => __( 'Stronger text-side emphasis for the Lunara Debrief signature.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_review_single_pairing_density'     => array(
+            'label'   => __( 'Pair It With density', 'lunara-film' ),
+            'default' => 'editorial',
+            'note'    => __( 'Tunes the companion pairing lane readers have been responding to.', 'lunara-film' ),
+            'options' => array(
+                'compact'   => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'Tighter pairing cards for a faster after-review scan.', 'lunara-film' ),
+                ),
+                'editorial' => array(
+                    'label' => __( 'Editorial', 'lunara-film' ),
+                    'copy'  => __( 'Default pairing rhythm with strong readability.', 'lunara-film' ),
+                ),
+                'showcase'  => array(
+                    'label' => __( 'Showcase', 'lunara-film' ),
+                    'copy'  => __( 'More room for each recommendation to feel premium.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_review_single_spoiler_treatment'   => array(
+            'label'   => __( 'Spoiler shield treatment', 'lunara-film' ),
+            'default' => 'standard',
+            'note'    => __( 'Controls spoiler-warning emphasis without changing the reveal mechanism.', 'lunara-film' ),
+            'options' => array(
+                'standard'       => array(
+                    'label' => __( 'Standard', 'lunara-film' ),
+                    'copy'  => __( 'Clear spoiler guard with the current editorial styling.', 'lunara-film' ),
+                ),
+                'shield-forward' => array(
+                    'label' => __( 'Shield Forward', 'lunara-film' ),
+                    'copy'  => __( 'A more forceful protection chamber for full-spoiler reviews.', 'lunara-film' ),
+                ),
+                'high-contrast'  => array(
+                    'label' => __( 'High Contrast', 'lunara-film' ),
+                    'copy'  => __( 'Sharper warning treatment for readers who skim.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_review_single_trailer_prominence'  => array(
+            'label'   => __( 'Trailer prominence', 'lunara-film' ),
+            'default' => 'standard',
+            'note'    => __( 'Tunes the embedded trailer chamber while preserving trailer placement rules.', 'lunara-film' ),
+            'options' => array(
+                'standard' => array(
+                    'label' => __( 'Standard', 'lunara-film' ),
+                    'copy'  => __( 'Current trailer treatment.', 'lunara-film' ),
+                ),
+                'centered' => array(
+                    'label' => __( 'Centered', 'lunara-film' ),
+                    'copy'  => __( 'Cleaner trade-publication centering for embedded trailers.', 'lunara-film' ),
+                ),
+                'feature'  => array(
+                    'label' => __( 'Feature', 'lunara-film' ),
+                    'copy'  => __( 'A larger trailer chamber when retention matters.', 'lunara-film' ),
+                ),
+            ),
+        ),
+    );
+}
+
+function lunara_control_desk_review_single_select_value( $key ) {
+    $specs = lunara_control_desk_review_single_select_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return '';
+    }
+
+    $value = sanitize_key( (string) get_theme_mod( $key, $specs[ $key ]['default'] ) );
+
+    if ( ! isset( $specs[ $key ]['options'][ $value ] ) ) {
+        return (string) $specs[ $key ]['default'];
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_review_single_number_specs() {
+    return array(
+        'lunara_review_single_section_gap'           => array(
+            'label'   => __( 'Section rhythm', 'lunara-film' ),
+            'default' => 48,
+            'min'     => 24,
+            'max'     => 96,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Space between the hero, body, Debrief, and related review package.', 'lunara-film' ),
+        ),
+        'lunara_review_single_debrief_poster_width'  => array(
+            'label'   => __( 'Debrief poster width', 'lunara-film' ),
+            'default' => 320,
+            'min'     => 220,
+            'max'     => 420,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Maximum poster chamber width inside the Debrief module.', 'lunara-film' ),
+        ),
+        'lunara_review_related_count'                => array(
+            'label'   => __( 'Related review count', 'lunara-film' ),
+            'default' => 4,
+            'min'     => 2,
+            'max'     => 6,
+            'step'    => 1,
+            'unit'    => __( 'cards', 'lunara-film' ),
+            'note'    => __( 'How many related review cards appear after Debrief.', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_review_single_clamp_number( $key, $value ) {
+    $specs = lunara_control_desk_review_single_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    if ( is_array( $value ) ) {
+        $value = reset( $value );
+    }
+
+    $spec  = $specs[ $key ];
+    $value = absint( $value );
+
+    if ( $value < $spec['min'] ) {
+        return absint( $spec['min'] );
+    }
+
+    if ( $value > $spec['max'] ) {
+        return absint( $spec['max'] );
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_review_single_number_value( $key ) {
+    $specs = lunara_control_desk_review_single_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    return lunara_control_desk_review_single_clamp_number(
+        $key,
+        get_theme_mod( $key, $specs[ $key ]['default'] )
+    );
+}
+
+function lunara_control_desk_save_review_single_studio() {
+    $redirect = lunara_control_desk_admin_url(
+        array(
+            'tab' => 'theme-studio',
+        )
+    ) . '#lunara-theme-studio-review-single-studio';
+
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        wp_safe_redirect( add_query_arg( 'lunara_notice', 'review_single_studio_forbidden', $redirect ) );
+        exit;
+    }
+
+    check_admin_referer( 'lunara_save_review_single_studio', 'lunara_review_single_nonce' );
+
+    $raw_selects = isset( $_POST['lunara_review_single_select'] ) && is_array( $_POST['lunara_review_single_select'] )
+        ? wp_unslash( $_POST['lunara_review_single_select'] )
+        : array();
+
+    foreach ( lunara_control_desk_review_single_select_specs() as $key => $spec ) {
+        $value = isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'];
+        if ( ! isset( $spec['options'][ $value ] ) ) {
+            $value = (string) $spec['default'];
+        }
+        set_theme_mod( $key, $value );
+    }
+
+    $raw_numbers = isset( $_POST['lunara_review_single_number'] ) && is_array( $_POST['lunara_review_single_number'] )
+        ? wp_unslash( $_POST['lunara_review_single_number'] )
+        : array();
+    $raw_resets  = isset( $_POST['lunara_review_single_reset'] ) && is_array( $_POST['lunara_review_single_reset'] )
+        ? wp_unslash( $_POST['lunara_review_single_reset'] )
+        : array();
+    $resets      = array_map( 'sanitize_key', array_keys( $raw_resets ) );
+
+    foreach ( lunara_control_desk_review_single_number_specs() as $key => $spec ) {
+        if ( in_array( $key, $resets, true ) ) {
+            remove_theme_mod( $key );
+            continue;
+        }
+
+        if ( array_key_exists( $key, $raw_numbers ) ) {
+            set_theme_mod( $key, (string) lunara_control_desk_review_single_clamp_number( $key, $raw_numbers[ $key ] ) );
+        }
+    }
+
+    wp_safe_redirect( add_query_arg( 'lunara_notice', 'review_single_studio_saved', $redirect ) );
+    exit;
+}
+add_action( 'admin_post_lunara_save_review_single_studio', 'lunara_control_desk_save_review_single_studio' );
+
 function lunara_control_desk_journal_archive_select_specs() {
     return array(
         'lunara_journal_archive_density'         => array(
@@ -5752,6 +6026,156 @@ function lunara_control_desk_render_reviews_archive_studio() {
     <?php
 }
 
+function lunara_control_desk_render_review_single_select_control( $key, $spec ) {
+    $value     = lunara_control_desk_review_single_select_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <fieldset class="lunara-control-desk-homepage-choice">
+        <legend>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </legend>
+        <div class="lunara-control-desk-homepage-choice-options">
+            <?php foreach ( $spec['options'] as $option_key => $option ) : ?>
+                <label class="<?php echo $value === $option_key ? 'is-selected' : ''; ?>">
+                    <input
+                        type="radio"
+                        name="lunara_review_single_select[<?php echo esc_attr( $key ); ?>]"
+                        value="<?php echo esc_attr( $option_key ); ?>"
+                        <?php checked( $value, $option_key ); ?>
+                    />
+                    <span>
+                        <strong><?php echo esc_html( $option['label'] ); ?></strong>
+                        <small><?php echo esc_html( $option['copy'] ); ?></small>
+                    </span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+    </fieldset>
+    <?php
+}
+
+function lunara_control_desk_render_review_single_number_control( $key, $spec ) {
+    $value     = lunara_control_desk_review_single_number_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <label class="lunara-control-desk-homepage-number" data-lunara-brand-number-control>
+        <span>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+        </span>
+        <input
+            type="range"
+            min="<?php echo esc_attr( $spec['min'] ); ?>"
+            max="<?php echo esc_attr( $spec['max'] ); ?>"
+            step="<?php echo esc_attr( $spec['step'] ); ?>"
+            value="<?php echo esc_attr( $value ); ?>"
+            data-lunara-brand-range
+        />
+        <span class="lunara-control-desk-brand-number-value">
+            <input
+                type="number"
+                name="lunara_review_single_number[<?php echo esc_attr( $key ); ?>]"
+                min="<?php echo esc_attr( $spec['min'] ); ?>"
+                max="<?php echo esc_attr( $spec['max'] ); ?>"
+                step="<?php echo esc_attr( $spec['step'] ); ?>"
+                value="<?php echo esc_attr( $value ); ?>"
+                data-lunara-brand-number
+            />
+            <em><?php echo esc_html( $spec['unit'] ); ?></em>
+        </span>
+        <span class="lunara-control-desk-brand-reset">
+            <label>
+                <input type="checkbox" name="lunara_review_single_reset[<?php echo esc_attr( $key ); ?>]" value="1" />
+                <?php
+                printf(
+                    /* translators: %d: setting default value. */
+                    esc_html__( 'Reset to %d', 'lunara-film' ),
+                    absint( $spec['default'] )
+                );
+                ?>
+            </label>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </span>
+    </label>
+    <?php
+}
+
+function lunara_control_desk_render_review_single_studio() {
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        ?>
+        <section id="lunara-theme-studio-review-single-studio" class="lunara-control-desk-homepage-studio">
+            <div class="lunara-control-desk-panel-header">
+                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Review Single Studio', 'lunara-film' ); ?></p>
+                <h3><?php esc_html_e( 'Single Review controls require theme editing permission', 'lunara-film' ); ?></h3>
+                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'The public review package remains visible, but direct single-review rhythm changes are limited to administrators.', 'lunara-film' ); ?></p>
+            </div>
+        </section>
+        <?php
+        return;
+    }
+    ?>
+    <section id="lunara-theme-studio-review-single-studio" class="lunara-control-desk-homepage-studio">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Review Single Studio', 'lunara-film' ); ?></p>
+            <h3><?php esc_html_e( 'Single-review authority package controls', 'lunara-film' ); ?></h3>
+            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Tune the review page as a premium criticism product: hero image, right rail, Debrief, Pair It With, spoilers, trailers, and related reading, all without raw CSS.', 'lunara-film' ); ?></p>
+        </div>
+        <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+            <input type="hidden" name="action" value="lunara_save_review_single_studio" />
+            <?php wp_nonce_field( 'lunara_save_review_single_studio', 'lunara_review_single_nonce' ); ?>
+
+            <div class="lunara-control-desk-homepage-grid">
+                <div class="lunara-control-desk-homepage-card">
+                    <div class="lunara-control-desk-card-head">
+                        <div>
+                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Editorial Package', 'lunara-film' ); ?></p>
+                            <h3><?php esc_html_e( 'Hero, rail, spoilers, trailer, and module emphasis', 'lunara-film' ); ?></h3>
+                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'These controls change how the existing review surfaces read. They do not change Review fields, spoiler state, trailers, Debrief, or Pair It With content.', 'lunara-film' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="lunara-control-desk-homepage-choice-grid">
+                        <?php foreach ( lunara_control_desk_review_single_select_specs() as $key => $spec ) : ?>
+                            <?php lunara_control_desk_render_review_single_select_control( $key, $spec ); ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="lunara-control-desk-homepage-card">
+                    <div class="lunara-control-desk-card-head">
+                        <div>
+                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Geometry', 'lunara-film' ); ?></p>
+                            <h3><?php esc_html_e( 'Spacing, poster chamber, and retention count', 'lunara-film' ); ?></h3>
+                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Every value is clamped server-side so single reviews can get more dynamic without sidebar overlap, empty chambers, or mobile overflow.', 'lunara-film' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="lunara-control-desk-homepage-number-grid">
+                        <?php foreach ( lunara_control_desk_review_single_number_specs() as $key => $spec ) : ?>
+                            <?php lunara_control_desk_render_review_single_number_control( $key, $spec ); ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lunara-control-desk-homepage-footer">
+                <div>
+                    <strong><?php esc_html_e( 'Preview after saving', 'lunara-film' ); ?></strong>
+                    <span><?php esc_html_e( 'Check a standard review, a full-spoiler review, and the archive entry point after each change.', 'lunara-film' ); ?></span>
+                </div>
+                <div class="lunara-control-desk-actions">
+                    <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Review Single Studio', 'lunara-film' ); ?></button>
+                    <a class="button" href="<?php echo esc_url( home_url( '/reviews/sinners-2025/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners Desktop', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', home_url( '/reviews/sinners-2025/' ) ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners 390px', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( home_url( '/reviews/bugonia-the-full-spoiler/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Spoiler Review', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Reviews Archive', 'lunara-film' ); ?></a>
+                </div>
+            </div>
+        </form>
+    </section>
+    <?php
+}
+
 function lunara_control_desk_render_journal_archive_select_control( $key, $spec ) {
     $value     = lunara_control_desk_journal_archive_select_value( $key );
     $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
@@ -7931,6 +8355,7 @@ function lunara_control_desk_render_theme_studio_tab() {
         <?php lunara_control_desk_render_homepage_studio(); ?>
         <?php lunara_control_desk_render_journal_archive_studio(); ?>
         <?php lunara_control_desk_render_reviews_archive_studio(); ?>
+        <?php lunara_control_desk_render_review_single_studio(); ?>
         <?php lunara_control_desk_render_image_quality_console(); ?>
         <div class="lunara-control-desk-studio-nav" aria-label="<?php echo esc_attr__( 'Theme Studio groups', 'lunara-film' ); ?>">
             <?php foreach ( $groups as $group ) : ?>
@@ -9995,6 +10420,14 @@ function lunara_control_desk_render_notice() {
         'reviews_archive_studio_forbidden' => array(
             'class'   => 'notice-error',
             'message' => __( 'You can view the Control Desk, but changing Reviews Archive Studio controls requires theme editing permission.', 'lunara-film' ),
+        ),
+        'review_single_studio_saved' => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Review Single Studio saved. Single-review package rhythm now reads the updated values.', 'lunara-film' ),
+        ),
+        'review_single_studio_forbidden' => array(
+            'class'   => 'notice-error',
+            'message' => __( 'You can view the Control Desk, but changing Review Single Studio controls requires theme editing permission.', 'lunara-film' ),
         ),
         'journal_archive_studio_saved' => array(
             'class'   => 'notice-success',

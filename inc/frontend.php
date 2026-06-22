@@ -6622,6 +6622,282 @@ function lunara_output_review_full_scroll_rhythm_css() {
 add_action( 'wp_head', 'lunara_output_review_full_scroll_rhythm_css', 1007 );
 
 /**
+ * Emit bounded Review Single Studio controls.
+ */
+function lunara_output_review_single_studio_css() {
+    if ( is_admin() || is_feed() || ! is_singular( 'review' ) ) {
+        return;
+    }
+
+    $density = lunara_home_select_setting(
+        'lunara_review_single_density',
+        'editorial',
+        array( 'compact', 'editorial', 'feature' )
+    );
+    $hero_scale = lunara_home_select_setting(
+        'lunara_review_single_hero_scale',
+        'standard',
+        array( 'standard', 'poster-forward', 'wide-forward' )
+    );
+    $rail_mode = lunara_home_select_setting(
+        'lunara_review_single_rail_mode',
+        'balanced',
+        array( 'balanced', 'minimal', 'metadata-forward' )
+    );
+    $debrief_prominence = lunara_home_select_setting(
+        'lunara_review_single_debrief_prominence',
+        'standard',
+        array( 'standard', 'poster-forward', 'signature-forward' )
+    );
+    $pairing_density = lunara_home_select_setting(
+        'lunara_review_single_pairing_density',
+        'editorial',
+        array( 'compact', 'editorial', 'showcase' )
+    );
+    $spoiler_treatment = lunara_home_select_setting(
+        'lunara_review_single_spoiler_treatment',
+        'standard',
+        array( 'standard', 'shield-forward', 'high-contrast' )
+    );
+    $trailer_prominence = lunara_home_select_setting(
+        'lunara_review_single_trailer_prominence',
+        'standard',
+        array( 'standard', 'centered', 'feature' )
+    );
+
+    $section_gap          = lunara_home_brand_number_setting( 'lunara_review_single_section_gap', 48, 24, 96 );
+    $debrief_poster_width = lunara_home_brand_number_setting( 'lunara_review_single_debrief_poster_width', 320, 220, 420 );
+    $related_count        = lunara_home_brand_number_setting( 'lunara_review_related_count', 4, 2, 6 );
+
+    $body_gap_map = array(
+        'compact'   => 28,
+        'editorial' => 40,
+        'feature'   => 56,
+    );
+    $hero_max_map = array(
+        'standard'       => 980,
+        'poster-forward' => 760,
+        'wide-forward'   => 1180,
+    );
+    $rail_width_map = array(
+        'minimal'          => 240,
+        'balanced'         => 286,
+        'metadata-forward' => 334,
+    );
+    $pairing_gap_map = array(
+        'compact'   => 14,
+        'editorial' => 20,
+        'showcase'  => 28,
+    );
+    $related_card_min_map = array(
+        'compact'   => 160,
+        'editorial' => 188,
+        'feature'   => 220,
+    );
+    $related_excerpt_clamp_map = array(
+        'compact'   => 2,
+        'editorial' => 3,
+        'feature'   => 4,
+    );
+
+    $body_gap              = $body_gap_map[ $density ];
+    $hero_max              = $hero_max_map[ $hero_scale ];
+    $rail_width            = $rail_width_map[ $rail_mode ];
+    $pairing_gap           = $pairing_gap_map[ $pairing_density ];
+    $related_card_min      = $related_card_min_map[ $density ];
+    $related_excerpt_clamp = $related_excerpt_clamp_map[ $density ];
+
+    if ( 'signature-forward' === $debrief_prominence ) {
+        $debrief_poster_width = min( 420, $debrief_poster_width + 36 );
+    } elseif ( 'poster-forward' === $debrief_prominence ) {
+        $debrief_poster_width = min( 420, $debrief_poster_width + 18 );
+    }
+
+    if ( $related_count <= 3 ) {
+        $related_card_min = max( $related_card_min, 212 );
+    }
+    ?>
+    <style id="lunara-review-single-studio-css">
+    body.single-review .lunara-review-single-page {
+        --lunara-review-single-section-gap: <?php echo absint( $section_gap ); ?>px;
+        --lunara-review-single-body-gap: <?php echo absint( $body_gap ); ?>px;
+        --lunara-review-single-hero-max: <?php echo absint( $hero_max ); ?>px;
+        --lunara-review-single-rail-width: <?php echo absint( $rail_width ); ?>px;
+        --lunara-review-single-debrief-poster-width: <?php echo absint( $debrief_poster_width ); ?>px;
+        --lunara-review-single-pairing-gap: <?php echo absint( $pairing_gap ); ?>px;
+        --lunara-review-single-related-card-min: <?php echo absint( $related_card_min ); ?>px;
+        --lunara-review-single-related-excerpt-clamp: <?php echo absint( $related_excerpt_clamp ); ?>;
+    }
+
+    body.single-review .lunara-review-single-page {
+        overflow-x: clip !important;
+    }
+
+    body.single-review .lunara-review-single-hero {
+        margin-bottom: var(--lunara-review-single-section-gap) !important;
+    }
+
+    body.single-review .lunara-review-single-body {
+        margin-top: 0 !important;
+        margin-bottom: var(--lunara-review-single-section-gap) !important;
+    }
+
+    body.single-review .lunara-review-single-body-grid {
+        gap: var(--lunara-review-single-body-gap) !important;
+        grid-template-columns: minmax(0, 1fr) minmax(220px, var(--lunara-review-single-rail-width)) !important;
+    }
+
+    body.single-review .lunara-review-single-content {
+        min-width: 0 !important;
+    }
+
+    body.single-review .lunara-review-single-rail {
+        width: min(100%, var(--lunara-review-single-rail-width)) !important;
+        max-width: var(--lunara-review-single-rail-width) !important;
+        min-width: 0 !important;
+    }
+
+    body.single-review .lunara-review-single-rail-sticky {
+        gap: clamp(12px, 1.4vw, 18px) !important;
+    }
+
+    body.single-review .lunara-review-single-cinematic-hero {
+        max-width: var(--lunara-review-single-hero-max) !important;
+        margin-inline: auto !important;
+    }
+
+    body.single-review .lunara-review-single-cinematic-hero .lunara-review-visual,
+    body.single-review .lunara-review-single-cinematic-hero .lunara-review-visual-slot,
+    body.single-review .lunara-review-single-cinematic-hero img {
+        max-width: var(--lunara-review-single-hero-max) !important;
+    }
+
+    body.single-review .lunara-review-single-debrief-section {
+        margin-top: var(--lunara-review-single-section-gap) !important;
+        margin-bottom: var(--lunara-review-single-section-gap) !important;
+    }
+
+    body.single-review .lunara-review-single-debrief-wrap.has-signature-media {
+        grid-template-columns: minmax(220px, var(--lunara-review-single-debrief-poster-width)) minmax(0, 1fr) !important;
+        gap: clamp(18px, 2.4vw, 32px) !important;
+    }
+
+    body.single-review .lunara-review-single-debrief-poster-shell {
+        width: min(100%, var(--lunara-review-single-debrief-poster-width)) !important;
+        max-width: var(--lunara-review-single-debrief-poster-width) !important;
+    }
+
+    body.single-review .lunara-review-single-debrief--pairings {
+        margin-top: var(--lunara-review-single-pairing-gap) !important;
+    }
+
+    body.single-review .lunara-review-related {
+        margin-top: var(--lunara-review-single-section-gap) !important;
+    }
+
+    body.single-review .lunara-review-related .lunara-review-related-grid {
+        grid-template-columns: repeat(auto-fit, minmax(var(--lunara-review-single-related-card-min), 1fr)) !important;
+    }
+
+    body.single-review .lunara-review-related .lunara-review-grid-excerpt {
+        -webkit-line-clamp: var(--lunara-review-single-related-excerpt-clamp) !important;
+        line-clamp: var(--lunara-review-single-related-excerpt-clamp) !important;
+    }
+
+    <?php if ( 'metadata-forward' === $rail_mode ) : ?>
+    body.single-review .lunara-review-single-details,
+    body.single-review .lunara-review-single-rail .lunara-journal-rail-card {
+        padding: clamp(18px, 2vw, 24px) !important;
+        border-color: rgba(224, 196, 129, 0.28) !important;
+        background: linear-gradient(180deg, rgba(20, 35, 49, 0.94), rgba(7, 17, 29, 0.92)) !important;
+    }
+    <?php elseif ( 'minimal' === $rail_mode ) : ?>
+    body.single-review .lunara-review-single-rail .lunara-journal-rail-card {
+        padding: 14px !important;
+    }
+    <?php endif; ?>
+
+    <?php if ( 'signature-forward' === $debrief_prominence ) : ?>
+    body.single-review .lunara-review-single-debrief-section {
+        padding-block: clamp(20px, 3vw, 42px) !important;
+    }
+
+    body.single-review .lunara-review-single-debrief-wrap {
+        border-color: rgba(244, 210, 126, 0.34) !important;
+        box-shadow: 0 34px 70px rgba(0, 0, 0, 0.34) !important;
+    }
+    <?php endif; ?>
+
+    <?php if ( 'showcase' === $pairing_density ) : ?>
+    body.single-review .lunara-review-single-debrief--pairings {
+        padding: clamp(20px, 2.8vw, 34px) !important;
+        border-color: rgba(224, 196, 129, 0.3) !important;
+    }
+    <?php elseif ( 'compact' === $pairing_density ) : ?>
+    body.single-review .lunara-review-single-debrief--pairings {
+        padding: clamp(14px, 1.8vw, 22px) !important;
+    }
+    <?php endif; ?>
+
+    <?php if ( 'shield-forward' === $spoiler_treatment || 'high-contrast' === $spoiler_treatment ) : ?>
+    body.single-review .lunara-full-spoiler-warning,
+    body.single-review .lunara-spoiler-warning {
+        margin-block: clamp(18px, 2.4vw, 30px) !important;
+        border-color: rgba(244, 210, 126, <?php echo 'high-contrast' === $spoiler_treatment ? '0.48' : '0.32'; ?>) !important;
+        background:
+            linear-gradient(135deg, rgba(244, 210, 126, <?php echo 'high-contrast' === $spoiler_treatment ? '0.18' : '0.1'; ?>), rgba(9, 19, 31, 0.92)),
+            rgba(9, 19, 31, 0.94) !important;
+    }
+    <?php endif; ?>
+
+    <?php if ( 'centered' === $trailer_prominence || 'feature' === $trailer_prominence ) : ?>
+    body.single-review .lunara-trailer-module,
+    body.single-review .lunara-review-trailer,
+    body.single-review .lunara-trailer-embed {
+        width: min(100%, <?php echo 'feature' === $trailer_prominence ? '880px' : '720px'; ?>) !important;
+        margin: clamp(20px, 3vw, 38px) auto !important;
+    }
+
+    body.single-review .lunara-trailer-module iframe,
+    body.single-review .lunara-review-trailer iframe,
+    body.single-review .lunara-trailer-embed iframe {
+        width: 100% !important;
+    }
+    <?php endif; ?>
+
+    @media (max-width: 900px) {
+        body.single-review .lunara-review-single-body-grid {
+            display: block !important;
+        }
+
+        body.single-review .lunara-review-single-rail {
+            width: min(100%, 720px) !important;
+            max-width: 720px !important;
+            margin: clamp(24px, 6vw, 44px) auto 0 !important;
+        }
+
+        body.single-review .lunara-review-single-debrief-wrap.has-signature-media {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 520px) {
+        body.single-review .lunara-review-single-page {
+            --lunara-review-single-section-gap: min(<?php echo absint( $section_gap ); ?>px, 42px);
+            --lunara-review-single-body-gap: min(<?php echo absint( $body_gap ); ?>px, 28px);
+        }
+
+        body.single-review .lunara-review-single-debrief-poster-shell {
+            width: min(74vw, 220px) !important;
+            max-width: 220px !important;
+        }
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_output_review_single_studio_css', 1008 );
+
+/**
  * Compact Oscars portal guardrails.
  *
  * The /oscars/ front door inherits several homepage-scale components; keep this
