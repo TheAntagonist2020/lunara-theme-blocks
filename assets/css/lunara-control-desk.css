@@ -1627,19 +1627,55 @@
     text-align: center;
 }
 
+.lunara-control-desk-pairing-source-row {
+    grid-template-columns: 112px minmax(0, 1fr);
+}
+
+.lunara-control-desk-pairing-source-preview {
+    align-items: center;
+    aspect-ratio: 2 / 3;
+    background: #071321;
+    border: 1px solid rgba(155, 118, 45, 0.28);
+    border-radius: 6px;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.lunara-control-desk-pairing-source-preview img {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+.lunara-control-desk-pairing-source-preview span {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 11px;
+    padding: 8px;
+    text-align: center;
+}
+
 .lunara-control-desk-image-row-main {
     display: grid;
     gap: 7px;
     min-width: 0;
 }
 
-.lunara-control-desk-image-row-meta {
+.lunara-control-desk-image-row-meta,
+.lunara-control-desk-pairing-source-meta {
     display: grid;
     gap: 6px;
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.lunara-control-desk-image-row-meta span {
+.lunara-control-desk-pairing-source-meta {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.lunara-control-desk-image-row-meta span,
+.lunara-control-desk-pairing-source-meta span {
     background: #ffffff;
     border: 1px solid var(--lcd-line);
     border-radius: 6px;
@@ -1652,13 +1688,42 @@
     padding: 7px 8px;
 }
 
-.lunara-control-desk-image-row-meta strong {
+.lunara-control-desk-image-row-meta strong,
+.lunara-control-desk-pairing-source-meta strong {
     color: var(--lcd-muted);
     display: block;
     font-size: 10px;
     letter-spacing: 0.04em;
     margin-bottom: 2px;
     text-transform: uppercase;
+}
+
+.lunara-control-desk-pairing-source-warnings {
+    background: #fff8e5;
+    border: 1px solid rgba(219, 166, 23, 0.34);
+    border-radius: 6px;
+    color: #3b3322;
+    font-size: 12px;
+    line-height: 1.35;
+    margin: 0;
+    padding: 8px 8px 8px 24px;
+}
+
+.lunara-control-desk-pairing-source-raw {
+    background: #ffffff;
+    border: 1px dashed rgba(100, 116, 139, 0.42);
+    border-radius: 6px;
+    color: var(--lcd-muted);
+    display: grid;
+    font-size: 12px;
+    gap: 3px;
+    margin: 0;
+    overflow-wrap: anywhere;
+    padding: 8px;
+}
+
+.lunara-control-desk-pairing-source-raw strong {
+    color: var(--lcd-ink);
 }
 
 .lunara-control-desk-image-note {

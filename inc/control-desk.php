@@ -9105,9 +9105,138 @@ function lunara_control_desk_oscar_fact_visual_state( $attachment_id, $target, $
     return lunara_control_desk_image_quality_state( $attachment_id, $target );
 }
 
-function lunara_control_desk_image_quality_rows( $surface, $limit = 8 ) {
+function lunara_control_desk_review_pairing_source_status( $preview, $poster_required = true ) {
+    $preview         = is_array( $preview ) ? $preview : array();
+    $poster_required = (bool) $poster_required;
+    $warnings        = isset( $preview['warnings'] ) && is_array( $preview['warnings'] ) ? $preview['warnings'] : array();
+    $tt              = isset( $preview['tt'] ) ? trim( (string) $preview['tt'] ) : '';
+    $poster          = isset( $preview['poster_html'] ) ? trim( (string) $preview['poster_html'] ) : '';
+    $expected        = isset( $preview['title_base'] ) ? trim( (string) $preview['title_base'] ) : '';
+    $resolved        = isset( $preview['resolved_title'] ) ? trim( (string) $preview['resolved_title'] ) : '';
+
+    if ( '' === $tt ) {
+        $warnings[] = __( 'Missing IMDb title ID. Lock the pairing with a tt-id before trusting poster or link accuracy.', 'lunara-film' );
+    }
+
+    if ( $poster_required && '' === $poster ) {
+        $warnings[] = __( 'No poster resolved for this Pair It With source.', 'lunara-film' );
+    }
+
+    if ( '' !== $expected && '' !== $resolved && function_exists( 'lunara_normalize_title_key' ) && lunara_normalize_title_key( $expected ) !== lunara_normalize_title_key( $resolved ) ) {
+        $warnings[] = __( 'Resolved title differs from the entered Pair It With title.', 'lunara-film' );
+    }
+
+    $warnings = array_values( array_unique( array_filter( array_map( 'trim', $warnings ) ) ) );
+
+    if ( empty( $warnings ) ) {
+        return array(
+            'state'      => 'ready',
+            'label'      => __( 'Pairing source locked', 'lunara-film' ),
+            'note'       => $poster_required ? __( 'IMDb ID, poster, and resolved title agree enough for public review.', 'lunara-film' ) : __( 'IMDb ID and resolved title agree; open Pairing sources to resolve the poster preview.', 'lunara-film' ),
+            'reason'     => 'pairing-locked',
+            'dimensions' => array(
+                'width'  => 0,
+                'height' => 0,
+            ),
+            'warnings'   => array(),
+        );
+    }
+
+    return array(
+        'state'      => 'weak',
+        'label'      => __( 'Needs source review', 'lunara-film' ),
+        'note'       => __( 'Review the expected title, IMDb ID, resolved title, and poster before calling this pairing safe.', 'lunara-film' ),
+        'reason'     => 'pairing-review',
+        'dimensions' => array(
+            'width'  => 0,
+            'height' => 0,
+        ),
+        'warnings'   => $warnings,
+    );
+}
+
+function lunara_control_desk_review_pairing_source_rows( $limit = 80, $resolve_posters = false ) {
+    $limit           = max( 1, min( 160, absint( $limit ) ) );
+    $resolve_posters = (bool) $resolve_posters;
+    $rows            = array();
+
+    if ( ! function_exists( 'lunara_parse_pair_it_with_value' ) ) {
+        return $rows;
+    }
+
+    $posts = get_posts(
+        array(
+            'post_type'      => 'review',
+            'post_status'    => array( 'publish', 'draft', 'pending', 'future' ),
+            'posts_per_page' => $limit,
+            'orderby'        => 'modified',
+            'order'          => 'DESC',
+            'no_found_rows'  => true,
+        )
+    );
+
+    foreach ( $posts as $post ) {
+        $pairings = array(
+            'theme_echo'      => array(
+                'label' => __( 'Theme Echo', 'lunara-film' ),
+                'value' => get_post_meta( $post->ID, '_lunara_theme_echo', true ),
+            ),
+            'counter_program' => array(
+                'label' => __( 'Counter-Program', 'lunara-film' ),
+                'value' => get_post_meta( $post->ID, '_lunara_counter_program', true ),
+            ),
+            'career_context'  => array(
+                'label' => __( 'Career Context', 'lunara-film' ),
+                'value' => function_exists( 'lunara_get_career_context_meta' ) ? lunara_get_career_context_meta( $post->ID ) : get_post_meta( $post->ID, '_lunara_career_context', true ),
+            ),
+        );
+
+        foreach ( $pairings as $slot_key => $pairing ) {
+            $raw = trim( (string) ( $pairing['value'] ?? '' ) );
+            if ( '' === $raw ) {
+                continue;
+            }
+
+            $preview = lunara_parse_pair_it_with_value( $raw, $post->ID, $resolve_posters );
+            $status  = lunara_control_desk_review_pairing_source_status( $preview, $resolve_posters );
+
+            $rows[] = array(
+                'surface'        => __( 'Pair It With source', 'lunara-film' ),
+                'surface_key'    => 'review-pairing',
+                'title'          => get_the_title( $post ),
+                'post_id'        => absint( $post->ID ),
+                'post_status'    => (string) get_post_status( $post ),
+                'status_label'   => lunara_control_desk_post_status_label( $post ),
+                'edit_url'       => get_edit_post_link( $post->ID, '' ),
+                'view_url'       => get_permalink( $post ),
+                'media_url'      => '',
+                'attachment_id'  => 0,
+                'source_label'   => __( 'Debrief Pair It With field', 'lunara-film' ),
+                'status'         => $status,
+                'target'         => array(
+                    'width'  => 2000,
+                    'height' => 3000,
+                ),
+                'pairing_slot'   => $pairing['label'],
+                'pairing_key'    => $slot_key,
+                'expected_title' => isset( $preview['title'] ) && '' !== $preview['title'] ? $preview['title'] : $raw,
+                'resolved_title' => isset( $preview['resolved_title'] ) ? (string) $preview['resolved_title'] : '',
+                'imdb_title_id'  => isset( $preview['tt'] ) ? (string) $preview['tt'] : '',
+                'poster_html'    => isset( $preview['poster_html'] ) ? (string) $preview['poster_html'] : '',
+                'poster_deferred' => ! $resolve_posters,
+                'warnings'       => isset( $status['warnings'] ) && is_array( $status['warnings'] ) ? $status['warnings'] : array(),
+                'raw_value'      => $raw,
+            );
+        }
+    }
+
+    return $rows;
+}
+
+function lunara_control_desk_image_quality_rows( $surface, $limit = 8, $options = array() ) {
     $targets = lunara_control_desk_image_quality_targets();
     $surface = sanitize_key( $surface );
+    $options = is_array( $options ) ? $options : array();
     $limit   = max( 1, min( 48, absint( $limit ) ) );
     $rows    = array();
 
@@ -9215,6 +9344,8 @@ function lunara_control_desk_image_quality_rows( $surface, $limit = 8 ) {
                 'visual_focus'    => $visual_focus,
             );
         }
+    } elseif ( 'review-pairings' === $surface ) {
+        $rows = lunara_control_desk_review_pairing_source_rows( $limit, ! empty( $options['resolve_posters'] ) );
     }
 
     return $rows;
@@ -9307,7 +9438,7 @@ function lunara_control_desk_image_quality_filters() {
         $scope = 'recent';
     }
 
-    if ( ! in_array( $surface, array( 'all', 'editorial', 'review-card', 'journal-hero', 'oscar-fact' ), true ) ) {
+    if ( ! in_array( $surface, array( 'all', 'editorial', 'review-card', 'journal-hero', 'oscar-fact', 'review-pairing' ), true ) ) {
         $surface = 'all';
     }
 
@@ -9341,7 +9472,7 @@ function lunara_control_desk_image_quality_row_matches_filters( $row, $filters )
     $row_status  = isset( $row['post_status'] ) ? sanitize_key( $row['post_status'] ) : '';
     $row_state   = isset( $row['status']['state'] ) ? sanitize_key( $row['status']['state'] ) : 'weak';
 
-    if ( 'editorial' === $surface && ! in_array( $row_surface, array( 'review-card', 'journal-hero' ), true ) ) {
+    if ( 'editorial' === $surface && ! in_array( $row_surface, array( 'review-card', 'journal-hero', 'review-pairing' ), true ) ) {
         return false;
     }
 
@@ -9452,6 +9583,9 @@ function lunara_control_desk_render_image_quality_filter_link( $rows, $filters, 
 
     if ( 'surface' === $group_key ) {
         $overrides['fact_state'] = 'all';
+        if ( 'review-card' !== $value ) {
+            $overrides['scope'] = 'recent';
+        }
     }
 
     $active = isset( $filters[ $group_key ] ) && $filters[ $group_key ] === $value;
@@ -9469,8 +9603,16 @@ function lunara_control_desk_render_image_quality_filter_link( $rows, $filters, 
 }
 
 function lunara_control_desk_render_image_quality_filters( $rows, $filters ) {
-    $visible_count   = count( lunara_control_desk_filter_image_quality_rows( $rows, $filters ) );
-    $fact_lane_rows  = lunara_control_desk_image_quality_rows( 'oscar-facts', 48 );
+    $visible_count           = count( lunara_control_desk_filter_image_quality_rows( $rows, $filters ) );
+    $fact_lane_rows          = lunara_control_desk_image_quality_rows( 'oscar-facts', 48 );
+    $resolve_pairing_posters = isset( $filters['surface'] ) && 'review-pairing' === sanitize_key( $filters['surface'] );
+    $pairing_lane_rows       = lunara_control_desk_image_quality_rows(
+        'review-pairings',
+        $resolve_pairing_posters ? 48 : 16,
+        array(
+            'resolve_posters' => $resolve_pairing_posters,
+        )
+    );
     $fact_lane_reset = array(
         'scope'       => 'recent',
         'surface'     => 'oscar-fact',
@@ -9519,9 +9661,10 @@ function lunara_control_desk_render_image_quality_filters( $rows, $filters ) {
             <section>
                 <h5><?php esc_html_e( 'Surface', 'lunara-film' ); ?></h5>
                 <?php
-                lunara_control_desk_render_image_quality_filter_link( $rows, $filters, 'surface', 'all', __( 'All surfaces', 'lunara-film' ), __( 'Review cards, Journal heroes, and Oscar Facts.', 'lunara-film' ) );
-                lunara_control_desk_render_image_quality_filter_link( $rows, $filters, 'surface', 'editorial', __( 'Editorial surfaces', 'lunara-film' ), __( 'Reviews and Journal only.', 'lunara-film' ) );
+                lunara_control_desk_render_image_quality_filter_link( $rows, $filters, 'surface', 'all', __( 'All surfaces', 'lunara-film' ), __( 'Review cards, Pair It With sources, Journal heroes, and Oscar Facts.', 'lunara-film' ) );
+                lunara_control_desk_render_image_quality_filter_link( $rows, $filters, 'surface', 'editorial', __( 'Editorial surfaces', 'lunara-film' ), __( 'Reviews, Pair It With, and Journal.', 'lunara-film' ) );
                 lunara_control_desk_render_image_quality_filter_link( $rows, $filters, 'surface', 'review-card', __( 'Review cards', 'lunara-film' ), __( 'Archive, homepage, and card art.', 'lunara-film' ) );
+                lunara_control_desk_render_image_quality_filter_link( $rows, $filters, 'surface', 'review-pairing', __( 'Pairing sources', 'lunara-film' ), __( 'Pair It With poster and IMDb locks.', 'lunara-film' ) );
                 lunara_control_desk_render_image_quality_filter_link( $rows, $filters, 'surface', 'journal-hero', __( 'Journal heroes', 'lunara-film' ), __( 'Wide editorial image sources.', 'lunara-film' ) );
                 lunara_control_desk_render_image_quality_filter_link( $rows, $filters, 'surface', 'oscar-fact', __( 'Oscar Facts', 'lunara-film' ), __( 'Homepage fact carousel visuals.', 'lunara-film' ) );
                 ?>
@@ -9581,6 +9724,10 @@ function lunara_control_desk_render_image_quality_filters( $rows, $filters ) {
             <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'scope' => 'review-archive', 'surface' => 'review-card', 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?>">
                 <strong><?php esc_html_e( 'Review archive backlog', 'lunara-film' ); ?></strong>
                 <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( lunara_control_desk_review_archive_image_quality_rows(), array(), array( 'surface' => 'review-card', 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?></span>
+            </a>
+            <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'scope' => 'recent', 'surface' => 'review-pairing', 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?>">
+                <strong><?php esc_html_e( 'Pairing source backlog', 'lunara-film' ); ?></strong>
+                <span><?php echo esc_html( lunara_control_desk_image_quality_filter_count( $pairing_lane_rows, array(), array( 'surface' => 'review-pairing', 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?></span>
             </a>
             <a href="<?php echo esc_url( lunara_control_desk_image_quality_filter_url( $filters, array( 'post_status' => 'publish', 'state' => 'needs', 'fact_state' => 'all' ) ) ); ?>">
                 <strong><?php esc_html_e( 'Published gaps', 'lunara-film' ); ?></strong>
@@ -9741,6 +9888,11 @@ function lunara_control_desk_render_image_source_control( $row ) {
             'css'   => 'center center',
         ),
     );
+
+    if ( 'review-pairing' === $surface ) {
+        return;
+    }
+
     $surfaces      = lunara_control_desk_image_source_surfaces();
     $status        = isset( $row['status'] ) && is_array( $row['status'] ) ? $row['status'] : array();
     $accept_meta_key = lunara_control_desk_image_quality_accept_meta_key( $surface );
@@ -9849,7 +10001,69 @@ function lunara_control_desk_render_image_source_control( $row ) {
     <?php
 }
 
+function lunara_control_desk_render_pairing_source_row( $row ) {
+    $status      = isset( $row['status'] ) && is_array( $row['status'] ) ? $row['status'] : array();
+    $state       = isset( $status['state'] ) ? sanitize_html_class( $status['state'] ) : 'weak';
+    $warnings    = isset( $row['warnings'] ) && is_array( $row['warnings'] ) ? $row['warnings'] : array();
+    $poster_html = isset( $row['poster_html'] ) ? trim( (string) $row['poster_html'] ) : '';
+    $deferred    = ! empty( $row['poster_deferred'] );
+    ?>
+    <article class="lunara-control-desk-image-row lunara-control-desk-pairing-source-row is-<?php echo esc_attr( $state ); ?>">
+        <div class="lunara-control-desk-pairing-source-preview" aria-label="<?php echo esc_attr__( 'Pairing source audit', 'lunara-film' ); ?>">
+            <?php if ( '' !== $poster_html ) : ?>
+                <?php echo wp_kses_post( $poster_html ); ?>
+            <?php elseif ( $deferred ) : ?>
+                <span><?php esc_html_e( 'Poster preview deferred', 'lunara-film' ); ?></span>
+            <?php else : ?>
+                <span><?php esc_html_e( 'No poster', 'lunara-film' ); ?></span>
+            <?php endif; ?>
+        </div>
+        <div class="lunara-control-desk-image-row-main">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Pairing source audit', 'lunara-film' ); ?></p>
+            <h4><?php echo esc_html( isset( $row['title'] ) ? $row['title'] : __( 'Untitled Review', 'lunara-film' ) ); ?></h4>
+            <div class="lunara-control-desk-pairing-source-meta">
+                <span><strong><?php esc_html_e( 'Slot', 'lunara-film' ); ?></strong><?php echo esc_html( isset( $row['pairing_slot'] ) ? $row['pairing_slot'] : '' ); ?></span>
+                <span><strong><?php esc_html_e( 'Expected', 'lunara-film' ); ?></strong><?php echo esc_html( isset( $row['expected_title'] ) ? $row['expected_title'] : '' ); ?></span>
+                <span><strong><?php esc_html_e( 'IMDb', 'lunara-film' ); ?></strong><?php echo esc_html( ! empty( $row['imdb_title_id'] ) ? $row['imdb_title_id'] : __( 'Missing', 'lunara-film' ) ); ?></span>
+                <span><strong><?php esc_html_e( 'Resolved', 'lunara-film' ); ?></strong><?php echo esc_html( ! empty( $row['resolved_title'] ) ? $row['resolved_title'] : __( 'Unknown', 'lunara-film' ) ); ?></span>
+                <span><strong><?php esc_html_e( 'Post status', 'lunara-film' ); ?></strong><?php echo esc_html( isset( $row['status_label'] ) ? $row['status_label'] : __( 'Unknown', 'lunara-film' ) ); ?></span>
+            </div>
+            <p class="lunara-control-desk-image-note">
+                <strong><?php echo esc_html( isset( $status['label'] ) ? $status['label'] : __( 'Needs source review', 'lunara-film' ) ); ?></strong>
+                <?php echo esc_html( isset( $status['note'] ) ? $status['note'] : '' ); ?>
+            </p>
+            <?php if ( ! empty( $warnings ) ) : ?>
+                <ul class="lunara-control-desk-pairing-source-warnings">
+                    <?php foreach ( $warnings as $warning ) : ?>
+                        <li><?php echo esc_html( $warning ); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+            <?php if ( ! empty( $row['raw_value'] ) ) : ?>
+                <p class="lunara-control-desk-pairing-source-raw">
+                    <strong><?php esc_html_e( 'Raw field', 'lunara-film' ); ?></strong>
+                    <span><?php echo esc_html( $row['raw_value'] ); ?></span>
+                </p>
+            <?php endif; ?>
+            <div class="lunara-control-desk-actions">
+                <?php if ( ! empty( $row['edit_url'] ) ) : ?>
+                    <a class="button button-small button-primary" href="<?php echo esc_url( $row['edit_url'] ); ?>"><?php esc_html_e( 'Edit Review', 'lunara-film' ); ?></a>
+                <?php endif; ?>
+                <?php if ( ! empty( $row['view_url'] ) ) : ?>
+                    <a class="button button-small" href="<?php echo esc_url( $row['view_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View Review', 'lunara-film' ); ?></a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </article>
+    <?php
+}
+
 function lunara_control_desk_render_image_quality_row( $row ) {
+    if ( isset( $row['surface_key'] ) && 'review-pairing' === sanitize_key( $row['surface_key'] ) ) {
+        lunara_control_desk_render_pairing_source_row( $row );
+        return;
+    }
+
     $status        = isset( $row['status'] ) && is_array( $row['status'] ) ? $row['status'] : array();
     $state         = isset( $status['state'] ) ? sanitize_html_class( $status['state'] ) : 'weak';
     $dimensions    = isset( $status['dimensions'] ) && is_array( $status['dimensions'] ) ? $status['dimensions'] : array();
@@ -9929,23 +10143,33 @@ function lunara_control_desk_render_image_quality_group( $label, $rows, $empty_m
 }
 
 function lunara_control_desk_render_image_quality_console() {
-    $filters             = lunara_control_desk_image_quality_filters();
-    $scope               = isset( $filters['scope'] ) ? sanitize_key( $filters['scope'] ) : 'recent';
-    $review_rows         = lunara_control_desk_image_quality_rows( 'reviews', 16 );
-    $review_archive_rows = lunara_control_desk_review_archive_image_quality_rows();
-    $journal_rows        = lunara_control_desk_image_quality_rows( 'journal', 16 );
-    $fact_rows           = lunara_control_desk_image_quality_rows( 'oscar-facts', 48 );
+    $filters                 = lunara_control_desk_image_quality_filters();
+    $scope                   = isset( $filters['scope'] ) ? sanitize_key( $filters['scope'] ) : 'recent';
+    $resolve_pairing_posters = isset( $filters['surface'] ) && 'review-pairing' === sanitize_key( $filters['surface'] );
+    $review_rows             = lunara_control_desk_image_quality_rows( 'reviews', 16 );
+    $review_archive_rows     = lunara_control_desk_review_archive_image_quality_rows();
+    $pairing_rows            = lunara_control_desk_image_quality_rows(
+        'review-pairings',
+        $resolve_pairing_posters ? 48 : 16,
+        array(
+            'resolve_posters' => $resolve_pairing_posters,
+        )
+    );
+    $journal_rows            = lunara_control_desk_image_quality_rows( 'journal', 16 );
+    $fact_rows               = lunara_control_desk_image_quality_rows( 'oscar-facts', 48 );
 
     if ( 'review-archive' === $scope ) {
         $all_rows     = $review_archive_rows;
         $filtered     = lunara_control_desk_filter_image_quality_rows( $all_rows, $filters );
         $review_rows  = $filtered;
+        $pairing_rows = array();
         $journal_rows = array();
         $fact_rows    = array();
     } else {
-        $all_rows     = array_merge( $review_rows, $journal_rows, $fact_rows );
+        $all_rows     = array_merge( $review_rows, $pairing_rows, $journal_rows, $fact_rows );
         $filtered     = lunara_control_desk_filter_image_quality_rows( $all_rows, $filters );
         $review_rows  = lunara_control_desk_filter_image_quality_rows( $review_rows, $filters );
+        $pairing_rows = lunara_control_desk_filter_image_quality_rows( $pairing_rows, $filters );
         $journal_rows = lunara_control_desk_filter_image_quality_rows( $journal_rows, $filters );
         $fact_rows    = lunara_control_desk_filter_image_quality_rows( $fact_rows, $filters );
     }
@@ -9964,6 +10188,7 @@ function lunara_control_desk_render_image_quality_console() {
                 <?php lunara_control_desk_render_image_quality_group( __( 'Published Review archive backlog', 'lunara-film' ), $review_rows, __( 'No published Review archive rows match the current filters.', 'lunara-film' ) ); ?>
             <?php else : ?>
                 <?php lunara_control_desk_render_image_quality_group( __( 'Recent review card sources', 'lunara-film' ), $review_rows, __( 'No review card rows match the current filters.', 'lunara-film' ) ); ?>
+                <?php lunara_control_desk_render_image_quality_group( __( 'Pair It With sources', 'lunara-film' ), $pairing_rows, __( 'No Pair It With source rows match the current filters.', 'lunara-film' ) ); ?>
                 <?php lunara_control_desk_render_image_quality_group( __( 'Recent Journal hero sources', 'lunara-film' ), $journal_rows, __( 'No Journal hero rows match the current filters.', 'lunara-film' ) ); ?>
                 <?php lunara_control_desk_render_image_quality_group( __( 'Oscar Facts carousel visuals', 'lunara-film' ), $fact_rows, __( 'No Oscar Fact rows match the current filters.', 'lunara-film' ) ); ?>
             <?php endif; ?>

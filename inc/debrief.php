@@ -799,10 +799,11 @@ if ( ! function_exists( 'lunara_parse_pair_it_with_value' ) ) {
      * Parse a Pair It With field into the parts needed for preview and QA.
      *
      * @param string $value Raw meta value.
-     * @param int    $post_id Current review post ID.
+     * @param int    $post_id        Current review post ID.
+     * @param bool   $resolve_poster Whether to resolve poster HTML.
      * @return array<string,mixed>
      */
-    function lunara_parse_pair_it_with_value( $value, $post_id = 0 ) {
+    function lunara_parse_pair_it_with_value( $value, $post_id = 0, $resolve_poster = true ) {
         $raw      = trim( (string) $value );
         $warnings = array();
 
@@ -944,7 +945,7 @@ if ( ! function_exists( 'lunara_parse_pair_it_with_value' ) ) {
         }
 
         $poster_html = '';
-        if ( '' !== $tt && function_exists( 'lunara_get_title_poster_html' ) ) {
+        if ( $resolve_poster && '' !== $tt && function_exists( 'lunara_get_title_poster_html' ) ) {
             $poster_html = lunara_get_title_poster_html( $tt, 'medium', 'lunara-pair-preview-thumb', $title );
             if ( '' === trim( $poster_html ) ) {
                 $warnings[] = __( 'No poster resolved for this IMDb ID yet.', 'lunara-film' );
