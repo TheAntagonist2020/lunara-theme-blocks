@@ -6624,50 +6624,96 @@ add_action( 'wp_head', 'lunara_output_review_full_scroll_rhythm_css', 1007 );
 /**
  * Emit bounded Review Single Studio controls.
  */
+function lunara_get_review_single_preview_preset_values() {
+    if ( ! current_user_can( 'edit_theme_options' ) || empty( $_GET['lunara-review-preset'] ) ) {
+        return array();
+    }
+
+    $preset_key = sanitize_key( wp_unslash( $_GET['lunara-review-preset'] ) );
+    if ( '' === $preset_key || ! function_exists( 'lunara_control_desk_review_single_preset_specs' ) ) {
+        return array();
+    }
+
+    $presets = lunara_control_desk_review_single_preset_specs();
+    if ( ! isset( $presets[ $preset_key ]['values'] ) || ! is_array( $presets[ $preset_key ]['values'] ) ) {
+        return array();
+    }
+
+    return $presets[ $preset_key ]['values'];
+}
+
+function lunara_get_review_single_studio_select_value( $preview_values, $key, $default, $allowed ) {
+    if ( isset( $preview_values[ $key ] ) ) {
+        $value = sanitize_key( (string) $preview_values[ $key ] );
+        if ( in_array( $value, $allowed, true ) ) {
+            return $value;
+        }
+    }
+
+    return lunara_home_select_setting( $key, $default, $allowed );
+}
+
+function lunara_get_review_single_studio_number_value( $preview_values, $key, $default, $min, $max ) {
+    if ( isset( $preview_values[ $key ] ) ) {
+        return max( absint( $min ), min( absint( $max ), absint( $preview_values[ $key ] ) ) );
+    }
+
+    return lunara_home_brand_number_setting( $key, $default, $min, $max );
+}
+
 function lunara_output_review_single_studio_css() {
     if ( is_admin() || is_feed() || ! is_singular( 'review' ) ) {
         return;
     }
 
-    $density = lunara_home_select_setting(
+    $preview_values = lunara_get_review_single_preview_preset_values();
+
+    $density = lunara_get_review_single_studio_select_value(
+        $preview_values,
         'lunara_review_single_density',
         'editorial',
         array( 'compact', 'editorial', 'feature' )
     );
-    $hero_scale = lunara_home_select_setting(
+    $hero_scale = lunara_get_review_single_studio_select_value(
+        $preview_values,
         'lunara_review_single_hero_scale',
         'standard',
         array( 'standard', 'poster-forward', 'wide-forward' )
     );
-    $rail_mode = lunara_home_select_setting(
+    $rail_mode = lunara_get_review_single_studio_select_value(
+        $preview_values,
         'lunara_review_single_rail_mode',
         'balanced',
         array( 'balanced', 'minimal', 'metadata-forward' )
     );
-    $debrief_prominence = lunara_home_select_setting(
+    $debrief_prominence = lunara_get_review_single_studio_select_value(
+        $preview_values,
         'lunara_review_single_debrief_prominence',
         'standard',
         array( 'standard', 'poster-forward', 'signature-forward' )
     );
-    $pairing_density = lunara_home_select_setting(
+    $pairing_density = lunara_get_review_single_studio_select_value(
+        $preview_values,
         'lunara_review_single_pairing_density',
         'editorial',
         array( 'compact', 'editorial', 'showcase' )
     );
-    $spoiler_treatment = lunara_home_select_setting(
+    $spoiler_treatment = lunara_get_review_single_studio_select_value(
+        $preview_values,
         'lunara_review_single_spoiler_treatment',
         'standard',
         array( 'standard', 'shield-forward', 'high-contrast' )
     );
-    $trailer_prominence = lunara_home_select_setting(
+    $trailer_prominence = lunara_get_review_single_studio_select_value(
+        $preview_values,
         'lunara_review_single_trailer_prominence',
         'standard',
         array( 'standard', 'centered', 'feature' )
     );
 
-    $section_gap          = lunara_home_brand_number_setting( 'lunara_review_single_section_gap', 48, 24, 96 );
-    $debrief_poster_width = lunara_home_brand_number_setting( 'lunara_review_single_debrief_poster_width', 320, 220, 420 );
-    $related_count        = lunara_home_brand_number_setting( 'lunara_review_related_count', 4, 2, 6 );
+    $section_gap          = lunara_get_review_single_studio_number_value( $preview_values, 'lunara_review_single_section_gap', 48, 24, 96 );
+    $debrief_poster_width = lunara_get_review_single_studio_number_value( $preview_values, 'lunara_review_single_debrief_poster_width', 320, 220, 420 );
+    $related_count        = lunara_get_review_single_studio_number_value( $preview_values, 'lunara_review_related_count', 4, 2, 6 );
 
     $body_gap_map = array(
         'compact'   => 28,

@@ -1245,6 +1245,75 @@ function lunara_control_desk_review_single_number_specs() {
     );
 }
 
+function lunara_control_desk_review_single_preset_specs() {
+    return array(
+        'editorial-balance' => array(
+            'label'  => __( 'Editorial Balance', 'lunara-film' ),
+            'copy'   => __( 'The default premium criticism package: readable, steady, and publication-grade.', 'lunara-film' ),
+            'values' => array(
+                'lunara_review_single_density'            => 'editorial',
+                'lunara_review_single_hero_scale'         => 'standard',
+                'lunara_review_single_rail_mode'          => 'balanced',
+                'lunara_review_single_debrief_prominence' => 'standard',
+                'lunara_review_single_pairing_density'    => 'editorial',
+                'lunara_review_single_spoiler_treatment'  => 'standard',
+                'lunara_review_single_trailer_prominence' => 'centered',
+                'lunara_review_single_section_gap'        => 48,
+                'lunara_review_single_debrief_poster_width' => 320,
+                'lunara_review_related_count'             => 4,
+            ),
+        ),
+        'cinematic-feature' => array(
+            'label'  => __( 'Cinematic Feature', 'lunara-film' ),
+            'copy'   => __( 'A stronger magazine-style package for marquee reviews with bigger visual and retention beats.', 'lunara-film' ),
+            'values' => array(
+                'lunara_review_single_density'            => 'feature',
+                'lunara_review_single_hero_scale'         => 'wide-forward',
+                'lunara_review_single_rail_mode'          => 'metadata-forward',
+                'lunara_review_single_debrief_prominence' => 'signature-forward',
+                'lunara_review_single_pairing_density'    => 'showcase',
+                'lunara_review_single_spoiler_treatment'  => 'shield-forward',
+                'lunara_review_single_trailer_prominence' => 'feature',
+                'lunara_review_single_section_gap'        => 64,
+                'lunara_review_single_debrief_poster_width' => 360,
+                'lunara_review_related_count'             => 5,
+            ),
+        ),
+        'compact-dispatch'  => array(
+            'label'  => __( 'Compact Dispatch', 'lunara-film' ),
+            'copy'   => __( 'A tighter trade-desk read when pace matters and the criticism should move fast.', 'lunara-film' ),
+            'values' => array(
+                'lunara_review_single_density'            => 'compact',
+                'lunara_review_single_hero_scale'         => 'poster-forward',
+                'lunara_review_single_rail_mode'          => 'minimal',
+                'lunara_review_single_debrief_prominence' => 'standard',
+                'lunara_review_single_pairing_density'    => 'compact',
+                'lunara_review_single_spoiler_treatment'  => 'standard',
+                'lunara_review_single_trailer_prominence' => 'centered',
+                'lunara_review_single_section_gap'        => 36,
+                'lunara_review_single_debrief_poster_width' => 280,
+                'lunara_review_related_count'             => 3,
+            ),
+        ),
+        'spoiler-shield'    => array(
+            'label'  => __( 'Spoiler Shield', 'lunara-film' ),
+            'copy'   => __( 'A protected full-spoiler package with a more unmistakable warning chamber.', 'lunara-film' ),
+            'values' => array(
+                'lunara_review_single_density'            => 'editorial',
+                'lunara_review_single_hero_scale'         => 'wide-forward',
+                'lunara_review_single_rail_mode'          => 'balanced',
+                'lunara_review_single_debrief_prominence' => 'poster-forward',
+                'lunara_review_single_pairing_density'    => 'editorial',
+                'lunara_review_single_spoiler_treatment'  => 'high-contrast',
+                'lunara_review_single_trailer_prominence' => 'feature',
+                'lunara_review_single_section_gap'        => 56,
+                'lunara_review_single_debrief_poster_width' => 340,
+                'lunara_review_related_count'             => 4,
+            ),
+        ),
+    );
+}
+
 function lunara_control_desk_review_single_clamp_number( $key, $value ) {
     $specs = lunara_control_desk_review_single_number_specs();
 
@@ -1283,6 +1352,65 @@ function lunara_control_desk_review_single_number_value( $key ) {
     );
 }
 
+function lunara_control_desk_review_single_current_values() {
+    $values = array();
+
+    foreach ( lunara_control_desk_review_single_select_specs() as $key => $spec ) {
+        $values[ $key ] = lunara_control_desk_review_single_select_value( $key );
+    }
+
+    foreach ( lunara_control_desk_review_single_number_specs() as $key => $spec ) {
+        $values[ $key ] = lunara_control_desk_review_single_number_value( $key );
+    }
+
+    return $values;
+}
+
+function lunara_control_desk_review_single_active_preset_key() {
+    $current = lunara_control_desk_review_single_current_values();
+
+    foreach ( lunara_control_desk_review_single_preset_specs() as $preset_key => $preset ) {
+        $values = isset( $preset['values'] ) && is_array( $preset['values'] ) ? $preset['values'] : array();
+        $match  = true;
+
+        foreach ( $values as $key => $value ) {
+            if ( ! array_key_exists( $key, $current ) || (string) $current[ $key ] !== (string) $value ) {
+                $match = false;
+                break;
+            }
+        }
+
+        if ( $match ) {
+            return $preset_key;
+        }
+    }
+
+    return '';
+}
+
+function lunara_control_desk_apply_review_single_values( $values ) {
+    if ( ! is_array( $values ) ) {
+        return;
+    }
+
+    foreach ( lunara_control_desk_review_single_select_specs() as $key => $spec ) {
+        if ( ! array_key_exists( $key, $values ) ) {
+            continue;
+        }
+
+        $value = sanitize_key( (string) $values[ $key ] );
+        if ( isset( $spec['options'][ $value ] ) ) {
+            set_theme_mod( $key, $value );
+        }
+    }
+
+    foreach ( lunara_control_desk_review_single_number_specs() as $key => $spec ) {
+        if ( array_key_exists( $key, $values ) ) {
+            set_theme_mod( $key, (string) lunara_control_desk_review_single_clamp_number( $key, $values[ $key ] ) );
+        }
+    }
+}
+
 function lunara_control_desk_save_review_single_studio() {
     $redirect = lunara_control_desk_admin_url(
         array(
@@ -1296,6 +1424,15 @@ function lunara_control_desk_save_review_single_studio() {
     }
 
     check_admin_referer( 'lunara_save_review_single_studio', 'lunara_review_single_nonce' );
+
+    $presets    = lunara_control_desk_review_single_preset_specs();
+    $preset_key = isset( $_POST['lunara_review_single_preset'] ) ? sanitize_key( wp_unslash( $_POST['lunara_review_single_preset'] ) ) : '';
+
+    if ( '' !== $preset_key && isset( $presets[ $preset_key ] ) ) {
+        lunara_control_desk_apply_review_single_values( $presets[ $preset_key ]['values'] );
+        wp_safe_redirect( add_query_arg( 'lunara_notice', 'review_single_preset_applied', $redirect ) );
+        exit;
+    }
 
     $raw_selects = isset( $_POST['lunara_review_single_select'] ) && is_array( $_POST['lunara_review_single_select'] )
         ? wp_unslash( $_POST['lunara_review_single_select'] )
@@ -6102,6 +6239,76 @@ function lunara_control_desk_render_review_single_number_control( $key, $spec ) 
     <?php
 }
 
+function lunara_control_desk_review_single_preset_preview_url( $path, $preset_key, $mobile = false ) {
+    $url = add_query_arg( 'lunara-review-preset', $preset_key, home_url( $path ) );
+
+    if ( $mobile ) {
+        $url = add_query_arg( 'lunara-width', '390', $url );
+    }
+
+    return $url;
+}
+
+function lunara_control_desk_review_single_value_label( $key, $value ) {
+    $select_specs = lunara_control_desk_review_single_select_specs();
+    if ( isset( $select_specs[ $key ]['options'][ $value ]['label'] ) ) {
+        return $select_specs[ $key ]['options'][ $value ]['label'];
+    }
+
+    $number_specs = lunara_control_desk_review_single_number_specs();
+    if ( isset( $number_specs[ $key ] ) ) {
+        $unit = isset( $number_specs[ $key ]['unit'] ) ? $number_specs[ $key ]['unit'] : '';
+        return trim( absint( $value ) . ' ' . $unit );
+    }
+
+    return (string) $value;
+}
+
+function lunara_control_desk_review_single_key_label( $key ) {
+    $select_specs = lunara_control_desk_review_single_select_specs();
+    if ( isset( $select_specs[ $key ]['label'] ) ) {
+        return $select_specs[ $key ]['label'];
+    }
+
+    $number_specs = lunara_control_desk_review_single_number_specs();
+    if ( isset( $number_specs[ $key ]['label'] ) ) {
+        return $number_specs[ $key ]['label'];
+    }
+
+    $label = str_replace( array( 'lunara_review_single_', 'lunara_review_' ), '', $key );
+    return ucwords( str_replace( '_', ' ', $label ) );
+}
+
+function lunara_control_desk_render_review_single_preset_card( $preset_key, $preset, $active_preset_key ) {
+    $is_active = $preset_key === $active_preset_key;
+    $values    = isset( $preset['values'] ) && is_array( $preset['values'] ) ? $preset['values'] : array();
+    ?>
+    <fieldset class="lunara-control-desk-homepage-choice <?php echo $is_active ? 'is-selected' : ''; ?>">
+        <legend>
+            <strong><?php echo esc_html( $preset['label'] ); ?></strong>
+            <small><?php echo esc_html( $preset['copy'] ); ?></small>
+            <em><?php echo esc_html( $is_active ? __( 'active', 'lunara-film' ) : __( 'preset', 'lunara-film' ) ); ?></em>
+        </legend>
+        <div class="lunara-control-desk-source-grid">
+            <?php foreach ( $values as $key => $value ) : ?>
+                <span class="lunara-control-desk-source-pill">
+                    <strong><?php echo esc_html( lunara_control_desk_review_single_key_label( $key ) ); ?></strong>
+                    <?php echo esc_html( lunara_control_desk_review_single_value_label( $key, $value ) ); ?>
+                </span>
+            <?php endforeach; ?>
+        </div>
+        <div class="lunara-control-desk-actions">
+            <button type="submit" class="button" name="lunara_review_single_preset" value="<?php echo esc_attr( $preset_key ); ?>">
+                <?php echo esc_html( $is_active ? __( 'Reapply preset', 'lunara-film' ) : __( 'Apply preset', 'lunara-film' ) ); ?>
+            </button>
+            <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/reviews/sinners-2025/', $preset_key ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners preview', 'lunara-film' ); ?></a>
+            <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/reviews/sinners-2025/', $preset_key, true ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '390px', 'lunara-film' ); ?></a>
+            <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/reviews/bugonia-the-full-spoiler/', $preset_key ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Spoiler preview', 'lunara-film' ); ?></a>
+        </div>
+    </fieldset>
+    <?php
+}
+
 function lunara_control_desk_render_review_single_studio() {
     if ( ! current_user_can( 'edit_theme_options' ) ) {
         ?>
@@ -6115,6 +6322,11 @@ function lunara_control_desk_render_review_single_studio() {
         <?php
         return;
     }
+    $presets           = lunara_control_desk_review_single_preset_specs();
+    $active_preset_key = lunara_control_desk_review_single_active_preset_key();
+    $active_label      = $active_preset_key && isset( $presets[ $active_preset_key ] )
+        ? $presets[ $active_preset_key ]['label']
+        : __( 'Custom package', 'lunara-film' );
     ?>
     <section id="lunara-theme-studio-review-single-studio" class="lunara-control-desk-homepage-studio">
         <div class="lunara-control-desk-panel-header">
@@ -6125,6 +6337,25 @@ function lunara_control_desk_render_review_single_studio() {
         <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
             <input type="hidden" name="action" value="lunara_save_review_single_studio" />
             <?php wp_nonce_field( 'lunara_save_review_single_studio', 'lunara_review_single_nonce' ); ?>
+
+            <div class="lunara-control-desk-homepage-card">
+                <div class="lunara-control-desk-card-head">
+                    <div>
+                        <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Package Presets', 'lunara-film' ); ?></p>
+                        <h3><?php esc_html_e( 'Apply or preview a complete single-review rhythm', 'lunara-film' ); ?></h3>
+                        <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Presets save the same bounded controls below. Preview links are request-only and only affect admins with theme editing permission.', 'lunara-film' ); ?></p>
+                    </div>
+                    <div class="lunara-control-desk-status-pill">
+                        <strong><?php esc_html_e( 'Current package', 'lunara-film' ); ?></strong>
+                        <span><?php echo esc_html( $active_label ); ?></span>
+                    </div>
+                </div>
+                <div class="lunara-control-desk-homepage-choice-grid">
+                    <?php foreach ( $presets as $preset_key => $preset ) : ?>
+                        <?php lunara_control_desk_render_review_single_preset_card( $preset_key, $preset, $active_preset_key ); ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
 
             <div class="lunara-control-desk-homepage-grid">
                 <div class="lunara-control-desk-homepage-card">
@@ -10424,6 +10655,10 @@ function lunara_control_desk_render_notice() {
         'review_single_studio_saved' => array(
             'class'   => 'notice-success',
             'message' => __( 'Review Single Studio saved. Single-review package rhythm now reads the updated values.', 'lunara-film' ),
+        ),
+        'review_single_preset_applied' => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Review Single Studio preset applied. The selected package now drives the saved single-review rhythm.', 'lunara-film' ),
         ),
         'review_single_studio_forbidden' => array(
             'class'   => 'notice-error',

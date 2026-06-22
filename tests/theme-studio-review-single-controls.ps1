@@ -24,6 +24,7 @@ function Read-ThemeFile {
 $controlDesk = Read-ThemeFile 'inc/control-desk.php'
 $frontend = Read-ThemeFile 'inc/frontend.php'
 $singleReview = Read-ThemeFile 'single-review.php'
+$controlDeskCss = Read-ThemeFile 'assets/css/lunara-control-desk.css'
 
 foreach ($key in @(
     'lunara_review_single_density',
@@ -71,7 +72,24 @@ Assert-True ($controlDesk -match 'lunara_control_desk_render_review_single_studi
 Assert-True ($controlDesk -match 'admin_post_lunara_save_review_single_studio') 'Review Single Studio must save through a nonce-protected admin-post handler.'
 Assert-True ($controlDesk -match 'check_admin_referer\(\s*''lunara_save_review_single_studio''') 'Review Single Studio save handler must verify a nonce.'
 Assert-True ($controlDesk -match 'current_user_can\(\s*''edit_theme_options''') 'Review Single Studio must remain capability protected.'
+
+Assert-True ($controlDesk -match 'function\s+lunara_control_desk_review_single_preset_specs') 'Review Single Studio must define named preset specs.'
+foreach ($preset in @(
+    'editorial-balance',
+    'cinematic-feature',
+    'compact-dispatch',
+    'spoiler-shield'
+)) {
+    Assert-True ($controlDesk -match [regex]::Escape("'$preset'")) "Review Single Studio must include the $preset preset."
+}
+Assert-True ($controlDesk -match 'name="lunara_review_single_preset"') 'Review Single Studio must render preset apply buttons.'
+Assert-True ($controlDesk -match 'lunara_review_single_preset') 'Review Single Studio save handler must accept an optional preset key.'
+Assert-True ($controlDesk -match 'review_single_preset_applied') 'Review Single Studio must provide a preset-applied notice.'
+Assert-True ($controlDesk -match 'add_query_arg\(\s*''lunara-review-preset''') 'Review Single Studio must render admin-only preset preview links.'
+Assert-True ($controlDesk -match 'isset\(\s*\$presets\[\s*\$preset_key\s*\]\s*\)') 'Review Single Studio must reject invalid preset keys before applying values.'
 Assert-True ($controlDesk -notmatch '<textarea[^>]+lunara_review_single') 'Review Single Studio must not expose raw CSS textareas.'
+Assert-True ($controlDeskCss -match '\.lunara-control-desk-status-pill') 'Review Single Studio preset current-package marker must be styled.'
+Assert-True ($controlDeskCss -match '\.lunara-control-desk-source-grid') 'Review Single Studio preset value summaries must be styled.'
 
 foreach ($preview in @(
     "home_url( '/reviews/sinners-2025/' )",
@@ -107,6 +125,10 @@ foreach ($selector in @(
 }
 
 Assert-True ($frontend -match 'is_singular\(\s*''review''\s*\)') 'Review Single CSS must stay scoped to Review singular routes.'
+Assert-True ($frontend -match 'function\s+lunara_get_review_single_preview_preset_values') 'Review Single frontend CSS must expose a request-local preview preset reader.'
+Assert-True ($frontend -match '\$_GET\[\s*''lunara-review-preset''\s*\]') 'Review Single preview override must read the lunara-review-preset query key.'
+Assert-True ($frontend -match 'current_user_can\(\s*''edit_theme_options''\s*\)[\s\S]*\$_GET\[\s*''lunara-review-preset''\s*\]') 'Review Single preview override must be gated to theme editors.'
+Assert-True ($frontend -match 'lunara_control_desk_review_single_preset_specs') 'Review Single frontend preview must reuse the same preset specs as Theme Studio.'
 Assert-True ($frontend -match 'line-clamp') 'Review Single density controls must tune text depth, not only spacing.'
 Assert-True ($frontend -match 'function\s+lunara_output_review_single_studio_css') 'Review Single Studio must emit a named public CSS function.'
 Assert-True ($frontend -match 'add_action\(\s*''wp_head''\s*,\s*''lunara_output_review_single_studio_css''') 'Review Single Studio public CSS must be hooked through wp_head.'
