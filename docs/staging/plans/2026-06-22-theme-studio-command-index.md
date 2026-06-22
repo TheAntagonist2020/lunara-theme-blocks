@@ -22,7 +22,7 @@ files: `inc/control-desk.php`, `assets/css/lunara-control-desk.css`, `tests/them
 acceptance: `powershell -ExecutionPolicy Bypass -File tests/theme-studio-command-index.ps1`; `php -l inc/control-desk.php`; `git diff --check`
 spec: `docs/staging/specs/2026-06-22-theme-studio-command-index.md#test`
 
-- [ ] T5: Deploy, verify, and preserve continuity
+- [x] T5: Deploy, verify, and preserve continuity
 goal: Deploy only changed theme files, flush cache, smoke public routes, verify admin render, update continuity docs, and push the repo.
 files: `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\LUNARA_WORLD_CHANGELOG.md`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\09_DOCS_AND_NOTES\LUNARA_WEBSITE_HANDOFF.md`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\09_DOCS_AND_NOTES\SESSION-LOG-2026-06-22.md`
 acceptance: Local/remote hashes match; `/`, `/journal/`, `/reviews/`, `/review/sinners-2025/`, `/reviews/sinners-2025/`, and `/oscars/` return 200; sampled public HTML contains no command-index/admin leakage; evidence is saved under `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\10_VISUAL_EVIDENCE`.
