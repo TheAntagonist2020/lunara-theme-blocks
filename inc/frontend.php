@@ -226,6 +226,30 @@ function lunara_homepage_studio_signature_css() {
 
     $section_gap = lunara_home_brand_number_setting( 'lunara_home_section_gap', 38, 20, 90 );
     $rhythm      = lunara_home_select_setting( 'lunara_home_first_section_rhythm', 'tight', array( 'tight', 'balanced', 'spacious' ) );
+    $density_options        = array( 'compact', 'editorial', 'showcase' );
+    $latest_reviews_density = lunara_home_select_setting( 'lunara_home_latest_reviews_density', 'editorial', $density_options );
+    $journal_lane_density   = lunara_home_select_setting( 'lunara_home_journal_lane_density', 'editorial', $density_options );
+    $oscar_facts_density    = lunara_home_select_setting( 'lunara_home_oscar_facts_density', 'editorial', $density_options );
+
+    $latest_reviews_card_min = lunara_home_brand_number_setting( 'lunara_home_latest_reviews_card_min_height', 430, 340, 560 );
+    $journal_card_min        = lunara_home_brand_number_setting( 'lunara_home_journal_card_min_height', 330, 250, 480 );
+    $oscar_facts_card_min    = lunara_home_brand_number_setting( 'lunara_home_oscar_facts_card_min_height', 390, 300, 540 );
+
+    $latest_reviews_gap_map         = array( 'compact' => 18, 'editorial' => 24, 'showcase' => 30 );
+    $latest_reviews_quote_clamp_map = array( 'compact' => 2, 'editorial' => 3, 'showcase' => 4 );
+    $journal_gap_map                = array( 'compact' => 16, 'editorial' => 22, 'showcase' => 28 );
+    $journal_excerpt_clamp_map      = array( 'compact' => 2, 'editorial' => 3, 'showcase' => 4 );
+    $oscar_facts_body_clamp_map     = array( 'compact' => 3, 'editorial' => 4, 'showcase' => 5 );
+    $oscar_facts_text_pad_map       = array( 'compact' => 28, 'editorial' => 40, 'showcase' => 54 );
+
+    $latest_reviews_gap         = $latest_reviews_gap_map[ $latest_reviews_density ];
+    $latest_reviews_quote_clamp = $latest_reviews_quote_clamp_map[ $latest_reviews_density ];
+    $journal_gap                = $journal_gap_map[ $journal_lane_density ];
+    $journal_excerpt_clamp      = $journal_excerpt_clamp_map[ $journal_lane_density ];
+    $oscar_facts_body_clamp     = $oscar_facts_body_clamp_map[ $oscar_facts_density ];
+    $oscar_facts_text_pad       = $oscar_facts_text_pad_map[ $oscar_facts_density ];
+    $oscar_facts_media_min      = min( 420, max( 220, $oscar_facts_card_min - 70 ) );
+    $oscar_facts_archival_min   = min( 330, max( 230, $oscar_facts_card_min - 110 ) );
 
     if ( 'balanced' === $rhythm ) {
         $section_gap = (int) round( $section_gap * 1.08 );
@@ -238,23 +262,35 @@ function lunara_homepage_studio_signature_css() {
     $section_gap = max( 18, min( 96, $section_gap ) );
     ?>
     <style id="lunara-homepage-studio-signature-css">
-    body.home .lunara-front-page{--lunara-home-section-gap:<?php echo esc_html( $section_gap ); ?>px;}
+    body.home .lunara-front-page{--lunara-home-section-gap:<?php echo esc_html( $section_gap ); ?>px;--lunara-home-latest-reviews-card-min:<?php echo esc_html( $latest_reviews_card_min ); ?>px;--lunara-home-latest-reviews-gap:<?php echo esc_html( $latest_reviews_gap ); ?>px;--lunara-home-latest-reviews-quote-clamp:<?php echo esc_html( $latest_reviews_quote_clamp ); ?>;--lunara-home-journal-card-min:<?php echo esc_html( $journal_card_min ); ?>px;--lunara-home-journal-gap:<?php echo esc_html( $journal_gap ); ?>px;--lunara-home-journal-excerpt-clamp:<?php echo esc_html( $journal_excerpt_clamp ); ?>;--lunara-home-oscar-facts-card-min:<?php echo esc_html( $oscar_facts_card_min ); ?>px;--lunara-home-oscar-facts-media-min:<?php echo esc_html( $oscar_facts_media_min ); ?>px;--lunara-home-oscar-facts-archival-min:<?php echo esc_html( $oscar_facts_archival_min ); ?>px;--lunara-home-oscar-facts-body-clamp:<?php echo esc_html( $oscar_facts_body_clamp ); ?>;--lunara-home-oscar-facts-text-pad:<?php echo esc_html( $oscar_facts_text_pad ); ?>px;}
     body.home .lunara-front-page > .lunara-home-section{margin-top:var(--lunara-home-section-gap)!important;margin-bottom:var(--lunara-home-section-gap)!important;}
     body.home .lunara-front-page > .lunara-home-masthead + .lunara-home-section{margin-top:max(16px,calc(var(--lunara-home-section-gap) * .55))!important;}
     body.home .lunara-front-page > .wp-block-group.alignfull{margin-top:var(--lunara-home-section-gap)!important;margin-bottom:var(--lunara-home-section-gap)!important;}
     body.home .lunara-front-page > :where(.lunara-home-section,.wp-block-group.alignfull) + :where(.lunara-home-section,.wp-block-group.alignfull){margin-top:calc(var(--lunara-home-section-gap) * .82)!important;}
     body.home .lunara-home-masthead + *{scroll-margin-top:96px;}
     body.home .lunara-home-masthead-route:focus-visible,body.home .lunara-oscar-facts-section .lunara-carousel-dot:focus-visible{outline:2px solid rgba(224,196,129,.92);outline-offset:3px;}
+    body.home .lunara-latest-reviews-section .lunara-review-grid{gap:var(--lunara-home-latest-reviews-gap)!important;}
+    body.home .lunara-latest-reviews-section .lunara-review-grid-card{min-height:var(--lunara-home-latest-reviews-card-min)!important;height:100%;}
+    body.home .lunara-latest-reviews-section .lunara-review-grid-link{height:100%;}
+    body.home .lunara-latest-reviews-section .lunara-review-grid-poster-wrap{aspect-ratio:3/4!important;min-height:0!important;}
+    body.home .lunara-latest-reviews-section .lunara-review-grid-copy{padding:clamp(18px,2.3vw,28px)!important;}
+    body.home .lunara-latest-reviews-section .lunara-review-grid-quote{display:-webkit-box;-webkit-line-clamp:var(--lunara-home-latest-reviews-quote-clamp);-webkit-box-orient:vertical;overflow:hidden;}
+    body.home .lunara-journal-home-grid{gap:var(--lunara-home-journal-gap)!important;}
+    body.home .lunara-journal-home-grid .lunara-journal-home-card{min-height:var(--lunara-home-journal-card-min)!important;height:100%;}
+    body.home .lunara-journal-home-grid .lunara-journal-home-card-link{height:100%;}
+    body.home .lunara-journal-home-grid .lunara-journal-home-card-copy{padding:clamp(18px,2.4vw,30px)!important;}
+    body.home .lunara-journal-home-grid .lunara-journal-home-card-excerpt{display:-webkit-box;-webkit-line-clamp:var(--lunara-home-journal-excerpt-clamp);-webkit-box-orient:vertical;overflow:hidden;}
     body.home .lunara-oscar-facts-section{position:relative;overflow:clip;padding-inline:clamp(16px,4vw,30px);}
     body.home .lunara-oscar-facts-section .lunara-home-section-head{width:min(100%,1120px);margin:0 auto clamp(14px,2vw,22px)!important;padding:clamp(16px,2.2vw,24px) clamp(16px,2.4vw,28px);border:1px solid rgba(224,196,129,.2);border-radius:10px;background:linear-gradient(180deg,rgba(10,23,37,.78),rgba(7,16,27,.66));box-shadow:0 18px 48px rgba(0,0,0,.14);}
     body.home .lunara-oscar-facts-section .lunara-home-section-title{max-width:14em;text-wrap:balance;}
     body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel{width:min(100%,1160px)!important;padding:clamp(10px,1.5vw,18px);border:1px solid rgba(224,196,129,.26);border-radius:12px;background:linear-gradient(180deg,rgba(13,27,43,.88),rgba(6,14,24,.92));box-shadow:0 28px 70px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.04);}
-    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-link{overflow:hidden;border:1px solid rgba(224,196,129,.22);border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035);}
-    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-poster .lunara-oscar-fact-card-poster{min-height:clamp(330px,36vw,500px)!important;}
-    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-poster.has-archival-visual .lunara-oscar-fact-card-poster{min-height:clamp(260px,28vw,360px)!important;}
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-link{min-height:var(--lunara-home-oscar-facts-card-min)!important;overflow:hidden;border:1px solid rgba(224,196,129,.22);border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035);}
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-poster .lunara-oscar-fact-card-poster{min-height:clamp(var(--lunara-home-oscar-facts-media-min),36vw,500px)!important;}
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-poster.has-archival-visual .lunara-oscar-fact-card-poster{min-height:clamp(var(--lunara-home-oscar-facts-archival-min),28vw,360px)!important;}
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-archival-visual .lunara-oscar-fact-card-poster{background:linear-gradient(135deg,rgba(6,14,24,.98),rgba(16,29,43,.96))!important;}
     body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-title{letter-spacing:0!important;}
-    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-body{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-text{padding:clamp(24px,3.4vw,var(--lunara-home-oscar-facts-text-pad))!important;}
+    body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-body{display:-webkit-box;-webkit-line-clamp:var(--lunara-home-oscar-facts-body-clamp);-webkit-box-orient:vertical;overflow:hidden;}
     body.home .lunara-oscar-facts-section .lunara-oscar-facts-dots{gap:12px;margin-top:20px;}
     body.home .lunara-oscar-facts-section .lunara-carousel-dot{width:11px;height:11px;background:rgba(244,239,227,.14);border-color:rgba(224,196,129,.62);transition:width .2s ease,background .2s ease,border-color .2s ease;}
     body.home .lunara-oscar-facts-section .lunara-carousel-dot.active{width:38px;background:#d7b66f;border-color:#d7b66f;}

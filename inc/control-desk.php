@@ -447,6 +447,63 @@ function lunara_control_desk_homepage_select_specs() {
                 ),
             ),
         ),
+        'lunara_home_latest_reviews_density'  => array(
+            'label'   => __( 'Latest Reviews density', 'lunara-film' ),
+            'default' => 'editorial',
+            'note'    => __( 'Tunes how much editorial pressure the homepage Reviews lane carries.', 'lunara-film' ),
+            'options' => array(
+                'compact'   => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'Tighter grid rhythm for a faster front-page scan.', 'lunara-film' ),
+                ),
+                'editorial' => array(
+                    'label' => __( 'Editorial', 'lunara-film' ),
+                    'copy'  => __( 'The default card rhythm: image-led, readable, and dense.', 'lunara-film' ),
+                ),
+                'showcase'  => array(
+                    'label' => __( 'Showcase', 'lunara-film' ),
+                    'copy'  => __( 'More room for pull quotes and larger criticism cards.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_home_journal_lane_density'    => array(
+            'label'   => __( 'Journal lane density', 'lunara-film' ),
+            'default' => 'editorial',
+            'note'    => __( 'Controls how urgently the homepage Journal desk reads.', 'lunara-film' ),
+            'options' => array(
+                'compact'   => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'A tighter live-desk rail with shorter excerpts.', 'lunara-film' ),
+                ),
+                'editorial' => array(
+                    'label' => __( 'Editorial', 'lunara-film' ),
+                    'copy'  => __( 'Balanced movement for the default homepage desk lane.', 'lunara-film' ),
+                ),
+                'showcase'  => array(
+                    'label' => __( 'Showcase', 'lunara-film' ),
+                    'copy'  => __( 'Larger Journal cards for a more trade-front feel.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_home_oscar_facts_density'     => array(
+            'label'   => __( 'Oscar Facts density', 'lunara-film' ),
+            'default' => 'editorial',
+            'note'    => __( 'Tunes the homepage Oscar Facts carousel as a signature retention lane.', 'lunara-film' ),
+            'options' => array(
+                'compact'   => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'A shorter carousel chamber that moves readers onward quickly.', 'lunara-film' ),
+                ),
+                'editorial' => array(
+                    'label' => __( 'Editorial', 'lunara-film' ),
+                    'copy'  => __( 'The default archival rhythm: premium but not overlong.', 'lunara-film' ),
+                ),
+                'showcase'  => array(
+                    'label' => __( 'Showcase', 'lunara-film' ),
+                    'copy'  => __( 'A bigger feature-lane read for the Oscar database flex.', 'lunara-film' ),
+                ),
+            ),
+        ),
     );
 }
 
@@ -613,6 +670,33 @@ function lunara_control_desk_homepage_number_specs() {
             'step'    => 1,
             'unit'    => 'px',
             'note'    => __( 'Global spacing between major homepage modules after the masthead.', 'lunara-film' ),
+        ),
+        'lunara_home_latest_reviews_card_min_height' => array(
+            'label'   => __( 'Latest Reviews card height', 'lunara-film' ),
+            'default' => 430,
+            'min'     => 340,
+            'max'     => 560,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Minimum card height for the homepage Reviews lane.', 'lunara-film' ),
+        ),
+        'lunara_home_journal_card_min_height' => array(
+            'label'   => __( 'Journal card height', 'lunara-film' ),
+            'default' => 330,
+            'min'     => 250,
+            'max'     => 480,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Minimum card height for the homepage Journal lane.', 'lunara-film' ),
+        ),
+        'lunara_home_oscar_facts_card_min_height' => array(
+            'label'   => __( 'Oscar Facts card height', 'lunara-film' ),
+            'default' => 390,
+            'min'     => 300,
+            'max'     => 540,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Minimum feature height for the homepage Oscar Facts carousel.', 'lunara-film' ),
         ),
     );
 }
