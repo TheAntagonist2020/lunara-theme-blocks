@@ -7931,6 +7931,18 @@ function lunara_output_oscars_dossier_studio_css() {
         'inline',
         array( 'inline', 'feature', 'compact' )
     );
+    $related_reviews_treatment = lunara_get_oscars_dossier_studio_select_value(
+        $preview_values,
+        'lunara_oscars_related_reviews_treatment',
+        'standard-grid',
+        array( 'standard-grid', 'compact-rail', 'feature-strip' )
+    );
+    $title_image_focus = lunara_get_oscars_dossier_studio_select_value(
+        $preview_values,
+        'lunara_oscars_title_image_focus',
+        'center-center',
+        array( 'center-center', 'center-top', 'center-bottom', 'left-center', 'right-center' )
+    );
     $saved_preset = lunara_get_oscars_dossier_studio_select_value(
         $preview_values,
         'lunara_oscars_dossier_preset',
@@ -7940,6 +7952,7 @@ function lunara_output_oscars_dossier_studio_css() {
 
     $section_gap = lunara_get_oscars_dossier_studio_number_value( $preview_values, 'lunara_oscars_dossier_section_gap', 48, 24, 96 );
     $card_min    = lunara_get_oscars_dossier_studio_number_value( $preview_values, 'lunara_oscars_dossier_card_min', 280, 220, 420 );
+    $related_reviews_count = lunara_get_oscars_dossier_studio_number_value( $preview_values, 'lunara_oscars_related_reviews_count', 6, 2, 8 );
 
     $density_scale_map = array(
         'balanced' => '1',
@@ -7966,12 +7979,32 @@ function lunara_output_oscars_dossier_studio_css() {
         'feature'  => '22px',
         'compact'  => '12px',
     );
+    $related_review_min_map = array(
+        'standard-grid' => '280px',
+        'compact-rail'  => '220px',
+        'feature-strip' => '300px',
+    );
+    $related_media_aspect_map = array(
+        'standard-grid' => '16 / 10',
+        'compact-rail'  => '3 / 4',
+        'feature-strip' => '16 / 9',
+    );
+    $image_focus_map = array(
+        'center-center' => 'center center',
+        'center-top'    => 'center top',
+        'center-bottom' => 'center bottom',
+        'left-center'   => 'left center',
+        'right-center'  => 'right center',
+    );
 
     $density_scale     = isset( $density_scale_map[ $density ] ) ? $density_scale_map[ $density ] : '1';
     $hero_max          = isset( $hero_max_map[ $density ] ) ? $hero_max_map[ $density ] : '1040px';
     $profile_media_max = isset( $profile_media_map[ $profile_scale ] ) ? $profile_media_map[ $profile_scale ] : '340px';
     $writeup_max       = isset( $writeup_max_map[ $writeup_prominence ] ) ? $writeup_max_map[ $writeup_prominence ] : '880px';
     $race_gap          = isset( $race_gap_map[ $major_race_prominence ] ) ? $race_gap_map[ $major_race_prominence ] : '18px';
+    $related_review_min = isset( $related_review_min_map[ $related_reviews_treatment ] ) ? $related_review_min_map[ $related_reviews_treatment ] : '280px';
+    $related_media_aspect = isset( $related_media_aspect_map[ $related_reviews_treatment ] ) ? $related_media_aspect_map[ $related_reviews_treatment ] : '16 / 10';
+    $image_focus       = isset( $image_focus_map[ $title_image_focus ] ) ? $image_focus_map[ $title_image_focus ] : 'center center';
     ?>
     <style id="lunara-oscars-dossier-studio-css">
     body.aat-shell-page {
@@ -7982,6 +8015,10 @@ function lunara_output_oscars_dossier_studio_css() {
         --lunara-oscars-profile-media-max: <?php echo esc_html( $profile_media_max ); ?>;
         --lunara-oscars-writeup-max: <?php echo esc_html( $writeup_max ); ?>;
         --lunara-oscars-major-race-gap: <?php echo esc_html( $race_gap ); ?>;
+        --lunara-oscars-related-review-min: <?php echo esc_html( $related_review_min ); ?>;
+        --lunara-oscars-related-review-media-aspect: <?php echo esc_html( $related_media_aspect ); ?>;
+        --lunara-oscars-related-review-count: <?php echo esc_html( absint( $related_reviews_count ) ); ?>;
+        --lunara-oscars-image-focus: <?php echo esc_html( $image_focus ); ?>;
     }
 
     body.aat-shell-page .aat-container,
@@ -8022,6 +8059,55 @@ function lunara_output_oscars_dossier_studio_css() {
     body.aat-shell-page .aat-entity-poster,
     body.aat-shell-page .aat-title-poster {
         max-width: min(100%, var(--lunara-oscars-profile-media-max)) !important;
+    }
+
+    body.aat-shell-page .aat-related-reviews-grid {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--lunara-oscars-related-review-min)), 1fr)) !important;
+    }
+
+    body.aat-shell-page .aat-related-review-media {
+        aspect-ratio: var(--lunara-oscars-related-review-media-aspect) !important;
+    }
+
+    body.aat-shell-page .aat-related-review-image,
+    body.aat-shell-page .aat-related-review-media img,
+    body.aat-shell-page .aat-filmography-poster,
+    body.aat-shell-page .aat-filmography-poster-wrap img,
+    body.aat-shell-page .aat-entity-poster-wrap img,
+    body.aat-shell-page .aat-entity-poster,
+    body.aat-shell-page .aat-entity-portrait,
+    body.aat-shell-page .aat-title-poster {
+        object-position: var(--lunara-oscars-image-focus) !important;
+    }
+
+    body.aat-shell-page .aat-related-treatment-compact-rail .aat-related-reviews-grid,
+    body.aat-shell-page .aat-related-reviews-grid.aat-related-treatment-compact-rail {
+        gap: 14px !important;
+    }
+
+    body.aat-shell-page .aat-related-treatment-compact-rail .aat-related-review-card,
+    body.aat-shell-page .aat-related-review-card.aat-related-treatment-compact-rail {
+        border-radius: 16px !important;
+    }
+
+    body.aat-shell-page .aat-related-treatment-compact-rail .aat-related-review-body {
+        gap: 9px !important;
+        padding: 15px !important;
+    }
+
+    @media (min-width: 860px) {
+        body.aat-shell-page .aat-related-treatment-feature-strip .aat-related-review-card:first-child,
+        body.aat-shell-page .aat-related-reviews-grid.aat-related-treatment-feature-strip .aat-related-review-card:first-child {
+            display: grid !important;
+            grid-column: span 2;
+            grid-template-columns: minmax(240px, .95fr) minmax(0, 1fr);
+        }
+
+        body.aat-shell-page .aat-related-treatment-feature-strip .aat-related-review-card:first-child .aat-related-review-media,
+        body.aat-shell-page .aat-related-reviews-grid.aat-related-treatment-feature-strip .aat-related-review-card:first-child .aat-related-review-media {
+            aspect-ratio: auto !important;
+            min-height: 100% !important;
+        }
     }
 
     <?php if ( 'editorial' === $ceremony_rhythm || 'feature' === $writeup_prominence ) : ?>

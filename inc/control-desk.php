@@ -1590,6 +1590,52 @@ function lunara_control_desk_oscars_dossier_select_specs() {
                 ),
             ),
         ),
+        'lunara_oscars_related_reviews_treatment' => array(
+            'label'   => __( 'Related-review treatment', 'lunara-film' ),
+            'default' => 'standard-grid',
+            'note'    => __( 'Controls how Lunara review cards behave inside ceremony, category, title, and person Oscar files.', 'lunara-film' ),
+            'options' => array(
+                'standard-grid' => array(
+                    'label' => __( 'Standard Grid', 'lunara-film' ),
+                    'copy'  => __( 'A balanced card grid with the current publication rhythm.', 'lunara-film' ),
+                ),
+                'compact-rail'  => array(
+                    'label' => __( 'Compact Rail', 'lunara-film' ),
+                    'copy'  => __( 'A tighter retention lane when the page needs to move faster.', 'lunara-film' ),
+                ),
+                'feature-strip' => array(
+                    'label' => __( 'Feature Strip', 'lunara-film' ),
+                    'copy'  => __( 'A stronger first-card treatment for pages with one obvious criticism lead.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_oscars_title_image_focus'          => array(
+            'label'   => __( 'Title/person image focus', 'lunara-film' ),
+            'default' => 'center-center',
+            'note'    => __( 'Sets poster, portrait, and review-card crop focus without stretching the original art.', 'lunara-film' ),
+            'options' => array(
+                'center-center' => array(
+                    'label' => __( 'Center', 'lunara-film' ),
+                    'copy'  => __( 'Default balanced crop focus.', 'lunara-film' ),
+                ),
+                'center-top'    => array(
+                    'label' => __( 'Top', 'lunara-film' ),
+                    'copy'  => __( 'Protect faces and title art near the top of the frame.', 'lunara-film' ),
+                ),
+                'center-bottom' => array(
+                    'label' => __( 'Bottom', 'lunara-film' ),
+                    'copy'  => __( 'Favor lower poster composition when the top is empty.', 'lunara-film' ),
+                ),
+                'left-center'   => array(
+                    'label' => __( 'Left', 'lunara-film' ),
+                    'copy'  => __( 'Hold important figures or lettering on the left side.', 'lunara-film' ),
+                ),
+                'right-center'  => array(
+                    'label' => __( 'Right', 'lunara-film' ),
+                    'copy'  => __( 'Hold important figures or lettering on the right side.', 'lunara-film' ),
+                ),
+            ),
+        ),
     );
 }
 
@@ -1628,6 +1674,15 @@ function lunara_control_desk_oscars_dossier_number_specs() {
             'step'    => 1,
             'unit'    => 'px',
             'note'    => __( 'Minimum card width for responsive Oscars dossier grids and major-race cards.', 'lunara-film' ),
+        ),
+        'lunara_oscars_related_reviews_count' => array(
+            'label'   => __( 'Related reviews shown', 'lunara-film' ),
+            'default' => 6,
+            'min'     => 2,
+            'max'     => 8,
+            'step'    => 1,
+            'unit'    => '',
+            'note'    => __( 'Maximum Lunara review cards shown on Oscars ceremony, category, title, and person routes.', 'lunara-film' ),
         ),
     );
 }
@@ -1682,8 +1737,11 @@ function lunara_control_desk_oscars_dossier_preset_specs() {
                 'lunara_oscars_major_race_prominence' => 'standard',
                 'lunara_oscars_profile_scale'         => 'standard',
                 'lunara_oscars_writeup_prominence'    => 'inline',
+                'lunara_oscars_related_reviews_treatment' => 'standard-grid',
+                'lunara_oscars_title_image_focus'      => 'center-center',
                 'lunara_oscars_dossier_section_gap'   => 48,
                 'lunara_oscars_dossier_card_min'      => 280,
+                'lunara_oscars_related_reviews_count'  => 6,
             ),
         ),
         'ceremony-feature'   => array(
@@ -1696,8 +1754,11 @@ function lunara_control_desk_oscars_dossier_preset_specs() {
                 'lunara_oscars_major_race_prominence' => 'feature',
                 'lunara_oscars_profile_scale'         => 'standard',
                 'lunara_oscars_writeup_prominence'    => 'feature',
+                'lunara_oscars_related_reviews_treatment' => 'feature-strip',
+                'lunara_oscars_title_image_focus'      => 'center-top',
                 'lunara_oscars_dossier_section_gap'   => 64,
                 'lunara_oscars_dossier_card_min'      => 316,
+                'lunara_oscars_related_reviews_count'  => 6,
             ),
         ),
         'compact-ledger'     => array(
@@ -1710,8 +1771,11 @@ function lunara_control_desk_oscars_dossier_preset_specs() {
                 'lunara_oscars_major_race_prominence' => 'compact',
                 'lunara_oscars_profile_scale'         => 'compact',
                 'lunara_oscars_writeup_prominence'    => 'compact',
+                'lunara_oscars_related_reviews_treatment' => 'compact-rail',
+                'lunara_oscars_title_image_focus'      => 'center-center',
                 'lunara_oscars_dossier_section_gap'   => 34,
                 'lunara_oscars_dossier_card_min'      => 238,
+                'lunara_oscars_related_reviews_count'  => 4,
             ),
         ),
         'profile-spotlight'  => array(
@@ -1724,8 +1788,11 @@ function lunara_control_desk_oscars_dossier_preset_specs() {
                 'lunara_oscars_major_race_prominence' => 'standard',
                 'lunara_oscars_profile_scale'         => 'cinematic',
                 'lunara_oscars_writeup_prominence'    => 'inline',
+                'lunara_oscars_related_reviews_treatment' => 'feature-strip',
+                'lunara_oscars_title_image_focus'      => 'center-top',
                 'lunara_oscars_dossier_section_gap'   => 56,
                 'lunara_oscars_dossier_card_min'      => 304,
+                'lunara_oscars_related_reviews_count'  => 8,
             ),
         ),
     );
@@ -2379,7 +2446,7 @@ function lunara_control_desk_get_system_status() {
         array(
             'label' => __( 'Academy Awards plugin', 'lunara-film' ),
             'value' => $aat_version ? $aat_version : __( 'Not detected', 'lunara-film' ),
-            'state' => '2.7.30' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
+            'state' => '2.7.31' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
             'note'  => __( 'The active source is the GitHub-backed Oscars Ledger work tree under G:\\lunara-backups\\work.', 'lunara-film' ),
         ),
         array(
@@ -2511,7 +2578,7 @@ function lunara_control_desk_get_source_status() {
             'label' => __( 'Oscars plugin source', 'lunara-film' ),
             'value' => 'G:\\lunara-backups\\work\\academy-awards-table-optimized-ceremony-depth',
             'state' => 'ready',
-            'note'  => 'feat/ceremony-depth-thesis @ 750d985; related-review media guards verified; Deployer for Git Pro is inactive; original source folder has pre-existing SQL drift and was not the deploy source.',
+            'note'  => 'feat/ceremony-depth-thesis @ ce40819; related-review Studio hooks verified; Deployer for Git Pro is inactive; original source folder has pre-existing SQL drift and was not the deploy source.',
         ),
         array(
             'label' => __( 'Dispatch plugin source', 'lunara-film' ),
@@ -2556,7 +2623,7 @@ function lunara_control_desk_get_source_control_status() {
         ),
         array(
             'label' => __( 'Oscars repo', 'lunara-film' ),
-            'value' => 'feat/ceremony-depth-thesis @ 750d985',
+            'value' => 'feat/ceremony-depth-thesis @ ce40819',
             'state' => 'ready',
             'note'  => 'github.com/TheAntagonist2020/lunara-plugin-oscars-ledger',
         ),
