@@ -7925,6 +7925,12 @@ function lunara_output_oscars_dossier_studio_css() {
         'standard',
         array( 'standard', 'cinematic', 'compact' )
     );
+    $profile_media_treatment = lunara_get_oscars_dossier_studio_select_value(
+        $preview_values,
+        'lunara_oscars_profile_media_treatment',
+        'poster-frame',
+        array( 'poster-frame', 'cinematic-crop', 'archival-fit' )
+    );
     $writeup_prominence = lunara_get_oscars_dossier_studio_select_value(
         $preview_values,
         'lunara_oscars_writeup_prominence',
@@ -7952,6 +7958,8 @@ function lunara_output_oscars_dossier_studio_css() {
 
     $section_gap = lunara_get_oscars_dossier_studio_number_value( $preview_values, 'lunara_oscars_dossier_section_gap', 48, 24, 96 );
     $card_min    = lunara_get_oscars_dossier_studio_number_value( $preview_values, 'lunara_oscars_dossier_card_min', 280, 220, 420 );
+    $profile_media_width  = lunara_get_oscars_dossier_studio_number_value( $preview_values, 'lunara_oscars_profile_media_width', 340, 220, 520 );
+    $profile_media_height = lunara_get_oscars_dossier_studio_number_value( $preview_values, 'lunara_oscars_profile_media_height', 500, 320, 700 );
     $related_reviews_count = lunara_get_oscars_dossier_studio_number_value( $preview_values, 'lunara_oscars_related_reviews_count', 6, 2, 8 );
 
     $density_scale_map = array(
@@ -7968,6 +7976,16 @@ function lunara_output_oscars_dossier_studio_css() {
         'standard'  => '340px',
         'cinematic' => '430px',
         'compact'   => '280px',
+    );
+    $profile_media_fit_map = array(
+        'poster-frame'   => 'cover',
+        'cinematic-crop' => 'cover',
+        'archival-fit'   => 'contain',
+    );
+    $profile_media_aspect_map = array(
+        'poster-frame'   => '2 / 3',
+        'cinematic-crop' => '4 / 5',
+        'archival-fit'   => '2 / 3',
     );
     $writeup_max_map   = array(
         'inline'  => '880px',
@@ -7999,7 +8017,10 @@ function lunara_output_oscars_dossier_studio_css() {
 
     $density_scale     = isset( $density_scale_map[ $density ] ) ? $density_scale_map[ $density ] : '1';
     $hero_max          = isset( $hero_max_map[ $density ] ) ? $hero_max_map[ $density ] : '1040px';
-    $profile_media_max = isset( $profile_media_map[ $profile_scale ] ) ? $profile_media_map[ $profile_scale ] : '340px';
+    $profile_media_max = absint( $profile_media_width ) . 'px';
+    $profile_media_scale_max = isset( $profile_media_map[ $profile_scale ] ) ? $profile_media_map[ $profile_scale ] : '340px';
+    $profile_media_fit = isset( $profile_media_fit_map[ $profile_media_treatment ] ) ? $profile_media_fit_map[ $profile_media_treatment ] : 'cover';
+    $profile_media_aspect = isset( $profile_media_aspect_map[ $profile_media_treatment ] ) ? $profile_media_aspect_map[ $profile_media_treatment ] : '2 / 3';
     $writeup_max       = isset( $writeup_max_map[ $writeup_prominence ] ) ? $writeup_max_map[ $writeup_prominence ] : '880px';
     $race_gap          = isset( $race_gap_map[ $major_race_prominence ] ) ? $race_gap_map[ $major_race_prominence ] : '18px';
     $related_review_min = isset( $related_review_min_map[ $related_reviews_treatment ] ) ? $related_review_min_map[ $related_reviews_treatment ] : '280px';
@@ -8013,6 +8034,11 @@ function lunara_output_oscars_dossier_studio_css() {
         --lunara-oscars-dossier-density-scale: <?php echo esc_html( $density_scale ); ?>;
         --lunara-oscars-dossier-hero-max: <?php echo esc_html( $hero_max ); ?>;
         --lunara-oscars-profile-media-max: <?php echo esc_html( $profile_media_max ); ?>;
+        --lunara-oscars-profile-media-scale-max: <?php echo esc_html( $profile_media_scale_max ); ?>;
+        --lunara-oscars-profile-media-width: <?php echo esc_html( absint( $profile_media_width ) ); ?>px;
+        --lunara-oscars-profile-media-height: <?php echo esc_html( absint( $profile_media_height ) ); ?>px;
+        --lunara-oscars-profile-media-fit: <?php echo esc_html( $profile_media_fit ); ?>;
+        --lunara-oscars-profile-media-aspect: <?php echo esc_html( $profile_media_aspect ); ?>;
         --lunara-oscars-writeup-max: <?php echo esc_html( $writeup_max ); ?>;
         --lunara-oscars-major-race-gap: <?php echo esc_html( $race_gap ); ?>;
         --lunara-oscars-related-review-min: <?php echo esc_html( $related_review_min ); ?>;
@@ -8059,6 +8085,38 @@ function lunara_output_oscars_dossier_studio_css() {
     body.aat-shell-page .aat-entity-poster,
     body.aat-shell-page .aat-title-poster {
         max-width: min(100%, var(--lunara-oscars-profile-media-max)) !important;
+    }
+
+    body.aat-shell-page .aat-container.aat-profile-file .aat-entity-hero .aat-entity-poster-wrap,
+    body.aat-shell-page .aat-container.aat-profile-file .aat-entity-hero .aat-entity-poster-wrap.is-person,
+    body.aat-shell-page .aat-container.aat-profile-file .aat-entity-hero .aat-entity-poster-wrap.is-company,
+    body.aat-shell-page .aat-profile-file .aat-entity-poster-wrap,
+    body.aat-shell-page .aat-profile-file .aat-entity-poster-wrap.is-person,
+    body.aat-shell-page .aat-profile-file .aat-entity-poster-wrap.is-company {
+        aspect-ratio: var(--lunara-oscars-profile-media-aspect) !important;
+        display: block !important;
+        flex-basis: min(100%, var(--lunara-oscars-profile-media-width)) !important;
+        max-height: var(--lunara-oscars-profile-media-height) !important;
+        max-width: min(100%, var(--lunara-oscars-profile-media-width)) !important;
+        overflow: hidden !important;
+        width: min(100%, var(--lunara-oscars-profile-media-width)) !important;
+        background: linear-gradient(180deg, rgba(8, 20, 32, .94), rgba(5, 12, 21, .98)) !important;
+    }
+
+    body.aat-shell-page .aat-container.aat-profile-file .aat-entity-hero .aat-entity-poster-wrap img,
+    body.aat-shell-page .aat-container.aat-profile-file .aat-entity-hero .aat-entity-poster,
+    body.aat-shell-page .aat-container.aat-profile-file .aat-entity-hero .aat-entity-portrait,
+    body.aat-shell-page .aat-profile-file .aat-entity-poster-wrap img,
+    body.aat-shell-page .aat-profile-file .aat-entity-poster,
+    body.aat-shell-page .aat-profile-file .aat-entity-portrait {
+        aspect-ratio: var(--lunara-oscars-profile-media-aspect) !important;
+        display: block !important;
+        height: 100% !important;
+        max-height: var(--lunara-oscars-profile-media-height) !important;
+        max-width: 100% !important;
+        object-fit: var(--lunara-oscars-profile-media-fit) !important;
+        object-position: var(--lunara-oscars-image-focus) !important;
+        width: 100% !important;
     }
 
     body.aat-shell-page .aat-related-reviews-grid {
@@ -8132,6 +8190,20 @@ function lunara_output_oscars_dossier_studio_css() {
         grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)) !important;
     }
     <?php endif; ?>
+
+    @media (max-width: 700px) {
+        body.aat-shell-page .aat-container.aat-profile-file .aat-entity-hero .aat-entity-poster-wrap,
+        body.aat-shell-page .aat-container.aat-profile-file .aat-entity-hero .aat-entity-poster-wrap.is-person,
+        body.aat-shell-page .aat-container.aat-profile-file .aat-entity-hero .aat-entity-poster-wrap.is-company,
+        body.aat-shell-page .aat-profile-file .aat-entity-poster-wrap,
+        body.aat-shell-page .aat-profile-file .aat-entity-poster-wrap.is-person,
+        body.aat-shell-page .aat-profile-file .aat-entity-poster-wrap.is-company {
+            flex-basis: min(100%, 260px) !important;
+            max-height: min(var(--lunara-oscars-profile-media-height), 420px) !important;
+            max-width: min(100%, 260px) !important;
+            width: min(100%, 260px) !important;
+        }
+    }
     </style>
     <?php
 }
