@@ -4423,7 +4423,8 @@
 }
 
 .lunara-control-desk-utility-comparison-strip,
-.lunara-control-desk-review-comparison-strip {
+.lunara-control-desk-review-comparison-strip,
+.lunara-control-desk-oscars-comparison-strip {
     background: linear-gradient(135deg, rgba(6, 18, 31, 0.04), rgba(167, 122, 33, 0.06));
     border: 1px solid rgba(167, 122, 33, 0.2);
     border-radius: 8px;
@@ -4434,7 +4435,8 @@
 }
 
 .lunara-control-desk-utility-comparison-head,
-.lunara-control-desk-review-comparison-head {
+.lunara-control-desk-review-comparison-head,
+.lunara-control-desk-oscars-comparison-head {
     align-items: center;
     display: flex;
     flex-wrap: wrap;
@@ -4443,26 +4445,30 @@
 }
 
 .lunara-control-desk-utility-comparison-head strong,
-.lunara-control-desk-review-comparison-head strong {
+.lunara-control-desk-review-comparison-head strong,
+.lunara-control-desk-oscars-comparison-head strong {
     color: #1d2430;
     font-size: 14px;
 }
 
 .lunara-control-desk-utility-comparison-head span,
-.lunara-control-desk-review-comparison-head span {
+.lunara-control-desk-review-comparison-head span,
+.lunara-control-desk-oscars-comparison-head span {
     color: var(--lcd-muted);
     font-size: 12px;
 }
 
 .lunara-control-desk-utility-comparison-track,
-.lunara-control-desk-review-comparison-track {
+.lunara-control-desk-review-comparison-track,
+.lunara-control-desk-oscars-comparison-track {
     display: grid;
     gap: 10px;
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
 }
 
 .lunara-control-desk-utility-comparison-item,
-.lunara-control-desk-review-comparison-item {
+.lunara-control-desk-review-comparison-item,
+.lunara-control-desk-oscars-comparison-item {
     background: #fff;
     border: 1px solid rgba(6, 18, 31, 0.1);
     border-radius: 8px;
@@ -4474,25 +4480,29 @@
 }
 
 .lunara-control-desk-utility-comparison-item.is-active,
-.lunara-control-desk-review-comparison-item.is-active {
+.lunara-control-desk-review-comparison-item.is-active,
+.lunara-control-desk-oscars-comparison-item.is-active {
     border-color: rgba(53, 181, 88, 0.55);
     box-shadow: inset 4px 0 0 #35b558, 0 12px 26px rgba(6, 18, 31, 0.06);
 }
 
 .lunara-control-desk-utility-comparison-item header,
-.lunara-control-desk-review-comparison-item header {
+.lunara-control-desk-review-comparison-item header,
+.lunara-control-desk-oscars-comparison-item header {
     display: grid;
     gap: 2px;
 }
 
 .lunara-control-desk-utility-comparison-item header strong,
-.lunara-control-desk-review-comparison-item header strong {
+.lunara-control-desk-review-comparison-item header strong,
+.lunara-control-desk-oscars-comparison-item header strong {
     color: #1d2430;
     font-size: 13px;
 }
 
 .lunara-control-desk-utility-comparison-item header span,
-.lunara-control-desk-review-comparison-item header span {
+.lunara-control-desk-review-comparison-item header span,
+.lunara-control-desk-oscars-comparison-item header span {
     color: #a77a21;
     font-size: 10px;
     font-weight: 700;
@@ -4501,14 +4511,16 @@
 }
 
 .lunara-control-desk-utility-comparison-item dl,
-.lunara-control-desk-review-comparison-item dl {
+.lunara-control-desk-review-comparison-item dl,
+.lunara-control-desk-oscars-comparison-item dl {
     display: grid;
     gap: 6px;
     margin: 0;
 }
 
 .lunara-control-desk-utility-comparison-item dl div,
-.lunara-control-desk-review-comparison-item dl div {
+.lunara-control-desk-review-comparison-item dl div,
+.lunara-control-desk-oscars-comparison-item dl div {
     align-items: baseline;
     border-top: 1px solid rgba(6, 18, 31, 0.06);
     display: grid;
@@ -4520,19 +4532,23 @@
 .lunara-control-desk-utility-comparison-item dt,
 .lunara-control-desk-utility-comparison-item dd,
 .lunara-control-desk-review-comparison-item dt,
-.lunara-control-desk-review-comparison-item dd {
+.lunara-control-desk-review-comparison-item dd,
+.lunara-control-desk-oscars-comparison-item dt,
+.lunara-control-desk-oscars-comparison-item dd {
     margin: 0;
     min-width: 0;
 }
 
 .lunara-control-desk-utility-comparison-item dt,
-.lunara-control-desk-review-comparison-item dt {
+.lunara-control-desk-review-comparison-item dt,
+.lunara-control-desk-oscars-comparison-item dt {
     color: var(--lcd-muted);
     font-size: 10px;
 }
 
 .lunara-control-desk-utility-comparison-item dd,
-.lunara-control-desk-review-comparison-item dd {
+.lunara-control-desk-review-comparison-item dd,
+.lunara-control-desk-oscars-comparison-item dd {
     color: #1d2430;
     font-size: 11px;
     font-weight: 650;

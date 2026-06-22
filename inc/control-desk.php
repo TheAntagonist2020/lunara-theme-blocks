@@ -1862,6 +1862,10 @@ function lunara_control_desk_oscars_dossier_key_label( $key ) {
 }
 
 function lunara_control_desk_oscars_dossier_value_label( $key, $value ) {
+    if ( '' === (string) $value ) {
+        return __( 'Default', 'lunara-film' );
+    }
+
     $select_specs = lunara_control_desk_oscars_dossier_select_specs();
     if ( isset( $select_specs[ $key ]['options'][ $value ]['label'] ) ) {
         return $select_specs[ $key ]['options'][ $value ]['label'];
@@ -1873,6 +1877,24 @@ function lunara_control_desk_oscars_dossier_value_label( $key, $value ) {
     }
 
     return (string) $value;
+}
+
+function lunara_control_desk_oscars_dossier_comparison_specs() {
+    return array(
+        'lunara_oscars_dossier_density',
+        'lunara_oscars_ceremony_rhythm',
+        'lunara_oscars_major_race_prominence',
+        'lunara_oscars_profile_scale',
+        'lunara_oscars_writeup_prominence',
+        'lunara_oscars_related_reviews_count',
+        'lunara_oscars_related_reviews_treatment',
+        'lunara_oscars_profile_media_treatment',
+        'lunara_oscars_title_image_focus',
+        'lunara_oscars_dossier_section_gap',
+        'lunara_oscars_dossier_card_min',
+        'lunara_oscars_profile_media_width',
+        'lunara_oscars_profile_media_height',
+    );
 }
 
 function lunara_control_desk_oscars_dossier_current_values() {
@@ -7976,6 +7998,44 @@ function lunara_control_desk_render_oscars_dossier_number_control( $key, $spec )
     <?php
 }
 
+function lunara_control_desk_render_oscars_dossier_preset_comparison_item( $preset_key, $preset, $active_preset_key ) {
+    $values    = isset( $preset['values'] ) && is_array( $preset['values'] ) ? $preset['values'] : array();
+    $is_active = $preset_key === $active_preset_key;
+    ?>
+    <article class="lunara-control-desk-oscars-comparison-item <?php echo $is_active ? 'is-active' : ''; ?>">
+        <header>
+            <strong><?php echo esc_html( isset( $preset['label'] ) ? $preset['label'] : $preset_key ); ?></strong>
+            <span><?php echo esc_html( $is_active ? __( 'active package', 'lunara-film' ) : __( 'available preset', 'lunara-film' ) ); ?></span>
+        </header>
+        <dl>
+            <?php foreach ( lunara_control_desk_oscars_dossier_comparison_specs() as $key ) : ?>
+                <div>
+                    <dt><?php echo esc_html( lunara_control_desk_oscars_dossier_key_label( $key ) ); ?></dt>
+                    <dd><?php echo esc_html( lunara_control_desk_oscars_dossier_value_label( $key, isset( $values[ $key ] ) ? $values[ $key ] : '' ) ); ?></dd>
+                </div>
+            <?php endforeach; ?>
+        </dl>
+    </article>
+    <?php
+}
+
+function lunara_control_desk_render_oscars_dossier_preset_comparison_strip( $presets, $active_preset_key ) {
+    $presets = is_array( $presets ) ? $presets : lunara_control_desk_oscars_dossier_preset_specs();
+    ?>
+    <div class="lunara-control-desk-oscars-comparison-strip" aria-label="<?php esc_attr_e( 'Oscars Dossier preset comparison', 'lunara-film' ); ?>">
+        <div class="lunara-control-desk-oscars-comparison-head">
+            <strong><?php esc_html_e( 'Compare the Oscars dossiers', 'lunara-film' ); ?></strong>
+            <span><?php echo esc_html( $active_preset_key ? __( 'Saved controls match one of these presets.', 'lunara-film' ) : __( 'Current values are custom; compare before saving a preset.', 'lunara-film' ) ); ?></span>
+        </div>
+        <div class="lunara-control-desk-oscars-comparison-track">
+            <?php foreach ( $presets as $preset_key => $preset ) : ?>
+                <?php lunara_control_desk_render_oscars_dossier_preset_comparison_item( $preset_key, $preset, $active_preset_key ); ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php
+}
+
 function lunara_control_desk_render_oscars_dossier_preset_card( $preset_key, $preset, $active_preset_key ) {
     $is_active = $preset_key === $active_preset_key;
     $values    = isset( $preset['values'] ) && is_array( $preset['values'] ) ? $preset['values'] : array();
@@ -8070,6 +8130,7 @@ function lunara_control_desk_render_oscars_dossier_studio() {
                         <span><?php echo esc_html( $active_label ); ?></span>
                     </div>
                 </div>
+                <?php lunara_control_desk_render_oscars_dossier_preset_comparison_strip( $presets, $active_preset_key ); ?>
                 <div class="lunara-control-desk-oscars-preset-grid">
                     <?php foreach ( $presets as $preset_key => $preset ) : ?>
                         <?php lunara_control_desk_render_oscars_dossier_preset_card( $preset_key, $preset, $active_preset_key ); ?>
