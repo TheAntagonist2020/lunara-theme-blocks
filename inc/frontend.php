@@ -2883,16 +2883,74 @@ function lunara_output_review_archive_authority_css() {
     if ( ! $is_reviews_archive ) {
         return;
     }
+
+    $archive_density  = lunara_home_select_setting( 'lunara_reviews_archive_density', 'editorial', array( 'compact', 'editorial', 'showcase' ) );
+    $lead_prominence  = lunara_home_select_setting( 'lunara_reviews_archive_lead_prominence', 'standard', array( 'restrained', 'standard', 'feature' ) );
+    $rail_density     = lunara_home_select_setting( 'lunara_reviews_archive_rail_density', 'editorial', array( 'compact', 'editorial', 'showcase' ) );
+    $section_gap      = lunara_home_brand_number_setting( 'lunara_reviews_archive_section_gap', 40, 20, 90 );
+    $lead_min_height  = lunara_home_brand_number_setting( 'lunara_reviews_archive_lead_min_height', 460, 340, 640 );
+    $card_min_height  = lunara_home_brand_number_setting( 'lunara_reviews_archive_card_min_height', 360, 260, 540 );
+    $compact_media_w  = lunara_home_brand_number_setting( 'lunara_reviews_archive_compact_media_width', 116, 92, 150 );
+    $compact_media_h  = (int) round( $compact_media_w * 1.3276 );
+
+    $shell_gap_map = array(
+        'compact'   => 28,
+        'editorial' => 36,
+        'showcase'  => 46,
+    );
+    $run_gap_map = array(
+        'compact'   => 20,
+        'editorial' => 26,
+        'showcase'  => 32,
+    );
+    $rail_gap_map = array(
+        'compact'   => 12,
+        'editorial' => 18,
+        'showcase'  => 24,
+    );
+    $excerpt_clamp_map = array(
+        'compact'   => 2,
+        'editorial' => 3,
+        'showcase'  => 4,
+    );
+    $lead_media_map = array(
+        'restrained' => 240,
+        'standard'   => 270,
+        'feature'    => 320,
+    );
+    $lead_pad_map = array(
+        'restrained' => 32,
+        'standard'   => 46,
+        'feature'    => 58,
+    );
+
+    $shell_gap      = isset( $shell_gap_map[ $archive_density ] ) ? absint( $shell_gap_map[ $archive_density ] ) : 36;
+    $run_gap        = isset( $run_gap_map[ $archive_density ] ) ? absint( $run_gap_map[ $archive_density ] ) : 26;
+    $rail_gap       = isset( $rail_gap_map[ $rail_density ] ) ? absint( $rail_gap_map[ $rail_density ] ) : 18;
+    $excerpt_clamp  = isset( $excerpt_clamp_map[ $rail_density ] ) ? absint( $excerpt_clamp_map[ $rail_density ] ) : 3;
+    $lead_media_min = isset( $lead_media_map[ $lead_prominence ] ) ? absint( $lead_media_map[ $lead_prominence ] ) : 270;
+    $lead_copy_pad  = isset( $lead_pad_map[ $lead_prominence ] ) ? absint( $lead_pad_map[ $lead_prominence ] ) : 46;
     ?>
     <style id="lunara-review-archive-authority-css">
     body.post-type-archive-review .lunara-review-archive-page,
     body.page-template-page-reviews .lunara-review-archive-page {
-        gap: clamp(30px, 4vw, 52px) !important;
+        --lunara-reviews-archive-section-gap: <?php echo esc_html( $section_gap ); ?>px;
+        --lunara-reviews-archive-shell-gap: <?php echo esc_html( $shell_gap ); ?>px;
+        --lunara-reviews-archive-run-gap: <?php echo esc_html( $run_gap ); ?>px;
+        --lunara-reviews-archive-lead-min: <?php echo esc_html( $lead_min_height ); ?>px;
+        --lunara-reviews-archive-lead-media-min: <?php echo esc_html( $lead_media_min ); ?>px;
+        --lunara-reviews-archive-lead-copy-pad: <?php echo esc_html( $lead_copy_pad ); ?>px;
+        --lunara-reviews-archive-card-min: <?php echo esc_html( $card_min_height ); ?>px;
+        --lunara-reviews-archive-compact-media-width: <?php echo esc_html( $compact_media_w ); ?>px;
+        --lunara-reviews-archive-compact-media-height: <?php echo esc_html( $compact_media_h ); ?>px;
+        --lunara-reviews-archive-rail-gap: <?php echo esc_html( $rail_gap ); ?>px;
+        --lunara-reviews-archive-excerpt-clamp: <?php echo esc_html( $excerpt_clamp ); ?>;
+        gap: var(--lunara-reviews-archive-section-gap) !important;
     }
 
     body.post-type-archive-review .lunara-review-archive-page > .lunara-home-section,
     body.page-template-page-reviews .lunara-review-archive-page > .lunara-home-section {
-        margin-bottom: clamp(22px, 2.8vw, 36px) !important;
+        margin-bottom: calc(var(--lunara-reviews-archive-section-gap) * 0.72) !important;
     }
 
     body.post-type-archive-review .lunara-review-archive-hero,
@@ -2909,13 +2967,13 @@ function lunara_output_review_archive_authority_css() {
     body.post-type-archive-review .lunara-review-archive-shell,
     body.page-template-page-reviews .lunara-review-archive-shell {
         display: grid !important;
-        gap: clamp(28px, 4vw, 46px) !important;
+        gap: var(--lunara-reviews-archive-shell-gap) !important;
     }
 
     body.post-type-archive-review .lunara-review-archive-spotlight,
     body.page-template-page-reviews .lunara-review-archive-spotlight {
         display: grid !important;
-        gap: clamp(20px, 2.6vw, 32px) !important;
+        gap: var(--lunara-reviews-archive-run-gap) !important;
         grid-template-columns: minmax(0, 1fr) !important;
         margin-top: 0 !important;
     }
@@ -2923,7 +2981,7 @@ function lunara_output_review_archive_authority_css() {
     body.post-type-archive-review .lunara-review-archive-run,
     body.page-template-page-reviews .lunara-review-archive-run {
         display: grid !important;
-        gap: clamp(20px, 2.4vw, 30px) !important;
+        gap: var(--lunara-reviews-archive-run-gap) !important;
     }
 
     body.post-type-archive-review .lunara-review-archive-run-head,
@@ -2950,8 +3008,8 @@ function lunara_output_review_archive_authority_css() {
     body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-link,
     body.page-template-page-reviews .lunara-review-feature-card.is-compact .lunara-review-feature-link {
         display: grid !important;
-        grid-template-columns: 116px minmax(0, 1fr) !important;
-        min-height: 154px !important;
+        grid-template-columns: var(--lunara-reviews-archive-compact-media-width) minmax(0, 1fr) !important;
+        min-height: var(--lunara-reviews-archive-compact-media-height) !important;
     }
 
     body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-media,
@@ -2959,11 +3017,11 @@ function lunara_output_review_archive_authority_css() {
         aspect-ratio: auto !important;
         grid-column: 1 !important;
         grid-row: 1 !important;
-        height: 154px !important;
-        max-width: 116px !important;
-        min-height: 154px !important;
+        height: var(--lunara-reviews-archive-compact-media-height) !important;
+        max-width: var(--lunara-reviews-archive-compact-media-width) !important;
+        min-height: var(--lunara-reviews-archive-compact-media-height) !important;
         min-width: 0 !important;
-        width: 116px !important;
+        width: var(--lunara-reviews-archive-compact-media-width) !important;
     }
 
     body.post-type-archive-review .lunara-review-feature-card.is-compact .lunara-review-feature-image,
@@ -2990,8 +3048,9 @@ function lunara_output_review_archive_authority_css() {
     body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-link,
     body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-link {
         display: grid !important;
-        grid-template-columns: minmax(270px, 0.4fr) minmax(0, 1fr) !important;
+        grid-template-columns: minmax(var(--lunara-reviews-archive-lead-media-min), 0.4fr) minmax(0, 1fr) !important;
         grid-template-rows: minmax(0, 1fr) !important;
+        min-height: var(--lunara-reviews-archive-lead-min) !important;
     }
 
     body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-media,
@@ -3020,13 +3079,13 @@ function lunara_output_review_archive_authority_css() {
         grid-column: 2 !important;
         grid-row: 1 !important;
         min-width: 0 !important;
-        padding: clamp(24px, 3.6vw, 46px) !important;
+        padding: clamp(24px, 3.6vw, var(--lunara-reviews-archive-lead-copy-pad)) !important;
     }
 
     body.post-type-archive-review .lunara-review-archive-rail,
     body.page-template-page-reviews .lunara-review-archive-rail {
         display: grid !important;
-        gap: clamp(14px, 1.7vw, 22px) !important;
+        gap: var(--lunara-reviews-archive-rail-gap) !important;
         grid-template-columns: minmax(230px, 0.56fr) repeat(2, minmax(0, 1fr)) !important;
     }
 
@@ -3104,12 +3163,12 @@ function lunara_output_review_archive_authority_css() {
 
         body.post-type-archive-review .lunara-review-feature-card.is-lead .lunara-review-feature-excerpt,
         body.page-template-page-reviews .lunara-review-feature-card.is-lead .lunara-review-feature-excerpt {
-            -webkit-line-clamp: 3 !important;
+            -webkit-line-clamp: var(--lunara-reviews-archive-excerpt-clamp) !important;
         }
 
         body.post-type-archive-review .lunara-review-grid-excerpt,
         body.page-template-page-reviews .lunara-review-grid-excerpt {
-            -webkit-line-clamp: 2 !important;
+            -webkit-line-clamp: var(--lunara-reviews-archive-excerpt-clamp) !important;
         }
 
         body.post-type-archive-review .lunara-review-archive-uniform.lunara-review-grid,
@@ -3490,14 +3549,14 @@ function lunara_output_review_archive_authority_css() {
 
     .lunara-review-archive-page .lunara-review-archive-support-suite {
         display: grid !important;
-        gap: clamp(14px, 1.8vw, 22px) !important;
+        gap: var(--lunara-reviews-archive-rail-gap) !important;
         grid-template-columns: minmax(210px, 0.42fr) minmax(0, 1fr) !important;
         align-items: stretch !important;
     }
 
     .lunara-review-archive-page .lunara-review-archive-rail {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: clamp(14px, 1.7vw, 22px) !important;
+        gap: var(--lunara-reviews-archive-rail-gap) !important;
     }
 
     .lunara-review-archive-page .lunara-review-archive-rail .lunara-review-grid-card {
@@ -3505,7 +3564,7 @@ function lunara_output_review_archive_authority_css() {
     }
 
     .lunara-review-archive-page .lunara-review-archive-rail .lunara-review-grid-link {
-        min-height: 100% !important;
+        min-height: var(--lunara-reviews-archive-card-min) !important;
     }
 
     .lunara-review-archive-page .lunara-review-feature-card,
@@ -3549,6 +3608,11 @@ function lunara_output_review_archive_authority_css() {
     .lunara-review-archive-page .lunara-review-archive-run-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
         align-items: stretch !important;
+    }
+
+    .lunara-review-archive-page .lunara-review-archive-run-grid .lunara-review-grid-card,
+    .lunara-review-archive-page .lunara-review-archive-run-grid .lunara-review-grid-link {
+        min-height: var(--lunara-reviews-archive-card-min) !important;
     }
 
     .lunara-review-archive-page .lunara-review-archive-retention-card {
@@ -3622,7 +3686,7 @@ function lunara_output_review_archive_authority_css() {
     .lunara-review-archive-page .lunara-review-archive-support-suite {
         align-items: stretch !important;
         display: grid !important;
-        gap: clamp(16px, 2vw, 24px) !important;
+        gap: var(--lunara-reviews-archive-rail-gap) !important;
         grid-template-columns: minmax(210px, 0.32fr) minmax(0, 1fr) !important;
         min-width: 0 !important;
         overflow: hidden !important;
@@ -3643,7 +3707,7 @@ function lunara_output_review_archive_authority_css() {
     .lunara-review-archive-page .lunara-review-archive-dynamic-rail {
         align-content: start !important;
         display: grid !important;
-        gap: 12px !important;
+        gap: var(--lunara-reviews-archive-rail-gap) !important;
         grid-template-columns: minmax(0, 1fr) !important;
         grid-template-rows: auto minmax(0, 1fr) auto !important;
         min-width: 0 !important;
@@ -3687,7 +3751,7 @@ function lunara_output_review_archive_authority_css() {
 
     .lunara-review-archive-page .lunara-review-archive-rail-track {
         display: flex !important;
-        gap: clamp(12px, 1.6vw, 18px) !important;
+        gap: var(--lunara-reviews-archive-rail-gap) !important;
         min-width: 0 !important;
         max-width: 100% !important;
         overflow-x: auto !important;
@@ -3711,7 +3775,7 @@ function lunara_output_review_archive_authority_css() {
 
     .lunara-review-archive-page .lunara-review-archive-rail-item {
         display: grid !important;
-        flex: 0 0 min(360px, calc((100% - 18px) / 2)) !important;
+        flex: 0 0 min(360px, calc((100% - var(--lunara-reviews-archive-rail-gap)) / 2)) !important;
         min-width: 0 !important;
         scroll-snap-align: start !important;
     }

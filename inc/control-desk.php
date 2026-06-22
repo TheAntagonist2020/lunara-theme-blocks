@@ -852,6 +852,213 @@ function lunara_control_desk_save_homepage_studio() {
 }
 add_action( 'admin_post_lunara_save_homepage_studio', 'lunara_control_desk_save_homepage_studio' );
 
+function lunara_control_desk_reviews_archive_select_specs() {
+    return array(
+        'lunara_reviews_archive_density'         => array(
+            'label'   => __( 'Archive density', 'lunara-film' ),
+            'default' => 'editorial',
+            'note'    => __( 'Tunes the public Reviews desk from tighter scan to larger feature rhythm.', 'lunara-film' ),
+            'options' => array(
+                'compact'   => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'Shorter gaps and quicker card reads for a faster archive scan.', 'lunara-film' ),
+                ),
+                'editorial' => array(
+                    'label' => __( 'Editorial', 'lunara-film' ),
+                    'copy'  => __( 'The default Reviews desk rhythm: dense, legible, and publication-grade.', 'lunara-film' ),
+                ),
+                'showcase'  => array(
+                    'label' => __( 'Showcase', 'lunara-film' ),
+                    'copy'  => __( 'More room for the lead chamber and larger criticism cards.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_reviews_archive_lead_prominence' => array(
+            'label'   => __( 'Lead review prominence', 'lunara-film' ),
+            'default' => 'standard',
+            'note'    => __( 'Controls how strongly the top review package anchors the archive.', 'lunara-film' ),
+            'options' => array(
+                'restrained' => array(
+                    'label' => __( 'Restrained', 'lunara-film' ),
+                    'copy'  => __( 'A slimmer lead chamber when the archive needs to move quickly.', 'lunara-film' ),
+                ),
+                'standard'   => array(
+                    'label' => __( 'Standard', 'lunara-film' ),
+                    'copy'  => __( 'Balanced lead emphasis with strong poster visibility.', 'lunara-film' ),
+                ),
+                'feature'    => array(
+                    'label' => __( 'Feature', 'lunara-film' ),
+                    'copy'  => __( 'A more commanding lead package for a premium front-of-archive read.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_reviews_archive_rail_density'    => array(
+            'label'   => __( 'Companion rail density', 'lunara-film' ),
+            'default' => 'editorial',
+            'note'    => __( 'Tunes the native dynamic rail that carries current companion files.', 'lunara-film' ),
+            'options' => array(
+                'compact'   => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'Tighter rail cards and shorter excerpts.', 'lunara-film' ),
+                ),
+                'editorial' => array(
+                    'label' => __( 'Editorial', 'lunara-film' ),
+                    'copy'  => __( 'The default rail cadence with enough visual movement to keep readers moving.', 'lunara-film' ),
+                ),
+                'showcase'  => array(
+                    'label' => __( 'Showcase', 'lunara-film' ),
+                    'copy'  => __( 'Roomier companion cards for stronger poster and pull-quote presence.', 'lunara-film' ),
+                ),
+            ),
+        ),
+    );
+}
+
+function lunara_control_desk_reviews_archive_select_value( $key ) {
+    $specs = lunara_control_desk_reviews_archive_select_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return '';
+    }
+
+    $value = sanitize_key( (string) get_theme_mod( $key, $specs[ $key ]['default'] ) );
+
+    if ( ! isset( $specs[ $key ]['options'][ $value ] ) ) {
+        return (string) $specs[ $key ]['default'];
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_reviews_archive_number_specs() {
+    return array(
+        'lunara_reviews_archive_section_gap'         => array(
+            'label'   => __( 'Section rhythm', 'lunara-film' ),
+            'default' => 40,
+            'min'     => 20,
+            'max'     => 90,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Space between major Reviews archive modules.', 'lunara-film' ),
+        ),
+        'lunara_reviews_archive_lead_min_height'     => array(
+            'label'   => __( 'Lead package height', 'lunara-film' ),
+            'default' => 460,
+            'min'     => 340,
+            'max'     => 640,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Minimum height for the top lead review chamber.', 'lunara-film' ),
+        ),
+        'lunara_reviews_archive_card_min_height'     => array(
+            'label'   => __( 'Archive card height', 'lunara-film' ),
+            'default' => 360,
+            'min'     => 260,
+            'max'     => 540,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Minimum height for the review cards in the main archive run.', 'lunara-film' ),
+        ),
+        'lunara_reviews_archive_compact_media_width' => array(
+            'label'   => __( 'Compact media width', 'lunara-film' ),
+            'default' => 116,
+            'min'     => 92,
+            'max'     => 150,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Poster chamber width for compact companion cards.', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_reviews_archive_clamp_number( $key, $value ) {
+    $specs = lunara_control_desk_reviews_archive_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    if ( is_array( $value ) ) {
+        $value = reset( $value );
+    }
+
+    $spec  = $specs[ $key ];
+    $value = absint( $value );
+
+    if ( $value < $spec['min'] ) {
+        return absint( $spec['min'] );
+    }
+
+    if ( $value > $spec['max'] ) {
+        return absint( $spec['max'] );
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_reviews_archive_number_value( $key ) {
+    $specs = lunara_control_desk_reviews_archive_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    return lunara_control_desk_reviews_archive_clamp_number(
+        $key,
+        get_theme_mod( $key, $specs[ $key ]['default'] )
+    );
+}
+
+function lunara_control_desk_save_reviews_archive_studio() {
+    $redirect = lunara_control_desk_admin_url(
+        array(
+            'tab' => 'theme-studio',
+        )
+    ) . '#lunara-theme-studio-reviews-archive-studio';
+
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        wp_safe_redirect( add_query_arg( 'lunara_notice', 'reviews_archive_studio_forbidden', $redirect ) );
+        exit;
+    }
+
+    check_admin_referer( 'lunara_save_reviews_archive_studio', 'lunara_reviews_archive_nonce' );
+
+    $raw_selects = isset( $_POST['lunara_reviews_archive_select'] ) && is_array( $_POST['lunara_reviews_archive_select'] )
+        ? wp_unslash( $_POST['lunara_reviews_archive_select'] )
+        : array();
+
+    foreach ( lunara_control_desk_reviews_archive_select_specs() as $key => $spec ) {
+        $value = isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'];
+        if ( ! isset( $spec['options'][ $value ] ) ) {
+            $value = (string) $spec['default'];
+        }
+        set_theme_mod( $key, $value );
+    }
+
+    $raw_numbers = isset( $_POST['lunara_reviews_archive_number'] ) && is_array( $_POST['lunara_reviews_archive_number'] )
+        ? wp_unslash( $_POST['lunara_reviews_archive_number'] )
+        : array();
+    $raw_resets  = isset( $_POST['lunara_reviews_archive_reset'] ) && is_array( $_POST['lunara_reviews_archive_reset'] )
+        ? wp_unslash( $_POST['lunara_reviews_archive_reset'] )
+        : array();
+    $resets      = array_map( 'sanitize_key', array_keys( $raw_resets ) );
+
+    foreach ( lunara_control_desk_reviews_archive_number_specs() as $key => $spec ) {
+        if ( in_array( $key, $resets, true ) ) {
+            remove_theme_mod( $key );
+            continue;
+        }
+
+        if ( array_key_exists( $key, $raw_numbers ) ) {
+            set_theme_mod( $key, (string) lunara_control_desk_reviews_archive_clamp_number( $key, $raw_numbers[ $key ] ) );
+        }
+    }
+
+    wp_safe_redirect( add_query_arg( 'lunara_notice', 'reviews_archive_studio_saved', $redirect ) );
+    exit;
+}
+add_action( 'admin_post_lunara_save_reviews_archive_studio', 'lunara_control_desk_save_reviews_archive_studio' );
+
 function lunara_control_desk_image_source_surfaces() {
     return array(
         'review-card'  => array(
@@ -5189,6 +5396,155 @@ function lunara_control_desk_render_homepage_studio() {
     <?php
 }
 
+function lunara_control_desk_render_reviews_archive_select_control( $key, $spec ) {
+    $value     = lunara_control_desk_reviews_archive_select_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <fieldset class="lunara-control-desk-homepage-choice">
+        <legend>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </legend>
+        <div class="lunara-control-desk-homepage-choice-options">
+            <?php foreach ( $spec['options'] as $option_key => $option ) : ?>
+                <label class="<?php echo $value === $option_key ? 'is-selected' : ''; ?>">
+                    <input
+                        type="radio"
+                        name="lunara_reviews_archive_select[<?php echo esc_attr( $key ); ?>]"
+                        value="<?php echo esc_attr( $option_key ); ?>"
+                        <?php checked( $value, $option_key ); ?>
+                    />
+                    <span>
+                        <strong><?php echo esc_html( $option['label'] ); ?></strong>
+                        <small><?php echo esc_html( $option['copy'] ); ?></small>
+                    </span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+    </fieldset>
+    <?php
+}
+
+function lunara_control_desk_render_reviews_archive_number_control( $key, $spec ) {
+    $value     = lunara_control_desk_reviews_archive_number_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <label class="lunara-control-desk-homepage-number" data-lunara-brand-number-control>
+        <span>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+        </span>
+        <input
+            type="range"
+            min="<?php echo esc_attr( $spec['min'] ); ?>"
+            max="<?php echo esc_attr( $spec['max'] ); ?>"
+            step="<?php echo esc_attr( $spec['step'] ); ?>"
+            value="<?php echo esc_attr( $value ); ?>"
+            data-lunara-brand-range
+        />
+        <span class="lunara-control-desk-brand-number-value">
+            <input
+                type="number"
+                name="lunara_reviews_archive_number[<?php echo esc_attr( $key ); ?>]"
+                min="<?php echo esc_attr( $spec['min'] ); ?>"
+                max="<?php echo esc_attr( $spec['max'] ); ?>"
+                step="<?php echo esc_attr( $spec['step'] ); ?>"
+                value="<?php echo esc_attr( $value ); ?>"
+                data-lunara-brand-number
+            />
+            <em><?php echo esc_html( $spec['unit'] ); ?></em>
+        </span>
+        <span class="lunara-control-desk-brand-reset">
+            <label>
+                <input type="checkbox" name="lunara_reviews_archive_reset[<?php echo esc_attr( $key ); ?>]" value="1" />
+                <?php
+                printf(
+                    /* translators: %d: setting default value. */
+                    esc_html__( 'Reset to %d', 'lunara-film' ),
+                    absint( $spec['default'] )
+                );
+                ?>
+            </label>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </span>
+    </label>
+    <?php
+}
+
+function lunara_control_desk_render_reviews_archive_studio() {
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        ?>
+        <section id="lunara-theme-studio-reviews-archive-studio" class="lunara-control-desk-homepage-studio">
+            <div class="lunara-control-desk-panel-header">
+                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Reviews Archive Studio', 'lunara-film' ); ?></p>
+                <h3><?php esc_html_e( 'Reviews archive controls require theme editing permission', 'lunara-film' ); ?></h3>
+                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'The public archive remains visible, but direct Reviews rhythm changes are limited to administrators.', 'lunara-film' ); ?></p>
+            </div>
+        </section>
+        <?php
+        return;
+    }
+    ?>
+    <section id="lunara-theme-studio-reviews-archive-studio" class="lunara-control-desk-homepage-studio">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Reviews Archive Studio', 'lunara-film' ); ?></p>
+            <h3><?php esc_html_e( 'Reviews desk density and companion rail controls', 'lunara-film' ); ?></h3>
+            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Tune the Reviews archive like a route-family product: lead authority, companion movement, and archive card rhythm, all without raw CSS.', 'lunara-film' ); ?></p>
+        </div>
+        <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+            <input type="hidden" name="action" value="lunara_save_reviews_archive_studio" />
+            <?php wp_nonce_field( 'lunara_save_reviews_archive_studio', 'lunara_reviews_archive_nonce' ); ?>
+
+            <div class="lunara-control-desk-homepage-grid">
+                <div class="lunara-control-desk-homepage-card">
+                    <div class="lunara-control-desk-card-head">
+                        <div>
+                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Editorial Rhythm', 'lunara-film' ); ?></p>
+                            <h3><?php esc_html_e( 'Archive, lead, and rail emphasis', 'lunara-film' ); ?></h3>
+                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'These settings preserve the current archive shell while changing how forcefully each chamber reads.', 'lunara-film' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="lunara-control-desk-homepage-choice-grid">
+                        <?php foreach ( lunara_control_desk_reviews_archive_select_specs() as $key => $spec ) : ?>
+                            <?php lunara_control_desk_render_reviews_archive_select_control( $key, $spec ); ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="lunara-control-desk-homepage-card">
+                    <div class="lunara-control-desk-card-head">
+                        <div>
+                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Geometry', 'lunara-film' ); ?></p>
+                            <h3><?php esc_html_e( 'Spacing and card chambers', 'lunara-film' ); ?></h3>
+                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Every number is clamped server-side so the Reviews page can get tighter without overflow, crop, or empty-space drift.', 'lunara-film' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="lunara-control-desk-homepage-number-grid">
+                        <?php foreach ( lunara_control_desk_reviews_archive_number_specs() as $key => $spec ) : ?>
+                            <?php lunara_control_desk_render_reviews_archive_number_control( $key, $spec ); ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lunara-control-desk-homepage-footer">
+                <div>
+                    <strong><?php esc_html_e( 'Preview after saving', 'lunara-film' ); ?></strong>
+                    <span><?php esc_html_e( 'Use the archive links immediately after saving to judge the lead chamber, rail movement, and card density.', 'lunara-film' ); ?></span>
+                </div>
+                <div class="lunara-control-desk-actions">
+                    <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Reviews Archive Studio', 'lunara-film' ); ?></button>
+                    <a class="button" href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Reviews Desktop', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', home_url( '/reviews/' ) ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Reviews 390px', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( home_url( '/reviews/sinners-2025/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Review Single', 'lunara-film' ); ?></a>
+                </div>
+            </div>
+        </form>
+    </section>
+    <?php
+}
+
 function lunara_control_desk_image_quality_targets() {
     return array(
         'review-card' => array(
@@ -7095,6 +7451,7 @@ function lunara_control_desk_render_theme_studio_tab() {
         <?php lunara_control_desk_render_status_cards( lunara_control_desk_theme_studio_summary_cards( $groups ) ); ?>
         <?php lunara_control_desk_render_brand_console(); ?>
         <?php lunara_control_desk_render_homepage_studio(); ?>
+        <?php lunara_control_desk_render_reviews_archive_studio(); ?>
         <?php lunara_control_desk_render_image_quality_console(); ?>
         <div class="lunara-control-desk-studio-nav" aria-label="<?php echo esc_attr__( 'Theme Studio groups', 'lunara-film' ); ?>">
             <?php foreach ( $groups as $group ) : ?>
@@ -9151,6 +9508,14 @@ function lunara_control_desk_render_notice() {
         'homepage_studio_forbidden' => array(
             'class'   => 'notice-error',
             'message' => __( 'You can view the Control Desk, but changing Homepage Studio controls requires theme editing permission.', 'lunara-film' ),
+        ),
+        'reviews_archive_studio_saved' => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Reviews Archive Studio saved. The archive density and companion rail now read the updated values.', 'lunara-film' ),
+        ),
+        'reviews_archive_studio_forbidden' => array(
+            'class'   => 'notice-error',
+            'message' => __( 'You can view the Control Desk, but changing Reviews Archive Studio controls requires theme editing permission.', 'lunara-film' ),
         ),
     );
 
