@@ -2200,6 +2200,223 @@ function lunara_control_desk_save_journal_archive_studio() {
 }
 add_action( 'admin_post_lunara_save_journal_archive_studio', 'lunara_control_desk_save_journal_archive_studio' );
 
+function lunara_control_desk_utility_search_select_specs() {
+    return array(
+        'lunara_utility_search_density'        => array(
+            'label'   => __( 'Search density', 'lunara-film' ),
+            'default' => 'editorial',
+            'note'    => __( 'Tunes how compact or showcase-led Search and 404 utility surfaces feel.', 'lunara-film' ),
+            'options' => array(
+                'compact'   => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'Tighter command rhythm for fast utility scanning.', 'lunara-film' ),
+                ),
+                'editorial' => array(
+                    'label' => __( 'Editorial', 'lunara-film' ),
+                    'copy'  => __( 'Default Lunara utility rhythm: useful, dense, and still premium.', 'lunara-film' ),
+                ),
+                'showcase'  => array(
+                    'label' => __( 'Showcase', 'lunara-film' ),
+                    'copy'  => __( 'Larger recovery and result chambers when the route should feel more cinematic.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_utility_result_treatment'      => array(
+            'label'   => __( 'Result treatment', 'lunara-film' ),
+            'default' => 'cards',
+            'note'    => __( 'Changes the Search results run without changing query behavior or result order.', 'lunara-film' ),
+            'options' => array(
+                'list'      => array(
+                    'label' => __( 'List', 'lunara-film' ),
+                    'copy'  => __( 'A tighter publication index for high-volume result sets.', 'lunara-film' ),
+                ),
+                'cards'     => array(
+                    'label' => __( 'Cards', 'lunara-film' ),
+                    'copy'  => __( 'Balanced cards with clean media and direct Oscar matches.', 'lunara-film' ),
+                ),
+                'spotlight' => array(
+                    'label' => __( 'Spotlight', 'lunara-film' ),
+                    'copy'  => __( 'The first result gets stronger visual weight for confidence and retention.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_utility_result_media'          => array(
+            'label'   => __( 'Result media', 'lunara-film' ),
+            'default' => 'guarded',
+            'note'    => __( 'Controls how assertively Search uses posters and wide media chambers.', 'lunara-film' ),
+            'options' => array(
+                'guarded'    => array(
+                    'label' => __( 'Guarded', 'lunara-film' ),
+                    'copy'  => __( 'Use media when present while keeping text-only results intentional.', 'lunara-film' ),
+                ),
+                'poster-led' => array(
+                    'label' => __( 'Poster-led', 'lunara-film' ),
+                    'copy'  => __( 'Prioritize stronger poster-like card presence.', 'lunara-film' ),
+                ),
+                'text-led'   => array(
+                    'label' => __( 'Text-led', 'lunara-film' ),
+                    'copy'  => __( 'Suppress decorative media weight when results should read like a clean index.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_utility_recovery_prominence'   => array(
+            'label'   => __( 'Recovery prominence', 'lunara-film' ),
+            'default' => 'standard',
+            'note'    => __( 'Adjusts no-results and 404 recovery cards so utility routes still keep readers moving.', 'lunara-film' ),
+            'options' => array(
+                'quiet'    => array(
+                    'label' => __( 'Quiet', 'lunara-film' ),
+                    'copy'  => __( 'Useful recovery without overpowering the page.', 'lunara-film' ),
+                ),
+                'standard' => array(
+                    'label' => __( 'Standard', 'lunara-film' ),
+                    'copy'  => __( 'A confident recovery block with clear next routes.', 'lunara-film' ),
+                ),
+                'strong'   => array(
+                    'label' => __( 'Strong', 'lunara-film' ),
+                    'copy'  => __( 'Bigger recovery cards when lost readers need obvious direction.', 'lunara-film' ),
+                ),
+            ),
+        ),
+    );
+}
+
+function lunara_control_desk_utility_search_select_value( $key ) {
+    $specs = lunara_control_desk_utility_search_select_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return '';
+    }
+
+    $value = sanitize_key( (string) get_theme_mod( $key, $specs[ $key ]['default'] ) );
+
+    if ( ! isset( $specs[ $key ]['options'][ $value ] ) ) {
+        return (string) $specs[ $key ]['default'];
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_utility_search_number_specs() {
+    return array(
+        'lunara_utility_section_gap'       => array(
+            'label'   => __( 'Section rhythm', 'lunara-film' ),
+            'default' => 42,
+            'min'     => 20,
+            'max'     => 84,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Space between Search/404 command, match, result, and recovery modules.', 'lunara-film' ),
+        ),
+        'lunara_utility_result_min_height' => array(
+            'label'   => __( 'Result card height', 'lunara-film' ),
+            'default' => 158,
+            'min'     => 118,
+            'max'     => 260,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Minimum chamber height for Search result cards and direct Oscar matches.', 'lunara-film' ),
+        ),
+        'lunara_utility_card_grid_min'     => array(
+            'label'   => __( 'Card grid width', 'lunara-film' ),
+            'default' => 280,
+            'min'     => 220,
+            'max'     => 360,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Responsive minimum column width for utility result grids.', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_utility_search_clamp_number( $key, $value ) {
+    $specs = lunara_control_desk_utility_search_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    if ( is_array( $value ) ) {
+        $value = reset( $value );
+    }
+
+    $spec  = $specs[ $key ];
+    $value = absint( $value );
+
+    if ( $value < $spec['min'] ) {
+        return absint( $spec['min'] );
+    }
+
+    if ( $value > $spec['max'] ) {
+        return absint( $spec['max'] );
+    }
+
+    return $value;
+}
+
+function lunara_control_desk_utility_search_number_value( $key ) {
+    $specs = lunara_control_desk_utility_search_number_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return 0;
+    }
+
+    return lunara_control_desk_utility_search_clamp_number(
+        $key,
+        get_theme_mod( $key, $specs[ $key ]['default'] )
+    );
+}
+
+function lunara_control_desk_save_utility_search_studio() {
+    $redirect = lunara_control_desk_admin_url(
+        array(
+            'tab' => 'theme-studio',
+        )
+    ) . '#lunara-theme-studio-utility-search-studio';
+
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        wp_safe_redirect( add_query_arg( 'lunara_notice', 'utility_search_studio_forbidden', $redirect ) );
+        exit;
+    }
+
+    check_admin_referer( 'lunara_save_utility_search_studio', 'lunara_utility_search_nonce' );
+
+    $raw_selects = isset( $_POST['lunara_utility_search_select'] ) && is_array( $_POST['lunara_utility_search_select'] )
+        ? wp_unslash( $_POST['lunara_utility_search_select'] )
+        : array();
+
+    foreach ( lunara_control_desk_utility_search_select_specs() as $key => $spec ) {
+        $value = isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'];
+        if ( ! isset( $spec['options'][ $value ] ) ) {
+            $value = (string) $spec['default'];
+        }
+        set_theme_mod( $key, $value );
+    }
+
+    $raw_numbers = isset( $_POST['lunara_utility_search_number'] ) && is_array( $_POST['lunara_utility_search_number'] )
+        ? wp_unslash( $_POST['lunara_utility_search_number'] )
+        : array();
+    $raw_resets  = isset( $_POST['lunara_utility_search_reset'] ) && is_array( $_POST['lunara_utility_search_reset'] )
+        ? wp_unslash( $_POST['lunara_utility_search_reset'] )
+        : array();
+    $resets      = array_map( 'sanitize_key', array_keys( $raw_resets ) );
+
+    foreach ( lunara_control_desk_utility_search_number_specs() as $key => $spec ) {
+        if ( in_array( $key, $resets, true ) ) {
+            remove_theme_mod( $key );
+            continue;
+        }
+
+        if ( array_key_exists( $key, $raw_numbers ) ) {
+            set_theme_mod( $key, (string) lunara_control_desk_utility_search_clamp_number( $key, $raw_numbers[ $key ] ) );
+        }
+    }
+
+    wp_safe_redirect( add_query_arg( 'lunara_notice', 'utility_search_studio_saved', $redirect ) );
+    exit;
+}
+add_action( 'admin_post_lunara_save_utility_search_studio', 'lunara_control_desk_save_utility_search_studio' );
+
 function lunara_control_desk_image_source_surfaces() {
     return array(
         'review-card'  => array(
@@ -6930,6 +7147,159 @@ function lunara_control_desk_render_review_single_studio() {
     <?php
 }
 
+function lunara_control_desk_render_utility_search_select_control( $key, $spec ) {
+    $value     = lunara_control_desk_utility_search_select_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <fieldset class="lunara-control-desk-homepage-choice">
+        <legend>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </legend>
+        <div class="lunara-control-desk-homepage-choice-options">
+            <?php foreach ( $spec['options'] as $option_key => $option ) : ?>
+                <label class="<?php echo $value === $option_key ? 'is-selected' : ''; ?>">
+                    <input
+                        type="radio"
+                        name="lunara_utility_search_select[<?php echo esc_attr( $key ); ?>]"
+                        value="<?php echo esc_attr( $option_key ); ?>"
+                        <?php checked( $value, $option_key ); ?>
+                    />
+                    <span>
+                        <strong><?php echo esc_html( $option['label'] ); ?></strong>
+                        <small><?php echo esc_html( $option['copy'] ); ?></small>
+                    </span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+    </fieldset>
+    <?php
+}
+
+function lunara_control_desk_render_utility_search_number_control( $key, $spec ) {
+    $value     = lunara_control_desk_utility_search_number_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <label class="lunara-control-desk-homepage-number" data-lunara-brand-number-control>
+        <span>
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <small><?php echo esc_html( $spec['note'] ); ?></small>
+        </span>
+        <input
+            type="range"
+            min="<?php echo esc_attr( $spec['min'] ); ?>"
+            max="<?php echo esc_attr( $spec['max'] ); ?>"
+            step="<?php echo esc_attr( $spec['step'] ); ?>"
+            value="<?php echo esc_attr( $value ); ?>"
+            data-lunara-brand-range
+        />
+        <span class="lunara-control-desk-brand-number-value">
+            <input
+                type="number"
+                name="lunara_utility_search_number[<?php echo esc_attr( $key ); ?>]"
+                min="<?php echo esc_attr( $spec['min'] ); ?>"
+                max="<?php echo esc_attr( $spec['max'] ); ?>"
+                step="<?php echo esc_attr( $spec['step'] ); ?>"
+                value="<?php echo esc_attr( $value ); ?>"
+                data-lunara-brand-number
+            />
+            <em><?php echo esc_html( $spec['unit'] ); ?></em>
+        </span>
+        <span class="lunara-control-desk-brand-reset">
+            <label>
+                <input type="checkbox" name="lunara_utility_search_reset[<?php echo esc_attr( $key ); ?>]" value="1" />
+                <?php
+                printf(
+                    /* translators: %d: setting default value. */
+                    esc_html__( 'Reset to %d', 'lunara-film' ),
+                    absint( $spec['default'] )
+                );
+                ?>
+            </label>
+            <em><?php echo esc_html( $is_custom ? __( 'custom', 'lunara-film' ) : __( 'default', 'lunara-film' ) ); ?></em>
+        </span>
+    </label>
+    <?php
+}
+
+function lunara_control_desk_render_utility_search_studio() {
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        ?>
+        <section id="lunara-theme-studio-utility-search-studio" class="lunara-control-desk-homepage-studio">
+            <div class="lunara-control-desk-panel-header">
+                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Utility Search Studio', 'lunara-film' ); ?></p>
+                <h3><?php esc_html_e( 'Utility route controls require theme editing permission', 'lunara-film' ); ?></h3>
+                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Search and recovery routes remain visible, but direct utility rhythm changes are limited to administrators.', 'lunara-film' ); ?></p>
+            </div>
+        </section>
+        <?php
+        return;
+    }
+
+    $search_preview   = home_url( '/?s=sinners' );
+    $recovery_preview = home_url( '/definitely-not-a-real-lunara-route/' );
+    ?>
+    <section id="lunara-theme-studio-utility-search-studio" class="lunara-control-desk-homepage-studio">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Utility Search Studio', 'lunara-film' ); ?></p>
+            <h3><?php esc_html_e( 'Search and recovery routes without the dead utility-page feeling', 'lunara-film' ); ?></h3>
+            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Tune Search results, Oscar direct matches, no-results recovery, and 404 routing as a small but real publication surface. No URL, query, or content behavior changes.', 'lunara-film' ); ?></p>
+        </div>
+        <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+            <input type="hidden" name="action" value="lunara_save_utility_search_studio" />
+            <?php wp_nonce_field( 'lunara_save_utility_search_studio', 'lunara_utility_search_nonce' ); ?>
+
+            <div class="lunara-control-desk-homepage-grid">
+                <div class="lunara-control-desk-homepage-card">
+                    <div class="lunara-control-desk-card-head">
+                        <div>
+                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Utility Rhythm', 'lunara-film' ); ?></p>
+                            <h3><?php esc_html_e( 'Search, direct matches, and recovery emphasis', 'lunara-film' ); ?></h3>
+                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'These controls keep the shared Lunara type system while giving utility pages their own route-family pulse.', 'lunara-film' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="lunara-control-desk-homepage-choice-grid">
+                        <?php foreach ( lunara_control_desk_utility_search_select_specs() as $key => $spec ) : ?>
+                            <?php lunara_control_desk_render_utility_search_select_control( $key, $spec ); ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="lunara-control-desk-homepage-card">
+                    <div class="lunara-control-desk-card-head">
+                        <div>
+                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Geometry', 'lunara-film' ); ?></p>
+                            <h3><?php esc_html_e( 'Spacing, result height, and grid width', 'lunara-film' ); ?></h3>
+                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Values clamp server-side so Search and 404 can get denser without mobile overflow, empty chambers, or cramped copy.', 'lunara-film' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="lunara-control-desk-homepage-number-grid">
+                        <?php foreach ( lunara_control_desk_utility_search_number_specs() as $key => $spec ) : ?>
+                            <?php lunara_control_desk_render_utility_search_number_control( $key, $spec ); ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lunara-control-desk-homepage-footer">
+                <div>
+                    <strong><?php esc_html_e( 'Preview after saving', 'lunara-film' ); ?></strong>
+                    <span><?php esc_html_e( 'Check a populated Search page, a 390px Search view, and the recovery route after each change.', 'lunara-film' ); ?></span>
+                </div>
+                <div class="lunara-control-desk-actions">
+                    <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Utility Search Studio', 'lunara-film' ); ?></button>
+                    <a class="button" href="<?php echo esc_url( $search_preview ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Search Desktop', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', $search_preview ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Search 390px', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( $recovery_preview ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '404 Recovery', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', $recovery_preview ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '404 390px', 'lunara-film' ); ?></a>
+                </div>
+            </div>
+        </form>
+    </section>
+    <?php
+}
+
 function lunara_control_desk_oscars_dossier_preset_preview_url( $path, $preset_key, $mobile = false ) {
     $url = add_query_arg( 'lunara-oscars-preset', $preset_key, home_url( $path ) );
 
@@ -8442,6 +8812,15 @@ function lunara_control_desk_theme_studio_groups() {
             'settings' => array( 'lunara_oscars_portal_title', 'lunara_oscars_portal_intro', 'lunara_home_ledger_heading' ),
         ),
         array(
+            'label'    => __( 'Utility Search', 'lunara-film' ),
+            'section'  => 'lunara_utility_search_studio',
+            'preview'  => home_url( '/?s=sinners' ),
+            'owner'    => __( 'Search and recovery templates', 'lunara-film' ),
+            'note'     => __( 'Search results, Oscar direct matches, no-results recovery, and 404 route rhythm.', 'lunara-film' ),
+            'renders'  => array( __( 'Search results', 'lunara-film' ), __( 'Oscar direct matches', 'lunara-film' ), __( 'No-results recovery', 'lunara-film' ), __( '404 recovery', 'lunara-film' ) ),
+            'settings' => array( 'lunara_utility_search_density', 'lunara_utility_result_treatment', 'lunara_utility_result_media', 'lunara_utility_recovery_prominence', 'lunara_utility_section_gap', 'lunara_utility_result_min_height', 'lunara_utility_card_grid_min' ),
+        ),
+        array(
             'label'    => __( 'Footer', 'lunara-film' ),
             'section'  => 'lunara_footer_options',
             'preview'  => home_url( '/' ),
@@ -8560,6 +8939,34 @@ function lunara_control_desk_theme_studio_setting_copy( $setting ) {
         'lunara_home_ledger_heading'             => array(
             'label' => __( 'Home Ledger heading', 'lunara-film' ),
             'hint'  => __( 'Labels the homepage Academy/Oscars Ledger lane.', 'lunara-film' ),
+        ),
+        'lunara_utility_search_density'          => array(
+            'label' => __( 'Utility density', 'lunara-film' ),
+            'hint'  => __( 'Tunes the compact, editorial, or showcase rhythm for Search and 404.', 'lunara-film' ),
+        ),
+        'lunara_utility_result_treatment'        => array(
+            'label' => __( 'Utility result treatment', 'lunara-film' ),
+            'hint'  => __( 'Controls whether Search results read as list, cards, or a spotlight run.', 'lunara-film' ),
+        ),
+        'lunara_utility_result_media'            => array(
+            'label' => __( 'Utility media treatment', 'lunara-film' ),
+            'hint'  => __( 'Controls how assertively utility result cards use image chambers.', 'lunara-film' ),
+        ),
+        'lunara_utility_recovery_prominence'     => array(
+            'label' => __( 'Recovery prominence', 'lunara-film' ),
+            'hint'  => __( 'Tunes no-results and 404 recovery weight.', 'lunara-film' ),
+        ),
+        'lunara_utility_section_gap'             => array(
+            'label' => __( 'Utility section rhythm', 'lunara-film' ),
+            'hint'  => __( 'Controls spacing between Search/404 modules.', 'lunara-film' ),
+        ),
+        'lunara_utility_result_min_height'       => array(
+            'label' => __( 'Utility result height', 'lunara-film' ),
+            'hint'  => __( 'Sets the minimum card chamber height for Search result modules.', 'lunara-film' ),
+        ),
+        'lunara_utility_card_grid_min'           => array(
+            'label' => __( 'Utility grid width', 'lunara-film' ),
+            'hint'  => __( 'Sets responsive utility result grid width.', 'lunara-film' ),
         ),
         'lunara_footer_tagline'                  => array(
             'label' => __( 'Footer tagline', 'lunara-film' ),
@@ -8699,6 +9106,16 @@ function lunara_control_desk_theme_studio_command_index_items() {
             'preview_url'        => home_url( '/reviews/' ),
             'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/reviews/' ) ),
             'next'               => __( 'Next frontier: Review single-page Debrief, Pair It With, and spoiler bridge controls.', 'lunara-film' ),
+        ),
+        array(
+            'label'              => __( 'Utility Search Studio', 'lunara-film' ),
+            'status'             => __( 'Live controls', 'lunara-film' ),
+            'surface'            => __( 'Search and recovery', 'lunara-film' ),
+            'affects'            => __( 'Search density, result cards, Oscar direct matches, 404 recovery, and no-results routing.', 'lunara-film' ),
+            'anchor'             => '#lunara-theme-studio-utility-search-studio',
+            'preview_url'        => home_url( '/?s=sinners' ),
+            'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/?s=sinners' ) ),
+            'next'               => __( 'Next frontier: generic archives, contact, and utility retention modules.', 'lunara-film' ),
         ),
         array(
             'label'              => __( 'Image Authority', 'lunara-film' ),
@@ -9367,6 +9784,7 @@ function lunara_control_desk_render_theme_studio_tab() {
         <?php lunara_control_desk_render_journal_archive_studio(); ?>
         <?php lunara_control_desk_render_reviews_archive_studio(); ?>
         <?php lunara_control_desk_render_review_single_studio(); ?>
+        <?php lunara_control_desk_render_utility_search_studio(); ?>
         <?php lunara_control_desk_render_oscars_dossier_studio(); ?>
         <?php lunara_control_desk_render_image_quality_console(); ?>
         <div class="lunara-control-desk-studio-nav" aria-label="<?php echo esc_attr__( 'Theme Studio groups', 'lunara-film' ); ?>">
@@ -11444,6 +11862,14 @@ function lunara_control_desk_render_notice() {
         'review_single_studio_forbidden' => array(
             'class'   => 'notice-error',
             'message' => __( 'You can view the Control Desk, but changing Review Single Studio controls requires theme editing permission.', 'lunara-film' ),
+        ),
+        'utility_search_studio_saved' => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Utility Search Studio saved. Search, Oscar direct matches, and recovery routes now read the updated values.', 'lunara-film' ),
+        ),
+        'utility_search_studio_forbidden' => array(
+            'class'   => 'notice-error',
+            'message' => __( 'You can view the Control Desk, but changing Utility Search Studio controls requires theme editing permission.', 'lunara-film' ),
         ),
         'oscars_dossier_studio_saved' => array(
             'class'   => 'notice-success',

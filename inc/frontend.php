@@ -8210,6 +8210,220 @@ function lunara_output_oscars_dossier_studio_css() {
 add_action( 'wp_head', 'lunara_output_oscars_dossier_studio_css', 1002 );
 
 /**
+ * Emit bounded Utility Search Studio controls.
+ */
+function lunara_output_utility_search_studio_css() {
+    if ( is_admin() || is_feed() || ! ( is_search() || is_404() ) ) {
+        return;
+    }
+
+    $density = lunara_home_select_setting(
+        'lunara_utility_search_density',
+        'editorial',
+        array( 'compact', 'editorial', 'showcase' )
+    );
+    $result_treatment = lunara_home_select_setting(
+        'lunara_utility_result_treatment',
+        'cards',
+        array( 'list', 'cards', 'spotlight' )
+    );
+    $result_media = lunara_home_select_setting(
+        'lunara_utility_result_media',
+        'guarded',
+        array( 'guarded', 'poster-led', 'text-led' )
+    );
+    $recovery_prominence = lunara_home_select_setting(
+        'lunara_utility_recovery_prominence',
+        'standard',
+        array( 'quiet', 'standard', 'strong' )
+    );
+
+    $section_gap       = lunara_home_brand_number_setting( 'lunara_utility_section_gap', 42, 20, 84 );
+    $result_min_height = lunara_home_brand_number_setting( 'lunara_utility_result_min_height', 158, 118, 260 );
+    $card_grid_min     = lunara_home_brand_number_setting( 'lunara_utility_card_grid_min', 280, 220, 360 );
+
+    $copy_lines_map = array(
+        'compact'   => 2,
+        'editorial' => 3,
+        'showcase'  => 4,
+    );
+    $density_pad_map = array(
+        'compact'   => 'clamp(18px, 3vw, 28px)',
+        'editorial' => 'clamp(22px, 3.4vw, 36px)',
+        'showcase'  => 'clamp(28px, 4vw, 46px)',
+    );
+    $density_gap_map = array(
+        'compact'   => '.72',
+        'editorial' => '1',
+        'showcase'  => '1.22',
+    );
+    $media_fit_map = array(
+        'guarded'    => 'cover',
+        'poster-led' => 'cover',
+        'text-led'   => 'contain',
+    );
+    $media_weight_map = array(
+        'guarded'    => '1',
+        'poster-led' => '1.12',
+        'text-led'   => '.72',
+    );
+    $recovery_scale_map = array(
+        'quiet'    => '.88',
+        'standard' => '1',
+        'strong'   => '1.18',
+    );
+
+    $copy_lines     = isset( $copy_lines_map[ $density ] ) ? $copy_lines_map[ $density ] : 3;
+    $density_pad    = isset( $density_pad_map[ $density ] ) ? $density_pad_map[ $density ] : 'clamp(22px, 3.4vw, 36px)';
+    $density_gap    = isset( $density_gap_map[ $density ] ) ? $density_gap_map[ $density ] : '1';
+    $media_fit      = isset( $media_fit_map[ $result_media ] ) ? $media_fit_map[ $result_media ] : 'cover';
+    $media_weight   = isset( $media_weight_map[ $result_media ] ) ? $media_weight_map[ $result_media ] : '1';
+    $recovery_scale = isset( $recovery_scale_map[ $recovery_prominence ] ) ? $recovery_scale_map[ $recovery_prominence ] : '1';
+    ?>
+    <style id="lunara-utility-search-studio-css">
+    body.search .lunara-search-page,
+    body.error404 .lunara-404-page {
+        --lunara-utility-section-gap: <?php echo esc_html( absint( $section_gap ) ); ?>px;
+        --lunara-utility-result-min-height: <?php echo esc_html( absint( $result_min_height ) ); ?>px;
+        --lunara-utility-result-grid-min: <?php echo esc_html( absint( $card_grid_min ) ); ?>px;
+        --lunara-utility-result-media-fit: <?php echo esc_html( $media_fit ); ?>;
+        --lunara-utility-result-copy-lines: <?php echo esc_html( absint( $copy_lines ) ); ?>;
+        --lunara-utility-panel-pad: <?php echo esc_html( $density_pad ); ?>;
+        --lunara-utility-density-gap: <?php echo esc_html( $density_gap ); ?>;
+        --lunara-utility-media-weight: <?php echo esc_html( $media_weight ); ?>;
+        --lunara-utility-recovery-scale: <?php echo esc_html( $recovery_scale ); ?>;
+    }
+
+    body.search .lunara-search-page,
+    body.error404 .lunara-404-page {
+        gap: var(--lunara-utility-section-gap);
+    }
+
+    body.error404 .lunara-404-page {
+        padding-bottom: clamp(28px, 4vw, 52px) !important;
+    }
+
+    body.error404 .lunara-404-shell {
+        margin-bottom: 0 !important;
+    }
+
+    body.error404 .lunara-site-footer {
+        margin-top: clamp(30px, 4vw, 58px) !important;
+        padding-top: clamp(36px, 5vw, 62px) !important;
+    }
+
+    body.search .lunara-search-page .lunara-home-section,
+    body.error404 .lunara-404-page .lunara-home-section,
+    body.search .lunara-search-oscar-shell,
+    body.search .lunara-search-results-shell,
+    body.search .lunara-search-empty-shell,
+    body.error404 .lunara-404-shell {
+        margin-block: calc(var(--lunara-utility-section-gap) * var(--lunara-utility-density-gap));
+    }
+
+    body.search .lunara-search-oscar-grid,
+    body.search .lunara-search-results-grid {
+        display: grid;
+        gap: clamp(14px, calc(var(--lunara-utility-section-gap) * .42), 26px);
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--lunara-utility-result-grid-min)), 1fr));
+        min-width: 0;
+    }
+
+    body.search .lunara-search-result-card,
+    body.search .lunara-search-oscar-card,
+    body.search .lunara-search-results-grid > article,
+    body.search .lunara-search-oscar-grid > article {
+        min-height: var(--lunara-utility-result-min-height);
+    }
+
+    body.search .lunara-search-result-card,
+    body.search .lunara-search-oscar-card,
+    body.search .lunara-search-empty-shell,
+    body.error404 .lunara-404-panel {
+        background:
+            linear-gradient(135deg, rgba(201, 169, 97, .11), transparent 44%),
+            rgba(8, 22, 36, .92);
+        border: 1px solid rgba(201, 169, 97, .18);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, .2);
+        min-width: 0;
+    }
+
+    body.search .lunara-search-empty-shell,
+    body.error404 .lunara-404-panel {
+        padding: calc(var(--lunara-utility-panel-pad) * var(--lunara-utility-recovery-scale));
+    }
+
+    body.search .lunara-search-result-card img,
+    body.search .lunara-search-oscar-card img,
+    body.search .lunara-review-grid-card img,
+    body.search .lunara-dispatch-archive-card img {
+        object-fit: var(--lunara-utility-result-media-fit);
+        transform: scale(var(--lunara-utility-media-weight));
+        transform-origin: center;
+    }
+
+    body.search .lunara-search-result-card p,
+    body.search .lunara-search-oscar-card p,
+    body.search .lunara-review-grid-card p,
+    body.search .lunara-dispatch-archive-card p,
+    body.error404 .lunara-404-panel p {
+        display: -webkit-box;
+        -webkit-line-clamp: var(--lunara-utility-result-copy-lines);
+        line-clamp: var(--lunara-utility-result-copy-lines);
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+    }
+
+    <?php if ( 'list' === $result_treatment ) : ?>
+    body.search .lunara-search-results-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.search .lunara-search-result-card,
+    body.search .lunara-search-results-grid > article {
+        min-height: calc(var(--lunara-utility-result-min-height) * .82);
+    }
+    <?php elseif ( 'spotlight' === $result_treatment ) : ?>
+    @media (min-width: 840px) {
+        body.search .lunara-search-results-grid > article:first-child {
+            grid-column: span 2;
+            min-height: calc(var(--lunara-utility-result-min-height) + 46px);
+        }
+    }
+    <?php endif; ?>
+
+    <?php if ( 'poster-led' === $result_media ) : ?>
+    body.search .lunara-search-results-grid .lunara-review-grid-card,
+    body.search .lunara-search-results-grid .lunara-dispatch-archive-card {
+        min-height: calc(var(--lunara-utility-result-min-height) + 42px);
+    }
+    <?php elseif ( 'text-led' === $result_media ) : ?>
+    body.search .lunara-search-result-card img,
+    body.search .lunara-search-oscar-card img,
+    body.search .lunara-review-grid-card img,
+    body.search .lunara-dispatch-archive-card img {
+        filter: saturate(.9) contrast(.95);
+    }
+    <?php endif; ?>
+
+    @media (max-width: 700px) {
+        body.search .lunara-search-page,
+        body.error404 .lunara-404-page {
+            --lunara-utility-section-gap: min(<?php echo esc_html( absint( $section_gap ) ); ?>px, 34px);
+            --lunara-utility-result-grid-min: min(<?php echo esc_html( absint( $card_grid_min ) ); ?>px, 100%);
+        }
+
+        body.search .lunara-search-oscar-grid,
+        body.search .lunara-search-results-grid {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_output_utility_search_studio_css', 1003 );
+
+/**
  * Final mobile-only Oscars guardrails after plugin-injected head styles.
  */
 function lunara_output_os_late_oscars_mobile_guardrail_css() {
