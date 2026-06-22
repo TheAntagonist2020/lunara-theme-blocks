@@ -9,6 +9,15 @@ get_header();
 
 if ( ! function_exists( 'lunara_search_select_theme_value' ) ) {
     function lunara_search_select_theme_value( $key, $default, $allowed ) {
+        $preview_values = function_exists( 'lunara_get_utility_search_preview_preset_values' ) ? lunara_get_utility_search_preview_preset_values() : array();
+
+        if ( isset( $preview_values[ $key ] ) ) {
+            $preview_value = sanitize_key( (string) $preview_values[ $key ] );
+            if ( in_array( $preview_value, $allowed, true ) ) {
+                return $preview_value;
+            }
+        }
+
         $value = sanitize_key( (string) get_theme_mod( $key, $default ) );
 
         return in_array( $value, $allowed, true ) ? $value : $default;

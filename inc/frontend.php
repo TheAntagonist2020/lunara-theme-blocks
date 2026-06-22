@@ -8212,50 +8212,98 @@ add_action( 'wp_head', 'lunara_output_oscars_dossier_studio_css', 1002 );
 /**
  * Emit bounded Utility Search Studio controls.
  */
+function lunara_get_utility_search_preview_preset_values() {
+    if ( ! current_user_can( 'edit_theme_options' ) || empty( $_GET['lunara-utility-preset'] ) ) {
+        return array();
+    }
+
+    $preset_key = sanitize_key( wp_unslash( $_GET['lunara-utility-preset'] ) );
+    if ( '' === $preset_key || ! function_exists( 'lunara_control_desk_utility_search_preset_specs' ) ) {
+        return array();
+    }
+
+    $presets = lunara_control_desk_utility_search_preset_specs();
+    if ( ! isset( $presets[ $preset_key ]['values'] ) || ! is_array( $presets[ $preset_key ]['values'] ) ) {
+        return array();
+    }
+
+    return $presets[ $preset_key ]['values'];
+}
+
+function lunara_get_utility_search_studio_select_value( $preview_values, $key, $default, $allowed ) {
+    if ( isset( $preview_values[ $key ] ) ) {
+        $preview_value = sanitize_key( (string) $preview_values[ $key ] );
+        $allowed       = array_map( 'sanitize_key', (array) $allowed );
+
+        if ( in_array( $preview_value, $allowed, true ) ) {
+            return $preview_value;
+        }
+    }
+
+    return lunara_home_select_setting( $key, $default, $allowed );
+}
+
+function lunara_get_utility_search_studio_number_value( $preview_values, $key, $default, $min, $max ) {
+    if ( isset( $preview_values[ $key ] ) ) {
+        return max( absint( $min ), min( absint( $max ), absint( $preview_values[ $key ] ) ) );
+    }
+
+    return lunara_home_brand_number_setting( $key, $default, $min, $max );
+}
+
 function lunara_output_utility_search_studio_css() {
     if ( is_admin() || is_feed() || ! ( is_search() || is_404() ) ) {
         return;
     }
 
-    $density = lunara_home_select_setting(
+    $preview_values = lunara_get_utility_search_preview_preset_values();
+
+    $density = lunara_get_utility_search_studio_select_value(
+        $preview_values,
         'lunara_utility_search_density',
         'editorial',
         array( 'compact', 'editorial', 'showcase' )
     );
-    $result_treatment = lunara_home_select_setting(
+    $result_treatment = lunara_get_utility_search_studio_select_value(
+        $preview_values,
         'lunara_utility_result_treatment',
         'cards',
         array( 'list', 'cards', 'spotlight' )
     );
-    $result_media = lunara_home_select_setting(
+    $result_media = lunara_get_utility_search_studio_select_value(
+        $preview_values,
         'lunara_utility_result_media',
         'guarded',
         array( 'guarded', 'poster-led', 'text-led' )
     );
-    $recovery_prominence = lunara_home_select_setting(
+    $recovery_prominence = lunara_get_utility_search_studio_select_value(
+        $preview_values,
         'lunara_utility_recovery_prominence',
         'standard',
         array( 'quiet', 'standard', 'strong' )
     );
-    $lead_focus = lunara_home_select_setting(
+    $lead_focus = lunara_get_utility_search_studio_select_value(
+        $preview_values,
         'lunara_utility_search_lead_focus',
         'balanced',
         array( 'balanced', 'ledger', 'reviews', 'journal' )
     );
-    $spotlight_type = lunara_home_select_setting(
+    $spotlight_type = lunara_get_utility_search_studio_select_value(
+        $preview_values,
         'lunara_utility_search_spotlight_type',
         'automatic',
         array( 'automatic', 'review', 'journal', 'page' )
     );
-    $reentry_primary = lunara_home_select_setting(
+    $reentry_primary = lunara_get_utility_search_studio_select_value(
+        $preview_values,
         'lunara_utility_reentry_primary',
         'home',
         array( 'home', 'reviews', 'journal', 'oscars', 'search' )
     );
 
-    $section_gap       = lunara_home_brand_number_setting( 'lunara_utility_section_gap', 42, 20, 84 );
-    $result_min_height = lunara_home_brand_number_setting( 'lunara_utility_result_min_height', 158, 118, 260 );
-    $card_grid_min     = lunara_home_brand_number_setting( 'lunara_utility_card_grid_min', 280, 220, 360 );
+    $section_gap       = lunara_get_utility_search_studio_number_value( $preview_values, 'lunara_utility_section_gap', 42, 20, 84 );
+    $result_min_height = lunara_get_utility_search_studio_number_value( $preview_values, 'lunara_utility_result_min_height', 158, 118, 260 );
+    $card_grid_min     = lunara_get_utility_search_studio_number_value( $preview_values, 'lunara_utility_card_grid_min', 280, 220, 360 );
 
     $copy_lines_map = array(
         'compact'   => 2,
