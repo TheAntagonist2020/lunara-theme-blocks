@@ -6,8 +6,89 @@
  */
 
 get_header();
+
+if ( ! function_exists( 'lunara_404_select_theme_value' ) ) {
+    function lunara_404_select_theme_value( $key, $default, $allowed ) {
+        $value = sanitize_key( (string) get_theme_mod( $key, $default ) );
+
+        return in_array( $value, $allowed, true ) ? $value : $default;
+    }
+}
+
+if ( ! function_exists( 'lunara_404_order_reentry_actions' ) ) {
+    function lunara_404_order_reentry_actions( $actions, $primary ) {
+        if ( empty( $actions ) || ! is_array( $actions ) ) {
+            return array();
+        }
+
+        $indexed = array();
+        foreach ( $actions as $index => $action ) {
+            $indexed[] = array(
+                'action' => $action,
+                'index'  => $index,
+            );
+        }
+
+        usort(
+            $indexed,
+            static function ( $left, $right ) use ( $primary ) {
+                $left_key  = isset( $left['action']['key'] ) ? (string) $left['action']['key'] : '';
+                $right_key = isset( $right['action']['key'] ) ? (string) $right['action']['key'] : '';
+                $left_rank = $left_key === $primary ? 0 : 1;
+                $right_rank = $right_key === $primary ? 0 : 1;
+
+                if ( $left_rank === $right_rank ) {
+                    return $left['index'] <=> $right['index'];
+                }
+
+                return $left_rank <=> $right_rank;
+            }
+        );
+
+        return array_values(
+            array_map(
+                static function ( $item ) {
+                    return $item['action'];
+                },
+                $indexed
+            )
+        );
+    }
+}
+
+$reentry_primary = lunara_404_select_theme_value( 'lunara_utility_reentry_primary', 'home', array( 'home', 'reviews', 'journal', 'oscars', 'search' ) );
+$reentry_actions = lunara_404_order_reentry_actions(
+    array(
+        array(
+            'key'   => 'home',
+            'label' => __( 'Go Home', 'lunara-film' ),
+            'url'   => home_url( '/' ),
+        ),
+        array(
+            'key'   => 'reviews',
+            'label' => __( 'Open Reviews', 'lunara-film' ),
+            'url'   => home_url( '/reviews/' ),
+        ),
+        array(
+            'key'   => 'journal',
+            'label' => __( 'Open Journal', 'lunara-film' ),
+            'url'   => home_url( '/journal/' ),
+        ),
+        array(
+            'key'   => 'oscars',
+            'label' => __( 'Open The Ledger', 'lunara-film' ),
+            'url'   => home_url( '/oscars/' ),
+        ),
+        array(
+            'key'   => 'search',
+            'label' => __( 'Search', 'lunara-film' ),
+            'url'   => home_url( '/?s=' ),
+        ),
+    ),
+    $reentry_primary
+);
 ?>
-<main id="primary" class="site-main lunara-archive-page lunara-404-page">
+<main id="primary" class="site-main lunara-archive-page lunara-404-page lunara-404-page--primary-<?php echo esc_attr( $reentry_primary ); ?>">
     <section class="lunara-home-section lunara-archive-hero">
         <div class="lunara-editorial-archive-hero-shell">
             <div class="lunara-editorial-archive-hero-copy-wrap">
@@ -46,9 +127,14 @@ get_header();
             </div>
 
             <div class="lunara-404-actions">
-                <a class="lunara-btn lunara-btn-primary" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Go Home', 'lunara-film' ); ?></a>
-                <a class="lunara-btn lunara-btn-secondary" href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>"><?php esc_html_e( 'Open Reviews', 'lunara-film' ); ?></a>
-                <a class="lunara-btn lunara-btn-secondary" href="<?php echo esc_url( home_url( '/oscars/' ) ); ?>"><?php esc_html_e( 'Open The Ledger', 'lunara-film' ); ?></a>
+                <?php foreach ( $reentry_actions as $action ) : ?>
+                    <?php
+                    $is_primary = isset( $action['key'] ) && $reentry_primary === $action['key'];
+                    $classes    = 'lunara-btn lunara-404-action lunara-404-action--' . sanitize_html_class( $action['key'] ?? 'route' );
+                    $classes   .= $is_primary ? ' lunara-btn-primary lunara-404-action--primary' : ' lunara-btn-secondary';
+                    ?>
+                    <a class="<?php echo esc_attr( $classes ); ?>" href="<?php echo esc_url( $action['url'] ); ?>"><?php echo esc_html( $action['label'] ); ?></a>
+                <?php endforeach; ?>
             </div>
 
             <form role="search" method="get" class="lunara-search-form lunara-search-form-shell" action="<?php echo esc_url( home_url( '/' ) ); ?>">

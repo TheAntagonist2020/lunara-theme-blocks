@@ -7,11 +7,140 @@
 
 get_header();
 
+if ( ! function_exists( 'lunara_search_select_theme_value' ) ) {
+    function lunara_search_select_theme_value( $key, $default, $allowed ) {
+        $value = sanitize_key( (string) get_theme_mod( $key, $default ) );
+
+        return in_array( $value, $allowed, true ) ? $value : $default;
+    }
+}
+
+if ( ! function_exists( 'lunara_search_focus_post_type_priority' ) ) {
+    function lunara_search_focus_post_type_priority( $post_type, $focus_type ) {
+        $post_type  = (string) $post_type;
+        $focus_type = (string) $focus_type;
+
+        if ( 'review' === $focus_type ) {
+            return 'review' === $post_type ? 0 : 1;
+        }
+
+        if ( 'journal' === $focus_type ) {
+            return in_array( $post_type, array( 'post', 'journal' ), true ) ? 0 : 1;
+        }
+
+        if ( 'page' === $focus_type ) {
+            return 'page' === $post_type ? 0 : 1;
+        }
+
+        return 1;
+    }
+}
+
+if ( ! function_exists( 'lunara_search_focus_order_posts' ) ) {
+    function lunara_search_focus_order_posts( $posts, $lead_focus, $spotlight_type ) {
+        if ( empty( $posts ) || ! is_array( $posts ) ) {
+            return array();
+        }
+
+        $focus_type = '';
+
+        if ( in_array( $spotlight_type, array( 'review', 'journal', 'page' ), true ) ) {
+            $focus_type = $spotlight_type;
+        } elseif ( 'reviews' === $lead_focus ) {
+            $focus_type = 'review';
+        } elseif ( 'journal' === $lead_focus ) {
+            $focus_type = 'journal';
+        }
+
+        if ( '' === $focus_type ) {
+            return $posts;
+        }
+
+        $indexed = array();
+        foreach ( $posts as $index => $post_item ) {
+            $indexed[] = array(
+                'index' => $index,
+                'post'  => $post_item,
+            );
+        }
+
+        usort(
+            $indexed,
+            static function ( $left, $right ) use ( $focus_type ) {
+                $left_post  = $left['post'];
+                $right_post = $right['post'];
+                $left_type  = $left_post instanceof WP_Post ? $left_post->post_type : '';
+                $right_type = $right_post instanceof WP_Post ? $right_post->post_type : '';
+                $left_rank  = lunara_search_focus_post_type_priority( $left_type, $focus_type );
+                $right_rank = lunara_search_focus_post_type_priority( $right_type, $focus_type );
+
+                if ( $left_rank === $right_rank ) {
+                    return $left['index'] <=> $right['index'];
+                }
+
+                return $left_rank <=> $right_rank;
+            }
+        );
+
+        return array_values(
+            array_map(
+                static function ( $item ) {
+                    return $item['post'];
+                },
+                $indexed
+            )
+        );
+    }
+}
+
+if ( ! function_exists( 'lunara_search_render_oscar_matches' ) ) {
+    function lunara_search_render_oscar_matches( $oscar_matches ) {
+        if ( empty( $oscar_matches ) || ! is_array( $oscar_matches ) ) {
+            return;
+        }
+        ?>
+        <section class="lunara-home-section lunara-search-oscar-shell">
+            <div class="lunara-home-section-head lunara-search-results-head">
+                <div>
+                    <p class="lunara-home-section-kicker"><?php esc_html_e( 'Oscar Signal', 'lunara-film' ); ?></p>
+                    <h2 class="lunara-section-title"><?php esc_html_e( 'Direct Ledger Matches', 'lunara-film' ); ?></h2>
+                </div>
+            </div>
+
+            <div class="lunara-search-oscar-grid">
+                <?php foreach ( $oscar_matches as $match ) : ?>
+                    <article class="lunara-search-oscar-card">
+                        <a class="lunara-search-oscar-link" href="<?php echo esc_url( $match['url'] ); ?>">
+                            <p class="lunara-search-oscar-kicker"><?php echo esc_html( $match['kicker'] ); ?></p>
+                            <h3 class="lunara-search-oscar-title"><?php echo esc_html( $match['title'] ); ?></h3>
+                            <?php if ( ! empty( $match['meta'] ) ) : ?>
+                                <p class="lunara-search-oscar-meta"><?php echo esc_html( $match['meta'] ); ?></p>
+                            <?php endif; ?>
+                        </a>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php
+    }
+}
+
 $query_text    = trim( get_search_query() );
 $result_posts  = lunara_get_loop_posts();
 $oscar_matches = function_exists( 'lunara_get_oscars_search_matches' ) ? lunara_get_oscars_search_matches( $query_text, 6 ) : array();
 $recovery_hits = function_exists( 'lunara_get_search_recovery_routes' ) ? lunara_get_search_recovery_routes( $query_text, 6 ) : array();
 $result_count  = 0;
+$lead_focus    = lunara_search_select_theme_value( 'lunara_utility_search_lead_focus', 'balanced', array( 'balanced', 'ledger', 'reviews', 'journal' ) );
+$spotlight_type = lunara_search_select_theme_value( 'lunara_utility_search_spotlight_type', 'automatic', array( 'automatic', 'review', 'journal', 'page' ) );
+$result_posts  = lunara_search_focus_order_posts( $result_posts, $lead_focus, $spotlight_type );
+$oscar_after_results = in_array( $lead_focus, array( 'reviews', 'journal' ), true );
+$search_page_classes = array(
+    'site-main',
+    'lunara-archive-page',
+    'lunara-search-page',
+    'lunara-search-page--focus-' . $lead_focus,
+    'lunara-search-page--spotlight-' . $spotlight_type,
+);
 
 global $wp_query;
 
@@ -62,7 +191,7 @@ if ( empty( $result_posts ) && empty( $oscar_matches ) && ! empty( $recovery_hit
     );
 }
 ?>
-<main id="primary" class="site-main lunara-archive-page lunara-search-page">
+<main id="primary" class="<?php echo esc_attr( implode( ' ', $search_page_classes ) ); ?>">
     <section class="lunara-home-section lunara-archive-hero">
         <div class="lunara-editorial-archive-hero-shell">
             <div class="lunara-editorial-archive-hero-copy-wrap">
@@ -86,29 +215,8 @@ if ( empty( $result_posts ) && empty( $oscar_matches ) && ! empty( $recovery_hit
         </div>
     </section>
 
-    <?php if ( ! empty( $oscar_matches ) ) : ?>
-        <section class="lunara-home-section lunara-search-oscar-shell">
-            <div class="lunara-home-section-head lunara-search-results-head">
-                <div>
-                    <p class="lunara-home-section-kicker"><?php esc_html_e( 'Oscar Signal', 'lunara-film' ); ?></p>
-                    <h2 class="lunara-section-title"><?php esc_html_e( 'Direct Ledger Matches', 'lunara-film' ); ?></h2>
-                </div>
-            </div>
-
-            <div class="lunara-search-oscar-grid">
-                <?php foreach ( $oscar_matches as $match ) : ?>
-                    <article class="lunara-search-oscar-card">
-                        <a class="lunara-search-oscar-link" href="<?php echo esc_url( $match['url'] ); ?>">
-                            <p class="lunara-search-oscar-kicker"><?php echo esc_html( $match['kicker'] ); ?></p>
-                            <h3 class="lunara-search-oscar-title"><?php echo esc_html( $match['title'] ); ?></h3>
-                            <?php if ( ! empty( $match['meta'] ) ) : ?>
-                                <p class="lunara-search-oscar-meta"><?php echo esc_html( $match['meta'] ); ?></p>
-                            <?php endif; ?>
-                        </a>
-                    </article>
-                <?php endforeach; ?>
-            </div>
-        </section>
+    <?php if ( ! $oscar_after_results ) : ?>
+        <?php lunara_search_render_oscar_matches( $oscar_matches ); ?>
     <?php endif; ?>
 
     <?php if ( ! empty( $result_posts ) ) : ?>
@@ -215,6 +323,10 @@ if ( empty( $result_posts ) && empty( $oscar_matches ) && ! empty( $recovery_hit
                 </div>
             </div>
         </section>
+    <?php endif; ?>
+
+    <?php if ( $oscar_after_results ) : ?>
+        <?php lunara_search_render_oscar_matches( $oscar_matches ); ?>
     <?php endif; ?>
 </main>
 <?php

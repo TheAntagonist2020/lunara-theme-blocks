@@ -8237,6 +8237,21 @@ function lunara_output_utility_search_studio_css() {
         'standard',
         array( 'quiet', 'standard', 'strong' )
     );
+    $lead_focus = lunara_home_select_setting(
+        'lunara_utility_search_lead_focus',
+        'balanced',
+        array( 'balanced', 'ledger', 'reviews', 'journal' )
+    );
+    $spotlight_type = lunara_home_select_setting(
+        'lunara_utility_search_spotlight_type',
+        'automatic',
+        array( 'automatic', 'review', 'journal', 'page' )
+    );
+    $reentry_primary = lunara_home_select_setting(
+        'lunara_utility_reentry_primary',
+        'home',
+        array( 'home', 'reviews', 'journal', 'oscars', 'search' )
+    );
 
     $section_gap       = lunara_home_brand_number_setting( 'lunara_utility_section_gap', 42, 20, 84 );
     $result_min_height = lunara_home_brand_number_setting( 'lunara_utility_result_min_height', 158, 118, 260 );
@@ -8292,6 +8307,7 @@ function lunara_output_utility_search_studio_css() {
         --lunara-utility-density-gap: <?php echo esc_html( $density_gap ); ?>;
         --lunara-utility-media-weight: <?php echo esc_html( $media_weight ); ?>;
         --lunara-utility-recovery-scale: <?php echo esc_html( $recovery_scale ); ?>;
+        --lunara-utility-focus-ring: <?php echo esc_html( 'ledger' === $lead_focus ? 'rgba(201, 169, 97, .34)' : 'rgba(118, 166, 196, .26)' ); ?>;
     }
 
     body.search .lunara-search-page,
@@ -8346,6 +8362,52 @@ function lunara_output_utility_search_studio_css() {
         border: 1px solid rgba(201, 169, 97, .18);
         box-shadow: 0 18px 44px rgba(0, 0, 0, .2);
         min-width: 0;
+    }
+
+    body.search .lunara-search-page--focus-ledger .lunara-search-oscar-shell,
+    body.search .lunara-search-page--focus-reviews .lunara-search-results-shell,
+    body.search .lunara-search-page--focus-journal .lunara-search-results-shell {
+        border: 1px solid var(--lunara-utility-focus-ring);
+        border-radius: 18px;
+        padding: clamp(16px, 2.4vw, 26px);
+        background:
+            linear-gradient(135deg, rgba(201, 169, 97, .08), transparent 45%),
+            rgba(6, 18, 31, .34);
+    }
+
+    body.search .lunara-search-page--focus-reviews .lunara-search-results-head .lunara-home-section-kicker::after,
+    body.search .lunara-search-page--focus-journal .lunara-search-results-head .lunara-home-section-kicker::after,
+    body.search .lunara-search-page--focus-ledger .lunara-search-results-head .lunara-home-section-kicker::after {
+        content: " / Focused";
+        color: rgba(201, 169, 97, .72);
+    }
+
+    body.search .lunara-search-page--spotlight-review .lunara-search-results-grid > .lunara-review-grid-card:first-child,
+    body.search .lunara-search-page--spotlight-journal .lunara-search-results-grid > .lunara-dispatch-archive-card:first-child,
+    body.search .lunara-search-page--spotlight-page .lunara-search-results-grid > .lunara-search-result-card:first-child {
+        outline: 1px solid rgba(201, 169, 97, .34);
+        outline-offset: 4px;
+    }
+
+    body.search .lunara-editorial-archive-debrief-list li {
+        align-items: start;
+        gap: 12px;
+        grid-template-columns: minmax(88px, .45fr) minmax(0, 1fr);
+    }
+
+    body.search .lunara-editorial-archive-debrief-list span {
+        line-height: 1.35;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    body.error404 .lunara-404-page--primary-reviews .lunara-404-action--reviews,
+    body.error404 .lunara-404-page--primary-oscars .lunara-404-action--oscars,
+    body.error404 .lunara-404-page--primary-journal .lunara-404-action--journal,
+    body.error404 .lunara-404-page--primary-search .lunara-404-action--search,
+    body.error404 .lunara-404-page--primary-home .lunara-404-action--home {
+        box-shadow: 0 0 0 1px rgba(201, 169, 97, .34), 0 18px 38px rgba(0, 0, 0, .22);
+        transform: translateY(-1px);
     }
 
     body.search .lunara-search-empty-shell,
@@ -8411,6 +8473,10 @@ function lunara_output_utility_search_studio_css() {
         body.error404 .lunara-404-page {
             --lunara-utility-section-gap: min(<?php echo esc_html( absint( $section_gap ) ); ?>px, 34px);
             --lunara-utility-result-grid-min: min(<?php echo esc_html( absint( $card_grid_min ) ); ?>px, 100%);
+        }
+
+        body.search .lunara-editorial-archive-debrief-list li {
+            grid-template-columns: minmax(0, 1fr);
         }
 
         body.search .lunara-search-oscar-grid,

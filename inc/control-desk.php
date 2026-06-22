@@ -2297,6 +2297,100 @@ function lunara_control_desk_utility_search_select_value( $key ) {
     return $value;
 }
 
+function lunara_control_desk_utility_search_focus_select_specs() {
+    return array(
+        'lunara_utility_search_lead_focus'     => array(
+            'label'   => __( 'Search lead focus', 'lunara-film' ),
+            'default' => 'balanced',
+            'note'    => __( 'Chooses whether Search leads with the ledger or the editorial result run.', 'lunara-film' ),
+            'options' => array(
+                'balanced' => array(
+                    'label' => __( 'Balanced', 'lunara-film' ),
+                    'copy'  => __( 'Keep the current Search mix: direct Oscar signal first, then editorial results.', 'lunara-film' ),
+                ),
+                'ledger'   => array(
+                    'label' => __( 'Ledger', 'lunara-film' ),
+                    'copy'  => __( 'Make Oscar matches the priority chamber when the query points into the historical record.', 'lunara-film' ),
+                ),
+                'reviews'  => array(
+                    'label' => __( 'Reviews', 'lunara-film' ),
+                    'copy'  => __( 'Lead with Review results when criticism should carry the Search page.', 'lunara-film' ),
+                ),
+                'journal'  => array(
+                    'label' => __( 'Journal', 'lunara-film' ),
+                    'copy'  => __( 'Lead with Journal/editorial results when the Search page should feel like the desk.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_utility_search_spotlight_type' => array(
+            'label'   => __( 'Result spotlight type', 'lunara-film' ),
+            'default' => 'automatic',
+            'note'    => __( 'Chooses which result type is eligible to move into the first-card spotlight.', 'lunara-film' ),
+            'options' => array(
+                'automatic' => array(
+                    'label' => __( 'Automatic', 'lunara-film' ),
+                    'copy'  => __( 'Let the selected lead focus decide the first result treatment.', 'lunara-film' ),
+                ),
+                'review'    => array(
+                    'label' => __( 'Review', 'lunara-film' ),
+                    'copy'  => __( 'Prefer Review cards for the first result chamber.', 'lunara-film' ),
+                ),
+                'journal'   => array(
+                    'label' => __( 'Journal', 'lunara-film' ),
+                    'copy'  => __( 'Prefer Journal/editorial entries for the first result chamber.', 'lunara-film' ),
+                ),
+                'page'      => array(
+                    'label' => __( 'Page', 'lunara-film' ),
+                    'copy'  => __( 'Prefer static route pages when Search should function like site navigation.', 'lunara-film' ),
+                ),
+            ),
+        ),
+        'lunara_utility_reentry_primary'       => array(
+            'label'   => __( 'Recovery primary route', 'lunara-film' ),
+            'default' => 'home',
+            'note'    => __( 'Moves the chosen 404/recovery path into the primary re-entry position.', 'lunara-film' ),
+            'options' => array(
+                'home'    => array(
+                    'label' => __( 'Home', 'lunara-film' ),
+                    'copy'  => __( 'Use the homepage as the safest recovery path.', 'lunara-film' ),
+                ),
+                'reviews' => array(
+                    'label' => __( 'Reviews', 'lunara-film' ),
+                    'copy'  => __( 'Push lost readers back toward criticism first.', 'lunara-film' ),
+                ),
+                'journal' => array(
+                    'label' => __( 'Journal', 'lunara-film' ),
+                    'copy'  => __( 'Push lost readers back toward the editorial desk first.', 'lunara-film' ),
+                ),
+                'oscars'  => array(
+                    'label' => __( 'Oscars', 'lunara-film' ),
+                    'copy'  => __( 'Push lost readers toward the Oscar Ledger first.', 'lunara-film' ),
+                ),
+                'search'  => array(
+                    'label' => __( 'Search', 'lunara-film' ),
+                    'copy'  => __( 'Make Search the primary recovery action.', 'lunara-film' ),
+                ),
+            ),
+        ),
+    );
+}
+
+function lunara_control_desk_utility_search_focus_select_value( $key ) {
+    $specs = lunara_control_desk_utility_search_focus_select_specs();
+
+    if ( empty( $specs[ $key ] ) ) {
+        return '';
+    }
+
+    $value = sanitize_key( (string) get_theme_mod( $key, $specs[ $key ]['default'] ) );
+
+    if ( ! isset( $specs[ $key ]['options'][ $value ] ) ) {
+        return (string) $specs[ $key ]['default'];
+    }
+
+    return $value;
+}
+
 function lunara_control_desk_utility_search_number_specs() {
     return array(
         'lunara_utility_section_gap'       => array(
@@ -2387,6 +2481,18 @@ function lunara_control_desk_save_utility_search_studio() {
 
     foreach ( lunara_control_desk_utility_search_select_specs() as $key => $spec ) {
         $value = isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'];
+        if ( ! isset( $spec['options'][ $value ] ) ) {
+            $value = (string) $spec['default'];
+        }
+        set_theme_mod( $key, $value );
+    }
+
+    $raw_focus_selects = isset( $_POST['lunara_utility_search_focus_select'] ) && is_array( $_POST['lunara_utility_search_focus_select'] )
+        ? wp_unslash( $_POST['lunara_utility_search_focus_select'] )
+        : array();
+
+    foreach ( lunara_control_desk_utility_search_focus_select_specs() as $key => $spec ) {
+        $value = isset( $raw_focus_selects[ $key ] ) ? sanitize_key( $raw_focus_selects[ $key ] ) : (string) $spec['default'];
         if ( ! isset( $spec['options'][ $value ] ) ) {
             $value = (string) $spec['default'];
         }
@@ -7177,6 +7283,34 @@ function lunara_control_desk_render_utility_search_select_control( $key, $spec )
     <?php
 }
 
+function lunara_control_desk_render_utility_search_focus_select_control( $key, $spec ) {
+    $value     = lunara_control_desk_utility_search_focus_select_value( $key );
+    $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
+    ?>
+    <div class="lunara-control-desk-homepage-choice">
+        <div class="lunara-control-desk-choice-meta">
+            <strong><?php echo esc_html( $spec['label'] ); ?></strong>
+            <span><?php echo esc_html( $spec['note'] ); ?></span>
+        </div>
+        <div class="lunara-control-desk-radio-grid">
+            <?php foreach ( $spec['options'] as $option_key => $option ) : ?>
+                <label class="lunara-control-desk-radio-card<?php echo $value === $option_key ? ' is-selected' : ''; ?>">
+                    <input
+                        type="radio"
+                        name="lunara_utility_search_focus_select[<?php echo esc_attr( $key ); ?>]"
+                        value="<?php echo esc_attr( $option_key ); ?>"
+                        <?php checked( $value, $option_key ); ?>
+                    />
+                    <strong><?php echo esc_html( $option['label'] ); ?></strong>
+                    <span><?php echo esc_html( $option['copy'] ); ?></span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+        <p class="lunara-control-desk-subtle"><?php echo $is_custom ? esc_html__( 'Custom value active.', 'lunara-film' ) : esc_html__( 'Default value active.', 'lunara-film' ); ?></p>
+    </div>
+    <?php
+}
+
 function lunara_control_desk_render_utility_search_number_control( $key, $spec ) {
     $value     = lunara_control_desk_utility_search_number_value( $key );
     $is_custom = lunara_control_desk_theme_mod_has_custom_value( $key );
@@ -7277,6 +7411,21 @@ function lunara_control_desk_render_utility_search_studio() {
                     <div class="lunara-control-desk-homepage-number-grid">
                         <?php foreach ( lunara_control_desk_utility_search_number_specs() as $key => $spec ) : ?>
                             <?php lunara_control_desk_render_utility_search_number_control( $key, $spec ); ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="lunara-control-desk-homepage-card">
+                    <div class="lunara-control-desk-card-head">
+                        <div>
+                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Search Focus', 'lunara-film' ); ?></p>
+                            <h3><?php esc_html_e( 'Lead route, spotlight type, and recovery priority', 'lunara-film' ); ?></h3>
+                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'These controls change presentation priority only. Search queries, URLs, and result eligibility stay untouched.', 'lunara-film' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="lunara-control-desk-homepage-choice-grid">
+                        <?php foreach ( lunara_control_desk_utility_search_focus_select_specs() as $key => $spec ) : ?>
+                            <?php lunara_control_desk_render_utility_search_focus_select_control( $key, $spec ); ?>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -8818,7 +8967,7 @@ function lunara_control_desk_theme_studio_groups() {
             'owner'    => __( 'Search and recovery templates', 'lunara-film' ),
             'note'     => __( 'Search results, Oscar direct matches, no-results recovery, and 404 route rhythm.', 'lunara-film' ),
             'renders'  => array( __( 'Search results', 'lunara-film' ), __( 'Oscar direct matches', 'lunara-film' ), __( 'No-results recovery', 'lunara-film' ), __( '404 recovery', 'lunara-film' ) ),
-            'settings' => array( 'lunara_utility_search_density', 'lunara_utility_result_treatment', 'lunara_utility_result_media', 'lunara_utility_recovery_prominence', 'lunara_utility_section_gap', 'lunara_utility_result_min_height', 'lunara_utility_card_grid_min' ),
+            'settings' => array( 'lunara_utility_search_density', 'lunara_utility_result_treatment', 'lunara_utility_result_media', 'lunara_utility_recovery_prominence', 'lunara_utility_search_lead_focus', 'lunara_utility_search_spotlight_type', 'lunara_utility_reentry_primary', 'lunara_utility_section_gap', 'lunara_utility_result_min_height', 'lunara_utility_card_grid_min' ),
         ),
         array(
             'label'    => __( 'Footer', 'lunara-film' ),
@@ -8955,6 +9104,18 @@ function lunara_control_desk_theme_studio_setting_copy( $setting ) {
         'lunara_utility_recovery_prominence'     => array(
             'label' => __( 'Recovery prominence', 'lunara-film' ),
             'hint'  => __( 'Tunes no-results and 404 recovery weight.', 'lunara-film' ),
+        ),
+        'lunara_utility_search_lead_focus'       => array(
+            'label' => __( 'Search lead focus', 'lunara-film' ),
+            'hint'  => __( 'Chooses whether Search leads with the ledger, Reviews, or Journal/editorial results.', 'lunara-film' ),
+        ),
+        'lunara_utility_search_spotlight_type'   => array(
+            'label' => __( 'Search spotlight type', 'lunara-film' ),
+            'hint'  => __( 'Chooses which result type gets first-card emphasis when available.', 'lunara-film' ),
+        ),
+        'lunara_utility_reentry_primary'         => array(
+            'label' => __( 'Recovery primary route', 'lunara-film' ),
+            'hint'  => __( 'Moves the chosen 404/recovery path into the primary re-entry position.', 'lunara-film' ),
         ),
         'lunara_utility_section_gap'             => array(
             'label' => __( 'Utility section rhythm', 'lunara-film' ),
