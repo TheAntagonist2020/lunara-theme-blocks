@@ -92,7 +92,7 @@ Assert-True ($controlDeskCss -match '\.lunara-control-desk-status-pill') 'Review
 Assert-True ($controlDeskCss -match '\.lunara-control-desk-source-grid') 'Review Single Studio preset value summaries must be styled.'
 
 foreach ($preview in @(
-    "home_url( '/reviews/sinners-2025/' )",
+    "home_url( '/review/sinners-2025/' )",
     "home_url( '/reviews/bugonia-the-full-spoiler/' )",
     "home_url( '/reviews/' )"
 )) {

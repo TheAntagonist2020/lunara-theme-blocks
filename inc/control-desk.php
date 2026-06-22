@@ -7285,6 +7285,10 @@ function lunara_control_desk_review_single_preset_preview_url( $path, $preset_ke
 }
 
 function lunara_control_desk_review_single_value_label( $key, $value ) {
+    if ( null === $value || '' === (string) $value ) {
+        return __( 'Default', 'lunara-film' );
+    }
+
     $select_specs = lunara_control_desk_review_single_select_specs();
     if ( isset( $select_specs[ $key ]['options'][ $value ]['label'] ) ) {
         return $select_specs[ $key ]['options'][ $value ]['label'];
@@ -7314,6 +7318,79 @@ function lunara_control_desk_review_single_key_label( $key ) {
     return ucwords( str_replace( '_', ' ', $label ) );
 }
 
+function lunara_control_desk_review_single_comparison_specs() {
+    return array(
+        'lunara_review_single_density'              => array(
+            'label' => __( 'Package density', 'lunara-film' ),
+        ),
+        'lunara_review_single_hero_scale'           => array(
+            'label' => __( 'Hero scale', 'lunara-film' ),
+        ),
+        'lunara_review_single_rail_mode'            => array(
+            'label' => __( 'Rail mode', 'lunara-film' ),
+        ),
+        'lunara_review_single_debrief_prominence'   => array(
+            'label' => __( 'Debrief prominence', 'lunara-film' ),
+        ),
+        'lunara_review_single_pairing_density'      => array(
+            'label' => __( 'Pair It With density', 'lunara-film' ),
+        ),
+        'lunara_review_single_spoiler_treatment'    => array(
+            'label' => __( 'Spoiler treatment', 'lunara-film' ),
+        ),
+        'lunara_review_single_trailer_prominence'   => array(
+            'label' => __( 'Trailer prominence', 'lunara-film' ),
+        ),
+        'lunara_review_single_section_gap'          => array(
+            'label' => __( 'Section rhythm', 'lunara-film' ),
+        ),
+        'lunara_review_single_debrief_poster_width' => array(
+            'label' => __( 'Debrief poster width', 'lunara-film' ),
+        ),
+        'lunara_review_related_count'               => array(
+            'label' => __( 'Related review count', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_render_review_single_preset_comparison_item( $preset_key, $preset, $active_preset_key ) {
+    $values    = isset( $preset['values'] ) && is_array( $preset['values'] ) ? $preset['values'] : array();
+    $is_active = $preset_key === $active_preset_key;
+    ?>
+    <article class="lunara-control-desk-review-comparison-item <?php echo $is_active ? 'is-active' : ''; ?>">
+        <header>
+            <strong><?php echo esc_html( isset( $preset['label'] ) ? $preset['label'] : $preset_key ); ?></strong>
+            <span><?php echo esc_html( $is_active ? __( 'active package', 'lunara-film' ) : __( 'available preset', 'lunara-film' ) ); ?></span>
+        </header>
+        <dl>
+            <?php foreach ( lunara_control_desk_review_single_comparison_specs() as $key => $spec ) : ?>
+                <div>
+                    <dt><?php echo esc_html( $spec['label'] ); ?></dt>
+                    <dd><?php echo esc_html( lunara_control_desk_review_single_value_label( $key, isset( $values[ $key ] ) ? $values[ $key ] : '' ) ); ?></dd>
+                </div>
+            <?php endforeach; ?>
+        </dl>
+    </article>
+    <?php
+}
+
+function lunara_control_desk_render_review_single_preset_comparison_strip( $presets, $active_preset_key ) {
+    $presets = is_array( $presets ) ? $presets : lunara_control_desk_review_single_preset_specs();
+    ?>
+    <div class="lunara-control-desk-review-comparison-strip" aria-label="<?php esc_attr_e( 'Review Single preset comparison', 'lunara-film' ); ?>">
+        <div class="lunara-control-desk-review-comparison-head">
+            <strong><?php esc_html_e( 'Compare the Review packages', 'lunara-film' ); ?></strong>
+            <span><?php echo esc_html( $active_preset_key ? __( 'Saved controls match one of these presets.', 'lunara-film' ) : __( 'Current values are custom; compare before saving a preset.', 'lunara-film' ) ); ?></span>
+        </div>
+        <div class="lunara-control-desk-review-comparison-track">
+            <?php foreach ( $presets as $preset_key => $preset ) : ?>
+                <?php lunara_control_desk_render_review_single_preset_comparison_item( $preset_key, $preset, $active_preset_key ); ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php
+}
+
 function lunara_control_desk_render_review_single_preset_card( $preset_key, $preset, $active_preset_key ) {
     $is_active = $preset_key === $active_preset_key;
     $values    = isset( $preset['values'] ) && is_array( $preset['values'] ) ? $preset['values'] : array();
@@ -7336,8 +7413,8 @@ function lunara_control_desk_render_review_single_preset_card( $preset_key, $pre
             <button type="submit" class="button" name="lunara_review_single_preset" value="<?php echo esc_attr( $preset_key ); ?>">
                 <?php echo esc_html( $is_active ? __( 'Reapply preset', 'lunara-film' ) : __( 'Apply preset', 'lunara-film' ) ); ?>
             </button>
-            <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/reviews/sinners-2025/', $preset_key ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners preview', 'lunara-film' ); ?></a>
-            <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/reviews/sinners-2025/', $preset_key, true ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '390px', 'lunara-film' ); ?></a>
+            <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/review/sinners-2025/', $preset_key ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners preview', 'lunara-film' ); ?></a>
+            <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/review/sinners-2025/', $preset_key, true ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '390px', 'lunara-film' ); ?></a>
             <a class="button" href="<?php echo esc_url( lunara_control_desk_review_single_preset_preview_url( '/reviews/bugonia-the-full-spoiler/', $preset_key ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Spoiler preview', 'lunara-film' ); ?></a>
         </div>
     </fieldset>
@@ -7385,6 +7462,7 @@ function lunara_control_desk_render_review_single_studio() {
                         <span><?php echo esc_html( $active_label ); ?></span>
                     </div>
                 </div>
+                <?php lunara_control_desk_render_review_single_preset_comparison_strip( $presets, $active_preset_key ); ?>
                 <div class="lunara-control-desk-homepage-choice-grid">
                     <?php foreach ( $presets as $preset_key => $preset ) : ?>
                         <?php lunara_control_desk_render_review_single_preset_card( $preset_key, $preset, $active_preset_key ); ?>
@@ -7431,8 +7509,8 @@ function lunara_control_desk_render_review_single_studio() {
                 </div>
                 <div class="lunara-control-desk-actions">
                     <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Review Single Studio', 'lunara-film' ); ?></button>
-                    <a class="button" href="<?php echo esc_url( home_url( '/reviews/sinners-2025/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners Desktop', 'lunara-film' ); ?></a>
-                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', home_url( '/reviews/sinners-2025/' ) ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners 390px', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( home_url( '/review/sinners-2025/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners Desktop', 'lunara-film' ); ?></a>
+                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', home_url( '/review/sinners-2025/' ) ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Sinners 390px', 'lunara-film' ); ?></a>
                     <a class="button" href="<?php echo esc_url( home_url( '/reviews/bugonia-the-full-spoiler/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Spoiler Review', 'lunara-film' ); ?></a>
                     <a class="button" href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Reviews Archive', 'lunara-film' ); ?></a>
                 </div>
