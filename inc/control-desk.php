@@ -919,12 +919,19 @@ function lunara_control_desk_save_homepage_studio() {
 
     check_admin_referer( 'lunara_save_homepage_studio', 'lunara_homepage_nonce' );
 
+    $homepage_presets = lunara_control_desk_homepage_preset_specs();
+    $apply_preset_key = isset( $_POST['lunara_homepage_apply_preset'] )
+        ? sanitize_key( wp_unslash( $_POST['lunara_homepage_apply_preset'] ) )
+        : '';
+    $apply_preset     = isset( $homepage_presets[ $apply_preset_key ] ) ? $homepage_presets[ $apply_preset_key ] : array();
+    $apply_values     = isset( $apply_preset['values'] ) && is_array( $apply_preset['values'] ) ? $apply_preset['values'] : array();
+
     $raw_selects = isset( $_POST['lunara_homepage_select'] ) && is_array( $_POST['lunara_homepage_select'] )
         ? wp_unslash( $_POST['lunara_homepage_select'] )
         : array();
 
     foreach ( lunara_control_desk_homepage_select_specs() as $key => $spec ) {
-        $value = isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'];
+        $value = isset( $apply_values[ $key ] ) ? sanitize_key( $apply_values[ $key ] ) : ( isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'] );
         if ( ! isset( $spec['options'][ $value ] ) ) {
             $value = (string) $spec['default'];
         }
@@ -932,9 +939,9 @@ function lunara_control_desk_save_homepage_studio() {
     }
 
     $order_specs  = lunara_control_desk_homepage_order_preset_specs();
-    $order_preset = isset( $_POST['lunara_homepage_order_preset'] )
-        ? sanitize_key( wp_unslash( $_POST['lunara_homepage_order_preset'] ) )
-        : 'editorial-default';
+    $order_preset = isset( $apply_values['lunara_home_section_order_preset'] )
+        ? sanitize_key( $apply_values['lunara_home_section_order_preset'] )
+        : ( isset( $_POST['lunara_homepage_order_preset'] ) ? sanitize_key( wp_unslash( $_POST['lunara_homepage_order_preset'] ) ) : 'editorial-default' );
 
     if ( ! isset( $order_specs[ $order_preset ] ) ) {
         $order_preset = 'editorial-default';
@@ -978,7 +985,8 @@ function lunara_control_desk_save_homepage_studio() {
         set_theme_mod( $key, isset( $raw_visible[ $key ] ) ? '1' : '0' );
     }
 
-    wp_safe_redirect( add_query_arg( 'lunara_notice', 'homepage_studio_saved', $redirect ) );
+    $notice = $apply_values ? 'homepage_preset_applied' : 'homepage_studio_saved';
+    wp_safe_redirect( add_query_arg( 'lunara_notice', $notice, $redirect ) );
     exit;
 }
 add_action( 'admin_post_lunara_save_homepage_studio', 'lunara_control_desk_save_homepage_studio' );
@@ -7366,6 +7374,15 @@ function lunara_control_desk_render_homepage_preset_comparison_item( $preset_key
                 </div>
             <?php endforeach; ?>
         </dl>
+        <button
+            type="submit"
+            class="button button-secondary lunara-control-desk-homepage-apply-button"
+            name="lunara_homepage_apply_preset"
+            value="<?php echo esc_attr( $preset_key ); ?>"
+            <?php disabled( $is_active ); ?>
+        >
+            <?php echo esc_html( $is_active ? __( 'Current Package', 'lunara-film' ) : __( 'Apply Package', 'lunara-film' ) ); ?>
+        </button>
     </article>
     <?php
 }
@@ -7494,6 +7511,7 @@ function lunara_control_desk_render_homepage_studio() {
         </div>
         <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
             <input type="hidden" name="action" value="lunara_save_homepage_studio" />
+            <input type="hidden" name="lunara_homepage_apply_preset" value="" />
             <?php wp_nonce_field( 'lunara_save_homepage_studio', 'lunara_homepage_nonce' ); ?>
 
             <div class="lunara-control-desk-homepage-card">
@@ -13863,6 +13881,10 @@ function lunara_control_desk_render_notice() {
         'homepage_studio_saved' => array(
             'class'   => 'notice-success',
             'message' => __( 'Homepage Studio saved. The front-door rhythm and section shortcuts now read the updated values.', 'lunara-film' ),
+        ),
+        'homepage_preset_applied' => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Homepage package applied. The existing front-door controls now match that publication package.', 'lunara-film' ),
         ),
         'homepage_studio_forbidden' => array(
             'class'   => 'notice-error',

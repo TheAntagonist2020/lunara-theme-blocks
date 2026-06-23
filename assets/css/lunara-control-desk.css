@@ -4699,6 +4699,17 @@
     margin: 0;
 }
 
+.lunara-control-desk-homepage-apply-button {
+    justify-self: start;
+    min-height: 34px;
+}
+
+.lunara-control-desk-homepage-apply-button[disabled] {
+    border-color: rgba(53, 181, 88, 0.35) !important;
+    color: #257a3f !important;
+    opacity: 1 !important;
+}
+
 .lunara-control-desk-homepage-comparison-item dl,
 .lunara-control-desk-utility-comparison-item dl,
 .lunara-control-desk-review-comparison-item dl,
