@@ -624,6 +624,137 @@ function lunara_control_desk_homepage_order_for_preset( $preset, $context = 'des
     return $order;
 }
 
+function lunara_control_desk_homepage_comparison_specs() {
+    return array(
+        'lunara_home_front_door_density'    => array(
+            'label' => __( 'Front-door density', 'lunara-film' ),
+        ),
+        'lunara_home_route_card_prominence' => array(
+            'label' => __( 'Route-card prominence', 'lunara-film' ),
+        ),
+        'lunara_home_first_section_rhythm'  => array(
+            'label' => __( 'First-section rhythm', 'lunara-film' ),
+        ),
+        'lunara_home_latest_reviews_density' => array(
+            'label' => __( 'Latest Reviews density', 'lunara-film' ),
+        ),
+        'lunara_home_journal_lane_density'  => array(
+            'label' => __( 'Journal lane density', 'lunara-film' ),
+        ),
+        'lunara_home_oscar_facts_density'   => array(
+            'label' => __( 'Oscar Facts density', 'lunara-film' ),
+        ),
+        'lunara_home_section_order_preset'  => array(
+            'label' => __( 'Section order', 'lunara-film' ),
+        ),
+    );
+}
+
+function lunara_control_desk_homepage_preset_specs() {
+    return array(
+        'trade-front-door'   => array(
+            'label'  => __( 'Trade Front Door', 'lunara-film' ),
+            'copy'   => __( 'The balanced publication package: Reviews lead, Journal stays close, and Oscar Facts reads as a signature retention lane.', 'lunara-film' ),
+            'values' => array(
+                'lunara_home_front_door_density'     => 'editorial',
+                'lunara_home_route_card_prominence'  => 'strong',
+                'lunara_home_first_section_rhythm'   => 'tight',
+                'lunara_home_latest_reviews_density' => 'editorial',
+                'lunara_home_journal_lane_density'   => 'editorial',
+                'lunara_home_oscar_facts_density'    => 'editorial',
+                'lunara_home_section_order_preset'   => 'editorial-default',
+            ),
+        ),
+        'journal-desk-day'   => array(
+            'label'  => __( 'Journal Desk Day', 'lunara-film' ),
+            'copy'   => __( 'For days when movement and industry coverage should feel urgent before the criticism grid settles in.', 'lunara-film' ),
+            'values' => array(
+                'lunara_home_front_door_density'     => 'compact',
+                'lunara_home_route_card_prominence'  => 'standard',
+                'lunara_home_first_section_rhythm'   => 'tight',
+                'lunara_home_latest_reviews_density' => 'compact',
+                'lunara_home_journal_lane_density'   => 'showcase',
+                'lunara_home_oscar_facts_density'    => 'editorial',
+                'lunara_home_section_order_preset'   => 'journal-first',
+            ),
+        ),
+        'oscars-signature'   => array(
+            'label'  => __( 'Oscars Signature', 'lunara-film' ),
+            'copy'   => __( 'Moves the Academy record forward so the homepage flexes the database without losing the live editorial desk.', 'lunara-film' ),
+            'values' => array(
+                'lunara_home_front_door_density'     => 'editorial',
+                'lunara_home_route_card_prominence'  => 'strong',
+                'lunara_home_first_section_rhythm'   => 'balanced',
+                'lunara_home_latest_reviews_density' => 'compact',
+                'lunara_home_journal_lane_density'   => 'editorial',
+                'lunara_home_oscar_facts_density'    => 'showcase',
+                'lunara_home_section_order_preset'   => 'oscars-forward',
+            ),
+        ),
+        'criticism-showcase' => array(
+            'label'  => __( 'Criticism Showcase', 'lunara-film' ),
+            'copy'   => __( 'Gives the review lane extra room and weight when the front page should sell Lunara as a criticism destination.', 'lunara-film' ),
+            'values' => array(
+                'lunara_home_front_door_density'     => 'showcase',
+                'lunara_home_route_card_prominence'  => 'strong',
+                'lunara_home_first_section_rhythm'   => 'balanced',
+                'lunara_home_latest_reviews_density' => 'showcase',
+                'lunara_home_journal_lane_density'   => 'compact',
+                'lunara_home_oscar_facts_density'    => 'compact',
+                'lunara_home_section_order_preset'   => 'editorial-default',
+            ),
+        ),
+    );
+}
+
+function lunara_control_desk_homepage_value_label( $key, $value ) {
+    if ( null === $value || '' === (string) $value ) {
+        return __( 'Default', 'lunara-film' );
+    }
+
+    $select_specs = lunara_control_desk_homepage_select_specs();
+    if ( isset( $select_specs[ $key ]['options'][ $value ]['label'] ) ) {
+        return $select_specs[ $key ]['options'][ $value ]['label'];
+    }
+
+    if ( 'lunara_home_section_order_preset' === $key ) {
+        $order_specs = lunara_control_desk_homepage_order_preset_specs();
+        if ( isset( $order_specs[ $value ]['label'] ) ) {
+            return $order_specs[ $value ]['label'];
+        }
+    }
+
+    return (string) $value;
+}
+
+function lunara_control_desk_homepage_active_preset_key() {
+    $current = array(
+        'lunara_home_section_order_preset' => lunara_control_desk_homepage_order_preset_value(),
+    );
+
+    foreach ( lunara_control_desk_homepage_select_specs() as $key => $spec ) {
+        $current[ $key ] = lunara_control_desk_homepage_select_value( $key );
+    }
+
+    foreach ( lunara_control_desk_homepage_preset_specs() as $preset_key => $preset ) {
+        $values = isset( $preset['values'] ) && is_array( $preset['values'] ) ? $preset['values'] : array();
+        $match  = true;
+
+        foreach ( lunara_control_desk_homepage_comparison_specs() as $key => $spec ) {
+            if ( ! isset( $values[ $key ] ) || ! isset( $current[ $key ] ) || $values[ $key ] !== $current[ $key ] ) {
+                $match = false;
+                break;
+            }
+        }
+
+        if ( $match ) {
+            return $preset_key;
+        }
+    }
+
+    return '';
+}
+
 function lunara_control_desk_homepage_number_specs() {
     return array(
         'lunara_home_masthead_top_padding'    => array(
@@ -7215,6 +7346,47 @@ function lunara_control_desk_render_homepage_select_control( $key, $spec ) {
     <?php
 }
 
+function lunara_control_desk_render_homepage_preset_comparison_item( $preset_key, $preset, $active_preset_key ) {
+    $values    = isset( $preset['values'] ) && is_array( $preset['values'] ) ? $preset['values'] : array();
+    $is_active = $preset_key === $active_preset_key;
+    ?>
+    <article class="lunara-control-desk-homepage-comparison-item <?php echo $is_active ? 'is-active' : ''; ?>">
+        <header>
+            <strong><?php echo esc_html( isset( $preset['label'] ) ? $preset['label'] : $preset_key ); ?></strong>
+            <span><?php echo esc_html( $is_active ? __( 'active package', 'lunara-film' ) : __( 'available preset', 'lunara-film' ) ); ?></span>
+        </header>
+        <?php if ( ! empty( $preset['copy'] ) ) : ?>
+            <p><?php echo esc_html( $preset['copy'] ); ?></p>
+        <?php endif; ?>
+        <dl>
+            <?php foreach ( lunara_control_desk_homepage_comparison_specs() as $key => $spec ) : ?>
+                <div>
+                    <dt><?php echo esc_html( $spec['label'] ); ?></dt>
+                    <dd><?php echo esc_html( lunara_control_desk_homepage_value_label( $key, isset( $values[ $key ] ) ? $values[ $key ] : '' ) ); ?></dd>
+                </div>
+            <?php endforeach; ?>
+        </dl>
+    </article>
+    <?php
+}
+
+function lunara_control_desk_render_homepage_preset_comparison_strip( $presets, $active_preset_key ) {
+    $presets = is_array( $presets ) ? $presets : lunara_control_desk_homepage_preset_specs();
+    ?>
+    <div class="lunara-control-desk-homepage-comparison-strip" aria-label="<?php esc_attr_e( 'Homepage preset comparison', 'lunara-film' ); ?>">
+        <div class="lunara-control-desk-homepage-comparison-head">
+            <strong><?php esc_html_e( 'Compare the homepage packages', 'lunara-film' ); ?></strong>
+            <span><?php echo esc_html( $active_preset_key ? __( 'Saved controls match one of these publication packages.', 'lunara-film' ) : __( 'Current values are custom; use this strip to decide what the front door is trying to be.', 'lunara-film' ) ); ?></span>
+        </div>
+        <div class="lunara-control-desk-homepage-comparison-track">
+            <?php foreach ( $presets as $preset_key => $preset ) : ?>
+                <?php lunara_control_desk_render_homepage_preset_comparison_item( $preset_key, $preset, $active_preset_key ); ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php
+}
+
 function lunara_control_desk_render_homepage_order_preset_control( $current, $specs ) {
     ?>
     <fieldset class="lunara-control-desk-homepage-order-choice">
@@ -7308,6 +7480,11 @@ function lunara_control_desk_render_homepage_studio() {
     $order_current = $order_specs[ $order_preset ];
     $desktop_order = $order_current['desktop'];
     $mobile_order  = $order_current['mobile'];
+    $presets       = lunara_control_desk_homepage_preset_specs();
+    $active_preset_key = lunara_control_desk_homepage_active_preset_key();
+    $active_label  = $active_preset_key && isset( $presets[ $active_preset_key ] )
+        ? $presets[ $active_preset_key ]['label']
+        : __( 'Custom front door', 'lunara-film' );
     ?>
     <section id="lunara-theme-studio-homepage-studio" class="lunara-control-desk-homepage-studio">
         <div class="lunara-control-desk-panel-header">
@@ -7318,6 +7495,21 @@ function lunara_control_desk_render_homepage_studio() {
         <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
             <input type="hidden" name="action" value="lunara_save_homepage_studio" />
             <?php wp_nonce_field( 'lunara_save_homepage_studio', 'lunara_homepage_nonce' ); ?>
+
+            <div class="lunara-control-desk-homepage-card">
+                <div class="lunara-control-desk-card-head">
+                    <div>
+                        <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Publication Packages', 'lunara-film' ); ?></p>
+                        <h3><?php esc_html_e( 'Read the homepage as a front-door system', 'lunara-film' ); ?></h3>
+                        <p class="lunara-control-desk-subtle"><?php esc_html_e( 'These are comparison packages built from the existing controls below. They do not save anything by themselves in this first pass.', 'lunara-film' ); ?></p>
+                    </div>
+                    <div class="lunara-control-desk-status-pill">
+                        <strong><?php esc_html_e( 'Current package', 'lunara-film' ); ?></strong>
+                        <span><?php echo esc_html( $active_label ); ?></span>
+                    </div>
+                </div>
+                <?php lunara_control_desk_render_homepage_preset_comparison_strip( $presets, $active_preset_key ); ?>
+            </div>
 
             <div class="lunara-control-desk-homepage-grid">
                 <div class="lunara-control-desk-homepage-card">
