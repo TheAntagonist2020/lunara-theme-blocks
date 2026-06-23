@@ -9525,6 +9525,71 @@ function lunara_output_home_oscar_facts_carousel_css() {
 
 	body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel[data-lunara-splide-pilot] {
 		isolation: isolate;
+		--lunara-oscar-facts-progress: 12.5%;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-console {
+		position: relative;
+		z-index: 5;
+		display: grid;
+		grid-template-columns: auto auto minmax(90px, 1fr);
+		align-items: center;
+		gap: clamp(10px, 1.4vw, 18px);
+		margin: 0 0 clamp(10px, 1.4vw, 16px);
+		padding: clamp(10px, 1.2vw, 14px) clamp(12px, 1.6vw, 18px);
+		border: 1px solid rgba(215, 182, 111, 0.22);
+		border-radius: 999px;
+		background: linear-gradient(90deg, rgba(8, 18, 30, 0.92), rgba(14, 29, 45, 0.74));
+		box-shadow: inset 0 1px 0 rgba(246, 239, 226, 0.04), 0 16px 34px rgba(0, 0, 0, 0.18);
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-console-label {
+		color: rgba(215, 182, 111, 0.92);
+		font-size: 0.68rem;
+		font-weight: 700;
+		letter-spacing: 0.16em;
+		line-height: 1;
+		text-transform: uppercase;
+		white-space: nowrap;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-counter {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 4px;
+		min-width: 58px;
+		color: #f6efe2;
+		font-family: Georgia, serif;
+		font-size: clamp(1rem, 1.2vw, 1.2rem);
+		font-weight: 700;
+		line-height: 1;
+		letter-spacing: 0;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-counter-sep,
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-total {
+		color: rgba(246, 239, 226, 0.48);
+		font-size: 0.8em;
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-progress {
+		position: relative;
+		display: block;
+		width: 100%;
+		height: 4px;
+		overflow: hidden;
+		border-radius: 999px;
+		background: rgba(246, 239, 226, 0.12);
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-facts-progress-bar {
+		display: block;
+		width: var(--lunara-oscar-facts-progress);
+		height: 100%;
+		border-radius: inherit;
+		background: linear-gradient(90deg, rgba(215, 182, 111, 0.62), #f1d58b);
+		box-shadow: 0 0 16px rgba(215, 182, 111, 0.32);
+		transition: width 420ms ease;
 	}
 
     body.home .lunara-oscar-facts-section .lunara-oscar-facts-track {
@@ -9554,6 +9619,16 @@ function lunara_output_home_oscar_facts_carousel_css() {
 		visibility: visible;
 		pointer-events: auto;
 		transform: translateX(0);
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.is-lunara-active .lunara-oscar-fact-card-link {
+		border-color: rgba(215, 182, 111, 0.48);
+		box-shadow: 0 24px 54px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(246, 239, 226, 0.06);
+	}
+
+	body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.is-lunara-prev .lunara-oscar-fact-card-link,
+	body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.is-lunara-next .lunara-oscar-fact-card-link {
+		filter: saturate(0.92) brightness(0.94);
 	}
 
 	body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel.lunara-splide-ready {
@@ -9813,6 +9888,21 @@ function lunara_output_home_oscar_facts_carousel_css() {
 	}
 
 	@media (max-width: 780px) {
+		body.home .lunara-oscar-facts-section .lunara-oscar-facts-console {
+			grid-template-columns: 1fr auto;
+			border-radius: 12px;
+			padding: 12px;
+		}
+
+		body.home .lunara-oscar-facts-section .lunara-oscar-facts-progress {
+			grid-column: 1 / -1;
+			height: 5px;
+		}
+
+		body.home .lunara-oscar-facts-section .lunara-oscar-facts-console-label {
+			white-space: normal;
+		}
+
         body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-link {
             grid-template-columns: minmax(0, 1fr) !important;
             grid-template-rows: auto 1fr !important;
@@ -9884,7 +9974,8 @@ function lunara_output_home_oscar_facts_carousel_css() {
 	@media (prefers-reduced-motion: reduce) {
 		body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.lunara-carousel-slide,
 		body.home .lunara-oscar-facts-section .lunara-carousel-dot,
-		body.home .lunara-oscar-facts-section .lunara-splide-arrow {
+		body.home .lunara-oscar-facts-section .lunara-splide-arrow,
+		body.home .lunara-oscar-facts-section .lunara-oscar-facts-progress-bar {
 			transition: none !important;
 		}
 	}

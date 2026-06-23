@@ -13637,6 +13637,8 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 			return '';
 		}
 
+		$fact_total = max( 0, (int) $query->post_count );
+
 		$carousel_js = lunara_resolve_theme_asset(
 			'assets/js/lunara-carousel.js',
 			array( 'lunara-carousel.js' )
@@ -13665,7 +13667,18 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 				<a class="lunara-section-link" href="<?php echo esc_url( $args['cta_url'] ); ?>"><?php echo esc_html( $args['cta_text'] ); ?></a>
 			</div>
 
-			<div class="lunara-oscar-facts-carousel lunara-carousel" data-autoplay="6500" data-lunara-splide-pilot data-lunara-splide-autoplay="6500" aria-label="<?php esc_attr_e( 'Rotating Oscar facts', 'lunara-film' ); ?>">
+			<div class="lunara-oscar-facts-carousel lunara-carousel" data-autoplay="6500" data-lunara-splide-pilot data-lunara-splide-autoplay="6500" data-lunara-facts-total="<?php echo esc_attr( (string) $fact_total ); ?>" style="--lunara-oscar-facts-progress:<?php echo esc_attr( $fact_total > 0 ? (string) ( 100 / $fact_total ) . '%' : '0%' ); ?>;" aria-label="<?php esc_attr_e( 'Rotating Oscar facts', 'lunara-film' ); ?>">
+				<?php if ( $fact_total > 1 ) : ?>
+					<div class="lunara-oscar-facts-console" aria-label="<?php esc_attr_e( 'Oscar Facts carousel status', 'lunara-film' ); ?>">
+						<span class="lunara-oscar-facts-console-label"><?php esc_html_e( 'Oscar Ledger File', 'lunara-film' ); ?></span>
+						<span class="lunara-oscar-facts-counter" aria-live="polite">
+							<span class="lunara-oscar-facts-current">01</span>
+							<span class="lunara-oscar-facts-counter-sep" aria-hidden="true">/</span>
+							<span class="lunara-oscar-facts-total"><?php echo esc_html( str_pad( (string) $fact_total, 2, '0', STR_PAD_LEFT ) ); ?></span>
+						</span>
+						<span class="lunara-oscar-facts-progress" aria-hidden="true"><span class="lunara-oscar-facts-progress-bar"></span></span>
+					</div>
+				<?php endif; ?>
 				<div class="lunara-oscar-facts-track" role="list">
 				<?php while ( $query->have_posts() ) :
 					$query->the_post();
@@ -13701,7 +13714,7 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 						'sizes'    => '(max-width: 640px) 92vw, (max-width: 980px) 44vw, 480px',
 					);
 					?>
-					<article class="<?php echo esc_attr( $card_class ); ?>" role="listitem" data-fact-id="<?php echo esc_attr( (string) $pid ); ?>" data-visual-treatment="<?php echo esc_attr( $visual_treatment ); ?>" data-visual-focus="<?php echo esc_attr( $visual_focus ); ?>" style="<?php echo esc_attr( $card_style ); ?>">
+					<article class="<?php echo esc_attr( $card_class ); ?>" role="listitem" data-fact-id="<?php echo esc_attr( (string) $pid ); ?>" data-slide-index="<?php echo esc_attr( (string) ( $fact_index + 1 ) ); ?>" data-visual-treatment="<?php echo esc_attr( $visual_treatment ); ?>" data-visual-focus="<?php echo esc_attr( $visual_focus ); ?>" style="<?php echo esc_attr( $card_style ); ?>"<?php echo 0 === $fact_index ? ' aria-current="true"' : ''; ?>>
 						<a class="lunara-oscar-fact-card-link" href="<?php echo esc_url( $card_url ); ?>">
 							<?php if ( $has_image ) : ?>
 								<div class="lunara-oscar-fact-card-poster">

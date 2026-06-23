@@ -20,6 +20,10 @@
 		return ((index % length) + length) % length;
 	}
 
+	function padNumber(value) {
+		return value < 10 ? '0' + String(value) : String(value);
+	}
+
 	function initPilot(root) {
 		if (!window.Splide || root.classList.contains('lunara-splide-ready')) {
 			return;
@@ -56,6 +60,9 @@
 		var dots = Array.prototype.slice.call(
 			root.querySelectorAll('.lunara-carousel-dot')
 		);
+		var currentCounter = root.querySelector('.lunara-oscar-facts-current');
+		var totalCounter = root.querySelector('.lunara-oscar-facts-total');
+		var progressBar = root.querySelector('.lunara-oscar-facts-progress-bar');
 		var interval = numberAttr(root, 'data-lunara-splide-autoplay', 6500);
 		var heightFrame = 0;
 
@@ -100,8 +107,19 @@
 
 		function syncState() {
 			var current = activeIndex(splide.index, slides.length);
+			var previous = activeIndex(current - 1, slides.length);
+			var next = activeIndex(current + 1, slides.length);
 			slides.forEach(function (slide, index) {
-				slide.classList.toggle('active', index === current);
+				var isActive = index === current;
+				slide.classList.toggle('active', isActive);
+				slide.classList.toggle('is-lunara-active', isActive);
+				slide.classList.toggle('is-lunara-prev', index === previous && slides.length > 2);
+				slide.classList.toggle('is-lunara-next', index === next && slides.length > 2);
+				if (isActive) {
+					slide.setAttribute('aria-current', 'true');
+				} else {
+					slide.removeAttribute('aria-current');
+				}
 			});
 			dots.forEach(function (dot, index) {
 				var active = index === current;
@@ -112,7 +130,28 @@
 					dot.removeAttribute('aria-current');
 				}
 			});
+			syncSignatureConsole(current);
 			syncHeight();
+		}
+
+		function syncSignatureConsole(current) {
+			var total = slides.length;
+			var displayCurrent = total ? current + 1 : 0;
+			var progress = total ? Math.max(0, Math.min(100, (displayCurrent / total) * 100)) : 0;
+			var progressValue = progress.toFixed(4) + '%';
+
+			root.setAttribute('data-lunara-current-slide', String(displayCurrent));
+			root.style.setProperty('--lunara-oscar-facts-progress', progressValue);
+
+			if (currentCounter) {
+				currentCounter.textContent = padNumber(displayCurrent);
+			}
+			if (totalCounter) {
+				totalCounter.textContent = padNumber(total);
+			}
+			if (progressBar) {
+				progressBar.style.width = progressValue;
+			}
 		}
 
 		slides.forEach(function (slide) {
