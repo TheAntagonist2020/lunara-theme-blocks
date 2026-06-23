@@ -14,7 +14,7 @@ spec: `docs/staging/specs/2026-06-23-homepage-journal-mobile-runway.md`
   acceptance: focused contract plus PHP lint and homepage regression contracts pass.
   spec: `docs/staging/specs/2026-06-23-homepage-journal-mobile-runway.md#homepage-journal-mobile-runway`
 
-- [ ] T3: Deploy, verify, and preserve continuity
+- [x] T3: Deploy, verify, and preserve continuity
   goal: Deploy only changed runtime files, verify public behavior, capture evidence, update continuity docs, and push the theme repo.
   files: `LUNARA_WORLD_CHANGELOG.md`, `09_DOCS_AND_NOTES/LUNARA_WEBSITE_HANDOFF.md`, `09_DOCS_AND_NOTES/SESSION-LOG-2026-06-23.md`
   acceptance: live route smoke, remote lint, matching SHA256 hashes, responsive evidence, cache flush, continuity updates, and clean pushed repo.
