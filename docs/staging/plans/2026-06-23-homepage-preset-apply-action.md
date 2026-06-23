@@ -20,7 +20,7 @@ files: `assets/css/lunara-control-desk.css`
 acceptance: Focused apply test, Homepage comparison/order/signature-density/responsive-order regressions, PHP lint, and `git diff --check` pass.
 spec: `docs/staging/specs/2026-06-23-homepage-preset-apply-action.md#homepage-preset-apply-action`
 
-- [ ] T4: Deploy with zero-downtime verification and continuity
+- [x] T4: Deploy with zero-downtime verification and continuity
 goal: Ship only changed theme files with rollback, hashes, cache flush, public smoke, docs updates, and repo sync.
 files: `inc/control-desk.php`, `assets/css/lunara-control-desk.css`, `LUNARA_WORLD_CHANGELOG.md`, `09_DOCS_AND_NOTES/LUNARA_WEBSITE_HANDOFF.md`, `09_DOCS_AND_NOTES/SESSION-LOG-2026-06-23.md`
 acceptance: Remote hashes match local, cache is flushed, public smoke passes for `/`, `/journal/`, `/reviews/`, canonical Sinners Review, and `/oscars/`, no sampled public admin leakage, and commits are pushed.
