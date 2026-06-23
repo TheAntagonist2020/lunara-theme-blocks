@@ -20,7 +20,7 @@ files: `assets/css/lunara-control-desk.css`
 acceptance: `powershell -ExecutionPolicy Bypass -File tests/theme-studio-homepage-preset-comparison.ps1`, PHP lint, and `git diff --check` pass.
 spec: `docs/staging/specs/2026-06-23-homepage-preset-comparison-strip.md#homepage-preset-comparison-strip`
 
-- [ ] T4: Deploy with zero-downtime verification and continuity
+- [x] T4: Deploy with zero-downtime verification and continuity
 goal: Ship only changed theme files with rollback, hash verification, cache flush, public smoke tests, docs updates, and repo sync.
 files: `inc/control-desk.php`, `assets/css/lunara-control-desk.css`, `LUNARA_WORLD_CHANGELOG.md`, `09_DOCS_AND_NOTES/LUNARA_WEBSITE_HANDOFF.md`, `09_DOCS_AND_NOTES/SESSION-LOG-2026-06-23.md`
 acceptance: Remote hashes match local, cache is flushed, public smoke passes for `/`, `/journal/`, `/reviews/`, canonical Sinners Review, and `/oscars/`, no sampled public admin leakage, and commits are pushed.
