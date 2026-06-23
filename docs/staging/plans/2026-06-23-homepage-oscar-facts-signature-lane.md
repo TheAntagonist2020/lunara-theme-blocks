@@ -20,7 +20,7 @@ files: `inc/frontend.php`
 acceptance: Focused contract passes and responsive homepage browser QA shows no overflow, broken images, empty media chambers, or private leakage.
 spec: `docs/staging/specs/2026-06-23-homepage-oscar-facts-signature-lane.md#homepage-oscar-facts-signature-lane`
 
-- [ ] T4: Verify, deploy, and record continuity
+- [x] T4: Verify, deploy, and record continuity
 goal: Deploy only changed theme files, verify live behavior, flush cache, capture evidence, update continuity, and push the theme repo.
 files: `LUNARA_WORLD_CHANGELOG.md`, `09_DOCS_AND_NOTES/LUNARA_WEBSITE_HANDOFF.md`, `09_DOCS_AND_NOTES/SESSION-LOG-2026-06-23.md`
 acceptance: Local/remote hashes match, public smoke passes, evidence is under `10_VISUAL_EVIDENCE`, and the theme repo is pushed.
