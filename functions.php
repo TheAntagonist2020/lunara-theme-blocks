@@ -8340,10 +8340,11 @@ function lunara_render_custom_footer() {
                 <?php if ( $show_logo ) :
                     $custom_logo_id = get_theme_mod( 'custom_logo' );
                     if ( $custom_logo_id ) :
-                        echo wp_get_attachment_image( $custom_logo_id, 'medium', false, array(
-                            'class'   => 'lunara-footer-logo',
-                            'loading' => 'lazy',
-                            'alt'     => get_bloginfo( 'name' ) . ' logo',
+                        echo wp_get_attachment_image( $custom_logo_id, 'full', false, array(
+                            'class'    => 'lunara-footer-logo skip-lazy no-lazy',
+                            'loading'  => 'eager',
+                            'decoding' => 'async',
+                            'alt'      => get_bloginfo( 'name' ) . ' logo',
                         ) );
                     else : ?>
                         <span class="lunara-footer-wordmark"><?php bloginfo( 'name' ); ?></span>

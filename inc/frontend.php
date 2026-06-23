@@ -302,6 +302,68 @@ function lunara_homepage_studio_signature_css() {
 add_action( 'wp_footer', 'lunara_homepage_studio_signature_css', 130 );
 
 /**
+ * Tighten the homepage opening viewport after the brand and density layers.
+ */
+function lunara_home_first_viewport_polish_css() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+    ?>
+    <style id="lunara-home-first-viewport-polish-css">
+    body.home .lunara-front-page,
+    body.home main.lunara-front-page{gap:clamp(26px,4vw,58px)!important;}
+    body.home .lunara-home-masthead{margin-bottom:clamp(12px,2vw,24px)!important;}
+    body.home .lunara-front-page > .lunara-home-masthead + .lunara-home-section,
+    body.home main.lunara-front-page > .lunara-home-masthead + .lunara-home-section{margin-top:clamp(10px,1.4vw,20px)!important;}
+    body.home .lunara-home-masthead-panel{isolation:isolate;}
+    body.home .lunara-home-masthead-logo{image-rendering:auto;}
+    @media(min-width:1120px){
+        body.home .lunara-home-masthead-panel{grid-template-columns:minmax(0,1.14fr) minmax(340px,.86fr);min-height:clamp(386px,46vh,520px);gap:clamp(28px,5vw,82px);padding-top:clamp(24px,3vw,42px);padding-bottom:clamp(24px,3vw,42px);}
+        body.home .lunara-home-masthead-panel::after{left:50.8%;right:auto;top:clamp(38px,5vw,78px);bottom:clamp(38px,5vw,78px);width:1px;height:auto;background:linear-gradient(180deg,transparent,rgba(224,196,129,.38),transparent);}
+        body.home .lunara-home-masthead-identity{justify-items:start;text-align:left;align-content:center;}
+        body.home .lunara-home-masthead-logo-frame{justify-content:start;width:100%;}
+        body.home .lunara-home-masthead-logo{width:min(100%,980px);max-height:clamp(148px,18vw,254px);}
+        body.home .lunara-home-masthead-dek{max-width:46ch;margin:0;font-size:clamp(.98rem,1vw,1.08rem);line-height:1.5;}
+        body.home .lunara-home-masthead-standard{justify-self:start;}
+        body.home .lunara-home-masthead-routes{grid-template-columns:minmax(0,1fr);width:min(100%,430px);justify-self:end;align-self:center;margin:0;gap:10px;}
+        body.home .lunara-home-masthead-route{min-height:clamp(92px,9vh,112px);padding:13px 15px;}
+        body.home .lunara-home-masthead.is-density-showcase .lunara-home-masthead-route{min-height:clamp(100px,10vh,122px);}
+        body.home .lunara-home-masthead-route span:last-child{font-size:.85rem;line-height:1.36;}
+    }
+    @media(min-width:1120px) and (max-height:820px){
+        body.home .lunara-home-masthead-panel{min-height:clamp(350px,42vh,440px);padding-top:clamp(20px,2.5vw,34px);padding-bottom:clamp(20px,2.5vw,34px);}
+        body.home .lunara-home-masthead-logo{max-height:clamp(132px,16vw,222px);}
+        body.home .lunara-home-masthead-route{min-height:86px;}
+        body.home .lunara-home-masthead-dek{line-height:1.45;}
+    }
+    @media(max-width:820px){
+        body.home .lunara-front-page,
+        body.home main.lunara-front-page{gap:clamp(22px,7vw,38px)!important;}
+        body.home .lunara-front-page > .lunara-home-masthead + .lunara-home-section,
+        body.home main.lunara-front-page > .lunara-home-masthead + .lunara-home-section{margin-top:clamp(6px,2vw,12px)!important;}
+        body.home .lunara-home-masthead-panel{gap:14px;}
+        body.home .lunara-home-masthead-kicker{font-size:.68rem;}
+        body.home .lunara-home-masthead-logo{max-height:clamp(92px,26vw,138px);}
+        body.home .lunara-home-masthead-dek{max-width:34ch;}
+        body.home .lunara-home-masthead-route span:last-child{font-size:.84rem;line-height:1.36;}
+        body.home .lunara-dispatches-section{padding-top:clamp(12px,4vw,18px)!important;}
+        body.home .lunara-dispatches-section .lunara-home-section-head{min-height:0!important;margin-bottom:8px!important;gap:10px!important;}
+        body.home .lunara-dispatches-section .lunara-home-section-kicker,
+        body.home .lunara-dispatches-section .lunara-home-section-title{opacity:1!important;transform:none!important;}
+        body.home .lunara-dispatches-section .lunara-home-section-title{font-size:clamp(1.72rem,7vw,2.2rem)!important;line-height:1.05!important;}
+        body.home .lunara-dispatches-section .lunara-home-section-summary{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.95rem!important;line-height:1.42!important;}
+        body.home .lunara-dispatches-section .lunara-journal-home-grid{margin-top:8px!important;}
+    }
+    @media(prefers-reduced-motion:reduce){
+        body.home .lunara-home-masthead-panel,
+        body.home .lunara-home-masthead-logo{transition:none!important;}
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_footer', 'lunara_home_first_viewport_polish_css', 135 );
+
+/**
  * Footer fallback.
  */
 function lunara_footer_menu_fallback() {
@@ -359,10 +421,11 @@ function lunara_render_custom_footer() {
                 <?php if ( $show_logo ) :
                     $custom_logo_id = get_theme_mod( 'custom_logo' );
                     if ( $custom_logo_id ) :
-                        echo wp_get_attachment_image( $custom_logo_id, 'medium', false, array(
-                            'class'   => 'lunara-footer-logo',
-                            'loading' => 'lazy',
-                            'alt'     => get_bloginfo( 'name' ) . ' logo',
+                        echo wp_get_attachment_image( $custom_logo_id, 'full', false, array(
+                            'class'    => 'lunara-footer-logo skip-lazy no-lazy',
+                            'loading'  => 'eager',
+                            'decoding' => 'async',
+                            'alt'      => get_bloginfo( 'name' ) . ' logo',
                         ) );
                     else : ?>
                         <span class="lunara-footer-wordmark"><?php bloginfo( 'name' ); ?></span>
