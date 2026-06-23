@@ -9233,6 +9233,367 @@ function lunara_control_desk_review_pairing_source_rows( $limit = 80, $resolve_p
     return $rows;
 }
 
+function lunara_control_desk_review_retention_signal( $state, $label, $note = '', $meta = array() ) {
+    $allowed = array( 'ready', 'watch', 'needs-work', 'neutral' );
+    $state   = sanitize_key( (string) $state );
+
+    if ( ! in_array( $state, $allowed, true ) ) {
+        $state = 'watch';
+    }
+
+    return array_merge(
+        array(
+            'state' => $state,
+            'label' => (string) $label,
+            'note'  => (string) $note,
+        ),
+        is_array( $meta ) ? $meta : array()
+    );
+}
+
+function lunara_control_desk_review_retention_debrief_signal( $post_id ) {
+    $post_id = absint( $post_id );
+    if ( $post_id <= 0 ) {
+        return lunara_control_desk_review_retention_signal(
+            'needs-work',
+            __( 'Debrief missing', 'lunara-film' ),
+            __( 'No Review post was available for Debrief inspection.', 'lunara-film' )
+        );
+    }
+
+    $career_context = function_exists( 'lunara_get_career_context_meta' )
+        ? lunara_get_career_context_meta( $post_id )
+        : get_post_meta( $post_id, '_lunara_career_context', true );
+
+    $fields = array(
+        'score'          => get_post_meta( $post_id, '_lunara_score', true ),
+        'year'           => get_post_meta( $post_id, '_lunara_year', true ),
+        'director'       => get_post_meta( $post_id, '_lunara_director', true ),
+        'theme_echo'     => get_post_meta( $post_id, '_lunara_theme_echo', true ),
+        'counter_program' => get_post_meta( $post_id, '_lunara_counter_program', true ),
+        'career_context' => $career_context,
+    );
+
+    $present = array();
+    foreach ( $fields as $key => $value ) {
+        if ( '' !== trim( (string) $value ) ) {
+            $present[] = $key;
+        }
+    }
+
+    $count = count( $present );
+    if ( $count >= 5 ) {
+        return lunara_control_desk_review_retention_signal(
+            'ready',
+            __( 'Debrief ready', 'lunara-film' ),
+            __( 'The signature module has enough score, context, and pairing material to feel intentional.', 'lunara-film' ),
+            array( 'count' => $count )
+        );
+    }
+
+    if ( $count > 0 ) {
+        return lunara_control_desk_review_retention_signal(
+            'watch',
+            __( 'Debrief thin', 'lunara-film' ),
+            __( 'Some Debrief material exists, but the module may read light against the review body.', 'lunara-film' ),
+            array( 'count' => $count )
+        );
+    }
+
+    return lunara_control_desk_review_retention_signal(
+        'needs-work',
+        __( 'Debrief missing', 'lunara-film' ),
+        __( 'No Debrief source fields are filled for this Review.', 'lunara-film' ),
+        array( 'count' => 0 )
+    );
+}
+
+function lunara_control_desk_review_retention_pairing_signal( $post_id ) {
+    $post_id = absint( $post_id );
+    if ( $post_id <= 0 ) {
+        return lunara_control_desk_review_retention_signal(
+            'needs-work',
+            __( 'Pair It With missing', 'lunara-film' ),
+            __( 'No Review post was available for Pair It With inspection.', 'lunara-film' )
+        );
+    }
+
+    $pairings = array(
+        'theme_echo'      => get_post_meta( $post_id, '_lunara_theme_echo', true ),
+        'counter_program' => get_post_meta( $post_id, '_lunara_counter_program', true ),
+        'career_context'  => function_exists( 'lunara_get_career_context_meta' ) ? lunara_get_career_context_meta( $post_id ) : get_post_meta( $post_id, '_lunara_career_context', true ),
+    );
+
+    $present  = 0;
+    $warnings = array();
+
+    foreach ( $pairings as $raw ) {
+        $raw = trim( (string) $raw );
+        if ( '' === $raw ) {
+            continue;
+        }
+
+        $present++;
+        if ( function_exists( 'lunara_parse_pair_it_with_value' ) ) {
+            $preview = lunara_parse_pair_it_with_value( $raw, $post_id, false );
+            $status  = function_exists( 'lunara_control_desk_review_pairing_source_status' )
+                ? lunara_control_desk_review_pairing_source_status( $preview, false )
+                : array();
+
+            if ( isset( $status['state'] ) && 'ready' !== $status['state'] ) {
+                $warnings[] = isset( $status['label'] ) ? (string) $status['label'] : __( 'Needs source review', 'lunara-film' );
+            }
+
+            if ( isset( $status['warnings'] ) && is_array( $status['warnings'] ) ) {
+                $warnings = array_merge( $warnings, $status['warnings'] );
+            }
+        } else {
+            $warnings[] = __( 'Pair It With parser unavailable.', 'lunara-film' );
+        }
+    }
+
+    $warnings = array_values( array_unique( array_filter( array_map( 'trim', $warnings ) ) ) );
+
+    if ( ! empty( $warnings ) ) {
+        return lunara_control_desk_review_retention_signal(
+            'needs-work',
+            __( 'Pairing needs source review', 'lunara-film' ),
+            __( 'One or more Pair It With entries needs IMDb/source cleanup before the package is trusted.', 'lunara-film' ),
+            array(
+                'count'    => $present,
+                'warnings' => $warnings,
+            )
+        );
+    }
+
+    if ( $present >= 3 ) {
+        return lunara_control_desk_review_retention_signal(
+            'ready',
+            __( 'Pair It With ready', 'lunara-film' ),
+            __( 'All three companion sources are present and parse cleanly.', 'lunara-film' ),
+            array( 'count' => $present )
+        );
+    }
+
+    if ( $present > 0 ) {
+        return lunara_control_desk_review_retention_signal(
+            'watch',
+            __( 'Pair It With partial', 'lunara-film' ),
+            __( 'At least one companion source exists, but the lane is not a complete three-part package.', 'lunara-film' ),
+            array( 'count' => $present )
+        );
+    }
+
+    return lunara_control_desk_review_retention_signal(
+        'needs-work',
+        __( 'Pair It With missing', 'lunara-film' ),
+        __( 'No Theme Echo, Counter-Program, or Career Context companion is set.', 'lunara-film' ),
+        array( 'count' => 0 )
+    );
+}
+
+function lunara_control_desk_review_retention_overall_state( $signals ) {
+    $signals = is_array( $signals ) ? $signals : array();
+    $states  = array();
+
+    foreach ( $signals as $signal ) {
+        if ( ! is_array( $signal ) || empty( $signal['state'] ) || 'neutral' === $signal['state'] ) {
+            continue;
+        }
+
+        $states[] = sanitize_key( (string) $signal['state'] );
+    }
+
+    if ( in_array( 'needs-work', $states, true ) ) {
+        return lunara_control_desk_review_retention_signal(
+            'needs-work',
+            __( 'Needs Work', 'lunara-film' ),
+            __( 'At least one retention module needs attention before this Review package is fully trusted.', 'lunara-film' )
+        );
+    }
+
+    if ( in_array( 'watch', $states, true ) ) {
+        return lunara_control_desk_review_retention_signal(
+            'watch',
+            __( 'Watch', 'lunara-film' ),
+            __( 'The package is usable, but one or more retention signals should be reviewed.', 'lunara-film' )
+        );
+    }
+
+    return lunara_control_desk_review_retention_signal(
+        'ready',
+        __( 'Ready', 'lunara-film' ),
+        __( 'The visible retention package has the core signals expected of a polished Review.', 'lunara-film' )
+    );
+}
+
+function lunara_control_desk_review_retention_row( $post ) {
+    $post = get_post( $post );
+    if ( ! $post || 'review' !== $post->post_type ) {
+        return array();
+    }
+
+    $post_id        = absint( $post->ID );
+    $related_target = max( 1, absint( get_theme_mod( 'lunara_review_related_count', 4 ) ) );
+    $related_count  = 0;
+
+    if ( function_exists( 'lunara_get_related_review_posts' ) ) {
+        $related_query = lunara_get_related_review_posts( $post_id, $related_target );
+        if ( $related_query instanceof WP_Query ) {
+            $related_count = is_array( $related_query->posts ) ? count( $related_query->posts ) : 0;
+        }
+    }
+
+    $review_tt = function_exists( 'lunara_get_review_imdb_title_id' ) ? lunara_get_review_imdb_title_id( $post_id ) : '';
+    $ledger    = ( '' !== $review_tt && function_exists( 'lunara_get_oscar_ledger_counts' ) ) ? lunara_get_oscar_ledger_counts( $review_tt ) : array( 'noms' => 0, 'wins' => 0 );
+    $noms      = isset( $ledger['noms'] ) ? absint( $ledger['noms'] ) : 0;
+    $wins      = isset( $ledger['wins'] ) ? absint( $ledger['wins'] ) : 0;
+
+    $signals = array(
+        'trailer' => ( function_exists( 'lunara_post_has_trailer' ) && lunara_post_has_trailer( $post_id ) )
+            ? lunara_control_desk_review_retention_signal( 'ready', __( 'Trailer ready', 'lunara-film' ), __( 'A supported trailer embed is attached.', 'lunara-film' ) )
+            : lunara_control_desk_review_retention_signal( 'watch', __( 'No trailer', 'lunara-film' ), __( 'No supported trailer is attached to this Review.', 'lunara-film' ) ),
+        'spoiler' => ( function_exists( 'lunara_is_full_spoiler_review' ) && lunara_is_full_spoiler_review( $post_id ) )
+            ? lunara_control_desk_review_retention_signal( 'ready', __( 'Full spoiler review', 'lunara-film' ), __( 'This Review is explicitly marked as a full-spoiler package.', 'lunara-film' ) )
+            : ( function_exists( 'lunara_get_linked_spoiler_review' ) && ! empty( lunara_get_linked_spoiler_review( $post_id ) )
+                ? lunara_control_desk_review_retention_signal( 'ready', __( 'Spoiler bridge ready', 'lunara-film' ), __( 'This Review links readers to a full-spoiler companion.', 'lunara-film' ) )
+                : lunara_control_desk_review_retention_signal( 'watch', __( 'No spoiler bridge', 'lunara-film' ), __( 'No full-spoiler companion is linked yet.', 'lunara-film' ) ) ),
+        'debrief' => lunara_control_desk_review_retention_debrief_signal( $post_id ),
+        'pairing' => lunara_control_desk_review_retention_pairing_signal( $post_id ),
+        'related' => $related_count >= $related_target
+            ? lunara_control_desk_review_retention_signal( 'ready', __( 'Related reviews ready', 'lunara-film' ), sprintf( __( '%1$d related Reviews available.', 'lunara-film' ), absint( $related_count ) ) )
+            : ( $related_count > 0
+                ? lunara_control_desk_review_retention_signal( 'watch', __( 'Related reviews light', 'lunara-film' ), sprintf( __( '%1$d of %2$d target related Reviews available.', 'lunara-film' ), absint( $related_count ), absint( $related_target ) ) )
+                : lunara_control_desk_review_retention_signal( 'needs-work', __( 'Related reviews missing', 'lunara-film' ), __( 'No related Review fallback is available.', 'lunara-film' ) ) ),
+        'oscar'   => ( $noms + $wins ) > 0
+            ? lunara_control_desk_review_retention_signal( 'ready', __( 'Oscar Ledger linked', 'lunara-film' ), sprintf( __( '%1$d nominations and %2$d wins are available.', 'lunara-film' ), absint( $noms ), absint( $wins ) ) )
+            : ( '' !== $review_tt
+                ? lunara_control_desk_review_retention_signal( 'watch', __( 'No Oscar match', 'lunara-film' ), __( 'An IMDb title ID exists, but no Oscar Ledger nominations or wins are matched.', 'lunara-film' ) )
+                : lunara_control_desk_review_retention_signal( 'neutral', __( 'No Oscar signal', 'lunara-film' ), __( 'No IMDb title ID is set for Oscar Ledger matching.', 'lunara-film' ) ) ),
+    );
+
+    $signals['overall'] = lunara_control_desk_review_retention_overall_state( $signals );
+
+    return array(
+        'post_id'      => $post_id,
+        'title'        => get_the_title( $post ),
+        'post_status'  => (string) get_post_status( $post ),
+        'status_label' => function_exists( 'lunara_control_desk_post_status_label' ) ? lunara_control_desk_post_status_label( $post ) : get_post_status( $post ),
+        'modified'     => get_the_modified_date( '', $post ),
+        'edit_url'     => get_edit_post_link( $post_id, '' ),
+        'view_url'     => get_permalink( $post_id ),
+        'trailer'      => $signals['trailer'],
+        'spoiler'      => $signals['spoiler'],
+        'debrief'      => $signals['debrief'],
+        'pairing'      => $signals['pairing'],
+        'related'      => $signals['related'],
+        'oscar'        => $signals['oscar'],
+        'overall'      => $signals['overall'],
+    );
+}
+
+function lunara_control_desk_review_retention_rows( $limit = 16 ) {
+    $limit = max( 1, min( 48, absint( $limit ) ) );
+    $rows  = array();
+
+    $posts = get_posts(
+        array(
+            'post_type'      => 'review',
+            'post_status'    => array( 'publish', 'draft', 'pending', 'future' ),
+            'posts_per_page' => $limit,
+            'orderby'        => 'modified',
+            'order'          => 'DESC',
+            'no_found_rows'  => true,
+        )
+    );
+
+    foreach ( $posts as $post ) {
+        $row = lunara_control_desk_review_retention_row( $post );
+        if ( ! empty( $row ) ) {
+            $rows[] = $row;
+        }
+    }
+
+    return $rows;
+}
+
+function lunara_control_desk_render_review_retention_chip( $label, $signal ) {
+    $signal = is_array( $signal ) ? $signal : array();
+    $state  = isset( $signal['state'] ) ? sanitize_key( (string) $signal['state'] ) : 'watch';
+    $state  = '' !== $state ? $state : 'watch';
+    $note   = isset( $signal['note'] ) ? (string) $signal['note'] : '';
+    ?>
+    <span class="lunara-control-desk-retention-chip lunara-control-desk-retention-chip--<?php echo esc_attr( $state ); ?>">
+        <strong><?php echo esc_html( $label ); ?></strong>
+        <b><?php echo esc_html( isset( $signal['label'] ) ? $signal['label'] : $state ); ?></b>
+        <?php if ( '' !== trim( $note ) ) : ?>
+            <small><?php echo esc_html( $note ); ?></small>
+        <?php endif; ?>
+    </span>
+    <?php
+}
+
+function lunara_control_desk_render_review_retention_console() {
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        ?>
+        <section id="lunara-theme-studio-review-retention-health" class="lunara-control-desk-homepage-studio lunara-control-desk-retention-health">
+            <div class="lunara-control-desk-panel-header">
+                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Review Retention Health', 'lunara-film' ); ?></p>
+                <h3><?php esc_html_e( 'Retention package audit requires theme editing permission', 'lunara-film' ); ?></h3>
+            </div>
+        </section>
+        <?php
+        return;
+    }
+
+    $rows = lunara_control_desk_review_retention_rows( 16 );
+    ?>
+    <section id="lunara-theme-studio-review-retention-health" class="lunara-control-desk-homepage-studio lunara-control-desk-retention-health">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Review Retention Health', 'lunara-film' ); ?></p>
+            <h3><?php esc_html_e( 'Retention package audit', 'lunara-film' ); ?></h3>
+            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Read-only scan of trailers, spoiler bridges, Debrief, Pair It With, related Reviews, and Oscar Ledger signals before public polish continues.', 'lunara-film' ); ?></p>
+        </div>
+
+        <?php if ( empty( $rows ) ) : ?>
+            <div class="lunara-control-desk-empty">
+                <strong><?php esc_html_e( 'No recent Review posts found', 'lunara-film' ); ?></strong>
+                <span><?php esc_html_e( 'Create or import Reviews before running this retention package audit.', 'lunara-film' ); ?></span>
+            </div>
+        <?php else : ?>
+            <div class="lunara-control-desk-retention-list">
+                <?php foreach ( $rows as $row ) : ?>
+                    <article class="lunara-control-desk-retention-row">
+                        <div class="lunara-control-desk-retention-row-head">
+                            <div>
+                                <p class="lunara-control-desk-kicker"><?php echo esc_html( $row['status_label'] ); ?></p>
+                                <h4><?php echo esc_html( $row['title'] ); ?></h4>
+                                <span><?php echo esc_html( sprintf( __( 'Updated %s', 'lunara-film' ), $row['modified'] ) ); ?></span>
+                            </div>
+                            <div class="lunara-control-desk-actions">
+                                <a class="button" href="<?php echo esc_url( get_edit_post_link( $row['post_id'], '' ) ); ?>"><?php esc_html_e( 'Edit Review', 'lunara-film' ); ?></a>
+                                <a class="button" href="<?php echo esc_url( get_permalink( $row['post_id'] ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View', 'lunara-film' ); ?></a>
+                            </div>
+                        </div>
+                        <div class="lunara-control-desk-retention-overall">
+                            <?php lunara_control_desk_render_review_retention_chip( __( 'Overall', 'lunara-film' ), $row['overall'] ); ?>
+                        </div>
+                        <div class="lunara-control-desk-retention-grid">
+                            <?php lunara_control_desk_render_review_retention_chip( __( 'Trailer', 'lunara-film' ), $row['trailer'] ); ?>
+                            <?php lunara_control_desk_render_review_retention_chip( __( 'Spoiler', 'lunara-film' ), $row['spoiler'] ); ?>
+                            <?php lunara_control_desk_render_review_retention_chip( __( 'Debrief', 'lunara-film' ), $row['debrief'] ); ?>
+                            <?php lunara_control_desk_render_review_retention_chip( __( 'Pair It With', 'lunara-film' ), $row['pairing'] ); ?>
+                            <?php lunara_control_desk_render_review_retention_chip( __( 'Related reviews', 'lunara-film' ), $row['related'] ); ?>
+                            <?php lunara_control_desk_render_review_retention_chip( __( 'Oscar Ledger', 'lunara-film' ), $row['oscar'] ); ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </section>
+    <?php
+}
+
 function lunara_control_desk_image_quality_rows( $surface, $limit = 8, $options = array() ) {
     $targets = lunara_control_desk_image_quality_targets();
     $surface = sanitize_key( $surface );
@@ -11255,6 +11616,7 @@ function lunara_control_desk_render_theme_studio_tab() {
         <?php lunara_control_desk_render_reviews_archive_studio(); ?>
         <?php lunara_control_desk_render_review_card_image_focus_controls(); ?>
         <?php lunara_control_desk_render_review_single_studio(); ?>
+        <?php lunara_control_desk_render_review_retention_console(); ?>
         <?php lunara_control_desk_render_utility_search_studio(); ?>
         <?php lunara_control_desk_render_oscars_dossier_studio(); ?>
         <?php lunara_control_desk_render_image_quality_console(); ?>
