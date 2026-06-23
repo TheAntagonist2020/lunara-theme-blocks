@@ -364,6 +364,43 @@ function lunara_home_first_viewport_polish_css() {
 add_action( 'wp_footer', 'lunara_home_first_viewport_polish_css', 135 );
 
 /**
+ * Compact the homepage mobile Reviews run into a denser editorial rail.
+ */
+function lunara_home_mobile_card_runway_css() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+    ?>
+    <style id="lunara-home-mobile-card-runway-css">
+    @media(max-width:820px){
+        body.home .lunara-latest-reviews-section .lunara-review-grid{grid-template-columns:minmax(0,1fr)!important;gap:12px!important;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-card{min-height:0!important;height:auto!important;overflow:hidden;border-radius:10px!important;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-card.has-visual .lunara-review-grid-link{display:grid!important;grid-template-columns:minmax(92px,34vw) minmax(0,1fr)!important;grid-template-rows:auto!important;align-items:stretch!important;min-height:0!important;height:auto!important;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-card.has-no-visual .lunara-review-grid-link{grid-template-columns:minmax(0,1fr)!important;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-poster-wrap{aspect-ratio:3/4!important;min-height:0!important;height:auto!important;align-self:stretch!important;border-radius:8px 0 0 8px!important;overflow:hidden;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-poster{width:100%!important;height:100%!important;object-fit:cover!important;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-copy{display:grid!important;align-content:center!important;gap:6px!important;min-height:0!important;padding:12px 13px!important;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-title{font-size:clamp(1rem,4.6vw,1.16rem)!important;line-height:1.1!important;min-height:0!important;letter-spacing:0!important;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-meta{font-size:.72rem!important;line-height:1.3!important;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-quote{-webkit-line-clamp:2!important;font-size:.86rem!important;line-height:1.38!important;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-date{font-size:.68rem!important;}
+    }
+    @media(max-width:520px){
+        body.home .lunara-latest-reviews-section .lunara-review-grid{gap:10px!important;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-card.has-visual .lunara-review-grid-link{grid-template-columns:minmax(104px,36vw) minmax(0,1fr)!important;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-copy{padding:11px 12px!important;}
+        body.home .lunara-latest-reviews-section .lunara-review-grid-title{font-size:clamp(.98rem,4.9vw,1.08rem)!important;}
+    }
+    @media(prefers-reduced-motion:reduce){
+        body.home .lunara-latest-reviews-section .lunara-review-grid-card,
+        body.home .lunara-latest-reviews-section .lunara-review-grid-link{transition:none!important;}
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_footer', 'lunara_home_mobile_card_runway_css', 137 );
+
+/**
  * Footer fallback.
  */
 function lunara_footer_menu_fallback() {
