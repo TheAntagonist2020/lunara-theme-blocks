@@ -5,8 +5,8 @@
 1. [x] Add a failing contract test for homepage text-led card chamber cleanup.
 2. [x] Add a scoped CSS emitter that compacts homepage Review and Journal `has-no-visual` cards and tightens the Oscar Facts header band.
 3. [x] Run the focused contract, related homepage contracts, PHP lint, and `git diff --check`.
-4. [ ] Deploy only changed runtime files, flush cache, run public smoke checks, and capture responsive evidence.
-5. [ ] Update continuity docs and commit/push the theme repo.
+4. [x] Deploy only changed runtime files, flush cache, run public smoke checks, and capture responsive evidence.
+5. [x] Update continuity docs and commit/push the theme repo.
 
 ## Acceptance
 
