@@ -14,7 +14,7 @@ Spec: `docs/staging/specs/2026-06-24-homepage-oscar-picks-curation-console.md`
   acceptance: Focused contract, Oscar Picks controls regression, Oscar Picks rail regression, PHP lint, and `git diff --check` pass.
   spec: `docs/staging/specs/2026-06-24-homepage-oscar-picks-curation-console.md#contract`
 
-- [ ] T3: Deploy and verify
+- [x] T3: Deploy and verify
   goal: Deploy changed runtime files, flush cache, smoke public routes, confirm admin markers, capture homepage QA, update continuity, and push the repo.
   files: `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\10_VISUAL_EVIDENCE\lunara-homepage-oscar-picks-curation-console-20260624`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\09_DOCS_AND_NOTES`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\LUNARA_WORLD_CHANGELOG.md`
   acceptance: Local/remote hashes match, public smoke returns 200, sampled public HTML contains no private leakage, and responsive QA shows no overflow or broken images.
