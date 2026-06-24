@@ -14,7 +14,7 @@ Spec: `docs/staging/specs/2026-06-24-homepage-oscar-picks-studio-controls.md`
   acceptance: Contract test, existing homepage rail tests, PHP lint, and `git diff --check` pass.
   spec: `docs/staging/specs/2026-06-24-homepage-oscar-picks-studio-controls.md#contract`
 
-- [ ] T3: Deploy and verify
+- [x] T3: Deploy and verify
   goal: Deploy changed theme files, flush cache, smoke public routes, and capture homepage QA.
   files: `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\10_VISUAL_EVIDENCE\lunara-homepage-oscar-picks-studio-controls-20260624`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\09_DOCS_AND_NOTES`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\LUNARA_WORLD_CHANGELOG.md`
   acceptance: Local/remote hashes match, cache is flushed, public smoke returns 200, sampled homepage QA shows no overflow or private leakage, continuity docs are updated, and repo commits are pushed.
