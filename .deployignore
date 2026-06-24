@@ -1,0 +1,41 @@
+# Repository metadata and local tooling
+.deployignore
+.gitattributes
+.github
+.github/**
+.gitignore
+.playwright-cli
+.playwright-cli/**
+
+# Documentation and planning artifacts
+ARCHITECTURE.md
+README.md
+docs
+docs/**
+tests
+tests/**
+_oscar-facts-source.md
+
+# Local backups and transient files
+*.bak
+*.bak-*
+*.log
+*.tmp
+*.zip
+
+# Dependency/build artifacts that should never land in the live theme
+node_modules
+node_modules/**
+vendor
+vendor/**
+composer.json
+composer.lock
+package.json
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
