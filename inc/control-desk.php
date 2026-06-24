@@ -3673,7 +3673,7 @@ function lunara_control_desk_get_system_status() {
         array(
             'label' => __( 'Academy Awards plugin', 'lunara-film' ),
             'value' => $aat_version ? $aat_version : __( 'Not detected', 'lunara-film' ),
-            'state' => '2.7.33' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
+            'state' => '2.7.34' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
             'note'  => __( 'The active source is the GitHub-backed Oscars Ledger work tree under G:\\lunara-backups\\work.', 'lunara-film' ),
         ),
         array(
@@ -3805,7 +3805,7 @@ function lunara_control_desk_get_source_status() {
             'label' => __( 'Oscars plugin source', 'lunara-film' ),
             'value' => 'G:\\lunara-backups\\work\\academy-awards-table-optimized-ceremony-depth',
             'state' => 'ready',
-            'note'  => 'feat/ceremony-depth-thesis @ ce40819; related-review Studio hooks verified; Deployer for Git Pro is inactive; original source folder has pre-existing SQL drift and was not the deploy source.',
+            'note'  => 'feat/ceremony-depth-thesis @ c793aa8; person visual integrity states verified; Deployer for Git Pro is inactive; original source folder has pre-existing SQL drift and was not the deploy source.',
         ),
         array(
             'label' => __( 'Dispatch plugin source', 'lunara-film' ),
@@ -3850,7 +3850,7 @@ function lunara_control_desk_get_source_control_status() {
         ),
         array(
             'label' => __( 'Oscars repo', 'lunara-film' ),
-            'value' => 'feat/ceremony-depth-thesis @ ce40819',
+            'value' => 'feat/ceremony-depth-thesis @ c793aa8',
             'state' => 'ready',
             'note'  => 'github.com/TheAntagonist2020/lunara-plugin-oscars-ledger',
         ),
