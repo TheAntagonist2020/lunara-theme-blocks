@@ -13185,6 +13185,56 @@ body[data-rail-card-layout="split"] .lunara-dispatch-rail-copy {
     scrollbar-width: thin;
     scrollbar-color: rgba(201,169,97,.35) transparent;
 }
+
+.lunara-oscar-picks-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.lunara-oscar-picks-controls .lunara-carousel-dot {
+    width: 9px;
+    height: 9px;
+    margin: 0;
+    border-radius: 999px;
+    border: 1px solid rgba(201, 169, 97, 0.65);
+    background: transparent;
+    cursor: pointer;
+    transition: width 220ms ease, background-color 220ms ease, border-color 220ms ease;
+}
+
+.lunara-oscar-picks-controls .lunara-carousel-dot.active {
+    width: 24px;
+    background: rgba(201, 169, 97, 0.98);
+    border-color: rgba(201, 169, 97, 0.98);
+}
+
+.lunara-oscar-picks-controls .lunara-carousel-control {
+    width: 33px;
+    height: 33px;
+    border-radius: 999px;
+    border: 1px solid rgba(201, 169, 97, 0.55);
+    color: rgba(224, 196, 129, 0.98);
+    background: rgba(7, 15, 26, 0.86);
+    font-size: 15px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.lunara-oscar-picks-controls .lunara-carousel-control:hover,
+.lunara-oscar-picks-controls .lunara-carousel-control:focus-visible {
+    border-color: rgba(244, 216, 143, 0.86);
+    background: rgba(201, 169, 97, 0.14);
+    outline: none;
+    transform: translateY(-1px);
+}
+
 .lunara-oscar-picks-track::-webkit-scrollbar {
     height: 8px;
 }

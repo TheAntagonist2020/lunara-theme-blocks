@@ -13145,6 +13145,7 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 			'cta_text' => __( 'See the full Oscar Ledger', 'lunara-film' ),
 			'cta_url'  => home_url( '/oscars/' ),
 			'count'    => 12,
+			'autoplay' => 6500,
 		);
 		$args  = lunara_repair_mojibake_args( wp_parse_args( $args, $defaults ), array( 'kicker', 'heading', 'summary', 'cta_text' ) );
 		$query = lunara_get_oscar_picks( array( 'posts_per_page' => (int) $args['count'] ) );
@@ -13155,7 +13156,8 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 
 		ob_start();
 		?>
-		<section class="lunara-home-section lunara-home-slot-oscar-picks lunara-oscar-picks-section" aria-label="Lunara Oscar Picks" data-lunara-carousel data-lunara-carousel-autoplay="0">
+		<?php $pick_count = max( 0, (int) $query->post_count ); ?>
+		<section class="lunara-home-section lunara-home-slot-oscar-picks lunara-oscar-picks-section" aria-label="Lunara Oscar Picks" data-lunara-carousel data-lunara-carousel-autoplay="<?php echo $pick_count > 1 ? (int) $args['autoplay'] : 0; ?>">
 			<div class="lunara-home-section-head is-with-summary">
 				<div>
 					<p class="lunara-home-section-kicker"><?php echo esc_html( $args['kicker'] ); ?></p>
@@ -13166,8 +13168,26 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 				</div>
 				<a class="lunara-section-link" href="<?php echo esc_url( $args['cta_url'] ); ?>"><?php echo esc_html( $args['cta_text'] ); ?></a>
 			</div>
+			<?php if ( $pick_count > 1 ) : ?>
+				<div class="lunara-oscar-picks-controls">
+					<button class="lunara-carousel-control" type="button" data-lunara-carousel-prev aria-label="<?php esc_attr_e( 'Previous Oscar Pick', 'lunara-film' ); ?>">&lt;</button>
+					<div class="lunara-oscar-picks-dots lunara-carousel-dots" role="tablist" aria-label="<?php esc_attr_e( 'Oscar Picks slides', 'lunara-film' ); ?>">
+						<?php for ( $dot_index = 0; $dot_index < $pick_count; $dot_index++ ) : ?>
+							<button
+								class="lunara-carousel-dot <?php echo 0 === $dot_index ? 'active' : ''; ?>"
+								type="button"
+								data-lunara-carousel-dot
+								role="tab"
+								aria-label="<?php echo esc_attr( sprintf( __( 'Show Oscar Pick %d', 'lunara-film' ), $dot_index + 1 ) ); ?>"
+								aria-selected="<?php echo 0 === $dot_index ? 'true' : 'false'; ?>"
+							></button>
+						<?php endfor; ?>
+					</div>
+					<button class="lunara-carousel-control" type="button" data-lunara-carousel-next aria-label="<?php esc_attr_e( 'Next Oscar Pick', 'lunara-film' ); ?>">&gt;</button>
+				</div>
+			<?php endif; ?>
 
-			<div class="lunara-oscar-picks-track" role="list">
+			<div class="lunara-oscar-picks-track" data-lunara-carousel-track role="list" tabindex="0">
 				<?php while ( $query->have_posts() ) :
 					$query->the_post();
 					$pick_index  = max( 0, (int) $query->current_post );

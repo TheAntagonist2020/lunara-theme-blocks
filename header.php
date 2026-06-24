@@ -1200,24 +1200,6 @@
             }
         }
 
-        body.home .lunara-oscar-picks-track,
-        body.home .lunara-oscar-facts-track {
-            display: grid !important;
-            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-            grid-auto-flow: row !important;
-            grid-auto-columns: auto !important;
-            gap: clamp(18px, 2vw, 26px) !important;
-            width: 100% !important;
-            overflow: visible !important;
-            padding: 0 !important;
-            scroll-snap-type: none !important;
-        }
-
-        body.home .lunara-oscar-facts-track {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            align-items: start !important;
-        }
-
         body.home .lunara-oscar-pick-card,
         body.home .lunara-oscar-fact-card {
             width: 100% !important;
@@ -1318,20 +1300,6 @@
             border: 1px solid rgba(237, 210, 150, 0.4) !important;
             font-size: 0.72rem !important;
             letter-spacing: 0.12em !important;
-        }
-
-        @media (max-width: 900px) {
-            body.home .lunara-oscar-picks-track,
-            body.home .lunara-oscar-facts-track {
-                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            }
-        }
-
-        @media (max-width: 520px) {
-            body.home .lunara-oscar-picks-track,
-            body.home .lunara-oscar-facts-track {
-                grid-template-columns: 1fr !important;
-            }
         }
 
         body.lunara-oscars-portal-page .lunara-oscars-portal {
@@ -4587,7 +4555,6 @@
 
             body.home .lunara-latest-reviews-section .lunara-review-grid,
             body.home .lunara-journal-home-grid,
-            body.home .lunara-oscar-picks-track,
             body.home .lunara-oscar-facts-track {
                 width: calc(100vw - 32px) !important;
                 max-width: calc(100vw - 32px) !important;
@@ -4599,6 +4566,19 @@
                 overscroll-behavior: auto !important;
                 scroll-snap-type: none !important;
                 touch-action: pan-y pinch-zoom !important;
+            }
+
+            body.home .lunara-oscar-picks-track {
+                width: calc(100vw - 32px) !important;
+                max-width: calc(100vw - 32px) !important;
+                margin-inline: auto !important;
+                justify-items: stretch !important;
+                overflow-x: auto !important;
+                overflow-y: hidden !important;
+                overscroll-behavior-inline: contain !important;
+                scroll-snap-type: x mandatory !important;
+                touch-action: pan-x pan-y pinch-zoom !important;
+                -webkit-overflow-scrolling: touch !important;
             }
 
             body.home .lunara-latest-reviews-section .lunara-review-grid-card,
@@ -4624,6 +4604,10 @@
                 min-height: 0 !important;
                 grid-template-rows: auto !important;
                 touch-action: pan-y pinch-zoom !important;
+            }
+
+            body.home .lunara-oscar-pick-card-link {
+                touch-action: pan-x pan-y pinch-zoom !important;
             }
 
             body.home .lunara-journal-home-card-media:has(.lunara-journal-home-card-placeholder),
