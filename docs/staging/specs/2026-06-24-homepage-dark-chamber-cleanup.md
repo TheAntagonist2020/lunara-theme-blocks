@@ -16,6 +16,7 @@ The homepage should keep its tightened publication rhythm without forcing text-l
   - no visible empty media chamber,
   - no forced full-height card stretch,
   - lead text-only cards remain denser than visual lead cards.
+- Tighten the Oscar Facts section header band so it reads as a command strip before the carousel rather than a large dark framed chamber.
 - Keep all cleanup scoped to `body.home`.
 - Do not introduce new settings, new database fields, raw CSS controls, third-party carousel code, or unrelated route changes.
 - Do not introduce a new font family.

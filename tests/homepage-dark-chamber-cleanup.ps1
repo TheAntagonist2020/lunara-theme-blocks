@@ -47,6 +47,7 @@ foreach ($needle in @(
     'body.home .lunara-dispatches-section .lunara-journal-home-card.is-lead.has-no-visual{min-height:clamp(260px,24vw,360px)!important;',
     'body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-link{min-height:0!important;height:auto!important;grid-template-rows:auto!important;',
     'body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-media{display:none!important;',
+    'body.home .lunara-oscar-facts-section .lunara-home-section-head.is-with-summary{min-height:0!important;padding:clamp(16px,2.2vw,26px)!important;align-items:center!important;',
     '@media(max-width:820px)',
     '@media(prefers-reduced-motion:reduce)'
 )) {
