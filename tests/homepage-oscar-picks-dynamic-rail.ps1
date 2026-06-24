@@ -27,7 +27,7 @@ $style = Read-ThemeFile 'style.css'
 $header = Read-ThemeFile 'header.php'
 
 Assert-True ($functions -match "function\s+lunara_render_oscar_picks_carousel") 'Oscar Picks must keep its named renderer.'
-Assert-True ($functions -match "'autoplay'\s*=>\s*6500") 'Oscar Picks must define a bounded autoplay interval.'
+Assert-True ($functions -match "get_theme_mod\(\s*'lunara_home_oscar_picks_autoplay_interval'\s*,\s*6500\s*\)") 'Oscar Picks must define a bounded autoplay interval.'
 Assert-True ($functions -match 'data-lunara-carousel-autoplay="<\?php echo \$pick_count > 1 \? \(int\) \$args\[''autoplay''\] : 0; \?>"') 'Oscar Picks autoplay must disable itself when only one card exists.'
 Assert-True ($functions -match 'data-lunara-carousel-track') 'Oscar Picks track must opt into the shared carousel controller.'
 Assert-True ($functions -match 'class="lunara-oscar-picks-track"[^>]*tabindex="0"') 'Oscar Picks track must be keyboard-focusable.'

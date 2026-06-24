@@ -504,6 +504,25 @@ function lunara_control_desk_homepage_select_specs() {
                 ),
             ),
         ),
+        'lunara_home_oscar_picks_density'     => array(
+            'label'   => __( 'Oscar Picks density', 'lunara-film' ),
+            'default' => 'editorial',
+            'note'    => __( 'Tunes the homepage Oscar Picks rail without changing the curated pick posts.', 'lunara-film' ),
+            'options' => array(
+                'compact'   => array(
+                    'label' => __( 'Compact', 'lunara-film' ),
+                    'copy'  => __( 'A faster awards-season scan with tighter cards and less dwell time.', 'lunara-film' ),
+                ),
+                'editorial' => array(
+                    'label' => __( 'Editorial', 'lunara-film' ),
+                    'copy'  => __( 'The default rail rhythm: premium, readable, and active.', 'lunara-film' ),
+                ),
+                'showcase'  => array(
+                    'label' => __( 'Showcase', 'lunara-film' ),
+                    'copy'  => __( 'Larger cards when the picks lane should feel like a signature feature.', 'lunara-film' ),
+                ),
+            ),
+        ),
     );
 }
 
@@ -644,6 +663,9 @@ function lunara_control_desk_homepage_comparison_specs() {
         'lunara_home_oscar_facts_density'   => array(
             'label' => __( 'Oscar Facts density', 'lunara-film' ),
         ),
+        'lunara_home_oscar_picks_density'   => array(
+            'label' => __( 'Oscar Picks density', 'lunara-film' ),
+        ),
         'lunara_home_section_order_preset'  => array(
             'label' => __( 'Section order', 'lunara-film' ),
         ),
@@ -662,6 +684,7 @@ function lunara_control_desk_homepage_preset_specs() {
                 'lunara_home_latest_reviews_density' => 'editorial',
                 'lunara_home_journal_lane_density'   => 'editorial',
                 'lunara_home_oscar_facts_density'    => 'editorial',
+                'lunara_home_oscar_picks_density'    => 'editorial',
                 'lunara_home_section_order_preset'   => 'editorial-default',
             ),
         ),
@@ -675,6 +698,7 @@ function lunara_control_desk_homepage_preset_specs() {
                 'lunara_home_latest_reviews_density' => 'compact',
                 'lunara_home_journal_lane_density'   => 'showcase',
                 'lunara_home_oscar_facts_density'    => 'editorial',
+                'lunara_home_oscar_picks_density'    => 'compact',
                 'lunara_home_section_order_preset'   => 'journal-first',
             ),
         ),
@@ -688,6 +712,7 @@ function lunara_control_desk_homepage_preset_specs() {
                 'lunara_home_latest_reviews_density' => 'compact',
                 'lunara_home_journal_lane_density'   => 'editorial',
                 'lunara_home_oscar_facts_density'    => 'showcase',
+                'lunara_home_oscar_picks_density'    => 'showcase',
                 'lunara_home_section_order_preset'   => 'oscars-forward',
             ),
         ),
@@ -701,6 +726,7 @@ function lunara_control_desk_homepage_preset_specs() {
                 'lunara_home_latest_reviews_density' => 'showcase',
                 'lunara_home_journal_lane_density'   => 'compact',
                 'lunara_home_oscar_facts_density'    => 'compact',
+                'lunara_home_oscar_picks_density'    => 'editorial',
                 'lunara_home_section_order_preset'   => 'editorial-default',
             ),
         ),
@@ -828,6 +854,33 @@ function lunara_control_desk_homepage_number_specs() {
             'step'    => 1,
             'unit'    => 'px',
             'note'    => __( 'Minimum feature height for the homepage Oscar Facts carousel.', 'lunara-film' ),
+        ),
+        'lunara_home_oscar_picks_count' => array(
+            'label'   => __( 'Oscar Picks card count', 'lunara-film' ),
+            'default' => 12,
+            'min'     => 4,
+            'max'     => 16,
+            'step'    => 1,
+            'unit'    => __( 'cards', 'lunara-film' ),
+            'note'    => __( 'How many curated Oscar Pick cards render in the homepage rail.', 'lunara-film' ),
+        ),
+        'lunara_home_oscar_picks_card_min_height' => array(
+            'label'   => __( 'Oscar Picks card height', 'lunara-film' ),
+            'default' => 520,
+            'min'     => 380,
+            'max'     => 720,
+            'step'    => 1,
+            'unit'    => 'px',
+            'note'    => __( 'Minimum card height for the homepage Oscar Picks rail.', 'lunara-film' ),
+        ),
+        'lunara_home_oscar_picks_autoplay_interval' => array(
+            'label'   => __( 'Oscar Picks autoplay interval', 'lunara-film' ),
+            'default' => 6500,
+            'min'     => 0,
+            'max'     => 12000,
+            'step'    => 250,
+            'unit'    => 'ms',
+            'note'    => __( 'Set to 0 to stop automatic motion while keeping manual controls.', 'lunara-film' ),
         ),
     );
 }

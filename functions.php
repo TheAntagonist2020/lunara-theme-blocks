@@ -13138,16 +13138,34 @@ if ( ! function_exists( 'lunara_resolve_oscar_fact_ledger_url' ) ) {
  */
 if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 	function lunara_render_oscar_picks_carousel( $args = array() ) {
+		$default_count    = max( 4, min( 16, absint( get_theme_mod( 'lunara_home_oscar_picks_count', 12 ) ) ) );
+		$default_autoplay = max( 0, min( 12000, absint( get_theme_mod( 'lunara_home_oscar_picks_autoplay_interval', 6500 ) ) ) );
+		$density_options  = array( 'compact', 'editorial', 'showcase' );
+		$default_density  = sanitize_key( (string) get_theme_mod( 'lunara_home_oscar_picks_density', 'editorial' ) );
+
+		if ( ! in_array( $default_density, $density_options, true ) ) {
+			$default_density = 'editorial';
+		}
+
 		$defaults = array(
 			'kicker'   => __( 'Lunara Picks', 'lunara-film' ),
 			'heading'  => __( 'Predicted winners â€” 98th Academy Awards', 'lunara-film' ),
 			'summary'  => __( 'Behind the work, behind the scenes. The images you will not find anywhere else.', 'lunara-film' ),
 			'cta_text' => __( 'See the full Oscar Ledger', 'lunara-film' ),
 			'cta_url'  => home_url( '/oscars/' ),
-			'count'    => 12,
-			'autoplay' => 6500,
+			'count'    => $default_count,
+			'autoplay' => $default_autoplay,
+			'density'  => $default_density,
 		);
 		$args  = lunara_repair_mojibake_args( wp_parse_args( $args, $defaults ), array( 'kicker', 'heading', 'summary', 'cta_text' ) );
+		$args['count']    = max( 4, min( 16, absint( $args['count'] ) ) );
+		$args['autoplay'] = max( 0, min( 12000, absint( $args['autoplay'] ) ) );
+		$oscar_picks_density = sanitize_key( (string) $args['density'] );
+
+		if ( ! in_array( $oscar_picks_density, $density_options, true ) ) {
+			$oscar_picks_density = 'editorial';
+		}
+
 		$query = lunara_get_oscar_picks( array( 'posts_per_page' => (int) $args['count'] ) );
 
 		if ( ! $query->have_posts() ) {
@@ -13157,7 +13175,7 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 		ob_start();
 		?>
 		<?php $pick_count = max( 0, (int) $query->post_count ); ?>
-		<section class="lunara-home-section lunara-home-slot-oscar-picks lunara-oscar-picks-section" aria-label="Lunara Oscar Picks" data-lunara-carousel data-lunara-carousel-autoplay="<?php echo $pick_count > 1 ? (int) $args['autoplay'] : 0; ?>">
+		<section class="lunara-home-section lunara-home-slot-oscar-picks lunara-oscar-picks-section is-density-<?php echo esc_attr( $oscar_picks_density ); ?>" aria-label="Lunara Oscar Picks" data-lunara-carousel data-lunara-carousel-autoplay="<?php echo $pick_count > 1 ? (int) $args['autoplay'] : 0; ?>">
 			<div class="lunara-home-section-head is-with-summary">
 				<div>
 					<p class="lunara-home-section-kicker"><?php echo esc_html( $args['kicker'] ); ?></p>

@@ -230,10 +230,12 @@ function lunara_homepage_studio_signature_css() {
     $latest_reviews_density = lunara_home_select_setting( 'lunara_home_latest_reviews_density', 'editorial', $density_options );
     $journal_lane_density   = lunara_home_select_setting( 'lunara_home_journal_lane_density', 'editorial', $density_options );
     $oscar_facts_density    = lunara_home_select_setting( 'lunara_home_oscar_facts_density', 'editorial', $density_options );
+    $oscar_picks_density    = lunara_home_select_setting( 'lunara_home_oscar_picks_density', 'editorial', $density_options );
 
     $latest_reviews_card_min = lunara_home_brand_number_setting( 'lunara_home_latest_reviews_card_min_height', 430, 340, 560 );
     $journal_card_min        = lunara_home_brand_number_setting( 'lunara_home_journal_card_min_height', 330, 250, 480 );
     $oscar_facts_card_min    = lunara_home_brand_number_setting( 'lunara_home_oscar_facts_card_min_height', 390, 300, 540 );
+    $oscar_picks_card_min    = lunara_home_brand_number_setting( 'lunara_home_oscar_picks_card_min_height', 520, 380, 720 );
 
     $latest_reviews_gap_map         = array( 'compact' => 18, 'editorial' => 24, 'showcase' => 30 );
     $latest_reviews_quote_clamp_map = array( 'compact' => 2, 'editorial' => 3, 'showcase' => 4 );
@@ -241,6 +243,12 @@ function lunara_homepage_studio_signature_css() {
     $journal_excerpt_clamp_map      = array( 'compact' => 2, 'editorial' => 3, 'showcase' => 4 );
     $oscar_facts_body_clamp_map     = array( 'compact' => 3, 'editorial' => 4, 'showcase' => 5 );
     $oscar_facts_text_pad_map       = array( 'compact' => 28, 'editorial' => 40, 'showcase' => 54 );
+    $oscar_picks_gap_map            = array( 'compact' => 18, 'editorial' => 24, 'showcase' => 30 );
+    $oscar_picks_column_min_map     = array( 'compact' => 320, 'editorial' => 380, 'showcase' => 420 );
+    $oscar_picks_column_max_map     = array( 'compact' => 390, 'editorial' => 460, 'showcase' => 520 );
+    $oscar_picks_mobile_column_map  = array( 'compact' => 82, 'editorial' => 86, 'showcase' => 90 );
+    $oscar_picks_title_clamp_map    = array( 'compact' => 3, 'editorial' => 4, 'showcase' => 4 );
+    $oscar_picks_copy_pad_map       = array( 'compact' => 18, 'editorial' => 22, 'showcase' => 26 );
 
     $latest_reviews_gap         = $latest_reviews_gap_map[ $latest_reviews_density ];
     $latest_reviews_quote_clamp = $latest_reviews_quote_clamp_map[ $latest_reviews_density ];
@@ -250,6 +258,12 @@ function lunara_homepage_studio_signature_css() {
     $oscar_facts_text_pad       = $oscar_facts_text_pad_map[ $oscar_facts_density ];
     $oscar_facts_media_min      = min( 420, max( 220, $oscar_facts_card_min - 70 ) );
     $oscar_facts_archival_min   = min( 330, max( 230, $oscar_facts_card_min - 110 ) );
+    $oscar_picks_gap            = $oscar_picks_gap_map[ $oscar_picks_density ];
+    $oscar_picks_column_min     = $oscar_picks_column_min_map[ $oscar_picks_density ];
+    $oscar_picks_column_max     = $oscar_picks_column_max_map[ $oscar_picks_density ];
+    $oscar_picks_mobile_column  = $oscar_picks_mobile_column_map[ $oscar_picks_density ];
+    $oscar_picks_title_clamp    = $oscar_picks_title_clamp_map[ $oscar_picks_density ];
+    $oscar_picks_copy_pad       = $oscar_picks_copy_pad_map[ $oscar_picks_density ];
 
     if ( 'balanced' === $rhythm ) {
         $section_gap = (int) round( $section_gap * 1.08 );
@@ -262,7 +276,7 @@ function lunara_homepage_studio_signature_css() {
     $section_gap = max( 18, min( 96, $section_gap ) );
     ?>
     <style id="lunara-homepage-studio-signature-css">
-    body.home .lunara-front-page{--lunara-home-section-gap:<?php echo esc_html( $section_gap ); ?>px;--lunara-home-latest-reviews-card-min:<?php echo esc_html( $latest_reviews_card_min ); ?>px;--lunara-home-latest-reviews-gap:<?php echo esc_html( $latest_reviews_gap ); ?>px;--lunara-home-latest-reviews-quote-clamp:<?php echo esc_html( $latest_reviews_quote_clamp ); ?>;--lunara-home-journal-card-min:<?php echo esc_html( $journal_card_min ); ?>px;--lunara-home-journal-gap:<?php echo esc_html( $journal_gap ); ?>px;--lunara-home-journal-excerpt-clamp:<?php echo esc_html( $journal_excerpt_clamp ); ?>;--lunara-home-oscar-facts-card-min:<?php echo esc_html( $oscar_facts_card_min ); ?>px;--lunara-home-oscar-facts-media-min:<?php echo esc_html( $oscar_facts_media_min ); ?>px;--lunara-home-oscar-facts-archival-min:<?php echo esc_html( $oscar_facts_archival_min ); ?>px;--lunara-home-oscar-facts-body-clamp:<?php echo esc_html( $oscar_facts_body_clamp ); ?>;--lunara-home-oscar-facts-text-pad:<?php echo esc_html( $oscar_facts_text_pad ); ?>px;}
+    body.home .lunara-front-page{--lunara-home-section-gap:<?php echo esc_html( $section_gap ); ?>px;--lunara-home-latest-reviews-card-min:<?php echo esc_html( $latest_reviews_card_min ); ?>px;--lunara-home-latest-reviews-gap:<?php echo esc_html( $latest_reviews_gap ); ?>px;--lunara-home-latest-reviews-quote-clamp:<?php echo esc_html( $latest_reviews_quote_clamp ); ?>;--lunara-home-journal-card-min:<?php echo esc_html( $journal_card_min ); ?>px;--lunara-home-journal-gap:<?php echo esc_html( $journal_gap ); ?>px;--lunara-home-journal-excerpt-clamp:<?php echo esc_html( $journal_excerpt_clamp ); ?>;--lunara-home-oscar-facts-card-min:<?php echo esc_html( $oscar_facts_card_min ); ?>px;--lunara-home-oscar-facts-media-min:<?php echo esc_html( $oscar_facts_media_min ); ?>px;--lunara-home-oscar-facts-archival-min:<?php echo esc_html( $oscar_facts_archival_min ); ?>px;--lunara-home-oscar-facts-body-clamp:<?php echo esc_html( $oscar_facts_body_clamp ); ?>;--lunara-home-oscar-facts-text-pad:<?php echo esc_html( $oscar_facts_text_pad ); ?>px;--lunara-home-oscar-picks-card-min:<?php echo esc_html( $oscar_picks_card_min ); ?>px;--lunara-home-oscar-picks-gap:<?php echo esc_html( $oscar_picks_gap ); ?>px;--lunara-home-oscar-picks-column-min:<?php echo esc_html( $oscar_picks_column_min ); ?>px;--lunara-home-oscar-picks-column-max:<?php echo esc_html( $oscar_picks_column_max ); ?>px;--lunara-home-oscar-picks-mobile-column:<?php echo esc_html( $oscar_picks_mobile_column ); ?>%;--lunara-home-oscar-picks-title-clamp:<?php echo esc_html( $oscar_picks_title_clamp ); ?>;--lunara-home-oscar-picks-copy-pad:<?php echo esc_html( $oscar_picks_copy_pad ); ?>px;}
     body.home .lunara-front-page > .lunara-home-section{margin-top:var(--lunara-home-section-gap)!important;margin-bottom:var(--lunara-home-section-gap)!important;}
     body.home .lunara-front-page > .lunara-home-masthead + .lunara-home-section{margin-top:max(16px,calc(var(--lunara-home-section-gap) * .55))!important;}
     body.home .lunara-front-page > .wp-block-group.alignfull{margin-top:var(--lunara-home-section-gap)!important;margin-bottom:var(--lunara-home-section-gap)!important;}
@@ -280,6 +294,10 @@ function lunara_homepage_studio_signature_css() {
     body.home .lunara-journal-home-grid .lunara-journal-home-card-link{height:100%;}
     body.home .lunara-journal-home-grid .lunara-journal-home-card-copy{padding:clamp(18px,2.4vw,30px)!important;}
     body.home .lunara-journal-home-grid .lunara-journal-home-card-excerpt{display:-webkit-box;-webkit-line-clamp:var(--lunara-home-journal-excerpt-clamp);-webkit-box-orient:vertical;overflow:hidden;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-picks-track{grid-auto-columns:minmax(var(--lunara-home-oscar-picks-column-min),var(--lunara-home-oscar-picks-column-max))!important;gap:var(--lunara-home-oscar-picks-gap)!important;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-link{min-height:var(--lunara-home-oscar-picks-card-min)!important;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-copy{padding:var(--lunara-home-oscar-picks-copy-pad)!important;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-title{display:-webkit-box;-webkit-line-clamp:var(--lunara-home-oscar-picks-title-clamp)!important;-webkit-box-orient:vertical;overflow:hidden;}
     body.home .lunara-oscar-facts-section{position:relative;overflow:clip;padding-inline:clamp(16px,4vw,30px);}
     body.home .lunara-oscar-facts-section .lunara-home-section-head{width:min(100%,1120px);margin:0 auto clamp(14px,2vw,22px)!important;padding:clamp(16px,2.2vw,24px) clamp(16px,2.4vw,28px);border:1px solid rgba(224,196,129,.2);border-radius:10px;background:linear-gradient(180deg,rgba(10,23,37,.78),rgba(7,16,27,.66));box-shadow:0 18px 48px rgba(0,0,0,.14);}
     body.home .lunara-oscar-facts-section .lunara-home-section-title{max-width:14em;text-wrap:balance;}
@@ -294,7 +312,7 @@ function lunara_homepage_studio_signature_css() {
     body.home .lunara-oscar-facts-section .lunara-oscar-facts-dots{gap:12px;margin-top:20px;}
     body.home .lunara-oscar-facts-section .lunara-carousel-dot{width:11px;height:11px;background:rgba(244,239,227,.14);border-color:rgba(224,196,129,.62);transition:width .2s ease,background .2s ease,border-color .2s ease;}
     body.home .lunara-oscar-facts-section .lunara-carousel-dot.active{width:38px;background:#d7b66f;border-color:#d7b66f;}
-    @media(max-width:820px){body.home .lunara-front-page > .lunara-home-section{margin-top:calc(var(--lunara-home-section-gap) * .76)!important;margin-bottom:calc(var(--lunara-home-section-gap) * .9)!important;}body.home .lunara-oscar-facts-section{padding-inline:14px;}body.home .lunara-oscar-facts-section .lunara-home-section-head{padding:16px;margin-bottom:14px!important;}body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel{padding:8px;border-radius:10px;}body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-link{border-radius:8px;}body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-poster .lunara-oscar-fact-card-poster{min-height:0!important;}}
+    @media(max-width:820px){body.home .lunara-front-page > .lunara-home-section{margin-top:calc(var(--lunara-home-section-gap) * .76)!important;margin-bottom:calc(var(--lunara-home-section-gap) * .9)!important;}body.home .lunara-oscar-picks-section .lunara-oscar-picks-track{grid-auto-columns:var(--lunara-home-oscar-picks-mobile-column)!important;gap:calc(var(--lunara-home-oscar-picks-gap) * .64)!important;}body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-link{min-height:max(360px,calc(var(--lunara-home-oscar-picks-card-min) * .82))!important;}body.home .lunara-oscar-facts-section{padding-inline:14px;}body.home .lunara-oscar-facts-section .lunara-home-section-head{padding:16px;margin-bottom:14px!important;}body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel{padding:8px;border-radius:10px;}body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-link{border-radius:8px;}body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.has-poster .lunara-oscar-fact-card-poster{min-height:0!important;}}
     @media(prefers-reduced-motion:reduce){body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.lunara-carousel-slide,body.home .lunara-oscar-facts-section .lunara-carousel-dot{transition:none!important;}body.home .lunara-oscar-facts-section .lunara-oscar-fact-card.lunara-carousel-slide{transform:none!important;}}
     </style>
     <?php
