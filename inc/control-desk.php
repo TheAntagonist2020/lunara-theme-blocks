@@ -923,6 +923,78 @@ function lunara_control_desk_homepage_number_value( $key ) {
     );
 }
 
+function lunara_control_desk_parse_oscar_pick_order( $raw ) {
+    if ( is_array( $raw ) ) {
+        $raw = implode( ',', $raw );
+    }
+
+    $ids = array();
+
+    foreach ( preg_split( '/[\s,]+/', (string) $raw ) as $raw_id ) {
+        $post_id = absint( $raw_id );
+
+        if ( $post_id <= 0 || in_array( $post_id, $ids, true ) ) {
+            continue;
+        }
+
+        if ( get_post_type( $post_id ) !== 'lunara_oscar_pick' ) {
+            continue;
+        }
+
+        if ( get_post_status( $post_id ) !== 'publish' ) {
+            continue;
+        }
+
+        $ids[] = $post_id;
+    }
+
+    return $ids;
+}
+
+function lunara_control_desk_get_homepage_oscar_pick_order_ids() {
+    return lunara_control_desk_parse_oscar_pick_order( get_theme_mod( 'lunara_home_oscar_picks_manual_order', '' ) );
+}
+
+function lunara_control_desk_get_homepage_oscar_pick_posts_by_ids( $ids ) {
+    $ids = lunara_control_desk_parse_oscar_pick_order( $ids );
+
+    if ( empty( $ids ) ) {
+        return array();
+    }
+
+    return get_posts(
+        array(
+            'post_type'           => 'lunara_oscar_pick',
+            'post_status'         => 'publish',
+            'post__in'            => $ids,
+            'orderby'             => 'post__in',
+            'posts_per_page'      => count( $ids ),
+            'ignore_sticky_posts' => true,
+            'no_found_rows'       => true,
+        )
+    );
+}
+
+function lunara_control_desk_get_homepage_oscar_pick_candidates( $exclude_ids = array(), $limit = 30 ) {
+    $exclude_ids = array_map( 'absint', (array) $exclude_ids );
+
+    return get_posts(
+        array(
+            'post_type'           => 'lunara_oscar_pick',
+            'post_status'         => 'publish',
+            'posts_per_page'      => absint( $limit ),
+            'post__not_in'        => array_filter( $exclude_ids ),
+            'meta_key'            => '_lunara_pick_ceremony_year',
+            'orderby'             => array(
+                'meta_value_num' => 'DESC',
+                'date'           => 'DESC',
+            ),
+            'ignore_sticky_posts' => true,
+            'no_found_rows'       => true,
+        )
+    );
+}
+
 function lunara_control_desk_homepage_visibility_specs() {
     return array(
         'lunara_home_show_latest_reviews'  => array(
@@ -1021,6 +1093,37 @@ function lunara_control_desk_save_homepage_studio() {
         if ( array_key_exists( $key, $raw_numbers ) ) {
             set_theme_mod( $key, (string) lunara_control_desk_homepage_clamp_number( $key, $raw_numbers[ $key ] ) );
         }
+    }
+
+    $reset_oscar_picks = ! empty( $_POST['lunara_home_oscar_picks_reset_order'] );
+    $order_source       = isset( $_POST['lunara_home_oscar_picks_order_source'] )
+        ? sanitize_key( wp_unslash( $_POST['lunara_home_oscar_picks_order_source'] ) )
+        : 'fallback';
+    $raw_oscar_order   = isset( $_POST['lunara_home_oscar_picks_manual_order'] )
+        ? sanitize_textarea_field( wp_unslash( $_POST['lunara_home_oscar_picks_manual_order'] ) )
+        : '';
+    $oscar_pick_ids    = lunara_control_desk_parse_oscar_pick_order( $raw_oscar_order );
+    $raw_oscar_adds    = isset( $_POST['lunara_home_oscar_picks_add'] ) && is_array( $_POST['lunara_home_oscar_picks_add'] )
+        ? wp_unslash( $_POST['lunara_home_oscar_picks_add'] )
+        : array();
+    $add_oscar_pick_ids = lunara_control_desk_parse_oscar_pick_order( $raw_oscar_adds );
+
+    foreach ( $add_oscar_pick_ids as $add_id ) {
+        if ( ! in_array( $add_id, $oscar_pick_ids, true ) ) {
+            $oscar_pick_ids[] = $add_id;
+        }
+    }
+
+    $default_oscar_pick_ids       = lunara_control_desk_homepage_oscar_pick_default_order_ids();
+    $oscar_pick_order_is_default = $oscar_pick_ids === array_values( array_map( 'absint', $default_oscar_pick_ids ) );
+    $should_store_oscar_picks    = 'manual' === $order_source || ! empty( $add_oscar_pick_ids ) || ! $oscar_pick_order_is_default;
+
+    if ( $reset_oscar_picks || empty( $oscar_pick_ids ) ) {
+        remove_theme_mod( 'lunara_home_oscar_picks_manual_order' );
+    } elseif ( $should_store_oscar_picks ) {
+        set_theme_mod( 'lunara_home_oscar_picks_manual_order', implode( ',', $oscar_pick_ids ) );
+    } else {
+        remove_theme_mod( 'lunara_home_oscar_picks_manual_order' );
     }
 
     $raw_visible = isset( $_POST['lunara_homepage_visibility'] ) && is_array( $_POST['lunara_homepage_visibility'] )
@@ -7531,6 +7634,175 @@ function lunara_control_desk_render_homepage_number_control( $key, $spec ) {
     <?php
 }
 
+function lunara_control_desk_homepage_oscar_pick_default_order_ids() {
+    if ( function_exists( 'lunara_get_oscar_picks' ) ) {
+        $query = lunara_get_oscar_picks( array( 'posts_per_page' => 16 ) );
+        $ids   = wp_list_pluck( $query->posts, 'ID' );
+        wp_reset_postdata();
+
+        return array_map( 'absint', $ids );
+    }
+
+    return wp_list_pluck(
+        get_posts(
+            array(
+                'post_type'           => 'lunara_oscar_pick',
+                'post_status'         => 'publish',
+                'posts_per_page'      => 16,
+                'ignore_sticky_posts' => true,
+                'no_found_rows'       => true,
+            )
+        ),
+        'ID'
+    );
+}
+
+function lunara_control_desk_render_homepage_oscar_pick_order_item( $post, $index = 0 ) {
+    if ( ! ( $post instanceof WP_Post ) ) {
+        return;
+    }
+
+    $post_id = absint( $post->ID );
+    $film    = (string) get_post_meta( $post_id, '_lunara_pick_film', true );
+    $year    = (int) get_post_meta( $post_id, '_lunara_pick_ceremony_year', true );
+    $status  = (string) get_post_meta( $post_id, '_lunara_pick_status', true );
+    $terms   = get_the_terms( $post_id, 'oscar_pick_category' );
+    $term    = ! empty( $terms ) && ! is_wp_error( $terms ) ? $terms[0]->name : __( 'Oscar Pick', 'lunara-film' );
+    ?>
+    <article class="lunara-control-desk-carousel-item lunara-control-desk-oscar-pick-order-item" data-lunara-carousel-item data-lunara-carousel-id="<?php echo esc_attr( $post_id ); ?>">
+        <div class="lunara-control-desk-carousel-thumb">
+            <?php if ( has_post_thumbnail( $post_id ) ) : ?>
+                <?php
+                echo get_the_post_thumbnail(
+                    $post_id,
+                    'thumbnail',
+                    array(
+                        'class'   => 'lunara-control-desk-carousel-image',
+                        'loading' => 0 === (int) $index ? 'eager' : 'lazy',
+                    )
+                );
+                ?>
+            <?php else : ?>
+                <span class="lunara-control-desk-oscar-pick-thumb-empty"><?php esc_html_e( 'No image', 'lunara-film' ); ?></span>
+            <?php endif; ?>
+        </div>
+        <div class="lunara-control-desk-carousel-copy">
+            <div class="lunara-control-desk-carousel-title-row">
+                <div>
+                    <strong><?php echo esc_html( get_the_title( $post ) ? get_the_title( $post ) : __( '(Untitled Oscar Pick)', 'lunara-film' ) ); ?></strong>
+                    <span>
+                        <?php
+                        echo esc_html(
+                            implode(
+                                ' / ',
+                                array_filter(
+                                    array(
+                                        '#' . $post_id,
+                                        $term,
+                                        $film,
+                                        $year ? (string) $year : '',
+                                        $status ? ucfirst( $status ) : __( 'Predicted', 'lunara-film' ),
+                                    )
+                                )
+                            )
+                        );
+                        ?>
+                    </span>
+                </div>
+                <div class="lunara-control-desk-carousel-controls">
+                    <button type="button" class="button button-small" data-lunara-carousel-move="up"><?php esc_html_e( 'Up', 'lunara-film' ); ?></button>
+                    <button type="button" class="button button-small" data-lunara-carousel-move="down"><?php esc_html_e( 'Down', 'lunara-film' ); ?></button>
+                    <button type="button" class="button button-small" data-lunara-carousel-remove><?php esc_html_e( 'Hold', 'lunara-film' ); ?></button>
+                </div>
+            </div>
+            <div class="lunara-control-desk-actions">
+                <a class="button button-small" href="<?php echo esc_url( get_edit_post_link( $post_id, 'raw' ) ); ?>"><?php esc_html_e( 'Edit Pick', 'lunara-film' ); ?></a>
+                <a class="button button-small" href="<?php echo esc_url( get_permalink( $post_id ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Public Pick', 'lunara-film' ); ?></a>
+            </div>
+        </div>
+    </article>
+    <?php
+}
+
+function lunara_control_desk_render_homepage_oscar_pick_candidate( $post ) {
+    if ( ! ( $post instanceof WP_Post ) ) {
+        return;
+    }
+
+    $post_id = absint( $post->ID );
+    $year    = (int) get_post_meta( $post_id, '_lunara_pick_ceremony_year', true );
+    ?>
+    <label class="lunara-control-desk-oscar-pick-candidate">
+        <input type="checkbox" name="lunara_home_oscar_picks_add[]" value="<?php echo esc_attr( $post_id ); ?>" />
+        <span>
+            <?php if ( has_post_thumbnail( $post_id ) ) : ?>
+                <?php echo get_the_post_thumbnail( $post_id, 'thumbnail', array( 'loading' => 'lazy' ) ); ?>
+            <?php endif; ?>
+            <strong><?php echo esc_html( get_the_title( $post ) ? get_the_title( $post ) : __( '(Untitled Oscar Pick)', 'lunara-film' ) ); ?></strong>
+            <small><?php echo esc_html( trim( sprintf( __( '#%1$d %2$s', 'lunara-film' ), $post_id, $year ? '/ ' . $year : '' ) ) ); ?></small>
+        </span>
+    </label>
+    <?php
+}
+
+function lunara_control_desk_render_homepage_oscar_picks_curation() {
+    $stored_ids      = lunara_control_desk_get_homepage_oscar_pick_order_ids();
+    $order_is_custom = ! empty( $stored_ids );
+    $ordered_ids     = $order_is_custom ? $stored_ids : lunara_control_desk_homepage_oscar_pick_default_order_ids();
+    $ordered_posts   = lunara_control_desk_get_homepage_oscar_pick_posts_by_ids( $ordered_ids );
+    $candidate_posts = lunara_control_desk_get_homepage_oscar_pick_candidates( $ordered_ids, 24 );
+    ?>
+    <div class="lunara-control-desk-homepage-card lunara-control-desk-oscar-picks-curation" data-lunara-oscar-picks-curation>
+        <div class="lunara-control-desk-card-head">
+            <div>
+                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Oscar Picks Curation', 'lunara-film' ); ?></p>
+                <h3><?php esc_html_e( 'Order the homepage awards rail', 'lunara-film' ); ?></h3>
+                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Move cards up or down, hold weaker cards out of the public rail, and add recent published picks back on save. This only stores a homepage order list.', 'lunara-film' ); ?></p>
+            </div>
+            <div class="lunara-control-desk-status-pill">
+                <strong><?php esc_html_e( 'Order source', 'lunara-film' ); ?></strong>
+                <span><?php echo esc_html( $order_is_custom ? __( 'manual homepage order', 'lunara-film' ) : __( 'smart default fallback', 'lunara-film' ) ); ?></span>
+            </div>
+        </div>
+
+        <div class="lunara-control-desk-carousel-toolbar">
+            <input type="hidden" name="lunara_home_oscar_picks_order_source" value="<?php echo esc_attr( $order_is_custom ? 'manual' : 'fallback' ); ?>" />
+            <label for="lunara-home-oscar-picks-manual-order">
+                <span><?php esc_html_e( 'Active ordered pick IDs', 'lunara-film' ); ?></span>
+                <textarea id="lunara-home-oscar-picks-manual-order" name="lunara_home_oscar_picks_manual_order" rows="2" data-lunara-carousel-ids><?php echo esc_textarea( implode( ',', $ordered_ids ) ); ?></textarea>
+            </label>
+            <label class="lunara-control-desk-oscar-pick-reset">
+                <input type="checkbox" name="lunara_home_oscar_picks_reset_order" value="1" />
+                <span><?php esc_html_e( 'Reset to smart default order', 'lunara-film' ); ?></span>
+            </label>
+        </div>
+
+        <div class="lunara-control-desk-carousel-list" data-lunara-carousel-list>
+            <?php if ( empty( $ordered_posts ) ) : ?>
+                <div class="lunara-control-desk-empty" data-lunara-carousel-empty>
+                    <p><?php esc_html_e( 'No published Oscar Picks are available for homepage curation yet.', 'lunara-film' ); ?></p>
+                </div>
+            <?php else : ?>
+                <?php foreach ( $ordered_posts as $index => $post ) : ?>
+                    <?php lunara_control_desk_render_homepage_oscar_pick_order_item( $post, $index ); ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
+        <?php if ( ! empty( $candidate_posts ) ) : ?>
+            <div class="lunara-control-desk-oscar-picks-candidate-panel">
+                <strong><?php esc_html_e( 'Add recent held picks on save', 'lunara-film' ); ?></strong>
+                <div class="lunara-control-desk-oscar-picks-candidates">
+                    <?php foreach ( $candidate_posts as $post ) : ?>
+                        <?php lunara_control_desk_render_homepage_oscar_pick_candidate( $post ); ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
+    <?php
+}
+
 function lunara_control_desk_render_homepage_studio() {
     if ( ! current_user_can( 'edit_theme_options' ) ) {
         ?>
@@ -7562,7 +7834,7 @@ function lunara_control_desk_render_homepage_studio() {
             <h3><?php esc_html_e( 'Front-door rhythm and signature lane controls', 'lunara-film' ); ?></h3>
             <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Use these bounded controls to keep the homepage curated, dense, and alive without touching code or raw CSS.', 'lunara-film' ); ?></p>
         </div>
-        <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+        <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" data-lunara-carousel-form>
             <input type="hidden" name="action" value="lunara_save_homepage_studio" />
             <input type="hidden" name="lunara_homepage_apply_preset" value="" />
             <?php wp_nonce_field( 'lunara_save_homepage_studio', 'lunara_homepage_nonce' ); ?>
@@ -7613,6 +7885,8 @@ function lunara_control_desk_render_homepage_studio() {
                     </div>
                 </div>
             </div>
+
+            <?php lunara_control_desk_render_homepage_oscar_picks_curation(); ?>
 
             <div class="lunara-control-desk-homepage-card">
                 <div class="lunara-control-desk-card-head">

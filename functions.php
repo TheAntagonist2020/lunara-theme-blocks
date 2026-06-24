@@ -12619,8 +12619,18 @@ if ( ! function_exists( 'lunara_get_oscar_picks' ) ) {
 			'ceremony_year'  => 0,
 			'status'         => '',
 			'category'       => '',
+			'ordered_ids'    => array(),
 		);
 		$args = wp_parse_args( $args, $defaults );
+		$ordered_ids = array();
+
+		foreach ( (array) $args['ordered_ids'] as $ordered_id ) {
+			$ordered_id = absint( $ordered_id );
+
+			if ( $ordered_id > 0 && ! in_array( $ordered_id, $ordered_ids, true ) ) {
+				$ordered_ids[] = $ordered_id;
+			}
+		}
 
 		$query_args = array(
 			'post_type'           => 'lunara_oscar_pick',
@@ -12631,6 +12641,11 @@ if ( ! function_exists( 'lunara_get_oscar_picks' ) ) {
 			'meta_query'          => array(),
 			'tax_query'           => array(),
 		);
+
+		if ( ! empty( $ordered_ids ) ) {
+			$query_args['post__in'] = $ordered_ids;
+			$query_args['orderby']  = 'post__in';
+		}
 
 		if ( ! empty( $args['ceremony_year'] ) ) {
 			$query_args['meta_query'][] = array(
@@ -12652,12 +12667,14 @@ if ( ! function_exists( 'lunara_get_oscar_picks' ) ) {
 			);
 		}
 
-		// Default sort: most recent ceremony first, then most recently published pick.
-		$query_args['meta_key'] = '_lunara_pick_ceremony_year';
-		$query_args['orderby']  = array(
-			'meta_value_num' => 'DESC',
-			'date'           => 'DESC',
-		);
+		if ( empty( $ordered_ids ) ) {
+			// Default sort: most recent ceremony first, then most recently published pick.
+			$query_args['meta_key'] = '_lunara_pick_ceremony_year';
+			$query_args['orderby']  = array(
+				'meta_value_num' => 'DESC',
+				'date'           => 'DESC',
+			);
+		}
 
 		return new WP_Query( $query_args );
 	}
@@ -13147,6 +13164,17 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 			$default_density = 'editorial';
 		}
 
+		$manual_order_raw = (string) get_theme_mod( 'lunara_home_oscar_picks_manual_order', '' );
+		$manual_order_ids = array();
+
+		foreach ( preg_split( '/[\s,]+/', $manual_order_raw ) as $manual_order_id ) {
+			$manual_order_id = absint( $manual_order_id );
+
+			if ( $manual_order_id > 0 && ! in_array( $manual_order_id, $manual_order_ids, true ) ) {
+				$manual_order_ids[] = $manual_order_id;
+			}
+		}
+
 		$defaults = array(
 			'kicker'   => __( 'Lunara Picks', 'lunara-film' ),
 			'heading'  => __( 'Predicted winners â€” 98th Academy Awards', 'lunara-film' ),
@@ -13156,6 +13184,7 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 			'count'    => $default_count,
 			'autoplay' => $default_autoplay,
 			'density'  => $default_density,
+			'ordered_ids' => $manual_order_ids,
 		);
 		$args  = lunara_repair_mojibake_args( wp_parse_args( $args, $defaults ), array( 'kicker', 'heading', 'summary', 'cta_text' ) );
 		$args['count']    = max( 4, min( 16, absint( $args['count'] ) ) );
@@ -13166,7 +13195,12 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 			$oscar_picks_density = 'editorial';
 		}
 
-		$query = lunara_get_oscar_picks( array( 'posts_per_page' => (int) $args['count'] ) );
+		$query = lunara_get_oscar_picks(
+			array(
+				'posts_per_page' => (int) $args['count'],
+				'ordered_ids'    => isset( $args['ordered_ids'] ) ? (array) $args['ordered_ids'] : array(),
+			)
+		);
 
 		if ( ! $query->have_posts() ) {
 			return '';
