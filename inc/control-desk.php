@@ -3673,7 +3673,7 @@ function lunara_control_desk_get_system_status() {
         array(
             'label' => __( 'Academy Awards plugin', 'lunara-film' ),
             'value' => $aat_version ? $aat_version : __( 'Not detected', 'lunara-film' ),
-            'state' => '2.7.35' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
+            'state' => '2.7.36' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
             'note'  => __( 'The active source is the GitHub-backed Oscars Ledger work tree under G:\\lunara-backups\\work.', 'lunara-film' ),
         ),
         array(
