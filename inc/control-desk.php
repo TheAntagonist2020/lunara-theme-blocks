@@ -3673,7 +3673,7 @@ function lunara_control_desk_get_system_status() {
         array(
             'label' => __( 'Academy Awards plugin', 'lunara-film' ),
             'value' => $aat_version ? $aat_version : __( 'Not detected', 'lunara-film' ),
-            'state' => '2.7.44' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
+            'state' => '2.7.45' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
             'note'  => __( 'The active source is the GitHub-backed Oscars Ledger work tree under G:\\lunara-backups\\work.', 'lunara-film' ),
         ),
         array(
@@ -3850,7 +3850,7 @@ function lunara_control_desk_get_source_control_status() {
         ),
         array(
             'label' => __( 'Oscars repo', 'lunara-film' ),
-            'value' => 'main @ 29da704',
+            'value' => 'main @ d2e55f6',
             'state' => 'ready',
             'note'  => 'github.com/TheAntagonist2020/lunara-plugin-oscars-ledger',
         ),
