@@ -70,6 +70,10 @@ add_filter( 'acf/settings/load_json', 'lunara_acf_json_load_paths' );
  * ACF fields can be filled in the editor. ACF values win only when the mapped
  * ACF field has been saved on the post.
  *
+ * Structured fallbacks let the current frontend render richer ACF data through
+ * the existing legacy Debrief/Journal renderers until those renderers are
+ * refactored directly.
+ *
  * @return array<string,array<string,mixed>>
  */
 function lunara_acf_legacy_meta_map() {
@@ -83,11 +87,11 @@ function lunara_acf_legacy_meta_map() {
         '_lunara_studio'                        => array( 'field' => 'acf_lunara_review_studio', 'post_types' => array( 'review' ) ),
 
         // Review — Debrief legacy-compatible fields.
-        '_lunara_where'                         => array( 'field' => 'acf_lunara_review_where', 'post_types' => array( 'review' ) ),
-        '_lunara_theme_echo'                    => array( 'field' => 'acf_lunara_debrief_theme_echo', 'post_types' => array( 'review' ) ),
-        '_lunara_counter_program'               => array( 'field' => 'acf_lunara_debrief_counter_program', 'post_types' => array( 'review' ) ),
-        '_lunara_career_context'                => array( 'field' => 'acf_lunara_debrief_career_context', 'post_types' => array( 'review' ) ),
-        '_lunara_craft_mirror'                  => array( 'field' => 'acf_lunara_debrief_career_context', 'post_types' => array( 'review' ) ),
+        '_lunara_where'                         => array( 'field' => 'acf_lunara_review_where', 'structured_field' => 'acf_lunara_review_where_structured', 'structured_type' => 'where_to_watch', 'post_types' => array( 'review' ) ),
+        '_lunara_theme_echo'                    => array( 'field' => 'acf_lunara_debrief_theme_echo', 'structured_field' => 'acf_lunara_debrief_theme_echo_structured', 'structured_type' => 'pairing_line', 'post_types' => array( 'review' ) ),
+        '_lunara_counter_program'               => array( 'field' => 'acf_lunara_debrief_counter_program', 'structured_field' => 'acf_lunara_debrief_counter_structured', 'structured_type' => 'pairing_line', 'post_types' => array( 'review' ) ),
+        '_lunara_career_context'                => array( 'field' => 'acf_lunara_debrief_career_context', 'structured_field' => 'acf_lunara_debrief_career_structured', 'structured_type' => 'pairing_line', 'post_types' => array( 'review' ) ),
+        '_lunara_craft_mirror'                  => array( 'field' => 'acf_lunara_debrief_career_context', 'structured_field' => 'acf_lunara_debrief_career_structured', 'structured_type' => 'pairing_line', 'post_types' => array( 'review' ) ),
 
         // Review — editorial controls.
         '_lunara_review_lane_label_override'    => array( 'field' => 'acf_lunara_review_lane_label_override', 'post_types' => array( 'review' ) ),
@@ -142,6 +146,154 @@ function lunara_acf_legacy_meta_map() {
         '_lunara_post_hide_signal_card'         => array( 'field' => 'acf_lunara_journal_hide_signal_card', 'post_types' => array( 'post', 'journal' ), 'type' => 'boolean', 'allow_empty' => true ),
         '_lunara_post_hide_related'             => array( 'field' => 'acf_lunara_journal_hide_related', 'post_types' => array( 'post', 'journal' ), 'type' => 'boolean', 'allow_empty' => true ),
     );
+}
+
+/**
+ * Read a raw ACF value when ACF is available, with a post-meta fallback.
+ *
+ * @param int    $post_id    Post ID.
+ * @param string $field_name ACF field name.
+ * @return mixed
+ */
+function lunara_acf_get_raw_field_value( $post_id, $field_name ) {
+    $post_id    = absint( $post_id );
+    $field_name = sanitize_key( (string) $field_name );
+
+    if ( $post_id <= 0 || '' === $field_name ) {
+        return null;
+    }
+
+    if ( function_exists( 'get_field' ) ) {
+        $acf_value = get_field( $field_name, $post_id, false );
+        if ( null !== $acf_value ) {
+            return $acf_value;
+        }
+    }
+
+    if ( metadata_exists( 'post', $post_id, $field_name ) ) {
+        return get_post_meta( $post_id, $field_name, true );
+    }
+
+    return null;
+}
+
+/**
+ * Build the current legacy Pair It With line from a structured ACF group.
+ *
+ * @param int    $post_id    Post ID.
+ * @param string $field_name Structured group field name.
+ * @return string
+ */
+function lunara_acf_build_pairing_line_from_structured_field( $post_id, $field_name ) {
+    $group = lunara_acf_get_raw_field_value( $post_id, $field_name );
+    if ( ! is_array( $group ) ) {
+        return '';
+    }
+
+    $title = trim( (string) ( $group['title'] ?? '' ) );
+    $year  = trim( (string) ( $group['year'] ?? '' ) );
+    $tt    = strtolower( trim( (string) ( $group['imdb_title_id'] ?? '' ) ) );
+    $note  = trim( (string) ( $group['note'] ?? '' ) );
+
+    if ( '' === $title ) {
+        return '';
+    }
+
+    $line = $title;
+
+    if ( '' !== $year && preg_match( '/^\d{4}$/', $year ) && false === strpos( $line, '(' . $year . ')' ) ) {
+        $line .= ' (' . $year . ')';
+    }
+
+    if ( '' !== $note ) {
+        $line .= ' — ' . $note;
+    }
+
+    if ( '' !== $tt && preg_match( '/^tt\d{7,8}$/', $tt ) ) {
+        $line .= ' | ' . $tt;
+    }
+
+    return sanitize_text_field( $line );
+}
+
+/**
+ * Build the current legacy Where to Watch text from a structured ACF repeater.
+ *
+ * @param int    $post_id    Post ID.
+ * @param string $field_name Structured repeater field name.
+ * @return string
+ */
+function lunara_acf_build_where_text_from_structured_field( $post_id, $field_name ) {
+    $rows = lunara_acf_get_raw_field_value( $post_id, $field_name );
+    if ( ! is_array( $rows ) || empty( $rows ) ) {
+        return '';
+    }
+
+    $lines = array();
+
+    foreach ( $rows as $row ) {
+        if ( ! is_array( $row ) ) {
+            continue;
+        }
+
+        $label     = trim( (string) ( $row['provider_label'] ?? '' ) );
+        $type      = trim( (string) ( $row['provider_type'] ?? '' ) );
+        $url       = trim( (string) ( $row['provider_url'] ?? '' ) );
+        $note      = trim( (string) ( $row['availability_note'] ?? '' ) );
+        $affiliate = ! empty( $row['affiliate_disclosure'] );
+
+        if ( '' === $label && '' !== $type ) {
+            $label = ucwords( str_replace( array( '-', '_' ), ' ', $type ) );
+        }
+
+        if ( '' === $label && '' === $url && '' === $note ) {
+            continue;
+        }
+
+        $line = '' !== $label ? $label : $url;
+
+        if ( '' !== $url && '' !== $label ) {
+            $line .= ' | ' . esc_url_raw( $url );
+        }
+
+        if ( $affiliate ) {
+            $line .= ' | affiliate';
+        }
+
+        if ( '' !== $note ) {
+            $line .= ' — ' . $note;
+        }
+
+        $lines[] = sanitize_text_field( $line );
+    }
+
+    return implode( "\n", array_values( array_filter( $lines ) ) );
+}
+
+/**
+ * Build a structured fallback value for a mapped legacy field.
+ *
+ * @param int   $post_id Post ID.
+ * @param array $config  Bridge config.
+ * @return string
+ */
+function lunara_acf_build_structured_legacy_fallback( $post_id, $config ) {
+    if ( empty( $config['structured_field'] ) || empty( $config['structured_type'] ) ) {
+        return '';
+    }
+
+    $structured_field = (string) $config['structured_field'];
+    $structured_type  = (string) $config['structured_type'];
+
+    if ( 'pairing_line' === $structured_type ) {
+        return lunara_acf_build_pairing_line_from_structured_field( $post_id, $structured_field );
+    }
+
+    if ( 'where_to_watch' === $structured_type ) {
+        return lunara_acf_build_where_text_from_structured_field( $post_id, $structured_field );
+    }
+
+    return '';
 }
 
 /**
@@ -231,17 +383,28 @@ function lunara_acf_bridge_legacy_post_meta( $value, $object_id, $meta_key, $sin
         return $value;
     }
 
-    $acf_field = isset( $config['field'] ) ? (string) $config['field'] : '';
-    if ( '' === $acf_field || ! metadata_exists( 'post', $object_id, $acf_field ) ) {
-        return $value;
+    $acf_field   = isset( $config['field'] ) ? (string) $config['field'] : '';
+    $has_acf_raw = '' !== $acf_field && metadata_exists( 'post', $object_id, $acf_field );
+    $raw         = null;
+
+    if ( $has_acf_raw ) {
+        $bridging = true;
+        $raw      = get_post_meta( $object_id, $acf_field, true );
+        $bridging = false;
     }
 
-    $bridging = true;
-    $raw      = get_post_meta( $object_id, $acf_field, true );
-    $bridging = false;
-
-    $formatted   = lunara_acf_format_legacy_value( $raw, $config );
+    $formatted   = $has_acf_raw ? lunara_acf_format_legacy_value( $raw, $config ) : '';
     $allow_empty = ! empty( $config['allow_empty'] );
+
+    if ( ! $allow_empty && '' === trim( (string) $formatted ) ) {
+        $bridging  = true;
+        $structured = lunara_acf_build_structured_legacy_fallback( $object_id, $config );
+        $bridging  = false;
+
+        if ( '' !== trim( (string) $structured ) ) {
+            $formatted = $structured;
+        }
+    }
 
     if ( ! $allow_empty && '' === trim( (string) $formatted ) ) {
         return $value;
