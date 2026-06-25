@@ -1,0 +1,107 @@
+{
+    "key": "group_lunara_review_where_structured",
+    "title": "Lunara Review — Where to Watch Structured",
+    "fields": [
+        {
+            "key": "field_lunara_review_where_structured",
+            "label": "Where to Watch — Structured",
+            "name": "acf_lunara_review_where_structured",
+            "type": "repeater",
+            "instructions": "Structured availability rows for ACF Pro. If the legacy Where to Watch text field is empty, the bridge serializes these rows into _lunara_where-compatible text for the current frontend.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "100", "class": "", "id": "" },
+            "collapsed": "field_lunara_review_where_provider_label",
+            "min": 0,
+            "max": 0,
+            "layout": "row",
+            "button_label": "Add availability row",
+            "sub_fields": [
+                {
+                    "key": "field_lunara_review_where_provider_label",
+                    "label": "Provider Label",
+                    "name": "provider_label",
+                    "type": "text",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": { "width": "30", "class": "", "id": "" },
+                    "default_value": "",
+                    "placeholder": "Max, Netflix, In Theaters"
+                },
+                {
+                    "key": "field_lunara_review_where_provider_type",
+                    "label": "Provider Type",
+                    "name": "provider_type",
+                    "type": "select",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": { "width": "20", "class": "", "id": "" },
+                    "choices": {
+                        "streaming": "Streaming",
+                        "theatrical": "Theatrical",
+                        "rental": "Rent or Buy",
+                        "free": "Free Stream",
+                        "festival": "Festival",
+                        "library": "Library Stream",
+                        "direct": "Direct Link",
+                        "note": "Availability Note"
+                    },
+                    "default_value": "streaming",
+                    "allow_null": 1,
+                    "multiple": 0,
+                    "ui": 1,
+                    "ajax": 0,
+                    "return_format": "value",
+                    "placeholder": "Select type"
+                },
+                {
+                    "key": "field_lunara_review_where_provider_url",
+                    "label": "Provider URL",
+                    "name": "provider_url",
+                    "type": "url",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": { "width": "35", "class": "", "id": "" },
+                    "default_value": "",
+                    "placeholder": "https://..."
+                },
+                {
+                    "key": "field_lunara_review_where_affiliate",
+                    "label": "Affiliate / Sponsored",
+                    "name": "affiliate_disclosure",
+                    "type": "true_false",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": { "width": "15", "class": "", "id": "" },
+                    "message": "Affiliate",
+                    "default_value": 0,
+                    "ui": 1
+                },
+                {
+                    "key": "field_lunara_review_where_note",
+                    "label": "Availability Note",
+                    "name": "availability_note",
+                    "type": "textarea",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": { "width": "100", "class": "", "id": "" },
+                    "default_value": "",
+                    "rows": 2,
+                    "new_lines": "",
+                    "placeholder": "Optional context such as limited theatrical run, festival window, or date."
+                }
+            ]
+        }
+    ],
+    "location": [ [ { "param": "post_type", "operator": "==", "value": "review" } ] ],
+    "menu_order": 3,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "Structured ACF Pro Where to Watch rows that serialize through the ACF bridge while the current frontend remains legacy-compatible.",
+    "show_in_rest": 1,
+    "modified": 1782262800
+}
