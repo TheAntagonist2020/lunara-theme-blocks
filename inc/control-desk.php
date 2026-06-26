@@ -3805,7 +3805,7 @@ function lunara_control_desk_get_source_status() {
             'label' => __( 'Oscars plugin source', 'lunara-film' ),
             'value' => 'G:\\lunara-backups\\work\\academy-awards-table-optimized-ceremony-depth',
             'state' => 'ready',
-            'note'  => 'feat/ceremony-depth-thesis @ 85951e3; Documentary Short Subject now uses the premium dossier system for Oscars 2.7.65.',
+            'note'  => 'feat/ceremony-depth-thesis @ 776245c; Documentary Short Subject now uses the premium dossier system for Oscars 2.7.65.',
         ),
         array(
             'label' => __( 'Dispatch plugin source', 'lunara-film' ),
