@@ -3805,7 +3805,7 @@ function lunara_control_desk_get_source_status() {
             'label' => __( 'Oscars plugin source', 'lunara-film' ),
             'value' => 'G:\\lunara-backups\\work\\academy-awards-table-optimized-ceremony-depth',
             'state' => 'ready',
-            'note'  => 'feat/ceremony-depth-thesis @ 5c5c885; Sound Recording and legacy Song Score / Adaptation Score routes now use the premium dossier system with polished category and ceremony breadcrumbs for Oscars 2.7.69.',
+            'note'  => 'feat/ceremony-depth-thesis @ f831cdd; Sound Recording and legacy Song Score / Adaptation Score routes now use the premium dossier system with polished category and ceremony breadcrumbs for Oscars 2.7.69.',
         ),
         array(
             'label' => __( 'Dispatch plugin source', 'lunara-film' ),
