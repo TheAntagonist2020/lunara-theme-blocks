@@ -3673,7 +3673,7 @@ function lunara_control_desk_get_system_status() {
         array(
             'label' => __( 'Academy Awards plugin', 'lunara-film' ),
             'value' => $aat_version ? $aat_version : __( 'Not detected', 'lunara-film' ),
-            'state' => '2.7.69' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
+            'state' => '2.7.70' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
             'note'  => __( 'The active source is the GitHub-backed Oscars Ledger work tree under G:\\lunara-backups\\work.', 'lunara-film' ),
         ),
         array(
@@ -3805,7 +3805,7 @@ function lunara_control_desk_get_source_status() {
             'label' => __( 'Oscars plugin source', 'lunara-film' ),
             'value' => 'G:\\lunara-backups\\work\\academy-awards-table-optimized-ceremony-depth',
             'state' => 'ready',
-            'note'  => 'feat/ceremony-depth-thesis @ a447ea7; Sound Recording and legacy Song Score / Adaptation Score routes now use the premium dossier system with polished category, music, and ceremony breadcrumbs for Oscars 2.7.69.',
+            'note'  => 'feat/ceremony-depth-thesis @ d77045e; legacy Original Story and Title Writing routes now use the premium dossier system with polished Writing category labels for Oscars 2.7.70.',
         ),
         array(
             'label' => __( 'Dispatch plugin source', 'lunara-film' ),
