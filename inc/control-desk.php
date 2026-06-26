@@ -3805,7 +3805,7 @@ function lunara_control_desk_get_source_status() {
             'label' => __( 'Oscars plugin source', 'lunara-film' ),
             'value' => 'G:\\lunara-backups\\work\\academy-awards-table-optimized-ceremony-depth',
             'state' => 'ready',
-            'note'  => 'feat/ceremony-depth-thesis @ 08a7a65; department-style technical credits stay text-led and true company routes render Company History for Oscars 2.7.58.',
+            'note'  => 'feat/ceremony-depth-thesis @ 2b811b4; department-style technical credits stay text-led and true company routes render Company History for Oscars 2.7.58.',
         ),
         array(
             'label' => __( 'Dispatch plugin source', 'lunara-film' ),
