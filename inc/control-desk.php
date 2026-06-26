@@ -3673,7 +3673,7 @@ function lunara_control_desk_get_system_status() {
         array(
             'label' => __( 'Academy Awards plugin', 'lunara-film' ),
             'value' => $aat_version ? $aat_version : __( 'Not detected', 'lunara-film' ),
-            'state' => '2.7.55' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
+            'state' => '2.7.56' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
             'note'  => __( 'The active source is the GitHub-backed Oscars Ledger work tree under G:\\lunara-backups\\work.', 'lunara-film' ),
         ),
         array(
@@ -3805,7 +3805,7 @@ function lunara_control_desk_get_source_status() {
             'label' => __( 'Oscars plugin source', 'lunara-film' ),
             'value' => 'G:\\lunara-backups\\work\\academy-awards-table-optimized-ceremony-depth',
             'state' => 'ready',
-            'note'  => 'feat/ceremony-depth-thesis @ b8a8df9; existing PEOPLE ready adoption now requires typed IMDb confirmation for Oscars 2.7.55.',
+            'note'  => 'feat/ceremony-depth-thesis @ 69c2df3; existing PEOPLE hold review requires Approved To Adopt before typed adoption for Oscars 2.7.56.',
         ),
         array(
             'label' => __( 'Dispatch plugin source', 'lunara-film' ),
