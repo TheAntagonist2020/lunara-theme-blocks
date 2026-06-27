@@ -3673,7 +3673,7 @@ function lunara_control_desk_get_system_status() {
         array(
             'label' => __( 'Academy Awards plugin', 'lunara-film' ),
             'value' => $aat_version ? $aat_version : __( 'Not detected', 'lunara-film' ),
-            'state' => '2.7.80' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
+            'state' => '2.7.81' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
             'note'  => __( 'The active source is the GitHub-backed Oscars Ledger work tree under G:\\lunara-backups\\work.', 'lunara-film' ),
         ),
         array(
@@ -3805,7 +3805,7 @@ function lunara_control_desk_get_source_status() {
             'label' => __( 'Oscars plugin source', 'lunara-film' ),
             'value' => 'G:\\lunara-backups\\work\\academy-awards-table-optimized-ceremony-depth',
             'state' => 'ready',
-            'note'  => 'feat/ceremony-depth-thesis @ 00d3f7d; ceremony write-ups repair common mojibake before public rendering for Oscars 2.7.80.',
+            'note'  => 'feat/ceremony-depth-thesis @ 3efe937; ceremony pages add a Reader Path momentum module for Oscars 2.7.81.',
         ),
         array(
             'label' => __( 'Dispatch plugin source', 'lunara-film' ),
