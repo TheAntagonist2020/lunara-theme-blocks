@@ -2411,7 +2411,7 @@ if ( ! defined( 'LUNARA_CORE_VERSION' ) ) {
         <div class="lunara-meta-field">
             <label for="lunara_imdb_title_id">IMDb Title ID (for this review)</label>
             <input type="text" id="lunara_imdb_title_id" name="lunara_imdb_title_id" value="<?php echo esc_attr( $imdb_review_id ); ?>" placeholder="tt1234567">
-            <p class="description">Connects this review to the Oscars database film page (shows a â€œLunara Reviewâ€ module on /oscars/title/ttâ€¦/).</p>
+            <p class="description">Connects this review to the Oscars database film page (shows a â€œLunara Reviewâ€ module on /oscars/title/tt…/).</p>
         </div>
 
         <div class="lunara-meta-section">
@@ -11125,7 +11125,7 @@ if ( ! function_exists( 'lunara_split_journal_into_cards' ) ) {
 				return;
 			}
 
-			$body_trimmed = wp_trim_words( $body_plain, 35, 'â€¦' );
+			$body_trimmed = wp_trim_words( $body_plain, 35, '…' );
 			$anchor       = sanitize_title(
 				$has_title ? $current_title : 'item-' . ( $section_index + 1 )
 			);
@@ -11376,7 +11376,7 @@ if ( ! function_exists( 'lunara_prepend_reader_toc' ) ) {
 /**
  * Render a single journal post as a grid of H2 item-cards.
  *
- * Output is a <div class="lunara-journal-split-grid">â€¦</div> with one
+ * Output is a <div class="lunara-journal-split-grid">…</div> with one
  * <article class="lunara-journal-split-card"> per H2 section. Returns
  * empty string if the post has no H2 sections (caller should fall back
  * to its normal single-card rendering).
@@ -14062,7 +14062,7 @@ if ( ! function_exists( 'lunara_oscar_facts_derive_title' ) ) {
 		$body = preg_replace( '/\s+/', ' ', $body );
 		$first_sentence = preg_split( '/(?<=[.!?])\s/', $body, 2 )[0];
 		if ( strlen( $first_sentence ) > 78 ) {
-			$first_sentence = rtrim( substr( $first_sentence, 0, 75 ), ' ,;:' ) . 'â€¦';
+			$first_sentence = rtrim( substr( $first_sentence, 0, 75 ), ' ,;:' ) . '…';
 		}
 		return $first_sentence;
 	}
@@ -14842,7 +14842,7 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_data' ) ) {
 		if ( $latest_review ) {
 			$excerpt = trim( (string) get_the_excerpt( $latest_review ) );
 			if ( '' === $excerpt ) {
-				$excerpt = wp_trim_words( wp_strip_all_tags( $latest_review->post_content ), 24, 'â€¦' );
+				$excerpt = wp_trim_words( wp_strip_all_tags( $latest_review->post_content ), 24, '…' );
 			}
 		}
 		$url = $latest_review ? get_permalink( $latest_review ) : home_url( '/' );
@@ -14929,7 +14929,7 @@ if ( ! function_exists( 'lunara_render_cinematic_hero' ) ) {
 						<?php if ( '' !== $data['excerpt'] ) : ?>
 							<p class="lunara-cinematic-hero-excerpt"><?php echo esc_html( $data['excerpt'] ); ?></p>
 						<?php endif; ?>
-						<span class="lunara-cinematic-hero-cta"><?php echo esc_html( $data['cta'] ); ?> <span aria-hidden="true">â†’</span></span>
+						<span class="lunara-cinematic-hero-cta"><?php echo esc_html( $data['cta'] ); ?> <span aria-hidden="true">&rarr;</span></span>
 					</div>
 				</div>
 			</a>
