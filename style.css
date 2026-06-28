@@ -32,15 +32,31 @@ Text Domain: lunara-film
    ======================================== */
 
 :root {
-    --lunara-bg-primary: #0a1520;
-    --lunara-bg-deep: #0a1520;
-    --lunara-bg-secondary: #0f1d2e;
-    --lunara-bg-card: #0f1d2e;
-    --lunara-gold: #c9a961;
-    --lunara-gold-light: #e0c481;
-    --lunara-text: #FAFBFC;
-    --lunara-text-muted: #A8A8B8;
-    --lunara-border: rgba(201, 169, 97, 0.28);
+    /* ── Typography (canonical) ──────────────────────────────────────────
+       Georgia is Lunara's editorial face: a screen-designed serif that loads
+       instantly as a system font (zero webfont weight — a perf win, not a
+       cost). Bebas Neue + Oswald (the only @import-ed webfonts, defined far
+       below) are the condensed accent faces, reserved for labels: ceremony
+       tags, score pills, tickers. Control the type identity from these three
+       tokens so it can never drift again. */
+    --lunara-font-body: Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif;
+    --lunara-font-display: Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif;
+    --lunara-font-label: "Bebas Neue", "Oswald", "Arial Narrow", sans-serif;
+
+    /* ── Palette (navy + gold cinema identity) ───────────────────────────
+       A few tokens share a value but are kept as named aliases because they
+       are referenced separately throughout the stylesheet; collapsing them
+       would touch hundreds of call sites and belongs in a later, dedicated
+       pass. */
+    --lunara-bg-primary: #0a1520;                 /* page ground (deepest navy) */
+    --lunara-bg-deep: var(--lunara-bg-primary);   /* alias — follows bg-primary */
+    --lunara-bg-secondary: #0f1d2e;               /* elevated surface / card */
+    --lunara-bg-card: var(--lunara-bg-secondary); /* alias — follows bg-secondary */
+    --lunara-gold: #c9a961;          /* primary accent (Oscar gold) */
+    --lunara-gold-light: #e0c481;    /* lighter gold (hover / highlight) */
+    --lunara-text: #FAFBFC;          /* primary text */
+    --lunara-text-muted: #A8A8B8;    /* secondary / muted text */
+    --lunara-border: rgba(201, 169, 97, 0.28);  /* gold-tinted hairline */
     --lunara-glow-gold: rgba(201, 169, 97, 0.16);
     --lunara-glow-blue: rgba(168, 168, 184, 0.26);
     --lunara-glow-highlight: rgba(255, 255, 255, 0.07);
