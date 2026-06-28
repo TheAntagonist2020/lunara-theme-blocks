@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.0.7
+Version: 3.0.8
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -14139,7 +14139,29 @@ body.home .lunara-home-hero {
  * text floats over it like a poster credit block.
  * ============================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;600&display=swap');
+/* Self-hosted Bebas Neue (display/label face).
+ * Replaces a Google Fonts @import that sat here mid-file — invalid, because a
+ * CSS @import must precede all style rules, so browsers silently ignored it and
+ * the face never loaded (the kicker/CTA fell back to Impact). @font-face has no
+ * such position rule, so this loads reliably and locally — fast, no third-party
+ * request, GDPR-clean. Files in assets/fonts/ (OFL 1.1). Oswald was dropped: it
+ * only ever sat behind Bebas Neue as a fallback and never rendered. */
+@font-face {
+    font-family: 'Bebas Neue';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('assets/fonts/bebas-neue-latin-400.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Bebas Neue';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('assets/fonts/bebas-neue-latin-ext-400.woff2') format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
 
 .lunara-cinematic-hero {
     position: relative;
