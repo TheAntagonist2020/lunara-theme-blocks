@@ -52,3 +52,7 @@ require_once $lunara_inc . 'oscars-portal.php';
 require_once $lunara_inc . 'blocks.php';
 require_once $lunara_inc . 'block-migration.php';
 require_once $lunara_inc . 'frontend.php';
+
+// Layer 8 — Deploy maintenance (no dependencies; auto-flushes rewrite rules
+// after each deploy so CPT permalinks don't 404 after a push).
+require_once $lunara_inc . 'rewrite-flush.php';
