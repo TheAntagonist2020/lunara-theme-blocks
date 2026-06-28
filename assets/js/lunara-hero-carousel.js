@@ -65,13 +65,26 @@
 				}
 			});
 
-			// Eager-load the first slide's image; lazy-load the rest only once
-			// they're about to become visible (keeps the LCP fast).
+			// First slide loads eagerly (LCP). As each slide activates, swap in
+			// its image AND preload the next one's, so the cross-fade into the
+			// next slide never shows a blank flash.
+			var loadLazyImage = function (slideEl) {
+				if (!slideEl) {
+					return;
+				}
+				var lazyImg = slideEl.querySelector('img[data-lunara-lazy]');
+				if (lazyImg) {
+					lazyImg.src = lazyImg.getAttribute('data-lunara-lazy');
+					lazyImg.removeAttribute('data-lunara-lazy');
+				}
+			};
+
 			splide.on('active', function (slide) {
-				var img = slide.slide.querySelector('img[data-lunara-lazy]');
-				if (img) {
-					img.src = img.getAttribute('data-lunara-lazy');
-					img.removeAttribute('data-lunara-lazy');
+				loadLazyImage(slide.slide);
+
+				var allSlides = root.querySelectorAll('.splide__slide');
+				if (allSlides.length) {
+					loadLazyImage(allSlides[(slide.index + 1) % allSlides.length]);
 				}
 			});
 

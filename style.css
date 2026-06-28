@@ -14271,15 +14271,20 @@ body.home .lunara-home-hero {
 }
 
 .lunara-cinematic-hero-title {
-    margin: 0 0 28px;
+    margin: 0 0 18px;
     font-family: Georgia, 'Times New Roman', Times, serif;
-    font-size: clamp(2.6rem, 6.5vw, 6rem);
-    line-height: 1.02;
+    font-size: clamp(1.9rem, 3.4vw, 3.2rem);
+    line-height: 1.07;
     color: #fff;
     text-wrap: balance;
     font-weight: 400;
     letter-spacing: -0.015em;
-    max-width: 18ch;
+    max-width: 24ch;
+    /* Cap long headlines so the hero stays contained regardless of title length. */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .lunara-cinematic-hero-excerpt {

@@ -15002,12 +15002,12 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
 			if ( $reviews instanceof WP_Query && ! empty( $reviews->posts ) ) {
 				foreach ( $reviews->posts as $review ) {
 					$image = lunara_get_review_hero_image_url( $review->ID );
-					if ( '' === $image ) {
+					if ( ! $image ) {
 						continue;
 					}
 					$excerpt = function_exists( 'lunara_get_review_card_pull_quote' )
 						? lunara_get_review_card_pull_quote( $review->ID, 30, true )
-						: trim( (string) get_the_excerpt( $review ) );
+						: wp_trim_words( wp_strip_all_tags( (string) get_the_excerpt( $review ) ), 30, '…' );
 					$items[] = array(
 						'date'    => (string) $review->post_date,
 						'kicker'  => __( 'Latest Review', 'lunara-film' ),
@@ -15029,7 +15029,7 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
 					$image = function_exists( 'lunara_get_journal_card_image_url' )
 						? lunara_get_journal_card_image_url( $entry->ID, 'full' )
 						: '';
-					if ( '' === $image ) {
+					if ( ! $image ) {
 						continue;
 					}
 					$excerpt = function_exists( 'lunara_card_excerpt' )
