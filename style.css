@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.0.9
+Version: 3.1.0
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -14172,13 +14172,15 @@ body.home .lunara-home-hero {
  * silently ignored and the face never loaded. See the top of this file. */
 
 .lunara-cinematic-hero {
+    /* Single tunable hero height — contained, never full-screen. */
+    --lunara-hero-height: clamp(360px, 54vh, 600px);
     position: relative;
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     margin-top: 0;
     margin-bottom: 56px;
-    min-height: 92vh;
+    min-height: var(--lunara-hero-height);
     overflow: hidden;
     isolation: isolate;
     background: #07101b;
@@ -14189,7 +14191,7 @@ body.home .lunara-home-hero {
     position: relative;
     width: 100%;
     height: 100%;
-    min-height: 92vh;
+    min-height: var(--lunara-hero-height);
     color: inherit;
     text-decoration: none;
 }
@@ -14238,7 +14240,7 @@ body.home .lunara-home-hero {
     display: flex;
     align-items: flex-end;
     width: 100%;
-    min-height: 92vh;
+    min-height: var(--lunara-hero-height);
     padding: 0;
 }
 
@@ -16465,5 +16467,130 @@ body.post-type-archive-journal .lunara-review-grid-poster {
         letter-spacing: 0 !important;
         overflow-wrap: anywhere !important;
         text-wrap: balance !important;
+    }
+}
+
+/* ============================================================================
+   ROTATING CINEMATIC HERO — Splide cross-fade carousel
+   The theme bundles splide-core (no fade CSS), so the fade layout is supplied
+   here, scoped to .lunara-cinematic-hero-carousel. Each slide reuses the
+   single-hero markup + styles; this only adds carousel scaffolding + controls.
+   ============================================================================ */
+.lunara-cinematic-hero-carousel,
+.lunara-cinematic-hero-carousel .splide__track,
+.lunara-cinematic-hero-carousel .splide__list {
+    min-height: var(--lunara-hero-height);
+}
+.lunara-cinematic-hero-carousel .splide__track {
+    position: relative;
+    overflow: hidden;
+}
+.lunara-cinematic-hero-carousel .lunara-cinematic-hero-slide,
+.lunara-cinematic-hero-carousel .lunara-cinematic-hero-slide .lunara-cinematic-hero-link {
+    min-height: var(--lunara-hero-height);
+    height: 100%;
+}
+
+/* Fade layout (normally from the full splide theme CSS). Active slide stays in
+   flow so the track keeps its height; the rest stack behind at opacity 0. */
+.lunara-cinematic-hero-carousel.splide--fade > .splide__track > .splide__list {
+    display: block;
+}
+.lunara-cinematic-hero-carousel.splide--fade > .splide__track > .splide__list > .splide__slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    margin: 0;
+    opacity: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+.lunara-cinematic-hero-carousel.splide--fade > .splide__track > .splide__list > .splide__slide.is-active {
+    position: relative;
+    opacity: 1;
+    z-index: 1;
+    pointer-events: auto;
+}
+/* Before JS mounts (or if Splide fails to load), show only the first slide —
+   no stacked flash, graceful no-JS fallback. */
+.lunara-cinematic-hero-carousel:not(.is-hero-mounted) .splide__list > .splide__slide:not(:first-child) {
+    display: none;
+}
+
+/* Arrows — circular gold-on-glass, vertically centered. */
+.lunara-cinematic-hero-carousel .lunara-hero-arrows {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+}
+.lunara-cinematic-hero-carousel .lunara-hero-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 54px;
+    height: 54px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(201, 169, 97, 0.45);
+    background: rgba(7, 15, 26, 0.46);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #c9a961;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+.lunara-cinematic-hero-carousel .lunara-hero-arrow svg { width: 22px; height: 22px; fill: currentColor; }
+.lunara-cinematic-hero-carousel .lunara-hero-arrow:hover {
+    background: rgba(201, 169, 97, 0.92);
+    border-color: #c9a961;
+    color: #0a1520;
+}
+.lunara-cinematic-hero-carousel .lunara-hero-arrow-prev { left: 28px; }
+.lunara-cinematic-hero-carousel .lunara-hero-arrow-next { right: 28px; }
+.lunara-cinematic-hero-carousel .lunara-hero-arrow[disabled] { opacity: 0; }
+
+/* Pagination — slim bars, bottom center. */
+.lunara-cinematic-hero-carousel .lunara-hero-pagination {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 28px;
+    z-index: 4;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+.lunara-cinematic-hero-carousel .lunara-hero-pagination li { margin: 0; line-height: 0; }
+.lunara-cinematic-hero-carousel .lunara-hero-page {
+    width: 30px;
+    height: 4px;
+    padding: 0;
+    border: 0;
+    border-radius: 2px;
+    background: rgba(250, 251, 252, 0.32);
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.25s ease;
+}
+.lunara-cinematic-hero-carousel .lunara-hero-page.is-active {
+    background: #c9a961;
+    transform: scaleX(1.3);
+}
+
+@media (max-width: 900px) {
+    .lunara-cinematic-hero-carousel .lunara-hero-arrow { width: 44px; height: 44px; }
+    .lunara-cinematic-hero-carousel .lunara-hero-arrow-prev { left: 12px; }
+    .lunara-cinematic-hero-carousel .lunara-hero-arrow-next { right: 12px; }
+    .lunara-cinematic-hero-carousel .lunara-hero-pagination { bottom: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .lunara-cinematic-hero-carousel.splide--fade > .splide__track > .splide__list > .splide__slide {
+        transition: none !important;
     }
 }

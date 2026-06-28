@@ -43,7 +43,7 @@ get_header();
 	 * (its own escaping). Only slugs with a genuine renderer are listed.
 	 */
 	$lunara_section_renderers = array(
-		'hero'           => 'lunara_render_cinematic_hero',
+		'hero'           => 'lunara_render_cinematic_hero_carousel',
 		'latest-reviews' => 'lunara_render_homepage_latest_reviews',
 		'dispatch'       => 'lunara_render_homepage_journal_lane',
 		'oscar-picks'    => 'lunara_render_oscar_picks_carousel',
