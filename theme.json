@@ -1,0 +1,62 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": true,
+		"color": {
+			"defaultPalette": false,
+			"defaultGradients": false,
+			"customDuotone": false,
+			"custom": true,
+			"palette": [
+				{ "slug": "ground", "name": "Ground — Deep Navy", "color": "#0a1520" },
+				{ "slug": "surface", "name": "Surface — Card Navy", "color": "#0f1d2e" },
+				{ "slug": "gold", "name": "Lunara Gold", "color": "#c9a961" },
+				{ "slug": "gold-light", "name": "Gold — Light", "color": "#e0c481" },
+				{ "slug": "gold-deep", "name": "Gold — Deep", "color": "#997a44" },
+				{ "slug": "text", "name": "Text", "color": "#fafbfc" },
+				{ "slug": "text-muted", "name": "Text — Muted", "color": "#a8a8b8" }
+			],
+			"gradients": [
+				{ "slug": "cinema-depth", "name": "Cinema Depth", "gradient": "linear-gradient(180deg, #0a1520 0%, #0f1d2e 100%)" },
+				{ "slug": "gold-sheen", "name": "Gold Sheen", "gradient": "linear-gradient(135deg, #c9a961 0%, #e0c481 100%)" }
+			]
+		},
+		"typography": {
+			"defaultFontSizes": false,
+			"customFontSize": true,
+			"fluid": true,
+			"fontFamilies": [
+				{
+					"slug": "editorial",
+					"name": "Editorial — Georgia",
+					"fontFamily": "Georgia, \"Times New Roman\", \"Iowan Old Style\", \"Palatino Linotype\", serif"
+				},
+				{
+					"slug": "label",
+					"name": "Label — Bebas / Oswald",
+					"fontFamily": "\"Bebas Neue\", \"Oswald\", \"Arial Narrow\", sans-serif"
+				}
+			],
+			"fontSizes": [
+				{ "slug": "small", "name": "Small", "size": "0.85rem" },
+				{ "slug": "medium", "name": "Reading", "size": "1.0625rem", "fluid": { "min": "1rem", "max": "1.1875rem" } },
+				{ "slug": "large", "name": "Large", "size": "1.5rem", "fluid": { "min": "1.35rem", "max": "1.75rem" } },
+				{ "slug": "x-large", "name": "X-Large", "size": "2.25rem", "fluid": { "min": "1.9rem", "max": "2.75rem" } },
+				{ "slug": "xx-large", "name": "Display", "size": "3.75rem", "fluid": { "min": "2.6rem", "max": "4.75rem" } }
+			]
+		},
+		"spacing": {
+			"defaultSpacingSizes": false,
+			"units": ["px", "rem", "em", "vw", "vh", "%"],
+			"spacingSizes": [
+				{ "slug": "20", "name": "X-Small", "size": "12px" },
+				{ "slug": "30", "name": "Small", "size": "20px" },
+				{ "slug": "40", "name": "Medium", "size": "28px" },
+				{ "slug": "50", "name": "Large", "size": "46px" },
+				{ "slug": "60", "name": "X-Large", "size": "72px" },
+				{ "slug": "70", "name": "Section", "size": "110px" }
+			]
+		}
+	}
+}
