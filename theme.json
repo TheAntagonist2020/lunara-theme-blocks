@@ -1,6 +1,6 @@
 {
-	"$schema": "https://schemas.wp.org/trunk/theme.json",
-	"version": 3,
+	"$schema": "https://schemas.wp.org/wp/6.5/theme.json",
+	"version": 2,
 	"settings": {
 		"appearanceTools": true,
 		"color": {
@@ -23,7 +23,6 @@
 			]
 		},
 		"typography": {
-			"defaultFontSizes": false,
 			"customFontSize": true,
 			"fluid": true,
 			"fontFamilies": [
@@ -47,7 +46,6 @@
 			]
 		},
 		"spacing": {
-			"defaultSpacingSizes": false,
 			"units": ["px", "rem", "em", "vw", "vh", "%"],
 			"spacingSizes": [
 				{ "slug": "20", "name": "X-Small", "size": "12px" },
