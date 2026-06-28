@@ -1,0 +1,101 @@
+/**
+ * Lunara Cinematic Hero — rotating carousel.
+ *
+ * Mounts a premium cross-fade Splide carousel on the homepage hero, cycling
+ * through the latest reviews + journal entries. Independent of the Oscar-Facts
+ * "splide pilot" (which is hardcoded to its own markup). The PHP outputs native
+ * Splide DOM (.splide / .splide__track / .splide__list / .splide__slide), so
+ * this just configures and mounts.
+ *
+ * @package Lunara_Film
+ */
+(function () {
+	'use strict';
+
+	function mountHeroCarousels() {
+		if (!window.Splide) {
+			return;
+		}
+
+		var reduceMotion = window.matchMedia
+			? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+			: false;
+
+		var roots = document.querySelectorAll('.lunara-cinematic-hero-carousel.splide');
+
+		Array.prototype.forEach.call(roots, function (root) {
+			if (root.classList.contains('is-hero-mounted')) {
+				return;
+			}
+
+			var slideCount = root.querySelectorAll('.splide__slide').length;
+			if (slideCount < 2) {
+				// Nothing to rotate — leave the single slide as static markup.
+				root.classList.add('is-hero-mounted', 'is-hero-static');
+				return;
+			}
+
+			var interval = parseInt(root.getAttribute('data-lunara-hero-autoplay'), 10);
+			if (!interval || interval < 1500) {
+				interval = 6500;
+			}
+
+			var splide = new window.Splide(root, {
+				type: 'fade',
+				rewind: true,
+				perPage: 1,
+				perMove: 1,
+				arrows: true,
+				pagination: true,
+				drag: true,
+				keyboard: 'focused',
+				autoplay: !reduceMotion,
+				interval: interval,
+				pauseOnHover: true,
+				pauseOnFocus: true,
+				speed: reduceMotion ? 0 : 850,
+				rewindSpeed: reduceMotion ? 0 : 850,
+				classes: {
+					arrows: 'splide__arrows lunara-hero-arrows',
+					arrow: 'splide__arrow lunara-hero-arrow',
+					prev: 'splide__arrow--prev lunara-hero-arrow-prev',
+					next: 'splide__arrow--next lunara-hero-arrow-next',
+					pagination: 'splide__pagination lunara-hero-pagination',
+					page: 'splide__pagination__page lunara-hero-page'
+				}
+			});
+
+			// First slide loads eagerly (LCP). As each slide activates, swap in
+			// its image AND preload the next one's, so the cross-fade into the
+			// next slide never shows a blank flash.
+			var loadLazyImage = function (slideEl) {
+				if (!slideEl) {
+					return;
+				}
+				var lazyImg = slideEl.querySelector('img[data-lunara-lazy]');
+				if (lazyImg) {
+					lazyImg.src = lazyImg.getAttribute('data-lunara-lazy');
+					lazyImg.removeAttribute('data-lunara-lazy');
+				}
+			};
+
+			splide.on('active', function (slide) {
+				loadLazyImage(slide.slide);
+
+				var allSlides = root.querySelectorAll('.splide__slide');
+				if (allSlides.length) {
+					loadLazyImage(allSlides[(slide.index + 1) % allSlides.length]);
+				}
+			});
+
+			splide.mount();
+			root.classList.add('is-hero-mounted');
+		});
+	}
+
+	if (document.readyState !== 'loading') {
+		mountHeroCarousels();
+	} else {
+		document.addEventListener('DOMContentLoaded', mountHeroCarousels);
+	}
+})();

@@ -14940,6 +14940,202 @@ if ( ! function_exists( 'lunara_render_cinematic_hero' ) ) {
 }
 
 /**
+ * Right-size a TMDB backdrop URL for a hero background.
+ *
+ * The review meta stores the full-resolution `/t/p/original/` URL (often 4K /
+ * ~1.5MB). A full-bleed hero only needs ~1280-1920px wide, so swap the size
+ * segment to a lighter variant. Non-TMDB URLs (local uploads, etc.) pass
+ * through untouched.
+ */
+if ( ! function_exists( 'lunara_rightsize_backdrop_url' ) ) {
+	function lunara_rightsize_backdrop_url( $url, $variant = 'w1280' ) {
+		$url = (string) $url;
+		if ( false !== strpos( $url, 'image.tmdb.org/t/p/original/' ) ) {
+			return str_replace( '/t/p/original/', '/t/p/' . preg_replace( '/[^a-z0-9]/', '', (string) $variant ) . '/', $url );
+		}
+		return $url;
+	}
+}
+
+/**
+ * Resolve a review's hero/backdrop image URL via the same meta chain the
+ * single hero uses (hero banner -> TMDB backdrop -> card image -> poster ->
+ * featured image). Returns '' if none found.
+ */
+if ( ! function_exists( 'lunara_get_review_hero_image_url' ) ) {
+	function lunara_get_review_hero_image_url( $review_id ) {
+		$review_id  = (int) $review_id;
+		$candidates = array(
+			get_post_meta( $review_id, '_lunara_review_hero_banner', true ),
+			get_post_meta( $review_id, '_lunara_tmdb_backdrop_url', true ),
+			get_post_meta( $review_id, '_lunara_review_card_image', true ),
+			get_post_meta( $review_id, '_lunara_tmdb_poster_url', true ),
+		);
+		foreach ( $candidates as $candidate ) {
+			$candidate = trim( (string) $candidate );
+			if ( '' !== $candidate ) {
+				return $candidate;
+			}
+		}
+		if ( has_post_thumbnail( $review_id ) ) {
+			return (string) wp_get_attachment_image_url( get_post_thumbnail_id( $review_id ), 'full' );
+		}
+		return '';
+	}
+}
+
+/**
+ * Build the rotating hero feed: the latest reviews + journal entries merged
+ * newest-first. Each entry only joins if it has a usable backdrop image.
+ *
+ * @param int $max Maximum number of slides.
+ * @return array<int,array<string,string>> Slide data.
+ */
+if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
+	function lunara_get_cinematic_hero_slides( $max = 6 ) {
+		$max   = max( 1, (int) $max );
+		$items = array();
+
+		// Latest reviews.
+		if ( function_exists( 'lunara_latest_reviews_query' ) ) {
+			$reviews = lunara_latest_reviews_query( $max );
+			if ( $reviews instanceof WP_Query && ! empty( $reviews->posts ) ) {
+				foreach ( $reviews->posts as $review ) {
+					$image = lunara_get_review_hero_image_url( $review->ID );
+					if ( ! $image ) {
+						continue;
+					}
+					$excerpt = function_exists( 'lunara_get_review_card_pull_quote' )
+						? lunara_get_review_card_pull_quote( $review->ID, 30, true )
+						: wp_trim_words( wp_strip_all_tags( (string) get_the_excerpt( $review ) ), 30, '…' );
+					$items[] = array(
+						'date'    => (string) $review->post_date,
+						'kicker'  => __( 'Latest Review', 'lunara-film' ),
+						'title'   => get_the_title( $review->ID ),
+						'excerpt' => (string) $excerpt,
+						'url'     => get_permalink( $review->ID ),
+						'cta'     => __( 'Read the review', 'lunara-film' ),
+						'image'   => lunara_rightsize_backdrop_url( $image ),
+					);
+				}
+			}
+		}
+
+		// Latest journal entries.
+		if ( function_exists( 'lunara_home_dispatches_query' ) ) {
+			$journal = lunara_home_dispatches_query( $max );
+			if ( $journal instanceof WP_Query && ! empty( $journal->posts ) ) {
+				foreach ( $journal->posts as $entry ) {
+					$image = function_exists( 'lunara_get_journal_card_image_url' )
+						? lunara_get_journal_card_image_url( $entry->ID, 'full' )
+						: '';
+					if ( ! $image ) {
+						continue;
+					}
+					$excerpt = function_exists( 'lunara_card_excerpt' )
+						? lunara_card_excerpt( $entry->ID, 28 )
+						: wp_trim_words( wp_strip_all_tags( (string) get_the_excerpt( $entry ) ), 28, '…' );
+					$items[] = array(
+						'date'    => (string) $entry->post_date,
+						'kicker'  => __( 'From the Journal', 'lunara-film' ),
+						'title'   => get_the_title( $entry->ID ),
+						'excerpt' => (string) $excerpt,
+						'url'     => get_permalink( $entry->ID ),
+						'cta'     => __( 'Read the entry', 'lunara-film' ),
+						'image'   => lunara_rightsize_backdrop_url( $image ),
+					);
+				}
+			}
+		}
+
+		wp_reset_postdata();
+
+		// Newest first.
+		usort(
+			$items,
+			static function ( $a, $b ) {
+				return strcmp( (string) $b['date'], (string) $a['date'] );
+			}
+		);
+
+		return array_slice( $items, 0, $max );
+	}
+}
+
+/**
+ * Render one cinematic-hero slide from prepared data. The first slide loads
+ * eagerly (it's the LCP); the rest carry their URL in data-lunara-lazy and are
+ * swapped in by the carousel JS when they become active.
+ */
+if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
+	function lunara_render_cinematic_hero_slide( $data, $index = 0 ) {
+		$is_first     = ( 0 === (int) $index );
+		$transparent  = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+		$image_markup = $is_first
+			? '<img src="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" alt="" loading="eager" decoding="async" fetchpriority="high" sizes="100vw" />'
+			: '<img src="' . $transparent . '" data-lunara-lazy="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" alt="" loading="lazy" decoding="async" sizes="100vw" />';
+
+		ob_start();
+		?>
+		<li class="splide__slide lunara-cinematic-hero-slide">
+			<a class="lunara-cinematic-hero-link" href="<?php echo esc_url( $data['url'] ); ?>" aria-label="<?php echo esc_attr( $data['title'] ); ?>">
+				<div class="lunara-cinematic-hero-bg" aria-hidden="true">
+					<?php echo $image_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</div>
+				<div class="lunara-cinematic-hero-overlay" aria-hidden="true"></div>
+				<div class="lunara-cinematic-hero-shell">
+					<div class="lunara-cinematic-hero-content">
+						<p class="lunara-cinematic-hero-kicker"><?php echo esc_html( $data['kicker'] ); ?></p>
+						<h2 class="lunara-cinematic-hero-title"><?php echo esc_html( $data['title'] ); ?></h2>
+						<?php if ( '' !== trim( (string) $data['excerpt'] ) ) : ?>
+							<p class="lunara-cinematic-hero-excerpt"><?php echo esc_html( $data['excerpt'] ); ?></p>
+						<?php endif; ?>
+						<span class="lunara-cinematic-hero-cta"><?php echo esc_html( $data['cta'] ); ?> <span aria-hidden="true">&rarr;</span></span>
+					</div>
+				</div>
+			</a>
+		</li>
+		<?php
+		return (string) ob_get_clean();
+	}
+}
+
+/**
+ * Render the rotating cinematic hero (Splide cross-fade carousel of latest
+ * reviews + journal entries). Falls back to the single static hero when there
+ * are fewer than two slides, so it's always safe to use as the hero renderer.
+ */
+if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
+	function lunara_render_cinematic_hero_carousel( $attrs = array() ) {
+		$slides = lunara_get_cinematic_hero_slides( 6 );
+
+		if ( count( $slides ) < 2 ) {
+			return function_exists( 'lunara_render_cinematic_hero' )
+				? lunara_render_cinematic_hero( is_array( $attrs ) ? $attrs : array() )
+				: '';
+		}
+
+		$interval = (int) apply_filters( 'lunara_hero_autoplay_interval', 6500 );
+
+		ob_start();
+		?>
+		<section class="lunara-home-hero lunara-home-slot-hero lunara-cinematic-hero lunara-cinematic-hero-carousel splide" data-lunara-hero-autoplay="<?php echo esc_attr( (string) $interval ); ?>" aria-roledescription="carousel" aria-label="<?php esc_attr_e( 'Featured', 'lunara-film' ); ?>">
+			<div class="splide__track lunara-cinematic-hero-track">
+				<ul class="splide__list">
+					<?php
+					foreach ( $slides as $slide_index => $slide_data ) {
+						echo lunara_render_cinematic_hero_slide( $slide_data, $slide_index ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					}
+					?>
+				</ul>
+			</div>
+		</section>
+		<?php
+		return (string) ob_get_clean();
+	}
+}
+
+/**
  * Cache invalidation: when a review is published or the customizer is saved,
  * bust the latest-review object cache so the hero refreshes.
  */

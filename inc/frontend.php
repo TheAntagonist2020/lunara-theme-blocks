@@ -3092,6 +3092,21 @@ function lunara_enqueue_home_splide_pilot_assets() {
 			true
 		);
 	}
+
+	// Rotating cinematic hero (its own Splide cross-fade init).
+	$hero_js = lunara_resolve_theme_asset(
+		'assets/js/lunara-hero-carousel.js',
+		array( 'lunara-hero-carousel.js' )
+	);
+	if ( $hero_js['uri'] ) {
+		wp_enqueue_script(
+			'lunara-hero-carousel',
+			$hero_js['uri'],
+			array( 'lunara-splide' ),
+			lunara_theme_asset_version( $hero_js['path'] ),
+			true
+		);
+	}
 }
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_home_splide_pilot_assets', 20 );
 
