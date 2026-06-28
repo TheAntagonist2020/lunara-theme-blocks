@@ -48,10 +48,10 @@ Text Domain: lunara-film
        are referenced separately throughout the stylesheet; collapsing them
        would touch hundreds of call sites and belongs in a later, dedicated
        pass. */
-    --lunara-bg-primary: #0a1520;    /* page ground (deepest navy) */
-    --lunara-bg-deep: #0a1520;       /* alias of --lunara-bg-primary */
-    --lunara-bg-secondary: #0f1d2e;  /* elevated surface / card */
-    --lunara-bg-card: #0f1d2e;       /* alias of --lunara-bg-secondary */
+    --lunara-bg-primary: #0a1520;                 /* page ground (deepest navy) */
+    --lunara-bg-deep: var(--lunara-bg-primary);   /* alias — follows bg-primary */
+    --lunara-bg-secondary: #0f1d2e;               /* elevated surface / card */
+    --lunara-bg-card: var(--lunara-bg-secondary); /* alias — follows bg-secondary */
     --lunara-gold: #c9a961;          /* primary accent (Oscar gold) */
     --lunara-gold-light: #e0c481;    /* lighter gold (hover / highlight) */
     --lunara-text: #FAFBFC;          /* primary text */
