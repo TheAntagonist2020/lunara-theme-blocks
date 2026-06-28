@@ -14805,9 +14805,30 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_data' ) ) {
 		} elseif ( '' !== $override_image ) {
 			$image_url     = $override_image;
 			$attachment_id = (int) attachment_url_to_postid( $override_image );
-		} elseif ( $latest_review && has_post_thumbnail( $latest_review->ID ) ) {
-			$attachment_id = (int) get_post_thumbnail_id( $latest_review->ID );
-			$image_url     = (string) wp_get_attachment_image_url( $attachment_id, 'full' );
+		} elseif ( $latest_review ) {
+			// Reviews store their art in meta (TMDB imports), not as the WP
+			// featured image — prefer the purpose-built hero banner, then the
+			// TMDB backdrop, then the card/poster art; fall back to a real
+			// featured image only if one is actually set.
+			$review_id        = (int) $latest_review->ID;
+			$image_candidates = array(
+				get_post_meta( $review_id, '_lunara_review_hero_banner', true ),
+				get_post_meta( $review_id, '_lunara_tmdb_backdrop_url', true ),
+				get_post_meta( $review_id, '_lunara_review_card_image', true ),
+				get_post_meta( $review_id, '_lunara_tmdb_poster_url', true ),
+			);
+			foreach ( $image_candidates as $candidate ) {
+				$candidate = trim( (string) $candidate );
+				if ( '' !== $candidate ) {
+					$image_url     = $candidate;
+					$attachment_id = (int) attachment_url_to_postid( $candidate );
+					break;
+				}
+			}
+			if ( '' === $image_url && has_post_thumbnail( $review_id ) ) {
+				$attachment_id = (int) get_post_thumbnail_id( $review_id );
+				$image_url     = (string) wp_get_attachment_image_url( $attachment_id, 'full' );
+			}
 		}
 
 		if ( '' === $image_url ) {
