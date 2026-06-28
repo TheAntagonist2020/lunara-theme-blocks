@@ -87,7 +87,8 @@ if ( ! class_exists( 'Lunara_Portrait_Organizer' ) ) :
 					'i18n'    => array(
 						'confirmUnfile' => __( 'Remove the Oscar Portraits folder label from every portrait? (The images themselves are untouched.)', 'lunara-film' ),
 						'working'       => __( 'Working…', 'lunara-film' ),
-						'done'          => __( 'Done.', 'lunara-film' ),
+						'doneOrganize'  => __( 'Done. All portraits are filed in “Oscar Portraits”.', 'lunara-film' ),
+						'doneUnfile'    => __( 'Done. The folder label was removed from every portrait.', 'lunara-film' ),
 						'error'         => __( 'Something went wrong — check the console and try again.', 'lunara-film' ),
 					),
 				)
@@ -142,17 +143,15 @@ if ( ! class_exists( 'Lunara_Portrait_Organizer' ) ) :
 
 			$exclude_sql = '';
 			if ( $exclude_term_id > 0 ) {
-				$exclude_sql = $wpdb->prepare(
-					" AND p.ID NOT IN (
+				$exclude_sql = " AND p.ID NOT IN (
 						SELECT tr.object_id FROM {$wpdb->term_relationships} tr
 						INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id
 						WHERE tt.term_id = %d
-					)",
-					$exclude_term_id
-				);
+					)";
+				$params[]    = $exclude_term_id;
 			}
 
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders + exclude are prepared.
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $placeholders/$exclude_sql are placeholder strings, prepared in this single call.
 			$sql = $wpdb->prepare(
 				"SELECT COUNT(DISTINCT p.ID)
 				 FROM {$wpdb->posts} p
@@ -243,6 +242,9 @@ if ( ! class_exists( 'Lunara_Portrait_Organizer' ) ) :
 
 			$ids       = self::unfiled_portrait_ids( $term_id, self::BATCH );
 			$processed = 0;
+			// Defer term-count recalculation until the batch is done — avoids a
+			// recount on every single assignment across thousands of rows.
+			wp_defer_term_counting( true );
 			foreach ( $ids as $id ) {
 				// Append the folder term without clobbering any existing folders.
 				$result = wp_set_object_terms( $id, array( (int) $term_id ), self::TAXONOMY, true );
@@ -250,6 +252,7 @@ if ( ! class_exists( 'Lunara_Portrait_Organizer' ) ) :
 					$processed++;
 				}
 			}
+			wp_defer_term_counting( false );
 
 			$remaining = self::count_portraits( $term_id );
 
@@ -286,12 +289,14 @@ if ( ! class_exists( 'Lunara_Portrait_Organizer' ) ) :
 			);
 
 			$processed = 0;
+			wp_defer_term_counting( true );
 			foreach ( $ids as $id ) {
 				$result = wp_remove_object_terms( $id, array( (int) $term_id ), self::TAXONOMY );
 				if ( ! is_wp_error( $result ) ) {
 					$processed++;
 				}
 			}
+			wp_defer_term_counting( false );
 
 			$remaining = (int) $wpdb->get_var(
 				$wpdb->prepare(

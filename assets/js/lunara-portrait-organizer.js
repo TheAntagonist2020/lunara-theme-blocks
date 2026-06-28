@@ -117,7 +117,7 @@
 			},
 			function () {
 				setProgress(total);
-				$status.text(cfg.i18n.done + ' All portraits are filed in “Oscar Portraits”.');
+				$status.text(cfg.i18n.doneOrganize);
 				doScan();
 			}
 		);
@@ -134,7 +134,7 @@
 			},
 			function () {
 				$progress.css('width', '0%');
-				$status.text(cfg.i18n.done + ' The folder label was removed from every portrait.');
+				$status.text(cfg.i18n.doneUnfile);
 				doScan();
 			}
 		);
