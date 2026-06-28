@@ -14,6 +14,10 @@ This repository is intended to track the active theme source only. Local backup 
 
 Do not commit live-only secrets or generated WordPress/cache files. API keys should remain defined in server configuration or plugins, not in this theme repository.
 
+## Technical Specification
+
+- Living technical specification: `docs/tech-spec.md`
+
 ## Verification Baseline
 
 Before pushing or deploying changes:
