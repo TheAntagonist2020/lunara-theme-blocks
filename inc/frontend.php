@@ -3352,6 +3352,30 @@ function lunara_output_journal_archive_studio_css() {
         min-height: var(--lunara-journal-archive-card-min) !important;
     }
 
+    /* A featured "lead" entry with no image (is-text-brief) was keeping the
+       two-column featured span with an empty media column. Treat it like a
+       media-failed lead: a normal single-column card, with the content
+       vertically balanced so it never reads as half-empty. */
+    body.post-type-archive-journal .lunara-journal-archive-card.is-text-brief,
+    body.post-type-archive-journal .lunara-journal-archive-card.is-text-brief.is-lead {
+        grid-column: auto !important;
+    }
+
+    body.post-type-archive-journal .lunara-journal-archive-card.is-text-brief .lunara-review-grid-poster-wrap {
+        display: none !important;
+    }
+
+    body.post-type-archive-journal .lunara-journal-archive-card.is-text-brief .lunara-review-grid-link,
+    body.post-type-archive-journal .lunara-journal-archive-card.is-text-brief.is-lead .lunara-review-grid-link {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: minmax(0, 1fr) !important;
+        min-height: var(--lunara-journal-archive-card-min) !important;
+    }
+
+    body.post-type-archive-journal .lunara-journal-archive-card.is-text-brief.is-lead .lunara-review-grid-footer {
+        margin-top: 20px !important;
+    }
+
     body.post-type-archive-journal .lunara-journal-archive-card.is-media-failed .lunara-review-grid-copy {
         align-content: start !important;
         background:
