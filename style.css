@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.5
+Version: 3.1.6
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -7785,11 +7785,14 @@ body.aat-shell-page .aat-entity-title {
 
 .lunara-review-single-debrief-section,
 .lunara-review-single-debrief-shell {
+    /* Center within the content column like every other section. The old
+       left:50% + translateX(-50%) full-bleed trick double-shifted the block to
+       the right because the article grid already centers its children. */
     position: relative;
-    left: 50%;
-    transform: translateX(-50%);
     width: min(var(--lunara-review-debrief-width, 1180px), calc(100vw - 108px));
-    max-width: none;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .lunara-review-single-debrief-wrap.has-signature-media {
