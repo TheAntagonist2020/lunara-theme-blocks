@@ -1087,6 +1087,248 @@ if ( ! function_exists( 'lunara_render_pair_it_with_admin_preview' ) ) {
     }
 }
 
+if ( ! function_exists( 'lunara_pair_aperture_mark_svg_raw' ) ) {
+    /**
+     * Standalone SVG for the Lunara crescent-moon aperture mark.
+     *
+     * Returned as a complete, self-contained <svg> document (no <use>/<symbol>)
+     * so it can be embedded as a CSS background-image data URI. That keeps the
+     * mark entirely out of the page body, where an HTML sanitizer was stripping
+     * <use>/<symbol> elements. This is a placeholder interpretation of Dalton's
+     * mark; the whole SVG is filterable so the finished production art can be
+     * dropped in without touching the renderer or its CSS.
+     *
+     * @return string Complete <svg>…</svg> markup.
+     */
+    function lunara_pair_aperture_mark_svg_raw() {
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">'
+            . '<defs>'
+            . '<linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
+            . '<stop offset="0" stop-color="#f0dca6"/>'
+            . '<stop offset="0.45" stop-color="#cdac68"/>'
+            . '<stop offset="1" stop-color="#997a43"/>'
+            . '</linearGradient>'
+            . '<mask id="m">'
+            . '<rect width="120" height="120" fill="#000"/>'
+            . '<circle cx="55" cy="63" r="45" fill="#fff"/>'
+            . '<circle cx="78" cy="47" r="39" fill="#000"/>'
+            . '</mask>'
+            . '</defs>'
+            . '<circle cx="55" cy="63" r="45" fill="url(#g)" mask="url(#m)"/>'
+            . '<g fill="url(#g)">'
+            . '<path d="M66 56 L98 47 L91 67 Z"/>'
+            . '<path d="M66 56 L98 47 L91 67 Z" transform="rotate(126 66 56)"/>'
+            . '<path d="M66 56 L98 47 L91 67 Z" transform="rotate(252 66 56)"/>'
+            . '</g>'
+            . '</svg>';
+
+        /**
+         * Filter the crescent-moon aperture mark SVG.
+         *
+         * Return a complete, self-contained <svg xmlns="…">…</svg> string to
+         * replace the placeholder with the finished production mark.
+         *
+         * @param string $svg Default placeholder SVG markup.
+         */
+        return (string) apply_filters( 'lunara_pair_aperture_mark_svg', $svg );
+    }
+}
+
+if ( ! function_exists( 'lunara_pair_aperture_mark_css_url' ) ) {
+    /**
+     * The aperture mark as a CSS url() value (an SVG data URI).
+     *
+     * Lives in the stylesheet, not the page body, so no HTML sanitizer can touch
+     * it. Used as the background-image for `.lunara-pair-card-mark`.
+     *
+     * @return string e.g. url("data:image/svg+xml,...")
+     */
+    function lunara_pair_aperture_mark_css_url() {
+        $svg = trim( (string) lunara_pair_aperture_mark_svg_raw() );
+        if ( '' === $svg ) {
+            return 'none';
+        }
+
+        // rawurlencode is the safe, lossless encoding for a data URI: it escapes
+        // '#', '<', '>', quotes and spaces so the value survives inside url("…").
+        return 'url("data:image/svg+xml,' . rawurlencode( $svg ) . '")';
+    }
+}
+
+if ( ! function_exists( 'lunara_pair_render_where_to_watch' ) ) {
+    /**
+     * "Where to watch" slot for a paired film — JustWatch integration point.
+     *
+     * Returns an empty string by default so the card never shows a half-built
+     * streaming row. When JustWatch's API surfaces land, hook this filter to
+     * return a row of provider chips for the given IMDb title ID. Each card also
+     * carries a data-pair-tt attribute for optional client-side hydration.
+     *
+     * @param string $tt      IMDb title ID (lowercased) or ''.
+     * @param int    $post_id Current review post ID.
+     * @return string
+     */
+    function lunara_pair_render_where_to_watch( $tt, $post_id = 0 ) {
+        $tt = strtolower( trim( (string) $tt ) );
+
+        /**
+         * Filter the paired-film "Where to watch" markup (JustWatch stub).
+         *
+         * @param string $html    Default markup (empty).
+         * @param string $tt      IMDb title ID (lowercased) or ''.
+         * @param int    $post_id Current review post ID.
+         */
+        return (string) apply_filters( 'lunara_pair_where_to_watch_html', '', $tt, (int) $post_id );
+    }
+}
+
+if ( ! function_exists( 'lunara_render_pair_it_with_cards' ) ) {
+    /**
+     * Render the "Pair It With" trio as uniform, self-contained cinematic cards.
+     *
+     * Reuses lunara_parse_pair_it_with_value() for data resolution, then renders
+     * each pairing into an identical card shape: poster (or Fallback B title
+     * plate with the crescent-moon colophon when no poster resolves), role label,
+     * linked title + year, note, an always-on IMDb chip, an Oscar Ledger pill
+     * when the film has Oscar history, and a reserved JustWatch "Where to watch"
+     * slot. Uniformity is enforced structurally — every card carries every slot.
+     *
+     * @param int $post_id Review post ID (defaults to the current post).
+     * @return string Card markup, or '' when no pairings are filled.
+     */
+    function lunara_render_pair_it_with_cards( $post_id = 0 ) {
+        $post_id = $post_id ? (int) $post_id : (int) get_the_ID();
+        if ( $post_id <= 0 ) {
+            return '';
+        }
+
+        $rows = array(
+            array(
+                'slug'  => 'theme',
+                'label' => __( 'Theme Echo', 'lunara-film' ),
+                'value' => get_post_meta( $post_id, '_lunara_theme_echo', true ),
+            ),
+            array(
+                'slug'  => 'counter',
+                'label' => __( 'Counter-Program', 'lunara-film' ),
+                'value' => get_post_meta( $post_id, '_lunara_counter_program', true ),
+            ),
+            array(
+                'slug'  => 'career',
+                'label' => __( 'Career Context', 'lunara-film' ),
+                'value' => lunara_get_career_context_meta( $post_id ),
+            ),
+        );
+
+        $cards = array();
+
+        foreach ( $rows as $row ) {
+            $value = trim( (string) $row['value'] );
+            if ( '' === $value ) {
+                continue;
+            }
+
+            $data       = lunara_parse_pair_it_with_value( $value, $post_id );
+            $title_base = '' !== $data['title_base'] ? $data['title_base'] : $data['title'];
+            if ( '' === trim( (string) $title_base ) ) {
+                continue;
+            }
+
+            $tt     = (string) $data['tt'];
+            $year   = (string) $data['year'];
+            $note   = (string) $data['note'];
+            $counts = is_array( $data['counts'] ) ? $data['counts'] : array( 'noms' => 0, 'wins' => 0 );
+
+            // -- Poster, or Fallback B title plate with the aperture colophon. --
+            $poster_html = trim( (string) $data['poster_html'] );
+            if ( '' !== $poster_html ) {
+                $media = '<div class="lunara-pair-card-poster">' . $poster_html . '</div>';
+            } else {
+                $plate_title = '' !== trim( (string) $title_base ) ? $title_base : (string) $data['title'];
+                // The crescent-moon mark is painted via CSS background-image (see
+                // lunara_pair_aperture_mark_css_url), so the body stays free of the
+                // <use>/<symbol> SVG that the page sanitizer strips.
+                $media       = '<div class="lunara-pair-card-poster lunara-pair-card-poster--plate">'
+                    . '<div class="lunara-pair-card-plate">'
+                    . '<span class="lunara-pair-card-mark" aria-hidden="true"></span>'
+                    . '<span class="lunara-pair-card-plate-title">' . esc_html( $plate_title ) . '</span>'
+                    . '<span class="lunara-pair-card-plate-rule"></span>'
+                    . '</div></div>';
+            }
+
+            // -- Title (+ year). Internal Lunara destination preferred; IMDb is the chip. --
+            $title_inner = '<span class="lunara-pair-card-title-text">' . esc_html( $title_base ) . '</span>';
+            if ( '' !== $year ) {
+                $title_inner .= ' <span class="lunara-pair-card-year">(' . esc_html( $year ) . ')</span>';
+            }
+
+            $title_href = (string) $data['title_href'];
+            $href_type  = (string) $data['title_href_type'];
+            if ( '' !== $title_href && in_array( $href_type, array( 'review', 'oscar' ), true ) ) {
+                $title_html = '<a class="lunara-pair-card-title-link" href="' . esc_url( $title_href ) . '">' . $title_inner . '</a>';
+            } elseif ( '' !== $title_href ) {
+                $title_html = '<a class="lunara-pair-card-title-link" href="' . esc_url( $title_href ) . '" target="_blank" rel="noopener noreferrer nofollow">' . $title_inner . '</a>';
+            } else {
+                $title_html = '<span class="lunara-pair-card-title-link">' . $title_inner . '</span>';
+            }
+
+            // -- Chips: IMDb (always) + Oscar Ledger (only when Oscar history exists). --
+            $chips     = '';
+            $imdb_href = (string) $data['imdb_href'];
+            if ( '' !== $imdb_href ) {
+                $chips .= '<a class="lunara-pair-card-chip lunara-pair-card-chip--imdb" href="' . esc_url( $imdb_href ) . '" target="_blank" rel="noopener noreferrer nofollow">IMDb</a>';
+            }
+            $chips .= lunara_render_oscar_ledger_pill( $tt, $counts );
+
+            // -- JustWatch "Where to watch" slot (stubbed until the API lands). --
+            $watch = lunara_pair_render_where_to_watch( $tt, $post_id );
+
+            // -- Assemble the uniform card. --
+            $card  = '<article class="lunara-pair-card lunara-pair-card--' . esc_attr( $row['slug'] ) . '"';
+            $card .= '' !== $tt ? ' data-pair-tt="' . esc_attr( $tt ) . '"' : '';
+            $card .= '>';
+            $card .= $media;
+            $card .= '<div class="lunara-pair-card-body">';
+            $card .= '<p class="lunara-pair-card-role">' . esc_html( $row['label'] ) . '</p>';
+            $card .= '<h4 class="lunara-pair-card-title">' . $title_html . '</h4>';
+            if ( '' !== trim( $note ) ) {
+                $card .= '<p class="lunara-pair-card-note">' . esc_html( $note ) . '</p>';
+            }
+            if ( '' !== trim( $chips ) ) {
+                $card .= '<div class="lunara-pair-card-chips">' . $chips . '</div>';
+            }
+            if ( '' !== trim( (string) $watch ) ) {
+                $card .= '<div class="lunara-pair-card-watch">' . $watch . '</div>';
+            }
+            $card .= '</div></article>';
+
+            $cards[] = $card;
+        }
+
+        if ( empty( $cards ) ) {
+            return '';
+        }
+
+        $subtitle = (string) apply_filters(
+            'lunara_pair_cards_subtitle',
+            __( 'Three films in conversation with this one.', 'lunara-film' ),
+            $post_id
+        );
+
+        $html  = '<section class="lunara-pair-cards" aria-label="' . esc_attr__( 'Pair It With', 'lunara-film' ) . '">';
+        $html .= '<div class="lunara-pair-cards-head">';
+        $html .= '<h3 class="lunara-pair-cards-title">' . esc_html__( 'Pair It With', 'lunara-film' ) . '</h3>';
+        if ( '' !== trim( $subtitle ) ) {
+            $html .= '<p class="lunara-pair-cards-sub">' . esc_html( $subtitle ) . '</p>';
+        }
+        $html .= '</div>';
+        $html .= '<div class="lunara-pair-cards-grid" data-count="' . count( $cards ) . '">' . implode( '', $cards ) . '</div>';
+        $html .= '</section>';
+
+        return $html;
+    }
+}
+
 
 
 /**
@@ -1492,6 +1734,14 @@ if ( ! function_exists( 'lunara_pair_it_with_shortcode' ) ) {
 
         if ( $post_id <= 0 || ! function_exists( 'lunara_debrief_shortcode' ) ) {
             return '';
+        }
+
+        // Prefer the self-contained uniform card renderer.
+        if ( function_exists( 'lunara_render_pair_it_with_cards' ) ) {
+            $cards = lunara_render_pair_it_with_cards( $post_id );
+            if ( '' !== trim( (string) $cards ) ) {
+                return $cards;
+            }
         }
 
         $target_post = get_post( $post_id );

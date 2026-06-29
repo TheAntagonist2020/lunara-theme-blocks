@@ -52,3 +52,6 @@ require_once $lunara_inc . 'oscars-portal.php';
 require_once $lunara_inc . 'blocks.php';
 require_once $lunara_inc . 'block-migration.php';
 require_once $lunara_inc . 'frontend.php';
+
+// Layer 8 — Admin tools (admin-only; no front-end dependencies).
+require_once $lunara_inc . 'portrait-organizer.php';

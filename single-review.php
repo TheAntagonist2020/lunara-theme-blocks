@@ -322,7 +322,16 @@ if ( have_posts() ) :
                             <?php echo $debrief_parts['signature']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         </div>
                     </div>
-                    <?php if ( '' !== trim( (string) $debrief_parts['pairings'] ) ) : ?>
+                    <?php
+                    $pairing_cards_html = function_exists( 'lunara_render_pair_it_with_cards' )
+                        ? lunara_render_pair_it_with_cards( $post_id )
+                        : '';
+                    ?>
+                    <?php if ( '' !== trim( (string) $pairing_cards_html ) ) : ?>
+                        <div class="lunara-review-single-debrief-pairings-modern">
+                            <?php echo $pairing_cards_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        </div>
+                    <?php elseif ( '' !== trim( (string) $debrief_parts['pairings'] ) ) : ?>
                         <div class="lunara-review-single-debrief lunara-review-single-debrief--pairings">
                             <?php echo $debrief_parts['pairings']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         </div>

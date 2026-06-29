@@ -3352,6 +3352,30 @@ function lunara_output_journal_archive_studio_css() {
         min-height: var(--lunara-journal-archive-card-min) !important;
     }
 
+    /* A featured "lead" entry with no image (is-text-brief) was keeping the
+       two-column featured span with an empty media column. Treat it like a
+       media-failed lead: a normal single-column card, with the content
+       vertically balanced so it never reads as half-empty. */
+    body.post-type-archive-journal .lunara-journal-archive-card.is-text-brief,
+    body.post-type-archive-journal .lunara-journal-archive-card.is-text-brief.is-lead {
+        grid-column: auto !important;
+    }
+
+    body.post-type-archive-journal .lunara-journal-archive-card.is-text-brief .lunara-review-grid-poster-wrap {
+        display: none !important;
+    }
+
+    body.post-type-archive-journal .lunara-journal-archive-card.is-text-brief .lunara-review-grid-link,
+    body.post-type-archive-journal .lunara-journal-archive-card.is-text-brief.is-lead .lunara-review-grid-link {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: minmax(0, 1fr) !important;
+        min-height: var(--lunara-journal-archive-card-min) !important;
+    }
+
+    body.post-type-archive-journal .lunara-journal-archive-card.is-text-brief.is-lead .lunara-review-grid-footer {
+        margin-top: 20px !important;
+    }
+
     body.post-type-archive-journal .lunara-journal-archive-card.is-media-failed .lunara-review-grid-copy {
         align-content: start !important;
         background:
@@ -6011,6 +6035,364 @@ function lunara_output_review_pair_it_with_polish_css() {
     <?php
 }
 add_action( 'wp_head', 'lunara_output_review_pair_it_with_polish_css', 1005 );
+
+/**
+ * Pair It With — uniform cinematic cards (the modern renderer).
+ *
+ * Self-contained, scoped to `.lunara-pair-cards`, so it is inert wherever the
+ * cards do not appear. Loaded on single reviews and on any singular post/page
+ * that embeds the [lunara_pair_it_with] shortcode.
+ */
+function lunara_output_pair_it_with_cards_css() {
+    if ( is_admin() || is_feed() ) {
+        return;
+    }
+
+    $should_load = is_singular( 'review' );
+    if ( ! $should_load && is_singular() ) {
+        $current = get_post();
+        if ( $current instanceof WP_Post && has_shortcode( (string) $current->post_content, 'lunara_pair_it_with' ) ) {
+            $should_load = true;
+        }
+    }
+
+    if ( ! $should_load ) {
+        return;
+    }
+    ?>
+    <style id="lunara-pair-it-with-cards-css">
+    .lunara-pair-cards {
+        box-sizing: border-box;
+        margin: clamp(28px, 4vw, 46px) auto 0;
+        max-width: min(100%, 1040px);
+        padding: clamp(20px, 2.8vw, 32px);
+        border: 1px solid rgba(201, 169, 97, 0.24);
+        border-radius: 18px;
+        background:
+            radial-gradient(1100px 520px at 80% -12%, rgba(201, 169, 97, 0.07), transparent 60%),
+            linear-gradient(135deg, rgba(16, 31, 49, 0.98), rgba(10, 21, 32, 0.98) 60%, rgba(13, 28, 44, 0.96));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 26px 60px rgba(0, 0, 0, 0.28);
+    }
+
+    .lunara-pair-cards * {
+        box-sizing: border-box;
+    }
+
+    .lunara-pair-cards-head {
+        margin: 0 0 clamp(18px, 2.4vw, 26px);
+        padding: 0 0 14px;
+        border-bottom: 1px solid rgba(201, 169, 97, 0.2);
+    }
+
+    .lunara-pair-cards-title {
+        margin: 0;
+        color: var(--lunara-gold, #c9a961);
+        font-family: var(--lunara-label-font, "Bebas Neue", "Arial Narrow", sans-serif);
+        font-size: clamp(1.05rem, 2vw, 1.4rem);
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+
+    .lunara-pair-cards-sub {
+        margin: 8px 0 0;
+        color: rgba(244, 239, 227, 0.6);
+        font-family: var(--lunara-body-font, Georgia, serif);
+        font-size: clamp(0.86rem, 1.1vw, 0.96rem);
+        font-style: italic;
+        line-height: 1.4;
+    }
+
+    .lunara-pair-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 236px), 1fr));
+        gap: clamp(14px, 1.8vw, 22px);
+        align-items: stretch;
+    }
+
+    @media (min-width: 880px) {
+        .lunara-pair-cards-grid[data-count="3"] {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .lunara-pair-cards-grid[data-count="2"] {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    .lunara-pair-card {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid rgba(201, 169, 97, 0.22);
+        border-radius: 14px;
+        background: linear-gradient(180deg, #101f31, #0e1b2b);
+        box-shadow: 0 22px 46px rgba(0, 0, 0, 0.3);
+    }
+
+    .lunara-pair-card-poster {
+        position: relative;
+        aspect-ratio: 2 / 3;
+        overflow: hidden;
+        background: #0a1520;
+    }
+
+    .lunara-pair-card-poster img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Fallback B — title plate carrying the crescent-moon aperture colophon. */
+    .lunara-pair-card-plate {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 22px;
+        text-align: center;
+        background:
+            radial-gradient(90% 70% at 50% 22%, rgba(201, 169, 97, 0.08), transparent 60%),
+            linear-gradient(180deg, #0e1b2a, #0a1320);
+    }
+
+    .lunara-pair-card-mark {
+        display: block;
+        width: 44px;
+        height: 44px;
+        margin: 0 0 18px;
+        opacity: 0.95;
+        background-image: <?php echo function_exists( 'lunara_pair_aperture_mark_css_url' ) ? lunara_pair_aperture_mark_css_url() : 'none'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+    }
+
+    .lunara-pair-card-plate-title {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        color: #fff;
+        font-family: var(--lunara-body-font, Georgia, serif);
+        font-size: clamp(1.15rem, 1.7vw, 1.5rem);
+        line-height: 1.14;
+        letter-spacing: -0.01em;
+    }
+
+    .lunara-pair-card-plate-rule {
+        width: 40px;
+        height: 2px;
+        margin: 16px auto 0;
+        background: var(--lunara-gold, #c9a961);
+        opacity: 0.85;
+    }
+
+    .lunara-pair-card-body {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 9px;
+        padding: 15px 15px 17px;
+    }
+
+    .lunara-pair-card-role {
+        margin: 0;
+        color: var(--lunara-gold, #c9a961);
+        font-family: var(--lunara-label-font, "Bebas Neue", "Arial Narrow", sans-serif);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.26em;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+
+    .lunara-pair-card-title {
+        margin: 0;
+        font-family: var(--lunara-body-font, Georgia, serif);
+        font-size: clamp(1.05rem, 1.4vw, 1.22rem);
+        font-weight: 400;
+        line-height: 1.16;
+    }
+
+    .lunara-pair-card-title-link {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        color: #fff;
+        overflow-wrap: anywhere;
+        text-decoration: none;
+    }
+
+    .lunara-pair-card-title-link:hover .lunara-pair-card-title-text,
+    .lunara-pair-card-title-link:focus-visible .lunara-pair-card-title-text {
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .lunara-pair-card-year {
+        color: rgba(244, 239, 227, 0.55);
+        font-size: 0.86em;
+    }
+
+    .lunara-pair-card-note {
+        /* Show the entire pairing note in full — never truncate the writing. */
+        margin: 0;
+        color: rgba(244, 239, 227, 0.78);
+        font-family: var(--lunara-body-font, Georgia, serif);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        text-wrap: pretty;
+    }
+
+    .lunara-pair-card-chips {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        /* Push the chip row to the bottom so chips stay aligned across cards
+           regardless of how long each note runs. */
+        margin-top: auto;
+        padding-top: 12px;
+    }
+
+    .lunara-pair-card-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border: 1px solid rgba(201, 169, 97, 0.28);
+        border-radius: 999px;
+        color: var(--lunara-gold-light, #e0c481);
+        font-family: var(--lunara-label-font, "Arial Narrow", sans-serif);
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        line-height: 1;
+        text-decoration: none;
+        text-transform: uppercase;
+    }
+
+    .lunara-pair-card-chip--imdb {
+        border: 1px solid rgba(201, 169, 97, 0.4);
+        background: rgba(201, 169, 97, 0.12);
+        color: var(--lunara-gold-light, #e0c481);
+        font-weight: 700;
+    }
+
+    .lunara-pair-card-chip--imdb:hover,
+    .lunara-pair-card-chip--imdb:focus-visible {
+        background: rgba(201, 169, 97, 0.2);
+        border-color: rgba(201, 169, 97, 0.6);
+    }
+
+    .lunara-pair-card-chip--imdb::after {
+        content: " \2197";
+        font-weight: 400;
+    }
+
+    /* Oscar Ledger pill, restyled to sit cleanly among the card chips. */
+    .lunara-pair-card-chips .lunara-oscar-ledger {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        max-width: 100%;
+        text-decoration: none;
+    }
+
+    .lunara-pair-card-chips .lunara-oscar-ledger-pill {
+        padding: 4px 9px;
+        border: 1px solid rgba(201, 169, 97, 0.5);
+        border-radius: 999px;
+        background: rgba(201, 169, 97, 0.1);
+        color: var(--lunara-gold-light, #e0c481);
+        font-family: var(--lunara-label-font, "Arial Narrow", sans-serif);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+
+    .lunara-pair-card-chips .lunara-oscar-ledger-counts {
+        color: rgba(244, 239, 227, 0.6);
+        font-size: 0.74rem;
+        line-height: 1.1;
+    }
+
+    .lunara-pair-card-watch {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        padding-top: 12px;
+        border-top: 1px dashed rgba(201, 169, 97, 0.18);
+    }
+
+    @media (max-width: 680px) {
+        .lunara-pair-cards {
+            padding: 16px;
+            border-radius: 14px;
+        }
+
+        .lunara-pair-cards-grid,
+        .lunara-pair-cards-grid[data-count="2"],
+        .lunara-pair-cards-grid[data-count="3"] {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 12px;
+        }
+
+        /* Compact horizontal cards on phones: a readable poster, never a thumbnail. */
+        .lunara-pair-card {
+            display: grid;
+            grid-template-columns: 116px minmax(0, 1fr);
+            align-items: start;
+        }
+
+        .lunara-pair-card-poster {
+            aspect-ratio: 2 / 3;
+            height: auto;
+            align-self: start;
+        }
+
+        /* On phones the note follows the poster column, so no bottom-pin. */
+        .lunara-pair-card-chips {
+            margin-top: 8px;
+        }
+
+        .lunara-pair-card-body {
+            padding: 13px 14px;
+        }
+
+        .lunara-pair-card-mark {
+            width: 34px;
+            height: 34px;
+            margin-bottom: 10px;
+        }
+
+        .lunara-pair-card-plate {
+            padding: 14px 10px;
+        }
+
+        .lunara-pair-card-plate-title {
+            font-size: 1.02rem;
+        }
+
+        .lunara-pair-card-plate-rule {
+            margin-top: 12px;
+        }
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_output_pair_it_with_cards_css', 1006 );
 
 /**
  * Full spoiler Review warning and archive labels.

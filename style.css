@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.0
+Version: 3.1.8
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -5104,6 +5104,24 @@ footer.site-footer .lunara-footer-copyright {
 .lunara-review-grid-card:hover::before,.lunara-dispatch-archive-card:hover::before,.lunara-dispatch-lead:hover::before,.lunara-journal-rail-card:hover::before{opacity:1;transform:translateX(230%) rotate(16deg);}
 .lunara-review-grid-card:hover .lunara-review-grid-poster,.lunara-dispatch-archive-card:hover .lunara-dispatch-archive-thumb,.lunara-dispatch-lead:hover .lunara-dispatch-lead-image,.lunara-dispatch-rail-card:hover .lunara-dispatch-rail-thumb,.lunara-journal-single-media:hover .lunara-journal-single-image{transform:scale(1.05);filter:saturate(1.06) contrast(1.04);}
 .lunara-review-grid-excerpt{margin:10px 0 0;color:#FAFBFC;font-size:.96rem;line-height:1.66;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+/* Archive card titles/excerpts: the copy column is display:flex, which
+   blockifies the title's -webkit-box to flow-root and silently disables
+   -webkit-line-clamp, leaving a clipped sliver of the next line on long titles
+   (most visible on the journal lead card). Clip cleanly at exactly three
+   line-heights via the lh unit, independent of the cascade's line-height. */
+.lunara-journal-archive-grid .lunara-journal-archive-card .lunara-review-grid-title,
+.lunara-review-archive-grid .lunara-review-archive-card .lunara-review-grid-title {
+    display: block !important;
+    overflow: hidden !important;
+    min-height: 3lh !important;
+    max-height: 3lh !important;
+}
+.lunara-journal-archive-grid .lunara-journal-archive-card .lunara-review-grid-excerpt,
+.lunara-review-archive-grid .lunara-review-archive-card .lunara-review-grid-excerpt {
+    display: block !important;
+    overflow: hidden !important;
+    max-height: 3lh !important;
+}
 .lunara-review-grid-quote{margin-top:4px;color:var(--lunara-gold-light,#e0c481);font-size:.95rem;line-height:1.58;letter-spacing:0}
 .lunara-review-archive-card .lunara-review-grid-quote{-webkit-line-clamp:4}
 .lunara-latest-reviews-section .lunara-review-grid-quote{-webkit-line-clamp:3}
@@ -7785,11 +7803,14 @@ body.aat-shell-page .aat-entity-title {
 
 .lunara-review-single-debrief-section,
 .lunara-review-single-debrief-shell {
+    /* Center within the content column like every other section. The old
+       left:50% + translateX(-50%) full-bleed trick double-shifted the block to
+       the right because the article grid already centers its children. */
     position: relative;
-    left: 50%;
-    transform: translateX(-50%);
     width: min(var(--lunara-review-debrief-width, 1180px), calc(100vw - 108px));
-    max-width: none;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .lunara-review-single-debrief-wrap.has-signature-media {

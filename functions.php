@@ -14949,11 +14949,115 @@ if ( ! function_exists( 'lunara_render_cinematic_hero' ) ) {
  */
 if ( ! function_exists( 'lunara_rightsize_backdrop_url' ) ) {
 	function lunara_rightsize_backdrop_url( $url, $variant = 'w1280' ) {
-		$url = (string) $url;
-		if ( false !== strpos( $url, 'image.tmdb.org/t/p/original/' ) ) {
-			return str_replace( '/t/p/original/', '/t/p/' . preg_replace( '/[^a-z0-9]/', '', (string) $variant ) . '/', $url );
+		$url = trim( (string) $url );
+		if ( '' === $url ) {
+			return $url;
 		}
+
+		$crop = (string) apply_filters( 'lunara_hero_crop_dimensions', '1600,900' );
+
+		// TMDB: downscale the full-resolution original to a crisp, light, uniform
+		// 16:9 hero through Site Accelerator (Photon). Stretching the small w1280
+		// across a full-bleed banner was the source of the softness; downscaling a
+		// 3840px original to 1600x900 is sharp and ~7x lighter than the original.
+		if ( preg_match( '#image\.tmdb\.org/t/p/(?:w\d+|original)/(.+)$#i', $url, $m ) ) {
+			$file = (string) preg_replace( '/\?.*$/', '', ltrim( $m[1], '/' ) );
+			return add_query_arg(
+				array(
+					'resize'  => $crop,
+					'quality' => 86,
+					'ssl'     => 1,
+				),
+				'https://i0.wp.com/image.tmdb.org/t/p/original/' . $file
+			);
+		}
+
+		// Local / Jetpack-proxied uploads: request a uniform 16:9 hero crop via
+		// Site Accelerator so heavy originals are downscaled for speed and every
+		// hero is the same shape. (Photon never upscales, so undersized sources
+		// are handled separately by the eligibility floor, not here.)
+		if ( false !== strpos( $url, '/wp-content/uploads/' )
+			&& false === strpos( $url, 'resize=' )
+			&& false === strpos( $url, 'fit=' )
+			&& false === stripos( $url, '?w=' ) ) {
+			$url = add_query_arg(
+				array(
+					'resize'  => $crop,
+					'quality' => 86,
+					'ssl'     => 1,
+				),
+				$url
+			);
+		}
+
 		return $url;
+	}
+}
+
+/**
+ * Decide whether an image is good enough to fill the full-bleed hero.
+ *
+ * Keeps tiny or portrait images out of the rotation so a thumbnail can never be
+ * upscaled into mush. TMDB size tokens are read from the URL; local uploads are
+ * measured from attachment metadata. Unknown external images are not pruned.
+ *
+ * @param string $url       Raw image URL (pre-rightsize).
+ * @param int    $min_width Minimum acceptable width in pixels.
+ * @return bool
+ */
+if ( ! function_exists( 'lunara_hero_image_qualifies' ) ) {
+	function lunara_hero_image_qualifies( $url, $min_width = 0 ) {
+		$url = trim( (string) $url );
+		if ( '' === $url ) {
+			return false;
+		}
+
+		if ( $min_width <= 0 ) {
+			/**
+			 * Filter the minimum width an image needs to qualify for the hero.
+			 *
+			 * @param int $min_width Default 1280.
+			 */
+			$min_width = (int) apply_filters( 'lunara_hero_min_width', 1280 );
+		}
+
+		// TMDB sized URLs: derive the width straight from the size token.
+		if ( preg_match( '#image\.tmdb\.org/t/p/(w(\d+)|original)/#', $url, $m ) ) {
+			if ( 'original' === $m[1] ) {
+				return true; // TMDB originals are large landscape backdrops.
+			}
+			return (int) $m[2] >= $min_width;
+		}
+
+		// Local uploads: measure via attachment metadata when resolvable.
+		$base = (string) preg_replace( '/\?.*$/', '', $url );
+		if ( function_exists( 'attachment_url_to_postid' ) ) {
+			$att_id = attachment_url_to_postid( $base );
+			if ( $att_id ) {
+				$meta = wp_get_attachment_metadata( $att_id );
+				if ( is_array( $meta ) && ! empty( $meta['width'] ) ) {
+					$w = (int) $meta['width'];
+					$h = (int) ( $meta['height'] ?? 0 );
+					return $w >= $min_width && $w >= $h; // Wide enough AND landscape.
+				}
+			}
+		}
+
+		// Unknown / unresolvable external image: don't prune (rare path).
+		return true;
+	}
+}
+
+/**
+ * Qualify a hero image URL, returning it only if it clears the size floor.
+ *
+ * @param string $url Raw image URL (pre-rightsize).
+ * @return string The URL, or '' when it does not qualify for the hero.
+ */
+if ( ! function_exists( 'lunara_hero_qualify_or_blank' ) ) {
+	function lunara_hero_qualify_or_blank( $url ) {
+		$url = trim( (string) $url );
+		return ( '' !== $url && lunara_hero_image_qualifies( $url ) ) ? $url : '';
 	}
 }
 
@@ -14993,15 +15097,15 @@ if ( ! function_exists( 'lunara_get_review_hero_image_url' ) ) {
  */
 if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
 	function lunara_get_cinematic_hero_slides( $max = 6 ) {
-		$max   = max( 1, (int) $max );
+		$max   = max( 1, (int) $max ); $pool = $max + 6;
 		$items = array();
 
 		// Latest reviews.
 		if ( function_exists( 'lunara_latest_reviews_query' ) ) {
-			$reviews = lunara_latest_reviews_query( $max );
+			$reviews = lunara_latest_reviews_query( $pool );
 			if ( $reviews instanceof WP_Query && ! empty( $reviews->posts ) ) {
 				foreach ( $reviews->posts as $review ) {
-					$image = lunara_get_review_hero_image_url( $review->ID );
+					$image = lunara_hero_qualify_or_blank( lunara_get_review_hero_image_url( $review->ID ) );
 					if ( ! $image ) {
 						continue;
 					}
@@ -15023,11 +15127,11 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
 
 		// Latest journal entries.
 		if ( function_exists( 'lunara_home_dispatches_query' ) ) {
-			$journal = lunara_home_dispatches_query( $max );
+			$journal = lunara_home_dispatches_query( $pool );
 			if ( $journal instanceof WP_Query && ! empty( $journal->posts ) ) {
 				foreach ( $journal->posts as $entry ) {
 					$image = function_exists( 'lunara_get_journal_card_image_url' )
-						? lunara_get_journal_card_image_url( $entry->ID, 'full' )
+						? lunara_hero_qualify_or_blank( lunara_get_journal_card_image_url( $entry->ID, 'full' ) )
 						: '';
 					if ( ! $image ) {
 						continue;
