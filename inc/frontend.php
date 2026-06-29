@@ -6218,15 +6218,13 @@ function lunara_output_pair_it_with_cards_css() {
     }
 
     .lunara-pair-card-note {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+        /* Show the entire pairing note in full — never truncate the writing. */
         margin: 0;
         color: rgba(244, 239, 227, 0.78);
         font-family: var(--lunara-body-font, Georgia, serif);
         font-size: 0.9rem;
         line-height: 1.5;
+        text-wrap: pretty;
     }
 
     .lunara-pair-card-chips {
@@ -6234,7 +6232,10 @@ function lunara_output_pair_it_with_cards_css() {
         flex-wrap: wrap;
         align-items: center;
         gap: 8px;
-        margin-top: 2px;
+        /* Push the chip row to the bottom so chips stay aligned across cards
+           regardless of how long each note runs. */
+        margin-top: auto;
+        padding-top: 12px;
     }
 
     .lunara-pair-card-chip {
@@ -6254,10 +6255,16 @@ function lunara_output_pair_it_with_cards_css() {
     }
 
     .lunara-pair-card-chip--imdb {
-        border: none;
-        background: #f5c518;
-        color: #0a1520;
+        border: 1px solid rgba(201, 169, 97, 0.4);
+        background: rgba(201, 169, 97, 0.12);
+        color: var(--lunara-gold-light, #e0c481);
         font-weight: 700;
+    }
+
+    .lunara-pair-card-chip--imdb:hover,
+    .lunara-pair-card-chip--imdb:focus-visible {
+        background: rgba(201, 169, 97, 0.2);
+        border-color: rgba(201, 169, 97, 0.6);
     }
 
     .lunara-pair-card-chip--imdb::after {
@@ -6300,7 +6307,7 @@ function lunara_output_pair_it_with_cards_css() {
         flex-wrap: wrap;
         align-items: center;
         gap: 8px;
-        margin-top: auto;
+        margin-top: 10px;
         padding-top: 12px;
         border-top: 1px dashed rgba(201, 169, 97, 0.18);
     }
@@ -6322,13 +6329,18 @@ function lunara_output_pair_it_with_cards_css() {
         .lunara-pair-card {
             display: grid;
             grid-template-columns: 116px minmax(0, 1fr);
-            align-items: stretch;
+            align-items: start;
         }
 
         .lunara-pair-card-poster {
-            aspect-ratio: auto;
-            height: 100%;
-            min-height: 174px;
+            aspect-ratio: 2 / 3;
+            height: auto;
+            align-self: start;
+        }
+
+        /* On phones the note follows the poster column, so no bottom-pin. */
+        .lunara-pair-card-chips {
+            margin-top: 8px;
         }
 
         .lunara-pair-card-body {
