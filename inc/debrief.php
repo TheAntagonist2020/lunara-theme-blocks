@@ -1087,49 +1087,71 @@ if ( ! function_exists( 'lunara_render_pair_it_with_admin_preview' ) ) {
     }
 }
 
-if ( ! function_exists( 'lunara_pair_aperture_mark_symbol' ) ) {
+if ( ! function_exists( 'lunara_pair_aperture_mark_svg_raw' ) ) {
     /**
-     * Inline SVG <symbol> for the Lunara crescent-moon aperture mark.
+     * Standalone SVG for the Lunara crescent-moon aperture mark.
      *
-     * Referenced by the no-poster "title plate" via <use href="#lunara-aperture-mark">.
-     * This is a placeholder interpretation of Dalton's mark; the entire symbol is
-     * filterable so the refined production SVG can be dropped in without touching
-     * the renderer or its CSS.
+     * Returned as a complete, self-contained <svg> document (no <use>/<symbol>)
+     * so it can be embedded as a CSS background-image data URI. That keeps the
+     * mark entirely out of the page body, where an HTML sanitizer was stripping
+     * <use>/<symbol> elements. This is a placeholder interpretation of Dalton's
+     * mark; the whole SVG is filterable so the finished production art can be
+     * dropped in without touching the renderer or its CSS.
      *
-     * @return string
+     * @return string Complete <svg>…</svg> markup.
      */
-    function lunara_pair_aperture_mark_symbol() {
-        $svg = '<svg class="lunara-pair-mark-defs" width="0" height="0" aria-hidden="true" focusable="false">'
-            . '<symbol id="lunara-aperture-mark" viewBox="0 0 120 120">'
+    function lunara_pair_aperture_mark_svg_raw() {
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">'
             . '<defs>'
-            . '<linearGradient id="lunara-aperture-grad" x1="0" y1="0" x2="1" y2="1">'
-            . '<stop offset="0" stop-color="#f0dca6"></stop>'
-            . '<stop offset="0.45" stop-color="#cdac68"></stop>'
-            . '<stop offset="1" stop-color="#997a43"></stop>'
+            . '<linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
+            . '<stop offset="0" stop-color="#f0dca6"/>'
+            . '<stop offset="0.45" stop-color="#cdac68"/>'
+            . '<stop offset="1" stop-color="#997a43"/>'
             . '</linearGradient>'
-            . '<mask id="lunara-aperture-mask">'
-            . '<rect width="120" height="120" fill="#000"></rect>'
-            . '<circle cx="55" cy="63" r="45" fill="#fff"></circle>'
-            . '<circle cx="78" cy="47" r="39" fill="#000"></circle>'
+            . '<mask id="m">'
+            . '<rect width="120" height="120" fill="#000"/>'
+            . '<circle cx="55" cy="63" r="45" fill="#fff"/>'
+            . '<circle cx="78" cy="47" r="39" fill="#000"/>'
             . '</mask>'
             . '</defs>'
-            . '<circle cx="55" cy="63" r="45" fill="url(#lunara-aperture-grad)" mask="url(#lunara-aperture-mask)"></circle>'
-            . '<g fill="url(#lunara-aperture-grad)">'
-            . '<path id="lunara-aperture-blade" d="M66 56 L98 47 L91 67 Z"></path>'
-            . '<use href="#lunara-aperture-blade" transform="rotate(126 66 56)"></use>'
-            . '<use href="#lunara-aperture-blade" transform="rotate(252 66 56)"></use>'
+            . '<circle cx="55" cy="63" r="45" fill="url(#g)" mask="url(#m)"/>'
+            . '<g fill="url(#g)">'
+            . '<path d="M66 56 L98 47 L91 67 Z"/>'
+            . '<path d="M66 56 L98 47 L91 67 Z" transform="rotate(126 66 56)"/>'
+            . '<path d="M66 56 L98 47 L91 67 Z" transform="rotate(252 66 56)"/>'
             . '</g>'
-            . '</symbol></svg>';
+            . '</svg>';
 
         /**
-         * Filter the inline crescent-moon aperture mark.
+         * Filter the crescent-moon aperture mark SVG.
          *
-         * Return a complete <svg>…<symbol id="lunara-aperture-mark">…</symbol></svg>
-         * string to replace the placeholder with the finished production mark.
+         * Return a complete, self-contained <svg xmlns="…">…</svg> string to
+         * replace the placeholder with the finished production mark.
          *
-         * @param string $svg Default placeholder symbol markup.
+         * @param string $svg Default placeholder SVG markup.
          */
         return (string) apply_filters( 'lunara_pair_aperture_mark_svg', $svg );
+    }
+}
+
+if ( ! function_exists( 'lunara_pair_aperture_mark_css_url' ) ) {
+    /**
+     * The aperture mark as a CSS url() value (an SVG data URI).
+     *
+     * Lives in the stylesheet, not the page body, so no HTML sanitizer can touch
+     * it. Used as the background-image for `.lunara-pair-card-mark`.
+     *
+     * @return string e.g. url("data:image/svg+xml,...")
+     */
+    function lunara_pair_aperture_mark_css_url() {
+        $svg = trim( (string) lunara_pair_aperture_mark_svg_raw() );
+        if ( '' === $svg ) {
+            return 'none';
+        }
+
+        // rawurlencode is the safe, lossless encoding for a data URI: it escapes
+        // '#', '<', '>', quotes and spaces so the value survives inside url("…").
+        return 'url("data:image/svg+xml,' . rawurlencode( $svg ) . '")';
     }
 }
 
@@ -1198,8 +1220,7 @@ if ( ! function_exists( 'lunara_render_pair_it_with_cards' ) ) {
             ),
         );
 
-        $cards     = array();
-        $need_mark = false;
+        $cards = array();
 
         foreach ( $rows as $row ) {
             $value = trim( (string) $row['value'] );
@@ -1223,11 +1244,13 @@ if ( ! function_exists( 'lunara_render_pair_it_with_cards' ) ) {
             if ( '' !== $poster_html ) {
                 $media = '<div class="lunara-pair-card-poster">' . $poster_html . '</div>';
             } else {
-                $need_mark   = true;
                 $plate_title = '' !== trim( (string) $title_base ) ? $title_base : (string) $data['title'];
+                // The crescent-moon mark is painted via CSS background-image (see
+                // lunara_pair_aperture_mark_css_url), so the body stays free of the
+                // <use>/<symbol> SVG that the page sanitizer strips.
                 $media       = '<div class="lunara-pair-card-poster lunara-pair-card-poster--plate">'
                     . '<div class="lunara-pair-card-plate">'
-                    . '<svg class="lunara-pair-card-mark" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#lunara-aperture-mark"></use></svg>'
+                    . '<span class="lunara-pair-card-mark" aria-hidden="true"></span>'
                     . '<span class="lunara-pair-card-plate-title">' . esc_html( $plate_title ) . '</span>'
                     . '<span class="lunara-pair-card-plate-rule"></span>'
                     . '</div></div>';
@@ -1286,22 +1309,13 @@ if ( ! function_exists( 'lunara_render_pair_it_with_cards' ) ) {
             return '';
         }
 
-        // Emit the aperture mark symbol once per request, only if a plate needs it.
-        static $mark_emitted = false;
-        $symbol = '';
-        if ( $need_mark && ! $mark_emitted ) {
-            $symbol       = lunara_pair_aperture_mark_symbol();
-            $mark_emitted = true;
-        }
-
         $subtitle = (string) apply_filters(
             'lunara_pair_cards_subtitle',
             __( 'Three films in conversation with this one.', 'lunara-film' ),
             $post_id
         );
 
-        $html  = $symbol;
-        $html .= '<section class="lunara-pair-cards" aria-label="' . esc_attr__( 'Pair It With', 'lunara-film' ) . '">';
+        $html  = '<section class="lunara-pair-cards" aria-label="' . esc_attr__( 'Pair It With', 'lunara-film' ) . '">';
         $html .= '<div class="lunara-pair-cards-head">';
         $html .= '<h3 class="lunara-pair-cards-title">' . esc_html__( 'Pair It With', 'lunara-film' ) . '</h3>';
         if ( '' !== trim( $subtitle ) ) {

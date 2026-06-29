@@ -6138,10 +6138,15 @@ function lunara_output_pair_it_with_cards_css() {
     }
 
     .lunara-pair-card-mark {
+        display: block;
         width: 44px;
         height: 44px;
         margin: 0 0 18px;
         opacity: 0.95;
+        background-image: <?php echo function_exists( 'lunara_pair_aperture_mark_css_url' ) ? lunara_pair_aperture_mark_css_url() : 'none'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
     }
 
     .lunara-pair-card-plate-title {
