@@ -6395,6 +6395,91 @@ function lunara_output_pair_it_with_cards_css() {
 add_action( 'wp_head', 'lunara_output_pair_it_with_cards_css', 1006 );
 
 /**
+ * Homepage review cards — click-optimized: hook line, a CTA footer (score +
+ * "Read the review"), hover lift, and a where-to-watch slot. The card's job is
+ * the click, so the old bottom dead space becomes the call-to-action.
+ */
+function lunara_output_home_review_card_cta_css() {
+    if ( is_admin() || is_feed() || ! ( is_front_page() || is_home() ) ) {
+        return;
+    }
+    ?>
+    <style id="lunara-home-review-card-cta-css">
+    body.home .lunara-latest-reviews-section .lunara-review-grid-copy {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 9px !important;
+    }
+    /* Hook line: a tight, teasing pull-quote (clean 2-line clamp via lh). */
+    body.home .lunara-latest-reviews-section .lunara-review-grid-excerpt {
+        display: block !important;
+        overflow: hidden !important;
+        min-height: 0 !important;
+        max-height: 2lh !important;
+        font-style: italic !important;
+        color: rgba(223, 228, 234, 0.92) !important;
+    }
+    /* CTA footer — pinned to the bottom, fills the old dead space with a job. */
+    body.home .lunara-latest-reviews-section .lunara-review-grid-cta {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        margin-top: auto !important;
+        padding-top: 14px !important;
+        border-top: 1px solid rgba(201, 169, 97, 0.16) !important;
+    }
+    body.home .lunara-latest-reviews-section .lunara-review-grid-cta-score {
+        min-height: 1em;
+        color: var(--lunara-gold, #c9a961) !important;
+        font-size: 0.95rem !important;
+        letter-spacing: 1px !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+    body.home .lunara-latest-reviews-section .lunara-review-grid-cta-read {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        color: var(--lunara-gold-light, #e0c481) !important;
+        font-family: var(--lunara-label-font, "Arial Narrow", sans-serif) !important;
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.14em !important;
+        text-transform: uppercase !important;
+        white-space: nowrap !important;
+    }
+    body.home .lunara-latest-reviews-section .lunara-review-grid-cta-arrow {
+        transition: transform 0.18s ease !important;
+    }
+    /* Where-to-watch slot (JustWatch) — sits just above the CTA when wired. */
+    body.home .lunara-latest-reviews-section .lunara-review-grid-watch {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+    /* Tactile: lift on hover, slide the arrow, brighten the CTA. */
+    body.home .lunara-latest-reviews-section .lunara-review-grid-card {
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
+    }
+    body.home .lunara-latest-reviews-section .lunara-review-grid-card:hover {
+        transform: translateY(-6px) !important;
+        border-color: rgba(201, 169, 97, 0.42) !important;
+        box-shadow: 0 34px 70px rgba(0, 0, 0, 0.42) !important;
+    }
+    body.home .lunara-latest-reviews-section .lunara-review-grid-card:hover .lunara-review-grid-cta-read {
+        color: #fff !important;
+    }
+    body.home .lunara-latest-reviews-section .lunara-review-grid-card:hover .lunara-review-grid-cta-arrow {
+        transform: translateX(5px) !important;
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_output_home_review_card_cta_css', 1007 );
+
+/**
  * Full spoiler Review warning and archive labels.
  */
 function lunara_output_full_spoiler_review_css() {
