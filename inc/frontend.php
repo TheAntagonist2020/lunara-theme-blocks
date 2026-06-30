@@ -2366,6 +2366,35 @@ if ( ! function_exists( 'lunara_output_review_seo_meta' ) ) {
             $schema['itemReviewed']['dateCreated'] = $year;
         }
 
+        // Enrich the reviewed film so Google can identify it confidently
+        // (image + director + IMDb link) -- the richer the itemReviewed, the
+        // more eligible the page is for the star-rating review snippet.
+        if ( '' !== $image_url ) {
+            $schema['itemReviewed']['image'] = $image_url;
+        }
+
+        $review_director = trim( (string) get_post_meta( $post_id, '_lunara_director', true ) );
+        if ( '' !== $review_director ) {
+            $director_nodes = array();
+            foreach ( preg_split( '/\s*[\/,]\s*/', $review_director, -1, PREG_SPLIT_NO_EMPTY ) as $dname ) {
+                $director_nodes[] = array(
+                    '@type' => 'Person',
+                    'name'  => trim( $dname ),
+                );
+            }
+            if ( ! empty( $director_nodes ) ) {
+                $schema['itemReviewed']['director'] = ( 1 === count( $director_nodes ) ) ? $director_nodes[0] : $director_nodes;
+            }
+        }
+
+        $review_imdb_id = trim( (string) get_post_meta( $post_id, '_lunara_imdb_title_id', true ) );
+        if ( '' === $review_imdb_id ) {
+            $review_imdb_id = trim( (string) get_post_meta( $post_id, '_lunara_imdb_id', true ) );
+        }
+        if ( '' !== $review_imdb_id && preg_match( '/^tt\d+$/', $review_imdb_id ) ) {
+            $schema['itemReviewed']['sameAs'] = 'https://www.imdb.com/title/' . $review_imdb_id . '/';
+        }
+
         if ( '' !== $image_url ) {
             $schema['image'] = $image_url;
         }
@@ -2380,6 +2409,38 @@ if ( ! function_exists( 'lunara_output_review_seo_meta' ) ) {
         }
 
         echo '<script type="application/ld+json">' . wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
+
+        // Breadcrumb trail (Home > Reviews > Title): gives the search result a
+        // clean breadcrumb line and reinforces the site structure for crawlers.
+        $reviews_url = get_post_type_archive_link( 'review' );
+        if ( ! $reviews_url ) {
+            $reviews_url = home_url( '/reviews/' );
+        }
+        $breadcrumb = array(
+            '@context'        => 'https://schema.org',
+            '@type'           => 'BreadcrumbList',
+            'itemListElement' => array(
+                array(
+                    '@type'    => 'ListItem',
+                    'position' => 1,
+                    'name'     => __( 'Home', 'lunara-film' ),
+                    'item'     => home_url( '/' ),
+                ),
+                array(
+                    '@type'    => 'ListItem',
+                    'position' => 2,
+                    'name'     => __( 'Reviews', 'lunara-film' ),
+                    'item'     => $reviews_url,
+                ),
+                array(
+                    '@type'    => 'ListItem',
+                    'position' => 3,
+                    'name'     => $title,
+                    'item'     => $url,
+                ),
+            ),
+        );
+        echo '<script type="application/ld+json">' . wp_json_encode( $breadcrumb, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
     }
 }
 add_action( 'wp_head', 'lunara_output_review_seo_meta', 7 );
