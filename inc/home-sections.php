@@ -1815,8 +1815,10 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
                     $rid                = get_the_ID();
                     $is_current_release = in_array( $rid, $current_release_ids, true );
                     $score              = get_post_meta( $rid, '_lunara_score', true );
+                    // Always give a card a blurb: hand-set pull-quote first, otherwise
+                    // fall back to the review's excerpt / opening lines so no card is empty.
                     $quote              = function_exists( 'lunara_get_review_card_pull_quote' )
-                        ? lunara_get_review_card_pull_quote( $rid, 22 )
+                        ? lunara_get_review_card_pull_quote( $rid, 22, true )
                         : wp_trim_words( wp_strip_all_tags( get_the_excerpt( $rid ) ), 22, '...' );
                     $thumb_attrs        = array(
                         'class'    => 'lunara-review-grid-poster',
