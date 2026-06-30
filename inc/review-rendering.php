@@ -2647,7 +2647,9 @@ function lunara_render_review_grid_card( $post_id, $card_index = null ) {
     $has_position = null !== $card_index;
     $card_index   = max( 1, intval( $card_index ) );
     $score        = get_post_meta( $post_id, '_lunara_score', true );
-    $quote        = lunara_get_review_card_pull_quote( $post_id, 26 );
+    // Always give a card a blurb: hand-set pull-quote first, otherwise fall back
+    // to the review's excerpt / opening lines so no card is ever left empty.
+    $quote        = lunara_get_review_card_pull_quote( $post_id, 26, true );
     $updated      = lunara_get_review_card_modified_label( $post_id );
     $is_spoiler   = function_exists( 'lunara_is_full_spoiler_review' ) && lunara_is_full_spoiler_review( $post_id );
     $review_tt    = function_exists( 'lunara_get_review_imdb_title_id' ) ? lunara_get_review_imdb_title_id( $post_id ) : '';
