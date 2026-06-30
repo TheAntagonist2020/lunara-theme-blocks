@@ -6725,6 +6725,87 @@ function lunara_output_home_review_rail_css() {
 add_action( 'wp_head', 'lunara_output_home_review_rail_css', 1008 );
 
 /**
+ * On-brand newsletter signup (posts to Mailchimp).
+ *
+ * Renders a premium Lunara-styled email capture that submits directly to the
+ * site owner's Mailchimp audience via its embedded-form action URL -- no API
+ * key, no plugin. Stays completely hidden until the campaign is enabled AND a
+ * Mailchimp form URL is set in the Customizer, so it is safe to ship inert.
+ *
+ * @return string Form markup, or '' when not configured.
+ */
+if ( ! function_exists( 'lunara_render_newsletter_signup' ) ) {
+    function lunara_render_newsletter_signup() {
+        if ( ! (bool) get_theme_mod( 'lunara_newsletter_enabled', false ) ) {
+            return '';
+        }
+
+        $action = trim( (string) get_theme_mod( 'lunara_mailchimp_action_url', '' ) );
+        if ( '' === $action || ! wp_http_validate_url( $action ) ) {
+            return '';
+        }
+
+        $heading = trim( (string) get_theme_mod( 'lunara_newsletter_heading', '' ) );
+        if ( '' === $heading ) {
+            $heading = __( 'Get Lunara in your inbox', 'lunara-film' );
+        }
+        $blurb = trim( (string) get_theme_mod( 'lunara_newsletter_blurb', '' ) );
+        if ( '' === $blurb ) {
+            $blurb = __( 'New reviews and Journal dispatches, straight from the Lunara desk. No spam — unsubscribe anytime.', 'lunara-film' );
+        }
+
+        // Mailchimp bot-trap field name is b_<u>_<id>, derived from the form
+        // action URL's query string. Must be present and left empty by humans.
+        $honeypot = '';
+        $query    = (string) wp_parse_url( $action, PHP_URL_QUERY );
+        if ( '' !== $query ) {
+            parse_str( $query, $params );
+            $u  = isset( $params['u'] ) ? preg_replace( '/[^a-z0-9]/i', '', (string) $params['u'] ) : '';
+            $id = isset( $params['id'] ) ? preg_replace( '/[^a-z0-9]/i', '', (string) $params['id'] ) : '';
+            if ( '' !== $u && '' !== $id ) {
+                $honeypot = 'b_' . $u . '_' . $id;
+            }
+        }
+
+        ob_start();
+        ?>
+        <section class="lunara-newsletter" aria-label="<?php esc_attr_e( 'Newsletter signup', 'lunara-film' ); ?>">
+            <style>
+            .lunara-newsletter{width:min(100%,1080px);margin:clamp(40px,6vw,86px) auto;padding:clamp(28px,4vw,52px);box-sizing:border-box;border:1px solid rgba(201,169,97,.28);border-radius:20px;background:radial-gradient(circle at 88% 0%,rgba(201,169,97,.12),transparent 42%),linear-gradient(180deg,rgba(15,29,46,.92),rgba(8,16,27,.96));box-shadow:0 30px 70px rgba(0,0,0,.34);}
+            .lunara-newsletter-inner{display:grid;gap:clamp(14px,2vw,20px);max-width:640px;margin-inline:auto;text-align:center;}
+            .lunara-newsletter-kicker{margin:0;color:var(--lunara-gold-light,#e0c481);font-size:.74rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;}
+            .lunara-newsletter-heading{margin:0;color:var(--lunara-gold,#c9a961);font-size:clamp(1.5rem,3vw,2.1rem);line-height:1.12;}
+            .lunara-newsletter-blurb{margin:0 auto;max-width:52ch;color:rgba(223,228,234,.86);font-size:clamp(.95rem,1vw,1.05rem);line-height:1.6;}
+            .lunara-newsletter-form{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:4px;}
+            .lunara-newsletter-input{flex:1 1 280px;max-width:360px;min-height:50px;padding:12px 18px;box-sizing:border-box;border:1px solid rgba(201,169,97,.34);border-radius:999px;background:rgba(5,11,18,.6);color:var(--lunara-text,#fafbfc);font-size:1rem;}
+            .lunara-newsletter-input::placeholder{color:rgba(223,228,234,.5);}
+            .lunara-newsletter-input:focus{outline:none;border-color:rgba(224,196,129,.8);box-shadow:0 0 0 3px rgba(201,169,97,.18);}
+            .lunara-newsletter-submit{min-height:50px;padding:12px 30px;border:none;border-radius:999px;background:linear-gradient(135deg,#e0c481,#c9a961);color:#0a1525;font-family:var(--lunara-label-font,"Arial Narrow",sans-serif);font-size:.86rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease;}
+            .lunara-newsletter-submit:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(201,169,97,.32);}
+            .lunara-newsletter-fineprint{margin:0;color:rgba(223,228,234,.5);font-size:.76rem;}
+            @media(max-width:540px){.lunara-newsletter-form{flex-direction:column;align-items:stretch;}.lunara-newsletter-input{max-width:none;}}
+            </style>
+            <div class="lunara-newsletter-inner">
+                <p class="lunara-newsletter-kicker"><?php esc_html_e( 'The Lunara Dispatch', 'lunara-film' ); ?></p>
+                <h2 class="lunara-newsletter-heading"><?php echo esc_html( $heading ); ?></h2>
+                <p class="lunara-newsletter-blurb"><?php echo esc_html( $blurb ); ?></p>
+                <form class="lunara-newsletter-form" action="<?php echo esc_url( $action ); ?>" method="post" target="_blank" rel="noopener">
+                    <label class="screen-reader-text" for="lunara-mce-EMAIL"><?php esc_html_e( 'Email address', 'lunara-film' ); ?></label>
+                    <input type="email" name="EMAIL" id="lunara-mce-EMAIL" class="lunara-newsletter-input" placeholder="<?php esc_attr_e( 'you@email.com', 'lunara-film' ); ?>" required>
+                    <?php if ( '' !== $honeypot ) : ?>
+                        <div aria-hidden="true" style="position:absolute;left:-5000px;"><input type="text" name="<?php echo esc_attr( $honeypot ); ?>" tabindex="-1" value="" autocomplete="off"></div>
+                    <?php endif; ?>
+                    <button type="submit" class="lunara-newsletter-submit"><?php esc_html_e( 'Subscribe', 'lunara-film' ); ?></button>
+                </form>
+                <p class="lunara-newsletter-fineprint"><?php esc_html_e( 'No spam. Unsubscribe anytime.', 'lunara-film' ); ?></p>
+            </div>
+        </section>
+        <?php
+        return (string) ob_get_clean();
+    }
+}
+
+/**
  * Full spoiler Review warning and archive labels.
  */
 function lunara_output_full_spoiler_review_css() {

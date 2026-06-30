@@ -1453,6 +1453,95 @@ function lunara_customize_register( $wp_customize ) {
         )
     );
 
+    /* ----------------------------------------------------------------------
+     * Newsletter (Mailchimp) signup.
+     *
+     * A premium, on-brand email capture rendered at the end of review pages
+     * that posts straight to a Mailchimp audience via its embedded-form URL.
+     * Hidden until enabled AND a form URL is set, so it ships inert.
+     * -------------------------------------------------------------------- */
+    $wp_customize->add_section(
+        'lunara_newsletter_options',
+        array(
+            'title'       => __( 'Newsletter', 'lunara-film' ),
+            'panel'       => 'lunara_editorial_panel',
+            'priority'    => 22,
+            'description' => __( 'An on-brand email signup that posts to your Mailchimp audience. Paste your Mailchimp form URL below and turn it on — it stays hidden until both are set.', 'lunara-film' ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        'lunara_newsletter_enabled',
+        array(
+            'default'           => false,
+            'sanitize_callback' => 'wp_validate_boolean',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_newsletter_enabled',
+        array(
+            'label'       => __( 'Enable newsletter signup', 'lunara-film' ),
+            'section'     => 'lunara_newsletter_options',
+            'type'        => 'checkbox',
+            'description' => __( 'Show the signup at the end of review pages. Also requires the Mailchimp form URL below.', 'lunara-film' ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        'lunara_mailchimp_action_url',
+        array(
+            'default'           => '',
+            'sanitize_callback' => 'esc_url_raw',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_mailchimp_action_url',
+        array(
+            'label'       => __( 'Mailchimp form URL', 'lunara-film' ),
+            'section'     => 'lunara_newsletter_options',
+            'type'        => 'url',
+            'description' => __( 'In Mailchimp: Audience → Signup forms → Embedded form. Copy the form\'s action URL (it looks like https://YOURNAME.usXX.list-manage.com/subscribe/post?u=…&id=…) and paste it here.', 'lunara-film' ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        'lunara_newsletter_heading',
+        array(
+            'default'           => '',
+            'sanitize_callback' => 'sanitize_text_field',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_newsletter_heading',
+        array(
+            'label'       => __( 'Heading', 'lunara-film' ),
+            'section'     => 'lunara_newsletter_options',
+            'type'        => 'text',
+            'description' => __( 'Default: “Get Lunara in your inbox”.', 'lunara-film' ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        'lunara_newsletter_blurb',
+        array(
+            'default'           => '',
+            'sanitize_callback' => 'sanitize_text_field',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_newsletter_blurb',
+        array(
+            'label'       => __( 'Sub-text', 'lunara-film' ),
+            'section'     => 'lunara_newsletter_options',
+            'type'        => 'textarea',
+            'description' => __( 'One line under the heading.', 'lunara-film' ),
+        )
+    );
+
     $wp_customize->add_section(
         'lunara_editorial_archive_sections_options',
         array(
