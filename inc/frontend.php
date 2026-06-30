@@ -6480,6 +6480,83 @@ function lunara_output_home_review_card_cta_css() {
 add_action( 'wp_head', 'lunara_output_home_review_card_cta_css', 1007 );
 
 /**
+ * Homepage Latest Reviews dynamic rail (desktop / tablet carousel).
+ *
+ * Converts the Latest Reviews grid into a single horizontal scroll-snap rail
+ * at >=821px — just above the mobile rail's 820px ceiling, so the tuned mobile
+ * stack is left completely untouched. Reuses the existing poster-carousel arrow
+ * styling and the shared [data-lunara-carousel] JS driver (which adds
+ * .is-carousel-static when there aren't enough cards to scroll).
+ */
+function lunara_output_home_review_rail_css() {
+    if ( is_admin() || is_feed() || ! ( is_front_page() || is_home() ) ) {
+        return;
+    }
+    ?>
+    <style id="lunara-home-review-rail-css">
+    /* Header: arrows + the "All Reviews" link share one row. */
+    body.home .lunara-latest-reviews-section .lunara-home-section-head-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    /* Arrows are hidden by default; the mobile stack has no carousel. */
+    body.home .lunara-latest-reviews-section .lunara-poster-carousel-controls {
+        display: none;
+    }
+    @media (min-width: 821px) {
+        /* One horizontal, snap-scrolling rail of uniform poster cards.
+           !important because the homepage "studio signature" layer styles
+           this grid entirely with !important — the rail must override it. */
+        body.home .lunara-latest-reviews-section .lunara-review-rail-track {
+            display: grid !important;
+            grid-template-columns: none !important;
+            grid-auto-flow: column !important;
+            grid-auto-columns: clamp(244px, 21vw, 284px) !important;
+            gap: 22px !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            scroll-padding-left: 2px;
+            scrollbar-width: none;
+            /* room so the hover lift + shadow aren't sharply clipped */
+            padding: 10px 2px 34px;
+        }
+        body.home .lunara-latest-reviews-section .lunara-review-rail-track::-webkit-scrollbar {
+            display: none;
+        }
+        body.home .lunara-latest-reviews-section .lunara-review-rail-track > .lunara-review-grid-card {
+            scroll-snap-align: start;
+            min-width: 0;
+            /* let cards size to content (uniform via the single grid row),
+               overriding the studio layer's fixed card min-height. */
+            min-height: 0 !important;
+            height: auto !important;
+        }
+        body.home .lunara-latest-reviews-section .lunara-poster-carousel-controls {
+            display: inline-flex;
+            gap: 8px;
+        }
+        /* Not enough cards to scroll: drop the arrows, stop snapping. */
+        body.home .lunara-latest-reviews-section.is-carousel-static .lunara-poster-carousel-controls {
+            display: none;
+        }
+        body.home .lunara-latest-reviews-section.is-carousel-static .lunara-review-rail-track {
+            scroll-snap-type: none;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        body.home .lunara-latest-reviews-section .lunara-review-rail-track {
+            scroll-behavior: auto;
+        }
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_output_home_review_rail_css', 1008 );
+
+/**
  * Full spoiler Review warning and archive labels.
  */
 function lunara_output_full_spoiler_review_css() {

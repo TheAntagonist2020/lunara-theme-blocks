@@ -10367,6 +10367,17 @@ function lunara_output_carousel_controls_js() {
                 });
             }
 
+            // Overflow-aware controls: when the rail isn't wider than its
+            // viewport (e.g. only a handful of cards), hide the arrows rather
+            // than bounce on empty scroll. Re-check on resize and after load.
+            function syncOverflow() {
+                var overflowing = (track.scrollWidth - track.clientWidth) > 8;
+                section.classList.toggle('is-carousel-static', !overflowing);
+            }
+            syncOverflow();
+            window.addEventListener('resize', syncOverflow);
+            window.addEventListener('load', syncOverflow);
+
             const autoplay = parseInt(section.getAttribute('data-lunara-carousel-autoplay') || '0', 10);
             if (!reduceMotion && autoplay > 0) {
                 let timer = null;

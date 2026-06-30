@@ -1826,15 +1826,21 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
 
         ob_start();
         ?>
-        <section class="lunara-home-section lunara-home-slot-latest-reviews lunara-latest-reviews-section" data-review-source="<?php echo esc_attr( $source ); ?>" aria-label="<?php esc_attr_e( 'Latest Reviews', 'lunara-film' ); ?>">
+        <section class="lunara-home-section lunara-home-slot-latest-reviews lunara-latest-reviews-section" data-review-source="<?php echo esc_attr( $source ); ?>" data-lunara-carousel aria-label="<?php esc_attr_e( 'Latest Reviews', 'lunara-film' ); ?>">
             <div class="lunara-home-section-head">
                 <div>
                     <p class="lunara-home-section-kicker"><?php echo esc_html( $kicker ); ?></p>
                     <h2 class="lunara-home-section-title"><?php echo esc_html( $heading ); ?></h2>
                 </div>
-                <a class="lunara-section-link" href="<?php echo esc_url( $cta_url ); ?>"><?php echo esc_html( $cta_label ); ?></a>
+                <div class="lunara-home-section-head-actions">
+                    <div class="lunara-poster-carousel-controls" data-lunara-carousel-controls>
+                        <button type="button" class="lunara-poster-carousel-btn lunara-poster-carousel-prev" data-lunara-carousel-prev aria-label="<?php esc_attr_e( 'Previous reviews', 'lunara-film' ); ?>">&#8592;</button>
+                        <button type="button" class="lunara-poster-carousel-btn lunara-poster-carousel-next" data-lunara-carousel-next aria-label="<?php esc_attr_e( 'Next reviews', 'lunara-film' ); ?>">&#8594;</button>
+                    </div>
+                    <a class="lunara-section-link" href="<?php echo esc_url( $cta_url ); ?>"><?php echo esc_html( $cta_label ); ?></a>
+                </div>
             </div>
-            <div class="lunara-review-grid lunara-review-archive-uniform">
+            <div class="lunara-review-grid lunara-review-archive-uniform lunara-review-rail-track" data-lunara-carousel-track role="list" tabindex="0">
                 <?php
                 while ( $latest->have_posts() ) :
                     $latest->the_post();
