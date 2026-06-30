@@ -1391,6 +1391,68 @@ function lunara_customize_register( $wp_customize ) {
         );
     }
 
+    /* ----------------------------------------------------------------------
+     * Curation v1 — Spotlight Campaign.
+     *
+     * A global, optional override that promotes one published post to the lead
+     * slide of the cinematic hero and exposes a short label for a future visual
+     * strip. Off by default; when off the homepage is unchanged.
+     * -------------------------------------------------------------------- */
+    $wp_customize->add_setting(
+        'lunara_spotlight_enabled',
+        array(
+            'default'           => false,
+            'sanitize_callback' => 'wp_validate_boolean',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_spotlight_enabled',
+        array(
+            'label'       => __( 'Enable Spotlight Campaign', 'lunara-film' ),
+            'section'     => 'lunara_homepage_editorial_options',
+            'type'        => 'checkbox',
+            'description' => __( 'When on, the post below leads the cinematic hero and the front page gains the has-lunara-spotlight body class. Leave off for the normal newest/featured hero.', 'lunara-film' ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        'lunara_spotlight_post_id',
+        array(
+            'default'           => 0,
+            'sanitize_callback' => 'absint',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_spotlight_post_id',
+        array(
+            'label'       => __( 'Spotlight Post ID', 'lunara-film' ),
+            'section'     => 'lunara_homepage_editorial_options',
+            'type'        => 'number',
+            'input_attrs' => array( 'min' => 0, 'step' => 1 ),
+            'description' => __( 'Numeric ID of the published post (review, journal entry, or post) to lead the hero. Must be published to take effect.', 'lunara-film' ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        'lunara_spotlight_label',
+        array(
+            'default'           => '',
+            'sanitize_callback' => 'sanitize_text_field',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_spotlight_label',
+        array(
+            'label'       => __( 'Spotlight Label', 'lunara-film' ),
+            'section'     => 'lunara_homepage_editorial_options',
+            'type'        => 'text',
+            'description' => __( 'Short label for the campaign (e.g. "Festival Coverage", "Editor\'s Pick"). Read by the hero kicker and exposed for a future spotlight strip.', 'lunara-film' ),
+        )
+    );
+
     $wp_customize->add_section(
         'lunara_editorial_archive_sections_options',
         array(
