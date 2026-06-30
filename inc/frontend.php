@@ -2176,6 +2176,13 @@ if ( ! function_exists( 'lunara_should_use_brand_social_image_fallback' ) ) {
             return false;
         }
 
+        // Journal entries supply their own hero (dispatch image) — don't let the
+        // brand icon override it as the social image.
+        if ( is_singular( 'journal' ) && function_exists( 'lunara_get_journal_social_image_url' )
+            && '' !== lunara_get_journal_social_image_url( get_queried_object_id() ) ) {
+            return false;
+        }
+
         if ( is_singular() ) {
             $post_id = get_queried_object_id();
             if ( $post_id > 0 && has_post_thumbnail( $post_id ) ) {
@@ -2283,6 +2290,106 @@ if ( ! function_exists( 'lunara_filter_review_jetpack_open_graph_tags' ) ) {
     }
 }
 add_filter( 'jetpack_open_graph_tags', 'lunara_filter_review_jetpack_open_graph_tags', 20 );
+
+/**
+ * Journal social cards: give shared journal links the entry's own hero image
+ * and an opening-line hook, instead of falling back to the brand icon. Journal
+ * heroes live in _lunara_dispatch_image_url (a meta URL, not a featured image),
+ * so without this Jetpack has nothing post-specific to work with.
+ */
+if ( ! function_exists( 'lunara_get_journal_seo_summary' ) ) {
+    function lunara_get_journal_seo_summary( $post_id ) {
+        $post_id = intval( $post_id );
+        if ( $post_id <= 0 ) {
+            return '';
+        }
+
+        $summary = has_excerpt( $post_id )
+            ? get_the_excerpt( $post_id )
+            : get_post_field( 'post_content', $post_id );
+
+        $summary = strip_shortcodes( (string) $summary );
+        $summary = html_entity_decode( $summary, ENT_QUOTES, get_bloginfo( 'charset' ) ?: 'UTF-8' );
+        $summary = wp_strip_all_tags( $summary );
+        $summary = preg_replace( '/\s+/', ' ', $summary );
+        $summary = trim( (string) $summary );
+
+        return '' === $summary ? '' : wp_html_excerpt( $summary, 190, '...' );
+    }
+}
+
+if ( ! function_exists( 'lunara_get_journal_social_image_url' ) ) {
+    function lunara_get_journal_social_image_url( $post_id ) {
+        $post_id = intval( $post_id );
+        if ( $post_id <= 0 ) {
+            return '';
+        }
+
+        $url = trim( (string) get_post_meta( $post_id, '_lunara_dispatch_image_url', true ) );
+
+        if ( '' === $url && has_post_thumbnail( $post_id ) ) {
+            $thumb_id = get_post_thumbnail_id( $post_id );
+            $url      = $thumb_id ? (string) wp_get_attachment_image_url( $thumb_id, 'large' ) : (string) get_the_post_thumbnail_url( $post_id, 'large' );
+        }
+
+        if ( '' === $url ) {
+            return '';
+        }
+
+        // Uniform, light 16:9 card via Site Accelerator (no-op for already-sized URLs).
+        if ( function_exists( 'lunara_rightsize_backdrop_url' ) ) {
+            $url = lunara_rightsize_backdrop_url( $url );
+        }
+
+        return esc_url_raw( $url );
+    }
+}
+
+if ( ! function_exists( 'lunara_filter_journal_jetpack_open_graph_tags' ) ) {
+    function lunara_filter_journal_jetpack_open_graph_tags( $tags ) {
+        if ( ! is_singular( 'journal' ) || ! is_array( $tags ) ) {
+            return $tags;
+        }
+
+        $post_id     = get_queried_object_id();
+        $title       = trim( wp_strip_all_tags( get_the_title( $post_id ) ) );
+        $description = lunara_get_journal_seo_summary( $post_id );
+        $image_url   = lunara_get_journal_social_image_url( $post_id );
+
+        if ( '' !== $title ) {
+            $tags['og:title'] = $title;
+        }
+
+        if ( '' !== $description ) {
+            $tags['og:description'] = $description;
+        }
+
+        if ( '' !== $image_url ) {
+            $tags['og:image']     = $image_url;
+            $tags['og:image:alt'] = '' !== $title ? sprintf( __( '%s — Lunara Film Journal', 'lunara-film' ), $title ) : __( 'Lunara Film Journal', 'lunara-film' );
+            unset( $tags['og:image:width'], $tags['og:image:height'] );
+        }
+
+        return $tags;
+    }
+}
+add_filter( 'jetpack_open_graph_tags', 'lunara_filter_journal_jetpack_open_graph_tags', 20 );
+
+if ( ! function_exists( 'lunara_filter_journal_jetpack_seo_meta_tags' ) ) {
+    function lunara_filter_journal_jetpack_seo_meta_tags( $meta ) {
+        if ( ! is_singular( 'journal' ) || ! is_array( $meta ) ) {
+            return $meta;
+        }
+
+        $summary = lunara_get_journal_seo_summary( get_queried_object_id() );
+        if ( '' !== $summary ) {
+            $meta['description'] = $summary;
+        }
+
+        return $meta;
+    }
+}
+add_filter( 'jetpack_seo_meta_tags', 'lunara_filter_journal_jetpack_seo_meta_tags', 20 );
 
 if ( ! function_exists( 'lunara_output_review_seo_meta' ) ) {
     function lunara_output_review_seo_meta() {
