@@ -87,6 +87,11 @@ if ( ! function_exists( 'lunara_order_featured_first' ) ) {
         $featured_rows = array_values( array_map( 'intval', is_array( $featured_rows ) ? $featured_rows : array() ) );
 
         if ( ! empty( $featured_rows ) ) {
+            // The base query uses fields=ids, so WP_Query skips meta priming;
+            // prime _lunara_home_feature_order for the whole pinned set in a
+            // single query so the get_post_meta() reads below aren't an N+1.
+            update_meta_cache( 'post', $featured_rows );
+
             // Stable sort: feature order ASC, then preserve the date-DESC input order on ties.
             $ordered = array();
             foreach ( $featured_rows as $index => $fid ) {
@@ -399,11 +404,10 @@ function lunara_invalidate_review_query_caches( $post_id = 0 ) {
         }
     }
 
-    // Curation v1 — featured-first latest-reviews cache (multiple counts in use
-    // across the latest-reviews lane and the cinematic hero pool).
-    foreach ( array( 6, 8, 9, 12, 14, 15 ) as $count ) {
-        delete_transient( sprintf( 'lunara_latest_reviews_featured_%d_v1', $count ) );
-    }
+    // Curation v1 — featured-first latest-reviews pool. A single cached pool
+    // (sliced per call) shared by the latest-reviews lane and the cinematic
+    // hero, so no per-count key can ever be missed on invalidation.
+    delete_transient( 'lunara_latest_reviews_featured_pool_v1' );
 }
 add_action( 'save_post_review', 'lunara_invalidate_review_query_caches', 50 );
 add_action( 'deleted_post', 'lunara_invalidate_review_query_caches' );
@@ -482,18 +486,24 @@ function lunara_latest_reviews_query( $count = 9 ) {
     $count = max( 1, (int) $count );
 
     if ( function_exists( 'lunara_order_featured_first' ) ) {
-        $cache_key = sprintf( 'lunara_latest_reviews_featured_%d_v1', $count );
-        $post_ids  = get_transient( $cache_key );
+        // Cache one featured-first pool (a single key, not one per count) so a
+        // count outside the invalidation list can never serve stale data.
+        // Slicing the pool to N is equivalent to querying N directly for N <= pool.
+        $pool_size = 50;
+        $cache_key = 'lunara_latest_reviews_featured_pool_v1';
+        $pool      = get_transient( $cache_key );
 
-        if ( ! is_array( $post_ids ) ) {
-            $post_ids = lunara_order_featured_first(
+        if ( ! is_array( $pool ) ) {
+            $pool = lunara_order_featured_first(
                 array(
                     'post_type' => 'review',
-                    'count'     => $count,
+                    'count'     => $pool_size,
                 )
             );
-            set_transient( $cache_key, $post_ids, 15 * MINUTE_IN_SECONDS );
+            set_transient( $cache_key, $pool, 15 * MINUTE_IN_SECONDS );
         }
+
+        $post_ids = array_slice( $pool, 0, $count );
     } else {
         $post_ids = lunara_cached_review_ids( 'latest_reviews', $count, array() );
     }
@@ -625,6 +635,16 @@ if ( ! function_exists( 'lunara_get_spotlight_post_id' ) ) {
 
         $post = get_post( $post_id );
         if ( ! ( $post instanceof WP_Post ) || 'publish' !== $post->post_status ) {
+            return 0;
+        }
+
+        // Only allow real, public content types as a spotlight — never an
+        // attachment, revision, or internal type that would break the hero.
+        $allowed_types = apply_filters(
+            'lunara_spotlight_allowed_post_types',
+            array( 'review', 'journal', 'post', 'page' )
+        );
+        if ( ! in_array( $post->post_type, (array) $allowed_types, true ) ) {
             return 0;
         }
 

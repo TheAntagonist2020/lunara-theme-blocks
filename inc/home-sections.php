@@ -1840,7 +1840,7 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
                     <a class="lunara-section-link" href="<?php echo esc_url( $cta_url ); ?>"><?php echo esc_html( $cta_label ); ?></a>
                 </div>
             </div>
-            <div class="lunara-review-grid lunara-review-archive-uniform lunara-review-rail-track" data-lunara-carousel-track role="list" tabindex="0">
+            <div class="lunara-review-grid lunara-review-archive-uniform lunara-review-rail-track" data-lunara-carousel-track role="list" tabindex="0" aria-label="<?php esc_attr_e( 'Latest reviews carousel', 'lunara-film' ); ?>">
                 <?php
                 while ( $latest->have_posts() ) :
                     $latest->the_post();
@@ -1908,7 +1908,7 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
                                 $card_watch = function_exists( 'lunara_card_where_to_watch' ) ? lunara_card_where_to_watch( $rid ) : '';
                                 ?>
                                 <?php if ( '' !== trim( (string) $card_watch ) ) : ?>
-                                    <div class="lunara-review-grid-watch"><?php echo $card_watch; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+                                    <div class="lunara-review-grid-watch"><?php echo wp_kses_post( $card_watch ); ?></div>
                                 <?php endif; ?>
                                 <div class="lunara-review-grid-cta">
                                     <span class="lunara-review-grid-cta-score">
