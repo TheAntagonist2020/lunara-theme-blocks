@@ -3303,6 +3303,26 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
         foreach ( $posts as $post_item ) {
             $latest_ts = max( $latest_ts, (int) get_post_modified_time( 'U', true, $post_item ) );
         }
+        $current_sort    = isset( $args['current_sort'] ) ? sanitize_key( (string) $args['current_sort'] ) : lunara_get_review_archive_sort();
+
+        // Reviews Page Lead pin: on page one of the default newest-release
+        // view, a pinned review takes the lead slot (see
+        // lunara_review_pin_meta_callback). Explicit sorts and deeper pages
+        // keep their true order, and the director archive is untouched.
+        $current_page = max( 1, intval( get_query_var( 'paged' ) ), intval( get_query_var( 'page' ) ) );
+        if ( 'release_desc' === $current_sort && 1 === $current_page && ! $is_director_archive && function_exists( 'lunara_get_pinned_review_id' ) ) {
+            $pinned_review_id = lunara_get_pinned_review_id();
+            if ( $pinned_review_id > 0 ) {
+                $posts = array_values( array_filter( $posts, static function ( $post_item ) use ( $pinned_review_id ) {
+                    return (int) $post_item->ID !== $pinned_review_id;
+                } ) );
+                $pinned_review = get_post( $pinned_review_id );
+                if ( $pinned_review instanceof WP_Post && 'publish' === $pinned_review->post_status && 'review' === $pinned_review->post_type ) {
+                    array_unshift( $posts, $pinned_review );
+                }
+            }
+        }
+
         $lead_post       = ! empty( $posts ) ? array_shift( $posts ) : null;
         $support_posts   = array_slice( $posts, 0, 4 );
         $remaining_posts = array_slice( $posts, 4 );
@@ -3311,7 +3331,6 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
         $archive_mode    = $has_posts
             ? ( ! empty( $remaining_posts ) ? __( 'Lead / Support / Archive Run', 'lunara-film' ) : __( 'Lead / Support', 'lunara-film' ) )
             : __( 'Standby', 'lunara-film' );
-        $current_sort    = isset( $args['current_sort'] ) ? sanitize_key( (string) $args['current_sort'] ) : lunara_get_review_archive_sort();
         $sort_options    = isset( $args['sort_options'] ) && is_array( $args['sort_options'] ) ? $args['sort_options'] : lunara_get_review_archive_sort_options();
         $section_order = function_exists( 'lunara_get_reviews_archive_section_order_map' )
             ? lunara_get_reviews_archive_section_order_map()

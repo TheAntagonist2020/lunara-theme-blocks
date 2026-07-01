@@ -4088,6 +4088,79 @@ if ( ! defined( 'LUNARA_CORE_VERSION' ) ) {
     add_action( 'save_post_review', 'lunara_save_review_details_meta' );
 
     /**
+     * Reviews Page Lead pin.
+     *
+     * A checkbox on the review editor pins that review to the top of the
+     * Reviews page (the lead feature slot), e.g. for a title that just hit
+     * VOD. The pin time is stored in `_lunara_review_pinned`, so when more
+     * than one review is pinned the most recently pinned one leads. The pin
+     * only affects page one of the default "Newest Release" view; explicit
+     * sorts and deeper pages keep their true order.
+     */
+    function lunara_add_review_pin_meta_box() {
+        add_meta_box(
+            'lunara_review_pin_meta',
+            'Reviews Page Lead',
+            'lunara_review_pin_meta_callback',
+            'review',
+            'side',
+            'high'
+        );
+    }
+    add_action( 'add_meta_boxes', 'lunara_add_review_pin_meta_box' );
+
+    function lunara_review_pin_meta_callback( $post ) {
+        wp_nonce_field( 'lunara_review_pin_nonce', 'lunara_review_pin_nonce' );
+        $pinned = (bool) get_post_meta( $post->ID, '_lunara_review_pinned', true );
+        ?>
+        <p>
+            <label>
+                <input type="checkbox" name="lunara_review_pinned" value="1" <?php checked( $pinned ); ?> />
+                <strong><?php esc_html_e( 'Pin to top of Reviews page', 'lunara-film' ); ?></strong>
+            </label>
+        </p>
+        <p class="description"><?php esc_html_e( 'This review becomes the big lead card on the Reviews page. If several reviews are pinned, the most recently pinned one leads. Uncheck and update to release the slot back to the newest release.', 'lunara-film' ); ?></p>
+        <?php
+    }
+
+    function lunara_save_review_pin_meta( $post_id ) {
+        if ( ! isset( $_POST['lunara_review_pin_nonce'] ) ) return;
+        if ( ! wp_verify_nonce( $_POST['lunara_review_pin_nonce'], 'lunara_review_pin_nonce' ) ) return;
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+        if ( ! current_user_can( 'edit_post', $post_id ) ) return;
+
+        $was_pinned = (bool) get_post_meta( $post_id, '_lunara_review_pinned', true );
+
+        if ( ! empty( $_POST['lunara_review_pinned'] ) ) {
+            // Keep the original pin time on a plain re-save so an older pin
+            // isn't accidentally promoted over a newer one.
+            if ( ! $was_pinned ) {
+                update_post_meta( $post_id, '_lunara_review_pinned', time() );
+            }
+        } elseif ( $was_pinned ) {
+            delete_post_meta( $post_id, '_lunara_review_pinned' );
+        }
+    }
+    add_action( 'save_post_review', 'lunara_save_review_pin_meta' );
+
+    function lunara_get_pinned_review_id() {
+        $ids = get_posts(
+            array(
+                'post_type'      => 'review',
+                'post_status'    => 'publish',
+                'posts_per_page' => 1,
+                'fields'         => 'ids',
+                'meta_key'       => '_lunara_review_pinned',
+                'orderby'        => 'meta_value_num',
+                'order'          => 'DESC',
+                'no_found_rows'  => true,
+            )
+        );
+
+        return ! empty( $ids ) ? (int) $ids[0] : 0;
+    }
+
+    /**
      * Keep archive taxonomies synchronized with review meta.
      */
     function lunara_sync_review_archive_terms( $post_id ) {
