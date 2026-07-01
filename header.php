@@ -5251,6 +5251,106 @@
         }
     }
 
+    /* === Reviews archive refit layer ===
+       Kills the misshapen negative space on the Reviews page. Emitted at the
+       end of this critical block so it is the final word in the cascade. */
+
+    /* 1. Companion suite: the section header was a side panel stretched to the
+          full height of the rail (a ~1100px mostly-empty box). Make it a slim
+          band on top and give the rail the full width below, three cards up. */
+    body .lunara-review-archive-page .lunara-review-archive-support-suite {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 14px !important;
+    }
+
+    body .lunara-review-archive-page .lunara-review-archive-support-head {
+        align-content: start !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-bottom: 1px solid rgba(224, 196, 129, .16) !important;
+        border-radius: 0 !important;
+        gap: 4px !important;
+        margin-top: 0 !important;
+        min-height: 0 !important;
+        padding: 0 0 12px !important;
+    }
+
+    body .lunara-review-archive-page .lunara-review-archive-support-head .lunara-section-title {
+        max-width: 34ch !important;
+    }
+
+    body .lunara-review-archive-page .lunara-review-archive-rail-item {
+        flex-basis: calc((100% - 2 * var(--lunara-reviews-archive-rail-gap, 16px)) / 3) !important;
+    }
+
+    @media (max-width: 980px) {
+        body .lunara-review-archive-page .lunara-review-archive-rail-item {
+            flex-basis: calc((100% - var(--lunara-reviews-archive-rail-gap, 16px)) / 2) !important;
+        }
+    }
+
+    @media (max-width: 640px) {
+        body .lunara-review-archive-page .lunara-review-archive-rail-item {
+            flex-basis: 86% !important;
+        }
+    }
+
+    /* 2. Uniform cards: pin the updated line to the bottom and clamp excerpts
+          so short copy no longer leaves interior voids. */
+    body .lunara-review-archive-page .lunara-review-grid-link {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+    }
+
+    body .lunara-review-archive-page .lunara-review-grid-copy {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
+    }
+
+    body .lunara-review-archive-page .lunara-review-grid-copy .lunara-review-grid-updated {
+        margin-top: auto !important;
+        padding-top: 12px !important;
+    }
+
+    body .lunara-review-archive-page .lunara-review-grid-excerpt {
+        display: -webkit-box !important;
+        -webkit-box-orient: vertical !important;
+        -webkit-line-clamp: 5 !important;
+        overflow: hidden !important;
+    }
+
+    /* 3. Hero: center the copy against the command panel instead of letting it
+          float above a void. */
+    body .lunara-review-archive-page .lunara-review-archive-hero-shell {
+        align-items: center !important;
+    }
+
+    body .lunara-review-archive-page .lunara-review-archive-hero-copy-wrap {
+        align-content: center !important;
+    }
+
+    /* 4. Sort toolbar: one slim row instead of a heavy boxed section. */
+    body .lunara-review-archive-page .lunara-review-archive-toolbar {
+        align-items: center !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 14px !important;
+        justify-content: space-between !important;
+    }
+
+    body .lunara-review-archive-page .lunara-review-archive-toolbar-head .lunara-section-title {
+        font-size: clamp(1.05rem, 1.5vw, 1.3rem) !important;
+        max-width: none !important;
+        text-transform: none !important;
+    }
+
+    body .lunara-review-archive-page .lunara-review-archive-utility {
+        padding-bottom: clamp(14px, 1.8vw, 20px) !important;
+        padding-top: clamp(14px, 1.8vw, 20px) !important;
+    }
     </style>
     <script id="lunara-card-image-hydrator">
         (function () {
