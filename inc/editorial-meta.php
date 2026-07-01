@@ -160,6 +160,8 @@ if ( ! function_exists( 'lunara_add_post_editorial_meta_box' ) ) {
         $home_hero_priority     = get_post_meta( $post->ID, '_lunara_review_home_hero_priority', true );
         $featured_shelf_enabled = get_post_meta( $post->ID, '_lunara_review_home_featured_shelf', true );
         $featured_shelf_priority = get_post_meta( $post->ID, '_lunara_review_home_featured_priority', true );
+        $home_featured           = get_post_meta( $post->ID, '_lunara_home_featured', true );
+        $home_feature_order      = get_post_meta( $post->ID, '_lunara_home_feature_order', true );
         ?>
         <p>
             <label for="lunara_review_lane_label_override"><strong>Lane Label Override</strong></label><br>
@@ -255,6 +257,22 @@ if ( ! function_exists( 'lunara_add_post_editorial_meta_box' ) ) {
             <input type="number" min="1" max="99" name="lunara_review_home_featured_priority" id="lunara_review_home_featured_priority" value="<?php echo esc_attr( '' !== $featured_shelf_priority ? $featured_shelf_priority : '10' ); ?>" style="width:100%;">
             <small>Lower numbers appear first. This gives you a predictable shelf order without editing IDs by hand.</small>
         </p>
+        <hr>
+        <p>
+            <strong>Feature on Homepage</strong><br>
+            <small>Pin this review ahead of the newest items across the homepage feeds (hero, latest reviews). Leave unchecked for pure newest-first.</small>
+        </p>
+        <p>
+            <label>
+                <input type="checkbox" name="lunara_home_featured" value="1" <?php checked( $home_featured, '1' ); ?>>
+                <strong>Feature on homepage</strong>
+            </label>
+        </p>
+        <p>
+            <label for="lunara_home_feature_order"><strong>Feature priority</strong></label><br>
+            <input type="number" name="lunara_home_feature_order" id="lunara_home_feature_order" value="<?php echo esc_attr( '' !== $home_feature_order ? $home_feature_order : '0' ); ?>" style="width:100%;">
+            <small>Lower numbers appear first among featured items. Ties fall back to the newest publish date. Default 0.</small>
+        </p>
         <?php
     }
 
@@ -318,6 +336,12 @@ if ( ! function_exists( 'lunara_add_post_editorial_meta_box' ) ) {
             $featured_priority = 10;
         }
         update_post_meta( $post_id, '_lunara_review_home_featured_priority', (string) min( 99, $featured_priority ) );
+
+        // Curation v1 — unified homepage feature pin (shared across review + journal feeds).
+        update_post_meta( $post_id, '_lunara_home_featured', isset( $_POST['lunara_home_featured'] ) ? '1' : '0' );
+
+        $home_feature_order = isset( $_POST['lunara_home_feature_order'] ) ? intval( wp_unslash( $_POST['lunara_home_feature_order'] ) ) : 0;
+        update_post_meta( $post_id, '_lunara_home_feature_order', (string) $home_feature_order );
     }
     add_action( 'save_post_review', 'lunara_save_review_editorial_meta' );
 

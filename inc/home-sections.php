@@ -11,6 +11,33 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+if ( ! function_exists( 'lunara_card_where_to_watch' ) ) {
+    /**
+     * "Where to watch" markup for a review/journal card — JustWatch slot.
+     *
+     * Returns '' by default so the card never shows a half-built streaming row.
+     * When JustWatch's API lands, hook the lunara_card_where_to_watch_html filter
+     * to return provider chips for the post's IMDb title ID; the card already
+     * reserves the slot and carries the data it needs.
+     *
+     * @param int $post_id Review/journal post ID.
+     * @return string
+     */
+    function lunara_card_where_to_watch( $post_id ) {
+        $post_id = (int) $post_id;
+        $tt      = function_exists( 'lunara_get_review_imdb_title_id' ) ? (string) lunara_get_review_imdb_title_id( $post_id ) : '';
+
+        /**
+         * Filter the card "Where to watch" markup (JustWatch stub).
+         *
+         * @param string $html    Default markup (empty).
+         * @param int    $post_id Card post ID.
+         * @param string $tt      IMDb title ID (lowercased) or ''.
+         */
+        return (string) apply_filters( 'lunara_card_where_to_watch_html', '', $post_id, $tt );
+    }
+}
+
 /**
  * Clear short-lived front-page query caches whenever review content changes.
  */
@@ -1799,15 +1826,21 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
 
         ob_start();
         ?>
-        <section class="lunara-home-section lunara-home-slot-latest-reviews lunara-latest-reviews-section" data-review-source="<?php echo esc_attr( $source ); ?>" aria-label="<?php esc_attr_e( 'Latest Reviews', 'lunara-film' ); ?>">
+        <section class="lunara-home-section lunara-home-slot-latest-reviews lunara-latest-reviews-section" data-review-source="<?php echo esc_attr( $source ); ?>" data-lunara-carousel aria-label="<?php esc_attr_e( 'Latest Reviews', 'lunara-film' ); ?>">
             <div class="lunara-home-section-head">
                 <div>
                     <p class="lunara-home-section-kicker"><?php echo esc_html( $kicker ); ?></p>
                     <h2 class="lunara-home-section-title"><?php echo esc_html( $heading ); ?></h2>
                 </div>
-                <a class="lunara-section-link" href="<?php echo esc_url( $cta_url ); ?>"><?php echo esc_html( $cta_label ); ?></a>
+                <div class="lunara-home-section-head-actions">
+                    <div class="lunara-poster-carousel-controls" data-lunara-carousel-controls>
+                        <button type="button" class="lunara-poster-carousel-btn lunara-poster-carousel-prev" data-lunara-carousel-prev aria-label="<?php esc_attr_e( 'Previous reviews', 'lunara-film' ); ?>">&#8592;</button>
+                        <button type="button" class="lunara-poster-carousel-btn lunara-poster-carousel-next" data-lunara-carousel-next aria-label="<?php esc_attr_e( 'Next reviews', 'lunara-film' ); ?>">&#8594;</button>
+                    </div>
+                    <a class="lunara-section-link" href="<?php echo esc_url( $cta_url ); ?>"><?php echo esc_html( $cta_label ); ?></a>
+                </div>
             </div>
-            <div class="lunara-review-grid lunara-review-archive-uniform">
+            <div class="lunara-review-grid lunara-review-archive-uniform lunara-review-rail-track" data-lunara-carousel-track role="list" tabindex="0" aria-label="<?php esc_attr_e( 'Latest reviews carousel', 'lunara-film' ); ?>">
                 <?php
                 while ( $latest->have_posts() ) :
                     $latest->the_post();
@@ -1815,8 +1848,10 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
                     $rid                = get_the_ID();
                     $is_current_release = in_array( $rid, $current_release_ids, true );
                     $score              = get_post_meta( $rid, '_lunara_score', true );
+                    // Always give a card a blurb: hand-set pull-quote first, otherwise
+                    // fall back to the review's excerpt / opening lines so no card is empty.
                     $quote              = function_exists( 'lunara_get_review_card_pull_quote' )
-                        ? lunara_get_review_card_pull_quote( $rid, 22 )
+                        ? lunara_get_review_card_pull_quote( $rid, 22, true )
                         : wp_trim_words( wp_strip_all_tags( get_the_excerpt( $rid ) ), 22, '...' );
                     $thumb_attrs        = array(
                         'class'    => 'lunara-review-grid-poster',
@@ -1867,6 +1902,22 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
                                 <?php if ( $is_current_release ) : ?>
                                     <p class="lunara-review-grid-updated"><?php esc_html_e( 'Current Release Spotlight', 'lunara-film' ); ?></p>
                                 <?php endif; ?>
+                                <?php
+                                // Where-to-watch slot (JustWatch). Stub: returns '' until wired,
+                                // so it stays invisible; lights up across every card when ready.
+                                $card_watch = function_exists( 'lunara_card_where_to_watch' ) ? lunara_card_where_to_watch( $rid ) : '';
+                                ?>
+                                <?php if ( '' !== trim( (string) $card_watch ) ) : ?>
+                                    <div class="lunara-review-grid-watch"><?php echo wp_kses_post( $card_watch ); ?></div>
+                                <?php endif; ?>
+                                <div class="lunara-review-grid-cta">
+                                    <span class="lunara-review-grid-cta-score">
+                                        <?php if ( $score && function_exists( 'lunara_render_stars' ) ) : ?>
+                                            <?php echo wp_kses_post( lunara_render_stars( $score ) ); ?>
+                                        <?php endif; ?>
+                                    </span>
+                                    <span class="lunara-review-grid-cta-read"><?php esc_html_e( 'Read the review', 'lunara-film' ); ?> <span class="lunara-review-grid-cta-arrow" aria-hidden="true">&rarr;</span></span>
+                                </div>
                             </div>
                         </a>
                     </article>

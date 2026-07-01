@@ -1391,6 +1391,157 @@ function lunara_customize_register( $wp_customize ) {
         );
     }
 
+    /* ----------------------------------------------------------------------
+     * Curation v1 — Spotlight Campaign.
+     *
+     * A global, optional override that promotes one published post to the lead
+     * slide of the cinematic hero and exposes a short label for a future visual
+     * strip. Off by default; when off the homepage is unchanged.
+     * -------------------------------------------------------------------- */
+    $wp_customize->add_setting(
+        'lunara_spotlight_enabled',
+        array(
+            'default'           => false,
+            'sanitize_callback' => 'wp_validate_boolean',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_spotlight_enabled',
+        array(
+            'label'       => __( 'Enable Spotlight Campaign', 'lunara-film' ),
+            'section'     => 'lunara_homepage_editorial_options',
+            'type'        => 'checkbox',
+            'description' => __( 'When on, the post below leads the cinematic hero and the front page gains the has-lunara-spotlight body class. Leave off for the normal newest/featured hero.', 'lunara-film' ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        'lunara_spotlight_post_id',
+        array(
+            'default'           => 0,
+            'sanitize_callback' => 'absint',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_spotlight_post_id',
+        array(
+            'label'       => __( 'Spotlight Post ID', 'lunara-film' ),
+            'section'     => 'lunara_homepage_editorial_options',
+            'type'        => 'number',
+            'input_attrs' => array( 'min' => 0, 'step' => 1 ),
+            'description' => __( 'Numeric ID of the published post (review, journal entry, or post) to lead the hero. Must be published to take effect.', 'lunara-film' ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        'lunara_spotlight_label',
+        array(
+            'default'           => '',
+            'sanitize_callback' => 'sanitize_text_field',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_spotlight_label',
+        array(
+            'label'       => __( 'Spotlight Label', 'lunara-film' ),
+            'section'     => 'lunara_homepage_editorial_options',
+            'type'        => 'text',
+            'description' => __( 'Short label for the campaign (e.g. "Festival Coverage", "Editor\'s Pick"). Read by the hero kicker and exposed for a future spotlight strip.', 'lunara-film' ),
+        )
+    );
+
+    /* ----------------------------------------------------------------------
+     * Newsletter (Mailchimp) signup.
+     *
+     * A premium, on-brand email capture rendered at the end of review pages
+     * that posts straight to a Mailchimp audience via its embedded-form URL.
+     * Hidden until enabled AND a form URL is set, so it ships inert.
+     * -------------------------------------------------------------------- */
+    $wp_customize->add_section(
+        'lunara_newsletter_options',
+        array(
+            'title'       => __( 'Newsletter', 'lunara-film' ),
+            'panel'       => 'lunara_editorial_panel',
+            'priority'    => 22,
+            'description' => __( 'An on-brand email signup that posts to your Mailchimp audience. Paste your Mailchimp form URL below and turn it on — it stays hidden until both are set.', 'lunara-film' ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        'lunara_newsletter_enabled',
+        array(
+            'default'           => false,
+            'sanitize_callback' => 'wp_validate_boolean',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_newsletter_enabled',
+        array(
+            'label'       => __( 'Enable newsletter signup', 'lunara-film' ),
+            'section'     => 'lunara_newsletter_options',
+            'type'        => 'checkbox',
+            'description' => __( 'Show the signup at the end of review pages. Also requires the Mailchimp form URL below.', 'lunara-film' ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        'lunara_mailchimp_action_url',
+        array(
+            'default'           => '',
+            'sanitize_callback' => 'esc_url_raw',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_mailchimp_action_url',
+        array(
+            'label'       => __( 'Mailchimp form URL', 'lunara-film' ),
+            'section'     => 'lunara_newsletter_options',
+            'type'        => 'url',
+            'description' => __( 'In Mailchimp: Audience → Signup forms → Embedded form. Copy the form\'s action URL (it looks like https://YOURNAME.usXX.list-manage.com/subscribe/post?u=…&id=…) and paste it here.', 'lunara-film' ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        'lunara_newsletter_heading',
+        array(
+            'default'           => '',
+            'sanitize_callback' => 'sanitize_text_field',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_newsletter_heading',
+        array(
+            'label'       => __( 'Heading', 'lunara-film' ),
+            'section'     => 'lunara_newsletter_options',
+            'type'        => 'text',
+            'description' => __( 'Default: “Get Lunara in your inbox”.', 'lunara-film' ),
+        )
+    );
+
+    $wp_customize->add_setting(
+        'lunara_newsletter_blurb',
+        array(
+            'default'           => '',
+            'sanitize_callback' => 'sanitize_text_field',
+            'transport'         => 'refresh',
+        )
+    );
+    $wp_customize->add_control(
+        'lunara_newsletter_blurb',
+        array(
+            'label'       => __( 'Sub-text', 'lunara-film' ),
+            'section'     => 'lunara_newsletter_options',
+            'type'        => 'textarea',
+            'description' => __( 'One line under the heading.', 'lunara-film' ),
+        )
+    );
+
     $wp_customize->add_section(
         'lunara_editorial_archive_sections_options',
         array(

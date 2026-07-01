@@ -192,9 +192,11 @@ add_action( 'add_meta_boxes', 'lunara_journal_add_meta_box' );
 function lunara_journal_meta_box_render( $post ) {
 	wp_nonce_field( 'lunara_journal_meta_save', 'lunara_journal_meta_nonce' );
 
-	$kicker      = get_post_meta( $post->ID, '_lunara_journal_kicker',      true );
-	$signal_note = get_post_meta( $post->ID, '_lunara_journal_signal_note', true );
-	$is_featured = get_post_meta( $post->ID, '_lunara_journal_featured',    true );
+	$kicker             = get_post_meta( $post->ID, '_lunara_journal_kicker',      true );
+	$signal_note        = get_post_meta( $post->ID, '_lunara_journal_signal_note', true );
+	$is_featured        = get_post_meta( $post->ID, '_lunara_journal_featured',    true );
+	$home_featured      = get_post_meta( $post->ID, '_lunara_home_featured',       true );
+	$home_feature_order = get_post_meta( $post->ID, '_lunara_home_feature_order',  true );
 	?>
 	<style>
 		.lunara-meta-field { margin: 0 0 14px; }
@@ -237,6 +239,30 @@ function lunara_journal_meta_box_render( $post ) {
 			/>
 			<?php esc_html_e( 'Feature this entry (lead position on homepage)', 'lunara-film' ); ?>
 		</label>
+	</div>
+
+	<div class="lunara-meta-field">
+		<label>
+			<input
+				type="checkbox"
+				name="lunara_home_featured"
+				value="1"
+				<?php checked( $home_featured, '1' ); ?>
+			/>
+			<?php esc_html_e( 'Feature on homepage', 'lunara-film' ); ?>
+		</label>
+		<p class="description"><?php esc_html_e( 'Pins this entry ahead of the newest items across the homepage feeds. Leave unchecked for pure newest-first.', 'lunara-film' ); ?></p>
+	</div>
+
+	<div class="lunara-meta-field">
+		<label for="lunara_home_feature_order"><?php esc_html_e( 'Feature priority', 'lunara-film' ); ?></label>
+		<input
+			type="number"
+			id="lunara_home_feature_order"
+			name="lunara_home_feature_order"
+			value="<?php echo esc_attr( '' !== $home_feature_order ? $home_feature_order : '0' ); ?>"
+		/>
+		<p class="description"><?php esc_html_e( 'Lower numbers appear first among featured items. Ties fall back to newest. Default 0.', 'lunara-film' ); ?></p>
 	</div>
 	<?php
 }
@@ -283,6 +309,16 @@ function lunara_journal_meta_box_save( $post_id ) {
 		'_lunara_journal_featured',
 		isset( $_POST['lunara_journal_featured'] ) ? '1' : '0'
 	);
+
+	// Curation v1 — unified homepage feature pin (shared across review + journal feeds).
+	update_post_meta(
+		$post_id,
+		'_lunara_home_featured',
+		isset( $_POST['lunara_home_featured'] ) ? '1' : '0'
+	);
+
+	$home_feature_order = isset( $_POST['lunara_home_feature_order'] ) ? intval( wp_unslash( $_POST['lunara_home_feature_order'] ) ) : 0;
+	update_post_meta( $post_id, '_lunara_home_feature_order', (string) $home_feature_order );
 }
 add_action( 'save_post_journal', 'lunara_journal_meta_box_save' );
 

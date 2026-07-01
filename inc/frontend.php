@@ -2176,6 +2176,13 @@ if ( ! function_exists( 'lunara_should_use_brand_social_image_fallback' ) ) {
             return false;
         }
 
+        // Journal entries supply their own hero (dispatch image) — don't let the
+        // brand icon override it as the social image.
+        if ( is_singular( 'journal' ) && function_exists( 'lunara_get_journal_social_image_url' )
+            && '' !== lunara_get_journal_social_image_url( get_queried_object_id() ) ) {
+            return false;
+        }
+
         if ( is_singular() ) {
             $post_id = get_queried_object_id();
             if ( $post_id > 0 && has_post_thumbnail( $post_id ) ) {
@@ -2284,6 +2291,106 @@ if ( ! function_exists( 'lunara_filter_review_jetpack_open_graph_tags' ) ) {
 }
 add_filter( 'jetpack_open_graph_tags', 'lunara_filter_review_jetpack_open_graph_tags', 20 );
 
+/**
+ * Journal social cards: give shared journal links the entry's own hero image
+ * and an opening-line hook, instead of falling back to the brand icon. Journal
+ * heroes live in _lunara_dispatch_image_url (a meta URL, not a featured image),
+ * so without this Jetpack has nothing post-specific to work with.
+ */
+if ( ! function_exists( 'lunara_get_journal_seo_summary' ) ) {
+    function lunara_get_journal_seo_summary( $post_id ) {
+        $post_id = intval( $post_id );
+        if ( $post_id <= 0 ) {
+            return '';
+        }
+
+        $summary = has_excerpt( $post_id )
+            ? get_the_excerpt( $post_id )
+            : get_post_field( 'post_content', $post_id );
+
+        $summary = strip_shortcodes( (string) $summary );
+        $summary = html_entity_decode( $summary, ENT_QUOTES, get_bloginfo( 'charset' ) ?: 'UTF-8' );
+        $summary = wp_strip_all_tags( $summary );
+        $summary = preg_replace( '/\s+/', ' ', $summary );
+        $summary = trim( (string) $summary );
+
+        return '' === $summary ? '' : wp_html_excerpt( $summary, 190, '...' );
+    }
+}
+
+if ( ! function_exists( 'lunara_get_journal_social_image_url' ) ) {
+    function lunara_get_journal_social_image_url( $post_id ) {
+        $post_id = intval( $post_id );
+        if ( $post_id <= 0 ) {
+            return '';
+        }
+
+        $url = trim( (string) get_post_meta( $post_id, '_lunara_dispatch_image_url', true ) );
+
+        if ( '' === $url && has_post_thumbnail( $post_id ) ) {
+            $thumb_id = get_post_thumbnail_id( $post_id );
+            $url      = $thumb_id ? (string) wp_get_attachment_image_url( $thumb_id, 'large' ) : (string) get_the_post_thumbnail_url( $post_id, 'large' );
+        }
+
+        if ( '' === $url ) {
+            return '';
+        }
+
+        // Uniform, light 16:9 card via Site Accelerator (no-op for already-sized URLs).
+        if ( function_exists( 'lunara_rightsize_backdrop_url' ) ) {
+            $url = lunara_rightsize_backdrop_url( $url );
+        }
+
+        return esc_url_raw( $url );
+    }
+}
+
+if ( ! function_exists( 'lunara_filter_journal_jetpack_open_graph_tags' ) ) {
+    function lunara_filter_journal_jetpack_open_graph_tags( $tags ) {
+        if ( ! is_singular( 'journal' ) || ! is_array( $tags ) ) {
+            return $tags;
+        }
+
+        $post_id     = get_queried_object_id();
+        $title       = trim( wp_strip_all_tags( get_the_title( $post_id ) ) );
+        $description = lunara_get_journal_seo_summary( $post_id );
+        $image_url   = lunara_get_journal_social_image_url( $post_id );
+
+        if ( '' !== $title ) {
+            $tags['og:title'] = $title;
+        }
+
+        if ( '' !== $description ) {
+            $tags['og:description'] = $description;
+        }
+
+        if ( '' !== $image_url ) {
+            $tags['og:image']     = $image_url;
+            $tags['og:image:alt'] = '' !== $title ? sprintf( __( '%s — Lunara Film Journal', 'lunara-film' ), $title ) : __( 'Lunara Film Journal', 'lunara-film' );
+            unset( $tags['og:image:width'], $tags['og:image:height'] );
+        }
+
+        return $tags;
+    }
+}
+add_filter( 'jetpack_open_graph_tags', 'lunara_filter_journal_jetpack_open_graph_tags', 20 );
+
+if ( ! function_exists( 'lunara_filter_journal_jetpack_seo_meta_tags' ) ) {
+    function lunara_filter_journal_jetpack_seo_meta_tags( $meta ) {
+        if ( ! is_singular( 'journal' ) || ! is_array( $meta ) ) {
+            return $meta;
+        }
+
+        $summary = lunara_get_journal_seo_summary( get_queried_object_id() );
+        if ( '' !== $summary ) {
+            $meta['description'] = $summary;
+        }
+
+        return $meta;
+    }
+}
+add_filter( 'jetpack_seo_meta_tags', 'lunara_filter_journal_jetpack_seo_meta_tags', 20 );
+
 if ( ! function_exists( 'lunara_output_review_seo_meta' ) ) {
     function lunara_output_review_seo_meta() {
         if ( ! is_singular( 'review' ) ) {
@@ -2366,6 +2473,35 @@ if ( ! function_exists( 'lunara_output_review_seo_meta' ) ) {
             $schema['itemReviewed']['dateCreated'] = $year;
         }
 
+        // Enrich the reviewed film so Google can identify it confidently
+        // (image + director + IMDb link) -- the richer the itemReviewed, the
+        // more eligible the page is for the star-rating review snippet.
+        if ( '' !== $image_url ) {
+            $schema['itemReviewed']['image'] = $image_url;
+        }
+
+        $review_director = trim( (string) get_post_meta( $post_id, '_lunara_director', true ) );
+        if ( '' !== $review_director ) {
+            $director_nodes = array();
+            foreach ( preg_split( '/\s*[\/,]\s*/', $review_director, -1, PREG_SPLIT_NO_EMPTY ) as $dname ) {
+                $director_nodes[] = array(
+                    '@type' => 'Person',
+                    'name'  => trim( $dname ),
+                );
+            }
+            if ( ! empty( $director_nodes ) ) {
+                $schema['itemReviewed']['director'] = ( 1 === count( $director_nodes ) ) ? $director_nodes[0] : $director_nodes;
+            }
+        }
+
+        $review_imdb_id = trim( (string) get_post_meta( $post_id, '_lunara_imdb_title_id', true ) );
+        if ( '' === $review_imdb_id ) {
+            $review_imdb_id = trim( (string) get_post_meta( $post_id, '_lunara_imdb_id', true ) );
+        }
+        if ( '' !== $review_imdb_id && preg_match( '/^tt\d+$/', $review_imdb_id ) ) {
+            $schema['itemReviewed']['sameAs'] = 'https://www.imdb.com/title/' . $review_imdb_id . '/';
+        }
+
         if ( '' !== $image_url ) {
             $schema['image'] = $image_url;
         }
@@ -2380,6 +2516,38 @@ if ( ! function_exists( 'lunara_output_review_seo_meta' ) ) {
         }
 
         echo '<script type="application/ld+json">' . wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
+
+        // Breadcrumb trail (Home > Reviews > Title): gives the search result a
+        // clean breadcrumb line and reinforces the site structure for crawlers.
+        $reviews_url = get_post_type_archive_link( 'review' );
+        if ( ! $reviews_url ) {
+            $reviews_url = home_url( '/reviews/' );
+        }
+        $breadcrumb = array(
+            '@context'        => 'https://schema.org',
+            '@type'           => 'BreadcrumbList',
+            'itemListElement' => array(
+                array(
+                    '@type'    => 'ListItem',
+                    'position' => 1,
+                    'name'     => __( 'Home', 'lunara-film' ),
+                    'item'     => home_url( '/' ),
+                ),
+                array(
+                    '@type'    => 'ListItem',
+                    'position' => 2,
+                    'name'     => __( 'Reviews', 'lunara-film' ),
+                    'item'     => $reviews_url,
+                ),
+                array(
+                    '@type'    => 'ListItem',
+                    'position' => 3,
+                    'name'     => $title,
+                    'item'     => $url,
+                ),
+            ),
+        );
+        echo '<script type="application/ld+json">' . wp_json_encode( $breadcrumb, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
     }
 }
 add_action( 'wp_head', 'lunara_output_review_seo_meta', 7 );
@@ -6395,6 +6563,249 @@ function lunara_output_pair_it_with_cards_css() {
 add_action( 'wp_head', 'lunara_output_pair_it_with_cards_css', 1006 );
 
 /**
+ * Homepage review cards — click-optimized: hook line, a CTA footer (score +
+ * "Read the review"), hover lift, and a where-to-watch slot. The card's job is
+ * the click, so the old bottom dead space becomes the call-to-action.
+ */
+function lunara_output_home_review_card_cta_css() {
+    if ( is_admin() || is_feed() || ! ( is_front_page() || is_home() ) ) {
+        return;
+    }
+    ?>
+    <style id="lunara-home-review-card-cta-css">
+    body.home .lunara-latest-reviews-section .lunara-review-grid-copy {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 9px !important;
+    }
+    /* Hook line: a tight, teasing pull-quote (clean 2-line clamp via lh). */
+    body.home .lunara-latest-reviews-section .lunara-review-grid-excerpt {
+        display: block !important;
+        overflow: hidden !important;
+        min-height: 0 !important;
+        max-height: 2lh !important;
+        font-style: italic !important;
+        color: rgba(223, 228, 234, 0.92) !important;
+    }
+    /* CTA footer — pinned to the bottom, fills the old dead space with a job. */
+    body.home .lunara-latest-reviews-section .lunara-review-grid-cta {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        margin-top: auto !important;
+        padding-top: 14px !important;
+        border-top: 1px solid rgba(201, 169, 97, 0.16) !important;
+    }
+    body.home .lunara-latest-reviews-section .lunara-review-grid-cta-score {
+        min-height: 1em;
+        color: var(--lunara-gold, #c9a961) !important;
+        font-size: 0.95rem !important;
+        letter-spacing: 1px !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+    body.home .lunara-latest-reviews-section .lunara-review-grid-cta-read {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        color: var(--lunara-gold-light, #e0c481) !important;
+        font-family: var(--lunara-label-font, "Arial Narrow", sans-serif) !important;
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.14em !important;
+        text-transform: uppercase !important;
+        white-space: nowrap !important;
+    }
+    body.home .lunara-latest-reviews-section .lunara-review-grid-cta-arrow {
+        transition: transform 0.18s ease !important;
+    }
+    /* Where-to-watch slot (JustWatch) — sits just above the CTA when wired. */
+    body.home .lunara-latest-reviews-section .lunara-review-grid-watch {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+    /* Tactile: lift on hover, slide the arrow, brighten the CTA. */
+    body.home .lunara-latest-reviews-section .lunara-review-grid-card {
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
+    }
+    body.home .lunara-latest-reviews-section .lunara-review-grid-card:hover {
+        transform: translateY(-6px) !important;
+        border-color: rgba(201, 169, 97, 0.42) !important;
+        box-shadow: 0 34px 70px rgba(0, 0, 0, 0.42) !important;
+    }
+    body.home .lunara-latest-reviews-section .lunara-review-grid-card:hover .lunara-review-grid-cta-read {
+        color: #fff !important;
+    }
+    body.home .lunara-latest-reviews-section .lunara-review-grid-card:hover .lunara-review-grid-cta-arrow {
+        transform: translateX(5px) !important;
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_output_home_review_card_cta_css', 1007 );
+
+/**
+ * Homepage Latest Reviews dynamic rail (desktop / tablet carousel).
+ *
+ * Converts the Latest Reviews grid into a single horizontal scroll-snap rail
+ * at >=821px — just above the mobile rail's 820px ceiling, so the tuned mobile
+ * stack is left completely untouched. Reuses the existing poster-carousel arrow
+ * styling and the shared [data-lunara-carousel] JS driver (which adds
+ * .is-carousel-static when there aren't enough cards to scroll).
+ */
+function lunara_output_home_review_rail_css() {
+    if ( is_admin() || is_feed() || ! ( is_front_page() || is_home() ) ) {
+        return;
+    }
+    ?>
+    <style id="lunara-home-review-rail-css">
+    /* Header: arrows + the "All Reviews" link share one row. */
+    body.home .lunara-latest-reviews-section .lunara-home-section-head-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    /* Arrows are hidden by default; the mobile stack has no carousel. */
+    body.home .lunara-latest-reviews-section .lunara-poster-carousel-controls {
+        display: none;
+    }
+    @media (min-width: 821px) {
+        /* One horizontal, snap-scrolling rail of uniform poster cards.
+           !important because the homepage "studio signature" layer styles
+           this grid entirely with !important — the rail must override it. */
+        body.home .lunara-latest-reviews-section .lunara-review-rail-track {
+            display: grid !important;
+            grid-template-columns: none !important;
+            grid-auto-flow: column !important;
+            grid-auto-columns: clamp(244px, 21vw, 284px) !important;
+            gap: 22px !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            scroll-padding-left: 2px;
+            scrollbar-width: none;
+            /* room so the hover lift + shadow aren't sharply clipped */
+            padding: 10px 2px 34px;
+        }
+        body.home .lunara-latest-reviews-section .lunara-review-rail-track::-webkit-scrollbar {
+            display: none;
+        }
+        body.home .lunara-latest-reviews-section .lunara-review-rail-track > .lunara-review-grid-card {
+            scroll-snap-align: start;
+            min-width: 0;
+            /* let cards size to content (uniform via the single grid row),
+               overriding the studio layer's fixed card min-height. */
+            min-height: 0 !important;
+            height: auto !important;
+        }
+        body.home .lunara-latest-reviews-section .lunara-poster-carousel-controls {
+            display: inline-flex;
+            gap: 8px;
+        }
+        /* Not enough cards to scroll: drop the arrows, stop snapping. */
+        body.home .lunara-latest-reviews-section.is-carousel-static .lunara-poster-carousel-controls {
+            display: none;
+        }
+        body.home .lunara-latest-reviews-section.is-carousel-static .lunara-review-rail-track {
+            scroll-snap-type: none;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        body.home .lunara-latest-reviews-section .lunara-review-rail-track {
+            scroll-behavior: auto;
+        }
+    }
+    </style>
+    <?php
+}
+add_action( 'wp_head', 'lunara_output_home_review_rail_css', 1008 );
+
+/**
+ * On-brand newsletter signup (posts to Mailchimp).
+ *
+ * Renders a premium Lunara-styled email capture that submits directly to the
+ * site owner's Mailchimp audience via its embedded-form action URL -- no API
+ * key, no plugin. Stays completely hidden until the campaign is enabled AND a
+ * Mailchimp form URL is set in the Customizer, so it is safe to ship inert.
+ *
+ * @return string Form markup, or '' when not configured.
+ */
+if ( ! function_exists( 'lunara_render_newsletter_signup' ) ) {
+    function lunara_render_newsletter_signup() {
+        if ( ! (bool) get_theme_mod( 'lunara_newsletter_enabled', false ) ) {
+            return '';
+        }
+
+        $action = trim( (string) get_theme_mod( 'lunara_mailchimp_action_url', '' ) );
+        if ( '' === $action || ! wp_http_validate_url( $action ) ) {
+            return '';
+        }
+
+        $heading = trim( (string) get_theme_mod( 'lunara_newsletter_heading', '' ) );
+        if ( '' === $heading ) {
+            $heading = __( 'Get Lunara in your inbox', 'lunara-film' );
+        }
+        $blurb = trim( (string) get_theme_mod( 'lunara_newsletter_blurb', '' ) );
+        if ( '' === $blurb ) {
+            $blurb = __( 'New reviews and Journal dispatches, straight from the Lunara desk. No spam — unsubscribe anytime.', 'lunara-film' );
+        }
+
+        // Mailchimp bot-trap field name is b_<u>_<id>, derived from the form
+        // action URL's query string. Must be present and left empty by humans.
+        $honeypot = '';
+        $query    = (string) wp_parse_url( $action, PHP_URL_QUERY );
+        if ( '' !== $query ) {
+            parse_str( $query, $params );
+            $u  = isset( $params['u'] ) ? preg_replace( '/[^a-z0-9]/i', '', (string) $params['u'] ) : '';
+            $id = isset( $params['id'] ) ? preg_replace( '/[^a-z0-9]/i', '', (string) $params['id'] ) : '';
+            if ( '' !== $u && '' !== $id ) {
+                $honeypot = 'b_' . $u . '_' . $id;
+            }
+        }
+
+        ob_start();
+        ?>
+        <section class="lunara-newsletter" aria-label="<?php esc_attr_e( 'Newsletter signup', 'lunara-film' ); ?>">
+            <style>
+            .lunara-newsletter{width:min(100%,1080px);margin:clamp(40px,6vw,86px) auto;padding:clamp(28px,4vw,52px);box-sizing:border-box;border:1px solid rgba(201,169,97,.28);border-radius:20px;background:radial-gradient(circle at 88% 0%,rgba(201,169,97,.12),transparent 42%),linear-gradient(180deg,rgba(15,29,46,.92),rgba(8,16,27,.96));box-shadow:0 30px 70px rgba(0,0,0,.34);}
+            .lunara-newsletter-inner{display:grid;gap:clamp(14px,2vw,20px);max-width:640px;margin-inline:auto;text-align:center;}
+            .lunara-newsletter-kicker{margin:0;color:var(--lunara-gold-light,#e0c481);font-size:.74rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;}
+            .lunara-newsletter-heading{margin:0;color:var(--lunara-gold,#c9a961);font-size:clamp(1.5rem,3vw,2.1rem);line-height:1.12;}
+            .lunara-newsletter-blurb{margin:0 auto;max-width:52ch;color:rgba(223,228,234,.86);font-size:clamp(.95rem,1vw,1.05rem);line-height:1.6;}
+            .lunara-newsletter-form{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:4px;}
+            .lunara-newsletter-input{flex:1 1 280px;max-width:360px;min-height:50px;padding:12px 18px;box-sizing:border-box;border:1px solid rgba(201,169,97,.34);border-radius:999px;background:rgba(5,11,18,.6);color:var(--lunara-text,#fafbfc);font-size:1rem;}
+            .lunara-newsletter-input::placeholder{color:rgba(223,228,234,.5);}
+            .lunara-newsletter-input:focus{outline:none;border-color:rgba(224,196,129,.8);box-shadow:0 0 0 3px rgba(201,169,97,.18);}
+            .lunara-newsletter-submit{min-height:50px;padding:12px 30px;border:none;border-radius:999px;background:linear-gradient(135deg,#e0c481,#c9a961);color:#0a1525;font-family:var(--lunara-label-font,"Arial Narrow",sans-serif);font-size:.86rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease;}
+            .lunara-newsletter-submit:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(201,169,97,.32);}
+            .lunara-newsletter-fineprint{margin:0;color:rgba(223,228,234,.5);font-size:.76rem;}
+            @media(max-width:540px){.lunara-newsletter-form{flex-direction:column;align-items:stretch;}.lunara-newsletter-input{max-width:none;}}
+            </style>
+            <div class="lunara-newsletter-inner">
+                <p class="lunara-newsletter-kicker"><?php esc_html_e( 'The Lunara Dispatch', 'lunara-film' ); ?></p>
+                <h2 class="lunara-newsletter-heading"><?php echo esc_html( $heading ); ?></h2>
+                <p class="lunara-newsletter-blurb"><?php echo esc_html( $blurb ); ?></p>
+                <form class="lunara-newsletter-form" action="<?php echo esc_url( $action ); ?>" method="post" target="_blank" rel="noopener">
+                    <label class="screen-reader-text" for="lunara-mce-EMAIL"><?php esc_html_e( 'Email address', 'lunara-film' ); ?></label>
+                    <input type="email" name="EMAIL" id="lunara-mce-EMAIL" class="lunara-newsletter-input" placeholder="<?php esc_attr_e( 'you@email.com', 'lunara-film' ); ?>" required>
+                    <?php if ( '' !== $honeypot ) : ?>
+                        <div aria-hidden="true" style="position:absolute;left:-5000px;"><input type="text" name="<?php echo esc_attr( $honeypot ); ?>" tabindex="-1" value="" autocomplete="off"></div>
+                    <?php endif; ?>
+                    <button type="submit" class="lunara-newsletter-submit"><?php esc_html_e( 'Subscribe', 'lunara-film' ); ?></button>
+                </form>
+                <p class="lunara-newsletter-fineprint"><?php esc_html_e( 'No spam. Unsubscribe anytime.', 'lunara-film' ); ?></p>
+            </div>
+        </section>
+        <?php
+        return (string) ob_get_clean();
+    }
+}
+
+/**
  * Full spoiler Review warning and archive labels.
  */
 function lunara_output_full_spoiler_review_css() {
@@ -8749,10 +9160,291 @@ function lunara_output_oscars_portal_compact_css() {
             max-height: 154px !important;
         }
     }
+
+    /* === Portal cinematic layer ===
+       Emitted last inside this style block so it wins the cascade against the
+       compact rules above at equal specificity. Turns the thumbnail-sized,
+       text-first portal cards into poster-forward cards with real motion. */
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-feature-card {
+        align-content: start !important;
+        gap: 12px !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        max-width: 344px !important;
+        padding: 14px 14px 18px !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-feature-poster {
+        aspect-ratio: 2 / 3 !important;
+        border-radius: 14px !important;
+        max-height: none !important;
+        width: 100% !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 18px !important;
+    }
+
+    @media (min-width: 1121px) {
+        body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+    }
+
+    @media (max-width: 640px) {
+        body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-grid {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-card {
+        align-items: stretch !important;
+        display: grid !important;
+        gap: 0 !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: auto 1fr !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-spotlight-media-link {
+        display: block !important;
+        max-width: none !important;
+        width: 100% !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-spotlight-poster {
+        aspect-ratio: 3 / 4 !important;
+        background-position: center 22% !important;
+        background-size: cover !important;
+        border-radius: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+        max-width: none !important;
+        min-height: 0 !important;
+        width: 100% !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-spotlight-poster img,
+    body.lunara-oscars-portal-page .lunara-oscars-spotlight-poster .aat-entity-poster {
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: 50% 22% !important;
+        width: 100% !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-spotlight-card-copy {
+        padding: 13px 15px 16px !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-title-card {
+        align-items: stretch !important;
+        gap: 0 !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-title-media {
+        aspect-ratio: 2 / 3 !important;
+        border-radius: 0 !important;
+        max-width: none !important;
+        width: 100% !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-title-copy {
+        padding: 12px 14px 15px !important;
+    }
+
+    /* Five title cards -> five columns on wide screens so the row never rags. */
+    @media (min-width: 1121px) {
+        body.lunara-oscars-portal-page .lunara-oscars-portal-title-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        }
+    }
+
+    @media (max-width: 1120px) and (min-width: 761px) {
+        body.lunara-oscars-portal-page .lunara-oscars-portal-title-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+    }
+
+    @media (max-width: 760px) {
+        body.lunara-oscars-portal-page .lunara-oscars-portal-title-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-card {
+        align-items: stretch !important;
+        gap: 0 !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-media-link,
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-poster {
+        aspect-ratio: 3 / 2 !important;
+        border-radius: 0 !important;
+        max-width: none !important;
+        width: 100% !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-poster {
+        background-position: center 30% !important;
+        background-size: cover !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-poster img {
+        object-position: 50% 30% !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-card:not(.has-poster) {
+        padding: 14px !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-copy {
+        padding: 13px 15px 16px !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-category {
+        font-size: .62rem !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-name {
+        font-size: 1.02rem !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-winner-carousel-track {
+        grid-auto-columns: minmax(238px, 29%) !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-link-card.has-backdrop,
+    body.lunara-oscars-portal-page .lunara-oscars-research-card.has-backdrop {
+        align-content: end !important;
+        background-position: center !important;
+        background-size: cover !important;
+        display: grid !important;
+        isolation: isolate !important;
+        min-height: 190px !important;
+        position: relative !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-link-card.has-backdrop::before,
+    body.lunara-oscars-portal-page .lunara-oscars-research-card.has-backdrop::before {
+        background: linear-gradient(180deg, rgba(7, 16, 27, .12), rgba(7, 16, 27, .5) 52%, rgba(4, 11, 19, .9)) !important;
+        content: '' !important;
+        inset: 0 !important;
+        position: absolute !important;
+        transition: background .3s ease !important;
+        z-index: -1 !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-fact-card {
+        min-height: 128px !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-fact-value {
+        font-size: clamp(1.45rem, 2.4vw, 1.85rem) !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-link-card,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-card,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-title-card,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-fact-card,
+    body.lunara-oscars-portal-page .lunara-oscars-research-card,
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-card,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-feature-card {
+        transition: transform .28s ease, border-color .28s ease, box-shadow .28s ease !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-spotlight-poster img,
+    body.lunara-oscars-portal-page .lunara-oscars-spotlight-poster .aat-entity-poster,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-title-media img,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-title-media .aat-entity-poster,
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-poster img,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-feature-poster img,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-feature-poster .aat-entity-poster {
+        transition: transform .65s cubic-bezier(.2, .7, .2, 1) !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-card:hover,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-title-card:hover,
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-card:hover,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-link-card:hover,
+    body.lunara-oscars-portal-page .lunara-oscars-research-card:hover,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-fact-card:hover,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-feature-card:hover {
+        border-color: rgba(225, 197, 126, .55) !important;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, .35) !important;
+        transform: translateY(-4px) !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-card:hover .lunara-oscars-spotlight-poster img,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-card:hover .lunara-oscars-spotlight-poster .aat-entity-poster,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-title-card:hover .lunara-oscars-portal-title-media img,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-title-card:hover .lunara-oscars-portal-title-media .aat-entity-poster,
+    body.lunara-oscars-portal-page .lunara-ceremony-winner-card:hover .lunara-ceremony-winner-poster img,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-feature-card:hover .lunara-oscars-portal-feature-poster img,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-feature-card:hover .lunara-oscars-portal-feature-poster .aat-entity-poster {
+        transform: scale(1.055) !important;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        body.lunara-oscars-portal-page .lunara-oscars-reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity .7s ease, transform .7s cubic-bezier(.2, .7, .2, 1);
+        }
+
+        body.lunara-oscars-portal-page .lunara-oscars-reveal.is-inview {
+            opacity: 1;
+            transform: none;
+        }
+    }
     </style>
     <?php
 }
 add_action( 'wp_head', 'lunara_output_oscars_portal_compact_css', 1001 );
+
+/**
+ * Reveal-on-scroll for the Oscars portal sections. Sections stay fully
+ * visible without JS or under reduced motion; the class that hides them is
+ * only added here, right before the observer starts watching.
+ */
+if ( ! function_exists( 'lunara_output_oscars_portal_motion_js' ) ) {
+function lunara_output_oscars_portal_motion_js() {
+    if ( ! function_exists( 'lunara_is_oscars_portal_page' ) || ! lunara_is_oscars_portal_page() ) {
+        return;
+    }
+    ?>
+    <script>
+    (function () {
+        if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return;
+        }
+        var sections = document.querySelectorAll('.lunara-oscars-portal > .lunara-home-section');
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-inview');
+                    io.unobserve(entry.target);
+                }
+            });
+        }, { threshold: .06, rootMargin: '0px 0px -60px 0px' });
+        sections.forEach(function (section) {
+            section.classList.add('lunara-oscars-reveal');
+            io.observe(section);
+        });
+    })();
+    </script>
+    <?php
+}
+}
+add_action( 'wp_footer', 'lunara_output_oscars_portal_motion_js', 60 );
 
 /**
  * Emit bounded Oscars Dossier Studio controls.

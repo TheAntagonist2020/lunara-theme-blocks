@@ -661,6 +661,11 @@ if ( have_posts() ) :
 			<?php endif; ?>
 
 		</article>
+		<?php
+		if ( function_exists( 'lunara_render_newsletter_signup' ) ) {
+			echo lunara_render_newsletter_signup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		}
+		?>
 		</main>
 
 	<?php endwhile; ?>

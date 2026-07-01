@@ -10325,7 +10325,8 @@ if ( ! function_exists( 'lunara_search_text_match_score' ) ) {
  */
 if ( ! function_exists( 'lunara_output_carousel_controls_js' ) ) {
 function lunara_output_carousel_controls_js() {
-    if ( ! is_front_page() ) {
+    $is_oscars_portal = function_exists( 'lunara_is_oscars_portal_page' ) && lunara_is_oscars_portal_page();
+    if ( ! is_front_page() && ! $is_oscars_portal ) {
         return;
     }
     ?>
@@ -10365,6 +10366,23 @@ function lunara_output_carousel_controls_js() {
                 next.addEventListener('click', function () {
                     step(1);
                 });
+            }
+
+            // Overflow-aware controls: when the rail isn't wider than its
+            // viewport (e.g. only a handful of cards), hide the arrows rather
+            // than bounce on empty scroll. A ResizeObserver fires only when the
+            // track actually changes size and detaches with the element (no
+            // resize-listener thrash or leak); fall back to window resize.
+            function syncOverflow() {
+                var overflowing = (track.scrollWidth - track.clientWidth) > 8;
+                section.classList.toggle('is-carousel-static', !overflowing);
+            }
+            if (typeof ResizeObserver !== 'undefined') {
+                new ResizeObserver(syncOverflow).observe(track);
+            } else {
+                syncOverflow();
+                window.addEventListener('resize', syncOverflow);
+                window.addEventListener('load', syncOverflow);
             }
 
             const autoplay = parseInt(section.getAttribute('data-lunara-carousel-autoplay') || '0', 10);
@@ -15162,7 +15180,111 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
 			}
 		);
 
+		// Curation v1 — Spotlight Campaign lead. When enabled with a valid
+		// published post, that post takes the very first slide (overriding the
+		// newest/featured lead). Any duplicate of the same post elsewhere in the
+		// pool is removed so it doesn't appear twice.
+		$spotlight_slide = function_exists( 'lunara_build_spotlight_hero_slide' )
+			? lunara_build_spotlight_hero_slide()
+			: null;
+
+		if ( is_array( $spotlight_slide ) && ! empty( $spotlight_slide['image'] ) ) {
+			$spotlight_url = (string) $spotlight_slide['url'];
+			$items         = array_values(
+				array_filter(
+					$items,
+					static function ( $item ) use ( $spotlight_url ) {
+						return (string) $item['url'] !== $spotlight_url;
+					}
+				)
+			);
+			array_unshift( $items, $spotlight_slide );
+		}
+
 		return array_slice( $items, 0, $max );
+	}
+}
+
+/**
+ * Curation v1 — build the cinematic-hero slide for the Spotlight Campaign post.
+ *
+ * Returns null when the campaign is off, the post is invalid/unpublished, or no
+ * usable hero image can be resolved (so the hero falls back to its normal lead).
+ *
+ * @return array|null
+ */
+if ( ! function_exists( 'lunara_build_spotlight_hero_slide' ) ) {
+	function lunara_build_spotlight_hero_slide() {
+		if ( ! function_exists( 'lunara_get_spotlight_post_id' ) ) {
+			return null;
+		}
+
+		$post_id = lunara_get_spotlight_post_id();
+		if ( ! $post_id ) {
+			return null;
+		}
+
+		$post = get_post( $post_id );
+		if ( ! ( $post instanceof WP_Post ) ) {
+			return null;
+		}
+
+		$post_type = get_post_type( $post_id );
+
+		// Resolve the best available image for this post type.
+		$image = '';
+		if ( 'review' === $post_type && function_exists( 'lunara_get_review_hero_image_url' ) ) {
+			$image = lunara_get_review_hero_image_url( $post_id );
+		} elseif ( function_exists( 'lunara_get_journal_card_image_url' ) ) {
+			$image = lunara_get_journal_card_image_url( $post_id, 'full' );
+		}
+
+		if ( ! $image ) {
+			$image = (string) get_the_post_thumbnail_url( $post_id, 'full' );
+		}
+
+		if ( function_exists( 'lunara_hero_qualify_or_blank' ) ) {
+			$image = lunara_hero_qualify_or_blank( $image );
+		}
+
+		if ( ! $image ) {
+			return null;
+		}
+
+		if ( function_exists( 'lunara_rightsize_backdrop_url' ) ) {
+			$image = lunara_rightsize_backdrop_url( $image );
+		}
+
+		// Kicker: the campaign label, else a sensible per-type default.
+		$label = function_exists( 'lunara_get_spotlight_label' ) ? lunara_get_spotlight_label() : '';
+		if ( '' === trim( (string) $label ) ) {
+			$label = 'review' === $post_type
+				? __( 'Spotlight Review', 'lunara-film' )
+				: __( 'Spotlight', 'lunara-film' );
+		}
+
+		// Excerpt: reuse existing card-excerpt helpers when available.
+		if ( 'review' === $post_type && function_exists( 'lunara_get_review_card_pull_quote' ) ) {
+			$excerpt = lunara_get_review_card_pull_quote( $post_id, 30, true );
+		} elseif ( function_exists( 'lunara_card_excerpt' ) ) {
+			$excerpt = lunara_card_excerpt( $post_id, 30 );
+		} else {
+			$excerpt = wp_trim_words( wp_strip_all_tags( (string) get_the_excerpt( $post_id ) ), 30, '…' );
+		}
+
+		$cta = 'review' === $post_type
+			? __( 'Read the review', 'lunara-film' )
+			: __( 'Read the story', 'lunara-film' );
+
+		return array(
+			'date'    => (string) $post->post_date,
+			'kicker'  => (string) $label,
+			'title'   => get_the_title( $post_id ),
+			'excerpt' => (string) $excerpt,
+			'url'     => get_permalink( $post_id ),
+			'cta'     => $cta,
+			'image'   => $image,
+		);
 	}
 }
 
