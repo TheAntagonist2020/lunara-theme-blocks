@@ -10325,7 +10325,8 @@ if ( ! function_exists( 'lunara_search_text_match_score' ) ) {
  */
 if ( ! function_exists( 'lunara_output_carousel_controls_js' ) ) {
 function lunara_output_carousel_controls_js() {
-    if ( ! is_front_page() ) {
+    $is_oscars_portal = function_exists( 'lunara_is_oscars_portal_page' ) && lunara_is_oscars_portal_page();
+    if ( ! is_front_page() && ! $is_oscars_portal ) {
         return;
     }
     ?>
