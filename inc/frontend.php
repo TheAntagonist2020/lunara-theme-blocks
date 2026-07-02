@@ -6216,7 +6216,8 @@ function lunara_output_pair_it_with_cards_css() {
         return;
     }
 
-    $should_load = is_singular( 'review' );
+    // The homepage Pairing Desk showcase reuses the module verbatim.
+    $should_load = is_singular( 'review' ) || is_front_page();
     if ( ! $should_load && is_singular() ) {
         $current = get_post();
         if ( $current instanceof WP_Post && has_shortcode( (string) $current->post_content, 'lunara_pair_it_with' ) ) {
