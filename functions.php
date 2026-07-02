@@ -15545,30 +15545,68 @@ if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 		$review_title = get_the_title( $review_id );
 		$review_url   = get_permalink( $review_id );
 
+		// Cinematic backdrop: the reviewed film's own qualified wide image,
+		// drifting slowly behind the pairings (reduced-motion turns it off).
+		$backdrop = function_exists( 'lunara_get_review_hero_image_url' )
+			? trim( (string) lunara_get_review_hero_image_url( $review_id ) )
+			: '';
+		if ( '' !== $backdrop && function_exists( 'lunara_rightsize_backdrop_url' ) ) {
+			$backdrop = lunara_rightsize_backdrop_url( $backdrop );
+		}
+
 		ob_start();
 		?>
-		<section class="lunara-home-section lunara-home-slot-pairing-desk lunara-pairing-desk-section" aria-label="<?php esc_attr_e( 'Pair It With showcase', 'lunara-film' ); ?>">
+		<section class="lunara-home-section lunara-home-slot-pairing-desk lunara-pairing-desk-section<?php echo '' !== $backdrop ? ' has-desk-backdrop' : ''; ?>" aria-label="<?php esc_attr_e( 'Pair It With showcase', 'lunara-film' ); ?>">
 			<style>
-				.lunara-pairing-desk-section .lunara-pairing-desk-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 26px;margin-bottom:6px}
-				.lunara-pairing-desk-section .lunara-pairing-desk-source{display:inline-flex;align-items:center;gap:8px;max-width:100%;color:rgba(244,239,227,.78);font-size:.9rem}
-				.lunara-pairing-desk-section .lunara-pairing-desk-source a{color:var(--lunara-gold-light,#eadbb3);text-decoration:none;border-bottom:1px solid rgba(201,169,97,.4);transition:color .2s ease,border-color .2s ease}
-				.lunara-pairing-desk-section .lunara-pairing-desk-source a:hover{color:#fff;border-color:rgba(225,197,126,.85)}
-				.lunara-pairing-desk-section .lunara-pairing-desk-copy{margin:0 0 18px;max-width:66ch;color:rgba(244,239,227,.8);line-height:1.65}
+				.lunara-pairing-desk-section{overflow:hidden;position:relative}
+				.lunara-pairing-desk-backdrop{background-position:center 26%;background-size:cover;filter:saturate(.9);inset:-4%;position:absolute;z-index:0}
+				.lunara-pairing-desk-overlay{background:radial-gradient(circle at 82% 8%,rgba(201,169,97,.16),transparent 34%),linear-gradient(180deg,rgba(5,12,21,.88),rgba(7,16,27,.8) 42%,rgba(4,10,18,.95));inset:0;position:absolute;z-index:1}
+				.lunara-pairing-desk-inner{position:relative;z-index:2}
+				.lunara-pairing-desk-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,40ch);gap:14px 46px;align-items:end;margin-bottom:18px}
+				.lunara-pairing-desk-head .lunara-home-section-title{margin-bottom:0;text-shadow:0 3px 22px rgba(0,0,0,.5)}
+				.lunara-pairing-desk-intro{display:grid;gap:10px;align-content:end;padding-bottom:4px}
+				.lunara-pairing-desk-copy{margin:0;color:rgba(244,239,227,.84);font-size:.97rem;line-height:1.6;text-shadow:0 2px 14px rgba(0,0,0,.45)}
+				.lunara-pairing-desk-source{margin:0;color:rgba(244,239,227,.74);font-size:.88rem}
+				.lunara-pairing-desk-source a{color:var(--lunara-gold-light,#eadbb3);text-decoration:none;border-bottom:1px solid rgba(201,169,97,.4);transition:color .2s ease,border-color .2s ease}
+				.lunara-pairing-desk-source a:hover{color:#fff;border-color:rgba(225,197,126,.85)}
 				.lunara-pairing-desk-section .lunara-pair-cards{margin-top:0}
 				.lunara-pairing-desk-section .lunara-pair-cards-head{display:none}
+				.lunara-pairing-desk-section .lunara-pair-cards-grid{counter-reset:lunara-pair-act}
+				.lunara-pairing-desk-section .lunara-pair-card{counter-increment:lunara-pair-act;position:relative;transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease}
+				.lunara-pairing-desk-section .lunara-pair-card::after{color:rgba(224,196,129,.38);content:"0" counter(lunara-pair-act);font-family:'Bebas Neue','Oswald',Impact,sans-serif;font-size:3.4rem;line-height:1;pointer-events:none;position:absolute;right:14px;top:10px;text-shadow:0 2px 10px rgba(4,10,18,.85),0 0 26px rgba(4,10,18,.7);z-index:3}
+				.lunara-pairing-desk-section .lunara-pair-card:hover{border-color:rgba(225,197,126,.55);box-shadow:0 22px 48px rgba(0,0,0,.45);transform:translateY(-5px)}
+				.lunara-pairing-desk-section .lunara-pair-card .lunara-pair-card-poster img{transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+				.lunara-pairing-desk-section .lunara-pair-card:hover .lunara-pair-card-poster img{transform:scale(1.06)}
+				@media(prefers-reduced-motion:no-preference){
+					.lunara-pairing-desk-backdrop{animation:lunaraPairDrift 28s ease-in-out infinite alternate}
+					@keyframes lunaraPairDrift{from{transform:scale(1) translateY(0)}to{transform:scale(1.07) translateY(-1.5%)}}
+					.lunara-pairing-desk-section.lunara-reveal:not(.is-visible) .lunara-pair-card{opacity:0;transform:translateY(28px)}
+					.lunara-pairing-desk-section.lunara-reveal.is-visible .lunara-pair-card{opacity:1;transform:none;transition:opacity .75s ease,transform .75s cubic-bezier(.2,.7,.2,1)}
+					.lunara-pairing-desk-section.lunara-reveal.is-visible .lunara-pair-card:nth-child(2){transition-delay:.16s}
+					.lunara-pairing-desk-section.lunara-reveal.is-visible .lunara-pair-card:nth-child(3){transition-delay:.32s}
+				}
+				@media(max-width:900px){.lunara-pairing-desk-head{grid-template-columns:minmax(0,1fr)}.lunara-pairing-desk-intro{align-content:start;padding-bottom:0}}
 			</style>
-			<div class="lunara-pairing-desk-head">
-				<div>
-					<p class="lunara-home-section-kicker"><?php echo esc_html( $kicker ); ?></p>
-					<h2 class="lunara-home-section-title"><?php echo esc_html( $title ); ?></h2>
+			<?php if ( '' !== $backdrop ) : ?>
+				<div class="lunara-pairing-desk-backdrop" style="background-image:url('<?php echo esc_url( $backdrop ); ?>');" aria-hidden="true"></div>
+				<div class="lunara-pairing-desk-overlay" aria-hidden="true"></div>
+			<?php endif; ?>
+			<div class="lunara-pairing-desk-inner">
+				<div class="lunara-pairing-desk-head">
+					<div>
+						<p class="lunara-home-section-kicker"><?php echo esc_html( $kicker ); ?></p>
+						<h2 class="lunara-home-section-title"><?php echo esc_html( $title ); ?></h2>
+					</div>
+					<div class="lunara-pairing-desk-intro">
+						<p class="lunara-pairing-desk-copy"><?php echo esc_html( $copy ); ?></p>
+						<p class="lunara-pairing-desk-source">
+							<?php esc_html_e( 'Fresh from the debrief of', 'lunara-film' ); ?>
+							<a href="<?php echo esc_url( $review_url ); ?>"><?php echo esc_html( $review_title ); ?></a>
+						</p>
+					</div>
 				</div>
-				<p class="lunara-pairing-desk-source">
-					<?php esc_html_e( 'Fresh from the debrief of', 'lunara-film' ); ?>
-					<a href="<?php echo esc_url( $review_url ); ?>"><?php echo esc_html( $review_title ); ?></a>
-				</p>
+				<?php echo $cards; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- module renderer escapes internally. ?>
 			</div>
-			<p class="lunara-pairing-desk-copy"><?php echo esc_html( $copy ); ?></p>
-			<?php echo $cards; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- module renderer escapes internally. ?>
 		</section>
 		<?php
 
