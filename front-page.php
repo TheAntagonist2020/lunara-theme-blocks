@@ -45,6 +45,7 @@ get_header();
 	$lunara_section_renderers = array(
 		'hero'           => 'lunara_render_cinematic_hero_carousel',
 		'latest-reviews' => 'lunara_render_homepage_latest_reviews',
+		'pairing-desk'   => 'lunara_render_home_pairing_desk',
 		'dispatch'       => 'lunara_render_homepage_journal_lane',
 		'oscar-picks'    => 'lunara_render_oscar_picks_carousel',
 		'oscar-facts'    => 'lunara_render_oscar_facts_carousel',
