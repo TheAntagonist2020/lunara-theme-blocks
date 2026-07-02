@@ -84,6 +84,13 @@ function lunara_get_home_section_registry() {
             'description'  => __( 'The broader review archive lane beneath the hero and featured areas.', 'lunara-film' ),
             'aliases'      => array( 'latest', 'reviews' ),
         ),
+        'pairing-desk' => array(
+            'label'        => __( 'Pairing Desk (Pair It With)', 'lunara-film' ),
+            'toggle_label' => __( 'Show Pairing Desk', 'lunara-film' ),
+            'setting'      => 'lunara_home_show_pairing_desk',
+            'description'  => __( 'Showcases the signature Pair It With module: the three films paired with the latest reviewed title.', 'lunara-film' ),
+            'aliases'      => array( 'pairing', 'pair-it-with', 'pairings' ),
+        ),
     );
 }
 
@@ -135,6 +142,16 @@ function lunara_sanitize_home_section_order( $value ) {
 
     foreach ( $recognized as $slug ) {
         if ( ! in_array( $slug, $ordered, true ) ) {
+            // The Pair It With showcase belongs right under Latest Reviews by
+            // default (signature module, not a footer afterthought); every
+            // other newly recognized slug keeps the safe append-to-end rule.
+            if ( 'pairing-desk' === $slug ) {
+                $latest_pos = array_search( 'latest-reviews', $ordered, true );
+                if ( false !== $latest_pos ) {
+                    array_splice( $ordered, $latest_pos + 1, 0, array( $slug ) );
+                    continue;
+                }
+            }
             $ordered[] = $slug;
         }
     }

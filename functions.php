@@ -351,6 +351,7 @@ function lunara_get_home_section_slugs() {
     return array(
         'hero',
         'latest-reviews',
+        'pairing-desk',    // Added 2026-07-02 — Pair It With showcase (signature debrief module)
         'dispatch',
         'oscar-picks',     // Added 2026-05-10 â€” Lunara Oscar Picks carousel
         'oscar-facts',     // Added 2026-05-10 â€” Lunara Oscar Facts carousel
@@ -435,6 +436,16 @@ function lunara_get_home_section_order_map() {
     // order rule and default to order:0 â€” rendering BEFORE all numbered sections.
     foreach ( $defaults as $default_slug ) {
         if ( '' !== $default_slug && ! in_array( $default_slug, $ordered, true ) ) {
+            // The Pair It With showcase belongs right under Latest Reviews by
+            // default (it is the signature module, not a footer afterthought);
+            // every other new slug keeps the safe append-to-end behavior.
+            if ( 'pairing-desk' === $default_slug ) {
+                $latest_pos = array_search( 'latest-reviews', $ordered, true );
+                if ( false !== $latest_pos ) {
+                    array_splice( $ordered, $latest_pos + 1, 0, array( $default_slug ) );
+                    continue;
+                }
+            }
             $ordered[] = $default_slug;
         }
     }
@@ -533,6 +544,7 @@ function lunara_home_section_is_enabled( $slug, $default = true ) {
         'ledger'          => 'lunara_home_show_ledger',
         'deep-cuts'       => 'lunara_home_show_deep_cuts',
         'latest-reviews'  => 'lunara_home_show_latest_reviews',
+        'pairing-desk'    => 'lunara_home_show_pairing_desk',
     );
 
     $slug = lunara_normalize_home_section_slug( $slug );
@@ -15253,6 +15265,31 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
 			}
 		);
 
+		// Homepage Hero curation — posts featured via the editor checkbox take
+		// the front slides (most recently featured first); the automatic
+		// newest-content pool fills whatever slots remain. Duplicates of a
+		// featured post are removed from the pool so nothing appears twice.
+		if ( function_exists( 'lunara_get_hero_featured_slides' ) ) {
+			$featured_slides = lunara_get_hero_featured_slides( $max );
+			if ( ! empty( $featured_slides ) ) {
+				$featured_urls = array_map(
+					static function ( $slide ) {
+						return (string) $slide['url'];
+					},
+					$featured_slides
+				);
+				$items = array_values(
+					array_filter(
+						$items,
+						static function ( $item ) use ( $featured_urls ) {
+							return ! in_array( (string) $item['url'], $featured_urls, true );
+						}
+					)
+				);
+				$items = array_merge( $featured_slides, $items );
+			}
+		}
+
 		// Curation v1 — Spotlight Campaign lead. When enabled with a valid
 		// published post, that post takes the very first slide (overriding the
 		// newest/featured lead). Any duplicate of the same post elsewhere in the
@@ -15286,19 +15323,18 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
  *
  * @return array|null
  */
-if ( ! function_exists( 'lunara_build_spotlight_hero_slide' ) ) {
-	function lunara_build_spotlight_hero_slide() {
-		if ( ! function_exists( 'lunara_get_spotlight_post_id' ) ) {
-			return null;
-		}
-
-		$post_id = lunara_get_spotlight_post_id();
-		if ( ! $post_id ) {
-			return null;
-		}
-
+if ( ! function_exists( 'lunara_build_hero_slide_for_post' ) ) {
+	/**
+	 * Build a cinematic-hero slide for any public post (review, journal, post).
+	 * Returns null when no usable wide hero image can be resolved.
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $label   Kicker text; '' falls back to a per-type default.
+	 * @return array|null
+	 */
+	function lunara_build_hero_slide_for_post( $post_id, $label = '' ) {
 		$post = get_post( $post_id );
-		if ( ! ( $post instanceof WP_Post ) ) {
+		if ( ! ( $post instanceof WP_Post ) || 'publish' !== $post->post_status ) {
 			return null;
 		}
 
@@ -15328,12 +15364,10 @@ if ( ! function_exists( 'lunara_build_spotlight_hero_slide' ) ) {
 			$image = lunara_rightsize_backdrop_url( $image );
 		}
 
-		// Kicker: the campaign label, else a sensible per-type default.
-		$label = function_exists( 'lunara_get_spotlight_label' ) ? lunara_get_spotlight_label() : '';
 		if ( '' === trim( (string) $label ) ) {
 			$label = 'review' === $post_type
-				? __( 'Spotlight Review', 'lunara-film' )
-				: __( 'Spotlight', 'lunara-film' );
+				? __( 'Featured Review', 'lunara-film' )
+				: __( "Editor's Pick", 'lunara-film' );
 		}
 
 		// Excerpt: reuse existing card-excerpt helpers when available.
@@ -15358,6 +15392,214 @@ if ( ! function_exists( 'lunara_build_spotlight_hero_slide' ) ) {
 			'cta'     => $cta,
 			'image'   => $image,
 		);
+	}
+}
+
+if ( ! function_exists( 'lunara_build_spotlight_hero_slide' ) ) {
+	function lunara_build_spotlight_hero_slide() {
+		if ( ! function_exists( 'lunara_get_spotlight_post_id' ) ) {
+			return null;
+		}
+
+		$post_id = lunara_get_spotlight_post_id();
+		if ( ! $post_id ) {
+			return null;
+		}
+
+		// Kicker: the campaign label, else the campaign's own per-type default.
+		$label = function_exists( 'lunara_get_spotlight_label' ) ? lunara_get_spotlight_label() : '';
+		if ( '' === trim( (string) $label ) ) {
+			$label = 'review' === get_post_type( $post_id )
+				? __( 'Spotlight Review', 'lunara-film' )
+				: __( 'Spotlight', 'lunara-film' );
+		}
+
+		return lunara_build_hero_slide_for_post( $post_id, $label );
+	}
+}
+
+/**
+ * Homepage Hero curation — per-post "Feature in the homepage hero" checkbox.
+ *
+ * Works on reviews, journal entries, and standard posts. Featured posts take
+ * the front slides of the hero carousel (most recently featured first), after
+ * the Spotlight Campaign slide when that is enabled; remaining slots fill with
+ * the newest content as usual. `_lunara_hero_featured` stores the feature time.
+ */
+if ( ! function_exists( 'lunara_hero_featured_post_types' ) ) {
+	function lunara_hero_featured_post_types() {
+		return apply_filters( 'lunara_hero_featured_post_types', array( 'review', 'journal', 'post' ) );
+	}
+}
+
+if ( ! function_exists( 'lunara_add_hero_feature_meta_box' ) ) {
+	function lunara_add_hero_feature_meta_box() {
+		foreach ( lunara_hero_featured_post_types() as $hero_post_type ) {
+			add_meta_box(
+				'lunara_hero_feature_meta',
+				__( 'Homepage Hero', 'lunara-film' ),
+				'lunara_hero_feature_meta_callback',
+				$hero_post_type,
+				'side',
+				'high'
+			);
+		}
+	}
+	add_action( 'add_meta_boxes', 'lunara_add_hero_feature_meta_box' );
+
+	function lunara_hero_feature_meta_callback( $post ) {
+		wp_nonce_field( 'lunara_hero_feature_nonce', 'lunara_hero_feature_nonce' );
+		$featured = (bool) get_post_meta( $post->ID, '_lunara_hero_featured', true );
+		?>
+		<p>
+			<label>
+				<input type="checkbox" name="lunara_hero_featured" value="1" <?php checked( $featured ); ?> />
+				<strong><?php esc_html_e( 'Feature in the homepage hero carousel', 'lunara-film' ); ?></strong>
+			</label>
+		</p>
+		<p class="description"><?php esc_html_e( 'Puts this at the front of the big rotating hero on the homepage. Feature several and the most recently featured leads. Needs a wide (landscape) image to qualify. Uncheck and update to release the slot.', 'lunara-film' ); ?></p>
+		<?php
+	}
+
+	function lunara_save_hero_feature_meta( $post_id ) {
+		if ( ! isset( $_POST['lunara_hero_feature_nonce'] ) ) return;
+		if ( ! wp_verify_nonce( $_POST['lunara_hero_feature_nonce'], 'lunara_hero_feature_nonce' ) ) return;
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+		if ( ! current_user_can( 'edit_post', $post_id ) ) return;
+		if ( ! in_array( get_post_type( $post_id ), lunara_hero_featured_post_types(), true ) ) return;
+
+		$was_featured = (bool) get_post_meta( $post_id, '_lunara_hero_featured', true );
+
+		if ( ! empty( $_POST['lunara_hero_featured'] ) ) {
+			// Keep the original feature time on a plain re-save so an older
+			// feature isn't accidentally promoted over a newer one.
+			if ( ! $was_featured ) {
+				update_post_meta( $post_id, '_lunara_hero_featured', time() );
+			}
+		} elseif ( $was_featured ) {
+			delete_post_meta( $post_id, '_lunara_hero_featured' );
+		}
+	}
+	add_action( 'save_post', 'lunara_save_hero_feature_meta' );
+}
+
+/**
+ * Pairing Desk — homepage showcase for the signature Pair It With module.
+ *
+ * Renders the three pairings (Theme Echo / Counter-Program / Career Context)
+ * from the newest review that has any pairing filled, framed with an
+ * explainer so first-time visitors immediately see how Lunara differs from
+ * algorithmic "more like this" rails. Reuses the debrief module's own card
+ * renderer and scoped CSS, so the showcase always matches the single-review
+ * presentation exactly.
+ */
+if ( ! function_exists( 'lunara_get_pairing_desk_review_id' ) ) {
+	function lunara_get_pairing_desk_review_id() {
+		$ids = get_posts(
+			array(
+				'post_type'      => 'review',
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				'meta_query'     => array(
+					'relation' => 'OR',
+					array( 'key' => '_lunara_theme_echo', 'value' => '', 'compare' => '!=' ),
+					array( 'key' => '_lunara_counter_program', 'value' => '', 'compare' => '!=' ),
+					array( 'key' => '_lunara_career_context', 'value' => '', 'compare' => '!=' ),
+					array( 'key' => '_lunara_craft_mirror', 'value' => '', 'compare' => '!=' ),
+				),
+			)
+		);
+
+		return ! empty( $ids ) ? (int) $ids[0] : 0;
+	}
+}
+
+if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
+	function lunara_render_home_pairing_desk() {
+		if ( ! function_exists( 'lunara_render_pair_it_with_cards' ) ) {
+			return '';
+		}
+
+		$review_id = lunara_get_pairing_desk_review_id();
+		if ( $review_id <= 0 ) {
+			return '';
+		}
+
+		$cards = trim( (string) lunara_render_pair_it_with_cards( $review_id ) );
+		if ( '' === $cards ) {
+			return '';
+		}
+
+		$kicker = function_exists( 'lunara_theme_mod_text' )
+			? lunara_theme_mod_text( 'lunara_home_pairing_desk_kicker', 'The Lunara Method' )
+			: 'The Lunara Method';
+		$title = function_exists( 'lunara_theme_mod_text' )
+			? lunara_theme_mod_text( 'lunara_home_pairing_desk_title', 'Every review ends with three more films.' )
+			: 'Every review ends with three more films.';
+		$copy = function_exists( 'lunara_theme_mod_text' )
+			? lunara_theme_mod_text( 'lunara_home_pairing_desk_copy', 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm.' )
+			: 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm.';
+
+		$review_title = get_the_title( $review_id );
+		$review_url   = get_permalink( $review_id );
+
+		ob_start();
+		?>
+		<section class="lunara-home-section lunara-home-slot-pairing-desk lunara-pairing-desk-section" aria-label="<?php esc_attr_e( 'Pair It With showcase', 'lunara-film' ); ?>">
+			<style>
+				.lunara-pairing-desk-section .lunara-pairing-desk-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 26px;margin-bottom:6px}
+				.lunara-pairing-desk-section .lunara-pairing-desk-source{display:inline-flex;align-items:center;gap:8px;max-width:100%;color:rgba(244,239,227,.78);font-size:.9rem}
+				.lunara-pairing-desk-section .lunara-pairing-desk-source a{color:var(--lunara-gold-light,#eadbb3);text-decoration:none;border-bottom:1px solid rgba(201,169,97,.4);transition:color .2s ease,border-color .2s ease}
+				.lunara-pairing-desk-section .lunara-pairing-desk-source a:hover{color:#fff;border-color:rgba(225,197,126,.85)}
+				.lunara-pairing-desk-section .lunara-pairing-desk-copy{margin:0 0 18px;max-width:66ch;color:rgba(244,239,227,.8);line-height:1.65}
+				.lunara-pairing-desk-section .lunara-pair-cards{margin-top:0}
+				.lunara-pairing-desk-section .lunara-pair-cards-head{display:none}
+			</style>
+			<div class="lunara-pairing-desk-head">
+				<div>
+					<p class="lunara-home-section-kicker"><?php echo esc_html( $kicker ); ?></p>
+					<h2 class="lunara-home-section-title"><?php echo esc_html( $title ); ?></h2>
+				</div>
+				<p class="lunara-pairing-desk-source">
+					<?php esc_html_e( 'Fresh from the debrief of', 'lunara-film' ); ?>
+					<a href="<?php echo esc_url( $review_url ); ?>"><?php echo esc_html( $review_title ); ?></a>
+				</p>
+			</div>
+			<p class="lunara-pairing-desk-copy"><?php echo esc_html( $copy ); ?></p>
+			<?php echo $cards; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- module renderer escapes internally. ?>
+		</section>
+		<?php
+
+		return (string) ob_get_clean();
+	}
+}
+
+if ( ! function_exists( 'lunara_get_hero_featured_slides' ) ) {
+	function lunara_get_hero_featured_slides( $max = 6 ) {
+		$ids = get_posts(
+			array(
+				'post_type'      => lunara_hero_featured_post_types(),
+				'post_status'    => 'publish',
+				'posts_per_page' => max( 1, (int) $max ),
+				'fields'         => 'ids',
+				'meta_key'       => '_lunara_hero_featured',
+				'orderby'        => 'meta_value_num',
+				'order'          => 'DESC',
+				'no_found_rows'  => true,
+			)
+		);
+
+		$slides = array();
+		foreach ( (array) $ids as $featured_id ) {
+			$slide = lunara_build_hero_slide_for_post( (int) $featured_id );
+			if ( is_array( $slide ) && ! empty( $slide['image'] ) ) {
+				$slides[] = $slide;
+			}
+		}
+
+		return $slides;
 	}
 }
 
