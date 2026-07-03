@@ -40,9 +40,14 @@ function lunara_register_dynamic_blocks() {
         'category'      => 'lunara',
         'editor_script' => 'lunara-blocks',
         'supports'      => array(
-            'align'  => array( 'wide', 'full' ),
-            'anchor' => true,
-            'html'   => false,
+            'align'    => array( 'wide', 'full' ),
+            'anchor'   => true,
+            'html'     => false,
+            // Legacy bridge blocks: kept registered so any existing content
+            // still renders, but hidden from the inserter — the 2026-07 content
+            // census found ZERO posts/pages using them, and they were flooding
+            // the editor palette alongside the newer surfaces.
+            'inserter' => false,
         ),
     );
 

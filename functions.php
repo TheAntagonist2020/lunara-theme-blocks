@@ -15691,8 +15691,13 @@ if ( ! function_exists( 'lunara_register_homepage_blocks' ) ) {
 			'supports'    => array(
 				'html'      => false,
 				'reusable'  => false,
-				'multiple'  => true,  // allow multiple instances per page (hub-friendly)
-				'inserter'  => true,
+				'multiple'  => true,
+				// The homepage is Customizer-owned (front-page.php renders the
+				// section registry directly and never calls the_content()), so
+				// these composition blocks are no longer offered for insertion.
+				// They stay registered: the Home page's existing four blocks
+				// keep rendering and stay editable where they already exist.
+				'inserter'  => false,
 			),
 		);
 
@@ -16380,23 +16385,30 @@ JS;
 
 
 /* ============================================================================
- * LUNARA HUB â€” Page Template + Block Patterns + Pattern Category (added 2026-05-10)
+ * LUNARA HUB — Block Patterns (RETIRED FROM THE EDITOR, 2026-07-03)
  *
- * Lets Dalton (or the MCP) compose any Page with the Lunara block grammar:
- *   - Cinematic Hero (per-instance overrides for hub feature pages)
- *   - Journal Lane
- *   - Oscar Picks
- *   - Oscar Facts
- *   - Plus any Gutenberg core blocks freely interspersed
+ * These five hub patterns date from the Gutenberg-homepage experiment ("Path
+ * B"). The homepage is now Customizer-owned — front-page.php renders the
+ * section registry directly and never reads page block content — so offering
+ * whole hub compositions in the pattern browser only cluttered the editor
+ * ("countless instances of hubs"). The 2026-07 content census confirmed no
+ * page is built from them except Home (4055), whose blocks are dormant.
  *
- * Three pre-built patterns ship: Full Hub, Awards Focus, Editorial Focus.
- * Page Template "Lunara Hub" gives full-width treatment without the default
- * Blocksy chrome (sidebar, default page header).
+ * Patterns are stamps, not references: removing their registration does NOT
+ * affect any content previously created from them. To temporarily restore
+ * them (e.g. to scaffold a special feature page), add:
+ *   add_filter( 'lunara_enable_hub_patterns', '__return_true' );
  * ============================================================================ */
+
+if ( ! function_exists( 'lunara_hub_patterns_enabled' ) ) {
+	function lunara_hub_patterns_enabled() {
+		return (bool) apply_filters( 'lunara_enable_hub_patterns', false );
+	}
+}
 
 if ( ! function_exists( 'lunara_register_hub_pattern_category' ) ) {
 	function lunara_register_hub_pattern_category() {
-		if ( ! function_exists( 'register_block_pattern_category' ) ) {
+		if ( ! function_exists( 'register_block_pattern_category' ) || ! lunara_hub_patterns_enabled() ) {
 			return;
 		}
 		register_block_pattern_category( 'lunara', array(
@@ -16408,7 +16420,7 @@ if ( ! function_exists( 'lunara_register_hub_pattern_category' ) ) {
 
 if ( ! function_exists( 'lunara_register_hub_block_patterns' ) ) {
 	function lunara_register_hub_block_patterns() {
-		if ( ! function_exists( 'register_block_pattern' ) ) {
+		if ( ! function_exists( 'register_block_pattern' ) || ! lunara_hub_patterns_enabled() ) {
 			return;
 		}
 

@@ -26,6 +26,21 @@
 		window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 	function init(root) {
+		// Splide-pilot ownership handshake: the pilot script runs earlier in
+		// the footer and tags any root it claims synchronously (pending →
+		// ready). If it has claimed this root, the generic driver stays out
+		// entirely — no autoplay, no gesture bindings, no .active toggling
+		// racing the pilot's DOM rebuild. If the pilot never claimed it
+		// (Splide missing or failed), this driver remains the working
+		// static fallback exactly as before.
+		if (
+			root.hasAttribute('data-lunara-splide-pilot-active') ||
+			root.classList.contains('lunara-splide-pending') ||
+			root.classList.contains('lunara-splide-ready')
+		) {
+			return;
+		}
+
 		var slides = Array.prototype.slice.call(
 			root.querySelectorAll('.lunara-carousel-slide')
 		);
