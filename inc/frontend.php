@@ -3366,6 +3366,32 @@ function lunara_enqueue_home_splide_pilot_assets() {
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_home_splide_pilot_assets', 20 );
 
 /**
+ * Lights Down — immersive screening mode for single reviews and journal
+ * entries (chrome dim past the hero, reading-progress hairline, ambient
+ * accent sampled from the hero art).
+ */
+function lunara_enqueue_immersive_read_assets() {
+	if ( is_admin() || is_feed() || ! is_singular( array( 'review', 'journal' ) ) ) {
+		return;
+	}
+
+	$read_js = lunara_resolve_theme_asset(
+		'assets/js/lunara-immersive-read.js',
+		array( 'lunara-immersive-read.js' )
+	);
+	if ( $read_js['uri'] ) {
+		wp_enqueue_script(
+			'lunara-immersive-read',
+			$read_js['uri'],
+			array(),
+			lunara_theme_asset_version( $read_js['path'] ),
+			true
+		);
+	}
+}
+add_action( 'wp_enqueue_scripts', 'lunara_enqueue_immersive_read_assets', 20 );
+
+/**
  * Reviews archive authority package polish.
  */
 function lunara_enqueue_review_archive_dynamic_rails() {

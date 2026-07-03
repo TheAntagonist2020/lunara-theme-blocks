@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.28
+Version: 3.1.29
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -16761,4 +16761,79 @@ body.lunara-oscars-portal-page .lunara-oscars-portal-hero::after { right: 5%; tr
 @media (max-width: 900px) {
     body.lunara-oscars-portal-page .lunara-oscars-portal-hero::before,
     body.lunara-oscars-portal-page .lunara-oscars-portal-hero::after { width: 26%; }
+}
+
+/* ===== LUNARA ATMOSPHERE V2 ===== */
+/* Title Cards — kicker/title/CTA rise from a baseline mask on each hero
+   slide change. The hidden from-state exists ONLY inside the keyframes
+   (fill backwards), so text is never hidden for JS-off, reduced-motion,
+   or pre-mount readers; the carousel replays it via .is-title-live. */
+@media (prefers-reduced-motion: no-preference) {
+    .lunara-cinematic-hero-content.is-title-live > * {
+        animation: lunara-title-card-rise 560ms var(--lunara-ease-cine, cubic-bezier(.2, .8, .2, 1)) backwards;
+    }
+    .lunara-cinematic-hero-content.is-title-live > :nth-child(2) { animation-delay: 90ms; }
+    .lunara-cinematic-hero-content.is-title-live > :nth-child(3) { animation-delay: 180ms; }
+    .lunara-cinematic-hero-content.is-title-live > :nth-child(4) { animation-delay: 270ms; }
+    @keyframes lunara-title-card-rise {
+        from { clip-path: inset(0 -8% 100% -8%); transform: translateY(18px); }
+        to   { clip-path: inset(-20% -8% -20% -8%); transform: none; }
+    }
+}
+
+/* Chapter Hairline — a gold playhead that draws in under each section
+   kicker as the chapter enters. Rides the reveal system: .lunara-reveal is
+   only ever added by JS (which bails under reduced motion), so JS-off and
+   reduced-motion readers always see the settled static rule. The pure-CSS
+   view() timeline was rejected here on purpose: several home sections carry
+   overflow:hidden (backdrops), which makes them the nearest scroll container
+   and freezes view() progress. */
+.lunara-home-section .lunara-home-section-kicker { position: relative; }
+.lunara-home-section .lunara-home-section-kicker::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -7px;
+    width: min(220px, 100%);
+    height: 1px;
+    background: linear-gradient(90deg, var(--lunara-gold, #c9a961) 0%, rgba(201, 169, 97, .12) 100%);
+    transform-origin: 0 50%;
+    pointer-events: none;
+}
+.lunara-home-section.lunara-reveal .lunara-home-section-kicker::after {
+    transform: scaleX(0);
+    transition: transform 1.1s cubic-bezier(.2, .8, .2, 1) .18s;
+}
+.lunara-home-section.lunara-reveal.is-visible .lunara-home-section-kicker::after {
+    transform: scaleX(1);
+}
+
+/* Lights Down — immersive screening mode on single reviews/journal.
+   The chrome dims once the reader is past the hero; a reading-progress
+   hairline tracks the article; --lunara-ambient (sampled from the hero
+   art by lunara-immersive-read.js) tints the hairline and blockquotes. */
+#lunara-read-progress {
+    background: linear-gradient(90deg, var(--lunara-gold, #c9a961), var(--lunara-ambient, var(--lunara-gold-light, #eadbb3)));
+    height: 2px;
+    left: 0;
+    pointer-events: none;
+    position: fixed;
+    top: 0;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    width: 100%;
+    z-index: 9950;
+}
+#header, .site-footer, #main-container > footer { transition: opacity .55s ease; }
+body.is-lights-down #header,
+body.is-lights-down .site-footer,
+body.is-lights-down #main-container > footer { opacity: .35; }
+body.is-lights-down #header:hover,
+body.is-lights-down #header:focus-within { opacity: 1; }
+body.single-review .entry-content blockquote,
+body.single-journal .entry-content blockquote {
+    border-color: var(--lunara-ambient, var(--lunara-gold, #c9a961));
+}
+@media (prefers-reduced-motion: reduce) {
+    #header, .site-footer, #main-container > footer { transition: none; }
 }
