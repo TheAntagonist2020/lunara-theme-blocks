@@ -2047,6 +2047,93 @@ function lunara_output_stats_countup_js() {
 add_action( 'wp_footer', 'lunara_output_stats_countup_js', 102 );
 
 /**
+ * Atmosphere V1 — The Cut. Poster match-cut for cross-document View
+ * Transitions: clicking a poster card names its image `lunara-screen` at the
+ * moment of navigation so the browser morphs it into the review hero (named
+ * in pure CSS). Browsers without startViewTransition, modified clicks,
+ * external/new-tab links, and reduced-motion users all fall through to the
+ * existing tuned root fade — the fallback IS the design.
+ */
+function lunara_output_match_cut_js() {
+    if ( is_admin() || is_customize_preview() ) {
+        return;
+    }
+    ?>
+    <script>
+    (function(){
+        if(!('startViewTransition' in document))return;
+        if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+        var CARDS='.lunara-review-grid-card,.lunara-poster-card,.lunara-oscar-pick-card,.lunara-journal-home-card,.lunara-cinematic-hero-link';
+        document.addEventListener('click',function(e){
+            if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+            var card=e.target.closest?e.target.closest(CARDS):null;if(!card)return;
+            var a=card.matches('a')?card:card.querySelector('a[href]');
+            if(!a||!a.href)return;
+            if(a.target&&a.target!=='_self')return;
+            if(a.origin!==location.origin)return;
+            var img=card.querySelector('img');if(!img)return;
+            var r=img.getBoundingClientRect();
+            if(r.width<1||r.bottom<0||r.top>window.innerHeight)return;
+            /* Demote the current page's own hero name first — two elements
+               sharing lunara-screen would abort the whole transition. */
+            var hero=document.querySelector('.lunara-review-single-cinematic-hero .lunara-review-visual--hero');
+            if(hero)hero.style.viewTransitionName='none';
+            img.style.viewTransitionName='lunara-screen';
+            img.setAttribute('data-lunara-vt','1');
+        },true);
+        window.addEventListener('pageshow',function(e){
+            if(!e.persisted)return;
+            document.querySelectorAll('[data-lunara-vt]').forEach(function(el){el.style.viewTransitionName='';el.removeAttribute('data-lunara-vt');});
+            var hero=document.querySelector('.lunara-review-single-cinematic-hero .lunara-review-visual--hero');
+            if(hero)hero.style.viewTransitionName='';
+        });
+    })();
+    </script>
+    <?php
+}
+add_action( 'wp_footer', 'lunara_output_match_cut_js', 103 );
+
+/**
+ * Atmosphere V1 — Room Tone. Injects the 35mm grain veil (one-shot canvas
+ * bake to a data-URI tile, stepped on the compositor — no running canvas,
+ * no rAF) and the theater vignette, strictly after window load so first
+ * paint and LCP are untouched. Gated off for save-data, low-memory devices,
+ * and admin/customizer contexts; reduced-motion gets the static texture
+ * with no shimmer.
+ */
+function lunara_output_atmosphere_js() {
+    if ( is_admin() || is_customize_preview() ) {
+        return;
+    }
+    ?>
+    <script>
+    (function(){
+        if(navigator.connection&&navigator.connection.saveData)return;
+        if(navigator.deviceMemory&&navigator.deviceMemory<4)return;
+        var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        function boot(){
+            if(document.getElementById('lunara-grain'))return;
+            var c=document.createElement('canvas');c.width=c.height=160;
+            var x=c.getContext('2d');if(!x)return;
+            var d=x.createImageData(160,160);
+            for(var i=0;i<d.data.length;i+=4){var v=(Math.random()*255)|0;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=38;}
+            x.putImageData(d,0,0);
+            var g=document.createElement('div');g.id='lunara-grain';g.setAttribute('aria-hidden','true');
+            g.style.backgroundImage='url('+c.toDataURL()+')';
+            if(!reduce)g.classList.add('is-live');
+            document.body.appendChild(g);
+            var vg=document.createElement('div');vg.id='lunara-vignette';vg.setAttribute('aria-hidden','true');
+            document.body.appendChild(vg);
+        }
+        if(document.readyState==='complete'){setTimeout(boot,0);}
+        else{window.addEventListener('load',function(){setTimeout(boot,150);});}
+    })();
+    </script>
+    <?php
+}
+add_action( 'wp_footer', 'lunara_output_atmosphere_js', 104 );
+
+/**
  * Build review-specific SEO/social metadata from the same reader hook used by cards.
  */
 if ( ! function_exists( 'lunara_get_review_seo_summary' ) ) {
