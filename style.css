@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.23
+Version: 3.1.24
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -16627,4 +16627,138 @@ body.post-type-archive-journal .lunara-review-grid-poster {
     .lunara-cinematic-hero-carousel.splide--fade > .splide__track > .splide__list > .splide__slide {
         transition: none !important;
     }
+}
+
+/* ============================================================
+   LUNARA ATMOSPHERE V1 — the screening-room layer
+   One motion grammar, five instruments:
+   1. The Cut   — poster match-cut via cross-document View Transitions,
+                  root cross-fade retinted through house-dark navy.
+   2. The Dolly — scroll-driven hero parallax (pure CSS, compositor-only).
+   3. Rack Focus— hover a poster, its shelf-mates drop their key light.
+   4. Room Tone — 35mm grain veil + theater vignette + depth floor
+                  (grain node injected by lunara_output_atmosphere_js).
+   5. Key Light — gold spotlight shafts on the Oscars portal hero.
+   Everything below is additive and decorative: JS-off and
+   reduced-motion readers get the exact site that shipped before it.
+   ============================================================ */
+:root {
+    --lunara-ease-cine: cubic-bezier(.2, .8, .2, 1);
+    --lunara-cut-ms: 420ms;
+    --lunara-navy-deep: #060d15;
+}
+
+/* --- 1. The Cut ------------------------------------------------ */
+@media (prefers-reduced-motion: no-preference) {
+    ::view-transition { background-color: var(--lunara-navy-deep); }
+    .lunara-review-single-cinematic-hero .lunara-review-visual--hero { view-transition-name: lunara-screen; }
+    ::view-transition-group(lunara-screen) { animation-duration: var(--lunara-cut-ms); animation-timing-function: var(--lunara-ease-cine); }
+    ::view-transition-old(lunara-screen),
+    ::view-transition-new(lunara-screen) { height: 100%; width: 100%; object-fit: cover; overflow: hidden; }
+    ::view-transition-old(lunara-screen) { animation: none; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(lunara-screen),
+    ::view-transition-old(lunara-screen),
+    ::view-transition-new(lunara-screen) { animation: none; }
+}
+
+/* --- 2. The Dolly ---------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) and (min-width: 901px) {
+    @supports (animation-timeline: scroll()) {
+        .lunara-cinematic-hero-bg {
+            /* out-!importants the animation:none guard higher up by later source order */
+            animation: lunara-hero-dolly linear both !important;
+            animation-timeline: scroll(root) !important;
+            animation-range: 0px 100vh !important;
+        }
+        .lunara-cinematic-hero-overlay::after {
+            content: ""; position: absolute; inset: 0; background: var(--lunara-navy-deep); opacity: 0;
+            animation: lunara-hero-grade linear both;
+            animation-timeline: scroll(root);
+            animation-range: 0px 100vh;
+        }
+        .lunara-review-single-cinematic-hero .lunara-review-visual-frame { overflow: hidden; }
+        .lunara-review-single-cinematic-hero .lunara-review-visual-image {
+            animation: lunara-review-dolly linear both;
+            animation-timeline: view();
+            animation-range: cover 0% cover 100%;
+        }
+    }
+}
+@keyframes lunara-hero-dolly { to { transform: translate3d(0, 12%, 0) scale(1.12); } }
+@keyframes lunara-hero-grade { to { opacity: .55; } }
+@keyframes lunara-review-dolly { from { transform: scale(1.1) translateY(-2.5%); } to { transform: scale(1.1) translateY(2.5%); } }
+
+/* --- 3. Rack Focus ---------------------------------------------- */
+@media (hover: hover) and (pointer: fine) {
+    @supports selector(:has(*)) {
+        .lunara-journal-home-card-image,
+        .lunara-oscar-pick-card-image { transition: filter .3s ease; }
+        .lunara-review-grid:has(.lunara-review-grid-card:hover) .lunara-review-grid-card:not(:hover) .lunara-review-grid-poster,
+        .lunara-review-grid:has(.lunara-review-grid-card:focus-within) .lunara-review-grid-card:not(:focus-within) .lunara-review-grid-poster,
+        .lunara-journal-home-grid:has(.lunara-journal-home-card:hover) .lunara-journal-home-card:not(:hover) .lunara-journal-home-card-image,
+        .lunara-journal-home-grid:has(.lunara-journal-home-card:focus-within) .lunara-journal-home-card:not(:focus-within) .lunara-journal-home-card-image,
+        .lunara-oscar-picks-track:has(.lunara-oscar-pick-card:hover) .lunara-oscar-pick-card:not(:hover) .lunara-oscar-pick-card-image {
+            filter: brightness(.72) saturate(.85);
+        }
+    }
+    .lunara-section-link {
+        background-image: linear-gradient(currentColor, currentColor);
+        background-repeat: no-repeat; background-size: 0% 1px; background-position: 0 100%;
+        padding-bottom: 2px;
+        transition: background-size 240ms var(--lunara-ease-cine);
+    }
+    .lunara-section-link:hover,
+    .lunara-section-link:focus-visible { background-size: 100% 1px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .lunara-journal-home-card-image, .lunara-oscar-pick-card-image, .lunara-section-link { transition-duration: 0ms !important; }
+}
+
+/* --- 4. Room Tone ------------------------------------------------ */
+#lunara-grain {
+    position: fixed; inset: -100% auto auto -100%; width: 300%; height: 300%;
+    background-repeat: repeat; opacity: .05; mix-blend-mode: overlay;
+    pointer-events: none; z-index: 9940;
+}
+#lunara-grain.is-live { animation: lunara-grain-step .9s steps(1) infinite; }
+@keyframes lunara-grain-step {
+    0% { transform: translate3d(0, 0, 0); } 12.5% { transform: translate3d(-3%, -6%, 0); }
+    25% { transform: translate3d(4%, -2%, 0); } 37.5% { transform: translate3d(-2%, 5%, 0); }
+    50% { transform: translate3d(5%, 3%, 0); } 62.5% { transform: translate3d(-5%, 1%, 0); }
+    75% { transform: translate3d(2%, -4%, 0); } 87.5% { transform: translate3d(-1%, 3%, 0); }
+    100% { transform: translate3d(0, 0, 0); }
+}
+#lunara-vignette {
+    position: fixed; inset: 0;
+    background: radial-gradient(120% 90% at 50% 42%, transparent 62%, rgba(3, 8, 14, .4) 100%);
+    pointer-events: none; z-index: 9939;
+}
+body.home .lunara-front-page { background: radial-gradient(140% 60% at 50% 0%, rgba(16, 32, 47, .9) 0%, transparent 55%) no-repeat; }
+@media (prefers-reduced-motion: reduce) { #lunara-grain { animation: none !important; } }
+@media (max-width: 900px) { #lunara-grain { display: none; } }
+@media print { #lunara-grain, #lunara-vignette { display: none; } }
+
+/* --- 5. Key Light ------------------------------------------------ */
+body.lunara-oscars-portal-page .lunara-oscars-portal-hero { position: relative; overflow: hidden; isolation: isolate; }
+body.lunara-oscars-portal-page .lunara-oscars-portal-hero-grid { position: relative; z-index: 1; }
+body.lunara-oscars-portal-page .lunara-oscars-portal-hero::before,
+body.lunara-oscars-portal-page .lunara-oscars-portal-hero::after {
+    content: ""; position: absolute; top: -10%; bottom: 0; width: 16%; pointer-events: none; z-index: 0;
+    background: linear-gradient(to bottom, rgba(201, 169, 97, .11), rgba(201, 169, 97, .04) 55%, transparent 82%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 92%);
+    mask-image: linear-gradient(to bottom, #000 0%, transparent 92%);
+    opacity: .7;
+}
+body.lunara-oscars-portal-page .lunara-oscars-portal-hero::before { right: 22%; transform: skewX(-8deg); }
+body.lunara-oscars-portal-page .lunara-oscars-portal-hero::after { right: 5%; transform: skewX(-12deg); }
+@media (prefers-reduced-motion: no-preference) {
+    body.lunara-oscars-portal-page .lunara-oscars-portal-hero::before { animation: lunara-shaft-breathe 9s ease-in-out infinite alternate; }
+    body.lunara-oscars-portal-page .lunara-oscars-portal-hero::after { animation: lunara-shaft-breathe 9s ease-in-out 2.2s infinite alternate; }
+}
+@keyframes lunara-shaft-breathe { from { opacity: .5; } to { opacity: .85; } }
+@media (max-width: 900px) {
+    body.lunara-oscars-portal-page .lunara-oscars-portal-hero::before,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-hero::after { width: 26%; }
 }
