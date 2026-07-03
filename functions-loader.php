@@ -35,6 +35,7 @@ require_once $lunara_inc . 'control-desk.php';
 
 // Layer 2 — Shared hub (debrief defines functions used by everything below).
 require_once $lunara_inc . 'debrief.php';
+require_once $lunara_inc . 'shot-reel.php';   // The Still Gallery — [lunara_shot_reel] screening-room shot essays
 
 // Layer 3 — Card rendering (depends on debrief).
 require_once $lunara_inc . 'review-rendering.php';
