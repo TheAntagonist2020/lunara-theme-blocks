@@ -10671,103 +10671,17 @@ function lunara_output_sidebar_scroll_follow_js() {
 }
 add_action( 'wp_footer', 'lunara_output_sidebar_scroll_follow_js', 101 );
 
-/**
- * Wave 2: Image fade-in on load.
+/*
+ * Reveal-system single source of truth (reconciled 2026-07-03).
+ * lunara_output_image_fadein_js and lunara_output_scroll_reveal_js live ONLY
+ * in inc/frontend.php now (loaded first via functions-loader.php, so the
+ * function_exists-guarded copies that used to sit here were permanently dead
+ * code). CONTRACT for all future motion work: header.php's
+ * #lunara-critical-shell-repair block deliberately forces homepage sections
+ * carrying .lunara-reveal to opacity:1/transform:none with !important as an
+ * anti-jank guard - any new scroll choreography on those sections must use
+ * pseudo-elements or child elements, never the section box itself.
  */
-if ( ! function_exists( 'lunara_output_image_fadein_js' ) ) {
-function lunara_output_image_fadein_js() {
-    ?>
-    <script>
-    (function(){
-        function markLoaded(img){img.classList.add('lunara-img-loaded');}
-        function hydrateLazySource(img){
-            var dataSrc=img.getAttribute('data-src')||img.getAttribute('data-lazy-src')||'';
-            var dataSrcset=img.getAttribute('data-srcset')||img.getAttribute('data-lazy-srcset')||'';
-            var currentSrc=img.getAttribute('src')||'';
-            if(dataSrcset&&!img.getAttribute('srcset')){
-                img.setAttribute('srcset',dataSrcset);
-            }
-            if(dataSrc&&(!currentSrc||currentSrc.indexOf('data:image/gif')===0)){
-                img.setAttribute('src',dataSrc);
-            }
-        }
-        function processImg(img){
-            hydrateLazySource(img);
-            if(img.complete&&img.naturalWidth>1){markLoaded(img);return;}
-            img.addEventListener('load',function(){markLoaded(img);});
-            img.addEventListener('error',function(){markLoaded(img);});
-        }
-        var sels='.lunara-review-grid-poster,.lunara-review-feature-image,.lunara-poster-card-image,.lunara-journal-home-card-image,.lunara-dispatch-archive-thumb,.lunara-dispatch-lead-image,.lunara-oscar-pick-card-image,.lunara-oscar-fact-card-poster-image,.lunara-home-pulse-poster,.aat-filmography-poster,.aat-entity-poster';
-        document.querySelectorAll(sels).forEach(processImg);
-        if(window.MutationObserver){
-            new MutationObserver(function(mutations){
-                mutations.forEach(function(m){
-                    m.addedNodes.forEach(function(n){
-                        if(n.nodeType===1){
-                            if(n.matches&&n.matches(sels))processImg(n);
-                            n.querySelectorAll&&n.querySelectorAll(sels).forEach(processImg);
-                        }
-                    });
-                });
-            }).observe(document.body,{childList:true,subtree:true});
-        }
-    })();
-    </script>
-    <?php
-}
-}
-add_action( 'wp_footer', 'lunara_output_image_fadein_js', 100 );
-
-/**
- * Wave 3: Scroll-triggered reveals.
- */
-if ( ! function_exists( 'lunara_output_scroll_reveal_js' ) ) {
-function lunara_output_scroll_reveal_js() {
-    ?>
-    <script>
-    (function(){
-        if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-        // Only run scroll reveals on the front page â€” skip portal, plugin, single review, and other pages
-        var isFrontPage=document.body.classList.contains('home')||document.querySelector('.lunara-front-page');
-        var isPluginPage=document.querySelector('.aat-hub-page,.aat-entity-page');
-        var revealSels=[];
-        var staggerSels=[];
-        if(isFrontPage){
-            revealSels=[
-                '.lunara-front-page>.lunara-home-section','.lunara-review-grid-card','.lunara-review-feature-card',
-                '.lunara-poster-card','.lunara-ledger-card','.lunara-dispatch-archive-card'
-            ];
-            staggerSels=[
-                '.lunara-review-grid','.lunara-review-related-grid'
-            ];
-        }
-        // Entity pages get targeted reveals for stats/timeline only
-        if(isPluginPage){
-            revealSels=['.aat-entity-status-banner','.aat-stat','.aat-timeline-card'];
-            staggerSels=['.aat-stats-bar','.aat-timeline-list'];
-        }
-        if(!revealSels.length)return;
-        revealSels.forEach(function(s){
-            document.querySelectorAll(s).forEach(function(el){el.classList.add('lunara-reveal');});
-        });
-        staggerSels.forEach(function(s){
-            document.querySelectorAll(s).forEach(function(el){el.classList.add('lunara-reveal-stagger');});
-        });
-        var obs=new IntersectionObserver(function(entries){
-            entries.forEach(function(entry){
-                if(entry.isIntersecting){
-                    entry.target.classList.add('is-visible');
-                    obs.unobserve(entry.target);
-                }
-            });
-        },{threshold:0.08,rootMargin:'0px 0px -40px 0px'});
-        document.querySelectorAll('.lunara-reveal').forEach(function(el){obs.observe(el);});
-    })();
-    </script>
-    <?php
-}
-}
-add_action( 'wp_footer', 'lunara_output_scroll_reveal_js', 101 );
 
 // Sticky sidebar deferred to standalone theme (Tier 4).
 // Blocksy's scroll container architecture defeats both CSS sticky and JS fixed positioning.
