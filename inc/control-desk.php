@@ -14092,6 +14092,119 @@ function lunara_control_desk_render_homepage_board_tab( $rows ) {
             </div>
         </form>
     </section>
+
+    <?php lunara_control_desk_render_block_registry_diagnostic(); ?>
+    <?php
+}
+
+/**
+ * Read-only diagnostic: every registered Lunara-family block (theme
+ * lunara/*, Oscars plugin academy-awards/*, Journal plugin
+ * lunara-dispatch/*) with inserter visibility, registered lunara
+ * patterns, and a live census of which stored content actually contains
+ * any of that block markup. The source of truth to consult before
+ * retiring or restoring any editor surface.
+ */
+function lunara_control_desk_render_block_registry_diagnostic() {
+    $namespaces = array( 'lunara/', 'academy-awards/', 'lunara-dispatch/' );
+
+    $blocks = array();
+    if ( class_exists( 'WP_Block_Type_Registry' ) ) {
+        foreach ( WP_Block_Type_Registry::get_instance()->get_all_registered() as $name => $block_type ) {
+            $matched = false;
+            foreach ( $namespaces as $prefix ) {
+                if ( 0 === strpos( $name, $prefix ) ) {
+                    $matched = true;
+                    break;
+                }
+            }
+            if ( ! $matched ) {
+                continue;
+            }
+            $supports = is_array( $block_type->supports ) ? $block_type->supports : array();
+            $blocks[ $name ] = array_key_exists( 'inserter', $supports ) ? (bool) $supports['inserter'] : true;
+        }
+        ksort( $blocks );
+    }
+
+    $patterns = array();
+    if ( class_exists( 'WP_Block_Patterns_Registry' ) ) {
+        foreach ( WP_Block_Patterns_Registry::get_instance()->get_all_registered() as $pattern ) {
+            if ( isset( $pattern['name'] ) && 0 === strpos( (string) $pattern['name'], 'lunara/' ) ) {
+                $patterns[] = (string) $pattern['name'];
+            }
+        }
+        sort( $patterns );
+    }
+
+    global $wpdb;
+    $content_rows = $wpdb->get_results(
+        "SELECT ID, post_title, post_type, post_status
+         FROM {$wpdb->posts}
+         WHERE ( post_content LIKE '%<!-- wp:lunara/%'
+              OR post_content LIKE '%<!-- wp:academy-awards/%'
+              OR post_content LIKE '%<!-- wp:lunara-dispatch/%' )
+           AND post_status IN ('publish', 'draft', 'pending', 'private', 'future')
+         ORDER BY post_type, ID
+         LIMIT 50",
+        ARRAY_A
+    );
+    ?>
+    <section class="lunara-control-desk-panel">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Block Registry Diagnostic', 'lunara-film' ); ?></p>
+            <h2><?php esc_html_e( 'What the editor offers vs. what content actually uses', 'lunara-film' ); ?></h2>
+            <p class="lunara-control-desk-intro"><?php esc_html_e( 'Legacy bridge blocks and homepage composition blocks stay registered so existing content keeps rendering, but they are hidden from the inserter. Hub patterns are retired (restorable via the lunara_enable_hub_patterns filter). Consult this readout before retiring or restoring anything.', 'lunara-film' ); ?></p>
+        </div>
+        <table class="widefat striped">
+            <thead>
+                <tr>
+                    <th><?php esc_html_e( 'Registered Lunara-family block', 'lunara-film' ); ?></th>
+                    <th><?php esc_html_e( 'In inserter?', 'lunara-film' ); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ( empty( $blocks ) ) : ?>
+                    <tr><td colspan="2"><?php esc_html_e( 'No Lunara-family blocks registered.', 'lunara-film' ); ?></td></tr>
+                <?php endif; ?>
+                <?php foreach ( $blocks as $name => $in_inserter ) : ?>
+                    <tr>
+                        <td><code><?php echo esc_html( $name ); ?></code></td>
+                        <td><?php echo $in_inserter ? esc_html__( 'Yes', 'lunara-film' ) : esc_html__( 'Hidden (renders only)', 'lunara-film' ); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <p class="lunara-control-desk-subtle" style="margin-top:12px;">
+            <?php
+            echo esc_html(
+                sprintf(
+                    /* translators: %d: number of registered lunara patterns */
+                    __( 'Registered Lunara block patterns: %d', 'lunara-film' ),
+                    count( $patterns )
+                )
+            );
+            if ( ! empty( $patterns ) ) {
+                echo esc_html( ' — ' . implode( ', ', $patterns ) );
+            }
+            ?>
+        </p>
+        <h3 style="margin-top:18px;"><?php esc_html_e( 'Content containing Lunara block markup', 'lunara-film' ); ?></h3>
+        <?php if ( empty( $content_rows ) ) : ?>
+            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'No stored content contains Lunara block markup.', 'lunara-film' ); ?></p>
+        <?php else : ?>
+            <ul class="lunara-control-desk-link-list">
+                <?php foreach ( $content_rows as $row ) : ?>
+                    <li>
+                        <a href="<?php echo esc_url( get_edit_post_link( (int) $row['ID'], 'raw' ) ); ?>">
+                            <?php echo esc_html( $row['post_title'] ? $row['post_title'] : __( '(Untitled)', 'lunara-film' ) ); ?>
+                        </a>
+                        <code><?php echo esc_html( $row['post_type'] . ' #' . $row['ID'] . ' · ' . $row['post_status'] ); ?></code>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+    </section>
     <?php
 }
 
