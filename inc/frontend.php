@@ -6329,8 +6329,10 @@ function lunara_output_pair_it_with_cards_css() {
         return;
     }
 
-    // The homepage Pairing Desk showcase reuses the module verbatim.
-    $should_load = is_singular( 'review' ) || is_front_page();
+    // The homepage Pairing Desk showcase reuses the module verbatim, and the
+    // reviews index closes with the same desk — without this CSS the cards
+    // render unstyled there (mismatched sizes, stacked at natural heights).
+    $should_load = is_singular( 'review' ) || is_front_page() || is_post_type_archive( 'review' );
     if ( ! $should_load && is_singular() ) {
         $current = get_post();
         if ( $current instanceof WP_Post && has_shortcode( (string) $current->post_content, 'lunara_pair_it_with' ) ) {

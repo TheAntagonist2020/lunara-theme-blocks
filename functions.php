@@ -15471,8 +15471,8 @@ if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 			? lunara_theme_mod_text( 'lunara_home_pairing_desk_title', 'Every review ends with three more films.' )
 			: 'Every review ends with three more films.';
 		$copy = function_exists( 'lunara_theme_mod_text' )
-			? lunara_theme_mod_text( 'lunara_home_pairing_desk_copy', 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm.' )
-			: 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm.';
+			? lunara_theme_mod_text( 'lunara_home_pairing_desk_copy', 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm. No other film desk builds this rail.' )
+			: 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm. No other film desk builds this rail.';
 
 		$review_title = get_the_title( $review_id );
 		$review_url   = get_permalink( $review_id );
@@ -15495,6 +15495,7 @@ if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 				.lunara-pairing-desk-overlay{background:radial-gradient(circle at 82% 8%,rgba(201,169,97,.16),transparent 34%),linear-gradient(180deg,rgba(5,12,21,.88),rgba(7,16,27,.8) 42%,rgba(4,10,18,.95));inset:0;position:absolute;z-index:1}
 				.lunara-pairing-desk-inner{position:relative;z-index:2}
 				.lunara-pairing-desk-head{display:grid;grid-template-columns:minmax(0,max-content) minmax(280px,42ch);justify-content:start;gap:14px clamp(38px,5vw,72px);align-items:end;margin-bottom:18px}
+				.lunara-pairing-desk-claim{display:inline-block;margin:0 0 12px;padding:6px 13px;border:1px solid rgba(201,169,97,.5);background:rgba(7,15,26,.55);color:#e8d9b0;font-family:'Bebas Neue','Oswald',Impact,sans-serif;font-size:.85rem;letter-spacing:.32em;text-transform:uppercase}
 				.lunara-pairing-desk-head .lunara-home-section-title{margin-bottom:0;max-width:14ch;text-shadow:0 3px 22px rgba(0,0,0,.5)}
 				.lunara-pairing-desk-intro{display:grid;gap:10px;align-content:end;padding-bottom:4px}
 				.lunara-pairing-desk-copy{margin:0;color:rgba(244,239,227,.84);font-size:.97rem;line-height:1.6;text-shadow:0 2px 14px rgba(0,0,0,.45)}
@@ -15526,6 +15527,7 @@ if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 			<div class="lunara-pairing-desk-inner">
 				<div class="lunara-pairing-desk-head">
 					<div>
+						<p class="lunara-pairing-desk-claim"><?php esc_html_e( 'Only on Lunara', 'lunara-film' ); ?></p>
 						<p class="lunara-home-section-kicker"><?php echo esc_html( $kicker ); ?></p>
 						<h2 class="lunara-home-section-title"><?php echo esc_html( $title ); ?></h2>
 					</div>
