@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.32
+Version: 3.1.33
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -14239,8 +14239,10 @@ body.home .lunara-home-hero {
 }
 
 @keyframes lunara-cinematic-ken-burns {
-    0%   { transform: scale(1.06) translate3d(0, 0, 0); }
-    100% { transform: scale(1.14) translate3d(-1.5%, 1.2%, 0); }
+    /* Gentler drift: the old 1.06→1.14 zoom cropped up to 14% of the frame,
+       which read as "the image is cut off". Keep the life, show the shot. */
+    0%   { transform: scale(1.02) translate3d(0, 0, 0); }
+    100% { transform: scale(1.07) translate3d(-0.8%, 0.6%, 0); }
 }
 
 /* Multi-stop dark gradient pulling text legibility from bottom up */
@@ -14250,10 +14252,10 @@ body.home .lunara-home-hero {
     z-index: 1;
     background:
         linear-gradient(to top,
-            rgba(7, 15, 26, 0.96) 0%,
-            rgba(7, 15, 26, 0.78) 22%,
-            rgba(7, 15, 26, 0.42) 50%,
-            rgba(7, 15, 26, 0.10) 78%,
+            rgba(7, 15, 26, 0.88) 0%,
+            rgba(7, 15, 26, 0.60) 22%,
+            rgba(7, 15, 26, 0.26) 50%,
+            rgba(7, 15, 26, 0.05) 78%,
             rgba(7, 15, 26, 0.00) 100%
         ),
         radial-gradient(ellipse at top right,
@@ -14302,13 +14304,13 @@ body.home .lunara-home-hero {
 .lunara-cinematic-hero-title {
     margin: 0 0 18px;
     font-family: Georgia, 'Times New Roman', Times, serif;
-    font-size: clamp(1.9rem, 3.4vw, 3.2rem);
-    line-height: 1.07;
+    font-size: clamp(1.75rem, 2.9vw, 2.8rem);
+    line-height: 1.09;
     color: #fff;
     text-wrap: balance;
     font-weight: 400;
     letter-spacing: -0.015em;
-    max-width: 24ch;
+    max-width: 30ch;
     /* Cap long headlines so the hero stays contained regardless of title length. */
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -14321,7 +14323,7 @@ body.home .lunara-home-hero {
     max-width: 60ch;
     font-family: Georgia, serif;
     font-style: italic;
-    font-size: clamp(1.1rem, 1.4vw, 1.42rem);
+    font-size: clamp(1.02rem, 1.2vw, 1.26rem);
     line-height: 1.5;
     color: #FAFBFC;
     opacity: 0.94;
@@ -14514,9 +14516,11 @@ body.home .lunara-cinematic-hero + .lunara-home-section .lunara-home-section-hea
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center;
+    /* Bias the crop toward the upper third — faces and subjects live there
+       far more often than dead center on cinematic stills. */
+    object-position: center 30%;
     display: block;
-    transform: scale(1.06);
+    transform: scale(1.02);
     will-change: transform;
     animation: lunara-cinematic-ken-burns 28s ease-in-out infinite alternate;
 }
@@ -14534,7 +14538,7 @@ body.home .lunara-cinematic-hero + .lunara-home-section .lunara-home-section-hea
         max-width: none !important;
     }
     .lunara-cinematic-hero-title {
-        font-size: clamp(2rem, 8vw, 3.4rem) !important;
+        font-size: clamp(1.8rem, 6.5vw, 2.6rem) !important;
         max-width: none !important;
     }
     .lunara-cinematic-hero-excerpt {
@@ -14558,8 +14562,11 @@ body.home .lunara-cinematic-hero + .lunara-home-section .lunara-home-section-hea
         padding: 0 12px 38px !important;
     }
     .lunara-cinematic-hero-title {
-        font-size: clamp(1.85rem, 9vw, 2.8rem) !important;
+        font-size: clamp(1.7rem, 8vw, 2.3rem) !important;
         margin-bottom: 18px !important;
+        /* Narrow screens get one extra line before the cap — long editorial
+           titles need it at this measure. */
+        -webkit-line-clamp: 4;
     }
 }
 

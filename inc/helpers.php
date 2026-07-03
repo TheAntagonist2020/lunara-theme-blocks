@@ -298,6 +298,13 @@ function lunara_get_reviews_archive_section_registry() {
             'description'  => __( 'Keep the review archive paginated instead of hard-stopping after the visible grid.', 'lunara-film' ),
             'aliases'      => array( 'pager' ),
         ),
+        'pairing-desk' => array(
+            'label'        => __( 'Pairing Desk', 'lunara-film' ),
+            'toggle_label' => __( 'Show Pairing Desk', 'lunara-film' ),
+            'setting'      => 'lunara_reviews_archive_show_pairing_desk',
+            'description'  => __( 'Close the archive with the signature Pair It With showcase from the Debrief.', 'lunara-film' ),
+            'aliases'      => array( 'pairing', 'pair-it-with', 'debrief' ),
+        ),
     );
 }
 
