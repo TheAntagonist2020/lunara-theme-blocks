@@ -4,13 +4,27 @@
  * Mounts a premium cross-fade Splide carousel on the homepage hero, cycling
  * through the latest reviews + journal entries. Independent of the Oscar-Facts
  * "splide pilot" (which is hardcoded to its own markup). The PHP outputs native
- * Splide DOM (.splide / .splide__track / .splide__list / .splide__slide), so
- * this just configures and mounts.
+ * Splide DOM (.splide / .splide__track / .splide__list / .splide__slide) with
+ * REAL image srcs on every slide (slide 1 eager, the rest native-lazy), so
+ * this just configures and mounts — no image swapping.
+ *
+ * Resilience contract: the pre-mount guard in style.css hides slides 2+ until
+ * .is-hero-mounted exists. That class is added BEFORE mount() so a failure
+ * anywhere inside Splide's mount (which fires our handlers synchronously) can
+ * never leave the deck permanently hidden. Every custom handler is isolated
+ * in try/catch — decoration must never break navigation — and any caught
+ * error is announced with a [lunara-hero] console.warn beacon.
  *
  * @package Lunara_Film
  */
 (function () {
 	'use strict';
+
+	function warn(where, err) {
+		if (window.console && console.warn) {
+			console.warn('[lunara-hero] ' + where + ':', err);
+		}
+	}
 
 	function mountHeroCarousels() {
 		if (!window.Splide) {
@@ -65,75 +79,58 @@
 				}
 			});
 
-			// First slide loads eagerly (LCP). Every other slide's real image is
-			// swapped in as early as possible — at transition START (move), at
-			// activation, and via a full background preload shortly after the
-			// window load event — so paging through the deck never shows a blank
-			// slide waiting on a download.
-			var loadLazyImage = function (slideEl) {
-				if (!slideEl) {
-					return;
-				}
-				var lazyImg = slideEl.querySelector('img[data-lunara-lazy]');
-				if (lazyImg) {
-					lazyImg.loading = 'eager';
-					lazyImg.src = lazyImg.getAttribute('data-lunara-lazy');
-					lazyImg.removeAttribute('data-lunara-lazy');
-				}
-			};
-
-			splide.on('move', function (newIndex) {
-				var allSlides = root.querySelectorAll('.splide__slide');
-				if (allSlides.length) {
-					loadLazyImage(allSlides[newIndex % allSlides.length]);
-					loadLazyImage(allSlides[(newIndex + 1) % allSlides.length]);
-				}
-			});
-
+			// Title Card: replay the kicker/title/CTA rise on every slide
+			// change. Purely decorative, so it is isolated — a failure here
+			// must never break paging or the mount sequence.
 			splide.on('active', function (slide) {
-				loadLazyImage(slide.slide);
-
-				var allSlides = root.querySelectorAll('.splide__slide');
-				if (allSlides.length) {
-					loadLazyImage(allSlides[(slide.index + 1) % allSlides.length]);
-				}
-
-				// Title Card: replay the kicker/title/CTA rise on every slide
-				// change. The hidden from-state lives only inside the animation
-				// keyframes (fill backwards), so text is never hidden for JS-off,
-				// reduced-motion, or pre-mount readers.
-				if (!reduceMotion) {
+				try {
+					if (reduceMotion || !slide || !slide.slide) {
+						return;
+					}
 					var content = slide.slide.querySelector('.lunara-cinematic-hero-content');
 					if (content) {
 						content.classList.remove('is-title-live');
 						void content.offsetWidth;
 						content.classList.add('is-title-live');
 					}
+				} catch (err) {
+					warn('title-card', err);
 				}
 			});
 
-			splide.mount();
+			// Release the pre-mount guard BEFORE mounting: Splide fires events
+			// synchronously inside mount(), and if anything in that chain ever
+			// throws, the deck must already be visible.
 			root.classList.add('is-hero-mounted');
 
-			// Background-load every remaining slide image once the page itself
-			// has finished loading, gently staggered so the whole deck is warm
-			// within a few seconds without competing with the first paint.
-			var preloadRemaining = function () {
-				var pending = root.querySelectorAll('img[data-lunara-lazy]');
-				Array.prototype.forEach.call(pending, function (img, i) {
-					window.setTimeout(function () {
-						if (img.hasAttribute('data-lunara-lazy')) {
-							img.loading = 'eager';
-							img.src = img.getAttribute('data-lunara-lazy');
-							img.removeAttribute('data-lunara-lazy');
+			try {
+				splide.mount();
+				// The first slide is server-marked is-active, which means
+				// Splide's initial 'active' event can be skipped — arm its
+				// title card explicitly.
+				if (!reduceMotion) {
+					try {
+						var initial = root.querySelector('.splide__slide.is-active .lunara-cinematic-hero-content');
+						if (initial && !initial.classList.contains('is-title-live')) {
+							initial.classList.add('is-title-live');
 						}
-					}, 400 + i * 350);
-				});
-			};
-			if (document.readyState === 'complete') {
-				preloadRemaining();
-			} else {
-				window.addEventListener('load', preloadRemaining, { once: true });
+					} catch (err) {
+						warn('initial title-card', err);
+					}
+				}
+			} catch (err) {
+				warn('mount failed', err);
+				if (!root.classList.contains('splide--fade')) {
+					// Failed before Splide set up the fade layout: re-arm the
+					// guard so the hero degrades to the static slide-1 view
+					// instead of six vertically stacked slides.
+					root.classList.remove('is-hero-mounted');
+				} else if (!root.querySelector('.splide__slide.is-active')) {
+					// Failed after layout setup: keep the deck usable and make
+					// sure something is showing.
+					root.querySelector('.splide__slide').classList.add('is-active');
+				}
+				root.classList.add('is-hero-static');
 			}
 		});
 	}
