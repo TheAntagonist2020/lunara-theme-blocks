@@ -123,6 +123,46 @@ function lunara_control_desk_save_journal_lead() {
 }
 add_action( 'admin_post_lunara_save_journal_lead', 'lunara_control_desk_save_journal_lead' );
 
+/**
+ * Pairing Desk showcase copy — the homepage "advertisement of the debrief".
+ * Three plain-text fields; an emptied field falls back to the built-in line.
+ */
+function lunara_control_desk_save_pairing_desk_copy() {
+    $redirect = lunara_control_desk_admin_url(
+        array(
+            'tab' => 'homepage-board',
+        )
+    );
+
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        wp_safe_redirect( add_query_arg( 'lunara_notice', 'pairing_desk_copy_forbidden', $redirect ) );
+        exit;
+    }
+
+    check_admin_referer( 'lunara_save_pairing_desk_copy', 'lunara_pairing_desk_copy_nonce' );
+
+    $fields = array(
+        'lunara_home_pairing_desk_kicker' => 'sanitize_text_field',
+        'lunara_home_pairing_desk_title'  => 'sanitize_text_field',
+        'lunara_home_pairing_desk_copy'   => 'sanitize_textarea_field',
+    );
+
+    foreach ( $fields as $setting => $sanitizer ) {
+        $value = isset( $_POST[ $setting ] ) ? call_user_func( $sanitizer, wp_unslash( $_POST[ $setting ] ) ) : '';
+        $value = trim( (string) $value );
+
+        if ( '' !== $value ) {
+            set_theme_mod( $setting, $value );
+        } else {
+            remove_theme_mod( $setting );
+        }
+    }
+
+    wp_safe_redirect( add_query_arg( 'lunara_notice', 'pairing_desk_copy_saved', $redirect ) );
+    exit;
+}
+add_action( 'admin_post_lunara_save_pairing_desk_copy', 'lunara_control_desk_save_pairing_desk_copy' );
+
 function lunara_control_desk_parse_journal_carousel_ids( $raw_ids ) {
     if ( is_array( $raw_ids ) ) {
         $raw_ids = implode( ',', $raw_ids );
@@ -14011,6 +14051,47 @@ function lunara_control_desk_render_homepage_board_tab( $rows ) {
             <a class="button" href="<?php echo esc_url( home_url( '/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open Homepage', 'lunara-film' ); ?></a>
         </div>
     </section>
+
+    <section class="lunara-control-desk-panel">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Pairing Desk Showcase', 'lunara-film' ); ?></p>
+            <h2><?php esc_html_e( 'Edit the debrief showcase copy on the homepage', 'lunara-film' ); ?></h2>
+            <p class="lunara-control-desk-intro"><?php esc_html_e( 'These three lines introduce the Pair It With trio on the front page. Save with a field left blank to restore its built-in line. The three pairing cards themselves come from the featured review\'s debrief.', 'lunara-film' ); ?></p>
+        </div>
+        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+            <input type="hidden" name="action" value="lunara_save_pairing_desk_copy" />
+            <?php wp_nonce_field( 'lunara_save_pairing_desk_copy', 'lunara_pairing_desk_copy_nonce' ); ?>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><label for="lunara-pairing-desk-kicker"><?php esc_html_e( 'Kicker (small gold line)', 'lunara-film' ); ?></label></th>
+                    <td>
+                        <input type="text" class="regular-text" id="lunara-pairing-desk-kicker" name="lunara_home_pairing_desk_kicker"
+                            value="<?php echo esc_attr( (string) get_theme_mod( 'lunara_home_pairing_desk_kicker', '' ) ); ?>"
+                            placeholder="<?php echo esc_attr__( 'The Lunara Method', 'lunara-film' ); ?>" />
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="lunara-pairing-desk-title"><?php esc_html_e( 'Headline', 'lunara-film' ); ?></label></th>
+                    <td>
+                        <input type="text" class="large-text" id="lunara-pairing-desk-title" name="lunara_home_pairing_desk_title"
+                            value="<?php echo esc_attr( (string) get_theme_mod( 'lunara_home_pairing_desk_title', '' ) ); ?>"
+                            placeholder="<?php echo esc_attr__( 'Every review ends with three more films.', 'lunara-film' ); ?>" />
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="lunara-pairing-desk-copy"><?php esc_html_e( 'Supporting paragraph', 'lunara-film' ); ?></label></th>
+                    <td>
+                        <textarea class="large-text" rows="3" id="lunara-pairing-desk-copy" name="lunara_home_pairing_desk_copy"
+                            placeholder="<?php echo esc_attr__( 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm.', 'lunara-film' ); ?>"><?php echo esc_textarea( (string) get_theme_mod( 'lunara_home_pairing_desk_copy', '' ) ); ?></textarea>
+                    </td>
+                </tr>
+            </table>
+            <div class="lunara-control-desk-actions">
+                <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Showcase Copy', 'lunara-film' ); ?></button>
+                <a class="button" href="<?php echo esc_url( home_url( '/#pairing-desk' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View Section', 'lunara-film' ); ?></a>
+            </div>
+        </form>
+    </section>
     <?php
 }
 
@@ -14169,6 +14250,14 @@ function lunara_control_desk_render_notice() {
     }
 
     $messages = array(
+        'pairing_desk_copy_saved'     => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Pairing Desk showcase copy saved. The homepage section now reads your lines; any blank field returned to its built-in line.', 'lunara-film' ),
+        ),
+        'pairing_desk_copy_forbidden' => array(
+            'class'   => 'notice-error',
+            'message' => __( 'You can view the Control Desk, but changing the Pairing Desk copy requires theme editing permission.', 'lunara-film' ),
+        ),
         'journal_lead_saved'     => array(
             'class'   => 'notice-success',
             'message' => __( 'Journal lead updated. The homepage Journal lane and default Journal archive now share that lead.', 'lunara-film' ),
