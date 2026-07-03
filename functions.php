@@ -15574,21 +15574,23 @@ if ( ! function_exists( 'lunara_get_hero_featured_slides' ) ) {
 }
 
 /**
- * Render one cinematic-hero slide from prepared data. The first slide loads
- * eagerly (it's the LCP); the rest carry their URL in data-lunara-lazy and are
- * swapped in by the carousel JS when they become active.
+ * Render one cinematic-hero slide from prepared data. Every slide carries its
+ * REAL image src — the first eagerly (it's the LCP), the rest via the
+ * browser's native lazy loading at low priority. No placeholder/swap
+ * machinery: nothing JS-dependent can leave a slide blank. The first slide is
+ * also server-marked is-active so it stays visible in every pre-mount and
+ * failed-mount state once the fade layout class exists.
  */
 if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
 	function lunara_render_cinematic_hero_slide( $data, $index = 0 ) {
 		$is_first     = ( 0 === (int) $index );
-		$transparent  = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 		$image_markup = $is_first
 			? '<img src="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" alt="" loading="eager" decoding="async" fetchpriority="high" sizes="100vw" />'
-			: '<img src="' . $transparent . '" data-lunara-lazy="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" alt="" loading="lazy" decoding="async" sizes="100vw" />';
+			: '<img src="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" alt="" decoding="async" fetchpriority="low" sizes="100vw" />';
 
 		ob_start();
 		?>
-		<li class="splide__slide lunara-cinematic-hero-slide">
+		<li class="splide__slide lunara-cinematic-hero-slide<?php echo $is_first ? ' is-active' : ''; ?>">
 			<a class="lunara-cinematic-hero-link" href="<?php echo esc_url( $data['url'] ); ?>" aria-label="<?php echo esc_attr( $data['title'] ); ?>">
 				<div class="lunara-cinematic-hero-bg" aria-hidden="true">
 					<?php echo $image_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
