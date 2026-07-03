@@ -65,19 +65,30 @@
 				}
 			});
 
-			// First slide loads eagerly (LCP). As each slide activates, swap in
-			// its image AND preload the next one's, so the cross-fade into the
-			// next slide never shows a blank flash.
+			// First slide loads eagerly (LCP). Every other slide's real image is
+			// swapped in as early as possible — at transition START (move), at
+			// activation, and via a full background preload shortly after the
+			// window load event — so paging through the deck never shows a blank
+			// slide waiting on a download.
 			var loadLazyImage = function (slideEl) {
 				if (!slideEl) {
 					return;
 				}
 				var lazyImg = slideEl.querySelector('img[data-lunara-lazy]');
 				if (lazyImg) {
+					lazyImg.loading = 'eager';
 					lazyImg.src = lazyImg.getAttribute('data-lunara-lazy');
 					lazyImg.removeAttribute('data-lunara-lazy');
 				}
 			};
+
+			splide.on('move', function (newIndex) {
+				var allSlides = root.querySelectorAll('.splide__slide');
+				if (allSlides.length) {
+					loadLazyImage(allSlides[newIndex % allSlides.length]);
+					loadLazyImage(allSlides[(newIndex + 1) % allSlides.length]);
+				}
+			});
 
 			splide.on('active', function (slide) {
 				loadLazyImage(slide.slide);
@@ -90,6 +101,27 @@
 
 			splide.mount();
 			root.classList.add('is-hero-mounted');
+
+			// Background-load every remaining slide image once the page itself
+			// has finished loading, gently staggered so the whole deck is warm
+			// within a few seconds without competing with the first paint.
+			var preloadRemaining = function () {
+				var pending = root.querySelectorAll('img[data-lunara-lazy]');
+				Array.prototype.forEach.call(pending, function (img, i) {
+					window.setTimeout(function () {
+						if (img.hasAttribute('data-lunara-lazy')) {
+							img.loading = 'eager';
+							img.src = img.getAttribute('data-lunara-lazy');
+							img.removeAttribute('data-lunara-lazy');
+						}
+					}, 400 + i * 350);
+				});
+			};
+			if (document.readyState === 'complete') {
+				preloadRemaining();
+			} else {
+				window.addEventListener('load', preloadRemaining, { once: true });
+			}
 		});
 	}
 
