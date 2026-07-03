@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.31
+Version: 3.1.32
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -16525,25 +16525,14 @@ body.post-type-archive-journal .lunara-review-grid-poster {
     height: 100%;
 }
 
-/* Fade layout (normally from the full splide theme CSS). Active slide stays in
-   flow so the track keeps its height; the rest stack behind at opacity 0. */
-.lunara-cinematic-hero-carousel.splide--fade > .splide__track > .splide__list {
-    display: block;
-}
-.lunara-cinematic-hero-carousel.splide--fade > .splide__track > .splide__list > .splide__slide {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    margin: 0;
-    opacity: 0;
-    z-index: 0;
+/* Fade layout comes from splide-core.min.css (.splide__track--fade rules:
+   opacity + z-index on each slide). Splide v4 keeps every slide in the flex
+   row and cancels each one's offset with an inline translateX(-100% x index),
+   so slides MUST stay in flow — never position them absolute and never make
+   the list display:block, or that transform shoves every slide after the
+   first off-screen to the left. Only additive niceties belong here. */
+.lunara-cinematic-hero-carousel .splide__track--fade > .splide__list > .splide__slide:not(.is-active) {
     pointer-events: none;
-}
-.lunara-cinematic-hero-carousel.splide--fade > .splide__track > .splide__list > .splide__slide.is-active {
-    position: relative;
-    opacity: 1;
-    z-index: 1;
-    pointer-events: auto;
 }
 /* Before JS mounts (or if Splide fails to load), show only the first slide —
    no stacked flash, graceful no-JS fallback. */
