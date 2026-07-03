@@ -15495,41 +15495,59 @@ if ( ! function_exists( 'lunara_add_hero_feature_meta_box' ) ) {
  */
 if ( ! function_exists( 'lunara_get_pairing_desk_review_id' ) ) {
 	function lunara_get_pairing_desk_review_id() {
+		// Plain loop instead of a meta_query: scan the most recent reviews and
+		// take the first one with any pairing filled. Bounded (20 posts, meta
+		// primed in one round trip) and immune to meta-query edge cases.
 		$ids = get_posts(
 			array(
-				'post_type'      => 'review',
-				'post_status'    => 'publish',
-				'posts_per_page' => 1,
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				'meta_query'     => array(
-					'relation' => 'OR',
-					array( 'key' => '_lunara_theme_echo', 'value' => '', 'compare' => '!=' ),
-					array( 'key' => '_lunara_counter_program', 'value' => '', 'compare' => '!=' ),
-					array( 'key' => '_lunara_career_context', 'value' => '', 'compare' => '!=' ),
-					array( 'key' => '_lunara_craft_mirror', 'value' => '', 'compare' => '!=' ),
-				),
+				'post_type'              => 'review',
+				'post_status'            => 'publish',
+				'posts_per_page'         => 20,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_term_cache' => false,
 			)
 		);
 
-		return ! empty( $ids ) ? (int) $ids[0] : 0;
+		if ( empty( $ids ) ) {
+			return 0;
+		}
+
+		update_meta_cache( 'post', array_map( 'intval', $ids ) );
+
+		foreach ( $ids as $review_id ) {
+			$review_id = (int) $review_id;
+			$has_pairing =
+				'' !== trim( (string) get_post_meta( $review_id, '_lunara_theme_echo', true ) ) ||
+				'' !== trim( (string) get_post_meta( $review_id, '_lunara_counter_program', true ) ) ||
+				'' !== trim( (string) get_post_meta( $review_id, '_lunara_career_context', true ) ) ||
+				'' !== trim( (string) get_post_meta( $review_id, '_lunara_craft_mirror', true ) );
+
+			if ( $has_pairing ) {
+				return $review_id;
+			}
+		}
+
+		return 0;
 	}
 }
 
 if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 	function lunara_render_home_pairing_desk() {
+		// The bail markers make live diagnosis trivial: view-source shows which
+		// gate (if any) kept the section off the page.
 		if ( ! function_exists( 'lunara_render_pair_it_with_cards' ) ) {
-			return '';
+			return "\n<!-- lunara-pairing-desk: module renderer unavailable -->\n";
 		}
 
 		$review_id = lunara_get_pairing_desk_review_id();
 		if ( $review_id <= 0 ) {
-			return '';
+			return "\n<!-- lunara-pairing-desk: no published review with pairings found -->\n";
 		}
 
 		$cards = trim( (string) lunara_render_pair_it_with_cards( $review_id ) );
 		if ( '' === $cards ) {
-			return '';
+			return "\n<!-- lunara-pairing-desk: review " . (int) $review_id . " produced no cards -->\n";
 		}
 
 		$kicker = function_exists( 'lunara_theme_mod_text' )
@@ -15562,8 +15580,8 @@ if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 				.lunara-pairing-desk-backdrop{background-position:center 26%;background-size:cover;filter:saturate(.9);inset:-4%;position:absolute;z-index:0}
 				.lunara-pairing-desk-overlay{background:radial-gradient(circle at 82% 8%,rgba(201,169,97,.16),transparent 34%),linear-gradient(180deg,rgba(5,12,21,.88),rgba(7,16,27,.8) 42%,rgba(4,10,18,.95));inset:0;position:absolute;z-index:1}
 				.lunara-pairing-desk-inner{position:relative;z-index:2}
-				.lunara-pairing-desk-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,40ch);gap:14px 46px;align-items:end;margin-bottom:18px}
-				.lunara-pairing-desk-head .lunara-home-section-title{margin-bottom:0;text-shadow:0 3px 22px rgba(0,0,0,.5)}
+				.lunara-pairing-desk-head{display:grid;grid-template-columns:minmax(0,max-content) minmax(280px,42ch);justify-content:start;gap:14px clamp(38px,5vw,72px);align-items:end;margin-bottom:18px}
+				.lunara-pairing-desk-head .lunara-home-section-title{margin-bottom:0;max-width:14ch;text-shadow:0 3px 22px rgba(0,0,0,.5)}
 				.lunara-pairing-desk-intro{display:grid;gap:10px;align-content:end;padding-bottom:4px}
 				.lunara-pairing-desk-copy{margin:0;color:rgba(244,239,227,.84);font-size:.97rem;line-height:1.6;text-shadow:0 2px 14px rgba(0,0,0,.45)}
 				.lunara-pairing-desk-source{margin:0;color:rgba(244,239,227,.74);font-size:.88rem}
