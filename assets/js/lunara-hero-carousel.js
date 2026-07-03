@@ -97,6 +97,19 @@
 				if (allSlides.length) {
 					loadLazyImage(allSlides[(slide.index + 1) % allSlides.length]);
 				}
+
+				// Title Card: replay the kicker/title/CTA rise on every slide
+				// change. The hidden from-state lives only inside the animation
+				// keyframes (fill backwards), so text is never hidden for JS-off,
+				// reduced-motion, or pre-mount readers.
+				if (!reduceMotion) {
+					var content = slide.slide.querySelector('.lunara-cinematic-hero-content');
+					if (content) {
+						content.classList.remove('is-title-live');
+						void content.offsetWidth;
+						content.classList.add('is-title-live');
+					}
+				}
 			});
 
 			splide.mount();
