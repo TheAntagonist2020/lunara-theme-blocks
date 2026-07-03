@@ -3344,6 +3344,14 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
         $show_pagination = function_exists( 'lunara_reviews_archive_section_is_enabled' )
             ? lunara_reviews_archive_section_is_enabled( 'pagination' )
             : true;
+        // Pairing Desk closes the review index only — director/taxonomy
+        // archives reuse this shell and should stay focused on their run.
+        $show_pairing_desk = is_post_type_archive( 'review' )
+            && ! $is_director_archive
+            && function_exists( 'lunara_render_home_pairing_desk' )
+            && ( function_exists( 'lunara_reviews_archive_section_is_enabled' )
+                ? lunara_reviews_archive_section_is_enabled( 'pairing-desk' )
+                : true );
         $sort_base_url  = remove_query_arg( array( 'sort', 'paged' ), get_pagenum_link( 1 ) );
         $sort_label     = lunara_get_review_archive_sort_label( $current_sort );
         $latest_label   = $latest_ts > 0 ? wp_date( 'M j, Y', $latest_ts ) : __( 'Standby', 'lunara-film' );
@@ -3537,6 +3545,12 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                             <?php echo wp_kses_post( $args['pagination'] ); ?>
                         </div>
                     </div>
+            <?php endif; ?>
+
+            <?php if ( $show_pairing_desk ) : ?>
+                <div class="lunara-review-archive-slot-pairing-desk" data-lunara-section="pairing-desk">
+                    <?php echo lunara_render_home_pairing_desk(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- module renderer escapes internally. ?>
+                </div>
             <?php endif; ?>
         </main>
         <?php
