@@ -15488,7 +15488,7 @@ if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 
 		ob_start();
 		?>
-		<section class="lunara-home-section lunara-home-slot-pairing-desk lunara-pairing-desk-section<?php echo '' !== $backdrop ? ' has-desk-backdrop' : ''; ?>" aria-label="<?php esc_attr_e( 'Pair It With showcase', 'lunara-film' ); ?>">
+		<section id="pairing-desk" class="lunara-home-section lunara-home-slot-pairing-desk lunara-pairing-desk-section<?php echo '' !== $backdrop ? ' has-desk-backdrop' : ''; ?>" aria-label="<?php esc_attr_e( 'Pair It With showcase', 'lunara-film' ); ?>">
 			<style>
 				.lunara-pairing-desk-section{overflow:hidden;position:relative}
 				.lunara-pairing-desk-backdrop{background-position:center 26%;background-size:cover;filter:saturate(.9);inset:-4%;position:absolute;z-index:0}
