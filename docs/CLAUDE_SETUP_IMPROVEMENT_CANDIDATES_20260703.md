@@ -143,8 +143,9 @@ clear. Kills the deploy-then-404 class of incident.
 ### 7. Hardcoded cross-repo version anchor  →  **FIX**
 
 **Pattern.** The theme's Control Desk admin panel hardcodes the *expected* Oscars plugin
-version and a pinned commit hash (`'2.7.88' === $aat_version ? 'ready' : 'weak'` in
-`inc/control-desk.php`). Keeping that dashboard green consumed **30 tiny commits in two days**
+version and a pinned commit hash (`'2.7.89' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' )`
+at `inc/control-desk.php:3716` as of this writing — the literal has been hand-bumped with every
+plugin release). Keeping that dashboard green consumed **30 tiny commits in two days**
 ("Expect … release" / "Update … source anchor"), and it silently rots every time the plugin
 ships. Related drift: the live site ran a branch **31 versions ahead of main** (v2.7.89 vs
 v2.7.58), which forced the duplicate TMDB fix and left two draft PRs stranded.
