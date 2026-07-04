@@ -94,6 +94,28 @@ function lunara_enqueue_styles() {
             true
         );
     }
+
+    // GSAP motion layer (Design Spec 2.0 §5/§19B) — self-hosted vendor
+    // build (core + ScrollTrigger + SplitText, all standard-licensed) plus
+    // the Lunara module. Footer-loaded; purely decorative, so a failed
+    // load changes nothing.
+    $gsap_core = lunara_resolve_theme_asset( 'assets/vendor/gsap/gsap.min.js' );
+    $gsap_st   = lunara_resolve_theme_asset( 'assets/vendor/gsap/ScrollTrigger.min.js' );
+    $gsap_split = lunara_resolve_theme_asset( 'assets/vendor/gsap/SplitText.min.js' );
+    $gsap_motion = lunara_resolve_theme_asset( 'assets/js/lunara-gsap-motion.js' );
+    if ( ! empty( $gsap_core['path'] ) && ! empty( $gsap_motion['path'] ) ) {
+        wp_enqueue_script( 'lunara-gsap', $gsap_core['uri'], array(), lunara_theme_asset_version( $gsap_core['path'] ), true );
+        $motion_deps = array( 'lunara-gsap' );
+        if ( ! empty( $gsap_st['path'] ) ) {
+            wp_enqueue_script( 'lunara-gsap-scrolltrigger', $gsap_st['uri'], array( 'lunara-gsap' ), lunara_theme_asset_version( $gsap_st['path'] ), true );
+            $motion_deps[] = 'lunara-gsap-scrolltrigger';
+        }
+        if ( ! empty( $gsap_split['path'] ) ) {
+            wp_enqueue_script( 'lunara-gsap-splittext', $gsap_split['uri'], array( 'lunara-gsap' ), lunara_theme_asset_version( $gsap_split['path'] ), true );
+            $motion_deps[] = 'lunara-gsap-splittext';
+        }
+        wp_enqueue_script( 'lunara-gsap-motion', $gsap_motion['uri'], $motion_deps, lunara_theme_asset_version( $gsap_motion['path'] ), true );
+    }
 }
 }
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
@@ -15539,10 +15561,10 @@ if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 				@media(prefers-reduced-motion:no-preference){
 					.lunara-pairing-desk-backdrop{animation:lunaraPairDrift 28s ease-in-out infinite alternate}
 					@keyframes lunaraPairDrift{from{transform:scale(1) translateY(0)}to{transform:scale(1.07) translateY(-1.5%)}}
-					.lunara-pairing-desk-section.lunara-reveal:not(.is-visible) .lunara-pair-card{opacity:0;transform:translateY(28px)}
-					.lunara-pairing-desk-section.lunara-reveal.is-visible .lunara-pair-card{opacity:1;transform:none;transition:opacity .75s ease,transform .75s cubic-bezier(.2,.7,.2,1)}
-					.lunara-pairing-desk-section.lunara-reveal.is-visible .lunara-pair-card:nth-child(2){transition-delay:.16s}
-					.lunara-pairing-desk-section.lunara-reveal.is-visible .lunara-pair-card:nth-child(3){transition-delay:.32s}
+					html:not(.lunara-gsap-motion) .lunara-pairing-desk-section.lunara-reveal:not(.is-visible) .lunara-pair-card{opacity:0;transform:translateY(28px)}
+					html:not(.lunara-gsap-motion) .lunara-pairing-desk-section.lunara-reveal.is-visible .lunara-pair-card{opacity:1;transform:none;transition:opacity .75s ease,transform .75s cubic-bezier(.2,.7,.2,1)}
+					html:not(.lunara-gsap-motion) .lunara-pairing-desk-section.lunara-reveal.is-visible .lunara-pair-card:nth-child(2){transition-delay:.16s}
+					html:not(.lunara-gsap-motion) .lunara-pairing-desk-section.lunara-reveal.is-visible .lunara-pair-card:nth-child(3){transition-delay:.32s}
 				}
 				@media(max-width:900px){.lunara-pairing-desk-head{grid-template-columns:minmax(0,1fr)}.lunara-pairing-desk-intro{align-content:start;padding-bottom:0}}
 			</style>
