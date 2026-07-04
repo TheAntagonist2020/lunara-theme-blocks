@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.35
+Version: 3.1.36
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -16530,6 +16530,79 @@ body.post-type-archive-journal .lunara-review-grid-poster {
         letter-spacing: 0 !important;
         overflow-wrap: anywhere !important;
         text-wrap: balance !important;
+    }
+}
+
+/* ============================================================================
+   THE MONOLITH LETTERBOX (Design Spec 2.0 §2) — native adaptation.
+   Anamorphic bars over the cinematic hero that scrub open over the first
+   50vh of page scroll: letterbox → full bleed. Pure CSS scroll-driven
+   animation — no GSAP, no JS — and the @supports gate means browsers
+   without scroll-driven animations simply never render bars at all.
+   ============================================================================ */
+@media (prefers-reduced-motion: no-preference) and (min-width: 901px) {
+    @supports (animation-timeline: scroll(root)) {
+        .lunara-cinematic-hero-carousel .lunara-cinematic-hero-track::before,
+        .lunara-cinematic-hero-carousel .lunara-cinematic-hero-track::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 25%;
+            background: var(--lunara-navy-deep, #060d15);
+            z-index: 3;
+            pointer-events: none;
+            animation: lunara-monolith-open linear both;
+            /* scroll(root), NOT view(): the track's own overflow:hidden makes
+               it the nearest scroll container for its pseudo-elements, so a
+               view() timeline resolves against a scroller that never scrolls
+               and freezes. The spec's contract is "the first 50vh of scroll"
+               anyway — scroll(root) is the literal implementation. */
+            animation-timeline: scroll(root);
+            animation-range: 0px 50vh;
+        }
+        .lunara-cinematic-hero-carousel .lunara-cinematic-hero-track::before {
+            top: 0;
+            transform-origin: center top;
+        }
+        .lunara-cinematic-hero-carousel .lunara-cinematic-hero-track::after {
+            bottom: 0;
+            transform-origin: center bottom;
+        }
+    }
+}
+@keyframes lunara-monolith-open {
+    from { transform: scaleY(1); }
+    to   { transform: scaleY(0); }
+}
+
+/* ============================================================================
+   THE "METHOD" FOOTER REVEAL (Design Spec 2.0 §7) — curtain effect.
+   lunara-footer-curtain.js arms these classes only on desktop when the
+   content stage is tall enough; the stage carries the exact body ambient
+   stack (attachment: fixed renders viewport-relative, so it is pixel-
+   identical to the body's own ground layers) and slides up over the
+   pinned footer.
+   ============================================================================ */
+@media (min-width: 901px) {
+    body.lunara-curtain-armed .lunara-curtain-stage {
+        position: relative;
+        z-index: 1;
+        margin-bottom: var(--lunara-footer-h, 0px);
+        background-color: var(--lunara-bg-primary);
+        background-image:
+            radial-gradient(circle at top left, var(--lunara-glow-gold), transparent 28%),
+            radial-gradient(circle at 80% 18%, var(--lunara-glow-blue), transparent 26%),
+            linear-gradient(180deg, var(--lunara-bg-primary) 0%, var(--lunara-bg-deep) 100%);
+        background-attachment: fixed;
+        box-shadow: 0 34px 70px rgba(0, 0, 0, 0.6);
+    }
+    body.lunara-curtain-armed footer.lunara-site-footer {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 0;
     }
 }
 
