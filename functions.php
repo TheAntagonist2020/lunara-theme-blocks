@@ -81,6 +81,19 @@ function lunara_enqueue_styles() {
             true
         );
     }
+
+    // Footer curtain reveal (Design Spec 2.0 §7) — arms only on desktop
+    // widths with enough content; otherwise the footer stays in flow.
+    $curtain_js = lunara_resolve_theme_asset( 'assets/js/lunara-footer-curtain.js' );
+    if ( ! empty( $curtain_js['path'] ) ) {
+        wp_enqueue_script(
+            'lunara-footer-curtain',
+            $curtain_js['uri'],
+            array(),
+            lunara_theme_asset_version( $curtain_js['path'] ),
+            true
+        );
+    }
 }
 }
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
