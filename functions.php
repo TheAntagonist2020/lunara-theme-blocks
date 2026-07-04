@@ -95,13 +95,16 @@ function lunara_enqueue_styles() {
         );
     }
 
-    // GSAP motion layer (Design Spec 2.0 §5/§19B) — self-hosted vendor
-    // build (core + ScrollTrigger + SplitText, all standard-licensed) plus
-    // the Lunara module. Footer-loaded; purely decorative, so a failed
-    // load changes nothing.
-    $gsap_core = lunara_resolve_theme_asset( 'assets/vendor/gsap/gsap.min.js' );
-    $gsap_st   = lunara_resolve_theme_asset( 'assets/vendor/gsap/ScrollTrigger.min.js' );
-    $gsap_split = lunara_resolve_theme_asset( 'assets/vendor/gsap/SplitText.min.js' );
+    // GSAP motion layer (Design Spec 2.0 §5/§19B) — self-hosted build
+    // (core + ScrollTrigger + SplitText, all standard-licensed) plus the
+    // Lunara module. Lives under assets/lib/, NOT assets/vendor/ — the
+    // WordPress.com GitHub deployer silently excludes vendor/ directories
+    // (composer-artifact rule), which is why 3.1.37's files never reached
+    // the server. Footer-loaded; purely decorative, so a failed load
+    // changes nothing.
+    $gsap_core = lunara_resolve_theme_asset( 'assets/lib/gsap/gsap.min.js' );
+    $gsap_st   = lunara_resolve_theme_asset( 'assets/lib/gsap/ScrollTrigger.min.js' );
+    $gsap_split = lunara_resolve_theme_asset( 'assets/lib/gsap/SplitText.min.js' );
     $gsap_motion = lunara_resolve_theme_asset( 'assets/js/lunara-gsap-motion.js' );
     if ( ! empty( $gsap_core['path'] ) && ! empty( $gsap_motion['path'] ) ) {
         wp_enqueue_script( 'lunara-gsap', $gsap_core['uri'], array(), lunara_theme_asset_version( $gsap_core['path'] ), true );
@@ -119,6 +122,24 @@ function lunara_enqueue_styles() {
 }
 }
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
+
+/**
+ * One-time restoration (3.1.38): the homepage Latest Reviews section was
+ * toggled off in a stored theme mod, and the Control Desk switch proved
+ * hard to locate (it lives under the Theme Studio tab). Dalton needs the
+ * section live for accreditation, so flip it once in code. The marker
+ * option makes this run a single time — any manual change afterwards is
+ * respected forever.
+ */
+if ( ! function_exists( 'lunara_restore_latest_reviews_once' ) ) {
+function lunara_restore_latest_reviews_once() {
+    if ( ! get_option( 'lunara_latest_reviews_restored_3138' ) ) {
+        set_theme_mod( 'lunara_home_show_latest_reviews', true );
+        update_option( 'lunara_latest_reviews_restored_3138', 1, false );
+    }
+}
+}
+add_action( 'after_setup_theme', 'lunara_restore_latest_reviews_once', 20 );
 
 /**
  * Theme setup
