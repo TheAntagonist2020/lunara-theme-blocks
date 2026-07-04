@@ -68,6 +68,19 @@ function lunara_enqueue_styles() {
             );
         }
     }
+
+    // Magnetic Interaction System (Design Spec 2.0 §10) — tiny, global,
+    // self-gating (fine pointers only, off under reduced motion).
+    $magnetic_js = lunara_resolve_theme_asset( 'assets/js/lunara-magnetic.js' );
+    if ( ! empty( $magnetic_js['path'] ) ) {
+        wp_enqueue_script(
+            'lunara-magnetic',
+            $magnetic_js['uri'],
+            array(),
+            lunara_theme_asset_version( $magnetic_js['path'] ),
+            true
+        );
+    }
 }
 }
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
