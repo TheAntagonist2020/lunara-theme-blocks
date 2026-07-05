@@ -275,6 +275,102 @@
             return null;
         }
     } );
+
+    /* ── Homepage section kit (hybrid composition, 3.1.50) ─────────────────
+       These blocks compose the front page: block order is section order,
+       block presence is visibility. Every edit() is a live server render of
+       the exact markup front-page.php ships. */
+
+    function sectionBlock( name, title, icon, description ) {
+        blocks.registerBlockType( name, {
+            title: title,
+            icon: icon,
+            category: 'lunara',
+            description: description,
+            supports: { html: false, reusable: false, multiple: true },
+            edit: function ( props ) {
+                return preview( name, props );
+            },
+            save: function () {
+                return null;
+            }
+        } );
+    }
+
+    blocks.registerBlockType( 'lunara/cinematic-hero', {
+        title: __( 'Homepage: Cinematic Hero', 'lunara-film' ),
+        icon: 'cover-image',
+        category: 'lunara',
+        description: __( 'The rotating cinematic hero. Slides are curated in Control Desk → Hero Command; the fields below shape the single-slide fallback.', 'lunara-film' ),
+        attributes: {
+            overrideImageId: { type: 'number', default: 0 },
+            overrideKicker: { type: 'string', default: '' },
+            overrideTitle: { type: 'string', default: '' },
+            overrideExcerpt: { type: 'string', default: '' },
+            overrideUrl: { type: 'string', default: '' },
+            overrideCta: { type: 'string', default: '' }
+        },
+        supports: { html: false, reusable: false, multiple: true },
+        edit: function ( props ) {
+            function text( label, key ) {
+                return el( TextControl, {
+                    label: label,
+                    value: props.attributes[ key ] || '',
+                    onChange: function ( value ) {
+                        var next = {};
+                        next[ key ] = value || '';
+                        props.setAttributes( next );
+                    }
+                } );
+            }
+            return [
+                el( InspectorControls, {},
+                    el( PanelBody, { title: __( 'Hero', 'lunara-film' ) },
+                        el( 'p', { style: { opacity: 0.75 } },
+                            __( 'The slide deck and overlay dial live in Control Desk → Hero Command. These overrides apply only when the hero falls back to a single static slide.', 'lunara-film' )
+                        ),
+                        text( __( 'Fallback kicker', 'lunara-film' ), 'overrideKicker' ),
+                        text( __( 'Fallback title', 'lunara-film' ), 'overrideTitle' ),
+                        text( __( 'Fallback excerpt', 'lunara-film' ), 'overrideExcerpt' ),
+                        text( __( 'Fallback link URL', 'lunara-film' ), 'overrideUrl' ),
+                        text( __( 'Fallback CTA label', 'lunara-film' ), 'overrideCta' )
+                    )
+                ),
+                preview( 'lunara/cinematic-hero', props )
+            ];
+        },
+        save: function () {
+            return null;
+        }
+    } );
+
+    sectionBlock(
+        'lunara/journal-lane',
+        __( 'Homepage: Journal Lane', 'lunara-film' ),
+        'editor-ul',
+        __( 'The Journal home grid: 1 lead card + 3 supporting cards from the most recent dispatch posts.', 'lunara-film' )
+    );
+
+    sectionBlock(
+        'lunara/oscar-picks',
+        __( 'Homepage: Oscar Picks', 'lunara-film' ),
+        'awards',
+        __( 'Horizontal carousel of curated behind-the-scenes Oscar pick cards.', 'lunara-film' )
+    );
+
+    sectionBlock(
+        'lunara/oscar-facts',
+        __( 'Homepage: Oscar Facts', 'lunara-film' ),
+        'lightbulb',
+        __( 'Text-forward Oscar fact cards in a horizontal carousel.', 'lunara-film' )
+    );
+
+    sectionBlock(
+        'lunara/pairing-desk',
+        __( 'Homepage: Pairing Desk', 'lunara-film' ),
+        'screenoptions',
+        __( 'The signature Pair It With showcase — three films in conversation with the newest paired review.', 'lunara-film' )
+    );
 } )(
     window.wp.blocks,
     window.wp.blockEditor,

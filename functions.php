@@ -15810,25 +15810,25 @@ if ( ! function_exists( 'lunara_register_homepage_blocks' ) ) {
 		}
 
 		$common = array(
-			'api_version' => 3,
-			'category'    => 'theme',
-			'supports'    => array(
+			'api_version'   => 3,
+			'category'      => 'lunara',
+			'editor_script' => 'lunara-blocks',
+			'supports'      => array(
 				'html'      => false,
 				'reusable'  => false,
 				'multiple'  => true,
-				// The homepage is Customizer-owned (front-page.php renders the
-				// section registry directly and never calls the_content()), so
-				// these composition blocks are no longer offered for insertion.
-				// They stay registered: the Home page's existing four blocks
-				// keep rendering and stay editable where they already exist.
-				'inserter'  => false,
+				// Hybrid homepage composition (3.1.50): these ARE the homepage
+				// kit. front-page.php renders the Home page's blocks when any
+				// are present (order = block order, presence = visibility);
+				// Homepage Studio packages write through to the same blocks.
+				'inserter'  => true,
 			),
 		);
 
 		register_block_type( 'lunara/cinematic-hero', array_merge( $common, array(
-			'title'           => __( 'Lunara Cinematic Hero', 'lunara-film' ),
+			'title'           => __( 'Homepage: Cinematic Hero', 'lunara-film' ),
 			'icon'            => 'cover-image',
-			'description'     => __( 'Full-viewport image-first opener. Per-instance overrides for image / kicker / title / excerpt / URL / CTA. Falls back to Customizer override â†’ latest review.', 'lunara-film' ),
+			'description'     => __( 'The rotating cinematic hero. Slides are curated in Control Desk → Hero Command (or auto-fill from the newest content); the override fields apply to the single-slide fallback.', 'lunara-film' ),
 			'attributes'      => array(
 				'overrideImageId' => array( 'type' => 'number', 'default' => 0 ),
 				'overrideKicker'  => array( 'type' => 'string', 'default' => '' ),
@@ -15838,12 +15838,18 @@ if ( ! function_exists( 'lunara_register_homepage_blocks' ) ) {
 				'overrideCta'     => array( 'type' => 'string', 'default' => '' ),
 			),
 			'render_callback' => function ( $attributes ) {
+				// Hero Command-aware carousel — identical to what front-page.php
+				// renders; falls back internally to the static hero (with these
+				// overrides) when fewer than two slides qualify.
+				if ( function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
+					return lunara_render_cinematic_hero_carousel( is_array( $attributes ) ? $attributes : array() );
+				}
 				return function_exists( 'lunara_render_cinematic_hero' ) ? lunara_render_cinematic_hero( $attributes ) : '';
 			},
 		) ) );
 
 		register_block_type( 'lunara/journal-lane', array_merge( $common, array(
-			'title'           => __( 'Lunara Journal Lane', 'lunara-film' ),
+			'title'           => __( 'Homepage: Journal Lane', 'lunara-film' ),
 			'icon'            => 'editor-ul',
 			'description'     => __( 'The Journal home grid: 1 lead card + 3 supporting cards from the most recent dispatch posts.', 'lunara-film' ),
 			'render_callback' => function () {
@@ -15852,7 +15858,7 @@ if ( ! function_exists( 'lunara_register_homepage_blocks' ) ) {
 		) ) );
 
 		register_block_type( 'lunara/oscar-picks', array_merge( $common, array(
-			'title'           => __( 'Lunara Oscar Picks', 'lunara-film' ),
+			'title'           => __( 'Homepage: Oscar Picks', 'lunara-film' ),
 			'icon'            => 'awards',
 			'description'     => __( 'Horizontal carousel of curated behind-the-scenes Oscar pick cards.', 'lunara-film' ),
 			'render_callback' => function () {
@@ -15861,11 +15867,20 @@ if ( ! function_exists( 'lunara_register_homepage_blocks' ) ) {
 		) ) );
 
 		register_block_type( 'lunara/oscar-facts', array_merge( $common, array(
-			'title'           => __( 'Lunara Oscar Facts', 'lunara-film' ),
+			'title'           => __( 'Homepage: Oscar Facts', 'lunara-film' ),
 			'icon'            => 'lightbulb',
 			'description'     => __( 'Text-forward Oscar fact cards in a horizontal carousel. Image-on-the-left when a featured image is set.', 'lunara-film' ),
 			'render_callback' => function () {
 				return function_exists( 'lunara_render_oscar_facts_carousel' ) ? lunara_render_oscar_facts_carousel() : '';
+			},
+		) ) );
+
+		register_block_type( 'lunara/pairing-desk', array_merge( $common, array(
+			'title'           => __( 'Homepage: Pairing Desk', 'lunara-film' ),
+			'icon'            => 'screenoptions',
+			'description'     => __( 'The signature Pair It With showcase — three films in conversation with the newest paired review. Copy is editable in Control Desk.', 'lunara-film' ),
+			'render_callback' => function () {
+				return function_exists( 'lunara_render_home_pairing_desk' ) ? lunara_render_home_pairing_desk() : '';
 			},
 		) ) );
 	}

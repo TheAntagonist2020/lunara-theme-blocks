@@ -72,3 +72,7 @@ require_once $lunara_inc . 'essay-builder.php';
 // Layer 12 — Live Global Search (Design Spec §6): REST endpoint + overlay
 // command palette. JS-off falls back to the /?s= results page untouched.
 require_once $lunara_inc . 'live-search.php';
+
+// Layer 13 — Hybrid homepage composition: the Home page's blocks render the
+// homepage when present; Homepage Studio saves write through to the blocks.
+require_once $lunara_inc . 'home-blocks.php';
