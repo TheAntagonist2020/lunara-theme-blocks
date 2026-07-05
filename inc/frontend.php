@@ -210,6 +210,7 @@ add_action( 'wp_head', 'lunara_home_front_door_css', 45 );
  */
 function lunara_rocket_preserve_front_door_css( $exclusions ) {
     $exclusions[] = 'lunara-home-front-door-css';
+    $exclusions[] = 'lunara-home-first-viewport-polish-css';
     return $exclusions;
 }
 add_filter( 'rocket_rucss_inline_content_exclusions', 'lunara_rocket_preserve_front_door_css' );
@@ -382,6 +383,7 @@ function lunara_home_first_viewport_polish_css() {
     }
     ?>
     <style id="lunara-home-first-viewport-polish-css">
+    /*lunara-home-first-viewport-polish-css*/
     body.home .lunara-front-page,
     body.home main.lunara-front-page{gap:clamp(26px,4vw,58px)!important;}
     body.home .lunara-home-masthead{margin-bottom:clamp(12px,2vw,24px)!important;}
@@ -433,7 +435,13 @@ function lunara_home_first_viewport_polish_css() {
     </style>
     <?php
 }
-add_action( 'wp_footer', 'lunara_home_first_viewport_polish_css', 135 );
+// HEAD, not footer (3.1.53): this block carries the masthead's two-column
+// grid. Printed in the footer, the first viewport painted single-column
+// (giant centered wordmark) and snapped into columns only when the parser
+// reached the end of the document — the logo flash readers reported,
+// measured at 1180px-centered → 554px-left ~475ms apart on a fast
+// connection. Settings-only CSS; nothing here needs footer context.
+add_action( 'wp_head', 'lunara_home_first_viewport_polish_css', 46 );
 
 /**
  * Compact the homepage mobile Reviews run into a denser editorial rail.
