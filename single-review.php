@@ -61,6 +61,7 @@ if ( have_posts() ) :
         $review_tt        = function_exists( 'lunara_get_review_imdb_title_id' ) ? lunara_get_review_imdb_title_id( $post_id ) : '';
         $ledger_counts    = '' !== $review_tt ? lunara_get_oscar_ledger_counts( $review_tt ) : array();
         $ledger_pill      = '' !== $review_tt ? lunara_render_oscar_ledger_pill( $review_tt, $ledger_counts ) : '';
+        $dossier_movie_id = function_exists( 'lunara_entity_movie_for_review' ) ? lunara_entity_movie_for_review( $post_id ) : 0;
         $debrief_block    = do_shortcode( '[lunara_debrief]' );
         $debrief_parts    = function_exists( 'lunara_split_review_debrief_block' )
             ? lunara_split_review_debrief_block( $debrief_block )
@@ -269,6 +270,41 @@ if ( have_posts() ) :
                                         <div class="lunara-review-single-ledger-pill-wrap">
                                             <?php echo wp_kses_post( $ledger_pill ); ?>
                                         </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if ( $dossier_movie_id > 0 ) : ?>
+                                    <div class="lunara-journal-rail-card lunara-review-single-dossier-card">
+                                        <p class="lunara-home-section-kicker"><?php esc_html_e( 'Film Dossier', 'lunara-film' ); ?></p>
+                                        <a class="lunara-review-dossier-link" href="<?php echo esc_url( get_permalink( $dossier_movie_id ) ); ?>">
+                                            <?php if ( has_post_thumbnail( $dossier_movie_id ) ) : ?>
+                                                <span class="lunara-review-dossier-poster">
+                                                    <?php
+                                                    echo get_the_post_thumbnail(
+                                                        $dossier_movie_id,
+                                                        'thumbnail',
+                                                        array(
+                                                            'loading'  => 'lazy',
+                                                            'decoding' => 'async',
+                                                            'alt'      => '',
+                                                        )
+                                                    );
+                                                    ?>
+                                                </span>
+                                            <?php endif; ?>
+                                            <span class="lunara-review-dossier-copy">
+                                                <strong>
+                                                    <?php
+                                                    echo esc_html( get_the_title( $dossier_movie_id ) );
+                                                    $dossier_year = trim( (string) get_post_meta( $dossier_movie_id, 'release_year', true ) );
+                                                    if ( '' !== $dossier_year ) {
+                                                        echo ' <em>(' . esc_html( $dossier_year ) . ')</em>';
+                                                    }
+                                                    ?>
+                                                </strong>
+                                                <span><?php esc_html_e( 'Awards record, cast, and the wider graph', 'lunara-film' ); ?> &rarr;</span>
+                                            </span>
+                                        </a>
                                     </div>
                                 <?php endif; ?>
 

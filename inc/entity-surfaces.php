@@ -119,6 +119,49 @@ function lunara_entity_review_for_movie( $movie_id ) {
 }
 
 /**
+ * The movie entity covering this review — the reverse of
+ * lunara_entity_review_for_movie, matched through the same IMDb bridge id.
+ * Per-request cached: the single-review rail and JSON-LD both ask.
+ */
+function lunara_entity_movie_for_review( $review_id ) {
+    static $cache = array();
+
+    $review_id = (int) $review_id;
+    if ( $review_id <= 0 ) {
+        return 0;
+    }
+    if ( isset( $cache[ $review_id ] ) ) {
+        return $cache[ $review_id ];
+    }
+
+    $cache[ $review_id ] = 0;
+
+    if ( ! post_type_exists( 'movie' ) || ! function_exists( 'lunara_get_review_imdb_title_id' ) ) {
+        return 0;
+    }
+
+    $tt = lunara_get_review_imdb_title_id( $review_id );
+    if ( '' === $tt ) {
+        return 0;
+    }
+
+    $movie_ids = get_posts(
+        array(
+            'post_type'      => 'movie',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+            'fields'         => 'ids',
+            'no_found_rows'  => true,
+            'meta_key'       => 'imdb_title_id',
+            'meta_value'     => $tt,
+        )
+    );
+
+    $cache[ $review_id ] = ! empty( $movie_ids ) ? (int) $movie_ids[0] : 0;
+    return $cache[ $review_id ];
+}
+
+/**
  * Filmography lanes for a person from the relationship graph.
  * ACF relationship fields store serialized ID arrays — the LIKE '"id"'
  * pattern is the standard containment test.
