@@ -60,3 +60,7 @@ require_once $lunara_inc . 'portrait-organizer.php';
 // Layer 9 — Entity surfaces (Phase 2B): movie/person dossiers, archives,
 // and their JSON-LD. Depends only on the Lunara Core entity models.
 require_once $lunara_inc . 'entity-surfaces.php';
+
+// Layer 10 — Hero Command: curated hero deck + overlay intensity. Front-end
+// feed override plus the Control Desk studio and its save/search handlers.
+require_once $lunara_inc . 'hero-command.php';

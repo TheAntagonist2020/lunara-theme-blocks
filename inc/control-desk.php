@@ -12189,6 +12189,7 @@ function lunara_control_desk_render_theme_studio_tab() {
         <?php lunara_control_desk_render_theme_studio_command_index(); ?>
         <?php lunara_control_desk_render_brand_console(); ?>
         <?php lunara_control_desk_render_homepage_studio(); ?>
+        <?php if ( function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) { lunara_control_desk_render_hero_command_studio(); } ?>
         <?php lunara_control_desk_render_journal_archive_studio(); ?>
         <?php lunara_control_desk_render_reviews_archive_studio(); ?>
         <?php lunara_control_desk_render_review_card_image_focus_controls(); ?>
@@ -14418,6 +14419,14 @@ function lunara_control_desk_render_notice() {
         'homepage_studio_forbidden' => array(
             'class'   => 'notice-error',
             'message' => __( 'You can view the Control Desk, but changing Homepage Studio controls requires theme editing permission.', 'lunara-film' ),
+        ),
+        'hero_command_saved' => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Hero Command saved. The hero now reads the deck and overlay settings; the homepage cache was purged so it screens immediately.', 'lunara-film' ),
+        ),
+        'hero_command_forbidden' => array(
+            'class'   => 'notice-error',
+            'message' => __( 'You can view the Control Desk, but Hero Command requires theme editing permission.', 'lunara-film' ),
         ),
         'reviews_archive_studio_saved' => array(
             'class'   => 'notice-success',

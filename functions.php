@@ -15035,7 +15035,7 @@ if ( ! function_exists( 'lunara_render_cinematic_hero' ) ) {
 				<div class="lunara-cinematic-hero-bg" aria-hidden="true">
 					<?php echo $img_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
-				<div class="lunara-cinematic-hero-overlay" aria-hidden="true"></div>
+				<div class="lunara-cinematic-hero-overlay" aria-hidden="true"<?php echo function_exists( 'lunara_hero_overlay_style_attr' ) ? lunara_hero_overlay_style_attr( array() ) : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>></div>
 				<div class="lunara-cinematic-hero-shell">
 					<div class="lunara-cinematic-hero-content">
 						<p class="lunara-cinematic-hero-kicker"><?php echo esc_html( $data['kicker'] ); ?></p>
@@ -15211,6 +15211,16 @@ if ( ! function_exists( 'lunara_get_review_hero_image_url' ) ) {
  */
 if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
 	function lunara_get_cinematic_hero_slides( $max = 6 ) {
+		// Hero Command — when the command deck is enabled with at least one
+		// renderable slide, the curated list IS the hero: exact slides, exact
+		// order, no cap at $max. The automatic feed below stays the fallback.
+		if ( function_exists( 'lunara_hero_command_slides' ) ) {
+			$commanded = lunara_hero_command_slides();
+			if ( ! empty( $commanded ) ) {
+				return $commanded;
+			}
+		}
+
 		$max   = max( 1, (int) $max ); $pool = $max + 6;
 		$items = array();
 
@@ -15694,7 +15704,7 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
 				<div class="lunara-cinematic-hero-bg" aria-hidden="true">
 					<?php echo $image_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
-				<div class="lunara-cinematic-hero-overlay" aria-hidden="true"></div>
+				<div class="lunara-cinematic-hero-overlay" aria-hidden="true"<?php echo function_exists( 'lunara_hero_overlay_style_attr' ) ? lunara_hero_overlay_style_attr( $data ) : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>></div>
 				<div class="lunara-cinematic-hero-shell">
 					<div class="lunara-cinematic-hero-content">
 						<p class="lunara-cinematic-hero-kicker"><?php echo esc_html( $data['kicker'] ); ?></p>
@@ -15721,7 +15731,13 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 	function lunara_render_cinematic_hero_carousel( $attrs = array() ) {
 		$slides = lunara_get_cinematic_hero_slides( 6 );
 
-		if ( count( $slides ) < 2 ) {
+		// A single curated Hero Command slide still renders through the
+		// carousel shell — the hero JS detects one slide and stays static, so
+		// the deck's slide (not the auto-latest) is what screens.
+		$command_live = function_exists( 'lunara_hero_command_slides' )
+			&& count( lunara_hero_command_slides() ) > 0;
+
+		if ( count( $slides ) < 1 || ( count( $slides ) < 2 && ! $command_live ) ) {
 			return function_exists( 'lunara_render_cinematic_hero' )
 				? lunara_render_cinematic_hero( is_array( $attrs ) ? $attrs : array() )
 				: '';
