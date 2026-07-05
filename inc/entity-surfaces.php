@@ -296,7 +296,10 @@ function lunara_entity_shape_archive_queries( $query ) {
         }
     }
 }
-add_action( 'pre_get_posts', 'lunara_entity_shape_archive_queries' );
+// Priority 99: something in the stack (parent theme or a plugin) resets
+// posts_per_page at default priority — live showed 10-per-page instead of
+// the shaped 24/36 until this ran last.
+add_action( 'pre_get_posts', 'lunara_entity_shape_archive_queries', 99 );
 
 /* ---------------------------------------------------------------------------
  * JSON-LD (Design Spec 2.0 §11 / §15)
