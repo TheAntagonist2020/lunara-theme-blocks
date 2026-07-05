@@ -355,6 +355,80 @@ add_action( 'pre_get_posts', 'lunara_entity_shape_archive_queries', PHP_INT_MAX 
  * JSON-LD (Design Spec 2.0 §11 / §15)
  * ------------------------------------------------------------------------ */
 
+/**
+ * The canonical schema @id for an entity page. Reviews reference the SAME
+ * node via itemReviewed, welding the review and dossier into one graph.
+ */
+function lunara_entity_schema_id( $post_id, $fragment ) {
+    return get_permalink( $post_id ) . '#' . $fragment;
+}
+
+/**
+ * Machine-readable award record (Design Spec §16 GEO): one plain string per
+ * ledger row — "Won — Best Picture (93rd Academy Awards, 2021)" — so AI
+ * retrieval and rich results can quote the record without parsing HTML.
+ *
+ * @param array $rows Award rows (category / ceremony / year / won).
+ * @return string[]
+ */
+function lunara_entity_award_schema_strings( $rows ) {
+    $strings = array();
+    foreach ( (array) $rows as $row ) {
+        $category = trim( (string) ( $row['category'] ?? '' ) );
+        if ( '' === $category ) {
+            continue;
+        }
+        $ceremony = (int) ( $row['ceremony'] ?? 0 );
+        $year     = trim( (string) ( $row['year'] ?? '' ) );
+        $won      = ! empty( $row['won'] ) && '0' !== (string) $row['won'];
+
+        $where = array();
+        if ( $ceremony > 0 ) {
+            $mod100 = $ceremony % 100;
+            $suffix = ( $mod100 >= 11 && $mod100 <= 13 )
+                ? 'th'
+                : array( 1 => 'st', 2 => 'nd', 3 => 'rd' )[ $ceremony % 10 ] ?? 'th';
+            $where[] = sprintf( '%d%s Academy Awards', $ceremony, $suffix );
+        }
+        if ( '' !== $year ) {
+            $where[] = $year;
+        }
+
+        $strings[] = ( $won ? 'Won' : 'Nominated' ) . ' — ' . $category
+            . ( $where ? ' (' . implode( ', ', $where ) . ')' : '' );
+    }
+    return $strings;
+}
+
+/**
+ * Breadcrumb node for an entity page: Home → index archive → title.
+ */
+function lunara_entity_schema_breadcrumb( $post_id, $index_label, $index_url ) {
+    return array(
+        '@type'           => 'BreadcrumbList',
+        'itemListElement' => array(
+            array(
+                '@type'    => 'ListItem',
+                'position' => 1,
+                'name'     => __( 'Home', 'lunara-film' ),
+                'item'     => home_url( '/' ),
+            ),
+            array(
+                '@type'    => 'ListItem',
+                'position' => 2,
+                'name'     => $index_label,
+                'item'     => $index_url,
+            ),
+            array(
+                '@type'    => 'ListItem',
+                'position' => 3,
+                'name'     => get_the_title( $post_id ),
+                'item'     => get_permalink( $post_id ),
+            ),
+        ),
+    );
+}
+
 function lunara_entity_output_schema() {
     if ( is_singular( 'movie' ) ) {
         $post_id = get_the_ID();
@@ -362,10 +436,10 @@ function lunara_entity_output_schema() {
         $rows    = lunara_entity_movie_awards( $post_id );
         $tally   = lunara_entity_award_tally( $rows );
         $schema  = array(
-            '@context' => 'https://schema.org',
-            '@type'    => 'Movie',
-            'name'     => get_the_title( $post_id ),
-            'url'      => get_permalink( $post_id ),
+            '@type' => 'Movie',
+            '@id'   => lunara_entity_schema_id( $post_id, 'movie' ),
+            'name'  => get_the_title( $post_id ),
+            'url'   => get_permalink( $post_id ),
         );
         $year = get_post_meta( $post_id, 'release_year', true );
         if ( $year ) {
@@ -378,7 +452,10 @@ function lunara_entity_output_schema() {
             $schema['sameAs'] = 'https://www.imdb.com/title/' . $tt . '/';
         }
         if ( $tally['nominations'] > 0 ) {
-            $schema['award'] = sprintf( '%d Academy Award wins, %d nominations', $tally['wins'], $tally['nominations'] );
+            // Per-row award strings first (GEO §16), the tally as the closer.
+            $award_strings   = lunara_entity_award_schema_strings( $rows );
+            $award_strings[] = sprintf( '%d Academy Award wins, %d nominations', $tally['wins'], $tally['nominations'] );
+            $schema['award'] = count( $award_strings ) === 1 ? $award_strings[0] : $award_strings;
         }
         $directors = get_post_meta( $post_id, 'directors', true );
         $directors = is_array( $directors ) ? $directors : (array) maybe_unserialize( $directors );
@@ -387,6 +464,7 @@ function lunara_entity_output_schema() {
             if ( 'publish' === get_post_status( $pid ) ) {
                 $director_nodes[] = array(
                     '@type' => 'Person',
+                    '@id'   => lunara_entity_schema_id( $pid, 'person' ),
                     'name'  => get_the_title( $pid ),
                     'url'   => get_permalink( $pid ),
                 );
@@ -395,17 +473,26 @@ function lunara_entity_output_schema() {
         if ( $director_nodes ) {
             $schema['director'] = $director_nodes;
         }
-        echo '<script type="application/ld+json">' . wp_json_encode( $schema ) . '</script>' . "\n";
+
+        $index_url = get_post_type_archive_link( 'movie' );
+        $graph     = array(
+            '@context' => 'https://schema.org',
+            '@graph'   => array(
+                $schema,
+                lunara_entity_schema_breadcrumb( $post_id, __( 'Film Index', 'lunara-film' ), $index_url ? $index_url : home_url( '/film/' ) ),
+            ),
+        );
+        echo '<script type="application/ld+json">' . wp_json_encode( $graph, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
     }
 
     if ( is_singular( 'person' ) ) {
         $post_id = get_the_ID();
         $nm      = strtolower( trim( (string) get_post_meta( $post_id, '_lunara_entity_id', true ) ) );
         $schema  = array(
-            '@context' => 'https://schema.org',
-            '@type'    => 'Person',
-            'name'     => get_the_title( $post_id ),
-            'url'      => get_permalink( $post_id ),
+            '@type' => 'Person',
+            '@id'   => lunara_entity_schema_id( $post_id, 'person' ),
+            'name'  => get_the_title( $post_id ),
+            'url'   => get_permalink( $post_id ),
         );
         if ( has_post_thumbnail( $post_id ) ) {
             $schema['image'] = get_the_post_thumbnail_url( $post_id, 'large' );
@@ -418,7 +505,16 @@ function lunara_entity_output_schema() {
         if ( ! empty( $roles ) ) {
             $schema['jobTitle'] = implode( ', ', array_map( 'ucfirst', array_filter( array_map( 'strval', $roles ) ) ) );
         }
-        echo '<script type="application/ld+json">' . wp_json_encode( $schema ) . '</script>' . "\n";
+
+        $index_url = get_post_type_archive_link( 'person' );
+        $graph     = array(
+            '@context' => 'https://schema.org',
+            '@graph'   => array(
+                $schema,
+                lunara_entity_schema_breadcrumb( $post_id, __( 'Talent Index', 'lunara-film' ), $index_url ? $index_url : home_url( '/talent/' ) ),
+            ),
+        );
+        echo '<script type="application/ld+json">' . wp_json_encode( $graph, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
     }
 }
 add_action( 'wp_head', 'lunara_entity_output_schema', 60 );
