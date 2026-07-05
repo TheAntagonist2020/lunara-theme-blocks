@@ -8544,11 +8544,20 @@ function lunara_render_custom_footer() {
                         <h4 class="lunara-footer-col-heading"><?php echo esc_html( $col1_head ); ?></h4>
                     <?php endif; ?>
                     <?php
-                    lunara_render_footer_link_list( array(
+                    $editorial_links = array(
                         array( 'label' => __( 'Home', 'lunara-film' ), 'url' => home_url( '/' ) ),
                         array( 'label' => __( 'Reviews', 'lunara-film' ), 'url' => get_post_type_archive_link( 'review' ) ?: home_url( '/reviews/' ) ),
                         array( 'label' => __( 'Journal', 'lunara-film' ), 'url' => get_post_type_archive_link( 'journal' ) ?: home_url( '/journal/' ) ),
-                    ) );
+                    );
+                    // Entity graph cutover: the indexes join the footer as soon
+                    // as Lunara Core registers the models.
+                    if ( post_type_exists( 'movie' ) ) {
+                        $editorial_links[] = array( 'label' => __( 'Film Index', 'lunara-film' ), 'url' => get_post_type_archive_link( 'movie' ) ?: home_url( '/film/' ) );
+                    }
+                    if ( post_type_exists( 'person' ) ) {
+                        $editorial_links[] = array( 'label' => __( 'Talent Index', 'lunara-film' ), 'url' => get_post_type_archive_link( 'person' ) ?: home_url( '/talent/' ) );
+                    }
+                    lunara_render_footer_link_list( $editorial_links );
                     ?>
                 </div>
                 <div class="lunara-footer-nav-col">
