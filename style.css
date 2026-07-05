@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.38
+Version: 3.1.39
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -16531,6 +16531,280 @@ body.post-type-archive-journal .lunara-review-grid-poster {
         overflow-wrap: anywhere !important;
         text-wrap: balance !important;
     }
+}
+
+/* ============================================================================
+   ENTITY SURFACES (Phase 2B) — Film Dossiers, Talent Pages, and indexes.
+   The public faces of the knowledge graph, in full Living Pulse.
+   ============================================================================ */
+.lunara-entity-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 clamp(16px, 4vw, 48px) 64px;
+}
+.lunara-entity-hero {
+    position: relative;
+    overflow: hidden;
+    margin: 28px 0 34px;
+    border: 1px solid var(--lunara-border, rgba(201, 169, 97, 0.22));
+    border-radius: 18px;
+    background: linear-gradient(160deg, #101f31, #0a1520);
+}
+.lunara-entity-hero-backdrop {
+    position: absolute;
+    inset: -4%;
+    background-position: center 30%;
+    background-size: cover;
+    filter: saturate(0.92);
+}
+.lunara-entity-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(7, 15, 26, 0.92) 0%, rgba(7, 15, 26, 0.55) 45%, rgba(7, 15, 26, 0.25) 100%);
+}
+.lunara-entity-hero-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    gap: clamp(22px, 3.4vw, 44px);
+    align-items: flex-end;
+    padding: clamp(28px, 4.4vw, 56px);
+}
+.lunara-entity-hero-poster {
+    flex: 0 0 clamp(160px, 18vw, 250px);
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid rgba(201, 169, 97, 0.35);
+    box-shadow: 0 26px 60px rgba(0, 0, 0, 0.55);
+    background: #0a1520;
+}
+.lunara-entity-hero-poster img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.lunara-entity-title {
+    margin: 6px 0 12px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.9rem, 3.4vw, 3rem);
+    line-height: 1.08;
+    color: #fff;
+    text-wrap: balance;
+}
+.lunara-entity-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin: 0 0 12px;
+    color: var(--lunara-text-muted, #a8a8b8);
+    font-size: 0.98rem;
+}
+.lunara-entity-directors {
+    margin: 0 0 16px;
+    color: rgba(244, 239, 227, 0.86);
+}
+.lunara-entity-directors a {
+    color: var(--lunara-gold-light, #e0c481);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(201, 169, 97, 0.4);
+}
+.lunara-entity-label {
+    margin-right: 8px;
+    font-family: 'Bebas Neue', 'Oswald', Impact, sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--lunara-gold, #c9a961);
+}
+.lunara-entity-review-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 24px;
+    font-family: 'Bebas Neue', 'Oswald', Impact, sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: #fff;
+    background: rgba(7, 15, 26, 0.5);
+    border: 1.5px solid var(--lunara-gold, #c9a961);
+    text-decoration: none;
+    transition: background 0.3s cubic-bezier(0.2, 0, 0.2, 1), color 0.3s cubic-bezier(0.2, 0, 0.2, 1);
+}
+.lunara-entity-review-cta:hover {
+    background: var(--lunara-gold, #c9a961);
+    color: #07101b;
+}
+.lunara-entity-body > * + * {
+    margin-top: clamp(28px, 4vw, 44px);
+}
+.lunara-entity-awards {
+    padding: clamp(20px, 3vw, 32px);
+    border: 1px solid rgba(201, 169, 97, 0.24);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(15, 29, 46, 0.9), rgba(10, 21, 32, 0.95));
+}
+.lunara-entity-awards-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.lunara-entity-awards-tally {
+    margin: 0;
+    color: var(--lunara-text-muted, #a8a8b8);
+}
+.lunara-entity-tally-wins {
+    color: var(--lunara-gold-light, #e0c481);
+    font-weight: 700;
+}
+.lunara-entity-award-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.lunara-entity-award {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 14px;
+    padding: 10px 4px;
+    border-bottom: 1px solid rgba(201, 169, 97, 0.12);
+}
+.lunara-entity-award:last-child { border-bottom: 0; }
+.lunara-entity-award-year {
+    font-family: 'Bebas Neue', 'Oswald', Impact, sans-serif;
+    letter-spacing: 0.14em;
+    color: var(--lunara-gold, #c9a961);
+    min-width: 52px;
+}
+.lunara-entity-award-cat { color: #f4efe3; }
+.lunara-entity-award-link {
+    color: var(--lunara-gold-light, #e0c481);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(201, 169, 97, 0.35);
+}
+.lunara-entity-award-state {
+    margin-left: auto;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--lunara-text-muted, #a8a8b8);
+    border: 1px solid rgba(168, 168, 184, 0.35);
+}
+.lunara-entity-award.is-win .lunara-entity-award-state {
+    color: #07101b;
+    background: linear-gradient(135deg, #e0c481, #c9a961);
+    border-color: transparent;
+    font-weight: 700;
+}
+.lunara-entity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 158px), 1fr));
+    gap: clamp(14px, 2vw, 22px);
+    margin-top: 14px;
+}
+.lunara-entity-card-link { text-decoration: none; display: block; }
+.lunara-entity-card-poster {
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid rgba(201, 169, 97, 0.2);
+    background: linear-gradient(180deg, #172c43, #0a1520);
+    transition: transform 0.32s cubic-bezier(0.2, 0, 0.2, 1), border-color 0.32s cubic-bezier(0.2, 0, 0.2, 1);
+}
+.lunara-entity-card:hover .lunara-entity-card-poster {
+    transform: translateY(-4px);
+    border-color: rgba(224, 196, 129, 0.55);
+}
+.lunara-entity-card-poster img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.lunara-entity-card-plate {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    padding: 14px;
+    text-align: center;
+    font-family: Georgia, serif;
+    color: #e7dcc0;
+    font-size: 0.92rem;
+    line-height: 1.35;
+}
+.lunara-entity-card-title {
+    margin: 10px 0 2px;
+    font-family: Georgia, serif;
+    font-size: 0.98rem;
+    line-height: 1.3;
+    color: #f4efe3;
+}
+.lunara-entity-card-meta {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--lunara-text-muted, #a8a8b8);
+}
+.lunara-entity-archive-head {
+    margin: 34px 0 10px;
+    max-width: 760px;
+}
+.lunara-entity-archive-copy { color: var(--lunara-text-muted, #a8a8b8); }
+.lunara-entity-sort {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 18px 0 8px;
+}
+.lunara-entity-sort a {
+    padding: 8px 16px;
+    border: 1px solid rgba(201, 169, 97, 0.3);
+    border-radius: 999px;
+    font-family: 'Bebas Neue', 'Oswald', Impact, sans-serif;
+    font-size: 0.88rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #e7dcc0;
+    text-decoration: none;
+}
+.lunara-entity-sort a.is-current {
+    background: linear-gradient(135deg, #e0c481, #c9a961);
+    color: #07101b;
+    border-color: transparent;
+}
+.lunara-entity-wtw { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.lunara-entity-wtw-chip {
+    padding: 9px 16px;
+    border: 1px solid rgba(201, 169, 97, 0.35);
+    border-radius: 999px;
+    color: #f4efe3;
+    text-decoration: none;
+    background: rgba(7, 15, 26, 0.5);
+}
+.lunara-entity-wtw-chip em {
+    font-style: normal;
+    color: var(--lunara-text-muted, #a8a8b8);
+    margin-left: 6px;
+}
+.lunara-entity-ledger-link a {
+    color: var(--lunara-gold-light, #e0c481);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(201, 169, 97, 0.4);
+}
+@media (max-width: 760px) {
+    .lunara-entity-hero-inner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .lunara-entity-hero-poster { flex-basis: auto; width: min(58vw, 220px); }
+    .lunara-entity-award-state { margin-left: 0; }
 }
 
 /* ============================================================================
