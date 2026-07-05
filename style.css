@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.50
+Version: 3.1.51
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -17713,5 +17713,29 @@ body.lunara-search-open {
     .lunara-search-overlay-panel {
         transition: none;
         transform: none;
+    }
+}
+
+/* ============================================================================
+ * VIEW TRANSITIONS (Design Spec §17) — theme 3.1.51
+ * Cross-document view transitions: same-origin page turns cross-fade like a
+ * cut instead of a hard white flash — the closest the web gets to a camera
+ * move between scenes. Pure progressive enhancement: browsers without
+ * support ignore the at-rule entirely, and reduced-motion never opts in.
+ * ========================================================================= */
+
+@media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+        navigation: auto;
+    }
+
+    ::view-transition-old(root) {
+        animation-duration: 0.22s;
+        animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
+    }
+
+    ::view-transition-new(root) {
+        animation-duration: 0.22s;
+        animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
     }
 }

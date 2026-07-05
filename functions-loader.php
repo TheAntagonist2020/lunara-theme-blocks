@@ -76,3 +76,7 @@ require_once $lunara_inc . 'live-search.php';
 // Layer 13 — Hybrid homepage composition: the Home page's blocks render the
 // homepage when present; Homepage Studio saves write through to the blocks.
 require_once $lunara_inc . 'home-blocks.php';
+
+// Layer 14 — GEO (Design Spec §16): serves /llms.txt, the retrieval-model
+// map of the site's authoritative surfaces.
+require_once $lunara_inc . 'geo.php';

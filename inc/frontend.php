@@ -2589,6 +2589,20 @@ if ( ! function_exists( 'lunara_output_review_seo_meta' ) ) {
             $schema['itemReviewed']['sameAs'] = 'https://www.imdb.com/title/' . $review_imdb_id . '/';
         }
 
+        // Knowledge-graph weld (§11/§15): when the reviewed film exists as a
+        // movie entity, itemReviewed carries the dossier's canonical @id — the
+        // review and the dossier become one node in the site graph instead of
+        // two anonymous Movie objects that crawlers must reconcile.
+        if ( function_exists( 'lunara_entity_movie_for_review' ) ) {
+            $graph_movie_id = lunara_entity_movie_for_review( $post_id );
+            if ( $graph_movie_id > 0 ) {
+                $schema['itemReviewed']['@id'] = function_exists( 'lunara_entity_schema_id' )
+                    ? lunara_entity_schema_id( $graph_movie_id, 'movie' )
+                    : get_permalink( $graph_movie_id ) . '#movie';
+                $schema['itemReviewed']['url'] = get_permalink( $graph_movie_id );
+            }
+        }
+
         if ( '' !== $image_url ) {
             $schema['image'] = $image_url;
         }
@@ -2602,8 +2616,6 @@ if ( ! function_exists( 'lunara_output_review_seo_meta' ) ) {
             );
         }
 
-        echo '<script type="application/ld+json">' . wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
-
         // Breadcrumb trail (Home > Reviews > Title): gives the search result a
         // clean breadcrumb line and reinforces the site structure for crawlers.
         $reviews_url = get_post_type_archive_link( 'review' );
@@ -2611,7 +2623,6 @@ if ( ! function_exists( 'lunara_output_review_seo_meta' ) ) {
             $reviews_url = home_url( '/reviews/' );
         }
         $breadcrumb = array(
-            '@context'        => 'https://schema.org',
             '@type'           => 'BreadcrumbList',
             'itemListElement' => array(
                 array(
@@ -2634,7 +2645,15 @@ if ( ! function_exists( 'lunara_output_review_seo_meta' ) ) {
                 ),
             ),
         );
-        echo '<script type="application/ld+json">' . wp_json_encode( $breadcrumb, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
+
+        // One consolidated @graph per page (§11/§15): the Review and its
+        // breadcrumb ship as a single sheet instead of two loose scripts.
+        unset( $schema['@context'] );
+        $graph = array(
+            '@context' => 'https://schema.org',
+            '@graph'   => array( $schema, $breadcrumb ),
+        );
+        echo '<script type="application/ld+json">' . wp_json_encode( $graph, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
     }
 }
 add_action( 'wp_head', 'lunara_output_review_seo_meta', 7 );
