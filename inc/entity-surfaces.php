@@ -40,7 +40,9 @@ function lunara_entity_movie_awards( $movie_id ) {
              LEFT JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key IN ('category','ceremony_number','ceremony_year','won','person')
              WHERE p.post_type = 'ledger_entry' AND p.post_status != 'trash'
              GROUP BY p.ID
-             ORDER BY CAST(MAX(CASE WHEN pm.meta_key = 'ceremony_number' THEN pm.meta_value END) AS UNSIGNED) ASC, p.ID ASC",
+             ORDER BY CAST(MAX(CASE WHEN pm.meta_key = 'ceremony_number' THEN pm.meta_value END) AS UNSIGNED) ASC,
+                      CAST(MAX(CASE WHEN pm.meta_key = 'won' THEN pm.meta_value END) AS UNSIGNED) ASC,
+                      MAX(CASE WHEN pm.meta_key = 'category' THEN pm.meta_value END) ASC",
             (string) $movie_id
         ),
         ARRAY_A
@@ -66,7 +68,9 @@ function lunara_entity_person_awards( $person_id ) {
              LEFT JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key IN ('category','ceremony_number','ceremony_year','won','movie')
              WHERE p.post_type = 'ledger_entry' AND p.post_status != 'trash'
              GROUP BY p.ID
-             ORDER BY CAST(MAX(CASE WHEN pm.meta_key = 'ceremony_number' THEN pm.meta_value END) AS UNSIGNED) ASC, p.ID ASC",
+             ORDER BY CAST(MAX(CASE WHEN pm.meta_key = 'ceremony_number' THEN pm.meta_value END) AS UNSIGNED) ASC,
+                      CAST(MAX(CASE WHEN pm.meta_key = 'won' THEN pm.meta_value END) AS UNSIGNED) ASC,
+                      MAX(CASE WHEN pm.meta_key = 'category' THEN pm.meta_value END) ASC",
             (string) $person_id
         ),
         ARRAY_A
@@ -177,9 +181,9 @@ function lunara_entity_render_award_history( $rows, $context = 'movie' ) {
         <div class="lunara-entity-awards-head">
             <p class="lunara-home-section-kicker"><?php esc_html_e( 'The Oscar Record', 'lunara-film' ); ?></p>
             <p class="lunara-entity-awards-tally">
-                <span class="lunara-entity-tally-wins"><?php echo esc_html( sprintf( _n( '%s win', '%s wins', $tally['wins'], 'lunara-film' ), number_format_i18n( $tally['wins'] ) ) ); ?></span>
-                <span aria-hidden="true">·</span>
                 <span><?php echo esc_html( sprintf( _n( '%s nomination', '%s nominations', $tally['nominations'], 'lunara-film' ), number_format_i18n( $tally['nominations'] ) ) ); ?></span>
+                <span aria-hidden="true">·</span>
+                <span class="lunara-entity-tally-wins"><?php echo esc_html( sprintf( _n( '%s win', '%s wins', $tally['wins'], 'lunara-film' ), number_format_i18n( $tally['wins'] ) ) ); ?></span>
             </p>
         </div>
         <ul class="lunara-entity-award-list">
