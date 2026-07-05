@@ -68,3 +68,7 @@ require_once $lunara_inc . 'hero-command.php';
 // Layer 11 — Modular Essay Builder (Design Spec §12): renders the ACF
 // flexible-content modules registered by Lunara Core after essay content.
 require_once $lunara_inc . 'essay-builder.php';
+
+// Layer 12 — Live Global Search (Design Spec §6): REST endpoint + overlay
+// command palette. JS-off falls back to the /?s= results page untouched.
+require_once $lunara_inc . 'live-search.php';
