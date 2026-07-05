@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.47
+Version: 3.1.48
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -17509,5 +17509,209 @@ body.single-journal .entry-content blockquote {
     .lunara-essay-banner {
         margin-top: 34px;
         margin-bottom: 34px;
+    }
+}
+
+/* ============================================================================
+ * LIVE GLOBAL SEARCH OVERLAY (Design Spec §6 / §9) — theme 3.1.48
+ * REST-backed command palette: Cmd/Ctrl+K or "/", header trigger
+ * intercepted. Off-canvas panel with deep blur gradients + soft gold lines.
+ * ========================================================================= */
+
+body.lunara-search-open {
+    overflow: hidden;
+}
+
+.lunara-search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 12000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: clamp(48px, 14vh, 140px) 20px 40px;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+
+.lunara-search-overlay.is-open {
+    opacity: 1;
+}
+
+.lunara-search-overlay-veil {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at top, rgba(201, 169, 97, 0.07) 0%, transparent 55%),
+        rgba(7, 15, 26, 0.72);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+}
+
+.lunara-search-overlay-panel {
+    position: relative;
+    z-index: 1;
+    width: min(640px, 100%);
+    max-height: min(70vh, 640px);
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, rgba(15, 29, 46, 0.98) 0%, rgba(10, 21, 32, 0.98) 100%);
+    border: 1px solid var(--lunara-border);
+    border-radius: 14px;
+    box-shadow: 0 32px 90px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    transform: translateY(10px);
+    transition: transform 0.18s ease;
+}
+
+.lunara-search-overlay.is-open .lunara-search-overlay-panel {
+    transform: translateY(0);
+}
+
+.lunara-search-overlay-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px 6px 20px;
+    border-bottom: 1px solid var(--lunara-border);
+}
+
+.lunara-search-overlay-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    outline: none;
+    padding: 14px 0;
+    font-family: var(--lunara-font-body);
+    font-size: 1.06rem;
+    color: var(--lunara-text);
+}
+
+.lunara-search-overlay-input::placeholder {
+    color: var(--lunara-text-muted);
+    opacity: 0.75;
+}
+
+.lunara-search-overlay-close {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 0;
+    color: var(--lunara-text-muted);
+    font-size: 1.5rem;
+    line-height: 1;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.lunara-search-overlay-close:hover {
+    color: var(--lunara-gold-light);
+}
+
+.lunara-search-overlay-results {
+    overflow-y: auto;
+    padding: 6px 8px 10px;
+    overscroll-behavior: contain;
+}
+
+.lunara-search-group {
+    padding: 8px 0 2px;
+}
+
+.lunara-search-group-label {
+    margin: 0 0 2px;
+    padding: 6px 12px 4px;
+    font-family: var(--lunara-font-label);
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--lunara-gold);
+}
+
+.lunara-search-hit {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--lunara-text);
+}
+
+.lunara-search-hit:hover,
+.lunara-search-hit.is-active {
+    background: rgba(201, 169, 97, 0.10);
+    box-shadow: inset 2px 0 0 var(--lunara-gold);
+}
+
+.lunara-search-hit-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.98rem;
+}
+
+.lunara-search-hit-meta {
+    flex: 0 0 auto;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    color: var(--lunara-text-muted);
+}
+
+.lunara-search-hit--more {
+    margin-top: 6px;
+    justify-content: center;
+    border-top: 1px solid var(--lunara-border);
+    border-radius: 0;
+    color: var(--lunara-gold-light);
+    font-size: 0.86rem;
+    letter-spacing: 0.06em;
+}
+
+.lunara-search-overlay-empty {
+    margin: 0;
+    padding: 26px 16px;
+    text-align: center;
+    color: var(--lunara-text-muted);
+    font-style: italic;
+}
+
+.lunara-search-overlay-hint {
+    margin: 0;
+    padding: 8px 16px 10px;
+    border-top: 1px solid rgba(201, 169, 97, 0.14);
+    text-align: center;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: var(--lunara-text-muted);
+}
+
+@media (max-width: 640px) {
+    .lunara-search-overlay {
+        padding: 0;
+    }
+
+    .lunara-search-overlay-panel {
+        width: 100%;
+        max-height: 100%;
+        height: 100%;
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+    }
+
+    .lunara-search-overlay-hint {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lunara-search-overlay,
+    .lunara-search-overlay-panel {
+        transition: none;
+        transform: none;
     }
 }
