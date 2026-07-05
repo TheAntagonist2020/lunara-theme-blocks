@@ -143,6 +143,9 @@ function lunara_purge_rocket_on_deploy() {
     if ( function_exists( 'rocket_clean_used_css' ) ) {
         rocket_clean_used_css();
     }
+    if ( function_exists( 'rocket_clean_minify' ) ) {
+        rocket_clean_minify();
+    }
     update_option( 'lunara_rocket_purged_version', $version, false );
 }
 }

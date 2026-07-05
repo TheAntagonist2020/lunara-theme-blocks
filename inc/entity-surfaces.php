@@ -267,6 +267,7 @@ function lunara_entity_shape_archive_queries( $query ) {
     }
     if ( $query->is_post_type_archive( 'movie' ) ) {
         $query->set( 'posts_per_page', 24 );
+        $query->set( 'posts_per_archive_page', 24 );
         $sort = isset( $_GET['sort'] ) ? sanitize_key( wp_unslash( $_GET['sort'] ) ) : 'year';
         if ( 'az' === $sort ) {
             $query->set( 'orderby', 'title' );
@@ -279,6 +280,7 @@ function lunara_entity_shape_archive_queries( $query ) {
     }
     if ( $query->is_post_type_archive( 'person' ) ) {
         $query->set( 'posts_per_page', 36 );
+        $query->set( 'posts_per_archive_page', 36 );
         $query->set( 'orderby', 'title' );
         $query->set( 'order', 'ASC' );
         $role = isset( $_GET['role'] ) ? sanitize_key( wp_unslash( $_GET['role'] ) ) : '';
@@ -296,10 +298,11 @@ function lunara_entity_shape_archive_queries( $query ) {
         }
     }
 }
-// Priority 99: something in the stack (parent theme or a plugin) resets
-// posts_per_page at default priority — live showed 10-per-page instead of
-// the shaped 24/36 until this ran last.
-add_action( 'pre_get_posts', 'lunara_entity_shape_archive_queries', 99 );
+// PHP_INT_MAX: live testing showed the ordering applied at priority 99 but
+// posts_per_page still came back 10 — something in the stack (Jetpack's
+// archive modules are the usual suspect) re-caps it after us. The entity
+// indexes' page size is not negotiable, so this runs dead last.
+add_action( 'pre_get_posts', 'lunara_entity_shape_archive_queries', PHP_INT_MAX );
 
 /* ---------------------------------------------------------------------------
  * JSON-LD (Design Spec 2.0 §11 / §15)
