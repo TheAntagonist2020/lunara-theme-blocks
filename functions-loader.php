@@ -64,3 +64,7 @@ require_once $lunara_inc . 'entity-surfaces.php';
 // Layer 10 — Hero Command: curated hero deck + overlay intensity. Front-end
 // feed override plus the Control Desk studio and its save/search handlers.
 require_once $lunara_inc . 'hero-command.php';
+
+// Layer 11 — Modular Essay Builder (Design Spec §12): renders the ACF
+// flexible-content modules registered by Lunara Core after essay content.
+require_once $lunara_inc . 'essay-builder.php';

@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.46
+Version: 3.1.47
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -97,6 +97,15 @@ Text Domain: lunara-film
     --lunara-body-size: 15px;
     --lunara-body-line-height: 1.65;
     --lunara-section-title-size: clamp(1.4rem, 2.2vw, 1.85rem);
+
+    /* ── Fluid clamp system (Design Spec §8/§18) ─────────────────────────
+       Linear scaling from 375px mobile to 1440px desktop. New surfaces
+       (essay modules first) adopt these; legacy call sites migrate in the
+       dedicated clamp pass. */
+    --lunara-display-text: clamp(3rem, 1.5rem + 6.38vw, 7.5rem);   /* 48 → 120px */
+    --lunara-header-text: clamp(2rem, 1.4rem + 2.5vw, 3.5rem);      /* 32 → 56px  */
+    --lunara-body-text: clamp(1rem, 0.9rem + 0.42vw, 1.25rem);      /* 16 → 20px  */
+    --lunara-line-height-editorial: 1.6;
 }
 
 body {
@@ -17276,4 +17285,229 @@ body.single-journal .entry-content blockquote {
 }
 @media (prefers-reduced-motion: reduce) {
     #header, .site-footer, #main-container > footer { transition: none; }
+}
+
+/* ============================================================================
+ * MODULAR ESSAY BUILDER (Design Spec §12 / §19A) — theme 3.1.47
+ * Renders the ACF flexible-content module stack after essay content on
+ * journal entries and posts. First adopter of the §18 fluid clamp tokens.
+ * Media guards: hairline borders + soft drops on every media module.
+ * ========================================================================= */
+
+.lunara-essay-modules {
+    max-width: 720px;
+    margin: 40px auto 0;
+    font-size: var(--lunara-body-text);
+    line-height: var(--lunara-line-height-editorial);
+    color: var(--lunara-text);
+}
+
+.lunara-essay-module {
+    margin: 0 0 34px;
+}
+
+.lunara-essay-module:last-child {
+    margin-bottom: 0;
+}
+
+/* Shared media guard — spec: custom boundaries, light hairlines, soft drops. */
+.lunara-essay-media-guard {
+    display: block;
+    border: 1px solid var(--lunara-border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+    background: var(--lunara-bg-secondary);
+}
+
+.lunara-essay-media-guard img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* -- Prose passage ------------------------------------------------------- */
+.lunara-essay-prose p {
+    margin: 0 0 1.15em;
+    font-size: var(--lunara-body-text);
+    line-height: var(--lunara-line-height-editorial);
+}
+
+.lunara-essay-prose p:last-child {
+    margin-bottom: 0;
+}
+
+.lunara-essay-prose a {
+    color: var(--lunara-gold-light);
+}
+
+/* -- Pull-quote ---------------------------------------------------------- */
+.lunara-essay-pullquote {
+    margin: 46px 0;
+    padding: 26px 8px;
+    border-top: 1px solid var(--lunara-border);
+    border-bottom: 1px solid var(--lunara-border);
+    text-align: center;
+}
+
+.lunara-essay-pullquote blockquote {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-family: var(--lunara-font-display);
+    font-size: clamp(1.35rem, 1rem + 1.7vw, 2.1rem);
+    line-height: 1.35;
+    font-style: italic;
+    color: var(--lunara-text);
+}
+
+.lunara-essay-pullquote blockquote::before {
+    content: "\201C";
+    color: var(--lunara-gold);
+}
+
+.lunara-essay-pullquote blockquote::after {
+    content: "\201D";
+    color: var(--lunara-gold);
+}
+
+.lunara-essay-pullquote figcaption {
+    margin-top: 12px;
+    font-family: var(--lunara-font-label);
+    font-size: 0.82rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--lunara-gold);
+}
+
+/* -- Inset frame --------------------------------------------------------- */
+.lunara-essay-inset {
+    margin: 6px 0 22px;
+}
+
+@media (min-width: 761px) {
+    .lunara-essay-inset {
+        width: min(340px, 42%);
+    }
+
+    .lunara-essay-inset.is-right {
+        float: right;
+        margin-left: 28px;
+    }
+
+    .lunara-essay-inset.is-left {
+        float: left;
+        margin-right: 28px;
+    }
+
+    /* Contain the floats so the module stack always closes cleanly. */
+    .lunara-essay-modules {
+        display: flow-root;
+    }
+}
+
+.lunara-essay-inset figcaption {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+    color: var(--lunara-text-muted);
+}
+
+/* -- Widescreen video spread --------------------------------------------- */
+.lunara-essay-video {
+    margin: 46px 0;
+}
+
+@media (min-width: 981px) {
+    .lunara-essay-video {
+        width: min(960px, calc(100vw - 64px));
+        margin-left: calc(50% - min(480px, 50vw - 32px));
+    }
+}
+
+.lunara-essay-video-frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+}
+
+.lunara-essay-video-frame iframe,
+.lunara-essay-video-frame video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+}
+
+.lunara-essay-video figcaption {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+    color: var(--lunara-text-muted);
+}
+
+/* -- Cinematic banner (full-bleed) ---------------------------------------- */
+.lunara-essay-banner {
+    position: relative;
+    width: 100vw;
+    margin: 52px 0 52px calc(50% - 50vw);
+    overflow: hidden;
+}
+
+.lunara-essay-banner-media img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 72vh;
+    object-fit: cover;
+}
+
+.lunara-essay-banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(7, 15, 26, 0.72) 0%, rgba(7, 15, 26, 0.12) 42%, rgba(7, 15, 26, 0) 70%);
+    pointer-events: none;
+}
+
+.lunara-essay-banner-copy {
+    position: absolute;
+    left: 50%;
+    bottom: 26px;
+    transform: translateX(-50%);
+    width: min(720px, calc(100vw - 48px));
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lunara-essay-banner-kicker {
+    font-family: var(--lunara-font-label);
+    font-size: 0.82rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--lunara-gold);
+}
+
+.lunara-essay-banner-title {
+    font-family: var(--lunara-font-display);
+    font-size: clamp(1.4rem, 1rem + 2vw, 2.4rem);
+    line-height: 1.2;
+    color: var(--lunara-text);
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
+}
+
+@media (max-width: 760px) {
+    .lunara-essay-pullquote {
+        margin: 34px 0;
+    }
+
+    .lunara-essay-video,
+    .lunara-essay-banner {
+        margin-top: 34px;
+        margin-bottom: 34px;
+    }
 }
