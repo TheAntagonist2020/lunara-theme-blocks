@@ -124,6 +124,31 @@ function lunara_enqueue_styles() {
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
 
 /**
+ * Deploy-aware WP Rocket purge. Rocket's "Remove Unused CSS" strips every
+ * stylesheet link and inlines a cached used-CSS set — which trails theme
+ * deploys, so freshly shipped styles are invisible until someone clicks
+ * "Clear Used CSS" (the 3.1.39 entity surfaces rendered completely bare
+ * because of exactly this). Purge Rocket's page cache and Used CSS once
+ * per theme version so every deploy is self-cleaning.
+ */
+if ( ! function_exists( 'lunara_purge_rocket_on_deploy' ) ) {
+function lunara_purge_rocket_on_deploy() {
+    $version = (string) wp_get_theme()->get( 'Version' );
+    if ( '' === $version || get_option( 'lunara_rocket_purged_version' ) === $version ) {
+        return;
+    }
+    if ( function_exists( 'rocket_clean_domain' ) ) {
+        rocket_clean_domain();
+    }
+    if ( function_exists( 'rocket_clean_used_css' ) ) {
+        rocket_clean_used_css();
+    }
+    update_option( 'lunara_rocket_purged_version', $version, false );
+}
+}
+add_action( 'init', 'lunara_purge_rocket_on_deploy', 20 );
+
+/**
  * One-time restoration (3.1.38): the homepage Latest Reviews section was
  * toggled off in a stored theme mod, and the Control Desk switch proved
  * hard to locate (it lives under the Theme Studio tab). Dalton needs the
