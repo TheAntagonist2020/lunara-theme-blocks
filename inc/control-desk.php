@@ -1181,6 +1181,13 @@ function lunara_control_desk_save_homepage_studio() {
         set_theme_mod( $key, isset( $raw_visible[ $key ] ) ? '1' : '0' );
     }
 
+    // Hybrid composition write-through: when the homepage is block-composed,
+    // the just-saved order + visibility recompose the Home page's blocks so
+    // the Studio and the editor never disagree.
+    if ( function_exists( 'lunara_sync_home_section_blocks_from_settings' ) ) {
+        lunara_sync_home_section_blocks_from_settings();
+    }
+
     $notice = $apply_values ? 'homepage_preset_applied' : 'homepage_studio_saved';
     wp_safe_redirect( add_query_arg( 'lunara_notice', $notice, $redirect ) );
     exit;

@@ -60,6 +60,7 @@
 					duration: 0.7,
 					ease: 'power3.out',
 					stagger: stagger,
+					clearProps: 'transform,opacity',
 					scrollTrigger: { trigger: el, start: 'top 88%', once: true }
 				});
 			} catch (err) { /* decorative — never break the page */ }

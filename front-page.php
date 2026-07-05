@@ -38,6 +38,24 @@ get_header();
 	}
 
 	/*
+	 * Hybrid composition (3.1.50): when the Home page carries Lunara section
+	 * blocks, the blocks ARE the homepage — order is block order, presence is
+	 * visibility, and the editor previews match the front end. With no
+	 * section blocks present, the Customizer registry below renders exactly
+	 * as before (which is also the rollback: remove the blocks, this resumes).
+	 */
+	if ( function_exists( 'lunara_home_uses_block_composition' ) && lunara_home_uses_block_composition() ) {
+		echo lunara_render_home_block_composition(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		wp_reset_postdata();
+		?>
+</main>
+
+<?php
+		get_footer();
+		return;
+	}
+
+	/*
 	 * Homepage section slug => render callback. Each callback returns a
 	 * self-contained <section class="lunara-home-section lunara-home-slot-{slug}">
 	 * (its own escaping). Only slugs with a genuine renderer are listed.
