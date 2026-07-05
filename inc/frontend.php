@@ -62,7 +62,15 @@ function lunara_render_home_front_door() {
     $prominence  = lunara_home_select_setting( 'lunara_home_route_card_prominence', 'strong', array( 'quiet', 'standard', 'strong' ) );
 
     if ( $logo_id ) {
-        $logo_html = wp_get_attachment_image(
+        // Timing-immune sizing: the settled dimensions ride ON the element as
+        // an inline style, so the wordmark can never paint giant while an
+        // optimizer (WP Rocket async/used CSS) is still delivering the
+        // stylesheet — the exact big-then-small flash readers reported. The
+        // var() indirection lets the breakpoint rules in
+        // lunara_home_front_door_css() keep overriding tablet/mobile sizes.
+        $logo_desktop_w = lunara_home_brand_number_setting( 'lunara_home_logo_desktop_max_width', 1180, 520, 1600 );
+        $logo_desktop_h = lunara_home_brand_number_setting( 'lunara_home_logo_desktop_max_height', 312, 140, 420 );
+        $logo_html      = wp_get_attachment_image(
             $logo_id,
             'full',
             false,
@@ -72,6 +80,11 @@ function lunara_render_home_front_door() {
                 'decoding'      => 'async',
                 'fetchpriority' => 'high',
                 'alt'           => '',
+                'style'         => sprintf(
+                    'display:block;width:var(--lunara-masthead-logo-w,min(100%%,%dpx));height:auto;max-height:var(--lunara-masthead-logo-cap,clamp(118px,22vw,%dpx));object-fit:contain;',
+                    (int) $logo_desktop_w,
+                    (int) $logo_desktop_h
+                ),
             )
         );
     }
@@ -152,6 +165,7 @@ function lunara_home_front_door_css() {
     $mobile_bottom_pad    = max( 16, min( 28, $masthead_bottom_pad ) );
     ?>
     <style id="lunara-home-front-door-css">
+    /*lunara-home-front-door-css*/
     body.home .lunara-home-masthead{--lunara-home-masthead-top-pad:<?php echo esc_html( $masthead_top_pad ); ?>px;--lunara-home-masthead-bottom-pad:<?php echo esc_html( $masthead_bottom_pad ); ?>px;--lunara-home-masthead-gap:<?php echo esc_html( $masthead_bottom_gap ); ?>px;--lunara-home-route-card-min:<?php echo esc_html( $route_card_min ); ?>px;width:100%;margin:0 auto var(--lunara-home-masthead-gap);box-sizing:border-box;}
     body.home .lunara-home-masthead-panel{position:relative;display:grid;gap:clamp(16px,2.4vw,30px);align-items:center;overflow:hidden;padding:var(--lunara-home-masthead-top-pad) clamp(18px,5vw,76px) var(--lunara-home-masthead-bottom-pad);border-bottom:1px solid rgba(201,169,97,.24);background:radial-gradient(circle at 78% -20%,rgba(201,169,97,.18),transparent 32%),linear-gradient(180deg,rgba(5,12,21,.98),rgba(9,21,34,.98) 56%,rgba(6,14,24,.98));}
     body.home .lunara-home-masthead-panel::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(201,169,97,.14),transparent 19%,transparent 81%,rgba(244,239,227,.08));opacity:.74;}
@@ -177,13 +191,29 @@ function lunara_home_front_door_css() {
     body.home .lunara-home-masthead-route-label{color:var(--lunara-gold-light,#e0c481);font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;}
     body.home .lunara-home-masthead-route strong{color:var(--lunara-text,#FAFBFC);font-size:clamp(1rem,1.15vw,1.16rem);line-height:1.18;}
     body.home .lunara-home-masthead-route span:last-child{color:rgba(244,239,227,.74);font-size:.88rem;line-height:1.42;}
-    @media(max-width:820px){body.home .lunara-home-masthead{margin-bottom:<?php echo esc_html( max( 16, min( 34, $masthead_bottom_gap ) ) ); ?>px;}body.home .lunara-home-masthead-panel{padding:<?php echo esc_html( $mobile_top_pad ); ?>px 16px <?php echo esc_html( $mobile_bottom_pad ); ?>px;border-radius:0;}body.home .lunara-home-masthead-panel::after{left:16px;right:16px;bottom:auto;top:clamp(154px,42vw,218px);}body.home .lunara-home-masthead-logo-frame{width:100%;}body.home .lunara-home-masthead-logo{width:min(100%,<?php echo esc_html( $mobile_logo_width ); ?>px);max-width:100%;max-height:clamp(106px,31vw,<?php echo esc_html( $mobile_logo_height ); ?>px);object-fit:contain;}body.home .lunara-home-masthead-dek{font-size:1rem;line-height:1.54;}body.home .lunara-home-masthead-routes{grid-template-columns:minmax(0,1fr);gap:10px;margin-top:10px;}body.home .lunara-home-masthead-route{min-height:auto;padding:13px 14px;}}
-    @media(min-width:821px) and (max-width:1100px){body.home .lunara-home-masthead-routes{grid-template-columns:repeat(3,minmax(0,1fr));}body.home .lunara-home-masthead-logo{width:min(100%,<?php echo esc_html( $tablet_logo_width ); ?>px);}}
+    @media(max-width:820px){body.home .lunara-home-masthead{margin-bottom:<?php echo esc_html( max( 16, min( 34, $masthead_bottom_gap ) ) ); ?>px;}body.home .lunara-home-masthead-panel{padding:<?php echo esc_html( $mobile_top_pad ); ?>px 16px <?php echo esc_html( $mobile_bottom_pad ); ?>px;border-radius:0;}body.home .lunara-home-masthead-panel::after{left:16px;right:16px;bottom:auto;top:clamp(154px,42vw,218px);}body.home .lunara-home-masthead-logo-frame{width:100%;}body.home .lunara-home-masthead-logo{--lunara-masthead-logo-w:min(100%,<?php echo esc_html( $mobile_logo_width ); ?>px);--lunara-masthead-logo-cap:clamp(106px,31vw,<?php echo esc_html( $mobile_logo_height ); ?>px);width:min(100%,<?php echo esc_html( $mobile_logo_width ); ?>px);max-width:100%;max-height:clamp(106px,31vw,<?php echo esc_html( $mobile_logo_height ); ?>px);object-fit:contain;}body.home .lunara-home-masthead-dek{font-size:1rem;line-height:1.54;}body.home .lunara-home-masthead-routes{grid-template-columns:minmax(0,1fr);gap:10px;margin-top:10px;}body.home .lunara-home-masthead-route{min-height:auto;padding:13px 14px;}}
+    @media(min-width:821px) and (max-width:1100px){body.home .lunara-home-masthead-routes{grid-template-columns:repeat(3,minmax(0,1fr));}body.home .lunara-home-masthead-logo{--lunara-masthead-logo-w:min(100%,<?php echo esc_html( $tablet_logo_width ); ?>px);width:min(100%,<?php echo esc_html( $tablet_logo_width ); ?>px);}}
     @media(prefers-reduced-motion:reduce){body.home .lunara-home-masthead-route{transition:none;}body.home .lunara-home-masthead-route:hover,body.home .lunara-home-masthead-route:focus-visible{transform:none;}}
     </style>
     <?php
 }
 add_action( 'wp_head', 'lunara_home_front_door_css', 45 );
+
+/**
+ * Keep the masthead's layout CSS out of WP Rocket's used-CSS pipeline.
+ *
+ * Rocket's Remove Unused CSS collects inline styles into its async-applied
+ * used-CSS blob; for the homepage masthead that opens a first-paint window
+ * where the wordmark has no width constraint and flashes giant before
+ * snapping small — the exact complaint readers reported. These exclusions
+ * pin the front-door <style> in place, render-blocking, on every config.
+ */
+function lunara_rocket_preserve_front_door_css( $exclusions ) {
+    $exclusions[] = 'lunara-home-front-door-css';
+    return $exclusions;
+}
+add_filter( 'rocket_rucss_inline_content_exclusions', 'lunara_rocket_preserve_front_door_css' );
+add_filter( 'rocket_rucss_inline_atts_exclusions', 'lunara_rocket_preserve_front_door_css' );
 
 function lunara_home_card_media_hygiene_css() {
     if ( ! is_front_page() ) {
