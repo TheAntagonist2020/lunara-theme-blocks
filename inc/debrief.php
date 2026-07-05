@@ -1182,6 +1182,88 @@ if ( ! function_exists( 'lunara_pair_render_where_to_watch' ) ) {
     }
 }
 
+if ( ! function_exists( 'lunara_pair_relational_data' ) ) {
+    /**
+     * Build Pair It With card data straight from a linked movie entity.
+     *
+     * Reads the Relational Trinity fields saved on the review (theme_echo_movie,
+     * counter_program_movie, career_context_movie plus their *_note twins,
+     * registered by Lunara Core) and shapes the result exactly like
+     * lunara_parse_pair_it_with_value(), so the card renderer downstream stays a
+     * single code path. Poster preference: the movie's own featured image, then
+     * the shared poster pipeline keyed on its IMDb title ID.
+     *
+     * @param int    $review_id Review post ID.
+     * @param string $relation  Field stem: theme_echo | counter_program | career_context.
+     * @return array<string,mixed>|null Null when no published movie is linked.
+     */
+    function lunara_pair_relational_data( $review_id, $relation ) {
+        $movie_id = (int) get_post_meta( (int) $review_id, $relation . '_movie', true );
+        if ( $movie_id <= 0 ) {
+            return null;
+        }
+
+        $movie = get_post( $movie_id );
+        if ( ! $movie || 'movie' !== $movie->post_type || 'publish' !== $movie->post_status ) {
+            return null;
+        }
+
+        $title_base = trim( (string) get_the_title( $movie ) );
+        if ( '' === $title_base ) {
+            return null;
+        }
+
+        $year = trim( (string) get_post_meta( $movie_id, 'release_year', true ) );
+        $tt   = strtolower( trim( (string) get_post_meta( $movie_id, 'imdb_title_id', true ) ) );
+        if ( '' !== $tt && ! preg_match( '/^tt\d{7,8}$/', $tt ) ) {
+            $tt = '';
+        }
+        $note = trim( (string) get_post_meta( (int) $review_id, $relation . '_note', true ) );
+
+        $counts = array( 'noms' => 0, 'wins' => 0 );
+        if ( '' !== $tt && function_exists( 'lunara_get_oscar_ledger_counts' ) ) {
+            $counts = lunara_get_oscar_ledger_counts( $tt );
+        }
+
+        $poster_html = '';
+        if ( has_post_thumbnail( $movie_id ) ) {
+            $poster_html = (string) get_the_post_thumbnail(
+                $movie_id,
+                'medium',
+                array(
+                    'class'    => 'lunara-pair-preview-thumb',
+                    'loading'  => 'lazy',
+                    'decoding' => 'async',
+                )
+            );
+        }
+        if ( '' === trim( $poster_html ) && '' !== $tt && function_exists( 'lunara_get_title_poster_html' ) ) {
+            $poster_html = (string) lunara_get_title_poster_html( $tt, 'medium', 'lunara-pair-preview-thumb', $title_base );
+        }
+
+        $dossier_href = (string) get_permalink( $movie_id );
+        $imdb_href    = '' !== $tt ? 'https://www.imdb.com/title/' . $tt . '/' : '';
+
+        return array(
+            'raw'             => '',
+            'clean'           => $title_base,
+            'tt'              => $tt,
+            'title'           => '' !== $year ? $title_base . ' (' . $year . ')' : $title_base,
+            'title_base'      => $title_base,
+            'year'            => $year,
+            'note'            => $note,
+            'internal_href'   => $dossier_href,
+            'imdb_href'       => $imdb_href,
+            'title_href'      => $dossier_href,
+            'title_href_type' => 'entity',
+            'counts'          => is_array( $counts ) ? $counts : array( 'noms' => 0, 'wins' => 0 ),
+            'poster_html'     => $poster_html,
+            'resolved_title'  => $title_base,
+            'warnings'        => array(),
+        );
+    }
+}
+
 if ( ! function_exists( 'lunara_render_pair_it_with_cards' ) ) {
     /**
      * Render the "Pair It With" trio as uniform, self-contained cinematic cards.
@@ -1204,31 +1286,39 @@ if ( ! function_exists( 'lunara_render_pair_it_with_cards' ) ) {
 
         $rows = array(
             array(
-                'slug'  => 'theme',
-                'label' => __( 'Theme Echo', 'lunara-film' ),
-                'value' => get_post_meta( $post_id, '_lunara_theme_echo', true ),
+                'slug'     => 'theme',
+                'relation' => 'theme_echo',
+                'label'    => __( 'Theme Echo', 'lunara-film' ),
+                'value'    => get_post_meta( $post_id, '_lunara_theme_echo', true ),
             ),
             array(
-                'slug'  => 'counter',
-                'label' => __( 'Counter-Program', 'lunara-film' ),
-                'value' => get_post_meta( $post_id, '_lunara_counter_program', true ),
+                'slug'     => 'counter',
+                'relation' => 'counter_program',
+                'label'    => __( 'Counter-Program', 'lunara-film' ),
+                'value'    => get_post_meta( $post_id, '_lunara_counter_program', true ),
             ),
             array(
-                'slug'  => 'career',
-                'label' => __( 'Career Context', 'lunara-film' ),
-                'value' => lunara_get_career_context_meta( $post_id ),
+                'slug'     => 'career',
+                'relation' => 'career_context',
+                'label'    => __( 'Career Context', 'lunara-film' ),
+                'value'    => lunara_get_career_context_meta( $post_id ),
             ),
         );
 
         $cards = array();
 
         foreach ( $rows as $row ) {
-            $value = trim( (string) $row['value'] );
-            if ( '' === $value ) {
-                continue;
+            // Relational Trinity first: a linked movie entity beats the legacy text field.
+            $data = lunara_pair_relational_data( $post_id, $row['relation'] );
+
+            if ( null === $data ) {
+                $value = trim( (string) $row['value'] );
+                if ( '' === $value ) {
+                    continue;
+                }
+                $data = lunara_parse_pair_it_with_value( $value, $post_id );
             }
 
-            $data       = lunara_parse_pair_it_with_value( $value, $post_id );
             $title_base = '' !== $data['title_base'] ? $data['title_base'] : $data['title'];
             if ( '' === trim( (string) $title_base ) ) {
                 continue;
@@ -1264,7 +1354,7 @@ if ( ! function_exists( 'lunara_render_pair_it_with_cards' ) ) {
 
             $title_href = (string) $data['title_href'];
             $href_type  = (string) $data['title_href_type'];
-            if ( '' !== $title_href && in_array( $href_type, array( 'review', 'oscar' ), true ) ) {
+            if ( '' !== $title_href && in_array( $href_type, array( 'review', 'oscar', 'entity' ), true ) ) {
                 $title_html = '<a class="lunara-pair-card-title-link" href="' . esc_url( $title_href ) . '">' . $title_inner . '</a>';
             } elseif ( '' !== $title_href ) {
                 $title_html = '<a class="lunara-pair-card-title-link" href="' . esc_url( $title_href ) . '" target="_blank" rel="noopener noreferrer nofollow">' . $title_inner . '</a>';
