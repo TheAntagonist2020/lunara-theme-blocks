@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.55
+Version: 3.1.56
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -59,15 +59,17 @@ Text Domain: lunara-film
 
 :root {
     /* ── Typography (canonical) ──────────────────────────────────────────
-       Georgia is Lunara's editorial face: a screen-designed serif that loads
-       instantly as a system font (zero webfont weight — a perf win, not a
-       cost). Bebas Neue + Oswald (the only @import-ed webfonts, defined far
-       below) are the condensed accent faces, reserved for labels: ceremony
-       tags, score pills, tickers. Control the type identity from these three
-       tokens so it can never drift again. */
-    --lunara-font-body: Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif;
-    --lunara-font-display: Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif;
-    --lunara-font-label: "Bebas Neue", "Oswald", "Arial Narrow", sans-serif;
+       Tiempos is the planned house voice, GT Sectra is the sharp signature
+       display, and Canela Deck is the rare editorial glamour face. Until the
+       licensed webfont files are added, these tokens fall back cleanly to the
+       existing system serif stack. */
+    --lunara-font-body: "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif;
+    --lunara-font-display: "Tiempos Headline", "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", serif;
+    --lunara-font-signature: "GT Sectra Display", "Tiempos Headline", Georgia, "Times New Roman", serif;
+    --lunara-font-glamour: "Canela Deck", "Tiempos Headline", Georgia, "Times New Roman", serif;
+    --lunara-font-label: "Tiempos Text", "Segoe UI", Arial, sans-serif;
+    --lunara-body-font-stack: var(--lunara-font-body);
+    --lunara-heading-font-stack: var(--lunara-font-display);
 
     /* ── Palette (navy + gold cinema identity) ───────────────────────────
        A few tokens share a value but are kept as named aliases because they
