@@ -243,7 +243,7 @@ if ( ! function_exists( 'lunara_search_render_oscar_matches' ) ) {
             <div class="lunara-home-section-head lunara-search-results-head">
                 <div>
                     <p class="lunara-home-section-kicker"><?php esc_html_e( 'Oscar Signal', 'lunara-film' ); ?></p>
-                    <h2 class="lunara-section-title"><?php esc_html_e( 'Direct Ledger Matches', 'lunara-film' ); ?></h2>
+                    <h2 class="lunara-section-title"><?php esc_html_e( 'Direct ledger matches', 'lunara-film' ); ?></h2>
                 </div>
             </div>
 
@@ -298,11 +298,7 @@ if ( $result_count <= 0 ) {
 }
 
 $archive_title = '' !== $query_text
-    ? sprintf(
-        /* translators: %s: Search query. */
-        __( 'Searching Lunara for "%s"', 'lunara-film' ),
-        $query_text
-    )
+    ? __( 'Search Results', 'lunara-film' )
     : __( 'Search Lunara Film', 'lunara-film' );
 
 $archive_copy = __( 'A command surface for criticism, Journal entries, film dossiers, talent files, and the Oscar Ledger.', 'lunara-film' );
@@ -342,6 +338,12 @@ if ( empty( $result_posts ) && empty( $oscar_matches ) && ! empty( $recovery_hit
             <div class="lunara-editorial-archive-hero-copy-wrap">
                 <p class="lunara-archive-hero-kicker"><?php echo esc_html( get_theme_mod( 'lunara_search_kicker', __( 'Search Desk', 'lunara-film' ) ) ); ?></p>
                 <h1 class="lunara-archive-hero-title"><?php echo esc_html( $archive_title ); ?></h1>
+                <?php if ( '' !== $query_text ) : ?>
+                    <p class="lunara-search-query-line">
+                        <span><?php esc_html_e( 'Query', 'lunara-film' ); ?></span>
+                        <strong><?php echo esc_html( $query_text ); ?></strong>
+                    </p>
+                <?php endif; ?>
                 <?php if ( '' !== $archive_copy ) : ?>
                     <p class="lunara-archive-hero-copy"><?php echo esc_html( $archive_copy ); ?></p>
                 <?php endif; ?>
@@ -374,7 +376,7 @@ if ( empty( $result_posts ) && empty( $oscar_matches ) && ! empty( $recovery_hit
             <div class="lunara-home-section-head lunara-search-results-head">
                 <div>
                     <p class="lunara-home-section-kicker"><?php esc_html_e( 'Search Run', 'lunara-film' ); ?></p>
-                    <h2 class="lunara-section-title"><?php esc_html_e( 'Results By Desk', 'lunara-film' ); ?></h2>
+                    <h2 class="lunara-section-title"><?php esc_html_e( 'Results by desk', 'lunara-film' ); ?></h2>
                 </div>
             </div>
 

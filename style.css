@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.54
+Version: 3.1.55
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -2554,6 +2554,69 @@ footer.site-footer .lunara-footer-copyright {
     gap: clamp(18px, 2vw, 26px);
 }
 
+.lunara-search-page .lunara-archive-hero-kicker,
+.lunara-search-page .lunara-home-section-kicker,
+.lunara-search-page .lunara-search-command-lane-kicker,
+.lunara-search-page .lunara-search-oscar-kicker,
+.lunara-search-page .lunara-search-result-kicker {
+    color: rgba(224,196,129,.78);
+    font-family: var(--lunara-font-label, "Bebas Neue", "Arial Narrow", sans-serif);
+    font-size: .68rem;
+    font-weight: 400;
+    letter-spacing: .15em;
+}
+
+.lunara-search-page .lunara-archive-hero-title {
+    max-width: 760px;
+    color: var(--lunara-text, #FAFBFC);
+    font-family: var(--lunara-font-display, Georgia, "Times New Roman", serif);
+    font-size: clamp(2.35rem, 4.4vw, 4.9rem);
+    font-weight: 500;
+    line-height: .96;
+}
+
+.lunara-search-query-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0;
+    color: rgba(250,251,252,.84);
+    font-size: clamp(1rem, 1.35vw, 1.18rem);
+    line-height: 1.35;
+}
+
+.lunara-search-query-line span {
+    color: rgba(224,196,129,.76);
+    font-family: var(--lunara-font-label, "Bebas Neue", "Arial Narrow", sans-serif);
+    font-size: .72rem;
+    font-weight: 400;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+
+.lunara-search-query-line strong {
+    color: var(--lunara-gold-light, #e0c481);
+    font-weight: 500;
+}
+
+.lunara-search-page .lunara-archive-hero-copy {
+    max-width: 720px;
+    color: rgba(250,251,252,.76);
+    font-size: clamp(.98rem, 1.15vw, 1.08rem);
+    line-height: 1.62;
+}
+
+.lunara-search-page .lunara-section-title {
+    color: var(--lunara-text, #FAFBFC);
+    font-family: var(--lunara-font-display, Georgia, "Times New Roman", serif);
+    font-size: clamp(1.32rem, 2.2vw, 2rem);
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.12;
+    text-transform: none;
+}
+
 .lunara-search-command-form {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -2590,10 +2653,10 @@ footer.site-footer .lunara-footer-copyright {
     border-radius: 6px;
     padding: 0 18px;
     background: rgba(224,196,129,.14);
-    color: var(--lunara-gold-light);
+    color: var(--lunara-text, #FAFBFC);
     font-size: .78rem;
-    font-weight: 800;
-    letter-spacing: .12em;
+    font-weight: 700;
+    letter-spacing: .08em;
     text-transform: uppercase;
 }
 
@@ -2624,10 +2687,6 @@ footer.site-footer .lunara-footer-copyright {
 
 .lunara-search-command-lane-kicker {
     margin: 0;
-    color: var(--lunara-gold-light);
-    font-size: .76rem;
-    font-weight: 800;
-    letter-spacing: .16em;
     text-transform: uppercase;
 }
 
@@ -2678,18 +2737,17 @@ footer.site-footer .lunara-footer-copyright {
 .lunara-search-oscar-kicker,
 .lunara-search-result-kicker {
     margin: 0;
-    color: var(--lunara-gold-light);
-    font-size: .74rem;
-    letter-spacing: .16em;
     text-transform: uppercase;
 }
 
 .lunara-search-oscar-title,
 .lunara-search-result-title {
     margin: 0;
-    color: var(--lunara-gold);
-    font-size: clamp(1.12rem, 1.8vw, 1.34rem);
-    line-height: 1.12;
+    color: var(--lunara-text, #FAFBFC);
+    font-family: var(--lunara-font-display, Georgia, "Times New Roman", serif);
+    font-size: clamp(1.08rem, 1.45vw, 1.28rem);
+    font-weight: 500;
+    line-height: 1.2;
 }
 
 .lunara-search-oscar-meta {
@@ -2700,8 +2758,9 @@ footer.site-footer .lunara-footer-copyright {
 
 .lunara-search-result-copy {
     margin: 0;
-    color: #FAFBFC;
-    line-height: 1.65;
+    color: rgba(250,251,252,.74);
+    font-size: .94rem;
+    line-height: 1.64;
 }
 
 .lunara-search-form-shell {
