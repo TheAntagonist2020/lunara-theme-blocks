@@ -102,6 +102,137 @@ if ( ! function_exists( 'lunara_search_focus_order_posts' ) ) {
     }
 }
 
+if ( ! function_exists( 'lunara_search_query_text' ) ) {
+    function lunara_search_query_text() {
+        $query_text = trim( (string) get_search_query( false ) );
+
+        if ( '' === $query_text && isset( $_GET['q'] ) ) {
+            $query_text = trim( sanitize_text_field( wp_unslash( $_GET['q'] ) ) );
+        }
+
+        if ( '' === $query_text && isset( $_GET['s'] ) ) {
+            $query_text = trim( sanitize_text_field( wp_unslash( $_GET['s'] ) ) );
+        }
+
+        return $query_text;
+    }
+}
+
+if ( ! function_exists( 'lunara_search_result_post_types' ) ) {
+    function lunara_search_result_post_types() {
+        $post_types = array( 'review', 'journal', 'post', 'movie', 'person', 'page' );
+
+        return array_values(
+            array_filter(
+                $post_types,
+                static function ( $post_type ) {
+                    return post_type_exists( $post_type );
+                }
+            )
+        );
+    }
+}
+
+if ( ! function_exists( 'lunara_search_command_results_query' ) ) {
+    function lunara_search_command_results_query( $query_text ) {
+        $query_text = trim( (string) $query_text );
+
+        if ( '' === $query_text ) {
+            return null;
+        }
+
+        return new WP_Query(
+            array(
+                's'                      => $query_text,
+                'post_type'              => lunara_search_result_post_types(),
+                'post_status'            => 'publish',
+                'posts_per_page'         => 24,
+                'ignore_sticky_posts'    => true,
+                'no_found_rows'          => false,
+                'update_post_meta_cache' => true,
+                'update_post_term_cache' => false,
+            )
+        );
+    }
+}
+
+if ( ! function_exists( 'lunara_search_group_label' ) ) {
+    function lunara_search_group_label( $post_type ) {
+        $labels = array(
+            'review'  => __( 'Reviews', 'lunara-film' ),
+            'journal' => __( 'Journal', 'lunara-film' ),
+            'post'    => __( 'Essays & Stories', 'lunara-film' ),
+            'movie'   => __( 'Film Dossiers', 'lunara-film' ),
+            'person'  => __( 'Talent', 'lunara-film' ),
+            'page'    => __( 'Site Pages', 'lunara-film' ),
+        );
+
+        if ( isset( $labels[ $post_type ] ) ) {
+            return $labels[ $post_type ];
+        }
+
+        $object = get_post_type_object( $post_type );
+        return $object && ! empty( $object->labels->name ) ? $object->labels->name : __( 'Entries', 'lunara-film' );
+    }
+}
+
+if ( ! function_exists( 'lunara_search_group_posts' ) ) {
+    function lunara_search_group_posts( $posts ) {
+        $order  = array( 'review', 'journal', 'post', 'movie', 'person', 'page' );
+        $groups = array();
+
+        foreach ( (array) $posts as $post_item ) {
+            if ( ! ( $post_item instanceof WP_Post ) ) {
+                continue;
+            }
+
+            $type = (string) $post_item->post_type;
+            if ( ! isset( $groups[ $type ] ) ) {
+                $groups[ $type ] = array(
+                    'label' => lunara_search_group_label( $type ),
+                    'posts' => array(),
+                );
+            }
+
+            $groups[ $type ]['posts'][] = $post_item;
+        }
+
+        uksort(
+            $groups,
+            static function ( $left, $right ) use ( $order ) {
+                $left_rank  = array_search( $left, $order, true );
+                $right_rank = array_search( $right, $order, true );
+
+                $left_rank  = false === $left_rank ? 99 : $left_rank;
+                $right_rank = false === $right_rank ? 99 : $right_rank;
+
+                return $left_rank <=> $right_rank;
+            }
+        );
+
+        return $groups;
+    }
+}
+
+if ( ! function_exists( 'lunara_search_render_post_result_card' ) ) {
+    function lunara_search_render_post_result_card( $post_item ) {
+        if ( ! ( $post_item instanceof WP_Post ) ) {
+            return;
+        }
+
+        $type_label = lunara_search_group_label( $post_item->post_type );
+        ?>
+        <article class="lunara-search-result-card is-type-<?php echo esc_attr( sanitize_html_class( $post_item->post_type ) ); ?>">
+            <a class="lunara-search-result-link" href="<?php echo esc_url( get_permalink( $post_item ) ); ?>">
+                <p class="lunara-search-result-kicker"><?php echo esc_html( $type_label ); ?></p>
+                <h3 class="lunara-search-result-title"><?php echo esc_html( get_the_title( $post_item ) ); ?></h3>
+                <p class="lunara-search-result-copy"><?php echo esc_html( wp_trim_words( wp_strip_all_tags( get_the_excerpt( $post_item ) ), absint( get_theme_mod( 'lunara_search_excerpt_words', 22 ) ) ) ); ?></p>
+            </a>
+        </article>
+        <?php
+    }
+}
+
 if ( ! function_exists( 'lunara_search_render_oscar_matches' ) ) {
     function lunara_search_render_oscar_matches( $oscar_matches ) {
         if ( empty( $oscar_matches ) || ! is_array( $oscar_matches ) ) {
@@ -134,14 +265,17 @@ if ( ! function_exists( 'lunara_search_render_oscar_matches' ) ) {
     }
 }
 
-$query_text    = trim( get_search_query() );
-$result_posts  = lunara_get_loop_posts();
+$query_text    = lunara_search_query_text();
+$command_query = function_exists( 'lunara_is_search_command_request' ) && lunara_is_search_command_request();
+$custom_query  = $command_query ? lunara_search_command_results_query( $query_text ) : null;
+$result_posts  = $custom_query instanceof WP_Query ? lunara_get_loop_posts( $custom_query ) : lunara_get_loop_posts();
 $oscar_matches = function_exists( 'lunara_get_oscars_search_matches' ) ? lunara_get_oscars_search_matches( $query_text, 6 ) : array();
 $recovery_hits = function_exists( 'lunara_get_search_recovery_routes' ) ? lunara_get_search_recovery_routes( $query_text, 6 ) : array();
 $result_count  = 0;
 $lead_focus    = lunara_search_select_theme_value( 'lunara_utility_search_lead_focus', 'balanced', array( 'balanced', 'ledger', 'reviews', 'journal' ) );
 $spotlight_type = lunara_search_select_theme_value( 'lunara_utility_search_spotlight_type', 'automatic', array( 'automatic', 'review', 'journal', 'page' ) );
 $result_posts  = lunara_search_focus_order_posts( $result_posts, $lead_focus, $spotlight_type );
+$result_groups = lunara_search_group_posts( $result_posts );
 $oscar_after_results = in_array( $lead_focus, array( 'reviews', 'journal' ), true );
 $search_page_classes = array(
     'site-main',
@@ -153,7 +287,9 @@ $search_page_classes = array(
 
 global $wp_query;
 
-if ( isset( $wp_query ) && $wp_query instanceof WP_Query ) {
+if ( $custom_query instanceof WP_Query ) {
+    $result_count = max( 0, intval( $custom_query->found_posts ) );
+} elseif ( isset( $wp_query ) && $wp_query instanceof WP_Query ) {
     $result_count = max( 0, intval( $wp_query->found_posts ) );
 }
 
@@ -169,7 +305,7 @@ $archive_title = '' !== $query_text
     )
     : __( 'Search Lunara Film', 'lunara-film' );
 
-$archive_copy = '';
+$archive_copy = __( 'A command surface for criticism, Journal entries, film dossiers, talent files, and the Oscar Ledger.', 'lunara-film' );
 
 $overview_lines = array(
     array(
@@ -222,49 +358,45 @@ if ( empty( $result_posts ) && empty( $oscar_matches ) && ! empty( $recovery_hit
                 </ul>
             </aside>
         </div>
+        <form role="search" method="get" class="lunara-search-command-form" action="<?php echo esc_url( function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/' ) ); ?>">
+            <label class="screen-reader-text" for="lunara-search-command-input"><?php esc_html_e( 'Search Lunara Film', 'lunara-film' ); ?></label>
+            <input id="lunara-search-command-input" type="search" class="lunara-search-command-input" placeholder="<?php esc_attr_e( 'Search a film, critic file, Oscar category, or person', 'lunara-film' ); ?>" value="<?php echo esc_attr( $query_text ); ?>" name="<?php echo esc_attr( function_exists( 'lunara_search_command_url' ) ? 'q' : 's' ); ?>" />
+            <button type="submit" class="lunara-search-command-submit"><?php esc_html_e( 'Run Search', 'lunara-film' ); ?></button>
+        </form>
     </section>
 
     <?php if ( ! $oscar_after_results ) : ?>
         <?php lunara_search_render_oscar_matches( $oscar_matches ); ?>
     <?php endif; ?>
 
-    <?php if ( ! empty( $result_posts ) ) : ?>
+    <?php if ( ! empty( $result_groups ) ) : ?>
         <section class="lunara-home-section lunara-search-results-shell">
             <div class="lunara-home-section-head lunara-search-results-head">
                 <div>
                     <p class="lunara-home-section-kicker"><?php esc_html_e( 'Search Run', 'lunara-film' ); ?></p>
-                    <h2 class="lunara-section-title"><?php esc_html_e( 'Results On The Record', 'lunara-film' ); ?></h2>
+                    <h2 class="lunara-section-title"><?php esc_html_e( 'Results By Desk', 'lunara-film' ); ?></h2>
                 </div>
             </div>
 
-            <div class="lunara-search-results-grid">
-                <?php foreach ( $result_posts as $post_item ) : ?>
-                    <?php
-                    if ( ! ( $post_item instanceof WP_Post ) ) {
-                        continue;
-                    }
-
-                    if ( 'review' === $post_item->post_type && function_exists( 'lunara_render_review_grid_card' ) ) {
-                        echo lunara_render_review_grid_card( $post_item->ID );
-                        continue;
-                    }
-
-                    if ( 'post' === $post_item->post_type && function_exists( 'lunara_render_dispatch_archive_card' ) ) {
-                        echo lunara_render_dispatch_archive_card( $post_item->ID );
-                        continue;
-                    }
-                    ?>
-                    <article class="lunara-search-result-card">
-                        <a class="lunara-search-result-link" href="<?php echo esc_url( get_permalink( $post_item ) ); ?>">
-                            <p class="lunara-search-result-kicker"><?php echo esc_html( get_post_type_object( $post_item->post_type )->labels->singular_name ?? __( 'Entry', 'lunara-film' ) ); ?></p>
-                            <h3 class="lunara-search-result-title"><?php echo esc_html( get_the_title( $post_item ) ); ?></h3>
-                            <p class="lunara-search-result-copy"><?php echo esc_html( wp_trim_words( wp_strip_all_tags( get_the_excerpt( $post_item ) ), absint( get_theme_mod( 'lunara_search_excerpt_words', 22 ) ) ) ); ?></p>
-                        </a>
-                    </article>
+            <div class="lunara-search-command-lanes">
+                <?php foreach ( $result_groups as $group_key => $group ) : ?>
+                    <section class="lunara-search-command-lane is-lane-<?php echo esc_attr( sanitize_html_class( $group_key ) ); ?>">
+                        <div class="lunara-search-command-lane-head">
+                            <p class="lunara-search-command-lane-kicker"><?php echo esc_html( $group['label'] ); ?></p>
+                            <span><?php echo esc_html( number_format_i18n( count( $group['posts'] ) ) ); ?></span>
+                        </div>
+                        <div class="lunara-search-results-grid">
+                            <?php foreach ( $group['posts'] as $post_item ) : ?>
+                                <?php lunara_search_render_post_result_card( $post_item ); ?>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
                 <?php endforeach; ?>
             </div>
 
-            <?php the_posts_pagination(); ?>
+            <?php if ( ! ( $custom_query instanceof WP_Query ) ) : ?>
+                <?php the_posts_pagination(); ?>
+            <?php endif; ?>
         </section>
     <?php elseif ( ! empty( $recovery_hits ) ) : ?>
         <section class="lunara-home-section lunara-search-recovery-shell">
@@ -299,9 +431,9 @@ if ( empty( $result_posts ) && empty( $oscar_matches ) && ! empty( $recovery_hit
                 <div class="lunara-editorial-archive-empty-note">
                     <p class="lunara-home-section-kicker"><?php esc_html_e( 'Try Again', 'lunara-film' ); ?></p>
                     <h2 class="lunara-section-title"><?php esc_html_e( 'Search for a title, person, or argument worth reopening.', 'lunara-film' ); ?></h2>
-                    <form role="search" method="get" class="lunara-search-form lunara-search-form-shell" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+                    <form role="search" method="get" class="lunara-search-form lunara-search-form-shell" action="<?php echo esc_url( function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/' ) ); ?>">
                         <label class="screen-reader-text" for="lunara-search-input"><?php esc_html_e( 'Search for:', 'lunara-film' ); ?></label>
-                        <input id="lunara-search-input" type="search" class="lunara-search-input" placeholder="<?php esc_attr_e( 'Search Lunara Film', 'lunara-film' ); ?>" value="<?php echo esc_attr( $query_text ); ?>" name="s" />
+                        <input id="lunara-search-input" type="search" class="lunara-search-input" placeholder="<?php esc_attr_e( 'Search Lunara Film', 'lunara-film' ); ?>" value="<?php echo esc_attr( $query_text ); ?>" name="<?php echo esc_attr( function_exists( 'lunara_search_command_url' ) ? 'q' : 's' ); ?>" />
                         <button type="submit" class="lunara-btn lunara-btn-primary"><?php esc_html_e( 'Search', 'lunara-film' ); ?></button>
                     </form>
                 </div>
