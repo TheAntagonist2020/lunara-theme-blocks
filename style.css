@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.62
+Version: 3.1.68
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -17995,4 +17995,59 @@ body.lunara-search-open {
         animation-duration: 0.22s;
         animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
     }
+}
+
+/* ============================================================================
+ * MOBILE HUD AUDIT FIXES (Design Spec §9/§14) — theme 3.1.68
+ * From the scripted 390px sweep across all ten template types: two
+ * unguarded horizontal rails and the recurring sub-40px tap targets.
+ * Hit areas grow via invisible overlays; visual boxes, borders, pill
+ * shapes, and title line-clamping stay exactly as they render today.
+ * ========================================================================= */
+
+/* Rails: kill the double-tap-zoom delay and stop horizontal overscroll
+   from chaining into browser back-navigation. Deliberately NOT pan-x:
+   these are tall card bands, and vertical page scrolls must still be
+   able to start inside them. */
+.lunara-review-archive-rail-track,
+.lunara-ledger-carousel-track,
+.lunara-oscars-winner-carousel-track {
+    touch-action: manipulation;
+    overscroll-behavior-x: contain;
+}
+
+/* Carousel dots: 9–12px visual, ≥25px hit area. The overlay hit-tests as
+   part of the button, so the dot's own box, border, radius, and width
+   transition are untouched. (Dots have no other ::after in the theme.) */
+.lunara-carousel-dot,
+.lunara-review-archive-rail-dot {
+    position: relative;
+}
+
+.lunara-carousel-dot::after,
+.lunara-review-archive-rail-dot::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+}
+
+/* Pair-card chips: same overlay, via ::before — the IMDb chip already
+   uses ::after for its in-flow arrow glyph. */
+.lunara-pair-card-chip {
+    position: relative;
+}
+
+.lunara-pair-card-chip::before {
+    content: "";
+    position: absolute;
+    inset: -8px 0;
+}
+
+/* Pair-card title links clamp to two lines with overflow:hidden, which
+   would clip an absolute overlay — grow the padding box upward instead.
+   Top only: bottom padding on a -webkit-line-clamp box leaks the hidden
+   third line into the padding zone. */
+.lunara-pair-card-title-link {
+    padding-top: 8px;
+    margin-top: -8px;
 }
