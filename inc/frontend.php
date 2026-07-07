@@ -585,6 +585,14 @@ function lunara_home_first_viewport_polish_css() {
         body.home .lunara-home-masthead-route{min-height:clamp(92px,9vh,112px);padding:13px 15px;}
         body.home .lunara-home-masthead.is-density-showcase .lunara-home-masthead-route{min-height:clamp(100px,10vh,122px);}
         body.home .lunara-home-masthead-route span:last-child{font-size:.85rem;line-height:1.36;}
+        body.home .lunara-home-front-desk .lunara-home-masthead-panel{grid-template-columns:minmax(0,1fr)!important;min-height:0!important;gap:24px!important;}
+        body.home .lunara-home-front-desk .lunara-home-masthead-panel::after{display:none!important;}
+        body.home .lunara-home-front-desk .lunara-home-masthead-identity{justify-items:center!important;text-align:center!important;align-content:start!important;}
+        body.home .lunara-home-front-desk .lunara-home-masthead-logo-frame{justify-content:center!important;width:100%!important;}
+        body.home .lunara-home-front-desk .lunara-home-masthead-logo{width:min(100%,<?php echo esc_html( $desktop_logo_width ); ?>px)!important;max-height:clamp(118px,22vw,<?php echo esc_html( $desktop_logo_height ); ?>px)!important;}
+        body.home .lunara-home-front-desk .lunara-home-masthead-dek{max-width:58ch!important;margin:0 auto!important;text-align:center!important;font-size:1.08rem!important;line-height:1.58!important;}
+        body.home .lunara-home-front-desk .lunara-home-masthead-routes{grid-template-columns:repeat(3,minmax(0,1fr))!important;width:min(100%,1120px)!important;justify-self:center!important;align-self:auto!important;margin:0 auto!important;}
+        body.home .lunara-home-front-desk .lunara-home-masthead-route{min-height:calc(var(--lunara-home-route-card-min) - 18px)!important;}
     }
     @media(min-width:1120px) and (max-height:820px){
         body.home .lunara-home-masthead-panel{min-height:clamp(350px,42vh,440px);padding-top:clamp(20px,2.5vw,34px);padding-bottom:clamp(20px,2.5vw,34px);}
