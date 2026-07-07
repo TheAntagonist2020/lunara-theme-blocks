@@ -16,6 +16,288 @@ body.home .lunara-home-cinematic-front-door {
 	width: 100vw;
 }
 
+body.home .lunara-home-cinematic-front-desk {
+	margin-bottom: clamp(28px, 4vw, 58px);
+}
+
+body.home .lunara-home-cinematic-stage {
+	background:
+		radial-gradient(circle at 78% 16%, rgba(201, 169, 97, .18), transparent 29%),
+		linear-gradient(180deg, #07111e 0%, #050a12 100%);
+	isolation: isolate;
+	min-height: min(88svh, 880px);
+	overflow: hidden;
+	position: relative;
+}
+
+body.home .lunara-home-cinematic-backdrop {
+	animation: lunara-home-cinematic-breathe 8s ease-in-out infinite alternate;
+	filter: saturate(.92) contrast(1.06);
+	height: 100%;
+	inset: 0;
+	object-fit: cover;
+	object-position: center;
+	position: absolute;
+	transform: translate3d(0, 0, 0) scale(1.01);
+	transform-origin: center;
+	width: 100%;
+	z-index: -3;
+}
+
+body.home .lunara-home-cinematic-scrim {
+	background:
+		linear-gradient(90deg, rgba(2, 6, 11, .96) 0%, rgba(3, 9, 16, .82) 42%, rgba(3, 9, 16, .38) 72%, rgba(2, 6, 11, .82) 100%),
+		linear-gradient(180deg, rgba(2, 6, 11, .2) 0%, rgba(2, 6, 11, .9) 100%);
+	inset: 0;
+	pointer-events: none;
+	position: absolute;
+	z-index: -2;
+}
+
+body.home .lunara-home-cinematic-shell {
+	box-sizing: border-box;
+	display: grid;
+	gap: clamp(22px, 4vw, 42px);
+	grid-template-areas:
+		"brand rail"
+		"copy rail"
+		"routes routes";
+	grid-template-columns: minmax(0, 1.14fr) minmax(300px, .56fr);
+	min-height: inherit;
+	padding: clamp(28px, 5vw, 76px) min(6vw, 92px) clamp(22px, 4vw, 54px);
+	position: relative;
+	z-index: 1;
+}
+
+body.home .lunara-home-cinematic-brand {
+	align-content: start;
+	align-self: start;
+	display: grid;
+	gap: 12px;
+	grid-area: brand;
+	max-width: 780px;
+}
+
+body.home .lunara-home-cinematic-kicker,
+body.home .lunara-home-cinematic-label,
+body.home .lunara-home-cinematic-routes span {
+	color: var(--lunara-gold-light, #e0c481);
+	font-family: var(--lunara-font-label, Arial, sans-serif);
+	font-size: .72rem;
+	font-weight: 800;
+	letter-spacing: 0;
+	line-height: 1.1;
+	margin: 0;
+	text-transform: uppercase;
+}
+
+body.home .lunara-home-cinematic-wordmark-frame {
+	display: block;
+	width: min(100%, 720px);
+}
+
+body.home .lunara-home-cinematic-wordmark {
+	display: block;
+	filter: drop-shadow(0 18px 34px rgba(0, 0, 0, .42));
+	height: auto;
+	max-height: 148px;
+	object-fit: contain;
+	object-position: left center;
+	width: min(100%, 640px);
+}
+
+body.home .lunara-home-cinematic-wordmark-fallback {
+	color: var(--lunara-gold, #c9a961);
+	display: block;
+	font-family: var(--lunara-font-glamour, var(--lunara-font-display, Georgia, serif));
+	font-size: 4rem;
+	font-weight: 600;
+	letter-spacing: 0;
+	line-height: .92;
+}
+
+body.home .lunara-home-cinematic-copy {
+	align-self: end;
+	grid-area: copy;
+	max-width: 780px;
+}
+
+body.home .lunara-home-cinematic-lead {
+	color: var(--lunara-text, #fafbfc);
+	display: block;
+	max-width: 780px;
+	text-decoration: none;
+}
+
+body.home .lunara-home-cinematic-lead h2 {
+	color: var(--lunara-text, #fafbfc);
+	font-family: var(--lunara-font-signature, var(--lunara-font-display, Georgia, serif));
+	font-size: 4.35rem;
+	font-weight: 500;
+	letter-spacing: 0;
+	line-height: .95;
+	margin: 14px 0 18px;
+	max-width: 12ch;
+	text-wrap: balance;
+}
+
+body.home .lunara-home-cinematic-lead p {
+	color: rgba(244, 239, 227, .86);
+	font-size: 1.06rem;
+	line-height: 1.62;
+	margin: 0 0 24px;
+	max-width: 60ch;
+}
+
+body.home .lunara-home-cinematic-cta {
+	align-items: center;
+	color: var(--lunara-gold-light, #e0c481);
+	display: inline-flex;
+	font-size: .98rem;
+	font-weight: 800;
+	gap: 8px;
+	line-height: 1.15;
+}
+
+body.home .lunara-home-cinematic-signal-rail {
+	align-self: stretch;
+	display: grid;
+	gap: 12px;
+	grid-area: rail;
+	grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto;
+	min-width: 0;
+}
+
+body.home .lunara-home-cinematic-signal,
+body.home .lunara-home-cinematic-search,
+body.home .lunara-home-cinematic-routes a {
+	backdrop-filter: blur(16px);
+	background: rgba(5, 11, 18, .58);
+	border: 1px solid rgba(224, 196, 129, .24);
+	border-radius: 8px;
+	box-shadow: 0 24px 58px rgba(0, 0, 0, .24);
+	box-sizing: border-box;
+	color: var(--lunara-text, #fafbfc);
+	display: grid;
+	gap: 9px;
+	min-width: 0;
+	text-decoration: none;
+	transition: border-color .28s ease, transform .28s ease, background .28s ease;
+}
+
+body.home .lunara-home-cinematic-signal {
+	align-content: end;
+	min-height: 176px;
+	padding: 22px;
+}
+
+body.home .lunara-home-cinematic-signal strong {
+	color: var(--lunara-text, #fafbfc);
+	font-family: var(--lunara-font-display, Georgia, serif);
+	font-size: 1.38rem;
+	font-weight: 600;
+	letter-spacing: 0;
+	line-height: 1.08;
+	text-wrap: balance;
+}
+
+body.home .lunara-home-cinematic-signal span:last-child {
+	color: rgba(244, 239, 227, .72);
+	font-size: .9rem;
+	line-height: 1.45;
+}
+
+body.home .lunara-home-cinematic-signal.is-ledger {
+	background: linear-gradient(180deg, rgba(20, 34, 49, .72), rgba(5, 11, 18, .62));
+}
+
+body.home .lunara-home-cinematic-search {
+	padding: 18px;
+}
+
+body.home .lunara-home-cinematic-search-row {
+	align-items: center;
+	display: grid;
+	gap: 8px;
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+
+body.home .lunara-home-cinematic-search input {
+	background: rgba(244, 239, 227, .1);
+	border: 1px solid rgba(244, 239, 227, .22);
+	border-radius: 8px;
+	color: var(--lunara-text, #fafbfc);
+	font-size: .96rem;
+	height: 44px;
+	min-width: 0;
+	padding: 0 12px;
+	width: 100%;
+}
+
+body.home .lunara-home-cinematic-search input::placeholder {
+	color: rgba(244, 239, 227, .56);
+}
+
+body.home .lunara-home-cinematic-search button {
+	background: var(--lunara-gold-light, #e0c481);
+	border: 1px solid rgba(224, 196, 129, .84);
+	border-radius: 8px;
+	color: #07101b;
+	cursor: pointer;
+	font-size: .9rem;
+	font-weight: 800;
+	height: 44px;
+	padding: 0 16px;
+}
+
+body.home .lunara-home-cinematic-routes {
+	align-self: end;
+	display: grid;
+	gap: 10px;
+	grid-area: routes;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+body.home .lunara-home-cinematic-routes a {
+	align-content: center;
+	min-height: 82px;
+	padding: 15px 16px;
+}
+
+body.home .lunara-home-cinematic-routes strong {
+	color: var(--lunara-text, #fafbfc);
+	font-family: var(--lunara-font-display, Georgia, serif);
+	font-size: 1.12rem;
+	font-weight: 600;
+	letter-spacing: 0;
+	line-height: 1.1;
+}
+
+body.home .lunara-home-cinematic-lead:hover .lunara-home-cinematic-cta,
+body.home .lunara-home-cinematic-lead:focus-visible .lunara-home-cinematic-cta {
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 4px;
+}
+
+body.home .lunara-home-cinematic-signal:hover,
+body.home .lunara-home-cinematic-routes a:hover,
+body.home .lunara-home-cinematic-search:focus-within {
+	background: rgba(8, 18, 29, .72);
+	border-color: rgba(224, 196, 129, .56);
+	transform: translateY(-2px);
+}
+
+@keyframes lunara-home-cinematic-breathe {
+	from {
+		transform: translate3d(0, 0, 0) scale(1.01);
+	}
+
+	to {
+		transform: translate3d(0, 0, 0) scale(1.055);
+	}
+}
+
 body.home .lunara-home-plugin-hero {
 	min-height: min(76svh, 760px);
 }
@@ -147,6 +429,69 @@ body.home .lunara-journal-home-deskbar {
 }
 
 @media (max-width: 720px) {
+	body.home .lunara-home-cinematic-stage {
+		min-height: 760px;
+	}
+
+	body.home .lunara-home-cinematic-shell {
+		gap: 18px;
+		grid-template-areas:
+			"brand"
+			"copy"
+			"rail"
+			"routes";
+		grid-template-columns: minmax(0, 1fr);
+		padding: 22px 16px 18px;
+	}
+
+	body.home .lunara-home-cinematic-wordmark {
+		max-height: 112px;
+		width: min(100%, 520px);
+	}
+
+	body.home .lunara-home-cinematic-wordmark-fallback {
+		font-size: 2.8rem;
+	}
+
+	body.home .lunara-home-cinematic-lead h2 {
+		font-size: 2.35rem;
+		line-height: 1.02;
+		max-width: 15ch;
+	}
+
+	body.home .lunara-home-cinematic-lead p {
+		font-size: .98rem;
+		line-height: 1.58;
+	}
+
+	body.home .lunara-home-cinematic-signal-rail,
+	body.home .lunara-home-cinematic-routes {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: none;
+	}
+
+	body.home .lunara-home-cinematic-signal {
+		min-height: 0;
+		padding: 17px;
+	}
+
+	body.home .lunara-home-cinematic-search-row {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	body.home .lunara-home-cinematic-search button {
+		width: 100%;
+	}
+
+	body.home .lunara-home-cinematic-routes {
+		gap: 8px;
+	}
+
+	body.home .lunara-home-cinematic-routes a {
+		min-height: 68px;
+		padding: 13px 14px;
+	}
+
 	body.home .lunara-home-plugin-hero,
 	body.home .lunara-home-cinematic-front-door.is-native-fallback .lunara-cinematic-hero-link {
 		min-height: 620px;
@@ -162,6 +507,16 @@ body.home .lunara-journal-home-deskbar {
 }
 
 @media (prefers-reduced-motion: reduce) {
+	body.home .lunara-home-cinematic-backdrop {
+		animation: none !important;
+		transform: translate3d(0, 0, 0) scale(1.02);
+	}
+
+	body.home .lunara-home-cinematic-signal,
+	body.home .lunara-home-cinematic-routes a {
+		transition: none !important;
+	}
+
 	body.home .lunara-home-plugin-hero-frame img,
 	body.home .lunara-pairing-desk-section .lunara-pair-card,
 	body.home .lunara-journal-home-card,
