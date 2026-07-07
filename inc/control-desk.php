@@ -7396,6 +7396,120 @@ function lunara_control_desk_render_review_pipeline_tab( $rows ) {
             <?php endif; ?>
         <?php endif; ?>
     </section>
+
+    <?php lunara_control_desk_render_trinity_backfill_panel(); ?>
+    <?php
+}
+
+/**
+ * Relational Trinity backfill — published reviews missing any of the three
+ * relational picks (Theme Echo / Counter-Program / Career Context). These
+ * are the reviews still rendering the legacy text fallback instead of the
+ * relational cards, listed oldest-first so the backlog drains from the top.
+ */
+function lunara_control_desk_get_trinity_gaps() {
+    $relations = array(
+        'theme_echo_movie'      => __( 'Theme Echo', 'lunara-film' ),
+        'counter_program_movie' => __( 'Counter-Program', 'lunara-film' ),
+        'career_context_movie'  => __( 'Career Context', 'lunara-film' ),
+    );
+
+    $ids = get_posts(
+        array(
+            'post_type'              => 'review',
+            'post_status'            => 'publish',
+            'posts_per_page'         => -1,
+            'fields'                 => 'ids',
+            'orderby'                => 'date',
+            'order'                  => 'ASC',
+            'no_found_rows'          => true,
+            'update_post_term_cache' => false,
+        )
+    );
+
+    $gaps   = array();
+    $counts = array_fill_keys( array_keys( $relations ), 0 );
+
+    foreach ( $ids as $id ) {
+        $missing = array();
+        foreach ( $relations as $key => $label ) {
+            if ( ! (int) get_post_meta( $id, $key, true ) ) {
+                $missing[] = $label;
+                $counts[ $key ]++;
+            }
+        }
+        if ( $missing ) {
+            $gaps[ $id ] = $missing;
+        }
+    }
+
+    return array(
+        'total'     => count( $ids ),
+        'complete'  => count( $ids ) - count( $gaps ),
+        'gaps'      => $gaps,
+        'counts'    => $counts,
+        'relations' => $relations,
+    );
+}
+
+function lunara_control_desk_render_trinity_backfill_panel() {
+    if ( ! post_type_exists( 'review' ) || ! post_type_exists( 'movie' ) ) {
+        return;
+    }
+
+    $data  = lunara_control_desk_get_trinity_gaps();
+    $cards = array(
+        array(
+            'label' => __( 'Trinity complete', 'lunara-film' ),
+            /* translators: 1: complete count, 2: total published reviews */
+            'value' => sprintf( __( '%1$d of %2$d reviews', 'lunara-film' ), $data['complete'], $data['total'] ),
+            'note'  => __( 'All three relational picks set — rendering the relational cards.', 'lunara-film' ),
+            'state' => count( $data['gaps'] ) ? 'warnings' : 'ready',
+        ),
+    );
+    foreach ( $data['relations'] as $key => $label ) {
+        $cards[] = array(
+            'label' => $label,
+            /* translators: %d: number of reviews missing this pick */
+            'value' => $data['counts'][ $key ] ? sprintf( _n( '%d review missing', '%d reviews missing', $data['counts'][ $key ], 'lunara-film' ), $data['counts'][ $key ] ) : __( 'Fully set', 'lunara-film' ),
+            'note'  => '',
+            'state' => $data['counts'][ $key ] ? 'warnings' : 'ready',
+        );
+    }
+    ?>
+    <section class="lunara-control-desk-panel">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Relational Trinity', 'lunara-film' ); ?></p>
+            <h2><?php esc_html_e( 'Backfill the three picks on every published review', 'lunara-film' ); ?></h2>
+            <p class="lunara-control-desk-intro"><?php esc_html_e( 'Reviews without a Theme Echo, Counter-Program, or Career Context pick still render the legacy text fallback instead of the relational cards. Oldest first, so the backlog drains from the top.', 'lunara-film' ); ?></p>
+        </div>
+        <?php lunara_control_desk_render_status_cards( $cards ); ?>
+        <?php if ( $data['gaps'] ) : ?>
+            <div class="lunara-control-desk-status-grid">
+                <?php $shown = 0; ?>
+                <?php foreach ( $data['gaps'] as $id => $missing ) : ?>
+                    <?php
+                    if ( $shown >= 15 ) {
+                        break;
+                    }
+                    $shown++;
+                    ?>
+                    <article class="lunara-control-desk-status-card is-warnings">
+                        <p class="lunara-control-desk-kicker"><?php echo esc_html( get_the_title( $id ) ); ?></p>
+                        <strong><?php echo esc_html( sprintf( /* translators: %s: comma-separated missing picks */ __( 'Missing: %s', 'lunara-film' ), implode( ', ', $missing ) ) ); ?></strong>
+                        <span>
+                            <a href="<?php echo esc_url( (string) get_edit_post_link( $id ) ); ?>"><?php esc_html_e( 'Set picks', 'lunara-film' ); ?></a>
+                            &nbsp;·&nbsp;
+                            <a href="<?php echo esc_url( (string) get_permalink( $id ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View live', 'lunara-film' ); ?></a>
+                        </span>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+            <?php if ( count( $data['gaps'] ) > $shown ) : ?>
+                <p class="lunara-control-desk-intro"><?php echo esc_html( sprintf( /* translators: %d: remaining count */ __( '…and %d more. This list refills from the backlog as you clear it.', 'lunara-film' ), count( $data['gaps'] ) - $shown ) ); ?></p>
+            <?php endif; ?>
+        <?php endif; ?>
+    </section>
     <?php
 }
 

@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.70
+Version: 3.1.71
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -314,7 +314,9 @@ body {
 
 .lunara-carousel-title {
     color: var(--lunara-gold);
-    font-size: 2.5rem;
+    /* Fluid between the old mobile (1.8rem) and desktop (2.5rem) fixed
+       stops — endpoints unchanged, the jump at 768px removed. */
+    font-size: clamp(1.8rem, 0.9rem + 1.8vw, 2.5rem);
     margin-bottom: 10px;
 }
 
@@ -527,7 +529,8 @@ body.single-post article h2,
 .single-review h2,
 .single-post h2 {
     color: #c9a961 !important;
-    font-size: 1.8rem;
+    /* Fluid: desktop cap unchanged at 1.8rem, eases to 1.5rem on phones. */
+    font-size: clamp(1.5rem, 1.2rem + 0.85vw, 1.8rem);
     margin-top: 50px;
     margin-bottom: 20px;
 }
@@ -564,7 +567,9 @@ body.single-post article h1,
 .single-review h1,
 .single-post h1 {
     color: #c9a961 !important;
-    font-size: 3rem;
+    /* Fluid continuation of the 2rem mobile stop below: 2rem at 768px
+       rising to the unchanged 3rem cap at 1440px — no more jump. */
+    font-size: clamp(2rem, 0.86rem + 2.38vw, 3rem);
     letter-spacing: 0.15em;
 }
 
