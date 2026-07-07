@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.57
+Version: 3.1.58
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -15,13 +15,11 @@ Text Domain: lunara-film
 */
 
 /* ============================================================================
- * SELF-HOSTED WEBFONTS — declared at the top so the browser discovers them
- * early (FOUT/FOIT mitigation). Bebas Neue is the display/label face; files in
- * assets/fonts/ (OFL 1.1), font-display: swap. This replaced a Google Fonts
- * @import that previously sat ~14k lines deep and was silently ignored — a CSS
- * @import must precede all rules — so the face never loaded and the cinematic-
- * hero kicker/CTA fell back to Impact. Oswald was dropped: it only ever sat
- * behind Bebas Neue as a fallback and never rendered.
+ * SELF-HOSTED WEBFONTS
+ * Declared at the top so the browser discovers them early. Bebas Neue remains
+ * in the theme repository under its OFL license. Licensed Lunara publication
+ * fonts are intentionally served from WordPress uploads instead of being
+ * committed to the public GitHub repo.
  * ============================================================================ */
 @font-face {
     font-family: 'Bebas Neue';
@@ -38,6 +36,112 @@ Text Domain: lunara-film
     font-display: swap;
     src: url('assets/fonts/bebas-neue-latin-ext-400.woff2') format('woff2');
     unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Tiempos Text';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/TiemposText-Regular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Tiempos Text';
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/TiemposText-Italic.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Tiempos Text';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/TiemposText-Semibold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Tiempos Text';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Tiempos Text';
+    font-style: italic;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/TiemposText-BoldItalic.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Tiempos Headline';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Regular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Tiempos Headline';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Medium.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Tiempos Headline';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Semibold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Tiempos Headline';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Bold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'GT Sectra Display';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/GTSectraFineLCG-Regular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'GT Sectra Display';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/GTSectraFineLCG-Medium.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'GT Sectra Display';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/GTSectraFineLCG-Bold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Canela Deck';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/CanelaDeckLCWebLight.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Canela Deck';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/CanelaDeckLCWebRegular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Canela Deck';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('/wp-content/uploads/lunara-fonts/v1/CanelaDeckLCWebMedium_1.woff2') format('woff2');
 }
 
 /* ========================================
@@ -59,10 +163,10 @@ Text Domain: lunara-film
 
 :root {
     /* ── Typography (canonical) ──────────────────────────────────────────
-       Tiempos is the planned house voice, GT Sectra is the sharp signature
-       display, and Canela Deck is the rare editorial glamour face. Until the
-       licensed webfont files are added, these tokens fall back cleanly to the
-       existing system serif stack. */
+       Tiempos is the house voice, GT Sectra is the sharp signature display,
+       and Canela Deck is the rare editorial glamour face. The licensed files
+       are served from WordPress uploads while these tokens retain clean
+       system fallbacks. */
     --lunara-font-body: "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif;
     --lunara-font-display: "Tiempos Headline", "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", serif;
     --lunara-font-signature: "GT Sectra Display", "Tiempos Headline", Georgia, "Times New Roman", serif;
