@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.68
+Version: 3.1.69
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -18050,4 +18050,75 @@ body.lunara-search-open {
 .lunara-pair-card-title-link {
     padding-top: 8px;
     margin-top: -8px;
+}
+
+/* ============================================================
+   LUNARA ATMOSPHERE V3 — the projection layer
+   Three final instruments, same law as V1/V2: everything here is
+   additive and decorative. JS-off and reduced-motion readers get
+   exactly the site that shipped before it.
+   1. Hero Breath   — an imperceptible slow zoom on hero imagery.
+                      The entity-dossier backdrop always breathes;
+                      the review hero breathes ONLY where The Dolly
+                      (V1) cannot run — under 901px, or in engines
+                      without scroll-timelines — so the two never
+                      fight over the same transform.
+   2. Dust Motes    — a drifting particle veil in the projector
+                      beam. Pure CSS on already-clipped hero shells;
+                      the Oscars hero carries it on the grid's
+                      ::after because Key Light (V1) owns both of
+                      the section's own pseudo-elements.
+   3. Tracking Shot — lives in lunara-gsap-motion.js: horizontal
+                      shelves ease in from a lateral offset as the
+                      page scrolls, the camera-pan grammar.
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+    /* --- 1. Hero Breath ----------------------------------------- */
+    .lunara-entity-hero-backdrop {
+        animation: lunara-hero-breath 18s ease-in-out infinite alternate;
+    }
+
+    @supports not (animation-timeline: scroll()) {
+        .lunara-review-single-cinematic-hero .lunara-review-visual-frame { overflow: hidden; }
+        .lunara-review-single-cinematic-hero .lunara-review-visual-image {
+            animation: lunara-hero-breath 18s ease-in-out infinite alternate;
+        }
+    }
+
+    @keyframes lunara-hero-breath {
+        from { transform: scale(1); }
+        to   { transform: scale(1.028); }
+    }
+
+    /* --- 2. Dust Motes ------------------------------------------ */
+    .lunara-entity-hero::after,
+    .lunara-oscars-portal-hero-grid::after {
+        content: "";
+        position: absolute;
+        inset: -14%;
+        z-index: 1; /* over the backdrop wash, under .lunara-entity-hero-inner (z:2) */
+        pointer-events: none;
+        background-image:
+            radial-gradient(1.5px 1.5px at 18% 32%, rgba(224, 196, 129, 0.55), transparent 60%),
+            radial-gradient(1px 1px at 64% 18%, rgba(244, 239, 227, 0.4), transparent 60%),
+            radial-gradient(2px 2px at 82% 64%, rgba(224, 196, 129, 0.35), transparent 60%),
+            radial-gradient(1.2px 1.2px at 38% 76%, rgba(244, 239, 227, 0.45), transparent 60%),
+            radial-gradient(1px 1px at 50% 50%, rgba(224, 196, 129, 0.3), transparent 60%);
+        background-repeat: repeat;
+        background-size: 340px 340px, 420px 420px, 520px 520px, 380px 380px, 460px 460px;
+        opacity: 0.14;
+        animation: lunara-dust-drift 60s linear infinite alternate;
+    }
+
+    @keyframes lunara-dust-drift {
+        to { transform: translate3d(2.4%, -3.6%, 0) rotate(0.4deg); }
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) and (max-width: 900px) {
+    /* The Dolly is desktop-only even where scroll-timelines exist. */
+    .lunara-review-single-cinematic-hero .lunara-review-visual-frame { overflow: hidden; }
+    .lunara-review-single-cinematic-hero .lunara-review-visual-image {
+        animation: lunara-hero-breath 18s ease-in-out infinite alternate;
+    }
 }
