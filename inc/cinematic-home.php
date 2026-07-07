@@ -19,6 +19,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * before the permanent theme mod is enabled.
  */
 function lunara_home_cinematic_front_door_preview_is_enabled() {
+	$preview_allowed = (bool) apply_filters( 'lunara_home_cinematic_front_door_preview_allowed', false );
+
+	if ( ! $preview_allowed ) {
+		return false;
+	}
+
 	if ( is_admin() || empty( $_GET['lunara_preview'] ) ) {
 		return false;
 	}
