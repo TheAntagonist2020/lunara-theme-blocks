@@ -81,3 +81,8 @@ require_once $lunara_inc . 'home-blocks.php';
 // Layer 14 — GEO (Design Spec §16): serves /llms.txt, the retrieval-model
 // map of the site's authoritative surfaces.
 require_once $lunara_inc . 'geo.php';
+
+// Layer 15 — Header Command (Design Spec §9): the Lunara header bar and
+// off-canvas navigation behind the Control Desk takeover switch — the
+// staged parent-theme exit. Default OFF; zero output while off.
+require_once $lunara_inc . 'header-command.php';

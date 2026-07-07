@@ -6274,6 +6274,12 @@ function lunara_control_desk_render_system_status_tab() {
         <?php lunara_control_desk_render_status_cards( lunara_control_desk_get_deploy_truth_cards() ); ?>
     </section>
 
+    <?php
+    if ( function_exists( 'lunara_header_takeover_render_switch_panel' ) ) {
+        lunara_header_takeover_render_switch_panel();
+    }
+    ?>
+
     <section class="lunara-control-desk-panel">
         <div class="lunara-control-desk-panel-header">
             <p class="lunara-control-desk-kicker"><?php esc_html_e( 'System Status', 'lunara-film' ); ?></p>
