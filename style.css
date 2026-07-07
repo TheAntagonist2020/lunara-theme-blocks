@@ -17996,3 +17996,43 @@ body.lunara-search-open {
         animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
     }
 }
+
+/* ============================================================================
+ * MOBILE HUD AUDIT FIXES (Design Spec §9/§14) — theme 3.1.67
+ * From the scripted 390px sweep across all ten template types: two
+ * unguarded horizontal rails and the recurring sub-40px tap targets.
+ * Hit areas grow; visual sizes stay identical.
+ * ========================================================================= */
+
+/* Rails: match the guarded home track (manipulation + contained overscroll). */
+.lunara-review-archive-rail-track,
+.lunara-ledger-carousel-track,
+.lunara-oscars-winner-carousel-track {
+    touch-action: manipulation;
+    overscroll-behavior-x: contain;
+}
+
+/* Carousel dots: 9px visual, ≥24px hit area via padding + margin rebate. */
+.lunara-carousel-dot,
+.lunara-review-archive-rail-dot {
+    box-sizing: content-box;
+    padding: 8px;
+    margin: -8px;
+    background-clip: content-box;
+}
+
+/* Pair-card chips + title links: taller tap boxes, same visual weight. */
+.lunara-pair-card-chip {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    margin-top: -3px;
+    margin-bottom: -3px;
+}
+
+.lunara-pair-card-title-link {
+    display: inline-block;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-top: -5px;
+    margin-bottom: -5px;
+}
