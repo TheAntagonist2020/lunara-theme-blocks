@@ -7452,6 +7452,107 @@ function lunara_control_desk_get_trinity_gaps() {
     );
 }
 
+/**
+ * Auto-match a gap review's legacy pair text to a movie entity.
+ *
+ * Confidence order: an IMDb tt id in the legacy text matched exactly
+ * against movie imdb_title_id meta; otherwise an exact title match,
+ * rejected if both sides carry a year and they disagree (protects
+ * against remakes). Returns null when nothing safe is found.
+ */
+function lunara_control_desk_trinity_suggest( $review_id, $relation ) {
+    if ( ! function_exists( 'lunara_parse_pair_it_with_value' ) ) {
+        return null;
+    }
+
+    if ( 'career_context' === $relation && function_exists( 'lunara_get_career_context_meta' ) ) {
+        $legacy = lunara_get_career_context_meta( $review_id );
+    } else {
+        $legacy = get_post_meta( $review_id, '_lunara_' . $relation, true );
+    }
+
+    $legacy = trim( (string) $legacy );
+    if ( '' === $legacy ) {
+        return null;
+    }
+
+    $parsed = lunara_parse_pair_it_with_value( $legacy, $review_id, false );
+
+    if ( ! empty( $parsed['tt'] ) ) {
+        $ids = get_posts(
+            array(
+                'post_type'      => 'movie',
+                'post_status'    => 'publish',
+                'meta_key'       => 'imdb_title_id',
+                'meta_value'     => $parsed['tt'],
+                'fields'         => 'ids',
+                'posts_per_page' => 1,
+                'no_found_rows'  => true,
+            )
+        );
+        if ( $ids ) {
+            return array( 'movie_id' => (int) $ids[0], 'via' => 'imdb' );
+        }
+    }
+
+    $title = trim( (string) ( $parsed['title_base'] ?? '' ) );
+    if ( '' !== $title ) {
+        $query = new WP_Query(
+            array(
+                'post_type'      => 'movie',
+                'post_status'    => 'publish',
+                'title'          => $title,
+                'fields'         => 'ids',
+                'posts_per_page' => 1,
+                'no_found_rows'  => true,
+            )
+        );
+        if ( $query->posts ) {
+            $movie_id   = (int) $query->posts[0];
+            $movie_year = trim( (string) get_post_meta( $movie_id, 'release_year', true ) );
+            $pair_year  = trim( (string) ( $parsed['year'] ?? '' ) );
+            if ( '' !== $movie_year && '' !== $pair_year && $movie_year !== $pair_year ) {
+                return null; // Same title, different year — likely a remake; do not auto-link.
+            }
+            return array( 'movie_id' => $movie_id, 'via' => 'title' );
+        }
+    }
+
+    return null;
+}
+
+/**
+ * One-click link handler: writes the ACF post-object pair for a relation.
+ */
+function lunara_control_desk_handle_trinity_link() {
+    $review_id = isset( $_POST['review_id'] ) ? (int) $_POST['review_id'] : 0;
+    $movie_id  = isset( $_POST['movie_id'] ) ? (int) $_POST['movie_id'] : 0;
+    $relation  = isset( $_POST['relation'] ) ? sanitize_key( wp_unslash( $_POST['relation'] ) ) : '';
+
+    $allowed = array( 'theme_echo', 'counter_program', 'career_context' );
+
+    if ( ! in_array( $relation, $allowed, true )
+        || ! $review_id || ! $movie_id
+        || ! current_user_can( 'edit_post', $review_id )
+        || ! check_admin_referer( 'lunara_trinity_link_' . $review_id . '_' . $relation ) ) {
+        wp_die( esc_html__( 'Trinity link request rejected.', 'lunara-film' ) );
+    }
+
+    $review = get_post( $review_id );
+    $movie  = get_post( $movie_id );
+    if ( ! $review || 'review' !== $review->post_type || ! $movie || 'movie' !== $movie->post_type || 'publish' !== $movie->post_status ) {
+        wp_die( esc_html__( 'Trinity link targets are invalid.', 'lunara-film' ) );
+    }
+
+    update_post_meta( $review_id, $relation . '_movie', $movie_id );
+    // ACF field-key mirror so the picker shows the value in the editor.
+    update_post_meta( $review_id, '_' . $relation . '_movie', 'field_lunara_review_' . $relation . '_movie' );
+
+    wp_safe_redirect( lunara_control_desk_admin_url( array( 'tab' => 'reviews' ) ) );
+    exit;
+}
+add_action( 'admin_post_lunara_trinity_link', 'lunara_control_desk_handle_trinity_link' );
+
 function lunara_control_desk_render_trinity_backfill_panel() {
     if ( ! post_type_exists( 'review' ) || ! post_type_exists( 'movie' ) ) {
         return;
@@ -7502,6 +7603,39 @@ function lunara_control_desk_render_trinity_backfill_panel() {
                             &nbsp;·&nbsp;
                             <a href="<?php echo esc_url( (string) get_permalink( $id ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View live', 'lunara-film' ); ?></a>
                         </span>
+                        <?php
+                        $relation_keys = array_flip( $data['relations'] ); // label => key
+                        foreach ( $missing as $missing_label ) :
+                            $rel_key = isset( $relation_keys[ $missing_label ] ) ? $relation_keys[ $missing_label ] : '';
+                            if ( ! $rel_key ) {
+                                continue;
+                            }
+                            $suggest = lunara_control_desk_trinity_suggest( $id, $rel_key );
+                            if ( ! $suggest ) {
+                                continue;
+                            }
+                            $movie_title = get_the_title( $suggest['movie_id'] );
+                            $movie_year  = trim( (string) get_post_meta( $suggest['movie_id'], 'release_year', true ) );
+                            ?>
+                            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:8px;">
+                                <input type="hidden" name="action" value="lunara_trinity_link" />
+                                <input type="hidden" name="review_id" value="<?php echo esc_attr( $id ); ?>" />
+                                <input type="hidden" name="movie_id" value="<?php echo esc_attr( $suggest['movie_id'] ); ?>" />
+                                <input type="hidden" name="relation" value="<?php echo esc_attr( $rel_key ); ?>" />
+                                <?php wp_nonce_field( 'lunara_trinity_link_' . $id . '_' . $rel_key ); ?>
+                                <button type="submit" class="button button-small">
+                                    <?php
+                                    echo esc_html( sprintf(
+                                        /* translators: 1: movie title (+year), 2: relation label, 3: match method */
+                                        __( 'Link “%1$s” as %2$s (%3$s match)', 'lunara-film' ),
+                                        $movie_title . ( $movie_year ? ' (' . $movie_year . ')' : '' ),
+                                        $missing_label,
+                                        'imdb' === $suggest['via'] ? __( 'IMDb id', 'lunara-film' ) : __( 'title', 'lunara-film' )
+                                    ) );
+                                    ?>
+                                </button>
+                            </form>
+                        <?php endforeach; ?>
                     </article>
                 <?php endforeach; ?>
             </div>
