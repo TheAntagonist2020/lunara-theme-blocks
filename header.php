@@ -2581,11 +2581,11 @@
 
         /*
          * Lunara Clean Power design pass.
-         * Public surfaces use Georgia as the house voice: literary, compact,
-         * centered, and strong without becoming ornate.
+         * Public surfaces use the canonical Lunara type tokens; the fallbacks
+         * stay literary and compact when the licensed faces are unavailable.
          */
         body:not(.wp-admin) {
-            font-family: Georgia, "Times New Roman", serif !important;
+            font-family: var(--lunara-font-body, Georgia, "Times New Roman", serif) !important;
             letter-spacing: 0 !important;
             text-rendering: optimizeLegibility !important;
         }
@@ -2597,7 +2597,7 @@
         body:not(.wp-admin) .ct-header,
         body:not(.wp-admin) .site-main,
         body:not(.wp-admin) .entry-content {
-            font-family: Georgia, "Times New Roman", serif !important;
+            font-family: var(--lunara-font-body, Georgia, "Times New Roman", serif) !important;
             letter-spacing: 0 !important;
         }
 
@@ -2614,7 +2614,7 @@
         body:not(.wp-admin) .aat-entity-title,
         body:not(.wp-admin) .aat-section-title,
         body:not(.wp-admin) .aat-category-history-title {
-            font-family: Georgia, "Times New Roman", serif !important;
+            font-family: var(--lunara-font-display, Georgia, "Times New Roman", serif) !important;
             font-weight: 700 !important;
             letter-spacing: 0 !important;
             text-wrap: balance !important;
@@ -2641,7 +2641,7 @@
         body:not(.wp-admin) .aat-decade-pill,
         body:not(.wp-admin) .aat-crossroad-pill,
         body:not(.wp-admin) .aat-winner-circle-action {
-            font-family: Georgia, "Times New Roman", serif !important;
+            font-family: var(--lunara-font-label, "Tiempos Text", "Segoe UI", Arial, sans-serif) !important;
             letter-spacing: 0.09em !important;
         }
 
