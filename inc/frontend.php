@@ -349,7 +349,7 @@ function lunara_home_front_door_css() {
     body.home .lunara-home-front-desk-lead::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,10,18,.95),rgba(4,10,18,.66) 52%,rgba(4,10,18,.24));}
     body.home .lunara-home-front-desk-lead::after{content:"";position:absolute;left:28px;right:28px;bottom:24px;height:1px;background:linear-gradient(90deg,rgba(224,196,129,.58),transparent);}
     body.home .lunara-home-front-desk-lead-link{position:relative;z-index:1;display:grid;align-content:end;min-height:440px;padding:34px 34px 44px;color:var(--lunara-text,#FAFBFC)!important;text-decoration:none!important;}
-    body.home .lunara-home-front-desk-title{max-width:13ch;margin:12px 0 14px;color:var(--lunara-text,#FAFBFC)!important;font-family:var(--lunara-font-signature,var(--lunara-font-display,Georgia,"Times New Roman",serif));font-size:3.15rem;font-weight:600;line-height:1;letter-spacing:0;text-wrap:balance;}
+    body.home .lunara-home-front-desk-title{max-width:13ch;margin:12px 0 14px;color:var(--lunara-text,#FAFBFC)!important;font-family:var(--lunara-font-signature,var(--lunara-font-display,Georgia,"Times New Roman",serif));font-size:3.15rem;font-weight:500;line-height:1;letter-spacing:0;text-wrap:balance;}
     body.home .lunara-home-front-desk-copy{max-width:62ch;margin:0 0 22px;color:rgba(244,239,227,.84);font-size:1.02rem;line-height:1.62;}
     body.home .lunara-home-front-desk-cta{display:inline-flex;width:max-content;max-width:100%;align-items:center;gap:8px;color:var(--lunara-gold-light,#e0c481);font-size:.96rem;font-weight:800;line-height:1.2;}
     body.home .lunara-home-front-desk-stack{display:grid;grid-template-rows:minmax(0,1fr) minmax(0,1fr) auto;gap:12px;min-width:0;}
