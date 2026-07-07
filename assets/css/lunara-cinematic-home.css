@@ -1,0 +1,181 @@
+/**
+ * Lunara cinematic homepage polish.
+ *
+ * This file is intentionally theme-owned: plugin sliders inherit the Lunara
+ * type system and live inside the same motion/spacing rules as native sections.
+ */
+
+body.home .lunara-home-cinematic-front-door {
+	background: #060e18;
+	box-sizing: border-box;
+	color: var(--lunara-text, #fafbfc);
+	font-family: var(--lunara-font-body, Georgia, serif);
+	margin-inline: calc(50% - 50vw);
+	overflow: clip;
+	position: relative;
+	width: 100vw;
+}
+
+body.home .lunara-home-plugin-hero {
+	min-height: min(76svh, 760px);
+}
+
+body.home .lunara-home-plugin-hero::after {
+	background: linear-gradient(180deg, rgba(6, 14, 24, 0) 0%, rgba(6, 14, 24, .44) 52%, rgba(6, 14, 24, .94) 100%);
+	bottom: 0;
+	content: "";
+	height: 42%;
+	left: 0;
+	pointer-events: none;
+	position: absolute;
+	right: 0;
+	z-index: 12;
+}
+
+body.home .lunara-home-plugin-hero-frame {
+	min-height: inherit;
+	position: relative;
+	z-index: 1;
+}
+
+body.home .lunara-home-plugin-hero-frame,
+body.home .lunara-home-plugin-hero-frame * {
+	font-family: inherit;
+	letter-spacing: 0;
+}
+
+body.home .lunara-home-plugin-hero-frame img {
+	backface-visibility: hidden;
+	display: block;
+	height: 100%;
+	object-fit: cover;
+	transform: translate3d(0, 0, 0);
+	width: 100%;
+}
+
+body.home .lunara-home-plugin-hero-frame a {
+	color: inherit;
+}
+
+body.home .lunara-home-cinematic-front-door.is-native-fallback .lunara-home-hero {
+	margin-block: 0;
+}
+
+body.home .lunara-home-cinematic-front-door.is-native-fallback .lunara-cinematic-hero-link {
+	min-height: min(76svh, 760px);
+}
+
+body.home .lunara-pairing-desk-section .lunara-pair-cards-grid {
+	isolation: isolate;
+}
+
+body.home .lunara-pairing-desk-section .lunara-pair-card {
+	will-change: opacity, transform;
+}
+
+@supports selector(:has(*)) {
+	body.home .lunara-pairing-desk-section .lunara-pair-cards-grid:has(.lunara-pair-card:is(:hover, :focus-within)) .lunara-pair-card:not(:hover):not(:focus-within) {
+		opacity: .6;
+		transform: scale(.985);
+	}
+
+	body.home .lunara-pairing-desk-section .lunara-pair-cards-grid:has(.lunara-pair-card:is(:hover, :focus-within)) .lunara-pair-card:is(:hover, :focus-within) {
+		box-shadow: 0 28px 60px rgba(0, 0, 0, .48), 0 0 34px rgba(201, 169, 97, .18);
+		transform: translateY(-6px) scale(1.018);
+	}
+}
+
+body.home .lunara-journal-home-card,
+body.home .lunara-review-grid-card,
+body.home .lunara-oscar-pick-card,
+body.home .lunara-oscar-fact-card {
+	transform: translate3d(0, 0, 0);
+}
+
+body.home .lunara-journal-home-card.is-cinematic-pending,
+body.home .lunara-review-grid-card.is-cinematic-pending,
+body.home .lunara-oscar-pick-card.is-cinematic-pending,
+body.home .lunara-oscar-fact-card.is-cinematic-pending {
+	opacity: 0;
+	transform: translate3d(0, 22px, 0);
+}
+
+body.home .lunara-journal-home-card.is-cinematic-visible,
+body.home .lunara-review-grid-card.is-cinematic-visible,
+body.home .lunara-oscar-pick-card.is-cinematic-visible,
+body.home .lunara-oscar-fact-card.is-cinematic-visible {
+	opacity: 1;
+	transform: translate3d(0, 0, 0);
+	transition: opacity .64s ease, transform .72s cubic-bezier(.2, .7, .2, 1);
+}
+
+body.home .lunara-journal-home-card.is-cinematic-visible:nth-child(2),
+body.home .lunara-review-grid-card.is-cinematic-visible:nth-child(2),
+body.home .lunara-oscar-pick-card.is-cinematic-visible:nth-child(2),
+body.home .lunara-oscar-fact-card.is-cinematic-visible:nth-child(2) {
+	transition-delay: .08s;
+}
+
+body.home .lunara-journal-home-card.is-cinematic-visible:nth-child(3),
+body.home .lunara-review-grid-card.is-cinematic-visible:nth-child(3),
+body.home .lunara-oscar-pick-card.is-cinematic-visible:nth-child(3),
+body.home .lunara-oscar-fact-card.is-cinematic-visible:nth-child(3) {
+	transition-delay: .14s;
+}
+
+body.home .lunara-journal-home-card.is-cinematic-visible:nth-child(4),
+body.home .lunara-review-grid-card.is-cinematic-visible:nth-child(4),
+body.home .lunara-oscar-pick-card.is-cinematic-visible:nth-child(4),
+body.home .lunara-oscar-fact-card.is-cinematic-visible:nth-child(4) {
+	transition-delay: .2s;
+}
+
+body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-link,
+body.home .lunara-oscar-facts-section .lunara-oscar-fact-card-link {
+	border-color: rgba(224, 196, 129, .24);
+}
+
+body.home .lunara-oscar-picks-section .lunara-oscar-pick-card:is(:hover, :focus-within) .lunara-oscar-pick-card-link,
+body.home .lunara-oscar-facts-section .lunara-oscar-fact-card:is(:hover, :focus-within) .lunara-oscar-fact-card-link {
+	border-color: rgba(224, 196, 129, .62);
+	box-shadow: 0 18px 46px rgba(0, 0, 0, .34);
+}
+
+body.home .lunara-home-section-head,
+body.home .lunara-journal-home-deskbar {
+	backdrop-filter: blur(10px);
+}
+
+@media (max-width: 720px) {
+	body.home .lunara-home-plugin-hero,
+	body.home .lunara-home-cinematic-front-door.is-native-fallback .lunara-cinematic-hero-link {
+		min-height: 620px;
+	}
+
+	body.home .lunara-home-plugin-hero-frame {
+		overflow: hidden;
+	}
+
+	body.home .lunara-home-plugin-hero-frame :is(h1, h2, h3, p) {
+		max-width: min(100%, 22rem);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	body.home .lunara-home-plugin-hero-frame img,
+	body.home .lunara-pairing-desk-section .lunara-pair-card,
+	body.home .lunara-journal-home-card,
+	body.home .lunara-review-grid-card,
+	body.home .lunara-oscar-pick-card,
+	body.home .lunara-oscar-fact-card {
+		transition: none !important;
+	}
+
+	body.home .lunara-journal-home-card.is-cinematic-pending,
+	body.home .lunara-review-grid-card.is-cinematic-pending,
+	body.home .lunara-oscar-pick-card.is-cinematic-pending,
+	body.home .lunara-oscar-fact-card.is-cinematic-pending {
+		opacity: 1;
+		transform: none;
+	}
+}
