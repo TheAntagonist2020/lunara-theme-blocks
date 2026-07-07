@@ -2626,6 +2626,11 @@
             font-weight: 500 !important;
         }
 
+        body:not(.wp-admin) .lunara-home-front-desk-signal strong,
+        body:not(.wp-admin) .lunara-home-masthead-route strong {
+            font-family: var(--lunara-font-display, Georgia, "Times New Roman", serif) !important;
+        }
+
         body:not(.wp-admin) a:not(.button):not(.wp-block-button__link):not(.lunara-button):not(.lunara-button-ghost):not(.lunara-btn):not(.aat-btn) {
             color: #e0c481 !important;
             text-decoration-color: rgba(224, 196, 129, 0.54) !important;
