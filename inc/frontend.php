@@ -181,6 +181,14 @@ function lunara_get_home_front_door_oscar_signal() {
 }
 
 function lunara_render_home_front_door() {
+    if ( function_exists( 'lunara_render_plugin_backed_home_hero' ) && function_exists( 'lunara_home_cinematic_front_door_is_enabled' ) && lunara_home_cinematic_front_door_is_enabled() ) {
+        $cinematic_front_door = trim( (string) lunara_render_plugin_backed_home_hero() );
+
+        if ( '' !== $cinematic_front_door ) {
+            return $cinematic_front_door;
+        }
+    }
+
     $reviews_url = get_post_type_archive_link( 'review' ) ?: home_url( '/reviews/' );
     $journal_url = get_post_type_archive_link( 'journal' ) ?: home_url( '/journal/' );
     $logo_id     = lunara_get_home_identity_logo_id();
