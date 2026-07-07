@@ -159,12 +159,34 @@
 		});
 	}
 
+	// Atmosphere V3: Tracking Shot — horizontal shelves ease in from a
+	// lateral offset as the page scrolls down to them, so the eye reads a
+	// camera pan rather than a fade. Scrubbed to scroll (reversible on the
+	// way back up); after the entry range the shelf rests at exactly x:0.
+	function armTrackingShot() {
+		var shelves = document.querySelectorAll(
+			'.lunara-pair-cards-grid, .lunara-poster-carousel-track, ' +
+			'.lunara-review-archive-rail-track, .lunara-ledger-carousel-track, ' +
+			'.lunara-oscars-winner-carousel-track'
+		);
+		shelves.forEach(function (shelf) {
+			try {
+				gsap.fromTo(shelf, { x: 32 }, {
+					x: 0,
+					ease: 'none',
+					scrollTrigger: { trigger: shelf, start: 'top 98%', end: 'top 58%', scrub: 0.6 }
+				});
+			} catch (err) { /* decorative — never break the page */ }
+		});
+	}
+
 	function boot() {
 		armHeadings();
 		armPairFanOut();
 		armEntityGrids();
 		armAwardRecords();
 		armEssayModules();
+		armTrackingShot();
 	}
 
 	// Split after webfonts settle so character metrics are final (no reflow
