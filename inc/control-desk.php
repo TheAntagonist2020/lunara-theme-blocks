@@ -6162,6 +6162,98 @@ function lunara_control_desk_render_operating_plan_tab() {
     <?php
 }
 
+/**
+ * Deploy Truth — read straight from the active theme on disk: the version
+ * actually being served, the moment it landed, and a sweep for files
+ * written AFTER that moment (an edit made outside the repo→deploy
+ * pipeline — admin file editor, FTP — which the next deploy would
+ * silently overwrite). style.css's write time is the deploy anchor
+ * because every deploy rewrites it (the version header lives there).
+ */
+function lunara_control_desk_get_deploy_truth_cards() {
+    $theme      = wp_get_theme();
+    $dir        = get_stylesheet_directory();
+    $style_path = $dir . '/style.css';
+    $deployed   = file_exists( $style_path ) ? (int) filemtime( $style_path ) : 0;
+
+    $cards   = array();
+    $cards[] = array(
+        'label' => __( 'Live theme version', 'lunara-film' ),
+        'value' => (string) $theme->get( 'Version' ) ? (string) $theme->get( 'Version' ) : __( 'Unknown', 'lunara-film' ),
+        'note'  => sprintf( /* translators: %s: theme directory name */ __( 'Active directory: %s', 'lunara-film' ), basename( $dir ) ),
+        'state' => 'ready',
+    );
+    $cards[] = array(
+        'label' => __( 'Deployed', 'lunara-film' ),
+        'value' => $deployed ? date_i18n( 'M j, Y H:i', $deployed + (int) ( get_option( 'gmt_offset' ) * HOUR_IN_SECONDS ) ) : __( 'Unknown', 'lunara-film' ),
+        'note'  => $deployed ? sprintf( /* translators: %s: humanized age */ __( '%s ago — style.css write time, the deploy anchor.', 'lunara-film' ), human_time_diff( $deployed ) ) : '',
+        'state' => $deployed ? 'ready' : 'warnings',
+    );
+
+    $drift = array();
+    if ( $deployed ) {
+        $paths = array_merge(
+            (array) glob( $dir . '/*.php' ),
+            (array) glob( $dir . '/*.css' ),
+            (array) glob( $dir . '/inc/*.php' ),
+            (array) glob( $dir . '/assets/js/*.js' ),
+            (array) glob( $dir . '/assets/css/*.css' )
+        );
+        foreach ( $paths as $path ) {
+            if ( ! $path || ! is_file( $path ) ) {
+                continue;
+            }
+            $mtime = (int) filemtime( $path );
+            if ( $mtime > $deployed + 5 * MINUTE_IN_SECONDS ) {
+                $drift[ str_replace( trailingslashit( $dir ), '', $path ) ] = $mtime;
+            }
+        }
+    }
+
+    if ( empty( $drift ) ) {
+        $cards[] = array(
+            'label' => __( 'Drift watch', 'lunara-film' ),
+            'value' => __( 'Repo and live agree', 'lunara-film' ),
+            'note'  => __( 'No theme file has been written after the deploy anchor — nothing was edited outside the pipeline.', 'lunara-film' ),
+            'state' => 'ready',
+        );
+    } else {
+        arsort( $drift );
+        $cards[] = array(
+            'label' => __( 'Drift watch', 'lunara-film' ),
+            /* translators: %d: number of drifted files */
+            'value' => sprintf( _n( '%d file edited after deploy', '%d files edited after deploy', count( $drift ), 'lunara-film' ), count( $drift ) ),
+            /* translators: %s: comma-separated file names */
+            'note'  => sprintf( __( 'Written outside the pipeline: %s. Fold these into the repo before the next deploy or they will be silently overwritten.', 'lunara-film' ), implode( ', ', array_slice( array_keys( $drift ), 0, 3 ) ) ),
+            'state' => 'warnings',
+        );
+    }
+
+    $parent  = $theme->parent();
+    $cards[] = array(
+        'label' => __( 'Parent theme', 'lunara-film' ),
+        'value' => $parent ? trim( $parent->get( 'Name' ) . ' ' . $parent->get( 'Version' ) ) : __( 'None', 'lunara-film' ),
+        'note'  => __( 'Blocksy underpins the child theme until the standalone exit.', 'lunara-film' ),
+        'state' => 'ready',
+    );
+
+    return $cards;
+}
+
+/**
+ * The same truth, stamped on every public page: version + deploy moment
+ * as a meta tag, so one View Source (or a probe) settles "what is live?"
+ */
+function lunara_output_build_stamp() {
+    $style = get_stylesheet_directory() . '/style.css';
+    $stamp = (string) wp_get_theme()->get( 'Version' );
+    if ( file_exists( $style ) ) {
+        $stamp .= '+' . gmdate( 'Ymd-His', (int) filemtime( $style ) );
+    }
+    echo '<meta name="lunara-build" content="' . esc_attr( $stamp ) . '" />' . "\n";
+}
+add_action( 'wp_head', 'lunara_output_build_stamp', 2 );
+
 function lunara_control_desk_render_system_status_tab() {
     $phase_cards = array(
         array( 'label' => __( 'Phase 1', 'lunara-film' ), 'value' => __( 'Foundation active', 'lunara-film' ), 'state' => 'ready', 'note' => __( 'Top-level admin surface and source map.', 'lunara-film' ) ),
@@ -6173,6 +6265,15 @@ function lunara_control_desk_render_system_status_tab() {
         array( 'label' => __( 'Phase 7', 'lunara-film' ), 'value' => __( 'AI Operator active', 'lunara-film' ), 'state' => 'ready', 'note' => __( 'Provider-routed private suggestions only.', 'lunara-film' ) ),
     );
     ?>
+    <section class="lunara-control-desk-panel">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Deploy Truth', 'lunara-film' ); ?></p>
+            <h2><?php esc_html_e( 'What is actually live, and whether anything drifted', 'lunara-film' ); ?></h2>
+            <p class="lunara-control-desk-intro"><?php esc_html_e( 'Read straight from the active theme on disk: the served version, the deploy moment, and a sweep for files written outside the repo-to-deploy pipeline. The same stamp ships on every page as a lunara-build meta tag.', 'lunara-film' ); ?></p>
+        </div>
+        <?php lunara_control_desk_render_status_cards( lunara_control_desk_get_deploy_truth_cards() ); ?>
+    </section>
+
     <section class="lunara-control-desk-panel">
         <div class="lunara-control-desk-panel-header">
             <p class="lunara-control-desk-kicker"><?php esc_html_e( 'System Status', 'lunara-film' ); ?></p>
