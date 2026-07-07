@@ -8579,7 +8579,7 @@ function lunara_render_custom_footer() {
                     <?php endif; ?>
                     <?php
                     $utility_links = array(
-                        array( 'label' => __( 'Search', 'lunara-film' ), 'url' => home_url( '/?s=' ) ),
+                        array( 'label' => __( 'Search', 'lunara-film' ), 'url' => function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/?s=' ) ),
                         array( 'label' => __( 'RSS Feed', 'lunara-film' ), 'url' => get_bloginfo( 'rss2_url' ) ),
                     );
                     $privacy_url = get_privacy_policy_url();
@@ -8759,7 +8759,7 @@ function lunara_footer_oscars_fallback() {
 if ( ! function_exists( 'lunara_footer_utility_fallback' ) ) {
 function lunara_footer_utility_fallback() {
     echo '<ul class="menu">';
-    echo '<li><a href="' . esc_url( home_url( '/?s=' ) ) . '">Search</a></li>';
+    echo '<li><a href="' . esc_url( function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/?s=' ) ) . '">Search</a></li>';
     echo '<li><a href="' . esc_url( home_url( '/contact/' ) ) . '">Contact</a></li>';
     echo '<li><a href="' . esc_url( get_feed_link() ) . '">RSS</a></li>';
     echo '</ul>';
@@ -10152,14 +10152,14 @@ if ( ! function_exists( 'lunara_render_live_search_script' ) ) {
         <script id="lunara-live-search-script">
         document.addEventListener('DOMContentLoaded', function () {
             const forms = Array.from(document.querySelectorAll('form[role="search"], .search-form')).filter(function (form) {
-                return form.querySelector('input[name="s"]');
+                return form.querySelector('input[name="s"], input[name="q"]');
             });
             if (!forms.length) return;
 
             const endpoint = <?php echo wp_json_encode( admin_url( 'admin-ajax.php?action=lunara_search_suggestions' ) ); ?>;
 
             forms.forEach(function (form) {
-                const input = form.querySelector('input[name="s"]');
+                const input = form.querySelector('input[name="s"], input[name="q"]');
                 if (!input || input.dataset.lunaraSuggestionsReady === '1') return;
                 input.dataset.lunaraSuggestionsReady = '1';
 
@@ -10192,6 +10192,20 @@ if ( ! function_exists( 'lunara_render_live_search_script' ) ) {
                         return;
                     }
 
+                    const allResultsUrl = function () {
+                        const value = input.value.trim();
+                        const queryName = input.name || 's';
+                        try {
+                            const url = new URL(form.getAttribute('action') || window.location.href, window.location.href);
+                            url.searchParams.set(queryName, value);
+                            return url.toString();
+                        } catch (error) {
+                            const action = form.action || window.location.href;
+                            const separator = action.indexOf('?') === -1 ? '?' : '&';
+                            return action + separator + encodeURIComponent(queryName) + '=' + encodeURIComponent(value);
+                        }
+                    };
+
                     panel.innerHTML = items.map(function (item, index) {
                         const meta = item.meta ? '<span class="lunara-live-search-meta">' + item.meta + '</span>' : '';
                         return '<a class="lunara-live-search-item" href="' + item.url + '" data-index="' + index + '">' +
@@ -10200,7 +10214,7 @@ if ( ! function_exists( 'lunara_render_live_search_script' ) ) {
                             meta +
                         '</a>';
                     }).join('') +
-                    '<a class="lunara-live-search-all-results" href="' + form.action + '?s=' + encodeURIComponent(input.value.trim()) + '">' +
+                    '<a class="lunara-live-search-all-results" href="' + allResultsUrl() + '">' +
                         '<span class="lunara-live-search-kicker"><?php echo esc_js( __( 'Search Desk', 'lunara-film' ) ); ?></span>' +
                         '<span class="lunara-live-search-title"><?php echo esc_js( __( 'See all results on the record', 'lunara-film' ) ); ?></span>' +
                     '</a>';

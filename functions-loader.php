@@ -70,7 +70,7 @@ require_once $lunara_inc . 'hero-command.php';
 require_once $lunara_inc . 'essay-builder.php';
 
 // Layer 12 — Live Global Search (Design Spec §6): REST endpoint + overlay
-// command palette. JS-off falls back to the /?s= results page untouched.
+// command palette. The branded surface is /search/?q=; /?s= remains legacy-safe.
 require_once $lunara_inc . 'live-search.php';
 
 // Layer 13 — Hybrid homepage composition: the Home page's blocks render the

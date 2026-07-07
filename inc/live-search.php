@@ -9,13 +9,101 @@
  * returns grouped, render-ready results. The overlay itself is an
  * off-canvas panel with deep blur gradients and soft gold lines, opened
  * with Cmd/Ctrl+K or "/" (or the header search trigger) and fully
- * keyboard-navigable. With JS off, search falls back to /?s= untouched.
+ * keyboard-navigable. The branded command surface lives at /search/?q=,
+ * while the legacy /?s= result path remains untouched.
  *
  * @package Lunara_Film
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
+}
+
+if ( ! function_exists( 'lunara_search_command_url' ) ) {
+	/**
+	 * Canonical public Search command URL.
+	 *
+	 * @param string $query Optional query text.
+	 * @return string
+	 */
+	function lunara_search_command_url( $query = '' ) {
+		$url   = home_url( '/search/' );
+		$query = trim( (string) $query );
+
+		if ( '' !== $query ) {
+			$url = add_query_arg( 'q', $query, $url );
+		}
+
+		return $url;
+	}
+}
+
+if ( ! function_exists( 'lunara_is_search_command_request' ) ) {
+	/**
+	 * Detect the pretty Search command route without relying on flushed rewrites.
+	 *
+	 * @return bool
+	 */
+	function lunara_is_search_command_request() {
+		if ( empty( $_SERVER['REQUEST_URI'] ) ) {
+			return false;
+		}
+
+		$request_path = (string) wp_parse_url( esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ), PHP_URL_PATH );
+		$home_path    = (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH );
+		$home_path    = trim( $home_path, '/' );
+		$relative     = trim( $request_path, '/' );
+
+		if ( '' !== $home_path && 0 === strpos( $relative, $home_path . '/' ) ) {
+			$relative = substr( $relative, strlen( $home_path ) + 1 );
+		}
+
+		return 'search' === trim( $relative, '/' );
+	}
+}
+
+if ( ! function_exists( 'lunara_search_command_template_redirect' ) ) {
+	/**
+	 * Render /search/ through search.php even if WordPress has no Search page.
+	 *
+	 * This deliberately avoids depending on a permalink flush, which makes the
+	 * route resilient during theme deployments and prevents the current 410.
+	 */
+	function lunara_search_command_template_redirect() {
+		if ( is_admin() || wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+			return;
+		}
+
+		if ( ! lunara_is_search_command_request() ) {
+			return;
+		}
+
+		global $wp_query;
+
+		$query_text = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
+		if ( '' !== $query_text && empty( $_GET['s'] ) ) {
+			$_GET['s'] = $query_text;
+			set_query_var( 's', $query_text );
+			if ( $wp_query instanceof WP_Query ) {
+				$wp_query->set( 's', $query_text );
+			}
+		}
+
+		if ( $wp_query instanceof WP_Query ) {
+			$wp_query->is_404    = false;
+			$wp_query->is_search = true;
+			$wp_query->is_home   = false;
+		}
+
+		status_header( 200 );
+
+		$template = locate_template( 'search.php' );
+		if ( $template ) {
+			include $template;
+			exit;
+		}
+	}
+	add_action( 'template_redirect', 'lunara_search_command_template_redirect', 0 );
 }
 
 if ( ! function_exists( 'lunara_live_search_post_types' ) ) {
@@ -130,7 +218,7 @@ if ( ! function_exists( 'lunara_live_search_rest_callback' ) ) {
 			array(
 				'q'        => $q,
 				'groups'   => array_values( $groups ),
-				'more_url' => add_query_arg( 's', rawurlencode( $q ), home_url( '/' ) ),
+				'more_url' => lunara_search_command_url( $q ),
 			)
 		);
 	}
@@ -171,7 +259,7 @@ if ( ! function_exists( 'lunara_live_search_enqueue' ) ) {
 if ( ! function_exists( 'lunara_live_search_render_overlay' ) ) {
 	/**
 	 * The overlay shell, printed once in the footer. Hidden until armed by
-	 * the script; the inner form posts to /?s= so JS-off remains intact.
+	 * the script; the inner form posts to the branded /search/ command route.
 	 */
 	function lunara_live_search_render_overlay() {
 		if ( is_admin() ) {
@@ -181,10 +269,10 @@ if ( ! function_exists( 'lunara_live_search_render_overlay' ) ) {
 		<div class="lunara-search-overlay" id="lunara-search-overlay" hidden role="dialog" aria-modal="true" aria-label="<?php esc_attr_e( 'Site search', 'lunara-film' ); ?>">
 			<div class="lunara-search-overlay-veil" data-lunara-search-close aria-hidden="true"></div>
 			<div class="lunara-search-overlay-panel">
-				<form class="lunara-search-overlay-form" action="<?php echo esc_url( home_url( '/' ) ); ?>" method="get" role="search">
+				<form class="lunara-search-overlay-form" action="<?php echo esc_url( lunara_search_command_url() ); ?>" method="get" role="search">
 					<input
 						type="search"
-						name="s"
+						name="q"
 						id="lunara-search-overlay-input"
 						class="lunara-search-overlay-input"
 						placeholder="<?php esc_attr_e( 'Search films, reviews, talent, the journal…', 'lunara-film' ); ?>"

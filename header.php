@@ -5791,9 +5791,9 @@ if ( $show_lunara_header_search ) {
 
     ob_start();
     ?>
-    <form role="search" method="get" class="lunara-search-form lunara-inline-header-search" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+    <form role="search" method="get" class="lunara-search-form lunara-inline-header-search" action="<?php echo esc_url( function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/' ) ); ?>">
         <label class="screen-reader-text" for="<?php echo esc_attr( $header_search_id ); ?>"><?php esc_html_e( 'Search for:', 'lunara-film' ); ?></label>
-        <input id="<?php echo esc_attr( $header_search_id ); ?>" type="search" class="lunara-search-input" placeholder="<?php echo esc_attr( $header_search_placeholder ); ?>" value="<?php echo esc_attr( get_search_query() ); ?>" name="s" />
+        <input id="<?php echo esc_attr( $header_search_id ); ?>" type="search" class="lunara-search-input" placeholder="<?php echo esc_attr( $header_search_placeholder ); ?>" value="<?php echo esc_attr( isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : get_search_query() ); ?>" name="<?php echo esc_attr( function_exists( 'lunara_search_command_url' ) ? 'q' : 's' ); ?>" />
         <button type="submit" class="lunara-btn lunara-btn-primary"><?php esc_html_e( 'Search', 'lunara-film' ); ?></button>
     </form>
     <?php

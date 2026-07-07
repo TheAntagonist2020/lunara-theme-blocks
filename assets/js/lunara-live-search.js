@@ -5,8 +5,8 @@
  * the header search trigger. Queries lunara/v1/search with a debounce and
  * an AbortController, renders grouped results (Reviews / Journal / Films /
  * Talent / Stories), and supports full arrow-key navigation. All result
- * text is inserted via textContent — never markup. With JS unavailable the
- * header search continues straight to /?s=.
+ * text is inserted via textContent — never markup. With JS unavailable, forms
+ * still land on the theme-owned search route.
  */
 (function () {
 	'use strict';
@@ -191,7 +191,7 @@
 		});
 
 		// Take over the header search trigger (capture phase beats the
-		// parent theme's own modal handler). JS-off: /?s= still works.
+		// parent theme's own modal handler).
 		document.addEventListener('click', function (event) {
 			var trigger = event.target.closest && event.target.closest(
 				'.ct-header-search, .ct-search-trigger, [data-id="search"], a[href*="?s="], [data-lunara-search-open]'
