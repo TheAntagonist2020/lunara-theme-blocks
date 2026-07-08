@@ -369,7 +369,18 @@ $command_cards = array(
         <?php endif; ?>
 
         <?php if ( $show_portal_links && ! empty( $portal_links ) ) : ?>
-        <section class="lunara-home-section lunara-oscars-portal-links-section lunara-oscars-portal-slot-portal-links">
+        <nav class="lunara-oscars-navigator" aria-label="<?php esc_attr_e( 'Ledger navigator', 'lunara-film' ); ?>">
+            <span class="lunara-oscars-navigator-label"><?php esc_html_e( 'Ledger', 'lunara-film' ); ?></span>
+            <a href="#oscars-doors"><?php esc_html_e( 'Quick Start', 'lunara-film' ); ?></a>
+            <?php if ( $show_spotlights ) : ?><a href="#oscars-spotlights"><?php esc_html_e( 'Spotlights', 'lunara-film' ); ?></a><?php endif; ?>
+            <?php if ( $show_title_cards ) : ?><a href="#oscars-titles"><?php esc_html_e( 'Titles', 'lunara-film' ); ?></a><?php endif; ?>
+            <?php if ( $show_research ) : ?><a href="#oscars-research"><?php esc_html_e( 'Research', 'lunara-film' ); ?></a><?php endif; ?>
+            <?php if ( $show_linked_reviews ) : ?><a href="#oscars-reviews"><?php esc_html_e( 'Reviews', 'lunara-film' ); ?></a><?php endif; ?>
+            <?php if ( $show_latest_winners ) : ?><a href="#oscars-winners"><?php esc_html_e( 'Winners', 'lunara-film' ); ?></a><?php endif; ?>
+            <?php if ( $show_deep_cuts ) : ?><a href="#oscars-deep-cuts"><?php esc_html_e( 'Deep Cuts', 'lunara-film' ); ?></a><?php endif; ?>
+        </nav>
+
+        <section id="oscars-doors" class="lunara-home-section lunara-oscars-portal-links-section lunara-oscars-portal-slot-portal-links">
                 <div class="lunara-home-section-header">
                     <div>
                     <p class="lunara-home-section-kicker"><?php echo esc_html( $explore_kicker ); ?></p>
@@ -396,7 +407,7 @@ $command_cards = array(
         <?php endif; ?>
 
         <?php if ( $show_spotlights && ! empty( $spotlights ) ) : ?>
-            <section class="lunara-home-section lunara-oscars-portal-spotlights lunara-oscars-portal-slot-spotlights">
+            <section id="oscars-spotlights" class="lunara-home-section lunara-oscars-portal-spotlights lunara-oscars-portal-slot-spotlights">
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker"><?php echo esc_html( $ceremony_label ); ?></p>
@@ -464,7 +475,7 @@ $command_cards = array(
         <?php endif; ?>
 
         <?php if ( $show_title_cards && ! empty( $title_cards ) ) : ?>
-            <section class="lunara-home-section lunara-oscars-portal-titles lunara-oscars-portal-slot-titles">
+            <section id="oscars-titles" class="lunara-home-section lunara-oscars-portal-titles lunara-oscars-portal-slot-titles">
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker"><?php echo esc_html( $titles_kicker ); ?></p>
@@ -547,7 +558,7 @@ $command_cards = array(
          */
         ?>
         <?php if ( $show_linked_reviews && $linked_reviews instanceof WP_Query && $linked_reviews->have_posts() ) : ?>
-            <section class="lunara-home-section lunara-oscars-portal-reviews lunara-oscars-portal-slot-linked-reviews">
+            <section id="oscars-reviews" class="lunara-home-section lunara-oscars-portal-reviews lunara-oscars-portal-slot-linked-reviews">
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker">Criticism Meets the Ledger</p>
@@ -600,7 +611,7 @@ $command_cards = array(
         }
         ?>
         <?php if ( $show_latest_winners && ! empty( $winner_cards ) ) : ?>
-            <section class="lunara-home-section lunara-oscars-portal-winners lunara-ceremony-winners-section lunara-oscars-portal-slot-latest-winners" aria-label="Ceremony Winners">
+            <section id="oscars-winners" class="lunara-home-section lunara-oscars-portal-winners lunara-ceremony-winners-section lunara-oscars-portal-slot-latest-winners" aria-label="Ceremony Winners">
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker">Oscar Ledger</p>
@@ -655,7 +666,7 @@ $command_cards = array(
         <?php endif; ?>
 
         <?php if ( $show_deep_cuts && ! empty( $deep_cuts ) ) : ?>
-            <section class="lunara-home-section lunara-oscars-portal-deep-cuts lunara-oscars-portal-slot-deep-cuts">
+            <section id="oscars-deep-cuts" class="lunara-home-section lunara-oscars-portal-deep-cuts lunara-oscars-portal-slot-deep-cuts">
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker">Rotating Stats</p>

@@ -403,6 +403,12 @@ if ( ! function_exists( 'lunara_get_trailer_inline_guardrails' ) ) {
 .lunara-trailer-frame{width:min(100%,720px)!important;margin:0 auto!important;box-sizing:border-box!important;border:1px solid rgba(201,169,97,.2)!important;border-radius:16px!important;background:#05080c!important;box-shadow:0 18px 42px rgba(0,0,0,.28)!important;overflow:hidden!important}
 .lunara-trailer-embed{position:relative!important;width:100%!important;aspect-ratio:16/9!important;min-height:0!important}
 .lunara-trailer-embed iframe,.lunara-trailer-embed embed,.lunara-trailer-embed object,.lunara-trailer-embed video{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;min-height:0!important;border:0!important}
+.lunara-trailer-facade{position:absolute!important;inset:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:12px!important;width:100%!important;height:100%!important;border:0!important;background-color:#05080c!important;background-position:center!important;background-size:cover!important;cursor:pointer!important}
+.lunara-trailer-facade::before{content:""!important;position:absolute!important;inset:0!important;background:linear-gradient(180deg,rgba(4,10,18,.18),rgba(4,10,18,.62))!important}
+.lunara-trailer-facade-play{position:relative!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:64px!important;height:64px!important;border-radius:999px!important;border:1px solid rgba(224,196,129,.85)!important;background:rgba(7,15,26,.72)!important;color:#e0c481!important;font-size:1.25rem!important;padding-left:5px!important;transition:transform .18s ease,background .18s ease}
+.lunara-trailer-facade:hover .lunara-trailer-facade-play,.lunara-trailer-facade:focus-visible .lunara-trailer-facade-play{transform:scale(1.08);background:rgba(201,169,97,.32)!important}
+.lunara-trailer-facade-label{position:relative!important;color:rgba(244,239,227,.9)!important;font-size:.78rem!important;letter-spacing:.18em!important;text-transform:uppercase!important}
+@media(prefers-reduced-motion:reduce){.lunara-trailer-facade-play{transition:none!important}}
 @media(max-width:520px){.lunara-trailer-module{width:min(calc(100% - 36px),720px)!important}.lunara-trailer-frame{border-radius:14px!important}}
 </style>';
 	}
@@ -429,6 +435,23 @@ if ( ! function_exists( 'lunara_render_trailer_module' ) ) {
 			$label = __( 'Official Trailer', 'lunara-film' );
 		}
 
+		// Click-to-load facade: ship a poster frame, not a third-party
+		// iframe — kills the initial black rectangle and defers the whole
+		// YouTube payload until the reader asks for it. Falls back to the
+		// direct embed when no poster can be derived.
+		$embed_src = '';
+		if ( preg_match( '#src="([^"]+)"#', $embed, $src_match ) ) {
+			$embed_src = html_entity_decode( $src_match[1], ENT_QUOTES );
+		}
+		$facade_poster = '';
+		if ( preg_match( '#youtube(?:-nocookie)?\.com/embed/([A-Za-z0-9_-]{6,})#', $embed_src, $vid_match ) ) {
+			$facade_poster = 'https://img.youtube.com/vi/' . rawurlencode( $vid_match[1] ) . '/hqdefault.jpg';
+		}
+		if ( '' === $facade_poster && has_post_thumbnail( $post_id ) ) {
+			$facade_poster = (string) get_the_post_thumbnail_url( $post_id, 'large' );
+		}
+		$use_facade = '' !== $embed_src && '' !== $facade_poster;
+
 		ob_start();
 		?>
 		<?php echo lunara_get_trailer_inline_guardrails(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -446,13 +469,38 @@ if ( ! function_exists( 'lunara_render_trailer_module' ) ) {
 				</div>
 				<div class="lunara-trailer-frame">
 					<div class="lunara-trailer-embed">
-						<?php echo $embed; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						<?php if ( $use_facade ) : ?>
+							<button type="button" class="lunara-trailer-facade" data-lunara-trailer-src="<?php echo esc_url( $embed_src ); ?>" style="background-image:url('<?php echo esc_url( $facade_poster ); ?>');" aria-label="<?php esc_attr_e( 'Play trailer', 'lunara-film' ); ?>">
+								<span class="lunara-trailer-facade-play" aria-hidden="true">&#9654;</span>
+								<span class="lunara-trailer-facade-label"><?php esc_html_e( 'Play the trailer', 'lunara-film' ); ?></span>
+							</button>
+						<?php else : ?>
+							<?php echo $embed; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						<?php endif; ?>
 					</div>
 				</div>
 			</div>
 		</section>
+		<?php if ( $use_facade ) : ?>
+			<?php echo lunara_trailer_facade_loader_js(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+		<?php endif; ?>
 		<?php
 		return trim( ob_get_clean() );
+	}
+}
+
+if ( ! function_exists( 'lunara_trailer_facade_loader_js' ) ) {
+	/**
+	 * One tiny delegated listener, printed once: a facade click swaps the
+	 * poster button for the real iframe with autoplay.
+	 */
+	function lunara_trailer_facade_loader_js() {
+		static $printed = false;
+		if ( $printed ) {
+			return '';
+		}
+		$printed = true;
+		return '<script id="lunara-trailer-facade-js">document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest(".lunara-trailer-facade");if(!b)return;var s=b.getAttribute("data-lunara-trailer-src");if(!s)return;var f=document.createElement("iframe");f.src=s+(s.indexOf("?")===-1?"?":"&")+"autoplay=1";f.setAttribute("allow","accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture");f.setAttribute("allowfullscreen","");f.title=b.getAttribute("aria-label")||"Trailer";b.parentNode.replaceChild(f,b);},true);</script>';
 	}
 }
 
