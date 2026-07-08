@@ -265,12 +265,12 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 		}
 		.lunara-header-brand {
 			display: inline-flex; align-items: center; gap: 7px;
-			flex: 0 0 auto; min-width: clamp(140px, 12vw, 190px);
-			text-decoration: none;
+			flex: 0 0 auto; min-width: clamp(205px, 16vw, 260px);
+			overflow: hidden; text-decoration: none;
 		}
 		.lunara-header-logo {
-			display: block; width: auto; height: clamp(58px, 5.8vw, 82px);
-			max-width: min(190px, 18vw); object-fit: contain;
+			display: block; width: clamp(205px, 16vw, 248px); height: 64px;
+			max-width: none; object-fit: cover; object-position: center;
 		}
 		.lunara-header-brand-word {
 			color: var(--lunara-gold, #c9a961);
@@ -327,8 +327,8 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 			.lunara-header-nav { display: none; }
 			body.lunara-header-takeover { padding-top: 68px; }
 			.lunara-header-inner { height: 68px; gap: 14px; }
-			.lunara-header-brand { min-width: clamp(92px, 28vw, 128px); }
-			.lunara-header-logo { height: clamp(50px, 13vw, 58px); max-width: 128px; }
+			.lunara-header-brand { min-width: 134px; }
+			.lunara-header-logo { width: 134px; height: 48px; }
 			.lunara-header-search kbd { display: none; }
 		}
 		/* --- §9 off-canvas panel ------------------------------------ */
