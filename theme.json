@@ -28,13 +28,28 @@
 			"fontFamilies": [
 				{
 					"slug": "editorial",
-					"name": "Editorial — Georgia",
-					"fontFamily": "Georgia, \"Times New Roman\", \"Iowan Old Style\", \"Palatino Linotype\", serif"
+					"name": "Editorial — Tiempos Text",
+					"fontFamily": "\"Tiempos Text\", Georgia, \"Times New Roman\", \"Iowan Old Style\", \"Palatino Linotype\", serif"
+				},
+				{
+					"slug": "display",
+					"name": "Display — Tiempos Headline",
+					"fontFamily": "\"Tiempos Headline\", \"Tiempos Text\", Georgia, \"Times New Roman\", \"Iowan Old Style\", serif"
+				},
+				{
+					"slug": "signature",
+					"name": "Signature — GT Sectra",
+					"fontFamily": "\"GT Sectra Display\", \"Tiempos Headline\", Georgia, \"Times New Roman\", serif"
+				},
+				{
+					"slug": "glamour",
+					"name": "Glamour — Canela Deck",
+					"fontFamily": "\"Canela Deck\", \"Tiempos Headline\", Georgia, \"Times New Roman\", serif"
 				},
 				{
 					"slug": "label",
-					"name": "Label — Bebas / Oswald",
-					"fontFamily": "\"Bebas Neue\", \"Oswald\", \"Arial Narrow\", sans-serif"
+					"name": "Label — Tiempos",
+					"fontFamily": "\"Tiempos Text\", \"Segoe UI\", Arial, sans-serif"
 				}
 			],
 			"fontSizes": [
