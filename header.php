@@ -5931,6 +5931,15 @@ if ( $show_lunara_header_search ) {
         );
     }
 }
+
+if (
+    function_exists( 'lunara_header_takeover_enabled' )
+    && ! lunara_header_takeover_enabled()
+    && '' === trim( $global_header )
+) {
+    // Fail open: a public page should never render with no header at all.
+    add_filter( 'lunara_header_takeover_enabled', '__return_true', 99 );
+}
 ?>
 
 <body <?php body_class(); ?> <?php echo function_exists( 'blocksy_body_attr' ) ? blocksy_body_attr() : ''; ?>>
