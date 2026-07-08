@@ -167,6 +167,15 @@ if ( ! function_exists( 'lunara_live_search_rest_callback' ) ) {
 			return rest_ensure_response( array( 'q' => $q, 'groups' => array() ) );
 		}
 
+		// Hot-query cache: repeat keystrokes and popular queries return
+		// without touching SQL. Ten minutes is fresh enough for a site
+		// whose content changes a few times a day.
+		$cache_key = 'lunara_ls_' . md5( mb_strtolower( $q ) );
+		$cached    = get_transient( $cache_key );
+		if ( is_array( $cached ) && isset( $cached['groups'] ) ) {
+			return rest_ensure_response( $cached );
+		}
+
 		$types = lunara_live_search_post_types();
 		if ( empty( $types ) ) {
 			return rest_ensure_response( array( 'q' => $q, 'groups' => array() ) );
@@ -214,13 +223,42 @@ if ( ! function_exists( 'lunara_live_search_rest_callback' ) ) {
 			);
 		}
 
-		return rest_ensure_response(
-			array(
-				'q'        => $q,
-				'groups'   => array_values( $groups ),
-				'more_url' => lunara_search_command_url( $q ),
-			)
+		// The Oscar Ledger group: films and people straight from the
+		// awards database (aat_entity_stats via the oscars plugin).
+		if ( function_exists( 'aat_search_entities' ) ) {
+			$ledger_items = array();
+			foreach ( aat_search_entities( $q, $per_group_cap ) as $row ) {
+				$bits = array();
+				if ( $row['wins'] > 0 ) {
+					/* translators: %d: win count */
+					$bits[] = sprintf( _n( '%d win', '%d wins', $row['wins'], 'lunara-film' ), $row['wins'] );
+				}
+				if ( $row['nominations'] > 0 ) {
+					/* translators: %d: nomination count */
+					$bits[] = sprintf( _n( '%d nomination', '%d nominations', $row['nominations'], 'lunara-film' ), $row['nominations'] );
+				}
+				$ledger_items[] = array(
+					'title' => (string) $row['label'],
+					'url'   => (string) $row['url'],
+					'meta'  => implode( ' · ', $bits ),
+				);
+			}
+			if ( $ledger_items ) {
+				$groups['aat_ledger'] = array(
+					'label' => __( 'Oscar Ledger', 'lunara-film' ),
+					'items' => $ledger_items,
+				);
+			}
+		}
+
+		$payload = array(
+			'q'        => $q,
+			'groups'   => array_values( $groups ),
+			'more_url' => lunara_search_command_url( $q ),
 		);
+		set_transient( $cache_key, $payload, 10 * MINUTE_IN_SECONDS );
+
+		return rest_ensure_response( $payload );
 	}
 }
 
@@ -241,15 +279,35 @@ if ( ! function_exists( 'lunara_live_search_enqueue' ) ) {
 			true
 		);
 
+		$suggestions   = array();
+		$latest_review = get_posts(
+			array(
+				'post_type'      => 'review',
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+			)
+		);
+		if ( $latest_review ) {
+			$suggestions[] = html_entity_decode( get_the_title( $latest_review[0] ), ENT_QUOTES, 'UTF-8' );
+		}
+		$suggestions[] = __( 'Best Picture', 'lunara-film' );
+		$suggestions[] = __( 'Best Director', 'lunara-film' );
+		$suggestions[] = __( 'Best Actress', 'lunara-film' );
+
 		wp_localize_script(
 			$handle,
 			'LUNARA_LIVE_SEARCH',
 			array(
-				'endpoint'    => esc_url_raw( rest_url( 'lunara/v1/search' ) ),
-				'placeholder' => __( 'Search films, reviews, talent, the journal…', 'lunara-film' ),
-				'empty'       => __( 'Nothing in the archive matches that — yet.', 'lunara-film' ),
-				'more'        => __( 'See every result', 'lunara-film' ),
-				'hint'        => __( 'Esc to close · ↑↓ to move · Enter to open', 'lunara-film' ),
+				'endpoint'     => esc_url_raw( rest_url( 'lunara/v1/search' ) ),
+				'placeholder'  => __( 'Search films, reviews, talent, the journal…', 'lunara-film' ),
+				'empty'        => __( 'Nothing in the archive matches that — yet.', 'lunara-film' ),
+				'more'         => __( 'See every result', 'lunara-film' ),
+				'hint'         => __( 'Esc to close · ↑↓ to move · Enter to open', 'lunara-film' ),
+				'all'          => __( 'All', 'lunara-film' ),
+				'tryLabel'     => __( 'Try the desk', 'lunara-film' ),
+				'suggestions'  => (array) apply_filters( 'lunara_live_search_suggestions', $suggestions ),
 			)
 		);
 	}
