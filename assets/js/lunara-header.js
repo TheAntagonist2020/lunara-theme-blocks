@@ -57,6 +57,13 @@
 	}
 
 	ready(function () {
+		// Remove zombie Blocksy shell nodes some plugin still emits after
+		// the parent-theme exit — CSS hides them; this deletes them so no
+		// optimizer or cache variant can ever resurrect the floater.
+		Array.prototype.forEach.call(document.querySelectorAll('.ct-drawer-canvas, #offcanvas.ct-panel'), function (el) {
+			if (el.parentNode) { el.parentNode.removeChild(el); }
+		});
+
 		root   = document.getElementById('lunara-offcanvas');
 		opener = document.querySelector('[data-lunara-nav-open]');
 		if (!root || !opener) { return; }
