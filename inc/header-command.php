@@ -118,6 +118,49 @@ if ( ! function_exists( 'lunara_header_nav_markup' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lunara_header_brand_markup' ) ) {
+	function lunara_header_brand_markup() {
+		$logo_id = (int) get_theme_mod( 'custom_logo' );
+
+		if ( $logo_id > 0 ) {
+			$source = (string) wp_get_attachment_image_url( $logo_id, 'full' );
+
+			if ( '' !== $source ) {
+				$logo_420 = function_exists( 'lunara_resize_wpcom_image_url' )
+					? lunara_resize_wpcom_image_url( $source, 420, 236 )
+					: $source;
+				$logo_840 = function_exists( 'lunara_resize_wpcom_image_url' )
+					? lunara_resize_wpcom_image_url( $source, 840, 472 )
+					: '';
+				$alt      = trim( (string) get_post_meta( $logo_id, '_wp_attachment_image_alt', true ) );
+
+				if ( '' === $alt ) {
+					$site_name = trim( (string) get_bloginfo( 'name' ) );
+					$alt       = sprintf( __( '%s logo', 'lunara-film' ), '' !== $site_name ? $site_name : 'Lunara Film' );
+				}
+
+				$srcset = '';
+				if ( '' !== $logo_840 && $logo_840 !== $logo_420 ) {
+					$srcset = sprintf(
+						' srcset="%s 420w, %s 840w"',
+						esc_url( $logo_420 ),
+						esc_url( $logo_840 )
+					);
+				}
+
+				return sprintf(
+					'<img class="lunara-header-logo skip-lazy no-lazy" src="%1$s"%2$s sizes="(max-width: 720px) 96px, 150px" width="420" height="236" alt="%3$s" loading="eager" decoding="async" fetchpriority="high" data-no-lazy="1" data-skip-lazy="1">',
+					esc_url( $logo_420 ),
+					$srcset, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					esc_attr( $alt )
+				);
+			}
+		}
+
+		return '<span class="lunara-header-brand-word">Lunara</span><span class="lunara-header-brand-sub">Film</span>';
+	}
+}
+
 if ( ! function_exists( 'lunara_render_header_command' ) ) {
 	function lunara_render_header_command() {
 		if ( ! lunara_header_takeover_enabled() || is_admin() ) {
@@ -126,9 +169,8 @@ if ( ! function_exists( 'lunara_render_header_command' ) ) {
 		?>
 		<header class="lunara-header" data-lunara-header>
 			<div class="lunara-header-inner">
-				<a class="lunara-header-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>">
-					<span class="lunara-header-brand-word">Lunara</span>
-					<span class="lunara-header-brand-sub">Film</span>
+				<a class="lunara-header-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-label="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">
+					<?php echo lunara_header_brand_markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</a>
 				<nav class="lunara-header-nav" aria-label="<?php esc_attr_e( 'Primary', 'lunara-film' ); ?>">
 					<?php echo lunara_header_nav_markup( 'header-nav' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
@@ -208,7 +250,7 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 		body.lunara-header-takeover .ct-drawer-canvas,
 		body.lunara-header-takeover #offcanvas.ct-panel,
 		body.lunara-header-takeover #search-modal { display: none !important; visibility: hidden !important; }
-		body.lunara-header-takeover { padding-top: 64px; }
+		body.lunara-header-takeover { padding-top: 88px; }
 		body.lunara-header-takeover.admin-bar .lunara-header { top: 32px; }
 		.lunara-header {
 			position: fixed; top: 0; left: 0; right: 0; z-index: 980;
@@ -218,10 +260,18 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 		}
 		.lunara-header-inner {
 			display: flex; align-items: center; gap: 26px;
-			max-width: var(--lunara-shell-max, 1360px); height: 64px;
+			max-width: var(--lunara-shell-max, 1360px); height: 88px;
 			margin: 0 auto; padding: 0 var(--lunara-shell-pad, 28px);
 		}
-		.lunara-header-brand { display: inline-flex; align-items: baseline; gap: 7px; text-decoration: none; }
+		.lunara-header-brand {
+			display: inline-flex; align-items: center; gap: 7px;
+			flex: 0 0 auto; min-width: clamp(140px, 12vw, 190px);
+			text-decoration: none;
+		}
+		.lunara-header-logo {
+			display: block; width: auto; height: clamp(58px, 5.8vw, 82px);
+			max-width: min(190px, 18vw); object-fit: contain;
+		}
 		.lunara-header-brand-word {
 			color: var(--lunara-gold, #c9a961);
 			font-family: var(--lunara-font-display, Georgia, serif);
@@ -275,8 +325,10 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 		.lunara-header-burger span::after { display: none; }
 		@media (max-width: 1020px) {
 			.lunara-header-nav { display: none; }
-			body.lunara-header-takeover { padding-top: 58px; }
-			.lunara-header-inner { height: 58px; gap: 14px; }
+			body.lunara-header-takeover { padding-top: 68px; }
+			.lunara-header-inner { height: 68px; gap: 14px; }
+			.lunara-header-brand { min-width: clamp(92px, 28vw, 128px); }
+			.lunara-header-logo { height: clamp(50px, 13vw, 58px); max-width: 128px; }
 			.lunara-header-search kbd { display: none; }
 		}
 		/* --- §9 off-canvas panel ------------------------------------ */
