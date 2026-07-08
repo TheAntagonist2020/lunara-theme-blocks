@@ -158,6 +158,16 @@ function lunara_control_desk_save_pairing_desk_copy() {
         }
     }
 
+    // Backdrop override: an attachment id from the media picker. Zero or
+    // an invalid image clears the override and the section returns to its
+    // automatic backdrop (the featured review's own hero image).
+    $backdrop_id = isset( $_POST['lunara_home_pairing_desk_backdrop_id'] ) ? absint( $_POST['lunara_home_pairing_desk_backdrop_id'] ) : 0;
+    if ( $backdrop_id && lunara_control_desk_brand_image_is_valid( $backdrop_id ) ) {
+        set_theme_mod( 'lunara_home_pairing_desk_backdrop_id', $backdrop_id );
+    } else {
+        remove_theme_mod( 'lunara_home_pairing_desk_backdrop_id' );
+    }
+
     wp_safe_redirect( add_query_arg( 'lunara_notice', 'pairing_desk_copy_saved', $redirect ) );
     exit;
 }
@@ -14452,6 +14462,20 @@ function lunara_control_desk_render_homepage_board_tab( $rows ) {
                     </td>
                 </tr>
             </table>
+
+            <?php
+            lunara_control_desk_render_brand_media_control(
+                array(
+                    'eyebrow' => __( 'Showcase Backdrop', 'lunara-film' ),
+                    'label'   => __( 'The image behind the Lunara Method', 'lunara-film' ),
+                    'note'    => __( 'By default the section wears the featured review\'s own hero image. Pick an image here to override it; Clear returns to automatic.', 'lunara-film' ),
+                    'affects' => __( 'The full-width cinematic backdrop behind the Pair It With trio on the homepage.', 'lunara-film' ),
+                    'field'   => 'lunara_home_pairing_desk_backdrop_id',
+                    'value'   => absint( get_theme_mod( 'lunara_home_pairing_desk_backdrop_id', 0 ) ),
+                )
+            );
+            ?>
+
             <div class="lunara-control-desk-actions">
                 <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Showcase Copy', 'lunara-film' ); ?></button>
                 <a class="button" href="<?php echo esc_url( home_url( '/#pairing-desk' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View Section', 'lunara-film' ); ?></a>

@@ -15622,6 +15622,16 @@ if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 			$backdrop = lunara_rightsize_backdrop_url( $backdrop );
 		}
 
+		// Homepage Studio override: a hand-picked backdrop from the media
+		// library beats the automatic review-hero image when set.
+		$backdrop_override_id = absint( get_theme_mod( 'lunara_home_pairing_desk_backdrop_id', 0 ) );
+		if ( $backdrop_override_id ) {
+			$backdrop_override_url = (string) wp_get_attachment_image_url( $backdrop_override_id, 'full' );
+			if ( '' !== $backdrop_override_url ) {
+				$backdrop = $backdrop_override_url;
+			}
+		}
+
 		ob_start();
 		?>
 		<section id="pairing-desk" class="lunara-home-section lunara-home-slot-pairing-desk lunara-pairing-desk-section<?php echo '' !== $backdrop ? ' has-desk-backdrop' : ''; ?>" aria-label="<?php esc_attr_e( 'Pair It With showcase', 'lunara-film' ); ?>">
