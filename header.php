@@ -5403,8 +5403,37 @@
                 }).filter(Boolean).join(', ');
             }
 
+            function sanitizeImageSrcset(node) {
+                if (!node || !node.getAttribute || !node.setAttribute) return;
+
+                var currentSrcset = node.getAttribute('srcset') || '';
+                if (!currentSrcset) return;
+
+                var sanitizedSrcset = sanitizeSrcset(currentSrcset);
+                if (sanitizedSrcset && sanitizedSrcset !== currentSrcset) {
+                    node.setAttribute('srcset', sanitizedSrcset);
+                } else if (!sanitizedSrcset) {
+                    node.removeAttribute('srcset');
+                    node.removeAttribute('sizes');
+                }
+            }
+
+            function sanitizeDocumentSrcsets(root) {
+                root = root || document;
+
+                if (root.matches && root.matches('img[srcset], source[srcset]')) {
+                    sanitizeImageSrcset(root);
+                }
+
+                if (root.querySelectorAll) {
+                    root.querySelectorAll('img[srcset], source[srcset]').forEach(sanitizeImageSrcset);
+                }
+            }
+
             function hydrateImage(img) {
                 if (!img) return;
+                sanitizeImageSrcset(img);
+
                 var dataSrc = img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || '';
                 var dataSrcset = img.getAttribute('data-srcset') || img.getAttribute('data-lazy-srcset') || '';
                 var currentSrc = img.getAttribute('src') || '';
@@ -5459,6 +5488,8 @@
             }
 
             function hydrateCards() {
+                sanitizeDocumentSrcsets(document);
+
                 document.querySelectorAll([
                     '.lunara-review-grid-poster',
                     '.lunara-review-feature-image',
@@ -5484,7 +5515,29 @@
             }
 
             if (window.MutationObserver) {
-                new MutationObserver(hydrateCards).observe(document.documentElement, {
+                new MutationObserver(function (mutations) {
+                    var needsHydration = false;
+
+                    mutations.forEach(function (mutation) {
+                        if (mutation.type === 'attributes') {
+                            sanitizeImageSrcset(mutation.target);
+                            return;
+                        }
+
+                        needsHydration = true;
+                        mutation.addedNodes.forEach(function (node) {
+                            if (node.nodeType === 1) {
+                                sanitizeDocumentSrcsets(node);
+                            }
+                        });
+                    });
+
+                    if (needsHydration) {
+                        hydrateCards();
+                    }
+                }).observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['srcset', 'data-srcset', 'data-lazy-srcset'],
                     childList: true,
                     subtree: true
                 });
