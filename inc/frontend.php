@@ -2198,6 +2198,28 @@ function lunara_output_image_fadein_js() {
                 return (/\s+\d+w$/.test(candidate)||/\s+\d+(?:\.\d+)?x$/.test(candidate))?candidate:'';
             }).filter(Boolean).join(', ');
         }
+        function installSrcsetGuard(){
+            if(window.lunaraSrcsetGuardInstalled||!window.Element)return;
+            window.lunaraSrcsetGuardInstalled=true;
+            var nativeSetAttribute=Element.prototype.setAttribute;
+            Element.prototype.setAttribute=function(name,value){
+                if(typeof name==='string'&&name.toLowerCase()==='srcset'){
+                    value=sanitizeSrcset(String(value||''));
+                }
+                return nativeSetAttribute.call(this,name,value);
+            };
+            [window.HTMLImageElement,window.HTMLSourceElement].forEach(function(Constructor){
+                if(!Constructor||!Constructor.prototype)return;
+                var descriptor=Object.getOwnPropertyDescriptor(Constructor.prototype,'srcset');
+                if(!descriptor||!descriptor.set||!descriptor.get)return;
+                Object.defineProperty(Constructor.prototype,'srcset',{
+                    configurable:true,
+                    enumerable:descriptor.enumerable,
+                    get:function(){return descriptor.get.call(this);},
+                    set:function(value){descriptor.set.call(this,sanitizeSrcset(String(value||'')));}
+                });
+            });
+        }
         function sanitizeImageSrcset(node){
             if(!node||!node.getAttribute||!node.setAttribute){return;}
             var currentSrcset=node.getAttribute('srcset')||'';
@@ -2215,6 +2237,7 @@ function lunara_output_image_fadein_js() {
             if(root.matches&&root.matches('img[srcset], source[srcset]'))sanitizeImageSrcset(root);
             root.querySelectorAll&&root.querySelectorAll('img[srcset], source[srcset]').forEach(sanitizeImageSrcset);
         }
+        installSrcsetGuard();
         function hydrateLazySource(img){
             sanitizeImageSrcset(img);
             var dataSrc=img.getAttribute('data-src')||img.getAttribute('data-lazy-src')||'';
