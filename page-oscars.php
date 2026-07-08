@@ -597,7 +597,7 @@ $command_cards = array(
                     'prefer_backdrop'      => false,
                     'prefer_person_visuals' => true,
                     'title_visual_size'    => 'medium_large',
-                    'person_visual_size'   => 'large',
+                    'person_visual_size'   => 'medium_large',
                 )
             );
         }
