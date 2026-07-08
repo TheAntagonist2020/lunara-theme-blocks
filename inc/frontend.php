@@ -2198,7 +2198,25 @@ function lunara_output_image_fadein_js() {
                 return (/\s+\d+w$/.test(candidate)||/\s+\d+(?:\.\d+)?x$/.test(candidate))?candidate:'';
             }).filter(Boolean).join(', ');
         }
+        function sanitizeImageSrcset(node){
+            if(!node||!node.getAttribute||!node.setAttribute){return;}
+            var currentSrcset=node.getAttribute('srcset')||'';
+            if(!currentSrcset){return;}
+            var sanitizedSrcset=sanitizeSrcset(currentSrcset);
+            if(sanitizedSrcset&&sanitizedSrcset!==currentSrcset){
+                node.setAttribute('srcset',sanitizedSrcset);
+            }else if(!sanitizedSrcset){
+                node.removeAttribute('srcset');
+                node.removeAttribute('sizes');
+            }
+        }
+        function sanitizeDocumentSrcsets(root){
+            root=root||document;
+            if(root.matches&&root.matches('img[srcset], source[srcset]'))sanitizeImageSrcset(root);
+            root.querySelectorAll&&root.querySelectorAll('img[srcset], source[srcset]').forEach(sanitizeImageSrcset);
+        }
         function hydrateLazySource(img){
+            sanitizeImageSrcset(img);
             var dataSrc=img.getAttribute('data-src')||img.getAttribute('data-lazy-src')||'';
             var dataSrcset=img.getAttribute('data-srcset')||img.getAttribute('data-lazy-srcset')||'';
             var currentSrc=img.getAttribute('src')||'';
@@ -2227,18 +2245,24 @@ function lunara_output_image_fadein_js() {
             },1800);
         }
         var sels='.lunara-review-grid-poster,.lunara-review-feature-image,.lunara-poster-card-image,.lunara-journal-home-card-image,.lunara-dispatch-archive-thumb,.lunara-dispatch-lead-image,.lunara-oscar-pick-card-image,.lunara-oscar-fact-card-poster-image,.lunara-home-pulse-poster,.aat-filmography-poster,.aat-entity-poster';
+        sanitizeDocumentSrcsets(document);
         document.querySelectorAll(sels).forEach(processImg);
         if(window.MutationObserver){
             new MutationObserver(function(mutations){
                 mutations.forEach(function(m){
+                    if(m.type==='attributes'){
+                        sanitizeImageSrcset(m.target);
+                        return;
+                    }
                     m.addedNodes.forEach(function(n){
                         if(n.nodeType===1){
+                            sanitizeDocumentSrcsets(n);
                             if(n.matches&&n.matches(sels))processImg(n);
                             n.querySelectorAll&&n.querySelectorAll(sels).forEach(processImg);
                         }
                     });
                 });
-            }).observe(document.body,{childList:true,subtree:true});
+            }).observe(document.body,{attributes:true,attributeFilter:['srcset','data-srcset','data-lazy-srcset'],childList:true,subtree:true});
         }
     })();
     </script>
