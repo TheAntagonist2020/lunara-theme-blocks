@@ -9,16 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-add_action( 'wp_head', 'lunara_inject_premium_preloads', 1 );
-function lunara_inject_premium_preloads() {
-    ?>
-    <!-- LUNARA STUDIO: Aggressive Font Preloading -->
-    <link rel="preload" href="https://use.typekit.net/your-project-id.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://use.typekit.net/your-project-id.css"></noscript>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <?php
-}
+// The former "aggressive font preloading" block injected a PLACEHOLDER
+// Typekit stylesheet (your-project-id) plus Google Fonts preconnects on
+// every page — a dead request and two unused connections. The house
+// faces are self-hosted woff2s declared in style.css; nothing external
+// to preload.
 
 add_action( 'wp_body_open', 'lunara_inject_film_grain' );
 function lunara_inject_film_grain() {

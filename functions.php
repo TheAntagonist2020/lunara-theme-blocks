@@ -38,18 +38,24 @@ if ( ! defined( 'LUNARA_CORE_VERSION' ) ) {
  */
 if ( ! function_exists( 'lunara_enqueue_styles' ) ) {
 function lunara_enqueue_styles() {
-    // Parent styles (Blocksy)
-    wp_enqueue_style(
-        'blocksy-style',
-        get_template_directory_uri() . '/style.css',
-        array(),
-        wp_get_theme( get_template() )->get( 'Version' )
-    );
-    
+    // Parent styles (Blocksy) — only while a parent theme actually exists.
+    // Standalone builds must not depend on the 'blocksy-style' handle: an
+    // unregistered dependency would silently keep lunara-style from loading.
+    $lunara_style_deps = array();
+    if ( wp_get_theme()->parent() ) {
+        wp_enqueue_style(
+            'blocksy-style',
+            get_template_directory_uri() . '/style.css',
+            array(),
+            wp_get_theme( get_template() )->get( 'Version' )
+        );
+        $lunara_style_deps[] = 'blocksy-style';
+    }
+
     wp_enqueue_style(
         'lunara-style',
         get_stylesheet_uri(),
-        array( 'blocksy-style' ),
+        $lunara_style_deps,
         filemtime( get_stylesheet_directory() . '/style.css' )
     );
 

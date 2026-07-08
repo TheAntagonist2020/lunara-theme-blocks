@@ -9,7 +9,7 @@
  */
 
 ?><!doctype html>
-<html <?php language_attributes(); ?><?php echo blocksy_html_attr(); ?>>
+<html <?php language_attributes(); ?><?php echo function_exists( 'blocksy_html_attr' ) ? blocksy_html_attr() : ''; ?>>
 <head>
     <?php do_action( 'blocksy:head:start' ); ?>
 
@@ -5764,7 +5764,9 @@ if ( $show_lunara_header_search ) {
 }
 
 ob_start();
-blocksy_output_header();
+if ( function_exists( 'blocksy_output_header' ) ) {
+    blocksy_output_header();
+}
 $global_header = ob_get_clean();
 
 if ( null !== $lunara_strip_search_menu_item ) {
@@ -5821,7 +5823,7 @@ if ( $show_lunara_header_search ) {
 }
 ?>
 
-<body <?php body_class(); ?> <?php echo blocksy_body_attr(); ?>>
+<body <?php body_class(); ?> <?php echo function_exists( 'blocksy_body_attr' ) ? blocksy_body_attr() : ''; ?>>
 
 <?php
 if ( function_exists( 'wp_body_open' ) ) {
@@ -5833,14 +5835,24 @@ if ( function_exists( 'wp_body_open' ) ) {
     <?php
     do_action( 'blocksy:header:before' );
 
-    echo $global_header;
+    /*
+     * Under the Lunara header takeover the Blocksy header markup is not
+     * printed at all — hiding it with CSS proved fragile once WP Rocket's
+     * unused-CSS pass stripped the hide rule (the "floating header" seen
+     * on Edge). Standalone builds have no Blocksy header to print anyway.
+     */
+    if ( ! function_exists( 'lunara_header_takeover_enabled' ) || ! lunara_header_takeover_enabled() ) {
+        echo $global_header;
+    }
 
     do_action( 'blocksy:header:after' );
     do_action( 'blocksy:content:before' );
     ?>
 
-    <main <?php echo blocksy_main_attr(); ?>>
+    <main <?php echo function_exists( 'blocksy_main_attr' ) ? blocksy_main_attr() : 'id="main" class="site-main"'; ?>>
         <?php
         do_action( 'blocksy:content:top' );
-        blocksy_before_current_template();
+        if ( function_exists( 'blocksy_before_current_template' ) ) {
+            blocksy_before_current_template();
+        }
         ?>

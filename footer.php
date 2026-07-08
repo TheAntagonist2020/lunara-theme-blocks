@@ -8,7 +8,9 @@
  * @package Lunara_Film
  */
 
-blocksy_after_current_template();
+if ( function_exists( 'blocksy_after_current_template' ) ) {
+    blocksy_after_current_template();
+}
 do_action( 'blocksy:content:bottom' );
 
 ?>
@@ -18,7 +20,9 @@ do_action( 'blocksy:content:bottom' );
     do_action( 'blocksy:content:after' );
     do_action( 'blocksy:footer:before' );
 
-    blocksy_output_footer();
+    if ( function_exists( 'blocksy_output_footer' ) ) {
+        blocksy_output_footer();
+    }
 
     do_action( 'blocksy:footer:after' );
     ?>
