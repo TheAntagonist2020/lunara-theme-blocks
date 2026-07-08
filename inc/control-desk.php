@@ -6278,6 +6278,9 @@ function lunara_control_desk_render_system_status_tab() {
     if ( function_exists( 'lunara_header_takeover_render_switch_panel' ) ) {
         lunara_header_takeover_render_switch_panel();
     }
+    if ( function_exists( 'lunara_design_tokens_render_panel' ) ) {
+        lunara_design_tokens_render_panel();
+    }
     ?>
 
     <section class="lunara-control-desk-panel">

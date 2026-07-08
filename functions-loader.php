@@ -86,3 +86,7 @@ require_once $lunara_inc . 'geo.php';
 // off-canvas navigation behind the Control Desk takeover switch — the
 // staged parent-theme exit. Default OFF; zero output while off.
 require_once $lunara_inc . 'header-command.php';
+
+// Layer 16 — Design Tokens: dial-level palette/voice overrides from the
+// Control Desk, printed as a :root layer over the shipped tokens.
+require_once $lunara_inc . 'design-tokens.php';

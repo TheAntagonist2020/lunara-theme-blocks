@@ -202,6 +202,12 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 		body.lunara-header-takeover header.ct-header,
 		body.lunara-header-takeover [data-header],
 		body.lunara-header-takeover #header.ct-header { display: none !important; }
+		/* Kill the zombie Blocksy drawer some plugin still prints after the
+		   parent-theme exit (inert #offcanvas.ct-panel + its canvas). This
+		   block is Rocket-excluded, so the kill survives unused-CSS passes. */
+		body.lunara-header-takeover .ct-drawer-canvas,
+		body.lunara-header-takeover #offcanvas.ct-panel,
+		body.lunara-header-takeover #search-modal { display: none !important; visibility: hidden !important; }
 		body.lunara-header-takeover { padding-top: 64px; }
 		body.lunara-header-takeover.admin-bar .lunara-header { top: 32px; }
 		.lunara-header {
