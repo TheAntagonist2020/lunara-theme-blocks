@@ -45,6 +45,11 @@ require_once $lunara_inc . 'queries.php';
 
 // Layer 5 — Home page sections (depends on all above).
 require_once $lunara_inc . 'home-sections.php';
+// Extracted homepage renderers; functions.php keeps guarded fallback copies.
+require_once $lunara_inc . 'home-oscars.php';
+require_once $lunara_inc . 'home-hero.php';
+require_once $lunara_inc . 'home-pairing.php';
+require_once $lunara_inc . 'home-journal.php';
 
 // Layer 6 — Oscars portal (depends on home-sections + card builders).
 require_once $lunara_inc . 'oscars-portal.php';
@@ -52,6 +57,7 @@ require_once $lunara_inc . 'oscars-portal.php';
 // Layer 7 — Frontend output (footer, nav, search, content filters, animations).
 require_once $lunara_inc . 'blocks.php';
 require_once $lunara_inc . 'block-migration.php';
+require_once $lunara_inc . 'home-block-registration.php';
 require_once $lunara_inc . 'frontend.php';
 require_once $lunara_inc . 'cinematic-home.php';
 
