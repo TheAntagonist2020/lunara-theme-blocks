@@ -33,6 +33,7 @@ if ( ! function_exists( 'lunara_header_nav_links' ) ) {
 	 */
 	function lunara_header_nav_links() {
 		$links = array(
+			array( 'label' => __( 'Home', 'lunara-film' ), 'url' => home_url( '/' ) ),
 			array( 'label' => __( 'Reviews', 'lunara-film' ), 'url' => home_url( '/reviews/' ) ),
 			array( 'label' => __( 'Journal', 'lunara-film' ), 'url' => home_url( '/journal/' ) ),
 			array( 'label' => __( 'Oscars', 'lunara-film' ), 'url' => home_url( '/oscars/' ) ),
@@ -139,7 +140,6 @@ if ( ! function_exists( 'lunara_render_offcanvas_nav' ) ) {
 				<button type="button" class="lunara-offcanvas-close" data-lunara-nav-close aria-label="<?php esc_attr_e( 'Close navigation', 'lunara-film' ); ?>">&times;</button>
 				<p class="lunara-offcanvas-kicker"><?php esc_html_e( 'Lunara Film', 'lunara-film' ); ?></p>
 				<nav class="lunara-offcanvas-nav" aria-label="<?php esc_attr_e( 'Site navigation', 'lunara-film' ); ?>">
-					<a class="lunara-offcanvas-link" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Home', 'lunara-film' ); ?></a>
 					<?php echo lunara_header_nav_markup( 'offcanvas' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 				</nav>
 				<p class="lunara-offcanvas-foot"><?php esc_html_e( 'Reviews, Journal files, and the Oscar Ledger — one publication in motion.', 'lunara-film' ); ?></p>
@@ -207,6 +207,12 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 			font-size: .72rem; letter-spacing: .3em; text-transform: uppercase;
 		}
 		.lunara-header-nav { display: flex; align-items: center; gap: 22px; margin-left: 8px; }
+		.lunara-header-nav ul, .lunara-header-nav li,
+		.lunara-offcanvas-nav ul, .lunara-offcanvas-nav li {
+			list-style: none; margin: 0; padding: 0; display: block;
+		}
+		.lunara-header-nav li { display: inline-flex; }
+		.lunara-offcanvas-nav a { display: block; }
 		.lunara-header-nav a, .lunara-header-nav-link {
 			color: rgba(244,239,227,.82); text-decoration: none;
 			font-family: var(--lunara-font-label, sans-serif);
