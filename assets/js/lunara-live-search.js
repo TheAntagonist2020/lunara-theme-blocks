@@ -45,6 +45,9 @@
 			if (input) {
 				input.focus();
 				input.select();
+				if (input.value.trim().length < 2) {
+					renderSuggestions();
+				}
 			}
 		});
 	}
@@ -61,7 +64,15 @@
 	}
 
 	function optionEls() {
-		return results ? results.querySelectorAll('a.lunara-search-hit') : [];
+		if (!results) {
+			return [];
+		}
+		// Skip hits inside chip-hidden groups so arrow keys never land on
+		// something the reader cannot see.
+		return Array.prototype.filter.call(results.querySelectorAll('a.lunara-search-hit'), function (el) {
+			var section = el.closest && el.closest('section');
+			return !section || !section.hidden;
+		});
 	}
 
 	function setActive(index) {
@@ -85,6 +96,70 @@
 		results.appendChild(p);
 	}
 
+	// Suggested commands for the empty state: the palette should read as a
+	// discovery instrument before the first keystroke, not a blank form.
+	function renderSuggestions() {
+		var list = (cfg.suggestions || []).filter(Boolean);
+		results.textContent = '';
+		activeIndex = -1;
+		if (!list.length) {
+			return;
+		}
+		var wrap = document.createElement('div');
+		wrap.className = 'lunara-search-suggestions';
+		var label = document.createElement('p');
+		label.className = 'lunara-search-group-label';
+		label.textContent = cfg.tryLabel || 'Try';
+		wrap.appendChild(label);
+		list.forEach(function (text) {
+			var chip = document.createElement('button');
+			chip.type = 'button';
+			chip.className = 'lunara-search-suggestion';
+			chip.textContent = text;
+			chip.addEventListener('click', function () {
+				window.clearTimeout(debounceTimer);
+				input.value = text;
+				lastQuery = text;
+				input.focus();
+				runQuery(text);
+			});
+			wrap.appendChild(chip);
+		});
+		results.appendChild(wrap);
+	}
+
+	// Group chips: All / per-desk filters over the rendered result set.
+	function renderChips(groups) {
+		if (groups.length < 2) {
+			return;
+		}
+		var bar = document.createElement('div');
+		bar.className = 'lunara-search-chips';
+		var names = [cfg.all || 'All'].concat(groups.map(function (g) { return g.label || ''; }));
+		names.forEach(function (name, i) {
+			var chip = document.createElement('button');
+			chip.type = 'button';
+			chip.className = 'lunara-search-chip' + (i === 0 ? ' is-active' : '');
+			chip.textContent = name;
+			chip.addEventListener('click', function () {
+				Array.prototype.forEach.call(bar.querySelectorAll('.lunara-search-chip'), function (c) {
+					c.classList.remove('is-active');
+				});
+				chip.classList.add('is-active');
+				Array.prototype.forEach.call(results.querySelectorAll('.lunara-search-group'), function (section) {
+					var sectionLabel = section.getAttribute('data-lunara-group') || '';
+					section.hidden = i !== 0 && sectionLabel !== name;
+				});
+				Array.prototype.forEach.call(results.querySelectorAll('a.lunara-search-hit.is-active'), function (hit) {
+					hit.classList.remove('is-active');
+				});
+				activeIndex = -1;
+			});
+			bar.appendChild(chip);
+		});
+		results.appendChild(bar);
+	}
+
 	function renderGroups(payload) {
 		results.textContent = '';
 		activeIndex = -1;
@@ -95,9 +170,12 @@
 			return;
 		}
 
+		renderChips(groups);
+
 		groups.forEach(function (group) {
 			var section = document.createElement('section');
 			section.className = 'lunara-search-group';
+			section.setAttribute('data-lunara-group', group.label || '');
 
 			var heading = document.createElement('h3');
 			heading.className = 'lunara-search-group-label';
@@ -141,8 +219,7 @@
 			controller.abort();
 		}
 		if (q.length < 2) {
-			results.textContent = '';
-			activeIndex = -1;
+			renderSuggestions();
 			return;
 		}
 
