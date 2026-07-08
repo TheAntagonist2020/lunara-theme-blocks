@@ -62,7 +62,7 @@ if ( have_posts() ) :
         $ledger_counts    = '' !== $review_tt ? lunara_get_oscar_ledger_counts( $review_tt ) : array();
         $ledger_pill      = '' !== $review_tt ? lunara_render_oscar_ledger_pill( $review_tt, $ledger_counts ) : '';
         $dossier_movie_id = function_exists( 'lunara_entity_movie_for_review' ) ? lunara_entity_movie_for_review( $post_id ) : 0;
-        $debrief_block    = do_shortcode( '[lunara_debrief]' );
+        $debrief_block    = function_exists( 'lunara_debrief_shortcode' ) ? (string) lunara_debrief_shortcode( array() ) : '';
         $debrief_parts    = function_exists( 'lunara_split_review_debrief_block' )
             ? lunara_split_review_debrief_block( $debrief_block )
             : array(

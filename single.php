@@ -346,8 +346,8 @@ if ( 'review' === $post_type ) {
 
             // If no debrief was found in the rendered content (because we stripped the shortcode),
             // render it fresh here for the dedicated closing section.
-            if ( '' === $debrief_block && shortcode_exists( 'lunara_debrief' ) ) {
-                $debrief_block = trim( (string) do_shortcode( '[lunara_debrief]' ) );
+            if ( '' === $debrief_block && function_exists( 'lunara_debrief_shortcode' ) ) {
+                $debrief_block = trim( (string) lunara_debrief_shortcode( array() ) );
             }
 
             if ( '' !== $body_html && function_exists( 'lunara_insert_review_visuals_into_body_html' ) ) {
@@ -433,8 +433,8 @@ if ( 'review' === $post_type ) {
                                     <?php if ( '' !== $where ) : ?>
                                         <?php
                                         $watch_url = '';
-                                        if ( '' !== $review_tt && shortcode_exists( 'lunara_where_to_watch' ) ) {
-                                            $watch_providers = do_shortcode( '[lunara_where_to_watch imdb="' . esc_attr( $review_tt ) . '"]' );
+                                        if ( '' !== $review_tt && function_exists( 'lunara_where_to_watch_shortcode' ) ) {
+                                            $watch_providers = (string) lunara_where_to_watch_shortcode( array( 'imdb' => $review_tt ) );
                                             if ( '' !== trim( $watch_providers ) && preg_match( '~https://www\.themoviedb\.org/[^"\']+/watch\?locale=[A-Z]{2}~', $watch_providers, $watch_match ) ) {
                                                 $watch_url = $watch_match[0];
                                             }
@@ -445,9 +445,9 @@ if ( 'review' === $post_type ) {
                                             <div class="lunara-review-single-where-value">
                                                 <?php echo wp_kses_post( lunara_render_review_where_links( $where, get_the_title( $post_id ), $watch_url ) ); ?>
                                             </div>
-                                            <?php if ( '' !== $review_tt && shortcode_exists( 'lunara_where_to_watch' ) ) : ?>
+                                            <?php if ( '' !== $review_tt && function_exists( 'lunara_where_to_watch_shortcode' ) ) : ?>
                                                 <div class="lunara-review-single-where-providers">
-                                                    <?php echo do_shortcode( '[lunara_where_to_watch imdb="' . esc_attr( $review_tt ) . '"]' ); ?>
+                                                    <?php echo lunara_where_to_watch_shortcode( array( 'imdb' => $review_tt ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- renderer escapes internally, same output as the former shortcode. ?>
                                                 </div>
                                             <?php endif; ?>
                                         </div>

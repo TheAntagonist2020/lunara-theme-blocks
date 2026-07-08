@@ -3741,4 +3741,4 @@ if ( ! function_exists( 'lunara_render_news_archive_shell' ) ) {
     }
 }
 
-/* lunara_where_to_watch_shortcode lives in inc/shortcodes-home.php on the server */
+/* lunara_where_to_watch_shortcode is defined in functions.php (legacy module). */

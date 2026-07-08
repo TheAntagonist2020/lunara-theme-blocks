@@ -505,7 +505,7 @@ $command_cards = array(
             </section>
         <?php endif; ?>
 
-        <?php if ( $show_research && shortcode_exists( 'academy_awards' ) ) : ?>
+        <?php if ( $show_research && class_exists( 'WP_Block_Type_Registry' ) && WP_Block_Type_Registry::get_instance()->is_registered( 'academy-awards/database' ) ) : ?>
             <section id="oscars-research" class="lunara-home-section lunara-oscars-portal-research lunara-oscars-portal-slot-research">
                 <div class="lunara-home-section-header">
                     <div>
@@ -534,7 +534,7 @@ $command_cards = array(
                 </div>
 
                 <div class="lunara-oscars-research-shell<?php echo $table_view_requested ? ' is-table-view' : ' is-landing-view'; ?>">
-                    <?php echo do_shortcode( '[academy_awards]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php echo do_blocks( '<!-- wp:academy-awards/database /-->' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- server-rendered block, same renderer the shortcode wrapped. ?>
                 </div>
             </section>
         <?php endif; ?>

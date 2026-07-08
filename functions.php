@@ -2277,7 +2277,7 @@ if ( ! function_exists( 'lunara_home_shortcode' ) ) {
 function lunara_home_shortcode() {
     ob_start();
     ?>
-    <?php echo do_shortcode('[lunara_carousel set="homepage"]'); ?>
+    <?php echo function_exists( 'lunara_carousel_shortcode' ) ? lunara_carousel_shortcode( array( 'set' => 'homepage' ) ) : ''; ?>
 
     <div class="lunara-tagline">
         <p class="lunara-tagline-text">Film criticism and the living record of the Oscars.</p>
@@ -2287,7 +2287,7 @@ function lunara_home_shortcode() {
         <div class="lunara-section-header">
             <h2 class="lunara-section-title">Latest Reviews</h2>
         </div>
-        <?php echo do_shortcode('[lunara_reviews count="3"]'); ?>
+        <?php echo function_exists( 'lunara_reviews_shortcode' ) ? lunara_reviews_shortcode( array( 'count' => '3' ) ) : ''; ?>
         <div class="text-center" style="margin-top: 30px;">
             <a href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>" class="lunara-btn">View All Reviews</a>
         </div>

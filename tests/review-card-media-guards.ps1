@@ -23,7 +23,9 @@ function Read-ThemeFile {
 
 $homeSections = Read-ThemeFile 'inc/home-sections.php'
 $functions = Read-ThemeFile 'functions.php'
-$shortcodes = Read-ThemeFile 'inc/shortcodes-home.php'
+# inc/shortcodes-home.php was deleted in 3.1.78 (shortcode finality);
+# its legacy renderers live in functions.php, already loaded above.
+$shortcodes = $functions
 $frontend = Read-ThemeFile 'inc/frontend.php'
 
 Assert-True ($homeSections -match '\$has_card_media\s*=\s*\$has_thumb_html\s*\|\|\s*\$use_fallback_bg') 'Active homepage renderer must compute a real media state.'
