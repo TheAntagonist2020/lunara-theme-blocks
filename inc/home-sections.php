@@ -312,6 +312,30 @@ function lunara_enrich_oscars_entry_links( $entry, $aat_instance = null ) {
 }
 
 /**
+ * Keep Oscars card imagery sized to the visual slot instead of full portrait originals.
+ */
+function lunara_rightsize_oscars_card_image_url( $url, $width = 780, $height = 1170 ) {
+    $url = trim( (string) $url );
+
+    if ( '' === $url ) {
+        return '';
+    }
+
+    $decoded_url = html_entity_decode( $url, ENT_QUOTES, 'UTF-8' );
+    $host        = (string) wp_parse_url( $decoded_url, PHP_URL_HOST );
+
+    if ( '' !== $host && preg_match( '/(^|\.)wp\.com$/i', $host ) && function_exists( 'lunara_resize_wpcom_image_url' ) ) {
+        $resized_url = lunara_resize_wpcom_image_url( $decoded_url, $width, $height );
+
+        if ( '' !== $resized_url ) {
+            return $resized_url;
+        }
+    }
+
+    return $url;
+}
+
+/**
  * Build a curated media-library visual override for an Oscars winner card.
  */
 function lunara_get_oscars_curated_visual( $entry, $photo_map ) {
@@ -363,7 +387,7 @@ function lunara_get_oscars_entry_visual( $entry, $aat_instance = null, $args = a
             'prefer_backdrop'       => false,
             'prefer_person_visuals' => false,
             'title_visual_size'     => 'medium',
-            'person_visual_size'    => 'large',
+            'person_visual_size'    => 'medium_large',
         )
     );
 
@@ -391,6 +415,14 @@ function lunara_get_oscars_entry_visual( $entry, $aat_instance = null, $args = a
 
         if ( empty( $person_visual['poster_url'] ) && ! empty( $person_visual['portrait_url'] ) ) {
             $person_visual['poster_url'] = $person_visual['portrait_url'];
+        }
+
+        if ( ! empty( $person_visual['poster_url'] ) ) {
+            $person_visual['poster_url'] = lunara_rightsize_oscars_card_image_url( $person_visual['poster_url'], 780, 1170 );
+        }
+
+        if ( ! empty( $person_visual['portrait_url'] ) ) {
+            $person_visual['portrait_url'] = lunara_rightsize_oscars_card_image_url( $person_visual['portrait_url'], 780, 1170 );
         }
 
         if ( ! empty( $person_visual['poster_url'] ) && empty( $person_visual['poster_html'] ) ) {
@@ -446,6 +478,7 @@ function lunara_get_oscars_entry_visual( $entry, $aat_instance = null, $args = a
     if ( ! empty( $args['prefer_backdrop'] ) && ! empty( $visual['backdrop_url'] ) && 'person' !== $visual_source ) {
         $backdrop_url = trim( (string) $visual['backdrop_url'] );
         if ( '' !== $backdrop_url ) {
+            $backdrop_url           = lunara_rightsize_oscars_card_image_url( $backdrop_url, 960, 540 );
             $photo_alt             = ! empty( $entry['film'] ) ? $entry['film'] : ( $entry['name'] ?? '' );
             $visual['poster_url']  = $backdrop_url;
             $visual['poster_html'] = sprintf(
@@ -524,7 +557,7 @@ function lunara_get_home_oscars_snapshot() {
                 'use_curated_photos'    => true,
                 'prefer_person_visuals' => true,
                 'title_visual_size'     => 'medium_large',
-                'person_visual_size'    => 'large',
+                'person_visual_size'    => 'medium_large',
             )
         );
         $spotlights[]            = $entry;
@@ -629,7 +662,7 @@ function lunara_build_oscars_ceremony_winner_cards( $winner_map, $aat_instance =
             'prefer_backdrop'    => false,
             'prefer_person_visuals' => false,
             'title_visual_size'  => 'medium',
-            'person_visual_size' => 'large',
+            'person_visual_size' => 'medium_large',
         )
     );
 
@@ -758,7 +791,7 @@ function lunara_get_rotating_oscars_ceremony_showcase( $card_limit = 10 ) {
             'prefer_backdrop'    => true,
             'prefer_person_visuals' => true,
             'title_visual_size'  => 'large',
-            'person_visual_size' => 'large',
+            'person_visual_size' => 'medium_large',
         )
     );
     if ( empty( $winner_cards ) ) {
