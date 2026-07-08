@@ -15545,6 +15545,17 @@ if ( ! function_exists( 'lunara_add_hero_feature_meta_box' ) ) {
  */
 if ( ! function_exists( 'lunara_get_pairing_desk_review_id' ) ) {
 	function lunara_get_pairing_desk_review_id() {
+		// Curated showcase: a review hand-picked in the Homepage Studio wins
+		// outright — the Method band is a shareable stage, and its programming
+		// (a Nolan season, a festival run) belongs to the editor.
+		$curated = absint( get_theme_mod( 'lunara_home_pairing_desk_review_id', 0 ) );
+		if ( $curated ) {
+			$curated_post = get_post( $curated );
+			if ( $curated_post && 'review' === $curated_post->post_type && 'publish' === $curated_post->post_status ) {
+				return $curated;
+			}
+		}
+
 		// Plain loop instead of a meta_query: scan the most recent reviews and
 		// take the first one with any pairing filled. Bounded (20 posts, meta
 		// primed in one round trip) and immune to meta-query edge cases.

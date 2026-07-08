@@ -164,7 +164,7 @@ if ( ! function_exists( 'lunara_essay_append_modules' ) ) {
 	function lunara_essay_append_modules( $content ) {
 		static $rendered = array();
 
-		if ( ! is_singular( array( 'journal', 'post' ) ) || ! in_the_loop() || ! is_main_query() ) {
+		if ( ! is_singular( array( 'journal', 'post', 'review' ) ) || ! in_the_loop() || ! is_main_query() ) {
 			return $content;
 		}
 

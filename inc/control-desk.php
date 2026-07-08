@@ -158,6 +158,17 @@ function lunara_control_desk_save_pairing_desk_copy() {
         }
     }
 
+    // Curated showcase review: which review's trio the Method band wears.
+    // Zero or anything that is not a published review clears the override
+    // and the band returns to automatic (latest review with a full trio).
+    $curated_review = isset( $_POST['lunara_home_pairing_desk_review_id'] ) ? absint( $_POST['lunara_home_pairing_desk_review_id'] ) : 0;
+    $curated_post   = $curated_review ? get_post( $curated_review ) : null;
+    if ( $curated_post && 'review' === $curated_post->post_type && 'publish' === $curated_post->post_status ) {
+        set_theme_mod( 'lunara_home_pairing_desk_review_id', $curated_review );
+    } else {
+        remove_theme_mod( 'lunara_home_pairing_desk_review_id' );
+    }
+
     // Backdrop override: an attachment id from the media picker. Zero or
     // an invalid image clears the override and the section returns to its
     // automatic backdrop (the featured review's own hero image).
@@ -14459,6 +14470,33 @@ function lunara_control_desk_render_homepage_board_tab( $rows ) {
                     <td>
                         <textarea class="large-text" rows="3" id="lunara-pairing-desk-copy" name="lunara_home_pairing_desk_copy"
                             placeholder="<?php echo esc_attr__( 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm.', 'lunara-film' ); ?>"><?php echo esc_textarea( (string) get_theme_mod( 'lunara_home_pairing_desk_copy', '' ) ); ?></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="lunara-pairing-desk-review"><?php esc_html_e( 'Featured review (the whole showcase)', 'lunara-film' ); ?></label></th>
+                    <td>
+                        <?php
+                        $curated_showcase = absint( get_theme_mod( 'lunara_home_pairing_desk_review_id', 0 ) );
+                        $showcase_reviews = get_posts(
+                            array(
+                                'post_type'      => 'review',
+                                'post_status'    => 'publish',
+                                'posts_per_page' => -1,
+                                'orderby'        => 'date',
+                                'order'          => 'DESC',
+                                'no_found_rows'  => true,
+                            )
+                        );
+                        ?>
+                        <select id="lunara-pairing-desk-review" name="lunara_home_pairing_desk_review_id">
+                            <option value="0" <?php selected( $curated_showcase, 0 ); ?>><?php esc_html_e( 'Automatic — latest review with a full trio', 'lunara-film' ); ?></option>
+                            <?php foreach ( $showcase_reviews as $showcase_review ) : ?>
+                                <option value="<?php echo esc_attr( $showcase_review->ID ); ?>" <?php selected( $curated_showcase, $showcase_review->ID ); ?>>
+                                    <?php echo esc_html( get_the_title( $showcase_review ) . ' — ' . get_the_date( 'M j, Y', $showcase_review ) ); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="description"><?php esc_html_e( 'The band wears this review\'s trio, credit line, and backdrop — program it like a marquee (a director season, a festival run). Automatic follows your newest complete review.', 'lunara-film' ); ?></p>
                     </td>
                 </tr>
             </table>
