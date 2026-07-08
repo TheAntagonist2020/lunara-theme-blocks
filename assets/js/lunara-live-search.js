@@ -242,7 +242,22 @@
 			});
 	}
 
+	// The shortcut badge on the header pill and Signal Bar defaults to
+	// "Ctrl K" — correct for the large majority of readers — and only
+	// becomes the Mac glyph for visitors who actually have that key.
+	function labelSearchShortcuts() {
+		var isMac = /Mac|iPod|iPhone|iPad/.test(window.navigator.platform || window.navigator.userAgent || '');
+		if (!isMac) {
+			return;
+		}
+		Array.prototype.forEach.call(document.querySelectorAll('[data-lunara-shortcut-key]'), function (el) {
+			el.textContent = '⌘K';
+		});
+	}
+
 	ready(function () {
+		labelSearchShortcuts();
+
 		overlay = document.getElementById('lunara-search-overlay');
 		input   = document.getElementById('lunara-search-overlay-input');
 		results = document.getElementById('lunara-search-overlay-results');
