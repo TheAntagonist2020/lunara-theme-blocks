@@ -534,7 +534,7 @@ $command_cards = array(
                 </div>
 
                 <div class="lunara-oscars-research-shell<?php echo $table_view_requested ? ' is-table-view' : ' is-landing-view'; ?>">
-                    <?php echo do_shortcode( '[academy_awards]' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php echo do_blocks( '<!-- wp:academy-awards/database /-->' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- server-rendered block, same renderer the shortcode wrapped. ?>
                 </div>
             </section>
         <?php endif; ?>
