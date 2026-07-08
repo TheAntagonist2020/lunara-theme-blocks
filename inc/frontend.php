@@ -271,6 +271,14 @@ function lunara_render_home_front_door() {
                 <p class="lunara-home-masthead-dek"><?php esc_html_e( 'Reviews, Journal files, and the Oscar Ledger, edited as one publication in motion.', 'lunara-film' ); ?></p>
             </div>
 
+            <nav class="lunara-home-signal-bar" aria-label="<?php esc_attr_e( 'Live desk signals', 'lunara-film' ); ?>">
+                <span class="lunara-home-signal-bar-live"><span class="lunara-home-signal-bar-dot" aria-hidden="true"></span><?php esc_html_e( 'Live', 'lunara-film' ); ?></span>
+                <a class="lunara-home-signal-bar-item" href="<?php echo esc_url( $lead['url'] ); ?>"><em><?php esc_html_e( 'Review', 'lunara-film' ); ?></em><span><?php echo esc_html( $lead['title'] ); ?></span></a>
+                <a class="lunara-home-signal-bar-item" href="<?php echo esc_url( $journal['url'] ); ?>"><em><?php esc_html_e( 'Journal', 'lunara-film' ); ?></em><span><?php echo esc_html( $journal['title'] ); ?></span></a>
+                <a class="lunara-home-signal-bar-item" href="<?php echo esc_url( $oscar['url'] ); ?>"><em><?php esc_html_e( 'Ledger', 'lunara-film' ); ?></em><span><?php echo esc_html( $oscar['title'] ); ?></span></a>
+                <button type="button" class="lunara-home-signal-bar-item lunara-home-signal-bar-search" data-lunara-search-open><em>⌘K</em><span><?php esc_html_e( 'Search the desk', 'lunara-film' ); ?></span></button>
+            </nav>
+
             <div class="lunara-home-front-desk-grid">
                 <article class="lunara-home-front-desk-lead<?php echo ! empty( $lead['image'] ) ? ' has-image' : ' has-no-image'; ?>"<?php if ( ! empty( $lead['image'] ) ) : ?> style="background-image: url('<?php echo esc_url( $lead['image'] ); ?>');"<?php endif; ?>>
                     <a class="lunara-home-front-desk-lead-link" href="<?php echo esc_url( $lead['url'] ); ?>">
@@ -352,6 +360,25 @@ function lunara_home_front_door_css() {
     body.home .lunara-home-masthead-logo{display:block;width:min(100%,<?php echo esc_html( $desktop_logo_width ); ?>px);height:auto;max-height:clamp(118px,22vw,<?php echo esc_html( $desktop_logo_height ); ?>px);object-fit:contain;filter:drop-shadow(0 18px 34px rgba(0,0,0,.36));}
     body.home .lunara-home-masthead-logo-fallback{color:var(--lunara-gold,#c9a961);font-family:var(--lunara-font-glamour,var(--lunara-font-display,Georgia,serif));font-size:5.2rem;line-height:.92;letter-spacing:0;}
     body.home .lunara-home-masthead-dek{max-width:58ch;margin:0 auto;color:rgba(244,239,227,.88);font-size:1.08rem;line-height:1.58;text-wrap:pretty;}
+    /* Front Desk V2 — brand economy: the mark stays the mark, not the event.
+       Desktop-only; tablet/mobile keep their Studio-tuned sizes below. */
+    @media(min-width:1101px){
+        body.home .lunara-home-masthead-panel .lunara-home-masthead-logo{--lunara-masthead-logo-w:min(100%,780px);--lunara-masthead-logo-cap:clamp(104px,15vw,208px);}
+        body.home .lunara-home-masthead-panel .lunara-home-masthead-dek{font-size:1rem;}
+    }
+    /* Front Desk V2 — the Signal Bar: one slim live strip tying the lead
+       review, latest Journal file, the Ledger, and Search Command. */
+    body.home .lunara-home-signal-bar{display:flex;align-items:stretch;margin:18px 0 22px;border-top:1px solid rgba(201,169,97,.22);border-bottom:1px solid rgba(201,169,97,.22);overflow-x:auto;scrollbar-width:none;touch-action:manipulation;overscroll-behavior-x:contain;}
+    body.home .lunara-home-signal-bar::-webkit-scrollbar{display:none;}
+    body.home .lunara-home-signal-bar-live{display:inline-flex;align-items:center;gap:7px;padding:11px 16px 11px 2px;color:var(--lunara-gold-light,#e0c481);font-family:var(--lunara-font-label,sans-serif);font-size:.68rem;letter-spacing:.26em;text-transform:uppercase;white-space:nowrap;}
+    body.home .lunara-home-signal-bar-dot{width:7px;height:7px;border-radius:999px;background:#d7b66f;box-shadow:0 0 10px rgba(215,182,111,.85);}
+    @media(prefers-reduced-motion:no-preference){body.home .lunara-home-signal-bar-dot{animation:lunara-signal-pulse 2.4s ease-in-out infinite;}}
+    @keyframes lunara-signal-pulse{50%{opacity:.35;}}
+    body.home .lunara-home-signal-bar-item{display:inline-flex;align-items:baseline;gap:9px;min-width:0;flex:1 1 0;padding:11px 16px;border:0;border-left:1px solid rgba(201,169,97,.16);background:transparent;color:rgba(244,239,227,.86);font-family:var(--lunara-font-body,Georgia,serif);font-size:.86rem;text-decoration:none;cursor:pointer;text-align:left;}
+    body.home .lunara-home-signal-bar-item em{flex:none;font-style:normal;color:var(--lunara-gold,#c9a961);font-family:var(--lunara-font-label,sans-serif);font-size:.64rem;letter-spacing:.22em;text-transform:uppercase;}
+    body.home .lunara-home-signal-bar-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    body.home .lunara-home-signal-bar-item:hover span,body.home .lunara-home-signal-bar-item:focus-visible span{color:var(--lunara-gold-light,#e0c481);}
+    @media(max-width:820px){body.home .lunara-home-signal-bar{margin:14px 0 16px;}body.home .lunara-home-signal-bar-item{flex:0 0 auto;max-width:72vw;}}
     body.home .lunara-home-front-desk-grid{display:grid;grid-template-columns:minmax(0,1.48fr) minmax(320px,.72fr);gap:18px;width:min(100%,1320px);margin-inline:auto;}
     body.home .lunara-home-front-desk-lead{position:relative;min-height:440px;overflow:hidden;border:1px solid rgba(224,196,129,.26);border-radius:8px;background-color:rgba(15,29,46,.96);background-position:center;background-size:cover;box-shadow:0 28px 70px rgba(0,0,0,.28);}
     body.home .lunara-home-front-desk-lead::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,10,18,.95),rgba(4,10,18,.66) 52%,rgba(4,10,18,.24));}
