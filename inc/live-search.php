@@ -169,10 +169,16 @@ if ( ! function_exists( 'lunara_live_search_rest_callback' ) ) {
 
 		// Hot-query cache: repeat keystrokes and popular queries return
 		// without touching SQL. Ten minutes is fresh enough for a site
-		// whose content changes a few times a day.
-		$cache_key = 'lunara_ls_' . md5( mb_strtolower( $q ) );
+		// whose content changes a few times a day. The oscars-plugin
+		// availability is part of the key so a cached Ledger group can
+		// never outlive a deactivated plugin, and q/more_url are
+		// re-normalized on hits so response casing matches the request.
+		$ledger_on = function_exists( 'aat_search_entities' );
+		$cache_key = 'lunara_ls_' . md5( mb_strtolower( $q ) . '|' . ( $ledger_on ? '1' : '0' ) );
 		$cached    = get_transient( $cache_key );
 		if ( is_array( $cached ) && isset( $cached['groups'] ) ) {
+			$cached['q']        = $q;
+			$cached['more_url'] = lunara_search_command_url( $q );
 			return rest_ensure_response( $cached );
 		}
 
@@ -225,7 +231,7 @@ if ( ! function_exists( 'lunara_live_search_rest_callback' ) ) {
 
 		// The Oscar Ledger group: films and people straight from the
 		// awards database (aat_entity_stats via the oscars plugin).
-		if ( function_exists( 'aat_search_entities' ) ) {
+		if ( $ledger_on ) {
 			$ledger_items = array();
 			foreach ( aat_search_entities( $q, $per_group_cap ) as $row ) {
 				$bits = array();

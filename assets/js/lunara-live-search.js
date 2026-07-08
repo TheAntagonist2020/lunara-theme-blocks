@@ -117,6 +117,7 @@
 			chip.className = 'lunara-search-suggestion';
 			chip.textContent = text;
 			chip.addEventListener('click', function () {
+				window.clearTimeout(debounceTimer);
 				input.value = text;
 				lastQuery = text;
 				input.focus();
@@ -148,6 +149,9 @@
 				Array.prototype.forEach.call(results.querySelectorAll('.lunara-search-group'), function (section) {
 					var sectionLabel = section.getAttribute('data-lunara-group') || '';
 					section.hidden = i !== 0 && sectionLabel !== name;
+				});
+				Array.prototype.forEach.call(results.querySelectorAll('a.lunara-search-hit.is-active'), function (hit) {
+					hit.classList.remove('is-active');
 				});
 				activeIndex = -1;
 			});

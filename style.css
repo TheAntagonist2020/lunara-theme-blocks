@@ -18200,6 +18200,17 @@ body.single-journal .entry-content figcaption {
     cursor: pointer;
 }
 
+.lunara-search-chip:hover,
+.lunara-search-chip:focus-visible {
+    border-color: rgba(201, 169, 97, 0.55);
+    color: rgba(244, 239, 227, 0.95);
+}
+
+.lunara-search-chip:focus-visible {
+    outline: 2px solid rgba(224, 196, 129, 0.92);
+    outline-offset: 2px;
+}
+
 .lunara-search-chip.is-active {
     border-color: rgba(201, 169, 97, 0.7);
     background: rgba(201, 169, 97, 0.14);
