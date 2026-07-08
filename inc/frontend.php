@@ -276,7 +276,7 @@ function lunara_render_home_front_door() {
                 <a class="lunara-home-signal-bar-item" href="<?php echo esc_url( $lead['url'] ); ?>"><em><?php esc_html_e( 'Review', 'lunara-film' ); ?></em><span><?php echo esc_html( $lead['title'] ); ?></span></a>
                 <a class="lunara-home-signal-bar-item" href="<?php echo esc_url( $journal['url'] ); ?>"><em><?php esc_html_e( 'Journal', 'lunara-film' ); ?></em><span><?php echo esc_html( $journal['title'] ); ?></span></a>
                 <a class="lunara-home-signal-bar-item" href="<?php echo esc_url( $oscar['url'] ); ?>"><em><?php esc_html_e( 'Ledger', 'lunara-film' ); ?></em><span><?php echo esc_html( $oscar['title'] ); ?></span></a>
-                <button type="button" class="lunara-home-signal-bar-item lunara-home-signal-bar-search" data-lunara-search-open><em>⌘K</em><span><?php esc_html_e( 'Search the desk', 'lunara-film' ); ?></span></button>
+                <button type="button" class="lunara-home-signal-bar-item lunara-home-signal-bar-search" data-lunara-search-open><em data-lunara-shortcut-key>Ctrl K</em><span><?php esc_html_e( 'Search the desk', 'lunara-film' ); ?></span></button>
             </nav>
 
             <div class="lunara-home-front-desk-grid">

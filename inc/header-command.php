@@ -135,7 +135,7 @@ if ( ! function_exists( 'lunara_render_header_command' ) ) {
 				</nav>
 				<div class="lunara-header-actions">
 					<button type="button" class="lunara-header-search" data-lunara-search-open aria-label="<?php esc_attr_e( 'Search', 'lunara-film' ); ?>">
-						<span aria-hidden="true">⌕</span><kbd aria-hidden="true">⌘K</kbd>
+						<span aria-hidden="true">⌕</span><kbd aria-hidden="true" data-lunara-shortcut-key>Ctrl K</kbd>
 					</button>
 					<button type="button" class="lunara-header-burger" data-lunara-nav-open aria-expanded="false" aria-controls="lunara-offcanvas" aria-label="<?php esc_attr_e( 'Open navigation', 'lunara-film' ); ?>">
 						<span aria-hidden="true"></span>
