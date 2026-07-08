@@ -10,6 +10,42 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Drop malformed srcset candidates injected by CDN/image optimizers.
+ */
+if ( ! function_exists( 'lunara_sanitize_srcset_value' ) ) {
+    function lunara_sanitize_srcset_value( $srcset ) {
+        $srcset = is_string( $srcset ) ? trim( html_entity_decode( $srcset, ENT_QUOTES, 'UTF-8' ) ) : '';
+        if ( '' === $srcset ) {
+            return '';
+        }
+
+        $candidates = preg_split( '/,\s*(?=(?:https?:)?\/\/|\/)/', $srcset );
+        if ( ! is_array( $candidates ) || empty( $candidates ) ) {
+            $candidates = array( $srcset );
+        }
+
+        $valid = array();
+        foreach ( $candidates as $candidate ) {
+            $candidate = trim( (string) $candidate );
+            if ( '' === $candidate ) {
+                continue;
+            }
+
+            $decoded_candidate = html_entity_decode( $candidate, ENT_QUOTES, 'UTF-8' );
+            if ( preg_match( '/(?:[?&;](?:resize|fit)=0(?:%2c|,)nan)/i', $decoded_candidate ) || preg_match( '/(?:[?&;](?:w|h)=0(?:&|$))/i', $decoded_candidate ) ) {
+                continue;
+            }
+
+            if ( preg_match( '/\s+\d+w$/', $candidate ) || preg_match( '/\s+\d+(?:\.\d+)?x$/', $candidate ) ) {
+                $valid[] = $candidate;
+            }
+        }
+
+        return implode( ', ', $valid );
+    }
+}
+
+/**
  * Enqueue theme styles.
  */
 function lunara_enqueue_styles() {
@@ -302,9 +338,9 @@ function lunara_restore_priority_image_markup( $html ) {
     }
 
     if ( false === stripos( $html, ' srcset=' ) && preg_match( '/\sdata-(?:lazy-)?srcset=("|\')([^"\']+)\1/i', $html, $srcset_match ) ) {
-        $srcset = esc_attr( html_entity_decode( (string) $srcset_match[2], ENT_QUOTES, 'UTF-8' ) );
+        $srcset = lunara_sanitize_srcset_value( (string) $srcset_match[2] );
         if ( '' !== $srcset ) {
-            $html = preg_replace( '/<img\b/i', '<img srcset="' . $srcset . '"', $html, 1 );
+            $html = preg_replace( '/<img\b/i', '<img srcset="' . esc_attr( $srcset ) . '"', $html, 1 );
         }
     }
 
