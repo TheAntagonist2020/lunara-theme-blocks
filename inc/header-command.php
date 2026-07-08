@@ -22,8 +22,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( ! function_exists( 'lunara_header_takeover_enabled' ) ) {
 	function lunara_header_takeover_enabled() {
+		// Standalone theme (no Blocksy parent): the Lunara header IS the
+		// header — there is nothing to fall back to, so the switch is moot.
+		if ( ! wp_get_theme()->parent() ) {
+			return true;
+		}
 		return (bool) apply_filters( 'lunara_header_takeover_enabled', (bool) get_option( 'lunara_header_takeover', false ) );
 	}
+}
+
+if ( ! function_exists( 'lunara_header_command_rocket_exclusions' ) ) {
+	/**
+	 * Keep WP Rocket's unused-CSS pass away from the header/off-canvas CSS.
+	 * Without this, the hide-Blocksy rule and the (crawl-time hidden)
+	 * off-canvas styles get stripped — the "floating header" seen on Edge.
+	 */
+	function lunara_header_command_rocket_exclusions( $exclusions ) {
+		$exclusions = is_array( $exclusions ) ? $exclusions : array();
+		$exclusions[] = 'lunara-header-command';
+		return $exclusions;
+	}
+	add_filter( 'rocket_rucss_inline_content_exclusions', 'lunara_header_command_rocket_exclusions' );
+	add_filter( 'rocket_rucss_inline_atts_exclusions', 'lunara_header_command_rocket_exclusions' );
 }
 
 if ( ! function_exists( 'lunara_header_nav_links' ) ) {
