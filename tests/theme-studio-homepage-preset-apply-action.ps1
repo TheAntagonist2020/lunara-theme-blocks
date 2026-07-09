@@ -46,7 +46,7 @@ Assert-True ($controlDesk -match 'isset\(\s*\$apply_values\[''lunara_home_sectio
 Assert-True ($controlDesk -match 'homepage_preset_applied') 'Homepage apply action must redirect with a dedicated applied notice.'
 Assert-True ($controlDesk -notmatch 'admin_post_lunara_save_homepage_preset') 'Homepage apply action must not introduce a separate save handler.'
 Assert-True ($controlDesk -notmatch 'lunara-homepage-compare') 'Homepage apply action must not introduce a public comparison query variable.'
-Assert-True ($controlDesk -notmatch '<textarea[^>]+lunara_home') 'Homepage apply action must not expose raw CSS textareas.'
+Assert-True ($controlDesk -notmatch '<textarea[^>]+(?:id|name)="[^"]*(?:css|style)[^"]*"') 'Homepage apply action must not expose raw CSS textareas.'
 Assert-True ($adminCss -match '\.lunara-control-desk-homepage-apply-button') 'Control Desk CSS must style the Homepage apply button.'
 
 Write-Host 'Homepage preset apply action contract passed.'

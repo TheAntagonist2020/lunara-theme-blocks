@@ -90,3 +90,9 @@ require_once $lunara_inc . 'header-command.php';
 // Layer 16 — Design Tokens: dial-level palette/voice overrides from the
 // Control Desk, printed as a :root layer over the shipped tokens.
 require_once $lunara_inc . 'design-tokens.php';
+
+// Signal that every modular include completed. The monolithic fallback uses
+// this theme-owned sentinel; LUNARA_CORE_VERSION remains owned by Lunara Core.
+if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
+    define( 'LUNARA_SPLIT_LOADER_ACTIVE', true );
+}

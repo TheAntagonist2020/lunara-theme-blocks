@@ -27,10 +27,10 @@ $controlDesk = Read-ThemeFile 'inc/control-desk.php'
 
 Assert-True ($frontend -match 'function lunara_home_first_viewport_polish_css\(\)') 'Homepage first-viewport polish must live in a named frontend CSS emitter.'
 Assert-True ($frontend -match 'lunara-home-first-viewport-polish-css') 'Homepage first-viewport polish must render a distinct style id.'
-Assert-True ($frontend -match "add_action\(\s*'wp_footer',\s*'lunara_home_first_viewport_polish_css',\s*135\s*\)") 'Homepage first-viewport polish must load after the existing homepage signature CSS.'
+Assert-True ($frontend -match "add_action\(\s*'wp_head',\s*'lunara_home_first_viewport_polish_css',\s*46\s*\)") 'Homepage first-viewport polish must load in the head immediately after the front-door CSS.'
 Assert-True ($frontend -match 'is_front_page\(\)') 'Homepage first-viewport polish must stay scoped to the front page.'
 
-$match = [regex]::Match($frontend, 'function lunara_home_first_viewport_polish_css\(\) \{(?s).*?add_action\(\s*''wp_footer'',\s*''lunara_home_first_viewport_polish_css'',\s*135\s*\);')
+$match = [regex]::Match($frontend, 'function lunara_home_first_viewport_polish_css\(\) \{(?s).*?add_action\(\s*''wp_head'',\s*''lunara_home_first_viewport_polish_css'',\s*46\s*\);')
 Assert-True $match.Success 'Could not isolate homepage first-viewport polish block.'
 $block = $match.Value
 

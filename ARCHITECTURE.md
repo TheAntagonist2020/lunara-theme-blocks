@@ -1,11 +1,19 @@
 # Lunara Film — Theme Architecture & Operations
 
+> **Historical snapshot — do not use as the current edit or deployment runbook.**
+> This file describes the retired `lunara-film-premium-20260503-living-pulse`
+> layout as it existed on 2026-05-10. Current work belongs in
+> `TheAntagonist2020/lunara-theme-blocks` (`main`), where `functions.php`
+> loads the active `inc/` modules through `functions-loader.php`. Use
+> `README.md`, `docs/tech-spec.md`, and the Desktop workspace's newest session
+> log and changelog for current paths, architecture, and deployment state.
+
 **Last updated:** 2026-05-10
 **Theme:** `lunara-film-premium-20260503-living-pulse` (Blocksy child)
 **Live site:** https://lunarafilm.com
 **WP.com Site ID:** `247355955` (Atomic, Business plan, MCP enabled)
 
-This document is the canonical reference for how the theme is built, what's in it, how to deploy changes, and how to recover when things break. Read this **before** modifying anything.
+This document is retained as historical recovery context for that retired theme.
 
 ---
 
