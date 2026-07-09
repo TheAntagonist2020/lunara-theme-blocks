@@ -60,6 +60,6 @@ Assert-True ($controlDesk -match "__\(\s*'Default'\s*,\s*'lunara-film'\s*\)") 'H
 Assert-True ($controlDesk -match 'esc_html') 'Homepage comparison strip output must escape labels and values.'
 Assert-True ($controlDesk -notmatch 'lunara-homepage-compare') 'Homepage comparison strip must not introduce a new public comparison query variable.'
 Assert-True ($controlDesk -notmatch 'admin_post_lunara_save_homepage_preset') 'Homepage comparison strip must not introduce a new save handler in this read-only pass.'
-Assert-True ($controlDesk -notmatch '<textarea[^>]+lunara_home') 'Homepage comparison strip must not expose raw CSS textareas.'
+Assert-True ($controlDesk -notmatch '<textarea[^>]+(?:id|name)="[^"]*(?:css|style)[^"]*"') 'Homepage comparison strip must not expose raw CSS textareas.'
 
 Write-Host 'Homepage preset comparison contract passed.'

@@ -14,9 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Path B v2 (2026-04-19): wire the v3.0.0 split architecture.
  *
- * functions-loader.php loads all inc/ modules first. EVERY duplicate function
- * in this monolithic file below is wrapped in a `function_exists` guard so the
- * inc/ version wins and the monolith definitions silently skip.
+ * functions-loader.php loads all inc/ modules first, then defines the
+ * LUNARA_SPLIT_LOADER_ACTIVE sentinel. Duplicate fallback groups below check
+ * that theme-owned sentinel so the inc/ versions win and the monolith skips.
  *
  * The earlier Path B attempt left 3 functions unwrapped (lunara_resolve_theme_asset,
  * lunara_get_home_pulse_editorial_cards, lunara_build_home_title_story) because
@@ -25,13 +25,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  * To revert in one move: comment out the require_once below.
  */
 require_once __DIR__ . '/functions-loader.php';
-
-// The split inc/ modules have loaded. Treat the old monolithic fallback blocks
-// below as inactive so they cannot redeclare CPT, debrief, carousel, or taxonomy
-// functions already provided by the modular files.
-if ( ! defined( 'LUNARA_CORE_VERSION' ) ) {
-    define( 'LUNARA_CORE_VERSION', 'split-loader' );
-}
 
 /**
  * Enqueue parent and child theme styles
@@ -2215,7 +2208,7 @@ if ( ! has_action( 'wp_head', 'lunara_output_runtime_customizer_css' ) ) {
 /**
  * Register Reviews Custom Post Type
  */
-if ( ! defined( 'LUNARA_CORE_VERSION' ) && ! function_exists( 'lunara_register_reviews_cpt' ) ) {
+if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) && ! function_exists( 'lunara_register_reviews_cpt' ) ) {
     function lunara_register_reviews_cpt() {
         $args = array(
             'labels' => array(
@@ -2463,7 +2456,7 @@ if ( ! function_exists( 'lunara_render_stars' ) ) {
 /**
  * Add Lunara Debrief meta box to Reviews
  */
-if ( ! defined( 'LUNARA_CORE_VERSION' ) ) {
+if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
     function lunara_add_debrief_meta_box() {
         add_meta_box(
             'lunara_debrief_meta',
@@ -3447,7 +3440,7 @@ add_shortcode( 'lunara_debrief', 'lunara_debrief_shortcode' );
  * In WP Admin: Media Library â†’ click an image â†’ edit â†’ assign to a Slide Set (e.g., "homepage")
  * Then use: [lunara_carousel set="homepage"]
  */
-if ( ! defined( 'LUNARA_CORE_VERSION' ) ) {
+if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
 if ( ! function_exists( 'lunara_register_slide_set_taxonomy' ) ) {
 function lunara_register_slide_set_taxonomy() {
     register_taxonomy( 'lunara_slide_set', array( 'attachment' ), array(
@@ -4130,7 +4123,7 @@ if ( ! function_exists( 'lunara_render_review_where_links' ) ) {
 /**
  * Register archive taxonomies for director and review year.
  */
-if ( ! defined( 'LUNARA_CORE_VERSION' ) ) {
+if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
     function lunara_register_review_taxonomies() {
         register_taxonomy( 'lunara_director', array( 'review' ), array(
             'labels' => array(

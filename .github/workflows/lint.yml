@@ -15,6 +15,14 @@ jobs:
         with:
           php-version: '8.2'
 
+      - name: Theme contract tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Get-ChildItem tests -Filter '*.ps1' -File |
+            Sort-Object Name |
+            ForEach-Object { & $_.FullName }
+
       - name: PHP syntax
         run: |
           set -e

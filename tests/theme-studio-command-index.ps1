@@ -55,7 +55,7 @@ foreach ($surface in @(
     "home_url( '/' )",
     "home_url( '/journal/' )",
     "home_url( '/reviews/' )",
-    "home_url( '/review/sinners-2025/' )",
+    "home_url( '/reviews/sinners-2025/' )",
     "home_url( '/oscars/' )"
 )) {
     Assert-True ($controlDesk.Contains($surface)) "Command index must include preview URL $surface."
