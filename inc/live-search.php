@@ -8,8 +8,8 @@
  * stories, and (when the entity graph is live) films and talent — and
  * returns grouped, render-ready results. The overlay itself is an
  * off-canvas panel with deep blur gradients and soft gold lines, opened
- * with Cmd/Ctrl+K or "/" (or the header search trigger) and fully
- * keyboard-navigable. The branded command surface lives at /search/?q=,
+ * from ordinary search controls and kept fully keyboard-navigable. The
+ * branded search surface lives at /search/?q=,
  * while the legacy /?s= result path remains untouched.
  *
  * @package Lunara_Film

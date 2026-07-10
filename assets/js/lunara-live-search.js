@@ -1,8 +1,8 @@
 /**
  * Lunara Live Search — REST-backed overlay (Design Spec §6 / §9).
  *
- * Opens with Cmd/Ctrl+K or "/" (outside form fields), or by intercepting
- * the header search trigger. Queries lunara/v1/search with a debounce and
+ * Opens from ordinary header and editorial search controls. Queries
+ * lunara/v1/search with a debounce and
  * an AbortController, renders grouped results (Reviews / Journal / Films /
  * Talent / Stories), and supports full arrow-key navigation. All result
  * text is inserted via textContent — never markup. With JS unavailable, forms
@@ -24,14 +24,6 @@
 		} else {
 			document.addEventListener('DOMContentLoaded', fn);
 		}
-	}
-
-	function isTypingContext(el) {
-		if (!el) {
-			return false;
-		}
-		var tag = (el.tagName || '').toLowerCase();
-		return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable;
 	}
 
 	function openOverlay() {
@@ -242,22 +234,7 @@
 			});
 	}
 
-	// The shortcut badge on the header pill and Signal Bar defaults to
-	// "Ctrl K" — correct for the large majority of readers — and only
-	// becomes the Mac glyph for visitors who actually have that key.
-	function labelSearchShortcuts() {
-		var isMac = /Mac|iPod|iPhone|iPad/.test(window.navigator.platform || window.navigator.userAgent || '');
-		if (!isMac) {
-			return;
-		}
-		Array.prototype.forEach.call(document.querySelectorAll('[data-lunara-shortcut-key]'), function (el) {
-			el.textContent = '⌘K';
-		});
-	}
-
 	ready(function () {
-		labelSearchShortcuts();
-
 		overlay = document.getElementById('lunara-search-overlay');
 		input   = document.getElementById('lunara-search-overlay-input');
 		results = document.getElementById('lunara-search-overlay-results');
@@ -265,18 +242,8 @@
 			return;
 		}
 
-		// Global shortcuts.
+		// Escape remains available once the ordinary search control is open.
 		document.addEventListener('keydown', function (event) {
-			if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-				event.preventDefault();
-				openOverlay();
-				return;
-			}
-			if (event.key === '/' && !isTypingContext(event.target) && overlay.hidden) {
-				event.preventDefault();
-				openOverlay();
-				return;
-			}
 			if (event.key === 'Escape' && !overlay.hidden) {
 				closeOverlay();
 			}
