@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.92
+Version: 3.1.93
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -17790,8 +17790,8 @@ body.single-journal .entry-content blockquote {
 
 /* ============================================================================
  * LIVE GLOBAL SEARCH OVERLAY (Design Spec §6 / §9) — theme 3.1.48
- * REST-backed command palette: Cmd/Ctrl+K or "/", header trigger
- * intercepted. Off-canvas panel with deep blur gradients + soft gold lines.
+ * REST-backed search overlay opened from ordinary search controls.
+ * Off-canvas panel with deep blur gradients + soft gold lines.
  * ========================================================================= */
 
 body.lunara-search-open {

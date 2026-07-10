@@ -4,8 +4,8 @@
  *
  * The staged Blocksy exit: when the takeover switch is ON, the parent
  * theme's header is hidden and Lunara's own header bar mounts — brand,
- * primary routes, the search command trigger (wired to the existing
- * ⌘K overlay), and an off-canvas navigation panel with deep blur
+ * primary routes, an ordinary search trigger, and an off-canvas
+ * navigation panel with deep blur
  * gradients and soft gold hairlines, fully keyboard-accessible.
  *
  * The switch (option: lunara_header_takeover) defaults OFF so a deploy
@@ -176,8 +176,11 @@ if ( ! function_exists( 'lunara_render_header_command' ) ) {
 					<?php echo lunara_header_nav_markup( 'header-nav' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 				</nav>
 				<div class="lunara-header-actions">
-					<button type="button" class="lunara-header-search" data-lunara-search-open aria-label="<?php esc_attr_e( 'Search', 'lunara-film' ); ?>">
-						<span aria-hidden="true">⌕</span><kbd aria-hidden="true" data-lunara-shortcut-key>Ctrl K</kbd>
+					<button type="button" class="lunara-header-search" data-lunara-search-open aria-label="<?php esc_attr_e( 'Search', 'lunara-film' ); ?>" title="<?php esc_attr_e( 'Search', 'lunara-film' ); ?>">
+						<svg class="lunara-header-search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+							<circle cx="11" cy="11" r="8"></circle>
+							<path d="m21 21-4.3-4.3"></path>
+						</svg>
 					</button>
 					<button type="button" class="lunara-header-burger" data-lunara-nav-open aria-expanded="false" aria-controls="lunara-offcanvas" aria-label="<?php esc_attr_e( 'Open navigation', 'lunara-film' ); ?>">
 						<span aria-hidden="true"></span>
@@ -301,15 +304,28 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 		}
 		.lunara-header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 		.lunara-header-search {
-			display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
-			padding: 7px 12px; border-radius: 999px;
-			border: 1px solid rgba(201,169,97,.3); background: rgba(244,239,227,.05);
-			color: rgba(244,239,227,.78); font-size: .92rem; line-height: 1;
+			display: inline-grid; place-items: center; flex: 0 0 42px;
+			width: 42px; height: 42px; padding: 0; cursor: pointer;
+			border: 1px solid rgba(201,169,97,.32); border-radius: 999px;
+			background: rgba(7,15,24,.58); color: rgba(224,196,129,.92);
+			box-shadow: inset 0 0 0 1px rgba(255,255,255,.015);
+			transition: color .18s ease, border-color .18s ease, background-color .18s ease, transform .18s ease, box-shadow .18s ease;
 		}
-		.lunara-header-search kbd {
-			font-family: var(--lunara-font-label, sans-serif); font-size: .62rem;
-			letter-spacing: .08em; color: rgba(224,196,129,.85);
-			border: 1px solid rgba(201,169,97,.28); border-radius: 4px; padding: 2px 5px;
+		.lunara-header-search:hover {
+			color: var(--lunara-gold-light, #e0c481);
+			border-color: rgba(224,196,129,.62);
+			background: rgba(201,169,97,.1);
+			box-shadow: 0 8px 24px rgba(0,0,0,.2);
+			transform: translateY(-1px);
+		}
+		.lunara-header-search:focus-visible {
+			outline: 2px solid var(--lunara-gold-light, #e0c481);
+			outline-offset: 3px;
+		}
+		.lunara-header-search-icon {
+			display: block; width: 18px; height: 18px;
+			fill: none; stroke: currentColor; stroke-width: 1.75;
+			stroke-linecap: round; stroke-linejoin: round;
 		}
 		.lunara-header-burger {
 			position: relative; width: 42px; height: 42px; cursor: pointer;
@@ -329,7 +345,6 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 			.lunara-header-inner { height: 68px; gap: 14px; }
 			.lunara-header-brand { min-width: 134px; }
 			.lunara-header-logo { width: 134px; height: 48px; }
-			.lunara-header-search kbd { display: none; }
 		}
 		/* --- §9 off-canvas panel ------------------------------------ */
 		.lunara-offcanvas { position: fixed; inset: 0; z-index: 990; }
