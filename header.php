@@ -5821,13 +5821,13 @@
 
 <?php
 $show_lunara_header_search = is_front_page() || is_page_template( 'page-oscars.php' ) || is_page( 'oscars' );
-$header_search_placeholder = __( 'Search reviews, titles, filmmakers, Oscar categories', 'lunara-film' );
+$header_search_placeholder = __( 'Search Lunara', 'lunara-film' );
 $header_search_id          = 'lunara-header-search-input';
 $lunara_strip_search_menu_item = null;
 $lunara_strip_search_menu_markup = null;
 
 if ( is_page_template( 'page-oscars.php' ) || is_page( 'oscars' ) ) {
-    $header_search_placeholder = __( 'Search Oscar titles, people, ceremonies, categories', 'lunara-film' );
+    $header_search_placeholder = __( 'Search the Oscar Ledger', 'lunara-film' );
     $header_search_id          = 'lunara-header-oscars-search-input';
 }
 
