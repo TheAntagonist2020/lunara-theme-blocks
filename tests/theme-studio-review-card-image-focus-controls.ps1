@@ -24,6 +24,7 @@ function Read-ThemeFile {
 $controlDesk = Read-ThemeFile 'inc/control-desk.php'
 $frontend = Read-ThemeFile 'inc/frontend.php'
 $reviewRendering = Read-ThemeFile 'inc/review-rendering.php'
+$reviewComponents = Read-ThemeFile 'assets/css/lunara-review-components.css'
 
 foreach ($key in @(
     'lunara_review_archive_image_focus',
@@ -72,10 +73,10 @@ Assert-True ($frontend -match '--lunara-review-archive-image-focus') 'Review arc
 Assert-True ($frontend -match '--lunara-review-rail-image-focus') 'Review rail focus CSS variable must be emitted.'
 Assert-True ($frontend -match '--lunara-review-related-image-focus') 'Review related focus CSS variable must be emitted.'
 Assert-True ($frontend -match '--lunara-review-feature-image-focus') 'Review feature focus CSS variable must be emitted.'
-Assert-True ($frontend -match 'object-position:\s*var\(--lunara-review-archive-image-focus\)') 'Archive Review card images must use the archive focus variable.'
-Assert-True ($frontend -match 'object-position:\s*var\(--lunara-review-rail-image-focus\)') 'Companion rail Review card images must use the rail focus variable.'
-Assert-True ($frontend -match 'object-position:\s*var\(--lunara-review-related-image-focus\)') 'Related Review card images must use the related focus variable.'
-Assert-True ($frontend -match 'object-position:\s*var\(--lunara-review-feature-image-focus\)') 'Feature Review images must use the feature focus variable.'
+Assert-True ($reviewComponents -match 'object-position:\s*var\(--lunara-review-archive-image-focus\)') 'Archive Review card images must use the archive focus variable.'
+Assert-True ($reviewComponents -match 'object-position:\s*var\(--lunara-review-rail-image-focus\)') 'Companion rail Review card images must use the rail focus variable.'
+Assert-True ($reviewComponents -match 'object-position:\s*var\(--lunara-review-related-image-focus\)') 'Related Review card images must use the related focus variable.'
+Assert-True ($reviewComponents -match 'object-position:\s*var\(--lunara-review-feature-image-focus\)') 'Feature Review images must use the feature focus variable.'
 Assert-True ($frontend -match 'is_post_type_archive\(\s*''review''\s*\).*is_page\(\s*''reviews''\s*\).*is_singular\(\s*''review''\s*\).*is_front_page\(\)' ) 'Review card focus CSS must stay scoped to Reviews, single Review, and homepage contexts.'
 
 Assert-True ($reviewRendering -match '\$has_media\s*=\s*\$has_thumb_html\s*\|\|\s*\$use_fallback_bg') 'Review rendering must keep a real-media guard before card poster wrappers.'

@@ -32,9 +32,9 @@ Assert-True ($functions -match "echo\s+\`$has_visual\s*\?\s*'has-visual'\s*:\s*'
 Assert-True ($functions -match 'if\s*\(\s*\$has_visual\s*\)\s*:\s*[\s\S]*lunara-journal-home-card-media') 'Homepage Journal renderer must only print media wrappers for visual cards.'
 
 Assert-True ($setup -match "assets/css/lunara-home-modules\.css") 'Homepage text-led card cleanup must load from the cacheable homepage stylesheet.'
-Assert-True ($setup -match "add_action\(\s*'wp_head',\s*'lunara_print_home_module_styles',\s*1007\s*\)") 'Cacheable homepage modules must load in the late head after route styles.'
+Assert-True ($setup -match "add_action\(\s*'wp_head',\s*'lunara_print_home_module_styles',\s*44\s*\)") 'Cacheable homepage modules must load before the dynamic Front Desk variables.'
 Assert-True ($homeModules -match 'lunara-home-text-led-card-chamber-css') 'Homepage text-led card cleanup must retain a named asset section.'
-$match = [regex]::Match($homeModules, '(?s)/\* lunara-home-text-led-card-chamber-css \*/(?<css>.*)$')
+$match = [regex]::Match($homeModules, '(?s)/\* lunara-home-text-led-card-chamber-css \*/(?<css>.*?)(?=/\* Phase 1C: cacheable Front Desk \*/)')
 Assert-True $match.Success 'Could not isolate the cacheable homepage text-led card cleanup section.'
 $block = $match.Groups['css'].Value
 
