@@ -23,6 +23,7 @@ function Read-ThemeFile {
 
 $controlDesk = Read-ThemeFile 'inc/control-desk.php'
 $frontend = Read-ThemeFile 'inc/frontend.php'
+$homeModules = Read-ThemeFile 'assets/css/lunara-home-modules.css'
 
 foreach ($key in @(
     'lunara_home_latest_reviews_density',
@@ -69,10 +70,10 @@ foreach ($selector in @(
     '.lunara-oscar-facts-section',
     '.lunara-oscar-fact-card-link'
 )) {
-    Assert-True ($frontend.Contains($selector)) "Homepage public CSS must scope signature density to $selector."
+    Assert-True ($homeModules.Contains($selector)) "Homepage public CSS must scope signature density to $selector."
 }
 
 Assert-True ($frontend -match 'is_front_page\(\)') 'Homepage signature density CSS must stay scoped to the front page.'
-Assert-True ($frontend -match 'line-clamp') 'Homepage signature density CSS must tune text depth, not only spacing.'
+Assert-True ($homeModules -match 'line-clamp') 'Homepage signature density CSS must tune text depth, not only spacing.'
 
 Write-Host 'Homepage signature density controls contract passed.'

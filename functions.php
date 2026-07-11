@@ -140,6 +140,57 @@ function lunara_enqueue_shell_styles() {
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_shell_styles', 100 );
 }
 
+if ( ! function_exists( 'lunara_print_cacheable_stylesheet' ) ) {
+function lunara_print_cacheable_stylesheet( $handle, $relative_path ) {
+    $asset = lunara_resolve_theme_asset( $relative_path );
+
+    if ( empty( $asset['uri'] ) ) {
+        return;
+    }
+
+    wp_enqueue_style(
+        $handle,
+        $asset['uri'],
+        array(),
+        lunara_theme_asset_version( $asset['path'] )
+    );
+    wp_print_styles( $handle );
+}
+}
+
+if ( ! function_exists( 'lunara_print_public_guardrail_styles' ) ) {
+function lunara_print_public_guardrail_styles() {
+    if ( is_admin() || is_feed() ) {
+        return;
+    }
+
+    lunara_print_cacheable_stylesheet( 'lunara-public-guardrails', 'assets/css/lunara-public-guardrails.css' );
+}
+add_action( 'wp_head', 'lunara_print_public_guardrail_styles', 1005 );
+}
+
+if ( ! function_exists( 'lunara_print_home_module_styles' ) ) {
+function lunara_print_home_module_styles() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+
+    lunara_print_cacheable_stylesheet( 'lunara-home-modules', 'assets/css/lunara-home-modules.css' );
+}
+add_action( 'wp_footer', 'lunara_print_home_module_styles', 142 );
+}
+
+if ( ! function_exists( 'lunara_print_late_oscars_guardrail_styles' ) ) {
+function lunara_print_late_oscars_guardrail_styles() {
+    if ( is_admin() || is_feed() ) {
+        return;
+    }
+
+    lunara_print_cacheable_stylesheet( 'lunara-oscars-late-guardrails', 'assets/css/lunara-oscars-late-guardrails.css' );
+}
+add_action( 'wp_footer', 'lunara_print_late_oscars_guardrail_styles', 999 );
+}
+
 /**
  * Deploy-aware WP Rocket purge. Rocket's "Remove Unused CSS" strips every
  * stylesheet link and inlines a cached used-CSS set — which trails theme
@@ -12384,153 +12435,6 @@ function lunara_output_review_layout_guardrail_css() {
 }
 add_action( 'wp_head', 'lunara_output_review_layout_guardrail_css', 101 );
 }
-
-if ( ! function_exists( 'lunara_output_journal_desk_polish_css' ) ) {
-	function lunara_output_journal_desk_polish_css() {
-		if ( ! is_front_page() && ! is_post_type_archive( 'journal' ) && ! is_tax( 'journal_type' ) ) {
-			return;
-		}
-		?>
-		<style id="lunara-journal-desk-polish">
-			body .lunara-journal-home-deskbar,
-			body .lunara-journal-archive-deskbar {
-				display: flex !important;
-				flex-wrap: wrap !important;
-				align-items: center !important;
-				gap: 10px 18px !important;
-				margin: 18px 0 22px !important;
-				padding: 12px 14px !important;
-				border: 1px solid rgba(224,196,129,.16) !important;
-				border-radius: 8px !important;
-				background: rgba(9,20,34,.72) !important;
-				color: rgba(233,240,247,.86) !important;
-			}
-
-			body .lunara-journal-home-deskbar span,
-			body .lunara-journal-archive-deskbar span {
-				display: inline-flex !important;
-				align-items: baseline !important;
-				gap: 7px !important;
-				min-width: 0 !important;
-				font-size: .88rem !important;
-				line-height: 1.35 !important;
-			}
-
-			body .lunara-journal-home-deskbar strong,
-			body .lunara-journal-archive-deskbar strong {
-				color: rgba(224,196,129,.95) !important;
-				font-size: .68rem !important;
-				letter-spacing: 0 !important;
-				text-transform: uppercase !important;
-			}
-
-			body .lunara-journal-home-deskbar strong::after,
-			body .lunara-journal-archive-deskbar strong::after {
-				content: none !important;
-			}
-
-			body .lunara-journal-archive-filters,
-			body .lunara-archive-sort {
-				display: flex !important;
-				flex-wrap: wrap !important;
-				gap: 10px !important;
-				align-items: center !important;
-			}
-
-			body .lunara-journal-filter-pill,
-			body .lunara-journal-filter-pill:link,
-			body .lunara-journal-filter-pill:visited,
-			body .lunara-archive-sort-link,
-			body .lunara-archive-sort-link:link,
-			body .lunara-archive-sort-link:visited {
-				display: inline-flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-				gap: 7px !important;
-				min-height: 38px !important;
-				padding: 9px 14px !important;
-				border: 1px solid rgba(224,196,129,.24) !important;
-				border-radius: 8px !important;
-				background: rgba(12,27,45,.84) !important;
-				color: rgba(233,240,247,.88) !important;
-				font-size: .78rem !important;
-				font-weight: 700 !important;
-				line-height: 1.15 !important;
-				letter-spacing: 0 !important;
-				text-decoration: none !important;
-			}
-
-			body .lunara-journal-filter-pill:hover,
-			body .lunara-archive-sort-link:hover,
-			body .lunara-journal-filter-pill.is-active,
-			body .lunara-archive-sort-link.is-active {
-				border-color: rgba(224,196,129,.64) !important;
-				background: rgba(201,169,97,.14) !important;
-				color: rgba(255,245,216,.98) !important;
-				text-decoration: none !important;
-			}
-
-			body .lunara-journal-filter-count {
-				color: inherit !important;
-				opacity: .72 !important;
-			}
-
-			body .lunara-journal-card-provenance {
-				display: flex !important;
-				flex-wrap: wrap !important;
-				align-items: center !important;
-				gap: 6px !important;
-				margin: 8px 0 0 !important;
-				max-width: 100% !important;
-			}
-
-			body .lunara-journal-card-provenance-pill {
-				display: inline-flex !important;
-				align-items: center !important;
-				min-width: 0 !important;
-				max-width: 100% !important;
-				min-height: 28px !important;
-				padding: 6px 9px !important;
-				border: 1px solid rgba(224,196,129,.22) !important;
-				border-radius: 8px !important;
-				background: rgba(8,18,31,.66) !important;
-				color: rgba(236,242,248,.84) !important;
-				font-size: .67rem !important;
-				font-weight: 800 !important;
-				line-height: 1.12 !important;
-				letter-spacing: 0 !important;
-				text-transform: uppercase !important;
-				overflow-wrap: anywhere !important;
-			}
-
-			body .lunara-journal-card-provenance-pill.is-source {
-				color: rgba(255,244,213,.9) !important;
-			}
-
-			body .lunara-journal-card-provenance-pill.is-carousel {
-				background: rgba(201,169,97,.14) !important;
-				color: rgba(255,247,224,.96) !important;
-			}
-
-			@media (max-width: 720px) {
-				body .lunara-journal-home-deskbar,
-				body .lunara-journal-archive-deskbar {
-					align-items: stretch !important;
-					gap: 8px !important;
-				}
-
-				body .lunara-journal-home-deskbar span,
-				body .lunara-journal-archive-deskbar span {
-					width: 100% !important;
-					justify-content: space-between !important;
-				}
-			}
-		</style>
-		<?php
-	}
-	add_action( 'wp_head', 'lunara_output_journal_desk_polish_css', 120 );
-}
-
 
 /* ============================================================================
  * LUNARA OSCAR PICKS â€” CPT, taxonomy, meta box, query helper.

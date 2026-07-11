@@ -27,6 +27,7 @@ $functions = Read-ThemeFile 'functions.php'
 # its legacy renderers live in functions.php, already loaded above.
 $shortcodes = $functions
 $frontend = Read-ThemeFile 'inc/frontend.php'
+$homeModules = Read-ThemeFile 'assets/css/lunara-home-modules.css'
 
 Assert-True ($homeSections -match '\$has_card_media\s*=\s*\$has_thumb_html\s*\|\|\s*\$use_fallback_bg') 'Active homepage renderer must compute a real media state.'
 Assert-True ($homeSections -match "echo\s+\`$has_card_media\s*\?\s*'has-visual'\s*:\s*'has-no-visual'") 'Active homepage cards must expose visual/no-visual classes.'
@@ -46,8 +47,8 @@ foreach ($entry in @(
     Assert-True ($content -match '! \$has_card_media && \$score[\s\S]*is-inline-score') "$name renderer must render no-media scores inline."
 }
 
-Assert-True ($frontend -match 'lunara_home_card_media_hygiene_css') 'Homepage card hygiene CSS must stay active.'
-Assert-True ($frontend -match '\.lunara-review-grid-card\.has-no-visual\s+\.lunara-review-grid-link') 'Homepage CSS must collapse no-visual review cards.'
+Assert-True ($homeModules -match 'lunara-home-card-media-hygiene-css') 'Homepage card hygiene CSS must stay active.'
+Assert-True ($homeModules -match '\.lunara-review-grid-card\.has-no-visual\s+\.lunara-review-grid-link') 'Homepage CSS must collapse no-visual review cards.'
 Assert-True ($frontend -match 'function\s+hydrateLazySource') 'Active image fade-in script must hydrate lazy image sources.'
 Assert-True ($frontend -match 'data-lazy-src') 'Active image fade-in script must handle Jetpack-style lazy sources.'
 Assert-True ($frontend -match 'window\.setTimeout[\s\S]*lunara-img-loaded') 'Active image fade-in script must fail open instead of leaving blank image chambers.'

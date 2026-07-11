@@ -24,6 +24,7 @@ function Read-ThemeFile {
 $controlDesk = Read-ThemeFile 'inc/control-desk.php'
 $functions = Read-ThemeFile 'functions.php'
 $frontend = Read-ThemeFile 'inc/frontend.php'
+$homeModules = Read-ThemeFile 'assets/css/lunara-home-modules.css'
 
 Assert-True ($controlDesk -match "'lunara_home_oscar_picks_density'") 'Homepage Studio must expose Oscar Picks density.'
 Assert-True ($controlDesk -match "'lunara_home_oscar_picks_count'") 'Homepage Studio must expose Oscar Picks count.'
@@ -44,6 +45,6 @@ Assert-True ($frontend -match "lunara_home_oscar_picks_density") 'Homepage publi
 Assert-True ($frontend -match "lunara_home_oscar_picks_card_min_height") 'Homepage public CSS must read Oscar Picks card height.'
 Assert-True ($frontend -match "--lunara-home-oscar-picks-card-min") 'Homepage public CSS must emit an Oscar Picks card-height variable.'
 Assert-True ($frontend -match "--lunara-home-oscar-picks-gap") 'Homepage public CSS must emit an Oscar Picks gap variable.'
-Assert-True ($frontend -match "body\.home \.lunara-oscar-picks-section \.lunara-oscar-picks-track") 'Homepage public CSS must scope Oscar Picks track tuning to the homepage.'
+Assert-True ($homeModules -match "body\.home \.lunara-oscar-picks-section \.lunara-oscar-picks-track") 'Homepage public CSS must scope Oscar Picks track tuning to the homepage.'
 
 Write-Host 'Homepage Oscar Picks Studio controls contract passed.'
