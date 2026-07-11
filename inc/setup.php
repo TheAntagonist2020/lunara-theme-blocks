@@ -166,7 +166,7 @@ function lunara_print_home_module_styles() {
 
     lunara_print_cacheable_stylesheet( 'lunara-home-modules', 'assets/css/lunara-home-modules.css' );
 }
-add_action( 'wp_footer', 'lunara_print_home_module_styles', 142 );
+add_action( 'wp_head', 'lunara_print_home_module_styles', 1007 );
 
 /**
  * Preserve the original final-word cascade position for Oscars safeguards.
