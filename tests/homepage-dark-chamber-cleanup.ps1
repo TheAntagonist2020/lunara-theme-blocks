@@ -23,20 +23,20 @@ function Read-ThemeFile {
 
 $frontend = Read-ThemeFile 'inc/frontend.php'
 $functions = Read-ThemeFile 'functions.php'
+$setup = Read-ThemeFile 'inc/setup.php'
+$homeModules = Read-ThemeFile 'assets/css/lunara-home-modules.css'
 
 Assert-True ($functions -match "echo\s+\`$has_card_media\s*\?\s*'has-visual'\s*:\s*'has-no-visual'") 'Homepage Review cards must expose visual/no-visual classes.'
 Assert-True ($functions -match 'if\s*\(\s*\$has_card_media\s*\)\s*:\s*[\s\S]*lunara-review-grid-poster-wrap') 'Homepage Review renderer must only print poster wrappers for cards with media.'
 Assert-True ($functions -match "echo\s+\`$has_visual\s*\?\s*'has-visual'\s*:\s*'has-no-visual'") 'Homepage Journal cards must expose visual/no-visual classes.'
 Assert-True ($functions -match 'if\s*\(\s*\$has_visual\s*\)\s*:\s*[\s\S]*lunara-journal-home-card-media') 'Homepage Journal renderer must only print media wrappers for visual cards.'
 
-Assert-True ($frontend -match 'function lunara_home_text_led_card_chamber_css\(\)') 'Homepage text-led card cleanup must live in a named frontend CSS emitter.'
-Assert-True ($frontend -match 'lunara-home-text-led-card-chamber-css') 'Homepage text-led card cleanup must render a distinct style id.'
-Assert-True ($frontend -match "add_action\(\s*'wp_footer',\s*'lunara_home_text_led_card_chamber_css',\s*141\s*\)") 'Homepage text-led card cleanup must load after the mobile card runway CSS.'
-Assert-True ($frontend -match 'is_front_page\(\)') 'Homepage text-led card cleanup CSS must stay scoped to the front page.'
-
-$match = [regex]::Match($frontend, 'function lunara_home_text_led_card_chamber_css\(\) \{(?s).*?add_action\(\s*''wp_footer'',\s*''lunara_home_text_led_card_chamber_css'',\s*141\s*\);')
-Assert-True $match.Success 'Could not isolate homepage text-led card cleanup block.'
-$block = $match.Value
+Assert-True ($setup -match "assets/css/lunara-home-modules\.css") 'Homepage text-led card cleanup must load from the cacheable homepage stylesheet.'
+Assert-True ($setup -match "add_action\(\s*'wp_footer',\s*'lunara_print_home_module_styles',\s*142\s*\)") 'Cacheable homepage modules must retain the final homepage cascade position.'
+Assert-True ($homeModules -match 'lunara-home-text-led-card-chamber-css') 'Homepage text-led card cleanup must retain a named asset section.'
+$match = [regex]::Match($homeModules, '(?s)/\* lunara-home-text-led-card-chamber-css \*/(?<css>.*)$')
+Assert-True $match.Success 'Could not isolate the cacheable homepage text-led card cleanup section.'
+$block = $match.Groups['css'].Value
 
 foreach ($needle in @(
     'body.home .lunara-latest-reviews-section .lunara-review-grid-card.has-no-visual{min-height:clamp(220px,18vw,310px)!important;height:auto!important;align-self:start!important;',
@@ -55,7 +55,7 @@ foreach ($needle in @(
 }
 
 Assert-True ($block -notmatch 'font-family\s*:') 'Homepage text-led card cleanup must not introduce another font family.'
-Assert-True ($block -notmatch 'set_theme_mod|get_option\(') 'Homepage text-led card cleanup must not mutate or add settings.'
+Assert-True ($block -notmatch 'set_theme_mod|get_option\(|<\?php') 'Homepage text-led card cleanup must remain static CSS.'
 Assert-True ($block -notmatch 'post-type-archive-review|post-type-archive-journal|single-review|single-journal') 'Homepage cleanup must not target archive or single routes.'
 
 Write-Host 'Homepage text-led card chamber cleanup contract passed.'

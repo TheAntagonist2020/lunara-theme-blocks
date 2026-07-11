@@ -46,6 +46,7 @@ Assert-True ($pilotJs -match 'resize') 'Pilot JS must resync active slide height
 
 $frontend = Read-ThemeFile 'inc/frontend.php'
 $functions = Read-ThemeFile 'functions.php'
+$homeModules = Read-ThemeFile 'assets/css/lunara-home-modules.css'
 Assert-True ($frontend -match 'function lunara_enqueue_home_splide_pilot_assets') 'Homepage Splide assets must be enqueued from a named frontend helper.'
 Assert-True ($frontend -match 'is_front_page\(\)') 'Splide pilot enqueue must be scoped to the front page.'
 Assert-True ($frontend -match 'assets/vendor/splide/splide\.min\.js') 'Frontend enqueue must reference vendored Splide JS.'
@@ -57,10 +58,10 @@ Assert-True ($functions -match '_lunara_fact_visual_focus') 'Oscar Facts must su
 Assert-True ($functions -match 'lunara_sanitize_oscar_fact_visual_focus') 'Oscar Facts visual focus must be sanitized against allowed values.'
 Assert-True ($functions -match '--lunara-fact-image-position') 'Oscar Facts cards must expose a safe CSS custom property for image framing.'
 Assert-True ($functions -match '--lunara-fact-image-url') 'Archival Oscar Facts cards must expose a safe CSS custom property for the backing image.'
-Assert-True ($frontend.Contains('object-position: var(--lunara-fact-image-position')) 'Homepage Oscar Facts images must honor per-card visual focus.'
-Assert-True ($frontend -match 'has-archival-visual') 'Homepage Oscar Facts must expose an archival visual mode for non-cropping exact-source stills.'
-Assert-True ($frontend -match 'object-fit:\s*contain') 'Archival Oscar Facts visuals must preserve the full image instead of forcing a crop.'
-Assert-True ($frontend.Contains('background-image: var(--lunara-fact-image-url')) 'Archival Oscar Facts visuals must fill the media chamber with a soft source-image backing plate.'
+Assert-True ($homeModules.Contains('object-position: var(--lunara-fact-image-position')) 'Homepage Oscar Facts images must honor per-card visual focus.'
+Assert-True ($homeModules -match 'has-archival-visual') 'Homepage Oscar Facts must expose an archival visual mode for non-cropping exact-source stills.'
+Assert-True ($homeModules -match 'object-fit:\s*contain') 'Archival Oscar Facts visuals must preserve the full image instead of forcing a crop.'
+Assert-True ($homeModules.Contains('background-image: var(--lunara-fact-image-url')) 'Archival Oscar Facts visuals must fill the media chamber with a soft source-image backing plate.'
 
 $reviewRendering = Read-ThemeFile 'inc/review-rendering.php'
 Assert-True ($reviewRendering -notmatch 'splide') 'Reviews archive rendering must remain native during the homepage Splide pilot.'

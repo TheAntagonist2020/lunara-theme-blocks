@@ -23,15 +23,14 @@ function Read-ThemeFile {
 
 $frontend = Read-ThemeFile 'inc/frontend.php'
 $controlDesk = Read-ThemeFile 'inc/control-desk.php'
+$setup = Read-ThemeFile 'inc/setup.php'
+$homeModules = Read-ThemeFile 'assets/css/lunara-home-modules.css'
 
-Assert-True ($frontend -match 'function lunara_home_mobile_card_runway_css\(\)') 'Homepage mobile card runway must live in a named frontend CSS emitter.'
-Assert-True ($frontend -match 'lunara-home-mobile-card-runway-css') 'Homepage mobile card runway must render a distinct style id.'
-Assert-True ($frontend -match "add_action\(\s*'wp_footer',\s*'lunara_home_mobile_card_runway_css',\s*137\s*\)") 'Homepage mobile card runway must load after first-viewport polish.'
-Assert-True ($frontend -match 'is_front_page\(\)') 'Homepage mobile card runway CSS must stay scoped to the front page.'
-
-$match = [regex]::Match($frontend, 'function lunara_home_mobile_card_runway_css\(\) \{(?s).*?add_action\(\s*''wp_footer'',\s*''lunara_home_mobile_card_runway_css'',\s*137\s*\);')
-Assert-True $match.Success 'Could not isolate homepage mobile card runway block.'
-$block = $match.Value
+Assert-True ($setup -match "assets/css/lunara-home-modules\.css") 'Homepage mobile card runway must load from the cacheable homepage stylesheet.'
+Assert-True ($homeModules -match 'lunara-home-mobile-card-runway-css') 'Homepage mobile card runway must retain a named asset section.'
+$match = [regex]::Match($homeModules, '(?s)/\* lunara-home-mobile-card-runway-css \*/(?<css>.*?)(?=/\* lunara-home-journal-mobile-runway-css \*/)')
+Assert-True $match.Success 'Could not isolate the cacheable homepage mobile card runway section.'
+$block = $match.Groups['css'].Value
 
 foreach ($needle in @(
     '@media(max-width:820px)',
@@ -48,7 +47,7 @@ foreach ($needle in @(
 }
 
 Assert-True ($block -notmatch 'font-family\s*:') 'Homepage mobile card runway must not introduce another font family.'
-Assert-True ($block -notmatch 'set_theme_mod|get_option\(') 'Homepage mobile card runway must not mutate or add settings.'
+Assert-True ($block -notmatch 'set_theme_mod|get_option\(|<\?php') 'Homepage mobile card runway must remain static CSS.'
 Assert-True ($controlDesk -match "'mobile_order'\s*=>\s*array\(\s*'hero',\s*'dispatch',\s*'latest-reviews'") 'Homepage mobile order presets must still put Journal before Latest Reviews.'
 Assert-True ($controlDesk -match "'desktop_order'\s*=>\s*array\(\s*'hero',\s*'latest-reviews',\s*'dispatch'") 'Homepage desktop order presets must still put Latest Reviews before Journal.'
 

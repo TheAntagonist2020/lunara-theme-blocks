@@ -17,8 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_action( 'wp_body_open', 'lunara_inject_film_grain' );
 function lunara_inject_film_grain() {
-    // This adds the microscopic SVG noise overlay immediately after the body tag opens
-    echo '<div class="lunara-film-grain" aria-hidden="true"></div>';
+    echo '<div id="lunara-grain" class="is-live" aria-hidden="true"></div><div id="lunara-vignette" aria-hidden="true"></div>';
 }
 
 // We hook BEFORE the main content to start the Barba wrapper.

@@ -23,6 +23,7 @@ function Read-ThemeFile {
 
 $functions = Read-ThemeFile 'functions.php'
 $frontend = Read-ThemeFile 'inc/frontend.php'
+$homeModules = Read-ThemeFile 'assets/css/lunara-home-modules.css'
 $pilotJs = Read-ThemeFile 'assets/js/lunara-splide-pilot.js'
 
 Assert-True ($functions -match 'lunara-oscar-facts-console') 'Oscar Facts markup must include a public ledger console.'
@@ -43,14 +44,14 @@ Assert-True ($pilotJs -match 'is-lunara-prev') 'Splide pilot must add a Lunara p
 Assert-True ($pilotJs -match 'is-lunara-next') 'Splide pilot must add a Lunara next-state class for visual polish.'
 Assert-True ($pilotJs -match 'prefers-reduced-motion') 'Splide pilot must preserve reduced-motion behavior.'
 
-Assert-True ($frontend -match 'lunara-oscar-facts-console') 'Frontend CSS must style the Oscar Facts ledger console.'
-Assert-True ($frontend -match 'lunara-oscar-facts-counter') 'Frontend CSS must style the Oscar Facts slide counter.'
-Assert-True ($frontend -match 'lunara-oscar-facts-progress') 'Frontend CSS must style the Oscar Facts progress rail.'
-Assert-True ($frontend -match '--lunara-oscar-facts-progress') 'Frontend CSS must consume the Oscar Facts progress custom property.'
-Assert-True ($frontend -match 'is-lunara-active') 'Frontend CSS must style the Lunara active-state slide.'
-Assert-True ($frontend -match 'is-lunara-prev|is-lunara-next') 'Frontend CSS must account for adjacent slide state.'
-Assert-True ($frontend -match '@media \(max-width: 780px\)') 'Signature lane CSS must include mobile-safe controls.'
-Assert-True ($frontend -match '@media \(prefers-reduced-motion: reduce\)') 'Signature lane CSS must include reduced-motion fallback.'
+Assert-True ($homeModules -match 'lunara-oscar-facts-console') 'Cacheable homepage CSS must style the Oscar Facts ledger console.'
+Assert-True ($homeModules -match 'lunara-oscar-facts-counter') 'Cacheable homepage CSS must style the Oscar Facts slide counter.'
+Assert-True ($homeModules -match 'lunara-oscar-facts-progress') 'Cacheable homepage CSS must style the Oscar Facts progress rail.'
+Assert-True ($homeModules -match '--lunara-oscar-facts-progress') 'Cacheable homepage CSS must consume the Oscar Facts progress custom property.'
+Assert-True ($homeModules -match 'is-lunara-active') 'Cacheable homepage CSS must style the Lunara active-state slide.'
+Assert-True ($homeModules -match 'is-lunara-prev|is-lunara-next') 'Cacheable homepage CSS must account for adjacent slide state.'
+Assert-True ($homeModules -match '@media \(max-width: 780px\)') 'Signature lane CSS must include mobile-safe controls.'
+Assert-True ($homeModules -match '@media \(prefers-reduced-motion: reduce\)') 'Signature lane CSS must include reduced-motion fallback.'
 
 Assert-True ($functions -match '_lunara_fact_visual_verified') 'Oscar Facts must still require verified public visuals.'
 Assert-True ($functions -match 'lunara_oscar_fact_visual_hold_ids') 'Oscar Facts must still exclude held visuals from public image chambers.'

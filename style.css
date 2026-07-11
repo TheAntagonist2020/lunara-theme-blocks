@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.1.94
+Version: 3.1.95
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -17362,7 +17362,7 @@ body.post-type-archive-journal .lunara-review-grid-poster {
    2. The Dolly — scroll-driven hero parallax (pure CSS, compositor-only).
    3. Rack Focus— hover a poster, its shelf-mates drop their key light.
    4. Room Tone — 35mm grain veil + theater vignette + depth floor
-                  (grain node injected by lunara_output_atmosphere_js).
+                  (grain node injected at wp_body_open).
    5. Key Light — gold spotlight shafts on the Oscars portal hero.
    Everything below is additive and decorative: JS-off and
    reduced-motion readers get the exact site that shipped before it.
@@ -17444,6 +17444,7 @@ body.post-type-archive-journal .lunara-review-grid-poster {
 /* --- 4. Room Tone ------------------------------------------------ */
 #lunara-grain {
     position: fixed; inset: -100% auto auto -100%; width: 300%; height: 300%;
+    background-image: url("assets/images/lunara-grain.svg");
     background-repeat: repeat; opacity: .05; mix-blend-mode: overlay;
     pointer-events: none; z-index: 9940;
 }
@@ -17462,6 +17463,7 @@ body.post-type-archive-journal .lunara-review-grid-poster {
 }
 body.home .lunara-front-page { background: radial-gradient(140% 60% at 50% 0%, rgba(16, 32, 47, .9) 0%, transparent 55%) no-repeat; }
 @media (prefers-reduced-motion: reduce) { #lunara-grain { animation: none !important; } }
+@media (prefers-reduced-data: reduce) { #lunara-grain { display: none; } }
 @media (max-width: 900px) { #lunara-grain { display: none; } }
 @media print { #lunara-grain, #lunara-vignette { display: none; } }
 

@@ -122,6 +122,65 @@ function lunara_enqueue_shell_styles() {
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_shell_styles', 100 );
 
 /**
+ * Print a cacheable stylesheet at the same late cascade point previously used
+ * by its inline PHP emitter.
+ *
+ * @param string $handle        WordPress style handle.
+ * @param string $relative_path Theme-relative asset path.
+ */
+function lunara_print_cacheable_stylesheet( $handle, $relative_path ) {
+    $asset = lunara_resolve_theme_asset( $relative_path );
+
+    if ( empty( $asset['uri'] ) ) {
+        return;
+    }
+
+    wp_enqueue_style(
+        $handle,
+        $asset['uri'],
+        array(),
+        lunara_theme_asset_version( $asset['path'] )
+    );
+    wp_print_styles( $handle );
+}
+
+/**
+ * Shared route guardrails, formerly emitted as four large inline blocks.
+ */
+function lunara_print_public_guardrail_styles() {
+    if ( is_admin() || is_feed() ) {
+        return;
+    }
+
+    lunara_print_cacheable_stylesheet( 'lunara-public-guardrails', 'assets/css/lunara-public-guardrails.css' );
+}
+add_action( 'wp_head', 'lunara_print_public_guardrail_styles', 1005 );
+
+/**
+ * Homepage module rules that do not contain request-specific values.
+ */
+function lunara_print_home_module_styles() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+
+    lunara_print_cacheable_stylesheet( 'lunara-home-modules', 'assets/css/lunara-home-modules.css' );
+}
+add_action( 'wp_footer', 'lunara_print_home_module_styles', 142 );
+
+/**
+ * Preserve the original final-word cascade position for Oscars safeguards.
+ */
+function lunara_print_late_oscars_guardrail_styles() {
+    if ( is_admin() || is_feed() ) {
+        return;
+    }
+
+    lunara_print_cacheable_stylesheet( 'lunara-oscars-late-guardrails', 'assets/css/lunara-oscars-late-guardrails.css' );
+}
+add_action( 'wp_footer', 'lunara_print_late_oscars_guardrail_styles', 999 );
+
+/**
  * Theme setup
  */
 function lunara_theme_setup() {
