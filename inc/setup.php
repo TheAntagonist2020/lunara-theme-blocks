@@ -99,6 +99,29 @@ function lunara_enqueue_styles() {
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
 
 /**
+ * Load the public shell repair layer after route-specific styles.
+ *
+ * This stylesheet used to live inline in header.php. Keeping it as the final
+ * queued theme stylesheet preserves the existing cascade while allowing the
+ * browser to cache and reuse it across page views.
+ */
+function lunara_enqueue_shell_styles() {
+    $shell_css = lunara_resolve_theme_asset( 'assets/css/lunara-shell.css' );
+
+    if ( empty( $shell_css['uri'] ) ) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'lunara-shell',
+        $shell_css['uri'],
+        array( 'lunara-style' ),
+        lunara_theme_asset_version( $shell_css['path'] )
+    );
+}
+add_action( 'wp_enqueue_scripts', 'lunara_enqueue_shell_styles', 100 );
+
+/**
  * Theme setup
  */
 function lunara_theme_setup() {

@@ -29,6 +29,12 @@ Assert-True ($frontend -match 'function lunara_home_first_viewport_polish_css\(\
 Assert-True ($frontend -match 'lunara-home-first-viewport-polish-css') 'Homepage first-viewport polish must render a distinct style id.'
 Assert-True ($frontend -match "add_action\(\s*'wp_head',\s*'lunara_home_first_viewport_polish_css',\s*46\s*\)") 'Homepage first-viewport polish must load in the head immediately after the front-door CSS.'
 Assert-True ($frontend -match 'is_front_page\(\)') 'Homepage first-viewport polish must stay scoped to the front page.'
+Assert-True ($frontend -match 'function lunara_home_front_door_lead_image\( \$lead \)') 'The front-desk lead must use a named LCP image renderer.'
+Assert-True ($frontend -match "'fetchpriority'\s*=>\s*'high'") 'The front-desk LCP image must receive high fetch priority.'
+Assert-True ($frontend -match "'loading'\s*=>\s*'eager'") 'The front-desk LCP image must load eagerly.'
+Assert-True ($frontend -match 'wp_get_attachment_image\(\s*\$attachment_id,\s*''lunara-hero-spotlight''') 'Local front-desk media must retain WordPress responsive image markup.'
+Assert-True ($frontend -match 'class="lunara-home-front-desk-lead<\?php echo \$lead_image') 'The front-desk lead must render the dedicated image candidate.'
+Assert-True ($frontend -notmatch 'lunara-home-front-desk-lead[^>]+style="background-image') 'The front-desk LCP image must not be hidden in an inline CSS background.'
 
 $match = [regex]::Match($frontend, 'function lunara_home_first_viewport_polish_css\(\) \{(?s).*?add_action\(\s*''wp_head'',\s*''lunara_home_first_viewport_polish_css'',\s*46\s*\);')
 Assert-True $match.Success 'Could not isolate homepage first-viewport polish block.'

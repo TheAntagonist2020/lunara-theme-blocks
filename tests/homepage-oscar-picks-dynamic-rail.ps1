@@ -25,6 +25,7 @@ $functions = Read-ThemeFile 'functions.php'
 $frontend = Read-ThemeFile 'inc/frontend.php'
 $style = Read-ThemeFile 'style.css'
 $header = Read-ThemeFile 'header.php'
+$shell = Read-ThemeFile 'assets/css/lunara-shell.css'
 
 Assert-True ($functions -match "function\s+lunara_render_oscar_picks_carousel") 'Oscar Picks must keep its named renderer.'
 Assert-True ($functions -match "get_theme_mod\(\s*'lunara_home_oscar_picks_autoplay_interval'\s*,\s*6500\s*\)") 'Oscar Picks must define a bounded autoplay interval.'
@@ -51,8 +52,8 @@ Assert-True ($style -match 'lunara-oscar-picks-controls') 'Theme stylesheet must
 Assert-True ($style -match 'lunara-carousel-dot\.active') 'Theme stylesheet must style the active dot.'
 Assert-True ($style -match 'lunara-carousel-control') 'Theme stylesheet must style previous/next controls.'
 
-Assert-True ($header -notmatch 'body\.home \.lunara-oscar-picks-track,\s*body\.home \.lunara-oscar-facts-track\s*\{\s*display:\s*grid !important;') 'Header inline CSS must not force dynamic homepage rails back to static grid mode.'
-Assert-True ($header -notmatch 'body\.home \.lunara-oscar-picks-track,\s*body\.home \.lunara-oscar-facts-track\s*\{(?s).*?overflow-x:\s*visible !important') 'Header mobile shell must not make Oscar Picks horizontally inert.'
-Assert-True ($header -match 'body\.home \.lunara-oscar-picks-track\s*\{(?s).*?overflow-x:\s*auto !important') 'Header mobile shell must preserve Oscar Picks horizontal scrolling.'
+Assert-True ($shell -notmatch 'body\.home \.lunara-oscar-picks-track,\s*body\.home \.lunara-oscar-facts-track\s*\{\s*display:\s*grid !important;') 'Cacheable shell CSS must not force dynamic homepage rails back to static grid mode.'
+Assert-True ($shell -notmatch 'body\.home \.lunara-oscar-picks-track,\s*body\.home \.lunara-oscar-facts-track\s*\{(?s).*?overflow-x:\s*visible !important') 'Cacheable mobile shell must not make Oscar Picks horizontally inert.'
+Assert-True ($shell -match 'body\.home \.lunara-oscar-picks-track\s*\{(?s).*?overflow-x:\s*auto !important') 'Cacheable mobile shell must preserve Oscar Picks horizontal scrolling.'
 
 Write-Host 'Homepage Oscar Picks dynamic rail contract passed.'
