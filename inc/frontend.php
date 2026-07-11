@@ -426,7 +426,6 @@ add_action( 'wp_head', 'lunara_home_front_door_css', 45 );
 function lunara_rocket_preserve_front_door_css( $exclusions ) {
     $exclusions[] = 'lunara-home-front-door-vars';
     $exclusions[] = 'lunara-home-modules.css';
-    $exclusions[] = 'lunara-runtime-customizer-static.css';
     return $exclusions;
 }
 add_filter( 'rocket_rucss_inline_content_exclusions', 'lunara_rocket_preserve_front_door_css' );
@@ -6009,24 +6008,9 @@ function lunara_output_pair_it_with_cards_css() {
     if ( ! $should_load ) {
         return;
     }
-
-    $default_svg = function_exists( 'lunara_pair_aperture_mark_default_svg_raw' )
-        ? trim( (string) lunara_pair_aperture_mark_default_svg_raw() )
-        : '';
-    $current_svg = function_exists( 'lunara_pair_aperture_mark_svg_raw' )
-        ? trim( (string) lunara_pair_aperture_mark_svg_raw() )
-        : '';
-
-    // The shipped mark lives in the cacheable component stylesheet. Preserve
-    // the filter contract by printing an override only when the art changed.
-    if ( '' === $current_svg || $current_svg === $default_svg ) {
-        return;
-    }
-
-    $current_css_url = 'url("data:image/svg+xml,' . rawurlencode( $current_svg ) . '")';
     ?>
     <style id="lunara-pair-it-with-vars">
-    :root { --lunara-pair-aperture-mark-image: <?php echo $current_css_url; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- rawurlencode makes this a CSS-safe data URI. ?>; }
+    :root { --lunara-pair-aperture-mark-image: <?php echo function_exists( 'lunara_pair_aperture_mark_css_url' ) ? lunara_pair_aperture_mark_css_url() : 'none'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>; }
     </style>
     <?php
 }
