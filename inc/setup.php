@@ -169,19 +169,6 @@ function lunara_print_home_module_styles() {
 add_action( 'wp_head', 'lunara_print_home_module_styles', 44 );
 
 /**
- * Static Customizer selectors that consume the request-specific values printed
- * at priority 99. Keeping this link at 98 preserves the former cascade.
- */
-function lunara_print_runtime_customizer_static_styles() {
-    if ( is_admin() || is_feed() ) {
-        return;
-    }
-
-    lunara_print_cacheable_stylesheet( 'lunara-runtime-customizer-static', 'assets/css/lunara-runtime-customizer-static.css' );
-}
-add_action( 'wp_head', 'lunara_print_runtime_customizer_static_styles', 98 );
-
-/**
  * Preserve the original final-word cascade position for Oscars safeguards.
  */
 function lunara_print_late_oscars_guardrail_styles() {
