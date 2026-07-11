@@ -42,6 +42,24 @@
                 }).filter(Boolean).join(', ');
             }
 
+            function sanitizeImageUrl(value) {
+                value = (value || '').trim();
+                if (!value) return '';
+
+                if (/^data:image\/(?:avif|gif|jpe?g|png|webp);base64,/i.test(value)) {
+                    return value;
+                }
+
+                try {
+                    var parsed = new URL(value, document.baseURI);
+                    return parsed.protocol === 'http:' || parsed.protocol === 'https:' || parsed.protocol === 'blob:'
+                        ? parsed.href
+                        : '';
+                } catch (error) {
+                    return '';
+                }
+            }
+
             function installSrcsetGuard() {
                 if (window.lunaraSrcsetGuardInstalled || !window.Element) return;
                 window.lunaraSrcsetGuardInstalled = true;
@@ -121,8 +139,9 @@
                     }
                 }
 
-                if (dataSrc && (!currentSrc || currentSrc.indexOf('data:image/gif') === 0)) {
-                    img.setAttribute('src', dataSrc);
+                var safeDataSrc = sanitizeImageUrl(dataSrc);
+                if (safeDataSrc && (!currentSrc || currentSrc.indexOf('data:image/gif') === 0)) {
+                    img.src = safeDataSrc;
                 }
 
                 if (img.complete && img.naturalWidth > 1) {

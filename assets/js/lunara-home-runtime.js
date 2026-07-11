@@ -58,9 +58,22 @@
             return el ? (el.textContent || '').trim() : '';
         }
 
-        function getHTML(parent, selector) {
-            var el = parent.querySelector(selector);
-            return el ? el.innerHTML : '';
+        function safeHttpUrl(value) {
+            try {
+                var parsed = new URL(value || '', document.baseURI);
+                return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : '';
+            } catch (error) {
+                return '';
+            }
+        }
+
+        function appendTextElement(parent, tagName, className, text) {
+            if (!text) return null;
+            var element = document.createElement(tagName);
+            element.className = className;
+            element.textContent = text;
+            parent.appendChild(element);
+            return element;
         }
 
         function closeDetail() {
@@ -79,14 +92,14 @@
         function openDetail(card) {
             if (currentDetail) closeDetail();
 
-            var posterHTML = getHTML(card, '.lunara-lore-card-poster') || getHTML(card, '.lunara-ledger-story-poster');
+            var posterSource = card.querySelector('.lunara-lore-card-poster, .lunara-ledger-story-poster');
             var eyebrow    = getText(card, '.lunara-ledger-story-year');
             var title      = getText(card, '.lunara-ledger-story-title');
             var meta       = getText(card, '.lunara-ledger-story-categories');
             var body       = getText(card, '.lunara-ledger-story-summary');
             var link       = card.querySelector('.lunara-ledger-story-link');
-            var url        = link ? link.getAttribute('href') : '#';
-            var backdrop   = (card.getAttribute('data-lunara-lore-backdrop') || '').trim();
+            var url        = safeHttpUrl(link ? link.href : '');
+            var backdrop   = safeHttpUrl(card.getAttribute('data-lunara-lore-backdrop'));
 
             var detail = document.createElement('div');
             detail.className = 'lunara-lore-detail';
@@ -104,33 +117,44 @@
                 detail.style.backgroundPosition = 'center';
             }
 
-            var html = '';
-            html += '<button type="button" class="lunara-lore-detail-close" aria-label="Close detail">\u2715</button>';
-            html += '<div class="lunara-lore-detail-poster">' + posterHTML + '</div>';
-            html += '<div class="lunara-lore-detail-copy">';
-            if (eyebrow) html += '<p class="lunara-lore-detail-eyebrow">' + eyebrow + '</p>';
-            if (title)   html += '<h3 class="lunara-lore-detail-title">' + title + '</h3>';
-            if (meta)    html += '<p class="lunara-lore-detail-meta">' + meta + '</p>';
-            if (body)    html += '<p class="lunara-lore-detail-body">' + body + '</p>';
-            if (url && url !== '#') {
-                html += '<a class="lunara-lore-detail-cta" href="' + url + '">Open in the Ledger \u2192</a>';
+            var closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.className = 'lunara-lore-detail-close';
+            closeButton.setAttribute('aria-label', 'Close detail');
+            closeButton.textContent = '\u2715';
+            detail.appendChild(closeButton);
+
+            var poster = document.createElement('div');
+            poster.className = 'lunara-lore-detail-poster';
+            if (posterSource) {
+                poster.appendChild(posterSource.cloneNode(true));
             }
-            html += '</div>';
-            detail.innerHTML = html;
+            detail.appendChild(poster);
+
+            var copy = document.createElement('div');
+            copy.className = 'lunara-lore-detail-copy';
+            appendTextElement(copy, 'p', 'lunara-lore-detail-eyebrow', eyebrow);
+            appendTextElement(copy, 'h3', 'lunara-lore-detail-title', title);
+            appendTextElement(copy, 'p', 'lunara-lore-detail-meta', meta);
+            appendTextElement(copy, 'p', 'lunara-lore-detail-body', body);
+            if (url) {
+                var cta = appendTextElement(copy, 'a', 'lunara-lore-detail-cta', 'Open in the Ledger \u2192');
+                cta.href = url;
+            }
+            detail.appendChild(copy);
 
             wrap.appendChild(detail);
             section.classList.add('has-expanded');
             currentDetail = detail;
 
             // Focus the close button for a11y
-            var closeBtn = detail.querySelector('.lunara-lore-detail-close');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', function (e) {
+            if (closeButton) {
+                closeButton.addEventListener('click', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     closeDetail();
                 });
-                setTimeout(function () { closeBtn.focus(); }, 60);
+                setTimeout(function () { closeButton.focus(); }, 60);
             }
         }
 
