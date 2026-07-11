@@ -99,6 +99,31 @@ function lunara_enqueue_styles() {
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
 
 /**
+ * Preload only the two text faces that move Home's first-viewport geometry.
+ *
+ * The display faces remain demand-loaded so the LCP image does not compete
+ * with the full publication font family on a cold visit.
+ */
+function lunara_preload_home_text_fonts() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+
+    $font_base = content_url( '/uploads/lunara-fonts/v1/' );
+    $fonts     = array(
+        'TiemposText-Regular.woff2',
+    );
+
+    foreach ( $fonts as $font ) {
+        printf(
+            '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
+            esc_url( $font_base . $font )
+        );
+    }
+}
+add_action( 'wp_head', 'lunara_preload_home_text_fonts', 1 );
+
+/**
  * Load the public shell repair layer after route-specific styles.
  *
  * This stylesheet used to live inline in header.php. Keeping it as the final
@@ -167,6 +192,19 @@ function lunara_print_home_module_styles() {
     lunara_print_cacheable_stylesheet( 'lunara-home-modules', 'assets/css/lunara-home-modules.css' );
 }
 add_action( 'wp_head', 'lunara_print_home_module_styles', 44 );
+
+/**
+ * Static Customizer selectors that consume the request-specific values printed
+ * at priority 99. Keeping this link at 98 preserves the former cascade.
+ */
+function lunara_print_runtime_customizer_static_styles() {
+    if ( is_admin() || is_feed() ) {
+        return;
+    }
+
+    lunara_print_cacheable_stylesheet( 'lunara-runtime-customizer-static', 'assets/css/lunara-runtime-customizer-static.css' );
+}
+add_action( 'wp_head', 'lunara_print_runtime_customizer_static_styles', 98 );
 
 /**
  * Preserve the original final-word cascade position for Oscars safeguards.
