@@ -122,27 +122,6 @@ function lunara_enqueue_styles() {
 }
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
 
-if ( ! function_exists( 'lunara_preload_home_text_fonts' ) ) {
-function lunara_preload_home_text_fonts() {
-    if ( ! is_front_page() ) {
-        return;
-    }
-
-    $font_base = content_url( '/uploads/lunara-fonts/v1/' );
-    $fonts     = array(
-        'TiemposText-Regular.woff2',
-    );
-
-    foreach ( $fonts as $font ) {
-        printf(
-            '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
-            esc_url( $font_base . $font )
-        );
-    }
-}
-add_action( 'wp_head', 'lunara_preload_home_text_fonts', 1 );
-}
-
 if ( ! function_exists( 'lunara_enqueue_shell_styles' ) ) {
 function lunara_enqueue_shell_styles() {
     $shell_css = lunara_resolve_theme_asset( 'assets/css/lunara-shell.css' );
