@@ -122,6 +122,28 @@ function lunara_enqueue_styles() {
 }
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
 
+if ( ! function_exists( 'lunara_preload_home_text_fonts' ) ) {
+function lunara_preload_home_text_fonts() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+
+    $font_base = content_url( '/uploads/lunara-fonts/v1/' );
+    $fonts     = array(
+        'TiemposText-Regular.woff2',
+        'TiemposText-Bold.woff2',
+    );
+
+    foreach ( $fonts as $font ) {
+        printf(
+            '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
+            esc_url( $font_base . $font )
+        );
+    }
+}
+add_action( 'wp_head', 'lunara_preload_home_text_fonts', 1 );
+}
+
 if ( ! function_exists( 'lunara_enqueue_shell_styles' ) ) {
 function lunara_enqueue_shell_styles() {
     $shell_css = lunara_resolve_theme_asset( 'assets/css/lunara-shell.css' );
@@ -178,6 +200,17 @@ function lunara_print_home_module_styles() {
     lunara_print_cacheable_stylesheet( 'lunara-home-modules', 'assets/css/lunara-home-modules.css' );
 }
 add_action( 'wp_head', 'lunara_print_home_module_styles', 44 );
+}
+
+if ( ! function_exists( 'lunara_print_runtime_customizer_static_styles' ) ) {
+function lunara_print_runtime_customizer_static_styles() {
+    if ( is_admin() || is_feed() ) {
+        return;
+    }
+
+    lunara_print_cacheable_stylesheet( 'lunara-runtime-customizer-static', 'assets/css/lunara-runtime-customizer-static.css' );
+}
+add_action( 'wp_head', 'lunara_print_runtime_customizer_static_styles', 98 );
 }
 
 if ( ! function_exists( 'lunara_print_late_oscars_guardrail_styles' ) ) {
@@ -2203,15 +2236,6 @@ function lunara_output_runtime_customizer_css() {
     $css .= '--lunara-section-gap:' . $home_gap . 'px;';
     $css .= '}';
 
-    $css .= 'body{background-color:var(--lunara-bg-primary)!important;background-image:radial-gradient(circle at top left,var(--lunara-glow-gold),transparent 28%),radial-gradient(circle at 80% 18%,var(--lunara-glow-blue),transparent 26%),linear-gradient(180deg,var(--lunara-bg-primary) 0%,var(--lunara-bg-deep) 100%)!important;background-attachment:fixed;color:var(--lunara-text)!important;font-size:var(--lunara-body-size);line-height:var(--lunara-body-line-height);}';
-    $css .= '.site-content,.ct-content,.ct-container-full,.ct-page-title{background:transparent!important;}';
-    $css .= '.lunara-section,.lunara-archive-page > .lunara-home-section,.lunara-editorial-single-page > .lunara-home-section,.lunara-oscars-portal > .lunara-home-section{max-width:var(--lunara-shell-max);margin-left:auto;margin-right:auto;padding-left:var(--lunara-shell-pad);padding-right:var(--lunara-shell-pad);}';
-    $css .= '.lunara-home-section-title,.lunara-section-title,.lunara-home-pulse-title,.lunara-home-pulse-feature-heading,.lunara-poster-card-title,.lunara-dispatch-lead-title,.lunara-dispatch-rail-title,.lunara-home-winner-title,.lunara-home-pulse-note-title,.lunara-review-grid-title,.lunara-oscar-spotlight-text-panel h3{font-size:var(--lunara-section-title-size);}';
-    $css .= '.lunara-home-hero-title{font-size:var(--lunara-hero-title-size);}';
-    $css .= '.lunara-home-hero-copy{font-size:var(--lunara-hero-copy-size);line-height:var(--lunara-body-line-height);}';
-    $css .= '.lunara-home-hero-kicker,.lunara-home-section-kicker,.lunara-poster-card-kicker,.lunara-home-pulse-kicker,.lunara-dispatch-type,.lunara-home-pulse-note-kicker{font-size:var(--lunara-kicker-size);letter-spacing:var(--lunara-kicker-track);}';
-    $css .= '.lunara-home-section-summary,.lunara-poster-card-excerpt,.lunara-dispatch-lead-excerpt,.lunara-dispatch-rail-excerpt,.lunara-home-pulse-summary,.lunara-home-pulse-feature-copy,.lunara-home-pulse-note-copy,.lunara-oscar-spotlight-copy,.lunara-review-grid-meta,.lunara-poster-card-meta{font-size:var(--lunara-body-size);line-height:var(--lunara-body-line-height);}';
-    $css .= '.lunara-home-pulse-card,.lunara-poster-card,.lunara-dispatch-lead,.lunara-dispatch-rail-card,.lunara-home-winner-card,.lunara-home-pulse-note,.lunara-review-grid-card,.lunara-oscar-spotlight-pill,.lunara-home-pulse-feature-card{border-color:var(--lunara-border);border-radius:var(--lunara-surface-radius);}';
     $css .= '.lunara-dispatch-lead,.lunara-dispatch-rail-card,.lunara-home-winner-card,.lunara-home-pulse-note,.lunara-review-grid-card,.lunara-home-pulse-feature-card{background:' . lunara_hex_to_rgba( $bg_card, 0.88 ) . ';}';
     $css .= '.lunara-home-pulse-card{background:linear-gradient(180deg,' . lunara_hex_to_rgba( $bg_card, 0.96 ) . ',' . lunara_hex_to_rgba( $bg_primary, 0.92 ) . ');}';
     $css .= '.lunara-home-pulse-card-top,.lunara-oscar-spotlight-layout,.lunara-home-pulse-feature-card{background:linear-gradient(135deg,' . lunara_hex_to_rgba( $bg_secondary, 0.96 ) . ',' . lunara_hex_to_rgba( $bg_primary, 0.98 ) . ');}';
@@ -2242,10 +2266,6 @@ function lunara_output_runtime_customizer_css() {
     $css .= '.ct-footer .ct-container,footer.site-footer .ct-container{max-width:var(--lunara-shell-max);padding-left:var(--lunara-shell-pad);padding-right:var(--lunara-shell-pad);}';
     $css .= '.ct-footer a,footer.site-footer a{color:' . $text_color . ';}';
     $css .= '.ct-footer a:hover,footer.site-footer a:hover{color:' . $accent_soft . ';}';
-    $css .= '.lunara-front-page,.lunara-archive-page,.lunara-editorial-single-page,.lunara-oscars-portal{max-width:var(--lunara-home-max);padding-left:var(--lunara-home-pad);padding-right:var(--lunara-home-pad);}';
-    $css .= '.lunara-front-page,.lunara-editorial-single-page,.lunara-oscars-portal{gap:var(--lunara-home-gap);}';
-    $css .= '.lunara-home-hero.is-minimal,.lunara-archive-hero,.lunara-journal-single-hero,.lunara-oscars-portal-hero{padding-top:var(--lunara-home-hero-top);}';
-
     foreach ( lunara_get_home_section_slugs() as $slug ) {
         $order = isset( $section_order[ $slug ] ) ? intval( $section_order[ $slug ] ) : 99;
         $css  .= '.lunara-front-page > .lunara-home-slot-' . $slug . '{order:' . $order . ';}';
