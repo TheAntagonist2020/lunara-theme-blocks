@@ -75,7 +75,7 @@ foreach ($asset in $cacheableAssets) {
 }
 
 Assert-True ($setup -match "add_action\(\s*'wp_head'\s*,\s*'lunara_print_public_guardrail_styles'\s*,\s*1005\s*\)") 'Public guardrails must retain their late head cascade position.'
-Assert-True ($setup -match "add_action\(\s*'wp_footer'\s*,\s*'lunara_print_home_module_styles'\s*,\s*142\s*\)") 'Homepage modules must retain their late footer cascade position.'
+Assert-True ($setup -match "add_action\(\s*'wp_head'\s*,\s*'lunara_print_home_module_styles'\s*,\s*1007\s*\)") 'Homepage modules must load in the late head after route styles.'
 Assert-True ($setup -match "add_action\(\s*'wp_footer'\s*,\s*'lunara_print_late_oscars_guardrail_styles'\s*,\s*999\s*\)") 'Late Oscars guardrails must remain the final route safeguard.'
 
 $dynamicSignature = [regex]::Match(
@@ -114,6 +114,6 @@ Assert-True ($fallback -match 'id="lunara-grain"') 'The fallback loader must emi
 Assert-True (($setup + $fallback) -notmatch 'lunara-film-grain') 'The unused legacy grain node must stay removed.'
 Assert-True ($style -match 'background-image:\s*url\("assets/images/lunara-grain\.svg"\)') 'Room Tone CSS must use the cacheable grain asset.'
 Assert-True ($grain -match '<feTurbulence') 'The cacheable grain asset appears incomplete.'
-Assert-True ($style -match 'Version:\s*3\.1\.96') 'Theme version must be 3.1.96 for the corrected Phase 1B staging release.'
+Assert-True ($style -match 'Version:\s*3\.1\.97') 'Theme version must be 3.1.97 for the corrected Phase 1B staging release.'
 
 Write-Host "Performance payload budget contract passed (critical: $criticalBytes; shell: $shellBytes; public: $publicGuardrailBytes; home: $homeModuleBytes; Oscars: $lateOscarsBytes; dynamic: $dynamicSignatureBytes; grain: $grainBytes bytes)."
