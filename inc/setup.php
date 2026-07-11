@@ -112,7 +112,6 @@ function lunara_preload_home_text_fonts() {
     $font_base = content_url( '/uploads/lunara-fonts/v1/' );
     $fonts     = array(
         'TiemposText-Regular.woff2',
-        'TiemposText-Bold.woff2',
     );
 
     foreach ( $fonts as $font ) {
