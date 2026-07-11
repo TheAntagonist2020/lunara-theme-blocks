@@ -42,24 +42,6 @@
                 }).filter(Boolean).join(', ');
             }
 
-            function sanitizeImageUrl(value) {
-                value = (value || '').trim();
-                if (!value) return '';
-
-                if (/^data:image\/(?:avif|gif|jpe?g|png|webp);base64,/i.test(value)) {
-                    return value;
-                }
-
-                try {
-                    var parsed = new URL(value, document.baseURI);
-                    return parsed.protocol === 'http:' || parsed.protocol === 'https:' || parsed.protocol === 'blob:'
-                        ? parsed.href
-                        : '';
-                } catch (error) {
-                    return '';
-                }
-            }
-
             function installSrcsetGuard() {
                 if (window.lunaraSrcsetGuardInstalled || !window.Element) return;
                 window.lunaraSrcsetGuardInstalled = true;
@@ -125,9 +107,7 @@
                 if (!img) return;
                 sanitizeImageSrcset(img);
 
-                var dataSrc = img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || '';
                 var dataSrcset = img.getAttribute('data-srcset') || img.getAttribute('data-lazy-srcset') || '';
-                var currentSrc = img.getAttribute('src') || '';
 
                 if (dataSrcset && !img.getAttribute('srcset')) {
                     var sanitizedSrcset = sanitizeSrcset(dataSrcset);
@@ -137,11 +117,6 @@
                         img.removeAttribute('data-srcset');
                         img.removeAttribute('data-lazy-srcset');
                     }
-                }
-
-                var safeDataSrc = sanitizeImageUrl(dataSrc);
-                if (safeDataSrc && (!currentSrc || currentSrc.indexOf('data:image/gif') === 0)) {
-                    img.src = safeDataSrc;
                 }
 
                 if (img.complete && img.naturalWidth > 1) {

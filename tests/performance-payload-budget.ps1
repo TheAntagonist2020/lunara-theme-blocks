@@ -137,7 +137,7 @@ Assert-True ($frontend -match "assets/js/lunara-home-runtime\.js") 'The Home run
 Assert-True ($frontend -match "assets/css/lunara-review-components\.css") 'The route-scoped Review component stylesheet must be enqueued.'
 Assert-True ($publicRuntime -match "addEventListener\('error',\s*markLoaded") 'The public image runtime must reveal failed images instead of leaving invisible card chambers.'
 Assert-True ($publicRuntime -match 'setTimeout\(markLoaded,\s*1800\)') 'The public image runtime must retain its bounded visibility fallback.'
-Assert-True ($publicRuntime -match 'function sanitizeImageUrl') 'Lazy image promotion must validate DOM-provided URLs.'
+Assert-True ($publicRuntime -notmatch 'img\.src\s*=') 'The public runtime must leave lazy image URL promotion to WordPress.com rather than trusting DOM data attributes.'
 Assert-True ($homeRuntime -notmatch '\.innerHTML\s*=') 'The Home lore runtime must not reinterpret editorial DOM text as HTML.'
 Assert-True ($homeRuntime -match '\.textContent\s*=') 'The Home lore runtime must construct editorial detail text through safe DOM APIs.'
 Assert-True ($fallback -notmatch '(?s)lunara-pairing-desk-section[^<]*<style') 'The Pairing Desk must not print its static component CSS inside Home HTML.'
