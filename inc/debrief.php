@@ -1087,9 +1087,9 @@ if ( ! function_exists( 'lunara_render_pair_it_with_admin_preview' ) ) {
     }
 }
 
-if ( ! function_exists( 'lunara_pair_aperture_mark_svg_raw' ) ) {
+if ( ! function_exists( 'lunara_pair_aperture_mark_default_svg_raw' ) ) {
     /**
-     * Standalone SVG for the Lunara crescent-moon aperture mark.
+     * Default SVG for the Lunara crescent-moon aperture mark.
      *
      * Returned as a complete, self-contained <svg> document (no <use>/<symbol>)
      * so it can be embedded as a CSS background-image data URI. That keeps the
@@ -1098,10 +1098,10 @@ if ( ! function_exists( 'lunara_pair_aperture_mark_svg_raw' ) ) {
      * mark; the whole SVG is filterable so the finished production art can be
      * dropped in without touching the renderer or its CSS.
      *
-     * @return string Complete <svg>…</svg> markup.
+     * @return string Complete <svg>...</svg> markup.
      */
-    function lunara_pair_aperture_mark_svg_raw() {
-        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">'
+    function lunara_pair_aperture_mark_default_svg_raw() {
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">'
             . '<defs>'
             . '<linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
             . '<stop offset="0" stop-color="#f0dca6"/>'
@@ -1121,6 +1121,17 @@ if ( ! function_exists( 'lunara_pair_aperture_mark_svg_raw' ) ) {
             . '<path d="M66 56 L98 47 L91 67 Z" transform="rotate(252 66 56)"/>'
             . '</g>'
             . '</svg>';
+    }
+}
+
+if ( ! function_exists( 'lunara_pair_aperture_mark_svg_raw' ) ) {
+    /**
+     * Filterable SVG for deliberate aperture-mark overrides.
+     *
+     * @return string Complete <svg>...</svg> markup.
+     */
+    function lunara_pair_aperture_mark_svg_raw() {
+        $svg = lunara_pair_aperture_mark_default_svg_raw();
 
         /**
          * Filter the crescent-moon aperture mark SVG.

@@ -2932,15 +2932,6 @@ function lunara_output_runtime_customizer_css() {
     $css .= '--lunara-home-dispatch-rail-thumb-ratio:' . $dispatch_rail_thumb_ratio . ';';
     $css .= '}';
 
-    $css .= 'body{background-color:var(--lunara-bg-primary)!important;background-image:radial-gradient(circle at top left,var(--lunara-glow-gold),transparent 28%),radial-gradient(circle at 80% 18%,var(--lunara-glow-blue),transparent 26%),linear-gradient(180deg,var(--lunara-bg-primary) 0%,var(--lunara-bg-deep) 100%)!important;background-attachment:fixed;color:var(--lunara-text)!important;font-size:var(--lunara-body-size);line-height:var(--lunara-body-line-height);}';
-    $css .= '.site-content,.ct-content,.ct-container-full,.ct-page-title{background:transparent!important;}';
-    $css .= '.lunara-section,.lunara-archive-page > .lunara-home-section,.lunara-editorial-single-page > .lunara-home-section,.lunara-oscars-portal > .lunara-home-section{max-width:var(--lunara-shell-max);margin-left:auto;margin-right:auto;padding-left:var(--lunara-shell-pad);padding-right:var(--lunara-shell-pad);}';
-    $css .= '.lunara-home-section-title,.lunara-section-title,.lunara-home-pulse-title,.lunara-home-pulse-feature-heading,.lunara-poster-card-title,.lunara-dispatch-lead-title,.lunara-dispatch-rail-title,.lunara-home-winner-title,.lunara-home-pulse-note-title,.lunara-review-grid-title,.lunara-oscar-spotlight-text-panel h3{font-size:var(--lunara-section-title-size);}';
-    $css .= '.lunara-home-hero-title{font-size:var(--lunara-hero-title-size);}';
-    $css .= '.lunara-home-hero-copy{font-size:var(--lunara-hero-copy-size);line-height:var(--lunara-body-line-height);}';
-    $css .= '.lunara-home-hero-kicker,.lunara-home-section-kicker,.lunara-poster-card-kicker,.lunara-home-pulse-kicker,.lunara-dispatch-type,.lunara-home-pulse-note-kicker{font-size:var(--lunara-kicker-size);letter-spacing:var(--lunara-kicker-track);}';
-    $css .= '.lunara-home-section-summary,.lunara-poster-card-excerpt,.lunara-dispatch-lead-excerpt,.lunara-dispatch-rail-excerpt,.lunara-home-pulse-summary,.lunara-home-pulse-feature-copy,.lunara-home-pulse-note-copy,.lunara-oscar-spotlight-copy,.lunara-review-grid-meta,.lunara-poster-card-meta{font-size:var(--lunara-body-size);line-height:var(--lunara-body-line-height);}';
-    $css .= '.lunara-home-pulse-card,.lunara-poster-card,.lunara-dispatch-lead,.lunara-dispatch-rail-card,.lunara-home-winner-card,.lunara-home-pulse-note,.lunara-review-grid-card,.lunara-oscar-spotlight-pill,.lunara-home-pulse-feature-card{border-color:var(--lunara-border);border-radius:var(--lunara-surface-radius);}';
     $css .= '.lunara-dispatch-lead,.lunara-dispatch-rail-card,.lunara-home-winner-card,.lunara-home-pulse-note,.lunara-review-grid-card,.lunara-home-pulse-feature-card{background:' . lunara_hex_to_rgba( $bg_card, 0.88 ) . ';}';
     $css .= '.lunara-home-pulse-card{background:linear-gradient(180deg,' . lunara_hex_to_rgba( $bg_card, 0.96 ) . ',' . lunara_hex_to_rgba( $bg_primary, 0.92 ) . ');}';
     $css .= '.lunara-home-pulse-card-top,.lunara-oscar-spotlight-layout,.lunara-home-pulse-feature-card{background:linear-gradient(135deg,' . lunara_hex_to_rgba( $bg_secondary, 0.96 ) . ',' . lunara_hex_to_rgba( $bg_primary, 0.98 ) . ');}';
@@ -2969,40 +2960,41 @@ function lunara_output_runtime_customizer_css() {
     $css .= '.lunara-footer .lunara-container,footer.site-footer .lunara-container{max-width:var(--lunara-shell-max);padding-left:var(--lunara-shell-pad);padding-right:var(--lunara-shell-pad);}';
     $css .= '.lunara-footer a,footer.site-footer a{color:' . $text_color . ';}';
     $css .= '.lunara-footer a:hover,footer.site-footer a:hover{color:' . $accent_soft . ';}';
-    $css .= '.lunara-front-page,.lunara-archive-page,.lunara-editorial-single-page,.lunara-oscars-portal{max-width:var(--lunara-home-max);padding-left:var(--lunara-home-pad);padding-right:var(--lunara-home-pad);}';
-    $css .= '.lunara-front-page,.lunara-editorial-single-page,.lunara-oscars-portal{gap:var(--lunara-home-gap);}';
-    $css .= '.lunara-home-hero.is-minimal,.lunara-archive-hero,.lunara-journal-single-hero,.lunara-oscars-portal-hero{padding-top:var(--lunara-home-hero-top);}';
-
     foreach ( lunara_get_home_section_slugs() as $slug ) {
         $order = isset( $section_order[ $slug ] ) ? intval( $section_order[ $slug ] ) : 99;
         $css  .= '.lunara-front-page > .lunara-home-slot-' . $slug . '{order:' . $order . ';}';
     }
 
-    foreach ( lunara_get_registry_slugs( lunara_get_reviews_archive_section_registry() ) as $slug ) {
-        $order = isset( $review_section_order[ $slug ] ) ? intval( $review_section_order[ $slug ] ) : 99;
-        $css  .= '.lunara-review-archive-page > .lunara-review-archive-slot-' . $slug . '{order:' . $order . ';}';
-    }
+    // Home never renders the archive/portal registries below. Keeping those
+    // selectors out of its request removes repeated route-irrelevant HTML
+    // while every non-Home route retains the exact previous cascade.
+    if ( ! is_front_page() ) {
+        foreach ( lunara_get_registry_slugs( lunara_get_reviews_archive_section_registry() ) as $slug ) {
+            $order = isset( $review_section_order[ $slug ] ) ? intval( $review_section_order[ $slug ] ) : 99;
+            $css  .= '.lunara-review-archive-page > .lunara-review-archive-slot-' . $slug . '{order:' . $order . ';}';
+        }
 
-    foreach ( lunara_get_registry_slugs( lunara_get_journal_archive_section_registry() ) as $slug ) {
-        $order = isset( $journal_section_order[ $slug ] ) ? intval( $journal_section_order[ $slug ] ) : 99;
-        $css  .= '.lunara-journal-archive-page > .lunara-journal-archive-slot-' . $slug . '{order:' . $order . ';}';
-    }
+        foreach ( lunara_get_registry_slugs( lunara_get_journal_archive_section_registry() ) as $slug ) {
+            $order = isset( $journal_section_order[ $slug ] ) ? intval( $journal_section_order[ $slug ] ) : 99;
+            $css  .= '.lunara-journal-archive-page > .lunara-journal-archive-slot-' . $slug . '{order:' . $order . ';}';
+        }
 
-    foreach ( lunara_get_registry_slugs( lunara_get_news_archive_live_section_registry() ) as $slug ) {
-        $order = isset( $journal_live_section_order[ $slug ] ) ? intval( $journal_live_section_order[ $slug ] ) : 99;
-        $css  .= '.lunara-editorial-archive-page.lunara-editorial-archive-has-posts > .lunara-editorial-archive-slot-' . $slug . '{order:' . $order . ';}';
-        $css  .= '.lunara-news-archive-page.lunara-news-archive-has-posts > .lunara-news-archive-slot-' . $slug . '{order:' . $order . ';}';
-    }
+        foreach ( lunara_get_registry_slugs( lunara_get_news_archive_live_section_registry() ) as $slug ) {
+            $order = isset( $journal_live_section_order[ $slug ] ) ? intval( $journal_live_section_order[ $slug ] ) : 99;
+            $css  .= '.lunara-editorial-archive-page.lunara-editorial-archive-has-posts > .lunara-editorial-archive-slot-' . $slug . '{order:' . $order . ';}';
+            $css  .= '.lunara-news-archive-page.lunara-news-archive-has-posts > .lunara-news-archive-slot-' . $slug . '{order:' . $order . ';}';
+        }
 
-    foreach ( lunara_get_registry_slugs( lunara_get_news_archive_empty_section_registry() ) as $slug ) {
-        $order = isset( $journal_empty_section_order[ $slug ] ) ? intval( $journal_empty_section_order[ $slug ] ) : 99;
-        $css  .= '.lunara-editorial-archive-page.lunara-editorial-archive-is-empty > .lunara-editorial-archive-slot-' . $slug . '{order:' . $order . ';}';
-        $css  .= '.lunara-news-archive-page.lunara-news-archive-is-empty > .lunara-news-archive-slot-' . $slug . '{order:' . $order . ';}';
-    }
+        foreach ( lunara_get_registry_slugs( lunara_get_news_archive_empty_section_registry() ) as $slug ) {
+            $order = isset( $journal_empty_section_order[ $slug ] ) ? intval( $journal_empty_section_order[ $slug ] ) : 99;
+            $css  .= '.lunara-editorial-archive-page.lunara-editorial-archive-is-empty > .lunara-editorial-archive-slot-' . $slug . '{order:' . $order . ';}';
+            $css  .= '.lunara-news-archive-page.lunara-news-archive-is-empty > .lunara-news-archive-slot-' . $slug . '{order:' . $order . ';}';
+        }
 
-    foreach ( lunara_get_registry_slugs( lunara_get_oscars_portal_section_registry() ) as $slug ) {
-        $order = isset( $oscars_section_order[ $slug ] ) ? intval( $oscars_section_order[ $slug ] ) : 99;
-        $css  .= '.lunara-oscars-portal > .lunara-oscars-portal-slot-' . $slug . '{order:' . $order . ';}';
+        foreach ( lunara_get_registry_slugs( lunara_get_oscars_portal_section_registry() ) as $slug ) {
+            $order = isset( $oscars_section_order[ $slug ] ) ? intval( $oscars_section_order[ $slug ] ) : 99;
+            $css  .= '.lunara-oscars-portal > .lunara-oscars-portal-slot-' . $slug . '{order:' . $order . ';}';
+        }
     }
 
     if ( ! get_theme_mod( 'lunara_show_logo', true ) ) {
@@ -3055,17 +3047,19 @@ function lunara_output_runtime_customizer_css() {
     $css .= '.lunara-mobile-panel .lunara-mobile-menu li a{font-size:' . $mobile_link_size . 'px;color:' . $mobile_link_color . ';}';
     $css .= '.lunara-mobile-panel .lunara-mobile-menu li a:hover{color:' . $mobile_link_hover . ';}';
 
-    /* ── Single Post Layout ── */
-    $single_content_max = absint( get_theme_mod( 'lunara_single_content_max_width', 780 ) );
-    $css .= ':root{--lunara-single-content-max:' . $single_content_max . 'px;}';
+    if ( ! is_front_page() ) {
+        /* ── Single Post Layout ── */
+        $single_content_max = absint( get_theme_mod( 'lunara_single_content_max_width', 780 ) );
+        $css .= ':root{--lunara-single-content-max:' . $single_content_max . 'px;}';
 
-    /* ── Review Debrief Sizing ── */
-    $review_debrief_width  = max( 980, min( 1600, absint( get_theme_mod( 'lunara_review_debrief_width', 1180 ) ) ) );
-    $review_poster_max     = max( 260, min( 520, absint( get_theme_mod( 'lunara_review_debrief_poster_max', 400 ) ) ) );
-    $review_signature_shift = max( 0, min( 160, absint( get_theme_mod( 'lunara_review_debrief_signature_offset', 56 ) ) ) );
-    $css .= ':root{--lunara-review-debrief-width:' . $review_debrief_width . 'px;';
-    $css .= '--lunara-review-debrief-poster-max:' . $review_poster_max . 'px;';
-    $css .= '--lunara-review-debrief-signature-offset:' . $review_signature_shift . 'px;}';
+        /* ── Review Debrief Sizing ── */
+        $review_debrief_width   = max( 980, min( 1600, absint( get_theme_mod( 'lunara_review_debrief_width', 1180 ) ) ) );
+        $review_poster_max      = max( 260, min( 520, absint( get_theme_mod( 'lunara_review_debrief_poster_max', 400 ) ) ) );
+        $review_signature_shift = max( 0, min( 160, absint( get_theme_mod( 'lunara_review_debrief_signature_offset', 56 ) ) ) );
+        $css .= ':root{--lunara-review-debrief-width:' . $review_debrief_width . 'px;';
+        $css .= '--lunara-review-debrief-poster-max:' . $review_poster_max . 'px;';
+        $css .= '--lunara-review-debrief-signature-offset:' . $review_signature_shift . 'px;}';
+    }
 
     if ( '' === $css ) {
         return;
