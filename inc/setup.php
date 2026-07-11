@@ -181,6 +181,14 @@ function lunara_print_late_oscars_guardrail_styles() {
 add_action( 'wp_footer', 'lunara_print_late_oscars_guardrail_styles', 999 );
 
 /**
+ * Add the cacheable Room Tone overlays without runtime canvas work.
+ */
+function lunara_inject_room_tone_markup() {
+    echo '<div id="lunara-grain" class="is-live" aria-hidden="true"></div><div id="lunara-vignette" aria-hidden="true"></div>';
+}
+add_action( 'wp_body_open', 'lunara_inject_room_tone_markup', 1 );
+
+/**
  * Theme setup
  */
 function lunara_theme_setup() {

@@ -25,7 +25,6 @@ $header = Read-ThemeFile 'header.php'
 $setup = Read-ThemeFile 'inc/setup.php'
 $fallback = Read-ThemeFile 'functions.php'
 $frontend = Read-ThemeFile 'inc/frontend.php'
-$blocksy = Read-ThemeFile 'inc/blocksy-integration.php'
 $style = Read-ThemeFile 'style.css'
 $shell = Read-ThemeFile 'assets/css/lunara-shell.css'
 $publicGuardrails = Read-ThemeFile 'assets/css/lunara-public-guardrails.css'
@@ -108,11 +107,13 @@ foreach ($id in $retiredInlineIds) {
 }
 
 Assert-True ($frontend -notmatch 'lunara_output_atmosphere_js|createImageData|toDataURL') 'The runtime canvas grain generator must stay removed.'
-Assert-True ($blocksy -match 'id="lunara-grain"') 'Static grain markup must be emitted at wp_body_open.'
-Assert-True ($blocksy -match 'id="lunara-vignette"') 'Static vignette markup must be emitted at wp_body_open.'
-Assert-True ($blocksy -notmatch 'lunara-film-grain') 'The unused legacy grain node must stay removed.'
+Assert-True ($setup -match 'id="lunara-grain"') 'The split loader must emit static grain markup at wp_body_open.'
+Assert-True ($setup -match 'id="lunara-vignette"') 'The split loader must emit static vignette markup at wp_body_open.'
+Assert-True ($setup -match "add_action\(\s*'wp_body_open'\s*,\s*'lunara_inject_room_tone_markup'\s*,\s*1\s*\)") 'The split loader must register Room Tone markup before the public shell.'
+Assert-True ($fallback -match 'id="lunara-grain"') 'The fallback loader must emit static grain markup.'
+Assert-True (($setup + $fallback) -notmatch 'lunara-film-grain') 'The unused legacy grain node must stay removed.'
 Assert-True ($style -match 'background-image:\s*url\("assets/images/lunara-grain\.svg"\)') 'Room Tone CSS must use the cacheable grain asset.'
 Assert-True ($grain -match '<feTurbulence') 'The cacheable grain asset appears incomplete.'
-Assert-True ($style -match 'Version:\s*3\.1\.95') 'Theme version must be 3.1.95 for the Phase 1B staging release.'
+Assert-True ($style -match 'Version:\s*3\.1\.96') 'Theme version must be 3.1.96 for the corrected Phase 1B staging release.'
 
 Write-Host "Performance payload budget contract passed (critical: $criticalBytes; shell: $shellBytes; public: $publicGuardrailBytes; home: $homeModuleBytes; Oscars: $lateOscarsBytes; dynamic: $dynamicSignatureBytes; grain: $grainBytes bytes)."
