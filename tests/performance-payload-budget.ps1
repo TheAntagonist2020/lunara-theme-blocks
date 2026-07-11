@@ -31,7 +31,6 @@ $style = Read-ThemeFile 'style.css'
 $shell = Read-ThemeFile 'assets/css/lunara-shell.css'
 $publicGuardrails = Read-ThemeFile 'assets/css/lunara-public-guardrails.css'
 $homeModules = Read-ThemeFile 'assets/css/lunara-home-modules.css'
-$customizerStatic = Read-ThemeFile 'assets/css/lunara-runtime-customizer-static.css'
 $lateOscars = Read-ThemeFile 'assets/css/lunara-oscars-late-guardrails.css'
 $reviewComponents = Read-ThemeFile 'assets/css/lunara-review-components.css'
 $publicRuntime = Read-ThemeFile 'assets/js/lunara-public-runtime.js'
@@ -51,7 +50,6 @@ $criticalBytes = [Text.Encoding]::UTF8.GetByteCount($criticalMatch.Value)
 $shellBytes = [Text.Encoding]::UTF8.GetByteCount($shell)
 $publicGuardrailBytes = [Text.Encoding]::UTF8.GetByteCount($publicGuardrails)
 $homeModuleBytes = [Text.Encoding]::UTF8.GetByteCount($homeModules)
-$customizerStaticBytes = [Text.Encoding]::UTF8.GetByteCount($customizerStatic)
 $lateOscarsBytes = [Text.Encoding]::UTF8.GetByteCount($lateOscars)
 $reviewComponentBytes = [Text.Encoding]::UTF8.GetByteCount($reviewComponents)
 $publicRuntimeBytes = [Text.Encoding]::UTF8.GetByteCount($publicRuntime)
@@ -63,7 +61,6 @@ Assert-True ($criticalBytes -le 12288) "Critical shell CSS exceeds its 12 KB bud
 Assert-True ($shellBytes -le 204800) "Cacheable shell CSS exceeds its 200 KB transition budget: $shellBytes bytes."
 Assert-True ($publicGuardrailBytes -le 61440) "Public guardrail CSS exceeds its 60 KB budget: $publicGuardrailBytes bytes."
 Assert-True ($homeModuleBytes -le 61440) "Homepage module CSS exceeds its 60 KB budget: $homeModuleBytes bytes."
-Assert-True ($customizerStaticBytes -le 10240) "Static Customizer CSS exceeds its 10 KB budget: $customizerStaticBytes bytes."
 Assert-True ($lateOscarsBytes -le 20480) "Late Oscars CSS exceeds its 20 KB budget: $lateOscarsBytes bytes."
 Assert-True ($reviewComponentBytes -le 20480) "Review component CSS exceeds its 20 KB budget: $reviewComponentBytes bytes."
 Assert-True ($publicRuntimeBytes -le 20480) "Public runtime exceeds its 20 KB budget: $publicRuntimeBytes bytes."
@@ -74,13 +71,12 @@ Assert-True ($pairApertureBytes -le 2048) "Pairing aperture mark exceeds its 2 K
 Assert-True ($shell -notmatch '<\?php') 'The cacheable shell stylesheet must remain static CSS.'
 Assert-True ($publicGuardrails -notmatch '<\?php') 'Public guardrails must remain static CSS.'
 Assert-True ($homeModules -notmatch '<\?php') 'Homepage modules must remain static CSS.'
-Assert-True ($customizerStatic -notmatch '<\?php') 'Static Customizer CSS must remain cacheable.'
 Assert-True ($lateOscars -notmatch '<\?php') 'Late Oscars guardrails must remain static CSS.'
 Assert-True ($reviewComponents -notmatch '<\?php') 'Review components must remain static CSS.'
 Assert-True ($shell -match 'body\.home \.lunara-front-page > \.lunara-home-section') 'The cacheable shell stylesheet appears incomplete.'
+Assert-True ($shell -match 'background-color:var\(--lunara-bg-primary\)') 'The shell is missing the static Customizer selectors.'
 Assert-True ($publicGuardrails -match 'body\.home \.lunara-journal-home-grid') 'The public guardrail stylesheet appears incomplete.'
 Assert-True ($homeModules -match 'body\.home \.lunara-oscar-facts-section') 'The homepage module stylesheet appears incomplete.'
-Assert-True ($customizerStatic -match 'background-color:var\(--lunara-bg-primary\)') 'The static Customizer stylesheet appears incomplete.'
 Assert-True ($lateOscars -match 'body\.aat-shell-page \.aat-container') 'The late Oscars stylesheet appears incomplete.'
 Assert-True ($reviewComponents -match 'lunara-pair-cards') 'The review component stylesheet appears incomplete.'
 Assert-True ($reviewComponents -match 'lunara-pair-aperture\.svg') 'The cacheable Pairing aperture mark is not wired into the component stylesheet.'
@@ -102,9 +98,8 @@ foreach ($asset in $cacheableAssets) {
 
 Assert-True ($setup -match "add_action\(\s*'wp_head'\s*,\s*'lunara_print_public_guardrail_styles'\s*,\s*1005\s*\)") 'Public guardrails must retain their late head cascade position.'
 Assert-True ($setup -match "add_action\(\s*'wp_head'\s*,\s*'lunara_print_home_module_styles'\s*,\s*44\s*\)") 'Homepage modules must load before the dynamic Front Desk variables.'
-Assert-True ($setup -match "add_action\(\s*'wp_head'\s*,\s*'lunara_print_runtime_customizer_static_styles'\s*,\s*98\s*\)") 'Static Customizer selectors must load immediately before dynamic values.'
-Assert-True ($fallback -match 'assets/css/lunara-runtime-customizer-static\.css') 'The fallback loader is missing static Customizer CSS.'
-Assert-True ($frontend -match '[$]exclusions\[\]\s*=\s*''lunara-runtime-customizer-static\.css''') 'Rocket must not defer the first-paint Customizer selector layer.'
+Assert-True ($setup -notmatch 'lunara-runtime-customizer-static') 'Static Customizer selectors must not add a new render-blocking request.'
+Assert-True ($fallback -notmatch 'lunara-runtime-customizer-static') 'The fallback loader must not restore the retired Customizer request.'
 Assert-True ($setup -match "add_action\(\s*'wp_footer'\s*,\s*'lunara_print_late_oscars_guardrail_styles'\s*,\s*999\s*\)") 'Late Oscars guardrails must remain the final route safeguard.'
 
 $dynamicSignature = [regex]::Match(
@@ -176,4 +171,4 @@ Assert-True ($style -match 'background-image:\s*url\("assets/images/lunara-grain
 Assert-True ($grain -match '<feTurbulence') 'The cacheable grain asset appears incomplete.'
 Assert-True ($style -match 'Version:\s*3\.2\.0') 'Theme version must be 3.2.0 for the Phase 1D staging gate.'
 
-Write-Host "Performance payload budget contract passed (critical: $criticalBytes; shell: $shellBytes; public: $publicGuardrailBytes; home: $homeModuleBytes; customizer static: $customizerStaticBytes; review: $reviewComponentBytes; public JS: $publicRuntimeBytes; carousel JS: $scrollCarouselBytes; home JS: $homeRuntimeBytes; Oscars: $lateOscarsBytes; dynamic: $dynamicSignatureBytes; grain: $grainBytes; pair aperture: $pairApertureBytes bytes)."
+Write-Host "Performance payload budget contract passed (critical: $criticalBytes; shell: $shellBytes; public: $publicGuardrailBytes; home: $homeModuleBytes; review: $reviewComponentBytes; public JS: $publicRuntimeBytes; carousel JS: $scrollCarouselBytes; home JS: $homeRuntimeBytes; Oscars: $lateOscarsBytes; dynamic: $dynamicSignatureBytes; grain: $grainBytes; pair aperture: $pairApertureBytes bytes)."

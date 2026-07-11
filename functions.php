@@ -180,17 +180,6 @@ function lunara_print_home_module_styles() {
 add_action( 'wp_head', 'lunara_print_home_module_styles', 44 );
 }
 
-if ( ! function_exists( 'lunara_print_runtime_customizer_static_styles' ) ) {
-function lunara_print_runtime_customizer_static_styles() {
-    if ( is_admin() || is_feed() ) {
-        return;
-    }
-
-    lunara_print_cacheable_stylesheet( 'lunara-runtime-customizer-static', 'assets/css/lunara-runtime-customizer-static.css' );
-}
-add_action( 'wp_head', 'lunara_print_runtime_customizer_static_styles', 98 );
-}
-
 if ( ! function_exists( 'lunara_print_late_oscars_guardrail_styles' ) ) {
 function lunara_print_late_oscars_guardrail_styles() {
     if ( is_admin() || is_feed() ) {

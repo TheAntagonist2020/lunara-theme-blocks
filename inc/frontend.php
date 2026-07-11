@@ -426,7 +426,6 @@ add_action( 'wp_head', 'lunara_home_front_door_css', 45 );
 function lunara_rocket_preserve_front_door_css( $exclusions ) {
     $exclusions[] = 'lunara-home-front-door-vars';
     $exclusions[] = 'lunara-home-modules.css';
-    $exclusions[] = 'lunara-runtime-customizer-static.css';
     return $exclusions;
 }
 add_filter( 'rocket_rucss_inline_content_exclusions', 'lunara_rocket_preserve_front_door_css' );
