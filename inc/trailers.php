@@ -124,7 +124,7 @@ if ( ! function_exists( 'lunara_trailer_badge_inline_styles' ) ) {
 		<?php
 	}
 }
-add_action( 'wp_head', 'lunara_trailer_badge_inline_styles', 35 );
+// Phase 1C: static trailer badge CSS lives in lunara-public-guardrails.css.
 
 if ( ! function_exists( 'lunara_register_trailer_meta' ) ) {
 	function lunara_register_trailer_meta() {
