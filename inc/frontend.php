@@ -180,6 +180,49 @@ function lunara_get_home_front_door_oscar_signal() {
     );
 }
 
+/**
+ * Render the first-viewport editorial image as a discoverable LCP candidate.
+ *
+ * Local media uses WordPress image markup so srcset remains available. Remote
+ * backdrops retain the already right-sized URL and explicit 16:9 dimensions.
+ *
+ * @param array $lead Front-door lead data.
+ * @return string
+ */
+function lunara_home_front_door_lead_image( $lead ) {
+    $image_url = trim( (string) ( $lead['image'] ?? '' ) );
+    if ( '' === $image_url ) {
+        return '';
+    }
+
+    $attrs = array(
+        'class'         => 'lunara-home-front-desk-lead-media skip-lazy no-lazy',
+        'alt'           => '',
+        'loading'       => 'eager',
+        'decoding'      => 'async',
+        'fetchpriority' => 'high',
+        'sizes'         => '(max-width: 1100px) calc(100vw - 32px), 900px',
+    );
+
+    $attachment_id = function_exists( 'attachment_url_to_postid' )
+        ? absint( attachment_url_to_postid( (string) preg_replace( '/\?.*$/', '', $image_url ) ) )
+        : 0;
+
+    if ( $attachment_id ) {
+        $image_html = wp_get_attachment_image( $attachment_id, 'lunara-hero-spotlight', false, $attrs );
+        if ( '' !== trim( (string) $image_html ) ) {
+            return (string) $image_html;
+        }
+    }
+
+    return sprintf(
+        '<img class="%1$s" src="%2$s" alt="" width="1920" height="1080" loading="eager" decoding="async" fetchpriority="high" sizes="%3$s">',
+        esc_attr( $attrs['class'] ),
+        esc_url( $image_url ),
+        esc_attr( $attrs['sizes'] )
+    );
+}
+
 function lunara_render_home_front_door() {
     if ( function_exists( 'lunara_render_plugin_backed_home_hero' ) && function_exists( 'lunara_home_cinematic_front_door_is_enabled' ) && lunara_home_cinematic_front_door_is_enabled() ) {
         $cinematic_front_door = trim( (string) lunara_render_plugin_backed_home_hero() );
@@ -196,6 +239,7 @@ function lunara_render_home_front_door() {
     $density     = lunara_home_select_setting( 'lunara_home_front_door_density', 'editorial', array( 'compact', 'editorial', 'showcase' ) );
     $prominence  = lunara_home_select_setting( 'lunara_home_route_card_prominence', 'strong', array( 'quiet', 'standard', 'strong' ) );
     $lead        = lunara_get_home_front_door_lead();
+    $lead_image  = lunara_home_front_door_lead_image( $lead );
     $journal     = lunara_get_home_front_door_journal_signal();
     $oscar       = lunara_get_home_front_door_oscar_signal();
     $search_url  = function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/' );
@@ -280,7 +324,8 @@ function lunara_render_home_front_door() {
             </nav>
 
             <div class="lunara-home-front-desk-grid">
-                <article class="lunara-home-front-desk-lead<?php echo ! empty( $lead['image'] ) ? ' has-image' : ' has-no-image'; ?>"<?php if ( ! empty( $lead['image'] ) ) : ?> style="background-image: url('<?php echo esc_url( $lead['image'] ); ?>');"<?php endif; ?>>
+                <article class="lunara-home-front-desk-lead<?php echo $lead_image ? ' has-image' : ' has-no-image'; ?>">
+                    <?php echo $lead_image; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     <a class="lunara-home-front-desk-lead-link" href="<?php echo esc_url( $lead['url'] ); ?>">
                         <span class="lunara-home-front-desk-label"><?php echo esc_html( $lead['kicker'] ); ?></span>
                         <h2 class="lunara-home-front-desk-title"><?php echo esc_html( $lead['title'] ); ?></h2>
@@ -380,10 +425,11 @@ function lunara_home_front_door_css() {
     body.home .lunara-home-signal-bar-item:hover span,body.home .lunara-home-signal-bar-item:focus-visible span{color:var(--lunara-gold-light,#e0c481);}
     @media(max-width:820px){body.home .lunara-home-signal-bar{margin:14px 0 16px;}body.home .lunara-home-signal-bar-item{flex:0 0 auto;max-width:72vw;}}
     body.home .lunara-home-front-desk-grid{display:grid;grid-template-columns:minmax(0,1.48fr) minmax(320px,.72fr);gap:18px;width:min(100%,1320px);margin-inline:auto;}
-    body.home .lunara-home-front-desk-lead{position:relative;min-height:440px;overflow:hidden;border:1px solid rgba(224,196,129,.26);border-radius:8px;background-color:rgba(15,29,46,.96);background-position:center;background-size:cover;box-shadow:0 28px 70px rgba(0,0,0,.28);}
-    body.home .lunara-home-front-desk-lead::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,10,18,.95),rgba(4,10,18,.66) 52%,rgba(4,10,18,.24));}
-    body.home .lunara-home-front-desk-lead::after{content:"";position:absolute;left:28px;right:28px;bottom:24px;height:1px;background:linear-gradient(90deg,rgba(224,196,129,.58),transparent);}
-    body.home .lunara-home-front-desk-lead-link{position:relative;z-index:1;display:grid;align-content:end;min-height:440px;padding:34px 34px 44px;color:var(--lunara-text,#f4efe3)!important;text-decoration:none!important;}
+    body.home .lunara-home-front-desk-lead{position:relative;min-height:440px;overflow:hidden;border:1px solid rgba(224,196,129,.26);border-radius:8px;background-color:rgba(15,29,46,.96);box-shadow:0 28px 70px rgba(0,0,0,.28);}
+    body.home .lunara-home-front-desk-lead-media{position:absolute;z-index:0;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;}
+    body.home .lunara-home-front-desk-lead::before{content:"";position:absolute;z-index:1;inset:0;background:linear-gradient(90deg,rgba(4,10,18,.95),rgba(4,10,18,.66) 52%,rgba(4,10,18,.24));}
+    body.home .lunara-home-front-desk-lead::after{content:"";position:absolute;z-index:3;left:28px;right:28px;bottom:24px;height:1px;background:linear-gradient(90deg,rgba(224,196,129,.58),transparent);}
+    body.home .lunara-home-front-desk-lead-link{position:relative;z-index:2;display:grid;align-content:end;min-height:440px;padding:34px 34px 44px;color:var(--lunara-text,#f4efe3)!important;text-decoration:none!important;}
     body.home .lunara-home-front-desk-title{max-width:13ch;margin:12px 0 14px;color:var(--lunara-text,#f4efe3)!important;font-family:var(--lunara-font-signature,var(--lunara-font-display,Georgia,"Times New Roman",serif));font-size:3.15rem;font-weight:500;line-height:1;letter-spacing:0;text-wrap:balance;}
     body.home .lunara-home-front-desk-copy{max-width:62ch;margin:0 0 22px;color:rgba(244,239,227,.84);font-size:1.02rem;line-height:1.62;}
     body.home .lunara-home-front-desk-cta{display:inline-flex;width:max-content;max-width:100%;align-items:center;gap:8px;color:var(--lunara-gold-light,#e0c481);font-size:.96rem;font-weight:800;line-height:1.2;}
@@ -9639,9 +9685,9 @@ function lunara_output_oscars_portal_compact_css() {
         }
     }
 
-    /* Portal cinematic layer moved to header.php (end of #lunara-critical-shell-repair)
-       so it is the FINAL stylesheet in the cascade. The critical shell block loads
-       after wp_head and was overriding these rules when they lived here. */
+    /* Portal cinematic layer moved to assets/css/lunara-shell.css. The shell
+       enqueue runs after route-specific styles, while request-specific studio
+       emitters below can still make the final scoped adjustment. */
     </style>
     <?php
 }

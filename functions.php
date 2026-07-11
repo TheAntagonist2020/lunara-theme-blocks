@@ -122,6 +122,24 @@ function lunara_enqueue_styles() {
 }
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
 
+if ( ! function_exists( 'lunara_enqueue_shell_styles' ) ) {
+function lunara_enqueue_shell_styles() {
+    $shell_css = lunara_resolve_theme_asset( 'assets/css/lunara-shell.css' );
+
+    if ( empty( $shell_css['uri'] ) ) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'lunara-shell',
+        $shell_css['uri'],
+        array( 'lunara-style' ),
+        lunara_theme_asset_version( $shell_css['path'] )
+    );
+}
+add_action( 'wp_enqueue_scripts', 'lunara_enqueue_shell_styles', 100 );
+}
+
 /**
  * Deploy-aware WP Rocket purge. Rocket's "Remove Unused CSS" strips every
  * stylesheet link and inlines a cached used-CSS set — which trails theme
@@ -10796,8 +10814,8 @@ add_action( 'wp_footer', 'lunara_output_sidebar_scroll_follow_js', 101 );
  * lunara_output_image_fadein_js and lunara_output_scroll_reveal_js live ONLY
  * in inc/frontend.php now (loaded first via functions-loader.php, so the
  * function_exists-guarded copies that used to sit here were permanently dead
- * code). CONTRACT for all future motion work: header.php's
- * #lunara-critical-shell-repair block deliberately forces homepage sections
+ * code). CONTRACT for all future motion work: assets/css/lunara-shell.css
+ * deliberately forces homepage sections
  * carrying .lunara-reveal to opacity:1/transform:none with !important as an
  * anti-jank guard - any new scroll choreography on those sections must use
  * pseudo-elements or child elements, never the section box itself.
