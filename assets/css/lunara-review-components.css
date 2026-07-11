@@ -1,9 +1,5 @@
 /* Lunara review components: route-scoped and cacheable. */
 
-:root {
-    --lunara-pair-aperture-mark-image: url("../images/lunara-pair-aperture.svg");
-}
-
 body.post-type-archive-review .lunara-review-archive-run-grid .lunara-review-grid-poster,
     body.page-template-page-reviews .lunara-review-archive-run-grid .lunara-review-grid-poster,
     body.post-type-archive-review .lunara-review-grid .lunara-review-grid-poster,
