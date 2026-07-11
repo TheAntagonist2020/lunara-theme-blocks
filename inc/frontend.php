@@ -519,6 +519,24 @@ function lunara_enqueue_phase1c_delivery_assets() {
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_phase1c_delivery_assets', 30 );
 
 /**
+ * The canonical Home renderer does not consume block or theme.json markup.
+ *
+ * WordPress core prints the full global stylesheet through actions in both
+ * the header and footer, so dequeueing the handle alone cannot prevent the
+ * 23 KB inline block. Remove those core callbacks on Home only; desktop and
+ * mobile pixel comparisons confirmed this stylesheet has no visual effect.
+ */
+function lunara_disable_unused_home_global_styles() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+
+    remove_action( 'wp_enqueue_scripts', 'wp_enqueue_global_styles' );
+    remove_action( 'wp_footer', 'wp_enqueue_global_styles', 1 );
+}
+add_action( 'wp', 'lunara_disable_unused_home_global_styles', 0 );
+
+/**
  * The canonical Home renderer contains no WordPress or Stackable blocks.
  * Pixel comparisons at 1440x900 and 390x844 showed zero changed pixels when
  * these unused styles were removed, so keep them off this route only.

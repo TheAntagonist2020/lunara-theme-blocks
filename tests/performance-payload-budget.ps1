@@ -142,6 +142,9 @@ Assert-True ($homeRuntime -notmatch '\.innerHTML\s*=') 'The Home lore runtime mu
 Assert-True ($homeRuntime -match '\.textContent\s*=') 'The Home lore runtime must construct editorial detail text through safe DOM APIs.'
 Assert-True ($fallback -notmatch '(?s)lunara-pairing-desk-section[^<]*<style') 'The Pairing Desk must not print its static component CSS inside Home HTML.'
 Assert-True ($reviewComponents -match 'Pairing Desk showcase') 'The cacheable Review component bundle is missing the Pairing Desk showcase rules.'
+Assert-True ($frontend -match "remove_action\(\s*'wp_enqueue_scripts'\s*,\s*'wp_enqueue_global_styles'\s*\)") 'Home must remove the WordPress core global-style callback before head rendering.'
+Assert-True ($frontend -match "remove_action\(\s*'wp_footer'\s*,\s*'wp_enqueue_global_styles'\s*,\s*1\s*\)") 'Home must prevent WordPress core from printing global styles again in the footer.'
+Assert-True ($frontend -match "add_action\(\s*'wp'\s*,\s*'lunara_disable_unused_home_global_styles'\s*,\s*0\s*\)") 'The Home global-style removal must run after query resolution and before head rendering.'
 Assert-True ($frontend -match 'wp_dequeue_style\(\s*\$handle\s*\)') 'Home must dequeue only the proven-unused style handles through the scoped loop.'
 Assert-True ($setup -match 'id="lunara-grain"') 'The split loader must emit static grain markup at wp_body_open.'
 Assert-True ($setup -match 'id="lunara-vignette"') 'The split loader must emit static vignette markup at wp_body_open.'
@@ -150,6 +153,6 @@ Assert-True ($fallback -match 'id="lunara-grain"') 'The fallback loader must emi
 Assert-True (($setup + $fallback) -notmatch 'lunara-film-grain') 'The unused legacy grain node must stay removed.'
 Assert-True ($style -match 'background-image:\s*url\("assets/images/lunara-grain\.svg"\)') 'Room Tone CSS must use the cacheable grain asset.'
 Assert-True ($grain -match '<feTurbulence') 'The cacheable grain asset appears incomplete.'
-Assert-True ($style -match 'Version:\s*3\.1\.98') 'Theme version must be 3.1.98 for the Phase 1C delivery release.'
+Assert-True ($style -match 'Version:\s*3\.1\.99') 'Theme version must be 3.1.99 for the Phase 1C staging-gate follow-up.'
 
 Write-Host "Performance payload budget contract passed (critical: $criticalBytes; shell: $shellBytes; public: $publicGuardrailBytes; home: $homeModuleBytes; review: $reviewComponentBytes; public JS: $publicRuntimeBytes; carousel JS: $scrollCarouselBytes; home JS: $homeRuntimeBytes; Oscars: $lateOscarsBytes; dynamic: $dynamicSignatureBytes; grain: $grainBytes bytes)."
