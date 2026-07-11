@@ -191,6 +191,13 @@ function lunara_print_late_oscars_guardrail_styles() {
 add_action( 'wp_footer', 'lunara_print_late_oscars_guardrail_styles', 999 );
 }
 
+if ( ! function_exists( 'lunara_inject_room_tone_markup' ) ) {
+function lunara_inject_room_tone_markup() {
+    echo '<div id="lunara-grain" class="is-live" aria-hidden="true"></div><div id="lunara-vignette" aria-hidden="true"></div>';
+}
+add_action( 'wp_body_open', 'lunara_inject_room_tone_markup', 1 );
+}
+
 /**
  * Deploy-aware WP Rocket purge. Rocket's "Remove Unused CSS" strips every
  * stylesheet link and inlines a cached used-CSS set — which trails theme

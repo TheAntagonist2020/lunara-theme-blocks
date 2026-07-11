@@ -15,11 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 // faces are self-hosted woff2s declared in style.css; nothing external
 // to preload.
 
-add_action( 'wp_body_open', 'lunara_inject_film_grain' );
-function lunara_inject_film_grain() {
-    echo '<div id="lunara-grain" class="is-live" aria-hidden="true"></div><div id="lunara-vignette" aria-hidden="true"></div>';
-}
-
 // We hook BEFORE the main content to start the Barba wrapper.
 // This allows the Blocksy Header to remain persistent across page loads!
 add_action( 'blocksy:main:before', 'lunara_start_barba_wrapper', 5 );
