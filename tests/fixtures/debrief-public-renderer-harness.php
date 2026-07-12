@@ -32,6 +32,7 @@ function lunara_test_reset( $review_id ) {
         'watch_calls'        => 0,
         'image_calls'        => array(),
         'remote_calls'       => 0,
+        'oscar_ledger_calls' => 0,
     );
 }
 
@@ -272,6 +273,7 @@ function lunara_pair_render_where_to_watch( $tt, $review_id = 0 ) {
 }
 
 function lunara_render_oscar_ledger_pill( $tt, $counts = null ) {
+    ++$GLOBALS['lunara_test']['oscar_ledger_calls'];
     $noms = (int) ( $counts['noms'] ?? 0 );
     if ( $noms <= 0 ) {
         return '';
@@ -334,13 +336,16 @@ lunara_test_assert( array( 1, 2, 3, 4 ) === array_column( $GLOBALS['lunara_test'
 foreach ( $GLOBALS['lunara_test']['resolver_calls'] as $call ) {
     lunara_test_assert( true === $call['args']['require_published'], 'Canonical resolver must require published Movies.' );
     lunara_test_assert( true === $call['args']['resolve_poster'], 'Canonical resolver must opt into local posters.' );
-    lunara_test_assert( true === $call['args']['resolve_awards'], 'Canonical resolver must reuse resolved Oscar counts.' );
+    lunara_test_assert( false === $call['args']['allow_aat_local_poster'], 'Canonical resolver must not depend on the Oscars plugin poster library.' );
+    lunara_test_assert( false === $call['args']['resolve_awards'], 'Canonical resolver must not query Oscar data.' );
 }
 lunara_test_assert( array( true ) === $GLOBALS['lunara_test']['validation_strict'], 'Canonical validation must be strict.' );
 lunara_test_assert( 0 === $GLOBALS['lunara_test']['legacy_calls'], 'Canonical output must not call the legacy shortcode.' );
 lunara_test_assert( 0 === $GLOBALS['lunara_test']['parser_calls'], 'Canonical output must not call the legacy parser.' );
 lunara_test_assert( 0 === $GLOBALS['lunara_test']['legacy_media_calls'], 'Canonical output must not call the legacy poster helper.' );
 lunara_test_assert( 0 === $GLOBALS['lunara_test']['remote_calls'], 'Canonical output must make no remote request.' );
+lunara_test_assert( 0 === $GLOBALS['lunara_test']['oscar_ledger_calls'], 'Canonical output must make no Oscar Ledger call.' );
+lunara_test_assert( false === strpos( $canonical_html, 'lunara-oscar-ledger' ), 'Canonical output must remain complete without Oscar markup.' );
 lunara_test_assert( 3 === substr_count( $canonical['pairings_html'], 'class="lunara-pair-card lunara-pair-card--' ), 'Canonical output must contain exactly three cards.' );
 lunara_test_assert( false !== strpos( $canonical['pairings_html'], 'data-count="3"' ), 'Canonical output must declare three cards.' );
 $theme_pos   = strpos( $canonical['pairings_html'], 'lunara-pair-card--theme' );
@@ -459,6 +464,7 @@ echo json_encode(
         'empty_status_legacy' => true,
         'remote_calls'        => 0,
         'poster_fallback'     => true,
+        'oscar_independent'   => true,
     ),
     JSON_UNESCAPED_SLASHES
 );

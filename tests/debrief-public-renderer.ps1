@@ -31,6 +31,7 @@ Assert-True ([bool] $result.partial_no_mix) 'Partial canonical data must not mix
 Assert-True ([bool] $result.empty_status_legacy) 'Empty canonical status must preserve whole legacy fallback.'
 Assert-True ([int] $result.remote_calls -eq 0) 'Canonical renderer must make zero remote calls.'
 Assert-True ([bool] $result.poster_fallback) 'Controlled missing-poster fallback was not verified.'
+Assert-True ([bool] $result.oscar_independent) 'Canonical renderer must remain independent of Oscar data and helpers.'
 
 $renderer = Get-Content -Raw (Join-Path $themeRoot 'inc/debrief-public.php')
 $loader = Get-Content -Raw (Join-Path $themeRoot 'functions-loader.php')
@@ -46,6 +47,9 @@ Assert-True ($renderer -match "'published'\s*!==") 'Canonical renderer must requ
 Assert-True ($renderer -match 'lunara_debrief_validate_record\(\s*\$record\s*,\s*true\s*\)') 'Canonical renderer must use strict Core validation.'
 Assert-True ($renderer -match "array\(\s*'theme_echo',\s*'counter_program',\s*'career_context'\s*\)") 'Canonical renderer must lock the three-role order.'
 Assert-True ($renderer -match "'lunara-poster-library'") 'Canonical renderer must use the registered poster-library size.'
+Assert-True ($renderer -match "'allow_aat_local_poster'\s*=>\s*false") 'Canonical renderer must not use the Oscars plugin poster library.'
+Assert-True ($renderer -match "'resolve_awards'\s*=>\s*false") 'Canonical renderer must not request Oscar data.'
+Assert-True ($renderer -match "'show_oscar_ledger'\s*=>\s*false") 'Canonical pairing cards must suppress Oscar Ledger markup.'
 Assert-True ($renderer -notmatch 'wp_remote_get\s*\(') 'Public renderer module must not contain remote HTTP calls.'
 Assert-True ($renderer -notmatch 'lunara_get_title_poster_html\s*\(') 'Public renderer module must not call the remote-capable poster helper.'
 Assert-True ($renderer -notmatch 'do_shortcode\s*\(') 'Public renderer module must not execute shortcode strings.'
@@ -64,6 +68,6 @@ foreach ($legacyCall in @(
 Assert-True ($blocks -match 'lunara_debrief_public_renderer_enabled') 'Hidden bridge blocks must honor the staged native renderer switch.'
 Assert-True ($blocks -match 'lunara_render_review_debrief') 'Debrief bridge block must use the native renderer while enabled.'
 Assert-True ($blocks -match 'lunara_get_review_debrief_render_parts') 'Pair It With bridge block must use the atomic controller while enabled.'
-Assert-True ($style -match 'Version:\s*3\.2\.6') 'Theme version must identify the staged public Debrief renderer release.'
+Assert-True ($style -match 'Version:\s*3\.2\.7') 'Theme version must identify the Oscar-independent Debrief renderer release.'
 
 Write-Host 'Debrief public renderer contract passed.'

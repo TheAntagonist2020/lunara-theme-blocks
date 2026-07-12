@@ -79,6 +79,6 @@ Assert-True ($functions -match '\$is_priority_image\s*=\s*\$is_first\s*&&\s*\(bo
 Assert-True ($functions -match 'loading="lazy" decoding="async" fetchpriority="low"') 'Non-LCP cinematic hero images must use native lazy loading at low priority.'
 Assert-True (([regex]::Matches($functions, "array_key_exists\(\s*'first_image_is_lcp'")).Count -eq 2) 'Both static and carousel hero renderers must honor the LCP context flag.'
 Assert-True ($functions -match 'lunara_render_cinematic_hero_slide\( \$slide_data, \$slide_index, \$first_image_is_lcp \)') 'The carousel must pass its LCP context into every slide renderer.'
-Assert-True ($style -match 'Version:\s*3\.2\.6') 'Theme version must be 3.2.6 for the staged atomic Debrief renderer.'
+Assert-True ($style -match 'Version:\s*3\.2\.7') 'Theme version must be 3.2.7 for the Oscar-independent Debrief renderer.'
 
 Write-Host 'Homepage LCP priority hygiene contract passed.'
