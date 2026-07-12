@@ -15776,11 +15776,20 @@ if ( ! function_exists( 'lunara_register_homepage_blocks' ) ) {
 				'overrideCta'     => array( 'type' => 'string', 'default' => '' ),
 			),
 			'render_callback' => function ( $attributes ) {
+				$attributes = is_array( $attributes ) ? $attributes : array();
+
+				// The editable Home block composition renders after the Front Desk,
+				// whose lead image is already the page LCP. Keep this same block
+				// eager/high elsewhere where it can still be the true opener.
+				if ( is_front_page() ) {
+					$attributes['first_image_is_lcp'] = false;
+				}
+
 				// Hero Command-aware carousel — identical to what front-page.php
 				// renders; falls back internally to the static hero (with these
 				// overrides) when fewer than two slides qualify.
 				if ( function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
-					return lunara_render_cinematic_hero_carousel( is_array( $attributes ) ? $attributes : array() );
+					return lunara_render_cinematic_hero_carousel( $attributes );
 				}
 				return function_exists( 'lunara_render_cinematic_hero' ) ? lunara_render_cinematic_hero( $attributes ) : '';
 			},

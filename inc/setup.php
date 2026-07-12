@@ -378,6 +378,15 @@ function lunara_protect_priority_image_attributes( $attr ) {
 
     $class_string = isset( $attr['class'] ) ? (string) $attr['class'] : '';
 
+    // WordPress may promote an early wp_get_attachment_image() after its
+    // caller supplied fetchpriority=auto. The Front Desk lead is Home's LCP,
+    // so reassert normal priority for the decorative masthead logo here at
+    // the final theme-owned attribute filter.
+    if ( false !== strpos( $class_string, 'lunara-home-masthead-logo' ) ) {
+        $attr['loading']       = 'eager';
+        $attr['fetchpriority'] = 'auto';
+    }
+
     if ( false !== strpos( $class_string, 'default-logo' ) || false !== strpos( $class_string, 'dark-mode-logo' ) || false !== strpos( $class_string, 'lunara-footer-logo' ) ) {
         $attr['width']    = 300;
         $attr['height']   = 79;
