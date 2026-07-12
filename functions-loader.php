@@ -33,7 +33,8 @@ require_once $lunara_inc . 'control-desk.php';
 // The monolithic fallback in functions.php still covers older page content while
 // the canonical live homepage path remains the section-based front-page template.
 
-// Layer 2 — Shared hub (debrief defines functions used by everything below).
+// Layer 2 — Shared hub (Debrief data adapters and legacy renderer).
+require_once $lunara_inc . 'debrief-resolver.php';
 require_once $lunara_inc . 'debrief.php';
 require_once $lunara_inc . 'shot-reel.php';   // The Still Gallery — [lunara_shot_reel] screening-room shot essays
 
