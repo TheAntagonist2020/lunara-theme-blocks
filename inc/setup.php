@@ -371,32 +371,6 @@ function lunara_is_priority_image_attr( $attr ) {
     return 'eager' === $loading || 'high' === $fetchpriority;
 }
 
-/**
- * Keep WordPress's automatic LCP heuristic focused on the Front Desk lead.
- *
- * Core calculates loading optimization attributes after a caller's attachment
- * attributes, so this supported final filter is the reliable place to keep the
- * decorative Home masthead logo eager without promoting it above the lead.
- */
-function lunara_filter_home_masthead_loading_optimization_attributes( $loading_attrs, $tag_name, $attr, $context ) {
-    unset( $context );
-
-    if ( is_admin() || ! is_front_page() || 'img' !== $tag_name || ! is_array( $loading_attrs ) || ! is_array( $attr ) ) {
-        return $loading_attrs;
-    }
-
-    $class_string = isset( $attr['class'] ) ? (string) $attr['class'] : '';
-    if ( false === strpos( $class_string, 'lunara-home-masthead-logo' ) ) {
-        return $loading_attrs;
-    }
-
-    $loading_attrs['loading']       = 'eager';
-    $loading_attrs['fetchpriority'] = 'auto';
-
-    return $loading_attrs;
-}
-add_filter( 'wp_get_loading_optimization_attributes', 'lunara_filter_home_masthead_loading_optimization_attributes', PHP_INT_MAX, 4 );
-
 function lunara_protect_priority_image_attributes( $attr ) {
     if ( is_admin() ) {
         return $attr;

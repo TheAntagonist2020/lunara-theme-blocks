@@ -53,9 +53,9 @@ $logoPriorityHelper = [regex]::Match(
 Assert-True ('' -ne $logoPriorityHelper) 'The route-aware custom-logo priority helper is missing.'
 Assert-True ($logoPriorityHelper -match "is_front_page\(\)\s*\?\s*'auto'\s*:\s*'high'") 'Header logos must use normal priority on Home and retain high priority elsewhere.'
 Assert-True (([regex]::Matches($setup, "'fetchpriority'\]\s*=\s*lunara_custom_logo_fetch_priority\(\)")).Count -eq 2) 'Both custom-logo attribute filters must use the route-aware priority helper.'
-Assert-True ($setup -match 'function lunara_filter_home_masthead_loading_optimization_attributes\( \$loading_attrs, \$tag_name, \$attr, \$context \)') 'The Home masthead must use a named WordPress loading-optimization filter.'
-Assert-True ($setup -match '(?s)lunara_filter_home_masthead_loading_optimization_attributes.*?lunara-home-masthead-logo.*?\$loading_attrs\[''fetchpriority''\]\s*=\s*''auto''') 'The WordPress loading-optimization filter must keep the Home masthead logo at normal priority.'
-Assert-True ($setup -match "add_filter\(\s*'wp_get_loading_optimization_attributes',\s*'lunara_filter_home_masthead_loading_optimization_attributes',\s*PHP_INT_MAX,\s*4\s*\)") 'The Home masthead loading-optimization filter must run at the final theme-owned priority with all four arguments.'
+Assert-True ($frontend -match "class_exists\(\s*'WP_HTML_Tag_Processor'\s*\)") 'The Home masthead must finalize attributes through WordPress structured HTML processing.'
+Assert-True ($frontend -match '\$logo_processor->set_attribute\(\s*''fetchpriority'',\s*''auto''\s*\)') 'The final Home masthead markup must use normal fetch priority.'
+Assert-True ($frontend -match '\$logo_html\s*=\s*\$logo_processor->get_updated_html\(\)') 'The structured masthead update must replace the filtered attachment markup.'
 Assert-True ($headerCommand -match '\$fetchpriority\s*=\s*function_exists\(\s*''lunara_custom_logo_fetch_priority''\s*\)') 'The optional Header Command logo must reuse the route-aware priority helper.'
 Assert-True ($headerCommand -match 'fetchpriority="%4\$s"') 'Header Command markup must print the resolved route-aware priority.'
 
@@ -79,6 +79,6 @@ Assert-True ($functions -match '\$is_priority_image\s*=\s*\$is_first\s*&&\s*\(bo
 Assert-True ($functions -match 'loading="lazy" decoding="async" fetchpriority="low"') 'Non-LCP cinematic hero images must use native lazy loading at low priority.'
 Assert-True (([regex]::Matches($functions, "array_key_exists\(\s*'first_image_is_lcp'")).Count -eq 2) 'Both static and carousel hero renderers must honor the LCP context flag.'
 Assert-True ($functions -match 'lunara_render_cinematic_hero_slide\( \$slide_data, \$slide_index, \$first_image_is_lcp \)') 'The carousel must pass its LCP context into every slide renderer.'
-Assert-True ($style -match 'Version:\s*3\.2\.3') 'Theme version must be 3.2.3 for the WordPress loading-optimization correction.'
+Assert-True ($style -match 'Version:\s*3\.2\.4') 'Theme version must be 3.2.4 for the final masthead markup correction.'
 
 Write-Host 'Homepage LCP priority hygiene contract passed.'
