@@ -271,6 +271,19 @@ function lunara_render_home_front_door() {
                 ),
             )
         );
+
+        // Core and performance plugins may promote an early attachment image
+        // after its requested fetch priority has been evaluated. Finalize this
+        // one decorative wordmark after those filters while preserving the
+        // responsive srcset, dimensions, and all editor-selected media data.
+        if ( is_string( $logo_html ) && '' !== $logo_html && class_exists( 'WP_HTML_Tag_Processor' ) ) {
+            $logo_processor = new WP_HTML_Tag_Processor( $logo_html );
+            if ( $logo_processor->next_tag( array( 'tag_name' => 'IMG' ) ) ) {
+                $logo_processor->set_attribute( 'loading', 'eager' );
+                $logo_processor->set_attribute( 'fetchpriority', 'auto' );
+                $logo_html = $logo_processor->get_updated_html();
+            }
+        }
     }
 
     $routes = array(
