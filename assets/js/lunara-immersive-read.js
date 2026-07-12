@@ -73,8 +73,39 @@
 		|| document.querySelector('.lunara-review-visual--hero img')
 		|| article.querySelector('img');
 	if (img) {
+		var ambientSampleUrl = function (image) {
+			var source = image.currentSrc || image.src;
+			if (!source) {
+				return '';
+			}
+
+			try {
+				var url = new URL(source, document.baseURI);
+
+				if (url.hostname.toLowerCase() === 'image.tmdb.org') {
+					var photon = new URL('https://i0.wp.com/' + url.hostname + url.pathname);
+					photon.searchParams.set('resize', '48,48');
+					photon.searchParams.set('quality', '60');
+					photon.searchParams.set('ssl', '1');
+					return photon.toString();
+				}
+
+				if (url.origin === window.location.origin || /(^|\.)wp\.com$/i.test(url.hostname)) {
+					return url.toString();
+				}
+			} catch (e) {
+				return '';
+			}
+
+			return '';
+		};
+		var sampleUrl = ambientSampleUrl(img);
+		if (!sampleUrl) {
+			return;
+		}
+
 		// Re-fetch through crossOrigin=anonymous so the canvas isn't tainted —
-		// Photon/i0.wp.com sends ACAO:* so this succeeds for site imagery.
+		// Photon/i0.wp.com sends ACAO:*; unsupported external hosts are skipped.
 		var sample = new Image();
 		sample.crossOrigin = 'anonymous';
 		var applyAmbient = function () {
@@ -112,7 +143,7 @@
 		};
 		sample.addEventListener('load', applyAmbient, { once: true });
 		var armSample = function () {
-			sample.src = img.currentSrc || img.src;
+			sample.src = sampleUrl;
 		};
 		if (img.complete && img.naturalWidth) {
 			armSample();
