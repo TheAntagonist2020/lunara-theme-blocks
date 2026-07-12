@@ -3134,7 +3134,9 @@ function lunara_output_journal_archive_studio_css() {
         return;
     }
 
-    $is_journal_archive = is_post_type_archive( 'journal' ) || is_tax( 'journal_type' );
+    $is_journal_archive = function_exists( 'lunara_is_journal_archive_family' )
+        ? lunara_is_journal_archive_family()
+        : ( is_post_type_archive( 'journal' ) || is_tax( array( 'journal_section', 'journal_topic', 'journal_type' ) ) );
 
     if ( ! $is_journal_archive ) {
         return;
@@ -3454,7 +3456,11 @@ function lunara_output_journal_archive_media_guard_js() {
         return;
     }
 
-    if ( ! is_post_type_archive( 'journal' ) && ! is_tax( 'journal_type' ) ) {
+    $is_journal_archive = function_exists( 'lunara_is_journal_archive_family' )
+        ? lunara_is_journal_archive_family()
+        : ( is_post_type_archive( 'journal' ) || is_tax( array( 'journal_section', 'journal_topic', 'journal_type' ) ) );
+
+    if ( ! $is_journal_archive ) {
         return;
     }
     ?>
@@ -9229,7 +9235,7 @@ if ( ! function_exists( 'lunara_separate_review_from_editorial_archives' ) ) {
             return;
         }
 
-        if ( $query->is_post_type_archive( 'journal' ) || $query->is_tax( 'journal_type' ) ) {
+        if ( $query->is_post_type_archive( 'journal' ) || $query->is_tax( array( 'journal_section', 'journal_topic', 'journal_type' ) ) ) {
             if ( function_exists( 'lunara_apply_editorial_archive_sort_args' ) ) {
                 $query_vars = array(
                     'orderby' => $query->get( 'orderby' ),

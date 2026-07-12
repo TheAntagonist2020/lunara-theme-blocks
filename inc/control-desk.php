@@ -4500,7 +4500,10 @@ function lunara_control_desk_get_editorial_signals( $post_id, $post_type ) {
     }
 
     if ( 'journal' === $post_type ) {
-        if ( ! lunara_control_desk_has_terms( $post_id, 'journal_type' ) ) {
+        $has_journal_section = function_exists( 'lunara_journal_has_section' )
+            ? lunara_journal_has_section( $post_id )
+            : lunara_control_desk_has_terms( $post_id, 'journal_type' );
+        if ( ! $has_journal_section ) {
             $signals[] = lunara_control_desk_make_signal( __( 'Choose journal type', 'lunara-film' ) );
         }
     } elseif ( ! lunara_control_desk_has_terms( $post_id, 'category' ) ) {
@@ -4511,7 +4514,12 @@ function lunara_control_desk_get_editorial_signals( $post_id, $post_type ) {
         $signals[] = lunara_control_desk_make_signal( __( 'Add tags', 'lunara-film' ), 'weak' );
     }
 
-    if ( 'journal' === $post_type && '1' !== get_post_meta( $post_id, '_lunara_journal_featured', true ) ) {
+    if (
+        'journal' === $post_type &&
+        ! ( function_exists( 'lunara_journal_is_featured' )
+            ? lunara_journal_is_featured( $post_id )
+            : '1' === get_post_meta( $post_id, '_lunara_journal_featured', true ) )
+    ) {
         $signals[] = lunara_control_desk_make_signal( __( 'Not journal-featured', 'lunara-film' ), 'weak' );
     }
 
@@ -4615,6 +4623,10 @@ function lunara_control_desk_get_journal_duplicate_risk( $post_id ) {
 }
 
 function lunara_control_desk_journal_has_source_signal( $post_id, $text ) {
+	if ( function_exists( 'lunara_get_journal_source_items' ) && ! empty( lunara_get_journal_source_items( $post_id ) ) ) {
+		return true;
+	}
+
     $source_meta_keys = array(
         '_lunara_source_url',
         '_lunara_source_name',
@@ -4639,6 +4651,21 @@ function lunara_control_desk_journal_has_source_signal( $post_id, $text ) {
 }
 
 function lunara_control_desk_journal_source_summary( $post_id, $text ) {
+	if ( function_exists( 'lunara_get_journal_source_items' ) ) {
+		$source_items = lunara_get_journal_source_items( $post_id );
+		if ( ! empty( $source_items[0] ) ) {
+			if ( ! empty( $source_items[0]['publication'] ) ) {
+				return sanitize_text_field( $source_items[0]['publication'] );
+			}
+			if ( ! empty( $source_items[0]['url'] ) ) {
+				return sanitize_text_field( wp_parse_url( $source_items[0]['url'], PHP_URL_HOST ) );
+			}
+			if ( ! empty( $source_items[0]['headline'] ) ) {
+				return sanitize_text_field( $source_items[0]['headline'] );
+			}
+		}
+	}
+
     $source_meta_keys = array(
         '_lunara_source_name',
         '_lunara_journal_source_name',
@@ -4677,7 +4704,12 @@ function lunara_control_desk_journal_source_risk_details( $post_id, $text ) {
         '_lunara_dispatch_source_label',
     );
 
-    $haystack = (string) $text;
+	$haystack = (string) $text;
+    if ( function_exists( 'lunara_get_journal_source_items' ) ) {
+        foreach ( lunara_get_journal_source_items( $post_id ) as $source_item ) {
+            $haystack .= "\n" . implode( ' ', array_filter( $source_item ) );
+        }
+    }
     foreach ( $source_meta_keys as $meta_key ) {
         $value = get_post_meta( $post_id, $meta_key, true );
         if ( is_scalar( $value ) && '' !== (string) $value ) {
@@ -4744,7 +4776,9 @@ function lunara_control_desk_get_journal_dek_text( $post ) {
         return '';
     }
 
-    $standfirst = get_post_meta( $post->ID, '_lunara_post_standfirst', true );
+    $standfirst = function_exists( 'lunara_get_journal_field_value' )
+        ? lunara_get_journal_field_value( $post->ID, 'journal_deck', '_lunara_post_standfirst' )
+        : get_post_meta( $post->ID, '_lunara_post_standfirst', true );
     if ( is_scalar( $standfirst ) && '' !== trim( (string) $standfirst ) ) {
         return trim( wp_strip_all_tags( (string) $standfirst ) );
     }
@@ -4757,7 +4791,9 @@ function lunara_control_desk_get_journal_dek_text( $post ) {
 }
 
 function lunara_control_desk_get_journal_card_label_details( $post_id ) {
-    $override = trim( (string) get_post_meta( $post_id, '_lunara_journal_kicker', true ) );
+    $override = function_exists( 'lunara_get_journal_field_value' )
+        ? trim( (string) lunara_get_journal_field_value( $post_id, 'journal_kicker', '_lunara_journal_kicker' ) )
+        : trim( (string) get_post_meta( $post_id, '_lunara_journal_kicker', true ) );
     if ( '' !== $override ) {
         return array(
             'value'  => sprintf( __( 'Override: %s', 'lunara-film' ), $override ),
@@ -4787,6 +4823,13 @@ function lunara_control_desk_get_journal_card_label_details( $post_id ) {
 }
 
 function lunara_control_desk_get_journal_image_credit_summary( $post_id, $attachment_id ) {
+	if ( function_exists( 'lunara_get_journal_field_value' ) ) {
+		$canonical_credit = lunara_get_journal_field_value( $post_id, 'journal_image_credit' );
+		if ( is_scalar( $canonical_credit ) && '' !== trim( (string) $canonical_credit ) ) {
+			return sanitize_text_field( (string) $canonical_credit );
+		}
+	}
+
     $post_keys = array(
         '_lunara_featured_image_credit',
         '_lunara_featured_image_source_name',
@@ -4835,13 +4878,13 @@ function lunara_control_desk_get_journal_visual_provenance_details( $post_id, $a
         return '';
     };
 
-    $credit = $read_meta(
-        $post_id,
-        array(
-            '_lunara_featured_image_credit',
-            '_lunara_image_credit',
+    $credit = function_exists( 'lunara_get_journal_field_value' )
+        ? lunara_get_journal_field_value(
+            $post_id,
+            'journal_image_credit',
+            array( '_lunara_featured_image_credit', '_lunara_image_credit' )
         )
-    );
+        : $read_meta( $post_id, array( '_lunara_featured_image_credit', '_lunara_image_credit' ) );
     if ( '' === $credit && $attachment_id ) {
         $credit = $read_meta(
             $attachment_id,
@@ -4861,6 +4904,12 @@ function lunara_control_desk_get_journal_visual_provenance_details( $post_id, $a
             '_lunara_dispatch_source_label',
         )
     );
+    if ( function_exists( 'lunara_get_journal_source_items' ) ) {
+        $canonical_sources = lunara_get_journal_source_items( $post_id );
+        if ( ! empty( $canonical_sources[0]['publication'] ) ) {
+            $source_name = $canonical_sources[0]['publication'];
+        }
+    }
     if ( '' === $source_name && $attachment_id ) {
         $source_name = $read_meta(
             $attachment_id,
@@ -4871,15 +4920,16 @@ function lunara_control_desk_get_journal_visual_provenance_details( $post_id, $a
         );
     }
 
-    $source_url = $read_meta(
-        $post_id,
-        array(
-            '_lunara_featured_image_source_url',
-            '_lunara_source_url',
-            '_lunara_journal_source_url',
-            '_lunara_dispatch_source_url',
+    $source_url = function_exists( 'lunara_get_journal_field_value' )
+        ? lunara_get_journal_field_value(
+            $post_id,
+            'journal_image_source_url',
+            array( '_lunara_featured_image_source_url', '_lunara_source_url', '_lunara_journal_source_url', '_lunara_dispatch_source_url' )
         )
-    );
+        : $read_meta(
+            $post_id,
+            array( '_lunara_featured_image_source_url', '_lunara_source_url', '_lunara_journal_source_url', '_lunara_dispatch_source_url' )
+        );
     if ( '' === $source_url && $attachment_id ) {
         $source_url = $read_meta(
             $attachment_id,
@@ -4891,7 +4941,12 @@ function lunara_control_desk_get_journal_visual_provenance_details( $post_id, $a
     }
 
     $caption = $attachment_id ? trim( (string) wp_get_attachment_caption( $attachment_id ) ) : '';
-    $alt     = $attachment_id ? trim( (string) get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ) ) : '';
+    $alt     = function_exists( 'lunara_get_journal_field_value' )
+        ? trim( (string) lunara_get_journal_field_value( $post_id, 'journal_image_alt' ) )
+        : '';
+    if ( '' === $alt && $attachment_id ) {
+        $alt = trim( (string) get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ) );
+    }
 
     return array(
         'credit'      => sanitize_text_field( $credit ),
@@ -5113,7 +5168,9 @@ function lunara_control_desk_get_journal_growth_checks( $post_id ) {
 
     $current_lead_id = function_exists( 'lunara_control_desk_get_current_journal_lead_id' ) ? lunara_control_desk_get_current_journal_lead_id() : 0;
     $is_manual_lead  = $current_lead_id && absint( $post_id ) === absint( $current_lead_id );
-    $has_home_flag   = '1' === get_post_meta( $post_id, '_lunara_journal_featured', true );
+    $has_home_flag   = function_exists( 'lunara_journal_is_featured' )
+        ? lunara_journal_is_featured( $post_id )
+        : '1' === get_post_meta( $post_id, '_lunara_journal_featured', true );
     $checks[] = array(
         'label'  => __( 'Homepage Candidate', 'lunara-film' ),
         'value'  => $is_manual_lead ? __( 'Curated lead', 'lunara-film' ) : ( $has_home_flag ? __( 'Featured', 'lunara-film' ) : __( 'Not flagged', 'lunara-film' ) ),
@@ -14365,20 +14422,43 @@ function lunara_control_desk_get_homepage_lane_posts( $post_type, $meta_key, $li
         return array();
     }
 
-    $query = new WP_Query(
-        array(
+    $args = array(
             'post_type'              => $post_type,
             'post_status'            => array( 'publish', 'draft', 'pending' ),
             'posts_per_page'         => absint( $limit ),
             'orderby'                => 'modified',
             'order'                  => 'DESC',
-            'meta_key'               => $meta_key,
-            'meta_value'             => '1',
             'no_found_rows'          => true,
             'update_post_meta_cache' => true,
             'update_post_term_cache' => false,
-        )
-    );
+        );
+
+    if ( 'journal' === $post_type && '_lunara_journal_featured' === $meta_key ) {
+        $args['meta_query'] = array(
+            'relation' => 'OR',
+            array(
+                'key'     => 'journal_priority',
+                'value'   => array( 'high', 'breaking' ),
+                'compare' => 'IN',
+            ),
+            array(
+                'relation' => 'AND',
+                array(
+                    'key'     => 'journal_priority',
+                    'compare' => 'NOT EXISTS',
+                ),
+                array(
+                    'key'   => '_lunara_journal_featured',
+                    'value' => '1',
+                ),
+            ),
+        );
+    } else {
+        $args['meta_key']   = $meta_key;
+        $args['meta_value'] = '1';
+    }
+
+    $query = new WP_Query( $args );
 
     return $query->posts;
 }

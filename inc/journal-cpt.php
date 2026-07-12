@@ -18,11 +18,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Whether the dedicated Journal Foundation plugin is available.
+ *
+ * The plugin loads before the theme, so this is a stable ownership signal by
+ * the time theme modules register their hooks.
+ *
+ * @return bool
+ */
+function lunara_journal_foundation_is_active() {
+	return defined( 'LUNARA_JOURNAL_FOUNDATION_VERSION' ) || class_exists( 'Lunara_Journal_Foundation' );
+}
+
 /* =========================================================================
    1.  POST TYPE
    ========================================================================= */
 
 function lunara_register_journal_cpt() {
+	if ( post_type_exists( 'journal' ) ) {
+		return;
+	}
+
 	$labels = array(
 		'name'                  => __( 'Journal',                 'lunara-film' ),
 		'singular_name'         => __( 'Journal Entry',           'lunara-film' ),
@@ -82,6 +98,11 @@ add_action( 'init', 'lunara_register_journal_cpt' );
    ========================================================================= */
 
 function lunara_register_journal_type_taxonomy() {
+	if ( taxonomy_exists( 'journal_type' ) ) {
+		register_taxonomy_for_object_type( 'journal_type', 'journal' );
+		return;
+	}
+
 	$labels = array(
 		'name'              => __( 'Journal Types',         'lunara-film' ),
 		'singular_name'     => __( 'Journal Type',          'lunara-film' ),
@@ -114,7 +135,6 @@ function lunara_register_journal_type_taxonomy() {
 	register_taxonomy( 'journal_type', array( 'journal' ), $args );
 }
 add_action( 'init', 'lunara_register_journal_type_taxonomy' );
-
 
 /**
  * Register the per-post meta fields with the REST API so they can be set
@@ -176,7 +196,9 @@ add_action( 'after_switch_theme', 'lunara_seed_journal_type_terms' );
 function lunara_journal_add_meta_box() {
 	add_meta_box(
 		'lunara_journal_meta',
-		__( 'Journal Details', 'lunara-film' ),
+		lunara_journal_foundation_is_active()
+			? __( 'Homepage Curation', 'lunara-film' )
+			: __( 'Journal Details', 'lunara-film' ),
 		'lunara_journal_meta_box_render',
 		'journal',
 		'side',
@@ -192,7 +214,8 @@ add_action( 'add_meta_boxes', 'lunara_journal_add_meta_box' );
 function lunara_journal_meta_box_render( $post ) {
 	wp_nonce_field( 'lunara_journal_meta_save', 'lunara_journal_meta_nonce' );
 
-	$kicker             = get_post_meta( $post->ID, '_lunara_journal_kicker',      true );
+	$foundation_fields  = lunara_journal_foundation_is_active();
+	$kicker             = get_post_meta( $post->ID, '_lunara_journal_kicker', true );
 	$signal_note        = get_post_meta( $post->ID, '_lunara_journal_signal_note', true );
 	$is_featured        = get_post_meta( $post->ID, '_lunara_journal_featured',    true );
 	$home_featured      = get_post_meta( $post->ID, '_lunara_home_featured',       true );
@@ -207,6 +230,7 @@ function lunara_journal_meta_box_render( $post ) {
 		.lunara-meta-field .description { margin-top: 4px; font-size: 11px; color: #757575; }
 	</style>
 
+	<?php if ( ! $foundation_fields ) : ?>
 	<div class="lunara-meta-field">
 		<label for="lunara_journal_kicker"><?php esc_html_e( 'Kicker / Label Override', 'lunara-film' ); ?></label>
 		<input
@@ -228,7 +252,9 @@ function lunara_journal_meta_box_render( $post ) {
 		><?php echo esc_textarea( $signal_note ); ?></textarea>
 		<p class="description"><?php esc_html_e( 'Overrides the global signal note for this entry\'s Journal Type.', 'lunara-film' ); ?></p>
 	</div>
+	<?php endif; ?>
 
+	<?php if ( ! $foundation_fields ) : ?>
 	<div class="lunara-meta-field">
 		<label>
 			<input
@@ -240,6 +266,7 @@ function lunara_journal_meta_box_render( $post ) {
 			<?php esc_html_e( 'Feature this entry (lead position on homepage)', 'lunara-film' ); ?>
 		</label>
 	</div>
+	<?php endif; ?>
 
 	<div class="lunara-meta-field">
 		<label>
@@ -288,7 +315,7 @@ function lunara_journal_meta_box_save( $post_id ) {
 		return;
 	}
 
-	if ( isset( $_POST['lunara_journal_kicker'] ) ) {
+	if ( ! lunara_journal_foundation_is_active() && isset( $_POST['lunara_journal_kicker'] ) ) {
 		update_post_meta(
 			$post_id,
 			'_lunara_journal_kicker',
@@ -296,7 +323,7 @@ function lunara_journal_meta_box_save( $post_id ) {
 		);
 	}
 
-	if ( isset( $_POST['lunara_journal_signal_note'] ) ) {
+	if ( ! lunara_journal_foundation_is_active() && isset( $_POST['lunara_journal_signal_note'] ) ) {
 		update_post_meta(
 			$post_id,
 			'_lunara_journal_signal_note',
@@ -304,11 +331,13 @@ function lunara_journal_meta_box_save( $post_id ) {
 		);
 	}
 
-	update_post_meta(
-		$post_id,
-		'_lunara_journal_featured',
-		isset( $_POST['lunara_journal_featured'] ) ? '1' : '0'
-	);
+	if ( ! lunara_journal_foundation_is_active() ) {
+		update_post_meta(
+			$post_id,
+			'_lunara_journal_featured',
+			isset( $_POST['lunara_journal_featured'] ) ? '1' : '0'
+		);
+	}
 
 	// Curation v1 — unified homepage feature pin (shared across review + journal feeds).
 	update_post_meta(
@@ -388,84 +417,3 @@ function lunara_flush_journal_rewrites() {
 	flush_rewrite_rules();
 }
 add_action( 'after_switch_theme', 'lunara_flush_journal_rewrites' );
-
-
-/* =========================================================================
-   5.  HELPER — get the kicker label for a journal post
-   ========================================================================= */
-
-/**
- * Return the display kicker for a journal entry:
- *   1. Per-post kicker override  (_lunara_journal_kicker)
- *   2. First journal_type term name
- *   3. Customizer default kicker  (lunara_post_signal_kicker_default)
- *   4. Hard fallback: "Journal"
- *
- * @param  int    $post_id
- * @return string
- */
-function lunara_get_journal_kicker( $post_id = 0 ) {
-	if ( ! $post_id ) {
-		$post_id = get_the_ID();
-	}
-
-	$normalize_kicker = static function( $label ) {
-		$label = trim( (string) $label );
-		if ( in_array( $label, array( 'News', 'Dispatch', 'Dispatches', 'Dispatches & Audio' ), true ) ) {
-			return __( 'Journal', 'lunara-film' );
-		}
-
-		return $label;
-	};
-
-	$override = trim( (string) get_post_meta( $post_id, '_lunara_journal_kicker', true ) );
-	if ( $override !== '' ) {
-		return $normalize_kicker( $override );
-	}
-
-	$terms = get_the_terms( $post_id, 'journal_type' );
-	if ( $terms && ! is_wp_error( $terms ) ) {
-		return $normalize_kicker( $terms[0]->name );
-	}
-
-	$customizer_default = trim( (string) get_theme_mod( 'lunara_post_signal_kicker_default', '' ) );
-	if ( $customizer_default !== '' ) {
-		return $normalize_kicker( $customizer_default );
-	}
-
-	return __( 'Journal', 'lunara-film' );
-}
-
-
-/**
- * Return the signal note for a journal entry, following the same fallback chain
- * as lunara_get_journal_kicker() but for the longer contextual blurb.
- *
- * @param  int    $post_id
- * @return string
- */
-function lunara_get_journal_signal_note( $post_id = 0 ) {
-	if ( ! $post_id ) {
-		$post_id = get_the_ID();
-	}
-
-	$override = trim( (string) get_post_meta( $post_id, '_lunara_journal_signal_note', true ) );
-	if ( $override !== '' ) {
-		return $override;
-	}
-
-	// Try to match the first journal_type term to a customizer signal note.
-	// (Customizer settings still use the lunara_post_signal_{type} naming —
-	//  no need to rename those user-set values.)
-	$terms = get_the_terms( $post_id, 'journal_type' );
-	if ( $terms && ! is_wp_error( $terms ) ) {
-		$term_slug    = $terms[0]->slug;
-		$mod_key      = 'lunara_post_signal_' . str_replace( '-', '_', $term_slug );
-		$customizer_note = trim( (string) get_theme_mod( $mod_key, '' ) );
-		if ( $customizer_note !== '' ) {
-			return $customizer_note;
-		}
-	}
-
-	return '';
-}

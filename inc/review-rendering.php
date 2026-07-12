@@ -836,7 +836,9 @@ function lunara_get_dispatch_type_label( $post_id ) {
     );
 
     if ( 'journal' === get_post_type( $post_id ) ) {
-        $override = trim( (string) get_post_meta( $post_id, '_lunara_journal_kicker', true ) );
+        $override = function_exists( 'lunara_get_journal_kicker' )
+            ? trim( (string) lunara_get_journal_kicker( $post_id ) )
+            : trim( (string) get_post_meta( $post_id, '_lunara_journal_kicker', true ) );
         if ( '' !== $override ) {
             return $override;
         }
@@ -910,7 +912,9 @@ function lunara_get_dispatch_type_slug( $post_id ) {
     );
 
     if ( 'journal' === get_post_type( $post_id ) ) {
-        $journal_terms = get_the_terms( $post_id, 'journal_type' );
+        $journal_terms = function_exists( 'lunara_get_journal_primary_classification_terms' )
+            ? lunara_get_journal_primary_classification_terms( $post_id )
+            : get_the_terms( $post_id, 'journal_type' );
         if ( is_array( $journal_terms ) ) {
             foreach ( $priority_slugs as $slug => $resolved_slug ) {
                 foreach ( $journal_terms as $term ) {

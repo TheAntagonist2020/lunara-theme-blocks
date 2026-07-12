@@ -75,13 +75,13 @@ if ( ! function_exists( 'lunara_get_journal_hero_credit_data' ) ) {
 			return '';
 		};
 
-		$credit = $first_meta_value(
-			array(
-				'_lunara_featured_image_credit',
-				'_lunara_image_credit',
-			),
-			$post_id
-		);
+		$credit = function_exists( 'lunara_get_journal_field_value' )
+			? lunara_get_journal_field_value(
+				$post_id,
+				'journal_image_credit',
+				array( '_lunara_featured_image_credit', '_lunara_image_credit' )
+			)
+			: $first_meta_value( array( '_lunara_featured_image_credit', '_lunara_image_credit' ), $post_id );
 
 		if ( '' === $credit ) {
 			$credit = $first_meta_value(
@@ -97,47 +97,14 @@ if ( ! function_exists( 'lunara_get_journal_hero_credit_data' ) ) {
 			$credit = trim( (string) wp_get_attachment_caption( $attachment_id ) );
 		}
 
-		$source_name = $first_meta_value(
-			array(
-				'_lunara_featured_image_source_name',
-				'_lunara_source_name',
-			),
-			$post_id
-		);
-
-		if ( '' === $source_name ) {
-			$source_name = $first_meta_value(
-				array(
-					'_lunara_image_source_name',
-					'_lunara_dispatch_source_label',
-				),
-				$attachment_id
-			);
-		}
-
-		$source_url = $first_meta_value(
-			array(
-				'_lunara_featured_image_source_url',
-				'_lunara_source_url',
-				'_lunara_dispatch_source_url',
-			),
-			$post_id
-		);
-
-		if ( '' === $source_url ) {
-			$source_url = $first_meta_value(
-				array(
-					'_lunara_image_source_url',
-					'_lunara_dispatch_source_url',
-				),
-				$attachment_id
-			);
-		}
+		$image_source = function_exists( 'lunara_get_journal_image_source_pair' )
+			? lunara_get_journal_image_source_pair( $post_id, $attachment_id )
+			: array( 'name' => '', 'url' => '' );
 
 		return array(
 			'credit'      => sanitize_text_field( $credit ),
-			'source_name' => sanitize_text_field( $source_name ),
-			'source_url'  => esc_url_raw( $source_url ),
+			'source_name' => isset( $image_source['name'] ) ? sanitize_text_field( $image_source['name'] ) : '',
+			'source_url'  => isset( $image_source['url'] ) ? esc_url_raw( $image_source['url'] ) : '',
 		);
 	}
 }
@@ -441,6 +408,16 @@ if ( have_posts() ) :
 
 		$has_thumb   = has_post_thumbnail( $post_id );
 		$archive_url = get_post_type_archive_link( 'journal' );
+		$hero_alt    = function_exists( 'lunara_get_journal_field_value' )
+			? trim( (string) lunara_get_journal_field_value( $post_id, 'journal_image_alt' ) )
+			: '';
+		if ( '' === $hero_alt && $has_thumb ) {
+			$hero_alt = trim( (string) get_post_meta( get_post_thumbnail_id( $post_id ), '_wp_attachment_image_alt', true ) );
+		}
+		$classification_terms = function_exists( 'lunara_get_journal_primary_classification_terms' )
+			? lunara_get_journal_primary_classification_terms( $post_id )
+			: get_the_terms( $post_id, 'journal_type' );
+		$topic_terms = get_the_terms( $post_id, 'journal_topic' );
 		?>
 
 		<main class="lunara-editorial-single-page lunara-journal-single-page">
@@ -496,6 +473,7 @@ if ( have_posts() ) :
 									'fetchpriority' => 'high',
 									'decoding'      => 'async',
 									'sizes'         => '100vw',
+									'alt'           => $hero_alt,
 								)
 							);
 							?>
@@ -556,16 +534,33 @@ if ( have_posts() ) :
 						<div class="lunara-review-single-rail-sticky">
 
 							<?php
-							$type_terms = get_the_terms( $post_id, 'journal_type' );
-							if ( $type_terms && ! is_wp_error( $type_terms ) ) :
+							if ( $classification_terms && ! is_wp_error( $classification_terms ) ) :
+								$classification_label = isset( $classification_terms[0]->taxonomy ) && 'journal_section' === $classification_terms[0]->taxonomy
+									? __( 'Section', 'lunara-film' )
+									: __( 'Type', 'lunara-film' );
 								?>
 								<div class="lunara-journal-rail-card">
-									<p class="lunara-journal-rail-card-label"><?php esc_html_e( 'Type', 'lunara-film' ); ?></p>
+									<p class="lunara-journal-rail-card-label"><?php echo esc_html( $classification_label ); ?></p>
 									<ul class="lunara-journal-rail-type-list">
-										<?php foreach ( $type_terms as $term ) : ?>
+										<?php foreach ( $classification_terms as $term ) : ?>
 											<li>
 												<a href="<?php echo esc_url( get_term_link( $term ) ); ?>">
 													<?php echo esc_html( $term->name ); ?>
+												</a>
+											</li>
+										<?php endforeach; ?>
+									</ul>
+								</div>
+							<?php endif; ?>
+
+							<?php if ( $topic_terms && ! is_wp_error( $topic_terms ) ) : ?>
+								<div class="lunara-journal-rail-card">
+									<p class="lunara-journal-rail-card-label"><?php esc_html_e( 'Topics', 'lunara-film' ); ?></p>
+									<ul class="lunara-journal-rail-tag-list">
+										<?php foreach ( $topic_terms as $topic_term ) : ?>
+											<li>
+												<a href="<?php echo esc_url( get_term_link( $topic_term ) ); ?>">
+													<?php echo esc_html( $topic_term->name ); ?>
 												</a>
 											</li>
 										<?php endforeach; ?>
@@ -615,14 +610,11 @@ if ( have_posts() ) :
 				'no_found_rows'       => true,
 			);
 
-			if ( ! empty( $type_terms ) && ! is_wp_error( $type_terms ) ) {
-				$related_args['tax_query'] = array(
-					array(
-						'taxonomy' => 'journal_type',
-						'field'    => 'term_id',
-						'terms'    => wp_list_pluck( $type_terms, 'term_id' ),
-					),
-				);
+			$related_tax_query = function_exists( 'lunara_get_journal_related_tax_query' )
+				? lunara_get_journal_related_tax_query( $post_id )
+				: array();
+			if ( ! empty( $related_tax_query ) ) {
+				$related_args['tax_query'] = $related_tax_query;
 			}
 
 			$related_query = new WP_Query( $related_args );

@@ -104,6 +104,21 @@ function lunara_featured_image_guard_post_visual_match_text( $post_id ) {
         wp_trim_words( wp_strip_all_tags( (string) $post->post_content ), 120, '' ),
     );
 
+    if ( 'journal' === $post->post_type && function_exists( 'lunara_get_journal_source_items' ) ) {
+        foreach ( lunara_get_journal_source_items( $post_id ) as $source_item ) {
+            $strings[] = implode( ' ', array_filter( $source_item ) );
+        }
+    }
+
+    if ( 'journal' === $post->post_type && function_exists( 'lunara_get_journal_field_value' ) ) {
+        foreach ( array( 'journal_image_credit', 'journal_image_source_url', 'journal_image_alt' ) as $field_name ) {
+            $value = lunara_get_journal_field_value( $post_id, $field_name );
+            if ( is_scalar( $value ) && '' !== trim( (string) $value ) ) {
+                $strings[] = (string) $value;
+            }
+        }
+    }
+
     foreach ( array( '_lunara_source_name', '_lunara_source_url', '_lunara_journal_source_name', '_lunara_journal_source_url', '_lunara_dispatch_source_label', '_lunara_dispatch_source_url' ) as $meta_key ) {
         $value = get_post_meta( $post_id, $meta_key, true );
         if ( is_scalar( $value ) && '' !== trim( (string) $value ) ) {
