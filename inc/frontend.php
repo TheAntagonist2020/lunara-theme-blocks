@@ -262,7 +262,7 @@ function lunara_render_home_front_door() {
                 'class'         => 'lunara-home-masthead-logo skip-lazy no-lazy',
                 'loading'       => 'eager',
                 'decoding'      => 'async',
-                'fetchpriority' => 'high',
+                'fetchpriority' => 'auto',
                 'alt'           => '',
                 'style'         => sprintf(
                     'display:block;width:var(--lunara-masthead-logo-w,min(100%%,%dpx));height:auto;max-height:var(--lunara-masthead-logo-cap,clamp(118px,22vw,%dpx));object-fit:contain;',

@@ -1892,11 +1892,6 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
                         'decoding' => 'async',
                         'sizes'    => '(max-width: 520px) 46vw, (max-width: 900px) 42vw, (max-width: 1180px) 30vw, 340px',
                     );
-
-                    if ( 0 === $review_index ) {
-                        $thumb_attrs['fetchpriority'] = 'high';
-                    }
-
                     $image_data = function_exists( 'lunara_get_review_card_image_data' )
                         ? lunara_get_review_card_image_data( $rid, 'lunara-review-card', $thumb_attrs )
                         : array(

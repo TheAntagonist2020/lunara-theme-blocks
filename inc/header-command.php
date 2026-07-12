@@ -147,12 +147,16 @@ if ( ! function_exists( 'lunara_header_brand_markup' ) ) {
 						esc_url( $logo_840 )
 					);
 				}
+				$fetchpriority = function_exists( 'lunara_custom_logo_fetch_priority' )
+					? lunara_custom_logo_fetch_priority()
+					: ( is_front_page() ? 'auto' : 'high' );
 
 				return sprintf(
-					'<img class="lunara-header-logo skip-lazy no-lazy" src="%1$s"%2$s sizes="(max-width: 720px) 96px, 150px" width="420" height="236" alt="%3$s" loading="eager" decoding="async" fetchpriority="high" data-no-lazy="1" data-skip-lazy="1">',
+					'<img class="lunara-header-logo skip-lazy no-lazy" src="%1$s"%2$s sizes="(max-width: 720px) 96px, 150px" width="420" height="236" alt="%3$s" loading="eager" decoding="async" fetchpriority="%4$s" data-no-lazy="1" data-skip-lazy="1">',
 					esc_url( $logo_420 ),
 					$srcset, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					esc_attr( $alt )
+					esc_attr( $alt ),
+					esc_attr( $fetchpriority )
 				);
 			}
 		}

@@ -90,7 +90,11 @@ get_header();
 
 		$lunara_callback = $lunara_section_renderers[ $lunara_slug ];
 		if ( function_exists( $lunara_callback ) ) {
-			echo call_user_func( $lunara_callback ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			if ( 'hero' === $lunara_slug ) {
+				echo call_user_func( $lunara_callback, array( 'first_image_is_lcp' => false ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			} else {
+				echo call_user_func( $lunara_callback ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			}
 		}
 	}
 
