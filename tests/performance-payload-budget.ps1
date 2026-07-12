@@ -153,6 +153,6 @@ Assert-True ($fallback -match 'id="lunara-grain"') 'The fallback loader must emi
 Assert-True (($setup + $fallback) -notmatch 'lunara-film-grain') 'The unused legacy grain node must stay removed.'
 Assert-True ($style -match 'background-image:\s*url\("assets/images/lunara-grain\.svg"\)') 'Room Tone CSS must use the cacheable grain asset.'
 Assert-True ($grain -match '<feTurbulence') 'The cacheable grain asset appears incomplete.'
-Assert-True ($style -match 'Version:\s*3\.2\.4') 'Theme version must be 3.2.4 for the final masthead markup correction.'
+Assert-True ($style -match 'Version:\s*3\.2\.5') 'Theme version must be 3.2.5 for the Review ambient-sampling correction.'
 
 Write-Host "Performance payload budget contract passed (critical: $criticalBytes; shell: $shellBytes; public: $publicGuardrailBytes; home: $homeModuleBytes; review: $reviewComponentBytes; public JS: $publicRuntimeBytes; carousel JS: $scrollCarouselBytes; home JS: $homeRuntimeBytes; Oscars: $lateOscarsBytes; dynamic: $dynamicSignatureBytes; grain: $grainBytes bytes)."
