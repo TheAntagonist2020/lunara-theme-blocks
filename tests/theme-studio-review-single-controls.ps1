@@ -137,7 +137,8 @@ Assert-True ($frontend -match 'function\s+lunara_output_sidebar_scroll_follow_js
 
 Assert-True ($singleReview -match 'lunara_render_full_spoiler_review_warning') 'Single Review template must preserve the spoiler warning renderer.'
 Assert-True ($singleReview -match 'lunara_render_trailer_module') 'Single Review template must preserve the trailer module renderer.'
-Assert-True ($singleReview -match 'lunara_split_review_debrief_block') 'Single Review template must preserve Debrief split rendering.'
-Assert-True ($singleReview -match 'lunara-review-single-debrief--pairings') 'Single Review template must preserve Pair It With rendering.'
+Assert-True ($singleReview -match 'lunara_get_review_debrief_render_parts') 'Single Review template must preserve Debrief rendering through the atomic controller.'
+Assert-True ($singleReview -notmatch 'lunara_split_review_debrief_block') 'Single Review template must not select the compatibility parser directly.'
+Assert-True ($singleReview -match "debrief_render\['pairings_html'\]") 'Single Review template must preserve Pair It With rendering from the atomic controller.'
 
 Write-Host 'Review Single Studio controls contract passed.'
