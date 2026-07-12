@@ -46,7 +46,7 @@ function get_the_title( $post_id ) {
     return $GLOBALS['lunara_resolver_test']['posts'][ $post_id ]['title'] ?? '';
 }
 
-function get_post_meta( $post_id, $key ) {
+function get_post_meta( $post_id, $key, $single = false ) {
     ++$GLOBALS['lunara_resolver_test']['meta_reads'];
     return $GLOBALS['lunara_resolver_test']['meta'][ $post_id ][ $key ] ?? '';
 }
@@ -65,7 +65,7 @@ function maybe_unserialize( $value ) {
     return $value;
 }
 
-function apply_filters( $hook, $value ) {
+function apply_filters( $hook, $value, ...$args ) {
     return $value;
 }
 
@@ -89,7 +89,7 @@ function get_posts( $args ) {
     return array_slice( $matches, 0, 1 );
 }
 
-function lunara_get_oscar_ledger_counts() {
+function lunara_get_oscar_ledger_counts( $imdb_id = '' ) {
     ++$GLOBALS['lunara_resolver_test']['award_reads'];
     return array( 'noms' => 4, 'wins' => 1 );
 }
