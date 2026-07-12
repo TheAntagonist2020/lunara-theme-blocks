@@ -10,6 +10,11 @@ $GLOBALS['lunara_resolver_test'] = array(
         11 => array( 'post_type' => 'movie', 'post_status' => 'publish', 'title' => 'Theme Film' ),
         12 => array( 'post_type' => 'movie', 'post_status' => 'draft', 'title' => 'Draft Film' ),
         13 => array( 'post_type' => 'movie', 'post_status' => 'publish', 'title' => 'Local Poster Film' ),
+        14 => array( 'post_type' => 'movie', 'post_status' => 'private', 'title' => 'Private Film' ),
+        15 => array( 'post_type' => 'movie', 'post_status' => 'publish', 'title' => '' ),
+        16 => array( 'post_type' => 'movie', 'post_status' => 'publish', 'title' => 'No IMDb Film' ),
+        94 => array( 'post_type' => 'review', 'post_status' => 'publish', 'title' => 'Draft Fallback Review' ),
+        95 => array( 'post_type' => 'review', 'post_status' => 'publish', 'title' => 'Private Fallback Review' ),
         98 => array( 'post_type' => 'review', 'post_status' => 'draft', 'title' => 'Draft Film Review' ),
         99 => array( 'post_type' => 'review', 'post_status' => 'publish', 'title' => 'Theme Film Review' ),
     ),
@@ -22,6 +27,11 @@ $GLOBALS['lunara_resolver_test'] = array(
         ),
         12 => array( 'release_year' => '2021', 'imdb_title_id' => 'tt0000012' ),
         13 => array( 'release_year' => '2010', 'imdb_title_id' => 'tt0000013' ),
+        14 => array( 'release_year' => '2014', 'imdb_title_id' => 'tt0000014' ),
+        15 => array( 'release_year' => '2015', 'imdb_title_id' => 'tt0000015' ),
+        16 => array( 'release_year' => '2016' ),
+        94 => array( '_lunara_imdb_title_id' => 'tt0000012' ),
+        95 => array( '_lunara_imdb_title_id' => 'tt0000014' ),
         99 => array( '_lunara_imdb_title_id' => 'tt0000011' ),
     ),
     'thumbnails'     => array( 11 => 501 ),
@@ -75,6 +85,12 @@ function get_posts( $args ) {
         if ( $post['post_type'] !== ( $args['post_type'] ?? '' ) ) {
             continue;
         }
+
+        $allowed_statuses = (array) ( $args['post_status'] ?? 'publish' );
+        if ( ! in_array( $post['post_status'], $allowed_statuses, true ) ) {
+            continue;
+        }
+
         foreach ( $args['meta_query'] ?? array() as $condition ) {
             if ( ! is_array( $condition ) || empty( $condition['key'] ) ) {
                 continue;
@@ -95,9 +111,14 @@ function lunara_get_oscar_ledger_counts( $imdb_id = '' ) {
 }
 
 function lunara_debrief_get_review_record( $review_id ) {
+    $movie_ids = array(
+        98 => 12,
+        99 => 11,
+    );
+
     return array(
         'review_id'     => $review_id,
-        'reviewed_film' => array( 'movie_id' => 98 === $review_id ? 12 : 11 ),
+        'reviewed_film' => array( 'movie_id' => $movie_ids[ $review_id ] ?? 0 ),
     );
 }
 
@@ -150,7 +171,8 @@ lunara_resolver_assert_true( ! $draft_default['valid'], 'Draft movies must not b
 lunara_resolver_assert_true( in_array( 'movie_not_published', $draft_default['warnings'], true ), 'Draft rejection must expose a stable warning.' );
 
 $draft_admin = lunara_debrief_resolve_movie( 12, array( 'require_published' => false ) );
-lunara_resolver_assert_true( $draft_admin['valid'], 'Admin callers may explicitly inspect a complete draft entity.' );
+lunara_resolver_assert_true( ! $draft_admin['valid'], 'Draft entities must remain invalid for public output during admin inspection.' );
+lunara_resolver_assert_same( 'Draft Film', $draft_admin['title'], 'Admin callers may explicitly inspect a complete draft entity.' );
 
 $aat_local = lunara_debrief_resolve_movie( 13 );
 lunara_resolver_assert_same( 777, $aat_local['poster_attachment_id'], 'The resolver may use the Oscars plugin local attachment index.' );
@@ -168,8 +190,35 @@ lunara_resolver_assert_true( ! $reviewed_draft_default['valid'], 'A Review must 
 lunara_resolver_assert_true( in_array( 'movie_not_published', $reviewed_draft_default['warnings'], true ), 'Default Review draft rejection must expose a stable warning.' );
 
 $reviewed_draft_admin = lunara_debrief_resolve_reviewed_movie( 98, array( 'require_published' => false ) );
-lunara_resolver_assert_true( $reviewed_draft_admin['valid'], 'Admin callers may explicitly inspect a Review-owned draft movie.' );
+lunara_resolver_assert_true( ! $reviewed_draft_admin['valid'], 'A Review-owned draft must remain invalid for public output during admin inspection.' );
 lunara_resolver_assert_same( 12, $reviewed_draft_admin['movie_id'], 'Explicit draft resolution must retain the Review-owned movie ID.' );
+lunara_resolver_assert_same( 'Draft Film', $reviewed_draft_admin['title'], 'Admin callers may explicitly inspect a Review-owned draft movie.' );
+
+$fallback_draft_default = lunara_debrief_resolve_reviewed_movie( 94 );
+lunara_resolver_assert_same( 0, $fallback_draft_default['movie_id'], 'Default fallback lookup must not select a draft Movie.' );
+lunara_resolver_assert_true( in_array( 'review_movie_not_found', $fallback_draft_default['warnings'], true ), 'Rejected draft fallback must expose the not-found warning.' );
+
+$fallback_private_default = lunara_debrief_resolve_reviewed_movie( 95 );
+lunara_resolver_assert_same( 0, $fallback_private_default['movie_id'], 'Default fallback lookup must not select a private Movie.' );
+lunara_resolver_assert_true( in_array( 'review_movie_not_found', $fallback_private_default['warnings'], true ), 'Rejected private fallback must expose the not-found warning.' );
+
+$fallback_draft_admin = lunara_debrief_resolve_reviewed_movie( 94, array( 'require_published' => false ) );
+lunara_resolver_assert_same( 12, $fallback_draft_admin['movie_id'], 'Admin fallback lookup may explicitly inspect a draft Movie.' );
+lunara_resolver_assert_same( 'Draft Film', $fallback_draft_admin['title'], 'Draft fallback inspection must return local Movie data.' );
+lunara_resolver_assert_true( ! $fallback_draft_admin['valid'], 'An inspected draft fallback must remain invalid for public output.' );
+
+$fallback_private_admin = lunara_debrief_resolve_reviewed_movie( 95, array( 'require_published' => false ) );
+lunara_resolver_assert_same( 14, $fallback_private_admin['movie_id'], 'Admin fallback lookup may explicitly inspect a private Movie.' );
+lunara_resolver_assert_same( 'Private Film', $fallback_private_admin['title'], 'Private fallback inspection must return local Movie data.' );
+lunara_resolver_assert_true( ! $fallback_private_admin['valid'], 'An inspected private fallback must remain invalid for public output.' );
+
+$titleless = lunara_debrief_resolve_movie( 15 );
+lunara_resolver_assert_true( ! $titleless['valid'], 'A published Movie without a title must be invalid.' );
+lunara_resolver_assert_true( in_array( 'missing_title', $titleless['warnings'], true ), 'A titleless Movie must expose a stable warning.' );
+
+$without_imdb = lunara_debrief_resolve_movie( 16 );
+lunara_resolver_assert_true( ! $without_imdb['valid'], 'A published Movie without an IMDb ID must be invalid.' );
+lunara_resolver_assert_true( in_array( 'missing_imdb_title_id', $without_imdb['warnings'], true ), 'A Movie without an IMDb ID must expose a stable warning.' );
 
 $invalid = lunara_debrief_resolve_movie( 99 );
 lunara_resolver_assert_true( ! $invalid['valid'], 'Non-movie posts must be rejected.' );

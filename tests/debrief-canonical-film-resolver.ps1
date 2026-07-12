@@ -35,6 +35,7 @@ $resolver = Get-Content -Raw (Join-Path $themeRoot 'inc/debrief-resolver.php')
 Assert-True ($loader.Contains("require_once `$lunara_inc . 'debrief-resolver.php';")) 'The local-only resolver must load before the legacy Debrief renderer.'
 Assert-True ($loader.IndexOf("'debrief-resolver.php'") -lt $loader.IndexOf("'debrief.php'")) 'Resolver load order must precede the legacy renderer.'
 Assert-True ($resolver -match 'function\s+lunara_debrief_resolve_movie') 'The stable movie resolver wrapper must exist.'
+Assert-True ($resolver -match "method_exists\(\s*'Lunara_Debrief_Contract',\s*'is_public_film_reference'\s*\)") 'Resolver must delegate public-film validity to Core when available.'
 Assert-True ($resolver -notmatch 'wp_remote_get|get_title_visual_package|get_tmdb_data_for_imdb_id|lunara_get_title_poster_html') 'The resolver must not call remote-capable poster paths.'
 Assert-True ($resolver -notmatch 'add_action|add_filter|add_shortcode') 'Release A resolver must remain hook-free.'
 

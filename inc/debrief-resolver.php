@@ -129,7 +129,7 @@ final class Lunara_Debrief_Film_Resolver {
             $snapshot['warnings'][] = 'missing_poster';
         }
 
-        $snapshot['valid'] = '' !== $title && '' !== $imdb_id && '' !== $permalink;
+        $snapshot['valid'] = self::is_public_film_reference( $movie_id, $snapshot );
 
         return self::remember( $cache_key, $snapshot, $args );
     }
@@ -270,6 +270,33 @@ final class Lunara_Debrief_Film_Resolver {
      */
     private static function normalize_year( $year ) {
         return preg_match( '/\b(18|19|20|21)\d{2}\b/', (string) $year, $matches ) ? $matches[0] : '';
+    }
+
+    /**
+     * Determine whether a resolved Movie is safe for public Debrief output.
+     *
+     * Core remains the authority when its public-film contract is available.
+     * The fallback deliberately mirrors the same local-only requirements so
+     * the theme cannot widen public output when Core is unavailable.
+     *
+     * @param int                 $movie_id Canonical Movie post ID.
+     * @param array<string,mixed> $snapshot Resolved local Movie data.
+     * @return bool
+     */
+    private static function is_public_film_reference( $movie_id, $snapshot ) {
+        if (
+            class_exists( 'Lunara_Debrief_Contract' )
+            && method_exists( 'Lunara_Debrief_Contract', 'is_public_film_reference' )
+        ) {
+            return (bool) Lunara_Debrief_Contract::is_public_film_reference( $movie_id );
+        }
+
+        return $movie_id > 0
+            && 'movie' === get_post_type( $movie_id )
+            && 'publish' === get_post_status( $movie_id )
+            && '' !== trim( (string) ( $snapshot['title'] ?? '' ) )
+            && '' !== self::normalize_imdb_title_id( $snapshot['imdb_title_id'] ?? '' )
+            && '' !== trim( (string) ( $snapshot['permalink'] ?? '' ) );
     }
 
     /**
