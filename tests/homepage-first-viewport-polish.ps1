@@ -58,6 +58,14 @@ foreach ($needle in @(
     Assert-True ($block.Contains($needle)) "Homepage first-viewport polish is missing expected CSS: $needle"
 }
 
+foreach ($needle in @(
+    'body.home .lunara-home-masthead-logo-frame{display:grid;place-items:center;width:min(100%,1280px);height:clamp(148px,18vw,254px);',
+    '@media(min-width:821px) and (max-width:1119px){body.home .lunara-home-masthead-logo-frame{height:clamp(148px,22vw,312px);}}',
+    'body.home .lunara-home-masthead-logo-frame{width:100%;height:clamp(100px,18vw,148px);}'
+)) {
+    Assert-True ($homeModules.Contains($needle)) "Homepage logo frame is missing its responsive CLS reservation: $needle"
+}
+
 Assert-True ($block -notmatch 'font-family\s*:') 'Homepage first-viewport polish must not introduce another font family.'
 Assert-True ($block -notmatch 'set_theme_mod|get_option\(') 'Homepage first-viewport polish must not mutate or add settings.'
 Assert-True ($functions -match 'lunara_get_home_section_mobile_order_map') 'Theme must still expose the mobile homepage order helper.'
