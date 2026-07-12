@@ -174,10 +174,21 @@ function lunara_render_still_block( $attributes ) {
 }
 
 function lunara_render_debrief_block() {
+    if ( function_exists( 'lunara_debrief_public_renderer_enabled' ) && lunara_debrief_public_renderer_enabled() ) {
+        return function_exists( 'lunara_render_review_debrief' ) ? lunara_render_review_debrief( get_the_ID() ) : '';
+    }
+
     return function_exists( 'lunara_debrief_shortcode' ) ? lunara_debrief_shortcode( array() ) : '';
 }
 
 function lunara_render_pair_it_with_block() {
+    if ( function_exists( 'lunara_debrief_public_renderer_enabled' ) && lunara_debrief_public_renderer_enabled() ) {
+        $parts = function_exists( 'lunara_get_review_debrief_render_parts' )
+            ? lunara_get_review_debrief_render_parts( get_the_ID() )
+            : array();
+        return ! empty( $parts['pairings_html'] ) ? (string) $parts['pairings_html'] : '';
+    }
+
     return function_exists( 'lunara_pair_it_with_shortcode' ) ? lunara_pair_it_with_shortcode( array() ) : '';
 }
 

@@ -62,12 +62,13 @@ if ( have_posts() ) :
         $ledger_counts    = '' !== $review_tt ? lunara_get_oscar_ledger_counts( $review_tt ) : array();
         $ledger_pill      = '' !== $review_tt ? lunara_render_oscar_ledger_pill( $review_tt, $ledger_counts ) : '';
         $dossier_movie_id = function_exists( 'lunara_entity_movie_for_review' ) ? lunara_entity_movie_for_review( $post_id ) : 0;
-        $debrief_block    = function_exists( 'lunara_debrief_shortcode' ) ? (string) lunara_debrief_shortcode( array() ) : '';
-        $debrief_parts    = function_exists( 'lunara_split_review_debrief_block' )
-            ? lunara_split_review_debrief_block( $debrief_block )
+        $debrief_render   = function_exists( 'lunara_get_review_debrief_render_parts' )
+            ? lunara_get_review_debrief_render_parts( $post_id )
             : array(
-                'signature' => $debrief_block,
-                'pairings'  => '',
+                'has_content'    => false,
+                'signature_html' => '',
+                'media_html'     => '',
+                'pairings_html'  => '',
             );
         $hero_visual      = function_exists( 'lunara_render_review_visual_slot' )
             ? lunara_render_review_visual_slot(
@@ -127,9 +128,6 @@ if ( have_posts() ) :
                 $is_poster_hero ? ' lunara-review-visual--poster-hero' : ''
             );
         }
-        $debrief_media    = function_exists( 'lunara_get_review_debrief_signature_media_html' )
-            ? lunara_get_review_debrief_signature_media_html( $post_id )
-            : '';
         $related_query    = function_exists( 'lunara_get_related_review_posts' ) ? lunara_get_related_review_posts( $post_id, absint( get_theme_mod( 'lunara_review_related_count', 4 ) ) ) : null;
         $archive_url      = '' !== $archive_url_meta ? $archive_url_meta : get_post_type_archive_link( 'review' );
         $archive_url      = is_string( $archive_url ) && '' !== $archive_url ? $archive_url : home_url( '/reviews/' );
@@ -348,29 +346,18 @@ if ( have_posts() ) :
                     </div>
                 </section>
 
-                <?php if ( '' !== trim( wp_strip_all_tags( $debrief_block ) ) ) : ?>
+                <?php if ( ! empty( $debrief_render['has_content'] ) ) : ?>
                 <section class="lunara-review-single-debrief-section lunara-review-single-debrief-shell<?php echo $is_full_spoiler ? ' lunara-spoiler-protected-content lunara-spoiler-protected-content--module' : ''; ?>"<?php echo $is_full_spoiler ? ' data-lunara-spoiler-protected data-lunara-spoiler-post="' . esc_attr( $post_id ) . '"' : ''; ?>>
-                    <div class="lunara-review-single-debrief-wrap<?php echo '' !== $debrief_media ? ' has-signature-media' : ''; ?>">
-                        <?php if ( '' !== $debrief_media ) : ?>
-                            <?php echo $debrief_media; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <div class="lunara-review-single-debrief-wrap<?php echo ! empty( $debrief_render['media_html'] ) ? ' has-signature-media' : ''; ?>">
+                        <?php if ( ! empty( $debrief_render['media_html'] ) ) : ?>
+                            <?php echo $debrief_render['media_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         <?php endif; ?>
                         <div class="lunara-review-single-debrief">
-                            <?php echo $debrief_parts['signature']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                            <?php echo $debrief_render['signature_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         </div>
                     </div>
-                    <?php
-                    $pairing_cards_html = function_exists( 'lunara_render_pair_it_with_cards' )
-                        ? lunara_render_pair_it_with_cards( $post_id )
-                        : '';
-                    ?>
-                    <?php if ( '' !== trim( (string) $pairing_cards_html ) ) : ?>
-                        <div class="lunara-review-single-debrief-pairings-modern">
-                            <?php echo $pairing_cards_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                        </div>
-                    <?php elseif ( '' !== trim( (string) $debrief_parts['pairings'] ) ) : ?>
-                        <div class="lunara-review-single-debrief lunara-review-single-debrief--pairings">
-                            <?php echo $debrief_parts['pairings']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                        </div>
+                    <?php if ( ! empty( $debrief_render['pairings_html'] ) ) : ?>
+                        <?php echo $debrief_render['pairings_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     <?php endif; ?>
                 </section>
             <?php endif; ?>

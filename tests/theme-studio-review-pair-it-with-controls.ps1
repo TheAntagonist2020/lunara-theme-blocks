@@ -121,7 +121,8 @@ Assert-True ($frontend -match 'line-clamp:\s*var\(--lunara-review-pair-with-note
 Assert-True ($frontend -match 'max-width:\s*var\(--lunara-review-pair-with-max-width\)') 'Pair It With layout must control module width.'
 Assert-True ($frontend -match '@media\s*\(max-width:\s*680px\)[\s\S]*lunara-review-single-debrief--pairings') 'Pair It With mobile stacking must have a mobile-specific rule.'
 
-Assert-True ($singleReview -match 'lunara-review-single-debrief--pairings') 'Single Review template must preserve Pair It With rendering.'
-Assert-True ($singleReview -match 'lunara_split_review_debrief_block') 'Single Review template must keep Debrief split source.'
+Assert-True ($singleReview -match "debrief_render\['pairings_html'\]") 'Single Review template must preserve Pair It With rendering from the atomic controller.'
+Assert-True ($singleReview -match 'lunara_get_review_debrief_render_parts') 'Single Review template must use the atomic Debrief render controller.'
+Assert-True ($singleReview -notmatch 'lunara_split_review_debrief_block') 'Single Review template must not choose a legacy split source directly.'
 
 Write-Host 'Review Pair It With controls contract passed.'
