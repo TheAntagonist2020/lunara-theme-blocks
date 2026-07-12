@@ -253,6 +253,13 @@ function lunara_filter_front_page_document_title_parts( $parts ) {
 add_filter( 'document_title_parts', 'lunara_filter_front_page_document_title_parts', 20 );
 
 /**
+ * Keep the header logo visible without competing with Home's true LCP image.
+ */
+function lunara_custom_logo_fetch_priority() {
+    return is_front_page() ? 'auto' : 'high';
+}
+
+/**
  * Ensure the custom logo always ships with meaningful accessibility text.
  */
 function lunara_filter_custom_logo_image_attributes( $attr, $custom_logo_id, $blog_id ) {
@@ -273,7 +280,7 @@ function lunara_filter_custom_logo_image_attributes( $attr, $custom_logo_id, $bl
 
     if ( false !== strpos( $classes, 'default-logo' ) ) {
         $attr['loading']       = 'eager';
-        $attr['fetchpriority'] = 'high';
+        $attr['fetchpriority'] = lunara_custom_logo_fetch_priority();
     } elseif ( false !== strpos( $classes, 'dark-mode-logo' ) ) {
         $attr['loading'] = 'lazy';
         unset( $attr['fetchpriority'] );
@@ -384,7 +391,7 @@ function lunara_protect_priority_image_attributes( $attr ) {
 
         if ( false !== strpos( $class_string, 'default-logo' ) ) {
             $attr['loading']       = 'eager';
-            $attr['fetchpriority'] = 'high';
+            $attr['fetchpriority'] = lunara_custom_logo_fetch_priority();
         } else {
             $attr['loading'] = 'lazy';
             unset( $attr['fetchpriority'] );

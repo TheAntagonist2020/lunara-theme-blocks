@@ -14951,7 +14951,9 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_data' ) ) {
  */
 if ( ! function_exists( 'lunara_render_cinematic_hero' ) ) {
 	function lunara_render_cinematic_hero( $attrs = array() ) {
-		$data = lunara_get_cinematic_hero_data( is_array( $attrs ) ? $attrs : array() );
+		$attrs              = is_array( $attrs ) ? $attrs : array();
+		$first_image_is_lcp = ! array_key_exists( 'first_image_is_lcp', $attrs ) || (bool) $attrs['first_image_is_lcp'];
+		$data               = lunara_get_cinematic_hero_data( $attrs );
 		if ( null === $data ) {
 			return '';
 		}
@@ -14959,14 +14961,14 @@ if ( ! function_exists( 'lunara_render_cinematic_hero' ) ) {
 		// Build the <img> tag â€” use wp_get_attachment_image() if we have the
 		// attachment ID (gives us native srcset/sizes for responsive loading),
 		// otherwise fall back to a raw <img> with the URL.
-		// loading="eager" + fetchpriority="high" tells the browser this is the
-		// LCP element and to fetch it immediately (huge mobile perf win).
+		// The default remains eager/high for contexts where this is the true
+		// front door. Lower-page callers can explicitly opt into lazy/low.
 		$img_attrs = array(
 			'class'         => 'lunara-cinematic-hero-img',
 			'alt'           => '',
-			'loading'       => 'eager',
+			'loading'       => $first_image_is_lcp ? 'eager' : 'lazy',
 			'decoding'      => 'async',
-			'fetchpriority' => 'high',
+			'fetchpriority' => $first_image_is_lcp ? 'high' : 'low',
 			'sizes'         => '100vw',
 		);
 
@@ -15626,18 +15628,19 @@ if ( ! function_exists( 'lunara_get_hero_featured_slides' ) ) {
 
 /**
  * Render one cinematic-hero slide from prepared data. Every slide carries its
- * REAL image src — the first eagerly (it's the LCP), the rest via the
- * browser's native lazy loading at low priority. No placeholder/swap
- * machinery: nothing JS-dependent can leave a slide blank. The first slide is
- * also server-marked is-active so it stays visible in every pre-mount and
+ * REAL image src. The first is eager/high only when its caller identifies it
+ * as the LCP; every other image uses native lazy loading at low priority. No
+ * placeholder/swap machinery can leave a slide blank. The first slide is also
+ * server-marked is-active so it stays visible in every pre-mount and
  * failed-mount state once the fade layout class exists.
  */
 if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
-	function lunara_render_cinematic_hero_slide( $data, $index = 0 ) {
-		$is_first     = ( 0 === (int) $index );
-		$image_markup = $is_first
+	function lunara_render_cinematic_hero_slide( $data, $index = 0, $first_image_is_lcp = true ) {
+		$is_first          = ( 0 === (int) $index );
+		$is_priority_image = $is_first && (bool) $first_image_is_lcp;
+		$image_markup      = $is_priority_image
 			? '<img src="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" alt="" loading="eager" decoding="async" fetchpriority="high" sizes="100vw" />'
-			: '<img src="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" alt="" decoding="async" fetchpriority="low" sizes="100vw" />';
+			: '<img src="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" alt="" loading="lazy" decoding="async" fetchpriority="low" sizes="100vw" />';
 
 		ob_start();
 		?>
@@ -15671,7 +15674,9 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
  */
 if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 	function lunara_render_cinematic_hero_carousel( $attrs = array() ) {
-		$slides = lunara_get_cinematic_hero_slides( 6 );
+		$attrs              = is_array( $attrs ) ? $attrs : array();
+		$first_image_is_lcp = ! array_key_exists( 'first_image_is_lcp', $attrs ) || (bool) $attrs['first_image_is_lcp'];
+		$slides             = lunara_get_cinematic_hero_slides( 6 );
 
 		// A single curated Hero Command slide still renders through the
 		// carousel shell — the hero JS detects one slide and stays static, so
@@ -15681,7 +15686,7 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 
 		if ( count( $slides ) < 1 || ( count( $slides ) < 2 && ! $command_live ) ) {
 			return function_exists( 'lunara_render_cinematic_hero' )
-				? lunara_render_cinematic_hero( is_array( $attrs ) ? $attrs : array() )
+				? lunara_render_cinematic_hero( $attrs )
 				: '';
 		}
 
@@ -15694,7 +15699,7 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 				<ul class="splide__list">
 					<?php
 					foreach ( $slides as $slide_index => $slide_data ) {
-						echo lunara_render_cinematic_hero_slide( $slide_data, $slide_index ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						echo lunara_render_cinematic_hero_slide( $slide_data, $slide_index, $first_image_is_lcp ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					}
 					?>
 				</ul>
@@ -16646,9 +16651,6 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
 						'decoding' => 'async',
 						'sizes'    => '(max-width: 420px) 92vw, (max-width: 760px) 44vw, (max-width: 1180px) 42vw, 260px',
 					);
-					if ( 0 === $review_index ) {
-						$thumb_attrs['fetchpriority'] = 'high';
-					}
 					$image_data = function_exists( 'lunara_get_review_card_image_data' )
 						? lunara_get_review_card_image_data( $rid, 'newspack-article-block-portrait-intermediate', $thumb_attrs )
 						: array(
