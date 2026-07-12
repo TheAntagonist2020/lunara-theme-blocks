@@ -222,8 +222,8 @@ if ( ! function_exists( 'lunara_debrief_get_canonical_public_data' ) ) {
         $resolver_args = array(
             'require_published'      => true,
             'resolve_poster'         => true,
-            'allow_aat_local_poster' => true,
-            'resolve_awards'         => true,
+            'allow_aat_local_poster' => false,
+            'resolve_awards'         => false,
         );
         $source_id = absint( $record['reviewed_film']['movie_id'] ?? 0 );
         $source    = $source_id ? lunara_debrief_resolve_movie( $source_id, $resolver_args ) : array();
@@ -306,13 +306,6 @@ if ( ! function_exists( 'lunara_debrief_render_canonical_signature' ) ) {
 
         if ( '' !== $score ) {
             $html .= '<li><strong>' . esc_html__( 'Score:', 'lunara-film' ) . '</strong><span class="lunara-debrief-value">' . lunara_render_stars( $score ) . '</span></li>';
-        }
-
-        $ledger = function_exists( 'lunara_render_oscar_ledger_pill' )
-            ? lunara_render_oscar_ledger_pill( (string) $film['imdb_title_id'], $film['oscar_counts'] ?? array() )
-            : '';
-        if ( '' !== trim( $ledger ) ) {
-            $html .= '<li class="lunara-debrief-ledger-row"><strong>&nbsp;</strong><span class="lunara-debrief-value">' . $ledger . '</span></li>';
         }
 
         if ( '' !== $year ) {
@@ -434,7 +427,7 @@ if ( ! function_exists( 'lunara_debrief_render_canonical_pairing_cards' ) ) {
                     'title_href'      => (string) ( $film['permalink'] ?? '' ),
                     'title_href_type' => 'entity',
                     'imdb_href'       => (string) ( $film['imdb_url'] ?? '' ),
-                    'counts'          => is_array( $film['oscar_counts'] ?? null ) ? $film['oscar_counts'] : array( 'noms' => 0, 'wins' => 0 ),
+                    'show_oscar_ledger' => false,
                     'poster_html'     => $poster,
                     'watch_html'      => '',
                 ),
@@ -593,7 +586,9 @@ if ( ! function_exists( 'lunara_debrief_render_pair_card_group' ) ) {
             if ( '' !== $imdb_href ) {
                 $chips .= '<a class="lunara-pair-card-chip lunara-pair-card-chip--imdb" href="' . esc_url( $imdb_href ) . '" target="_blank" rel="noopener noreferrer nofollow">IMDb</a>';
             }
-            if ( function_exists( 'lunara_render_oscar_ledger_pill' ) ) {
+            $show_oscar_ledger = ! array_key_exists( 'show_oscar_ledger', $data )
+                || ! empty( $data['show_oscar_ledger'] );
+            if ( $show_oscar_ledger && function_exists( 'lunara_render_oscar_ledger_pill' ) ) {
                 $counts = is_array( $data['counts'] ?? null ) ? $data['counts'] : array( 'noms' => 0, 'wins' => 0 );
                 $chips .= lunara_render_oscar_ledger_pill( $tt, $counts );
             }
