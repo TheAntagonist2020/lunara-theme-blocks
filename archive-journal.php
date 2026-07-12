@@ -2,9 +2,9 @@
 /**
  * Journal Archive — Lunara Film
  *
- * Renders /journal/ (the journal CPT archive) as a deliberate Lunara lane:
- * type filters, lead entry, supporting grid.  Without this template, the site
- * falls through to archive.php which expects standard WordPress posts.
+ * Renders /journal/ and Journal taxonomy archives as a deliberate Lunara lane:
+ * canonical section/topic filters, legacy type compatibility, a lead entry,
+ * and supporting grid.
  *
  * @package Lunara_Film
  */
@@ -26,7 +26,22 @@ $title       = function_exists( 'lunara_theme_mod_text' )
 $copy        = function_exists( 'lunara_theme_mod_text' )
 	? lunara_theme_mod_text( 'lunara_journal_archive_copy', '' )
 	: '';
-$copy        = '';
+
+$journal_taxonomies = array( 'journal_section', 'journal_topic', 'journal_type' );
+$current_term        = is_tax( $journal_taxonomies ) ? get_queried_object() : null;
+
+if ( $current_term instanceof WP_Term ) {
+	$taxonomy_kickers = array(
+		'journal_section' => __( 'Journal Section', 'lunara-film' ),
+		'journal_topic'   => __( 'Journal Topic', 'lunara-film' ),
+		'journal_type'    => __( 'Journal Type', 'lunara-film' ),
+	);
+	$kicker = isset( $taxonomy_kickers[ $current_term->taxonomy ] )
+		? $taxonomy_kickers[ $current_term->taxonomy ]
+		: __( 'Journal File', 'lunara-film' );
+	$title = $current_term->name;
+	$copy  = trim( wp_strip_all_tags( term_description( $current_term ) ) );
+}
 
 if ( 'The Lunara Journal' === trim( (string) $kicker ) ) {
 	$kicker = __( 'Journal', 'lunara-film' );
@@ -48,7 +63,9 @@ $current_sort    = function_exists( 'lunara_get_editorial_archive_sort' ) ? luna
 $sort_options    = function_exists( 'lunara_get_editorial_archive_sort_options' ) ? lunara_get_editorial_archive_sort_options() : array();
 $sort_base_url   = remove_query_arg( array( 'sort', 'paged' ), get_pagenum_link( 1 ) );
 $journal_counts  = wp_count_posts( 'journal' );
-$journal_total   = isset( $journal_counts->publish ) ? (int) $journal_counts->publish : 0;
+$journal_total   = $current_term instanceof WP_Term && $wp_query instanceof WP_Query
+	? (int) $wp_query->found_posts
+	: ( isset( $journal_counts->publish ) ? (int) $journal_counts->publish : 0 );
 $latest_journal  = get_posts( array(
 	'post_type'      => 'journal',
 	'post_status'    => 'publish',
@@ -83,19 +100,48 @@ if ( function_exists( 'lunara_get_curated_journal_lead_id' ) && is_post_type_arc
 	}
 }
 
-// Build a type-filter row from journal_type terms.
-$type_terms = get_terms( array(
-	'taxonomy'   => 'journal_type',
-	'hide_empty' => true,
-	'orderby'    => 'count',
-	'order'      => 'DESC',
-) );
+// Prefer Foundation's canonical section/topic lanes. Each newsroom lane stays
+// bounded, while the active term is retained by the adapter when necessary.
+$section_terms     = lunara_get_journal_archive_filter_terms( 'journal_section', 8, $current_term );
+$topic_terms       = lunara_get_journal_archive_filter_terms( 'journal_topic', 10, $current_term );
+$legacy_type_terms = lunara_get_journal_archive_filter_terms( 'journal_type', 8, $current_term );
+
+$has_section_terms = is_array( $section_terms ) && ! empty( $section_terms );
+$primary_terms     = $has_section_terms ? $section_terms : $legacy_type_terms;
+$primary_label     = $has_section_terms ? __( 'Sections', 'lunara-film' ) : __( 'Types', 'lunara-film' );
+$journal_filter_groups = array();
+
+if ( is_array( $primary_terms ) && ! empty( $primary_terms ) ) {
+	$journal_filter_groups[] = array(
+		'label' => $primary_label,
+		'terms' => $primary_terms,
+	);
+}
+
+if ( is_array( $topic_terms ) && ! empty( $topic_terms ) ) {
+	$journal_filter_groups[] = array(
+		'label' => __( 'Topics', 'lunara-film' ),
+		'terms' => $topic_terms,
+	);
+}
+
+if ( $has_section_terms && is_array( $legacy_type_terms ) && ! empty( $legacy_type_terms ) ) {
+	$journal_filter_groups[] = array(
+		'label' => __( 'Archive Types', 'lunara-film' ),
+		'terms' => $legacy_type_terms,
+	);
+}
+
+$journal_lane_count = 0;
+foreach ( $journal_filter_groups as $filter_group ) {
+	$journal_lane_count += count( $filter_group['terms'] );
+}
 
 $latest_journal_url = ! empty( $latest_journal[0] ) ? get_permalink( (int) $latest_journal[0] ) : get_post_type_archive_link( 'journal' );
 $trailer_lane_url   = get_post_type_archive_link( 'journal' );
 
-if ( $type_terms && ! is_wp_error( $type_terms ) ) {
-	foreach ( $type_terms as $type_term ) {
+foreach ( $journal_filter_groups as $filter_group ) {
+	foreach ( $filter_group['terms'] as $type_term ) {
 		if ( ! $type_term instanceof WP_Term || 'trailer' !== sanitize_title( $type_term->slug ) ) {
 			continue;
 		}
@@ -106,6 +152,10 @@ if ( $type_terms && ! is_wp_error( $type_terms ) ) {
 			$trailer_lane_url = $term_link;
 		}
 
+		break;
+	}
+
+	if ( $trailer_lane_url !== get_post_type_archive_link( 'journal' ) ) {
 		break;
 	}
 }
@@ -151,29 +201,33 @@ $journal_retention_cards = array(
 		<?php if ( '' !== $latest_label ) : ?>
 			<span><strong><?php esc_html_e( 'Latest file:', 'lunara-film' ); ?></strong> <?php echo esc_html( $latest_label ); ?></span>
 		<?php endif; ?>
-		<?php if ( $type_terms && ! is_wp_error( $type_terms ) ) : ?>
-			<span><strong><?php esc_html_e( 'Desk mix:', 'lunara-film' ); ?></strong> <?php echo esc_html( sprintf( _n( '%d lane', '%d lanes', count( $type_terms ), 'lunara-film' ), count( $type_terms ) ) ); ?></span>
+		<?php if ( $journal_lane_count > 0 ) : ?>
+			<span><strong><?php esc_html_e( 'Desk mix:', 'lunara-film' ); ?></strong> <?php echo esc_html( sprintf( _n( '%d lane', '%d lanes', $journal_lane_count, 'lunara-film' ), $journal_lane_count ) ); ?></span>
 		<?php endif; ?>
 	</div>
 
-	<?php if ( $show_filters && $type_terms && ! is_wp_error( $type_terms ) ) : ?>
-		<nav class="lunara-journal-archive-filters lunara-journal-archive-slot-filters" aria-label="<?php esc_attr_e( 'Filter by type', 'lunara-film' ); ?>">
-			<a class="lunara-journal-filter-pill <?php echo is_post_type_archive( 'journal' ) ? 'is-active' : ''; ?>"
-			   href="<?php echo esc_url( get_post_type_archive_link( 'journal' ) ); ?>">
-				<?php esc_html_e( 'All', 'lunara-film' ); ?>
-			</a>
-			<?php
-			$current_term = is_tax( 'journal_type' ) ? get_queried_object() : null;
-			foreach ( $type_terms as $term ) :
-				$is_active = $current_term && $current_term->term_id === $term->term_id;
-				?>
-				<a class="lunara-journal-filter-pill <?php echo $is_active ? 'is-active' : ''; ?>"
-				   href="<?php echo esc_url( get_term_link( $term ) ); ?>">
-					<?php echo esc_html( $term->name ); ?>
-					<span class="lunara-journal-filter-count">(<?php echo intval( $term->count ); ?>)</span>
-				</a>
+	<?php if ( $show_filters && ! empty( $journal_filter_groups ) ) : ?>
+		<div class="lunara-journal-filter-groups lunara-journal-archive-slot-filters">
+			<?php foreach ( $journal_filter_groups as $group_index => $filter_group ) : ?>
+				<nav class="lunara-journal-archive-filters" aria-label="<?php echo esc_attr( sprintf( __( 'Filter Journal by %s', 'lunara-film' ), $filter_group['label'] ) ); ?>">
+					<span class="lunara-journal-filter-label"><?php echo esc_html( $filter_group['label'] ); ?></span>
+					<?php if ( 0 === $group_index ) : ?>
+						<a class="lunara-journal-filter-pill <?php echo is_post_type_archive( 'journal' ) ? 'is-active' : ''; ?>"
+						   href="<?php echo esc_url( get_post_type_archive_link( 'journal' ) ); ?>">
+							<?php esc_html_e( 'All', 'lunara-film' ); ?>
+						</a>
+					<?php endif; ?>
+					<?php foreach ( $filter_group['terms'] as $term ) : ?>
+						<?php $is_active = $current_term instanceof WP_Term && $current_term->taxonomy === $term->taxonomy && $current_term->term_id === $term->term_id; ?>
+						<a class="lunara-journal-filter-pill <?php echo $is_active ? 'is-active' : ''; ?>"
+						   href="<?php echo esc_url( get_term_link( $term ) ); ?>">
+							<?php echo esc_html( $term->name ); ?>
+							<span class="lunara-journal-filter-count">(<?php echo intval( $term->count ); ?>)</span>
+						</a>
+					<?php endforeach; ?>
+				</nav>
 			<?php endforeach; ?>
-		</nav>
+		</div>
 	<?php endif; ?>
 
 	<?php if ( ! empty( $journal_archive_posts ) ) : ?>
@@ -220,7 +274,7 @@ $journal_retention_cards = array(
 					? lunara_get_editorial_card_updated_label( $pid )
 					: '';
 				$thumb_url     = has_post_thumbnail( $pid ) ? get_the_post_thumbnail_url( $pid, 'lunara-hero-spotlight' ) : '';
-				$thumb_loading = $journal_card_index <= 2 ? 'eager' : 'lazy';
+				$thumb_loading = 1 === $journal_card_index ? 'eager' : 'lazy';
 				$has_media     = '' !== $thumb_url;
 				?>
 				<article class="lunara-review-grid-card lunara-journal-archive-card<?php echo 1 === $journal_card_index ? ' is-lead' : ''; ?><?php echo $has_media ? ' has-media' : ' is-text-brief'; ?>">
