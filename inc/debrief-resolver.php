@@ -143,6 +143,11 @@ final class Lunara_Debrief_Film_Resolver {
      */
     public static function resolve_reviewed_movie( $review_id, $args = array() ) {
         $review_id = absint( $review_id );
+        $args      = is_array( $args ) ? $args : array();
+        $args['require_published'] = isset( $args['require_published'] )
+            ? (bool) $args['require_published']
+            : true;
+
         if ( ! $review_id ) {
             return self::empty_snapshot();
         }
@@ -163,7 +168,9 @@ final class Lunara_Debrief_Film_Resolver {
                 $movie_ids = get_posts(
                     array(
                         'post_type'              => 'movie',
-                        'post_status'            => array( 'publish', 'draft', 'pending', 'private' ),
+                        'post_status'            => $args['require_published']
+                            ? 'publish'
+                            : array( 'publish', 'draft', 'pending', 'private' ),
                         'posts_per_page'         => 1,
                         'fields'                 => 'ids',
                         'no_found_rows'          => true,
@@ -195,7 +202,6 @@ final class Lunara_Debrief_Film_Resolver {
             return $snapshot;
         }
 
-        $args['require_published'] = $args['require_published'] ?? false;
         return self::resolve( $movie_id, $args );
     }
 

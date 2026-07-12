@@ -10,6 +10,7 @@ $GLOBALS['lunara_resolver_test'] = array(
         11 => array( 'post_type' => 'movie', 'post_status' => 'publish', 'title' => 'Theme Film' ),
         12 => array( 'post_type' => 'movie', 'post_status' => 'draft', 'title' => 'Draft Film' ),
         13 => array( 'post_type' => 'movie', 'post_status' => 'publish', 'title' => 'Local Poster Film' ),
+        98 => array( 'post_type' => 'review', 'post_status' => 'draft', 'title' => 'Draft Film Review' ),
         99 => array( 'post_type' => 'review', 'post_status' => 'publish', 'title' => 'Theme Film Review' ),
     ),
     'meta' => array(
@@ -96,7 +97,7 @@ function lunara_get_oscar_ledger_counts() {
 function lunara_debrief_get_review_record( $review_id ) {
     return array(
         'review_id'     => $review_id,
-        'reviewed_film' => array( 'movie_id' => 11 ),
+        'reviewed_film' => array( 'movie_id' => 98 === $review_id ? 12 : 11 ),
     );
 }
 
@@ -157,6 +158,18 @@ lunara_resolver_assert_same( 'aat_local', $aat_local['poster_source'], 'Local Os
 
 $reviewed = lunara_debrief_resolve_reviewed_movie( 99 );
 lunara_resolver_assert_same( 11, $reviewed['movie_id'], 'A Review must resolve its Core-owned source movie.' );
+
+$reviewed_bad_args = lunara_debrief_resolve_reviewed_movie( 99, 'not-an-options-array' );
+lunara_resolver_assert_same( 11, $reviewed_bad_args['movie_id'], 'Non-array Review options must normalize without a PHP 8 TypeError.' );
+lunara_resolver_assert_true( $reviewed_bad_args['valid'], 'Normalized Review options must retain the published default.' );
+
+$reviewed_draft_default = lunara_debrief_resolve_reviewed_movie( 98 );
+lunara_resolver_assert_true( ! $reviewed_draft_default['valid'], 'A Review must not expose its draft source movie by default.' );
+lunara_resolver_assert_true( in_array( 'movie_not_published', $reviewed_draft_default['warnings'], true ), 'Default Review draft rejection must expose a stable warning.' );
+
+$reviewed_draft_admin = lunara_debrief_resolve_reviewed_movie( 98, array( 'require_published' => false ) );
+lunara_resolver_assert_true( $reviewed_draft_admin['valid'], 'Admin callers may explicitly inspect a Review-owned draft movie.' );
+lunara_resolver_assert_same( 12, $reviewed_draft_admin['movie_id'], 'Explicit draft resolution must retain the Review-owned movie ID.' );
 
 $invalid = lunara_debrief_resolve_movie( 99 );
 lunara_resolver_assert_true( ! $invalid['valid'], 'Non-movie posts must be rejected.' );
