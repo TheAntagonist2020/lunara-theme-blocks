@@ -176,6 +176,16 @@ function lunara_print_late_oscars_guardrail_styles() {
         return;
     }
 
+    $aat_entity          = get_query_var( 'aat_entity' );
+    $aat_entity_id       = get_query_var( 'aat_entity_id' );
+    $aat_hub             = get_query_var( 'aat_hub' );
+    $is_aat_entity_route = ! empty( $aat_entity ) && ! empty( $aat_entity_id );
+    $is_aat_hub_route    = ! empty( $aat_hub );
+
+    if ( ! $is_aat_entity_route && ! $is_aat_hub_route ) {
+        return;
+    }
+
     lunara_print_cacheable_stylesheet( 'lunara-oscars-late-guardrails', 'assets/css/lunara-oscars-late-guardrails.css' );
 }
 add_action( 'wp_footer', 'lunara_print_late_oscars_guardrail_styles', 999 );
