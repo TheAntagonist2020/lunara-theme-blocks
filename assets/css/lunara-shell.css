@@ -3027,6 +3027,10 @@ body.single-journal .lunara-review-single-title {
     font-weight: 400 !important;
 }
 
+body.single-journal .lunara-review-single-kicker {
+    font-family: var(--lunara-font-label, "Tiempos Text", "Segoe UI", Arial, sans-serif) !important;
+}
+
 body.single-journal .lunara-review-single-content,
 body.single-journal .lunara-journal-single-content {
     font-family: var(--lunara-font-body, "Tiempos Text", Georgia, "Times New Roman", serif) !important;
