@@ -92,6 +92,21 @@ Assert-True ($setup -match "add_action\(\s*'wp_head'\s*,\s*'lunara_print_public_
 Assert-True ($setup -match "add_action\(\s*'wp_head'\s*,\s*'lunara_print_home_module_styles'\s*,\s*44\s*\)") 'Homepage modules must load before the dynamic Front Desk variables.'
 Assert-True ($setup -match "add_action\(\s*'wp_footer'\s*,\s*'lunara_print_late_oscars_guardrail_styles'\s*,\s*999\s*\)") 'Late Oscars guardrails must remain the final route safeguard.'
 
+$lateOscarsFunctionPattern = '(?s)function\s+lunara_print_late_oscars_guardrail_styles\s*\(\s*\)\s*\{.*?\}\s*add_action\(\s*''wp_footer''\s*,\s*''lunara_print_late_oscars_guardrail_styles''\s*,\s*999\s*\)'
+$lateOscarsSetupFunction = [regex]::Match($setup, $lateOscarsFunctionPattern).Value
+$lateOscarsFallbackFunction = [regex]::Match($fallback, $lateOscarsFunctionPattern).Value
+Assert-True (-not [string]::IsNullOrWhiteSpace($lateOscarsSetupFunction)) 'The split loader late Oscars function could not be inspected.'
+Assert-True (-not [string]::IsNullOrWhiteSpace($lateOscarsFallbackFunction)) 'The fallback late Oscars function could not be inspected.'
+
+foreach ($lateOscarsFunction in @($lateOscarsSetupFunction, $lateOscarsFallbackFunction)) {
+    Assert-True ($lateOscarsFunction -match "get_query_var\(\s*'aat_entity'\s*\)") 'Late Oscars CSS must inspect the AAT entity query variable.'
+    Assert-True ($lateOscarsFunction -match "get_query_var\(\s*'aat_entity_id'\s*\)") 'Late Oscars CSS must require the AAT entity ID query variable.'
+    Assert-True ($lateOscarsFunction -match "get_query_var\(\s*'aat_hub'\s*\)") 'Late Oscars CSS must inspect the AAT hub query variable.'
+    Assert-True ($lateOscarsFunction -match '\$is_aat_entity_route\s*=\s*!\s*empty\(\s*\$aat_entity\s*\)\s*&&\s*!\s*empty\(\s*\$aat_entity_id\s*\)') 'Late Oscars CSS must require both AAT entity query variables.'
+    Assert-True ($lateOscarsFunction -match '\$is_aat_hub_route\s*=\s*!\s*empty\(\s*\$aat_hub\s*\)') 'Late Oscars CSS must recognize AAT hub routes.'
+    Assert-True ($lateOscarsFunction -match 'if\s*\(\s*!\s*\$is_aat_entity_route\s*&&\s*!\s*\$is_aat_hub_route\s*\)\s*\{\s*return\s*;') 'Late Oscars CSS must return on Home, the Oscars portal, and every other non-AAT route.'
+}
+
 $dynamicSignature = [regex]::Match(
     $frontend,
     '(?s)<style id="lunara-homepage-studio-signature-css">.*?</style>'
@@ -153,6 +168,6 @@ Assert-True ($fallback -match 'id="lunara-grain"') 'The fallback loader must emi
 Assert-True (($setup + $fallback) -notmatch 'lunara-film-grain') 'The unused legacy grain node must stay removed.'
 Assert-True ($style -match 'background-image:\s*url\("assets/images/lunara-grain\.svg"\)') 'Room Tone CSS must use the cacheable grain asset.'
 Assert-True ($grain -match '<feTurbulence') 'The cacheable grain asset appears incomplete.'
-Assert-True ($style -match 'Version:\s*3\.2\.12') 'Theme version must be 3.2.12 for the Home mobile LCP priority correction.'
+Assert-True ($style -match 'Version:\s*3\.2\.13') 'Theme version must be 3.2.13 for the late Oscars CSS route scope.'
 
 Write-Host "Performance payload budget contract passed (critical: $criticalBytes; shell: $shellBytes; public: $publicGuardrailBytes; home: $homeModuleBytes; review: $reviewComponentBytes; public JS: $publicRuntimeBytes; carousel JS: $scrollCarouselBytes; home JS: $homeRuntimeBytes; Oscars: $lateOscarsBytes; dynamic: $dynamicSignatureBytes; grain: $grainBytes bytes)."
