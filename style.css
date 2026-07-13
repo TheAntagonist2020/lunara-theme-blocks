@@ -18340,3 +18340,69 @@ body.single-journal .entry-content figcaption {
 @media (prefers-reduced-motion: reduce) {
     .lunara-oscars-navigator a { transition: none; }
 }
+
+/* ============================================================================
+   Curated Grids — lunara-curated-grids-css
+   Column dial + lead layouts for the fully customizable grid blocks
+   (lunara/reviews-grid, lunara/journal-grid). Cards reuse the existing
+   review-grid / journal-home-card chrome; these rules only add the
+   per-instance column variable and the featured-lead treatments.
+   ============================================================================ */
+
+.lunara-review-grid.lunara-curated-grid {
+    grid-template-columns: repeat(var(--lunara-cgrid-cols, 3), minmax(0, 1fr));
+    gap: 28px;
+}
+
+.lunara-review-grid.lunara-curated-grid.is-layout-lead .lunara-review-grid-card.is-lead {
+    grid-column: 1 / -1;
+}
+
+.lunara-review-grid.lunara-curated-grid.is-layout-lead .lunara-review-grid-card.is-lead .lunara-review-grid-link {
+    grid-template-rows: none;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: stretch;
+}
+
+.lunara-review-grid.lunara-curated-grid.is-layout-lead .lunara-review-grid-card.is-lead .lunara-review-grid-poster-wrap {
+    aspect-ratio: 16 / 10;
+    border-radius: 18px 0 0 18px;
+    height: 100%;
+}
+
+.lunara-review-grid.lunara-curated-grid.is-layout-lead .lunara-review-grid-card.is-lead .lunara-review-grid-copy {
+    padding: 24px 26px;
+    align-content: center;
+}
+
+.lunara-review-grid.lunara-curated-grid.is-layout-lead .lunara-review-grid-card.is-lead .lunara-review-grid-title {
+    font-size: clamp(1.4rem, 2.6vw, 2rem);
+}
+
+.lunara-journal-home-grid.lunara-curated-grid {
+    grid-template-columns: repeat(var(--lunara-cgrid-cols, 2), minmax(0, 1fr));
+}
+
+@media (max-width: 980px) {
+    .lunara-review-grid.lunara-curated-grid,
+    .lunara-journal-home-grid.lunara-curated-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .lunara-review-grid.lunara-curated-grid.is-layout-lead .lunara-review-grid-card.is-lead .lunara-review-grid-link {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    .lunara-review-grid.lunara-curated-grid.is-layout-lead .lunara-review-grid-card.is-lead .lunara-review-grid-poster-wrap {
+        border-radius: 18px 18px 0 0;
+        height: auto;
+    }
+}
+
+@media (max-width: 640px) {
+    .lunara-review-grid.lunara-curated-grid,
+    .lunara-journal-home-grid.lunara-curated-grid {
+        grid-template-columns: 1fr;
+    }
+}
