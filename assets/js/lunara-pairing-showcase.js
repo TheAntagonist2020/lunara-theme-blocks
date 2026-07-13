@@ -444,7 +444,7 @@
 							: el( Notice, { status: 'warning', isDismissible: false }, __( 'Preview unavailable.', 'lunara-film' ) ) )
 						: el( Notice, { status: 'info', isDismissible: false },
 							'review' === source
-								? __( 'Enter a review ID to mirror its pairings.', 'lunara-film' )
+								? __( 'Search for a review to mirror its pairings.', 'lunara-film' )
 								: __( 'Add a pairing card to build the showcase.', 'lunara-film' ) )
 				)
 			);
