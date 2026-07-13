@@ -18594,3 +18594,22 @@ body.single-journal .entry-content figcaption {
         grid-column: auto;
     }
 }
+
+/* ============================================================================
+   Pairing Showcase — lunara-pairing-showcase-css
+   The signature Pair It With as a per-instance block (lunara/pairing). The
+   card chrome is reused verbatim from lunara-review-components.css (loaded on
+   demand wherever the block renders); these rules only let the block stand on
+   its own outside a review's debrief wrap.
+   ============================================================================ */
+
+.lunara-pairing-showcase-block {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.lunara-pairing-showcase-block .lunara-pair-cards-grid[data-count="1"] {
+    max-width: 340px;
+    margin-left: auto;
+    margin-right: auto;
+}
