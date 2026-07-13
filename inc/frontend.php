@@ -461,7 +461,10 @@ function lunara_phase1c_review_components_needed() {
 
     if ( is_singular() ) {
         $post = get_post();
-        if ( $post instanceof WP_Post && has_shortcode( (string) $post->post_content, 'lunara_pair_it_with' ) ) {
+        if ( $post instanceof WP_Post && (
+            has_shortcode( (string) $post->post_content, 'lunara_pair_it_with' )
+            || ( function_exists( 'has_block' ) && has_block( 'lunara/pairing', $post ) )
+        ) ) {
             return true;
         }
     }
