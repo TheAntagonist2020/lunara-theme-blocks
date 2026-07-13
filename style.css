@@ -18406,3 +18406,191 @@ body.single-journal .entry-content figcaption {
         grid-template-columns: 1fr;
     }
 }
+
+/* ============================================================================
+   Curated Media Showcase — lunara-media-showcase-css
+   One block, three displays (gallery / slider / carousel) over a hand-picked,
+   reorderable image set. Per-instance dials arrive as CSS custom properties:
+     --lunara-media-cols   column count (gallery)
+     --lunara-media-gap    gutter length (gallery + slider)
+     --lunara-media-ratio  aspect-ratio value; absent = natural/uncropped
+   ============================================================================ */
+
+.lunara-media-showcase {
+    --lunara-media-cols: 3;
+    --lunara-media-gap: 20px;
+}
+
+.lunara-media-showcase .lunara-media-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.lunara-media-showcase.is-ratio-auto .lunara-media-image {
+    height: auto;
+}
+
+.lunara-media-showcase .lunara-media-link {
+    display: block;
+    height: 100%;
+}
+
+.lunara-media-showcase figure.lunara-media-item,
+.lunara-media-showcase figure.lunara-media-slide {
+    margin: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.lunara-media-showcase.has-ratio .lunara-media-item,
+.lunara-media-showcase.has-ratio .lunara-media-slide {
+    aspect-ratio: var(--lunara-media-ratio, 4 / 3);
+}
+
+.lunara-media-showcase.is-rounded .lunara-media-item,
+.lunara-media-showcase.is-rounded .lunara-media-slide,
+.lunara-media-showcase.is-rounded .lunara-media-carousel {
+    border-radius: 14px;
+}
+
+.lunara-media-showcase .lunara-media-caption {
+    font-size: 0.82rem;
+    line-height: 1.4;
+    opacity: 0.78;
+    margin-top: 6px;
+    padding: 0 2px;
+}
+
+/* ── Gallery ─────────────────────────────────────────────────────────────── */
+.lunara-media-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--lunara-media-cols, 3), minmax(0, 1fr));
+    gap: var(--lunara-media-gap, 20px);
+}
+
+.lunara-media-display-gallery .lunara-media-item.is-feature {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+
+/* ── Slider ──────────────────────────────────────────────────────────────── */
+.lunara-media-slider {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lunara-media-slider-track {
+    display: flex;
+    gap: var(--lunara-media-gap, 20px);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    flex: 1 1 auto;
+}
+
+.lunara-media-slider-track::-webkit-scrollbar {
+    display: none;
+}
+
+.lunara-media-slider-track .lunara-media-slide {
+    flex: 0 0 clamp(220px, 42%, 460px);
+    scroll-snap-align: start;
+}
+
+.lunara-media-arrow {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(128, 128, 128, 0.35);
+    background: rgba(15, 29, 46, 0.65);
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.lunara-media-arrow:hover {
+    background: rgba(15, 29, 46, 0.9);
+}
+
+.lunara-media-arrow:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+/* ── Carousel (reuses the .lunara-carousel contract) ─────────────────────── */
+.lunara-media-carousel {
+    position: relative;
+    width: 100%;
+    aspect-ratio: var(--lunara-media-ratio, 16 / 9);
+    overflow: hidden;
+}
+
+.lunara-media-carousel.has-ratio {
+    aspect-ratio: var(--lunara-media-ratio, 16 / 9);
+}
+
+.lunara-media-carousel .lunara-media-carousel-slide {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.lunara-media-carousel .lunara-media-carousel-slide.active {
+    opacity: 1;
+}
+
+.lunara-media-carousel .lunara-media-carousel-cover {
+    position: absolute;
+    inset: 0;
+}
+
+.lunara-media-carousel .lunara-carousel-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 24px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0));
+    color: #fff;
+}
+
+@media (max-width: 782px) {
+    .lunara-media-gallery-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .lunara-media-display-gallery .lunara-media-item.is-feature {
+        grid-column: span 2;
+        grid-row: auto;
+    }
+
+    .lunara-media-slider-track .lunara-media-slide {
+        flex-basis: clamp(200px, 78%, 360px);
+    }
+}
+
+@media (max-width: 480px) {
+    .lunara-media-gallery-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lunara-media-display-gallery .lunara-media-item.is-feature {
+        grid-column: auto;
+    }
+}
