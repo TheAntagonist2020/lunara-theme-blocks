@@ -25,6 +25,7 @@
 	var ToggleControl = components.ToggleControl;
 	var Button = components.Button;
 	var Notice = components.Notice;
+	var Spinner = components.Spinner;
 	var ServerSideRender = ( serverSideRender && ( serverSideRender.default || serverSideRender ) ) || serverSideRender;
 
 	// Common role labels the signature feature uses — offered as suggestions,
@@ -66,6 +67,153 @@
 				posterCache[ item.id ] = thumb;
 			} );
 		} ).catch( function () {} );
+	}
+
+	// id → title cache for the chosen review, so re-opening doesn't refetch.
+	var reviewTitleCache = {};
+
+	/**
+	 * Single-select review search picker — the same search-and-click UX the
+	 * curated grids use, so mirror mode never asks for a raw post ID.
+	 */
+	function ReviewPicker( props ) {
+		var value = Number( props.value || 0 );
+		var onChange = props.onChange;
+
+		var termState = useState( '' );
+		var term = termState[ 0 ];
+		var setTerm = termState[ 1 ];
+
+		var resultsState = useState( [] );
+		var results = resultsState[ 0 ];
+		var setResults = resultsState[ 1 ];
+
+		var busyState = useState( false );
+		var busy = busyState[ 0 ];
+		var setBusy = busyState[ 1 ];
+
+		var labelState = useState( value && reviewTitleCache[ value ] ? reviewTitleCache[ value ] : '' );
+		var label = labelState[ 0 ];
+		var setLabel = labelState[ 1 ];
+
+		// Hydrate the chosen review's title so the selection reads by name.
+		useEffect( function () {
+			if ( value && ! reviewTitleCache[ value ] ) {
+				apiFetch( {
+					path: url.addQueryArgs( '/wp/v2/search', {
+						include: value,
+						type: 'post',
+						subtype: 'review',
+						per_page: 1,
+						_fields: 'id,title'
+					} )
+				} ).then( function ( r ) {
+					if ( r && r[ 0 ] ) {
+						reviewTitleCache[ value ] = r[ 0 ].title;
+						setLabel( r[ 0 ].title );
+					}
+				} ).catch( function () {} );
+			} else if ( value && reviewTitleCache[ value ] ) {
+				setLabel( reviewTitleCache[ value ] );
+			}
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		}, [ value ] );
+
+		useEffect( function () {
+			if ( ! term || term.length < 2 ) {
+				setResults( [] );
+				return;
+			}
+			var alive = true;
+			setBusy( true );
+			var timer = setTimeout( function () {
+				apiFetch( {
+					path: url.addQueryArgs( '/wp/v2/search', {
+						search: term,
+						type: 'post',
+						subtype: 'review',
+						per_page: 10,
+						_fields: 'id,title'
+					} )
+				} ).then( function ( found ) {
+					if ( ! alive ) {
+						return;
+					}
+					( found || [] ).forEach( function ( item ) {
+						reviewTitleCache[ item.id ] = item.title;
+					} );
+					setResults( found || [] );
+					setBusy( false );
+				} ).catch( function () {
+					if ( alive ) {
+						setResults( [] );
+						setBusy( false );
+					}
+				} );
+			}, 350 );
+			return function () {
+				alive = false;
+				clearTimeout( timer );
+			};
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		}, [ term ] );
+
+		function choose( id, title ) {
+			reviewTitleCache[ id ] = title;
+			setLabel( title );
+			setTerm( '' );
+			setResults( [] );
+			onChange( id );
+		}
+
+		var rowStyle = {
+			display: 'flex',
+			alignItems: 'center',
+			gap: '4px',
+			padding: '4px 0',
+			borderBottom: '1px solid rgba(128,128,128,0.15)'
+		};
+
+		if ( value ) {
+			return el( Fragment, {},
+				el( 'p', { style: { fontSize: '12px', margin: '0 0 6px' } },
+					el( 'strong', {}, __( 'Mirroring: ', 'lunara-film' ) ),
+					label || ( '#' + value )
+				),
+				el( Button, {
+					variant: 'secondary',
+					size: 'small',
+					isDestructive: true,
+					onClick: function () {
+						setLabel( '' );
+						onChange( 0 );
+					}
+				}, __( 'Choose a different review', 'lunara-film' ) )
+			);
+		}
+
+		return el( Fragment, {},
+			el( TextControl, {
+				label: __( 'Review to mirror', 'lunara-film' ),
+				placeholder: __( 'Search reviews by title…', 'lunara-film' ),
+				value: term,
+				onChange: setTerm
+			} ),
+			busy && el( Spinner, {} ),
+			! busy && term.length >= 2 && ! results.length && el( 'p', { style: { fontSize: '12px', opacity: 0.7 } }, __( 'No matching reviews.', 'lunara-film' ) ),
+			results.map( function ( item ) {
+				return el( 'div', { key: 'rev' + item.id, style: rowStyle },
+					el( 'span', { style: { flex: '1 1 auto', fontSize: '12px', lineHeight: 1.3 } }, item.title ),
+					el( Button, {
+						variant: 'secondary',
+						size: 'small',
+						onClick: function () {
+							choose( Number( item.id ), item.title );
+						}
+					}, __( 'Mirror', 'lunara-film' ) )
+				);
+			} )
+		);
 	}
 
 	function PairingEditor( props ) {
@@ -256,13 +404,13 @@
 							],
 							onChange: set( 'source' )
 						} ),
-						'review' === source && el( TextControl, {
-							label: __( 'Review ID to mirror', 'lunara-film' ),
-							type: 'number',
+						'review' === source && el( ReviewPicker, {
 							value: attributes.reviewId || 0,
-							help: __( 'Renders that review\'s automatic Pair It With cards verbatim.', 'lunara-film' ),
-							onChange: function ( v ) { setAttributes( { reviewId: parseInt( v, 10 ) || 0 } ); }
-						} )
+							onChange: function ( id ) { setAttributes( { reviewId: id } ); }
+						} ),
+						'review' === source && el( 'p', { style: { fontSize: '11px', opacity: 0.7, marginTop: '8px' } },
+							__( 'Renders that review\'s automatic Pair It With cards verbatim.', 'lunara-film' )
+						)
 					),
 					'curated' === source && el( PanelBody, { title: __( 'Pairing cards', 'lunara-film' ), initialOpen: true },
 						el( PairingEditor, { attributes: attributes, setAttributes: setAttributes } )
