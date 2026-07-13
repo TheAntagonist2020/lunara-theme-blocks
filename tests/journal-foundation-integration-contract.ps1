@@ -67,7 +67,7 @@ Assert-True ($single -match "'journal_image_alt'") 'Journal single must consume 
 Assert-True ($controlDesk -match "lunara_get_journal_source_items") 'Control Desk must consume canonical Foundation source rows.'
 Assert-True ($controlDesk -match "lunara_get_journal_field_value\([^\r\n]*'journal_deck'") 'Control Desk must prefer the canonical Foundation deck.'
 Assert-True ($related -match "lunara_get_journal_kicker") 'Related Journal rendering must use the shared canonical-first kicker.'
-Assert-True ($style -match 'Version:\s*3\.2\.14') 'Theme version must be 3.2.14 for the Review-single CSS route scope.'
+Assert-True ($style -match 'Version:\s*3\.2\.13') 'Theme version must be 3.2.13 for the late Oscars CSS route scope.'
 Assert-True ($fixtureSource -match "LUNARA_JOURNAL_FOUNDATION_VERSION',\s*'1\.2\.1'") 'Journal integration fixture must target stabilized Foundation 1.2.1.'
 Assert-True ($loader -match 'require_once\s+\$lunara_inc\s*\.\s*''journal-family\.php''') 'Split loader must include the dedicated Journal-family adapter module.'
 Assert-True ($journalFamily -match 'function\s+lunara_get_journal_related_tax_query') 'Related-query adapters belong in the dedicated Journal-family module.'
