@@ -68,6 +68,6 @@ foreach ($legacyCall in @(
 Assert-True ($blocks -match 'lunara_debrief_public_renderer_enabled') 'Hidden bridge blocks must honor the staged native renderer switch.'
 Assert-True ($blocks -match 'lunara_render_review_debrief') 'Debrief bridge block must use the native renderer while enabled.'
 Assert-True ($blocks -match 'lunara_get_review_debrief_render_parts') 'Pair It With bridge block must use the atomic controller while enabled.'
-Assert-True ($style -match 'Version:\s*3\.2\.9') 'Theme version must identify the Journal Foundation integration release.'
+Assert-True ($style -match 'Version:\s*3\.2\.10') 'Theme version must identify the Journal typography and alignment release.'
 
 Write-Host 'Debrief public renderer contract passed.'
