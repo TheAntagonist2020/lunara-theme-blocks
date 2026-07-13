@@ -13321,10 +13321,11 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 					$has_visual  = has_post_thumbnail( $pid );
 					$thumb_url   = $has_visual ? get_the_post_thumbnail_url( $pid, 'newspack-article-block-landscape-intermediate' ) : '';
 					$thumb_attrs = array(
-						'class'    => 'lunara-oscar-pick-card-image',
-						'loading'  => 'eager',
-						'decoding' => 'async',
-						'sizes'    => '(max-width: 420px) 92vw, (max-width: 760px) 44vw, (max-width: 1180px) 42vw, 360px',
+						'class'         => 'lunara-oscar-pick-card-image',
+						'loading'       => 'lazy',
+						'decoding'      => 'async',
+						'fetchpriority' => 'low',
+						'sizes'         => '(max-width: 420px) 92vw, (max-width: 760px) 44vw, (max-width: 1180px) 42vw, 360px',
 					);
 					?>
 					<article class="lunara-oscar-pick-card is-status-<?php echo esc_attr( $status ); ?> <?php echo $has_visual ? 'has-visual' : 'has-no-visual'; ?>" role="listitem">
@@ -13838,19 +13839,16 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 					$visual_focus = lunara_sanitize_oscar_fact_visual_focus( get_post_meta( $pid, '_lunara_fact_visual_focus', true ) );
 					$visual_focus_css = lunara_oscar_fact_visual_focus_css( $visual_focus );
 					$thumb_size = $is_archival_visual ? 'full' : 'lunara-hero-spotlight';
-					$visual_image_url = $has_image ? (string) get_the_post_thumbnail_url( $pid, $thumb_size ) : '';
 					$card_style_parts = array( '--lunara-fact-image-position:' . $visual_focus_css );
-					if ( $is_archival_visual && '' !== $visual_image_url ) {
-						$card_style_parts[] = '--lunara-fact-image-url:url(' . esc_url_raw( $visual_image_url ) . ')';
-					}
 					$card_style  = implode( ';', $card_style_parts ) . ';';
 					$card_class  = 'lunara-oscar-fact-card lunara-carousel-slide' . ( 0 === $fact_index ? ' active' : '' ) . ( $has_image ? ' has-poster' : '' ) . ( $is_archival_visual ? ' has-archival-visual' : '' );
 					$card_url    = lunara_resolve_oscar_fact_ledger_url( $pid, $category, $year );
 					$thumb_attrs = array(
-						'class'    => 'lunara-oscar-fact-card-poster-image',
-						'loading'  => 'eager',
-						'decoding' => 'async',
-						'sizes'    => '(max-width: 640px) 92vw, (max-width: 980px) 44vw, 480px',
+						'class'         => 'lunara-oscar-fact-card-poster-image',
+						'loading'       => 'lazy',
+						'decoding'      => 'async',
+						'fetchpriority' => 'low',
+						'sizes'         => '(max-width: 640px) 92vw, (max-width: 980px) 44vw, 480px',
 					);
 					?>
 					<article class="<?php echo esc_attr( $card_class ); ?>" role="listitem" data-fact-id="<?php echo esc_attr( (string) $pid ); ?>" data-slide-index="<?php echo esc_attr( (string) ( $fact_index + 1 ) ); ?>" data-visual-treatment="<?php echo esc_attr( $visual_treatment ); ?>" data-visual-focus="<?php echo esc_attr( $visual_focus ); ?>" style="<?php echo esc_attr( $card_style ); ?>"<?php echo 0 === $fact_index ? ' aria-current="true"' : ''; ?>>
@@ -16142,10 +16140,11 @@ if ( ! function_exists( 'lunara_render_homepage_journal_lane' ) ) {
 					$has_visual  = has_post_thumbnail( $pid );
 					$thumb_url   = $has_visual ? get_the_post_thumbnail_url( $pid, $thumb_size ) : '';
 					$thumb_attrs = array(
-						'class'    => 'lunara-journal-home-card-image skip-lazy no-lazy',
-						'loading'  => 'eager',
-						'decoding' => 'async',
-						'sizes'    => '(max-width: 640px) 92vw, (max-width: 980px) 46vw, (max-width: 1280px) 46vw, 620px',
+						'class'         => 'lunara-journal-home-card-image',
+						'loading'       => 'lazy',
+						'decoding'      => 'async',
+						'fetchpriority' => 'low',
+						'sizes'         => '(max-width: 640px) 92vw, (max-width: 980px) 46vw, (max-width: 1280px) 46vw, 620px',
 					);
 					?>
 					<article class="lunara-journal-home-card<?php echo $is_lead ? ' is-lead' : ''; ?> <?php echo $has_visual ? 'has-visual' : 'has-no-visual'; ?>">
@@ -16648,17 +16647,17 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
 			<div class="lunara-review-grid lunara-review-archive-uniform">
 				<?php while ( $latest->have_posts() ) :
 					$latest->the_post();
-					$review_index = max( 0, (int) $latest->current_post );
-					$rid          = get_the_ID();
+					$rid   = get_the_ID();
 					$score        = get_post_meta( $rid, '_lunara_score', true );
 					$quote        = function_exists( 'lunara_get_review_card_pull_quote' )
 						? lunara_get_review_card_pull_quote( $rid, 46 )
 						: wp_trim_words( wp_strip_all_tags( get_the_excerpt( $rid ) ), 46, '...' );
 					$thumb_attrs  = array(
-						'class'    => 'lunara-review-grid-poster',
-						'loading'  => 0 === $review_index ? 'eager' : 'lazy',
-						'decoding' => 'async',
-						'sizes'    => '(max-width: 420px) 92vw, (max-width: 760px) 44vw, (max-width: 1180px) 42vw, 260px',
+						'class'         => 'lunara-review-grid-poster',
+						'loading'       => 'lazy',
+						'decoding'      => 'async',
+						'fetchpriority' => 'low',
+						'sizes'         => '(max-width: 420px) 92vw, (max-width: 760px) 44vw, (max-width: 1180px) 42vw, 260px',
 					);
 					$image_data = function_exists( 'lunara_get_review_card_image_data' )
 						? lunara_get_review_card_image_data( $rid, 'newspack-article-block-portrait-intermediate', $thumb_attrs )

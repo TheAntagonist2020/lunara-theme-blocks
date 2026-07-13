@@ -25,6 +25,7 @@ $setup = Read-ThemeFile 'inc/setup.php'
 $frontend = Read-ThemeFile 'inc/frontend.php'
 $headerCommand = Read-ThemeFile 'inc/header-command.php'
 $homeSections = Read-ThemeFile 'inc/home-sections.php'
+$reviewRendering = Read-ThemeFile 'inc/review-rendering.php'
 $functions = Read-ThemeFile 'functions.php'
 $frontPage = Read-ThemeFile 'front-page.php'
 $style = Read-ThemeFile 'style.css'
@@ -71,6 +72,40 @@ Assert-True ('' -ne $activeLatestReviews) 'Could not isolate the active Home Lat
 Assert-True ('' -ne $fallbackLatestReviews) 'Could not isolate the fallback Home Latest Reviews renderer.'
 Assert-True ($activeLatestReviews -notmatch "'fetchpriority'\]\s*=\s*'high'") 'The lower active Latest Reviews rail must not claim LCP priority.'
 Assert-True ($fallbackLatestReviews -notmatch "'fetchpriority'\]\s*=\s*'high'") 'The lower fallback Latest Reviews rail must not claim LCP priority.'
+Assert-True ($activeLatestReviews -match "'loading'\s*=>\s*'lazy'") 'The lower active Latest Reviews rail must use native lazy loading.'
+Assert-True ($activeLatestReviews -match "'fetchpriority'\s*=>\s*'low'") 'The lower active Latest Reviews rail must use low fetch priority.'
+Assert-True ($fallbackLatestReviews -match "'loading'\s*=>\s*'lazy'") 'The lower fallback Latest Reviews rail must use native lazy loading.'
+Assert-True ($fallbackLatestReviews -match "'fetchpriority'\s*=>\s*'low'") 'The lower fallback Latest Reviews rail must use low fetch priority.'
+
+$journalLane = [regex]::Match(
+    $functions,
+    '(?ms)function lunara_render_homepage_journal_lane\(\).*?^}'
+).Value
+Assert-True ('' -ne $journalLane) 'Could not isolate the Home Journal lane renderer.'
+Assert-True ($journalLane -match "'loading'\s*=>\s*'lazy'") 'The lower Home Journal lane must use native lazy loading.'
+Assert-True ($journalLane -match "'fetchpriority'\s*=>\s*'low'") 'The lower Home Journal lane must use low fetch priority.'
+Assert-True ($journalLane -notmatch 'skip-lazy|no-lazy') 'The lower Home Journal lane must remain eligible for native and optimizer lazy loading.'
+
+$oscarPicks = [regex]::Match(
+    $functions,
+    '(?ms)function lunara_render_oscar_picks_carousel\( \$args = array\(\) \).*?^}'
+).Value
+$oscarFacts = [regex]::Match(
+    $functions,
+    '(?ms)function lunara_render_oscar_facts_carousel\( \$args = array\(\) \).*?^}'
+).Value
+Assert-True ('' -ne $oscarPicks) 'Could not isolate the Home Oscar Picks renderer.'
+Assert-True ('' -ne $oscarFacts) 'Could not isolate the Home Oscar Facts renderer.'
+Assert-True ($oscarPicks -match "'loading'\s*=>\s*'lazy'") 'The lower Home Oscar Picks carousel must use native lazy loading.'
+Assert-True ($oscarPicks -match "'fetchpriority'\s*=>\s*'low'") 'The lower Home Oscar Picks carousel must use low fetch priority.'
+Assert-True ($oscarFacts -match "'loading'\s*=>\s*'lazy'") 'The lower Home Oscar Facts carousel must use native lazy loading.'
+Assert-True ($oscarFacts -match "'fetchpriority'\s*=>\s*'low'") 'The lower Home Oscar Facts carousel must use low fetch priority.'
+Assert-True ($oscarFacts -notmatch '--lunara-fact-image-url|\$visual_image_url') 'Archival Oscar Facts must not bypass lazy loading through a CSS background image.'
+
+Assert-True ($reviewRendering -match '\$is_priority_image\s*=\s*''eager''\s*===') 'The shared Review image helper must classify priority from the requested loading attributes.'
+Assert-True ($reviewRendering -match 'if \( \$is_priority_image \) \{[\s\S]*?data-no-lazy[\s\S]*?data-skip-lazy[\s\S]*?\} else \{[\s\S]*?unset\( \$attrs\[''data-no-lazy''\], \$attrs\[''data-skip-lazy''\] \)') 'Only eager/high Review images may opt out of optimizer lazy loading.'
+Assert-True ($reviewRendering -match 'lunara_remove_img_attribute\( \$html, ''data-no-lazy'' \)') 'Locked lazy Review markup must remove stale optimizer exclusions.'
+Assert-True ($reviewRendering -match 'lunara_remove_img_attribute\( \$html, ''data-skip-lazy'' \)') 'Locked lazy Review markup must remove stale optimizer skip flags.'
 
 Assert-True ($frontPage -match '(?s)if \(\s*''hero''\s*===\s*\$lunara_slug\s*\).*?call_user_func\(\s*\$lunara_callback,\s*array\(\s*''first_image_is_lcp''\s*=>\s*false\s*\)') 'The lower Home hero must explicitly opt out of LCP priority.'
 Assert-True ($functions -match '(?s)register_block_type\(\s*''lunara/cinematic-hero''.*?if \( is_front_page\(\) \) \{\s*\$attributes\[''first_image_is_lcp''\]\s*=\s*false;') 'The editable Home cinematic-hero block must opt out after the Front Desk has claimed LCP.'
@@ -79,6 +114,6 @@ Assert-True ($functions -match '\$is_priority_image\s*=\s*\$is_first\s*&&\s*\(bo
 Assert-True ($functions -match 'loading="lazy" decoding="async" fetchpriority="low"') 'Non-LCP cinematic hero images must use native lazy loading at low priority.'
 Assert-True (([regex]::Matches($functions, "array_key_exists\(\s*'first_image_is_lcp'")).Count -eq 2) 'Both static and carousel hero renderers must honor the LCP context flag.'
 Assert-True ($functions -match 'lunara_render_cinematic_hero_slide\( \$slide_data, \$slide_index, \$first_image_is_lcp \)') 'The carousel must pass its LCP context into every slide renderer.'
-Assert-True ($style -match 'Version:\s*3\.2\.11') 'Theme version must be 3.2.11 for the complete Journal typography correction.'
+Assert-True ($style -match 'Version:\s*3\.2\.12') 'Theme version must be 3.2.12 for the Home mobile LCP priority correction.'
 
 Write-Host 'Homepage LCP priority hygiene contract passed.'

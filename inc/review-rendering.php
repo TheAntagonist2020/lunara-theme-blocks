@@ -1384,8 +1384,16 @@ if ( ! function_exists( 'lunara_lock_review_image_markup' ) ) {
 
         $html = lunara_replace_img_attribute( $html, 'src', $src );
         $html = lunara_replace_img_attribute( $html, 'data-src', $src );
-        $html = lunara_replace_img_attribute( $html, 'data-no-lazy', '1' );
-        $html = lunara_replace_img_attribute( $html, 'data-skip-lazy', '1' );
+
+        $is_priority_image = preg_match( '/\sloading=("|\')eager\1/i', $html ) || preg_match( '/\sfetchpriority=("|\')high\1/i', $html );
+        if ( $is_priority_image ) {
+            $html = lunara_replace_img_attribute( $html, 'data-no-lazy', '1' );
+            $html = lunara_replace_img_attribute( $html, 'data-skip-lazy', '1' );
+        } else {
+            $html = lunara_remove_img_attribute( $html, 'data-no-lazy' );
+            $html = lunara_remove_img_attribute( $html, 'data-skip-lazy' );
+        }
+
         $html = lunara_replace_img_attribute( $html, 'width', $width );
         $html = lunara_replace_img_attribute( $html, 'height', $height );
 
@@ -1450,8 +1458,13 @@ if ( ! function_exists( 'lunara_get_review_card_image_data' ) ) {
             $attrs['sizes'] = (string) $profile['sizes'];
         }
 
-        $attrs['data-no-lazy']   = '1';
-        $attrs['data-skip-lazy'] = '1';
+        $is_priority_image = 'eager' === strtolower( (string) ( $attrs['loading'] ?? '' ) ) || 'high' === strtolower( (string) ( $attrs['fetchpriority'] ?? '' ) );
+        if ( $is_priority_image ) {
+            $attrs['data-no-lazy']   = '1';
+            $attrs['data-skip-lazy'] = '1';
+        } else {
+            unset( $attrs['data-no-lazy'], $attrs['data-skip-lazy'] );
+        }
 
         $url       = '';
         $html      = '';
