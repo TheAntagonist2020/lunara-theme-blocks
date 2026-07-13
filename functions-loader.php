@@ -81,6 +81,17 @@ require_once $lunara_inc . 'live-search.php';
 // homepage when present; Homepage Studio saves write through to the blocks.
 require_once $lunara_inc . 'home-blocks.php';
 
+// Layer 13b — Curated Grids: fully customizable, per-instance Reviews Grid
+// and Journal Grid blocks (hand-picked slots, auto-fill, layout + display
+// dials). Depends on card helpers (review-rendering) and CPTs.
+require_once $lunara_inc . 'curated-grids.php';
+
+// Layer 13c — Curated Media: one fully customizable image block that renders
+// as a gallery, slider, or carousel from a hand-picked, reorderable set of
+// media-library images. Loads after curated-grids so it can reuse the shared
+// section-header helper; the carousel display reuses lunara-carousel.js.
+require_once $lunara_inc . 'curated-media.php';
+
 // Layer 14 — GEO (Design Spec §16): serves /llms.txt, the retrieval-model
 // map of the site's authoritative surfaces.
 require_once $lunara_inc . 'geo.php';
