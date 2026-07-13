@@ -157,6 +157,58 @@ function lunara_print_public_guardrail_styles() {
 add_action( 'wp_head', 'lunara_print_public_guardrail_styles', 1005 );
 
 /**
+ * Single Review guardrails kept out of the site-wide public bundle.
+ */
+function lunara_print_review_single_guardrail_styles() {
+    if ( is_admin() || is_feed() || ! is_singular( 'review' ) ) {
+        return;
+    }
+
+    lunara_print_cacheable_stylesheet( 'lunara-review-single-guardrails', 'assets/css/lunara-review-single-guardrails.css' );
+}
+add_action( 'wp_head', 'lunara_print_review_single_guardrail_styles', 1005 );
+
+/**
+ * Restore the click-through gate only when a Review actually uses it.
+ */
+function lunara_enqueue_review_spoiler_gate_runtime() {
+    if ( is_admin() || is_feed() || ! is_singular( 'review' ) ) {
+        return;
+    }
+
+    $post_id = get_queried_object_id();
+    if ( $post_id <= 0 || ! function_exists( 'lunara_is_full_spoiler_review' ) || ! lunara_is_full_spoiler_review( $post_id ) ) {
+        return;
+    }
+
+    $asset = lunara_resolve_theme_asset( 'assets/js/lunara-review-spoiler-gate.js' );
+    if ( empty( $asset['uri'] ) ) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'lunara-review-spoiler-gate',
+        $asset['uri'],
+        array(),
+        lunara_theme_asset_version( $asset['path'] ),
+        true
+    );
+    wp_script_add_data( 'lunara-review-spoiler-gate', 'strategy', 'defer' );
+}
+add_action( 'wp_enqueue_scripts', 'lunara_enqueue_review_spoiler_gate_runtime', 31 );
+
+/**
+ * The spoiler gate must initialize before interaction so protected text cannot flash.
+ */
+function lunara_review_spoiler_gate_delay_exclusions( $exclusions ) {
+    $exclusions   = is_array( $exclusions ) ? $exclusions : array();
+    $exclusions[] = 'lunara-review-spoiler-gate.js';
+
+    return array_values( array_unique( $exclusions ) );
+}
+add_filter( 'rocket_delay_js_exclusions', 'lunara_review_spoiler_gate_delay_exclusions' );
+
+/**
  * Homepage module rules that do not contain request-specific values.
  */
 function lunara_print_home_module_styles() {
