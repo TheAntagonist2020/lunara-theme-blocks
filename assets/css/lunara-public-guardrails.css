@@ -1070,8 +1070,9 @@ body.home .lunara-latest-reviews-section .lunara-review-grid {
 
         body.post-type-archive-journal .lunara-journal-archive-retention-card strong {
             color: rgba(255,243,212,.98) !important;
-            font-family: var(--theme-font-family, inherit) !important;
+            font-family: var(--lunara-font-display, "Tiempos Headline", Georgia, serif) !important;
             font-size: clamp(1rem, 1.35vw, 1.18rem) !important;
+            font-weight: 700 !important;
             line-height: 1.1 !important;
         }
 

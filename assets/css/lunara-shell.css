@@ -2450,6 +2450,8 @@ body:not(.wp-admin) .lunara-button,
 body:not(.wp-admin) .lunara-button-ghost,
 body:not(.wp-admin) .lunara-btn,
 body:not(.wp-admin) .aat-btn,
+body:not(.wp-admin) .lunara-site-footer .lunara-footer-nav-col a,
+body:not(.wp-admin) .lunara-site-footer .menu a,
 body:not(.wp-admin) .lunara-journal-filter-pill,
 body:not(.wp-admin) .lunara-archive-sort a,
 body:not(.wp-admin) .aat-decade-pill,
@@ -2982,7 +2984,65 @@ body.aat-shell-page .aat-hub-inline-link.aat-hub-inline-link-title {
 
 body.post-type-archive-journal .lunara-archive-page,
 body.single-journal .lunara-journal-single-page {
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body, Georgia, "Times New Roman", serif) !important;
+}
+
+body.post-type-archive-journal .lunara-archive-hero-title {
+    font-family: var(--lunara-font-glamour, var(--lunara-font-display, Georgia, "Times New Roman", serif)) !important;
+    font-weight: 400 !important;
+}
+
+body.post-type-archive-journal .lunara-archive-hero-kicker,
+body.post-type-archive-journal .lunara-journal-archive-deskbar strong,
+body.post-type-archive-journal .lunara-journal-filter-label,
+body.post-type-archive-journal .lunara-journal-filter-count,
+body.post-type-archive-journal .lunara-review-grid-kicker,
+body.post-type-archive-journal .lunara-dispatch-type,
+body.post-type-archive-journal .lunara-journal-archive-retention-kicker {
+    font-family: var(--lunara-font-label, "Tiempos Text", Georgia, "Times New Roman", serif) !important;
+}
+
+body.post-type-archive-journal .lunara-journal-filter-label {
+    letter-spacing: 0.08em !important;
+}
+
+body.post-type-archive-journal .lunara-journal-archive-toolbar .lunara-section-title,
+body.post-type-archive-journal .lunara-journal-archive-retention-head .lunara-section-title,
+body.post-type-archive-journal .lunara-archive-empty p {
+    font-family: var(--lunara-font-display, "Tiempos Headline", Georgia, "Times New Roman", serif) !important;
+    font-weight: 700 !important;
+}
+
+body.post-type-archive-journal .lunara-archive-hero-copy,
+body.post-type-archive-journal .lunara-journal-archive-deskbar,
+body.post-type-archive-journal .lunara-journal-archive-deskbar span,
+body.post-type-archive-journal .lunara-journal-filter-pill,
+body.post-type-archive-journal .lunara-review-grid-excerpt,
+body.post-type-archive-journal .lunara-journal-archive-retention-card > span:not(.lunara-journal-archive-retention-kicker) {
+    font-family: var(--lunara-font-body, "Tiempos Text", Georgia, "Times New Roman", serif) !important;
+}
+
+body.single-journal .lunara-review-single-title {
+    font-family: var(--lunara-font-glamour, var(--lunara-font-display, Georgia, "Times New Roman", serif)) !important;
+    font-weight: 400 !important;
+}
+
+body.single-journal .lunara-review-single-content,
+body.single-journal .lunara-journal-single-content {
+    font-family: var(--lunara-font-body, "Tiempos Text", Georgia, "Times New Roman", serif) !important;
+}
+
+body.single-journal .lunara-review-single-content h2,
+body.single-journal .lunara-review-single-content h3,
+body.single-journal .lunara-journal-single-content h2,
+body.single-journal .lunara-journal-single-content h3,
+body.single-journal .lunara-journal-single-content h4 {
+    font-family: var(--lunara-font-display, "Tiempos Headline", Georgia, "Times New Roman", serif) !important;
+    font-weight: 700 !important;
+}
+
+body.single-journal .lunara-review-single-rail-actions .lunara-btn {
+    font-family: var(--lunara-font-label, "Tiempos Text", Georgia, "Times New Roman", serif) !important;
 }
 
 body.post-type-archive-journal .lunara-archive-page {
@@ -3172,7 +3232,11 @@ body.single-journal .lunara-review-single-content {
     body.post-type-archive-journal .lunara-editorial-archive-toolbar-head,
     body.post-type-archive-journal .lunara-archive-sort,
     body.post-type-archive-journal .lunara-journal-archive-grid {
-        transform: translateX(-32px) !important;
+        transform: none !important;
+    }
+
+    body.post-type-archive-journal .lunara-journal-archive-filters {
+        justify-self: center !important;
     }
 
     body.post-type-archive-journal .lunara-review-grid-card,
