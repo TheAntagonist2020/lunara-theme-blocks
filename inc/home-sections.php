@@ -1877,7 +1877,6 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
                 <?php
                 while ( $latest->have_posts() ) :
                     $latest->the_post();
-                    $review_index       = max( 0, (int) $latest->current_post );
                     $rid                = get_the_ID();
                     $is_current_release = in_array( $rid, $current_release_ids, true );
                     $score              = get_post_meta( $rid, '_lunara_score', true );
@@ -1887,10 +1886,11 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
                         ? lunara_get_review_card_pull_quote( $rid, 22, true )
                         : wp_trim_words( wp_strip_all_tags( get_the_excerpt( $rid ) ), 22, '...' );
                     $thumb_attrs        = array(
-                        'class'    => 'lunara-review-grid-poster',
-                        'loading'  => 'eager',
-                        'decoding' => 'async',
-                        'sizes'    => '(max-width: 520px) 46vw, (max-width: 900px) 42vw, (max-width: 1180px) 30vw, 340px',
+                        'class'         => 'lunara-review-grid-poster',
+                        'loading'       => 'lazy',
+                        'decoding'      => 'async',
+                        'fetchpriority' => 'low',
+                        'sizes'         => '(max-width: 520px) 46vw, (max-width: 900px) 42vw, (max-width: 1180px) 30vw, 340px',
                     );
                     $image_data = function_exists( 'lunara_get_review_card_image_data' )
                         ? lunara_get_review_card_image_data( $rid, 'lunara-review-card', $thumb_attrs )

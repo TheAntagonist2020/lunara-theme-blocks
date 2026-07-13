@@ -390,12 +390,8 @@ body.home .lunara-oscar-facts-section {
         position: absolute;
         inset: 0;
         z-index: 0;
-        background-image: var(--lunara-fact-image-url, none);
-        background-position: var(--lunara-fact-image-position, center center);
-        background-size: cover;
-        filter: blur(18px) saturate(1.04);
-        opacity: 0.24;
-        transform: scale(1.08);
+        background: radial-gradient(circle at 50% 46%, rgba(215, 182, 111, 0.2), transparent 58%);
+        opacity: 1;
         pointer-events: none;
     }
 
