@@ -14,10 +14,9 @@
 	var PluginSidebar                = editPost.PluginSidebar || editor.PluginSidebar;
 	var PluginSidebarMoreMenuItem    = editPost.PluginSidebarMoreMenuItem || editor.PluginSidebarMoreMenuItem;
 	var Panel                        = components.Panel;
-	var PanelBody                    = components.PanelBody;
 	var Button                       = components.Button;
 
-	if ( ! PluginSidebar || ! PluginSidebarMoreMenuItem || ! PanelBody || ! Button ) {
+	if ( ! PluginSidebar || ! PluginSidebarMoreMenuItem || ! Panel || ! Button ) {
 		return;
 	}
 
