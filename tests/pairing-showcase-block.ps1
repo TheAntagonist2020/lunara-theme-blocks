@@ -66,6 +66,11 @@ Assert-True ($editor -match 'Move up') 'Editor must support reordering cards.'
 Assert-True ($editor -match 'MediaUpload') 'Editor must support a poster override from the media library.'
 Assert-True ($editor -match 'ServerSideRender') 'Editor must live-preview the server render.'
 
+# --- Mirror mode picks the review by search, not a raw ID -------------------
+Assert-True ($editor -match "subtype:\s*'review'") 'Mirror mode must search reviews over REST.'
+Assert-True ($editor -match 'ReviewPicker') 'Mirror mode must use the review search picker.'
+Assert-True (-not ($editor -match "type:\s*'number'")) 'Mirror mode must not use a raw numeric ID field.'
+
 # --- CSS --------------------------------------------------------------------
 Assert-True ($css -match 'lunara-pairing-showcase-css') 'Pairing showcase CSS section must be present.'
 
