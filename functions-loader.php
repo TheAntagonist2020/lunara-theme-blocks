@@ -97,6 +97,10 @@ require_once $lunara_inc . 'curated-media.php';
 // Oscar-ledger pill, where-to-watch) defined in Layer 2's debrief.php.
 require_once $lunara_inc . 'pairing-showcase.php';
 
+// Layer 13e — Lunara Studio: editor-only block hub plus starter patterns for
+// the flagship blocks and homepage section kit.
+require_once $lunara_inc . 'blocks-hub.php';
+
 // Layer 14 — GEO (Design Spec §16): serves /llms.txt, the retrieval-model
 // map of the site's authoritative surfaces.
 require_once $lunara_inc . 'geo.php';
