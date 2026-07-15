@@ -43,7 +43,7 @@
 	];
 
 	function insert( name ) {
-		if ( ! blocks.createBlock || ! data.select || ! data.dispatch ) {
+		if ( ! blocks.createBlock || ! data.dispatch ) {
 			return;
 		}
 		var blockEditor = data.dispatch( 'core/block-editor' );
@@ -92,7 +92,7 @@
 			el(
 				PluginSidebar,
 				{ name: 'lunara-studio', title: __( 'Lunara Studio', 'lunara-film' ), icon: 'video-alt2' },
-				Panel ? el( Panel, {}, panelChildren ) : panelChildren
+				el( Panel, {}, panelChildren )
 			)
 		);
 

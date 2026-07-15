@@ -46,21 +46,11 @@ if ( ! function_exists( 'lunara_blocks_hub_register_patterns' ) ) {
 	 * @return void
 	 */
 	function lunara_blocks_hub_register_patterns() {
-		// WordPress names this registry WP_Block_Pattern_Categories_Registry;
-		// retain the alternate spelling as a defensive compatibility fallback.
-		$categories = null;
-		if ( class_exists( 'WP_Block_Pattern_Categories_Registry' ) ) {
-			$categories = WP_Block_Pattern_Categories_Registry::get_instance();
-		} elseif ( class_exists( 'WP_Block_Patterns_Category_Registry' ) ) {
-			$categories = WP_Block_Patterns_Category_Registry::get_instance();
-		}
-		if ( function_exists( 'register_block_pattern_category' ) && $categories ) {
-			if ( ! $categories->is_registered( 'lunara' ) ) {
-				register_block_pattern_category(
-					'lunara',
-					array( 'label' => __( 'Lunara', 'lunara-film' ) )
-				);
-			}
+		if ( function_exists( 'register_block_pattern_category' ) ) {
+			register_block_pattern_category(
+				'lunara',
+				array( 'label' => __( 'Lunara', 'lunara-film' ) )
+			);
 		}
 
 		if ( ! function_exists( 'register_block_pattern' ) || ! class_exists( 'WP_Block_Patterns_Registry' ) ) {
@@ -91,7 +81,16 @@ if ( ! function_exists( 'lunara_blocks_hub_register_patterns' ) ) {
 				'title'       => __( 'Pair It With — Three Films', 'lunara-film' ),
 				'description' => __( 'A curated three-film conversation ready for editorial notes.', 'lunara-film' ),
 				'keywords'    => array( 'pairing', 'films', 'debrief' ),
-				'content'     => '<!-- wp:lunara/pairing {"source":"curated","pairings":[{"label":"The descent","title":"There Will Be Blood","year":"2007","note":"A study in appetite, power, and consequence.","imdb":"tt0469494"},{"label":"The grace note","title":"Paddington 2","year":"2017","note":"Kindness as a radical form of resistance.","imdb":"tt4468740"},{"label":"The reckoning","title":"No Country for Old Men","year":"2007","note":"Fate, violence, and the silence between choices.","imdb":"tt0477348"}]} /-->',
+				'content'     => <<<'PATTERN'
+<!-- wp:lunara/pairing {"source":"curated","pairings":[
+  {"label":"The descent","title":"There Will Be Blood","year":"2007",
+   "note":"A study in appetite, power, and consequence.","imdb":"tt0469494"},
+  {"label":"The grace note","title":"Paddington 2","year":"2017",
+   "note":"Kindness as a radical form of resistance.","imdb":"tt4468740"},
+  {"label":"The reckoning","title":"No Country for Old Men","year":"2007",
+   "note":"Fate, violence, and the silence between choices.","imdb":"tt0477348"}
+]} /-->
+PATTERN,
 			),
 			'lunara/section-cinematic-hero' => array(
 				'title'       => __( 'Homepage Section — Cinematic Hero', 'lunara-film' ),
