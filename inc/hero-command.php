@@ -288,14 +288,16 @@ if ( ! function_exists( 'lunara_hero_command_save' ) ) {
 		check_admin_referer( 'lunara_save_hero_command', 'lunara_hero_command_nonce' );
 
 		$raw = array(
-			'enabled' => isset( $_POST['lunara_hero_command_enabled'] ) ? 1 : 0,
-			'overlay' => isset( $_POST['lunara_hero_command_overlay'] ) ? (int) $_POST['lunara_hero_command_overlay'] : 100,
-			'slides'  => isset( $_POST['lunara_hero_command_slides'] ) && is_array( $_POST['lunara_hero_command_slides'] )
+			'enabled'          => isset( $_POST['lunara_hero_command_enabled'] ) ? 1 : 0,
+			'cinematic_opener' => isset( $_POST['lunara_hero_command_cinematic_opener'] ) ? 1 : 0,
+			'overlay'          => isset( $_POST['lunara_hero_command_overlay'] ) ? (int) $_POST['lunara_hero_command_overlay'] : 100,
+			'slides'           => isset( $_POST['lunara_hero_command_slides'] ) && is_array( $_POST['lunara_hero_command_slides'] )
 				? array_values( wp_unslash( $_POST['lunara_hero_command_slides'] ) ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized field-by-field below.
 				: array(),
 		);
 
 		update_option( 'lunara_hero_command', lunara_hero_command_sanitize( $raw ), true );
+		set_theme_mod( 'lunara_home_cinematic_front_door_enabled', ! empty( $raw['cinematic_opener'] ) ? 1 : 0 );
 
 		// The hero is the homepage LCP band — make the change visible now.
 		if ( function_exists( 'rocket_clean_home' ) ) {
@@ -329,9 +331,12 @@ if ( ! function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) {
 			return;
 		}
 
-		$settings   = lunara_hero_command_settings();
-		$deck       = $settings['slides'];
-		$live_count = count( lunara_hero_command_slides() );
+		$settings                 = lunara_hero_command_settings();
+		$deck                     = $settings['slides'];
+		$live_count               = count( lunara_hero_command_slides() );
+		$cinematic_opener_enabled = function_exists( 'lunara_home_cinematic_front_door_is_enabled' )
+			? lunara_home_cinematic_front_door_is_enabled()
+			: (bool) get_theme_mod( 'lunara_home_cinematic_front_door_enabled', false );
 		?>
 		<section id="lunara-theme-studio-hero-command" class="lunara-control-desk-homepage-studio">
 			<div class="lunara-control-desk-panel-header">
@@ -373,6 +378,14 @@ if ( ! function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) {
 							<span>
 								<strong><?php esc_html_e( 'Enable Hero Command', 'lunara-film' ); ?></strong>
 								<small><?php esc_html_e( 'The curated deck below replaces the automatic feed — exact slides, exact order, no cap at six.', 'lunara-film' ); ?></small>
+							</span>
+						</label>
+
+						<label class="lunara-hero-command-enable <?php echo $cinematic_opener_enabled ? 'is-enabled' : 'is-disabled'; ?>">
+							<input type="checkbox" name="lunara_hero_command_cinematic_opener" value="1" <?php checked( $cinematic_opener_enabled ); ?> />
+							<span>
+								<strong><?php esc_html_e( 'Use Cinematic Hero as homepage opener', 'lunara-film' ); ?></strong>
+								<small><?php esc_html_e( 'Make the full-bleed cinematic hero the first viewport. Leave this off to retain the reversible fallback during staging.', 'lunara-film' ); ?></small>
 							</span>
 						</label>
 
