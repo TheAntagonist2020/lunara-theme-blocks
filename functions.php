@@ -15699,10 +15699,15 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 		}
 
 		$interval = (int) apply_filters( 'lunara_hero_autoplay_interval', 6500 );
+		$is_static = count( $slides ) < 2;
+		$hero_classes = 'lunara-home-hero lunara-home-slot-hero lunara-cinematic-hero lunara-cinematic-hero-carousel splide';
+		if ( $is_static ) {
+			$hero_classes .= ' is-hero-static';
+		}
 
 		ob_start();
 		?>
-		<section class="lunara-home-hero lunara-home-slot-hero lunara-cinematic-hero lunara-cinematic-hero-carousel splide" data-lunara-hero-autoplay="<?php echo esc_attr( (string) $interval ); ?>" aria-roledescription="carousel" aria-label="<?php esc_attr_e( 'Featured', 'lunara-film' ); ?>">
+		<section class="<?php echo esc_attr( $hero_classes ); ?>" data-lunara-hero-autoplay="<?php echo esc_attr( (string) $interval ); ?>" aria-roledescription="carousel" aria-label="<?php esc_attr_e( 'Featured', 'lunara-film' ); ?>">
 			<div class="splide__track lunara-cinematic-hero-track">
 				<ul class="splide__list">
 					<?php

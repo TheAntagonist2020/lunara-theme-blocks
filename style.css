@@ -17212,6 +17212,23 @@ body.post-type-archive-journal .lunara-review-grid-poster {
     to   { transform: scaleY(0); }
 }
 
+/* A one-slide Hero Command opener has no scroll sequence to reveal. Keep the
+   static editorial frame full-bleed and visible at first paint; the monolith
+   letterbox remains available for rotating decks with a real transition. */
+.lunara-cinematic-hero-carousel.is-hero-static {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+.lunara-cinematic-hero-carousel.is-hero-static .lunara-cinematic-hero-slide {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+}
+.lunara-cinematic-hero-carousel.is-hero-static .lunara-cinematic-hero-track::before,
+.lunara-cinematic-hero-carousel.is-hero-static .lunara-cinematic-hero-track::after {
+    content: none !important;
+    display: none !important;
+}
+
 /* ============================================================================
    THE "METHOD" FOOTER REVEAL (Design Spec 2.0 §7) — curtain effect.
    lunara-footer-curtain.js arms these classes only on desktop when the
