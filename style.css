@@ -17218,6 +17218,7 @@ body.post-type-archive-journal .lunara-review-grid-poster {
 .lunara-cinematic-hero-carousel.is-hero-static {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
+    visibility: visible !important;
 }
 .lunara-cinematic-hero-carousel.is-hero-static .lunara-cinematic-hero-slide {
     flex: 0 0 100% !important;

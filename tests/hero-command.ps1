@@ -36,6 +36,7 @@ Assert-True ($heroCarousel -match "is-hero-mounted', 'is-hero-static', 'is-rende
 Assert-True ($themeFunctions -match '\$is_static\s*=\s*count\(\s*\$slides\s*\)\s*<\s*2') 'The server-rendered carousel must identify a one-slide static opener before first paint.'
 Assert-True ($themeFunctions -match '\$hero_classes\s*\.\=\s*'' is-hero-static''') 'The server-rendered static opener must expose its layout class before JavaScript runs.'
 Assert-True ($themeCss -match 'lunara-cinematic-hero-carousel\.is-hero-static') 'Static cinematic heroes must have a dedicated layout guard.'
+Assert-True ($themeCss -match 'is-hero-static[\s\S]*visibility:\s*visible\s*!important') 'Static cinematic heroes must remain visible when delayed JavaScript has not mounted Splide.'
 Assert-True ($themeCss -match 'is-hero-static \.lunara-cinematic-hero-slide[\s\S]*flex: 0 0 100%') 'A static cinematic hero slide must fill the carousel width.'
 Assert-True ($themeCss -match 'is-hero-static \.lunara-cinematic-hero-track::before[\s\S]*content: none') 'Static cinematic heroes must not render the scroll curtain.'
 
