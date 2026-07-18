@@ -493,6 +493,36 @@ function lunara_get_oscars_entry_visual( $entry, $aat_instance = null, $args = a
 }
 
 /**
+ * Flush every Oscars-derived homepage/portal transient the moment the
+ * ledger data changes. Before this, an Oscars import left the deep-cuts
+ * and rotating-showcase caches stale for up to a DAY — the editor
+ * uploads new data and the site keeps showing the old world. Hooked on
+ * the oscars plugin's own post-import action; a no-op when absent.
+ */
+function lunara_flush_oscars_home_transients() {
+    delete_transient( 'lunara_home_oscars_snapshot_v6' );
+    delete_transient( 'lunara_home_database_spotlight_v1' );
+    delete_transient( 'lunara_home_ledger_story_cards_v2' );
+    delete_transient( 'lunara_home_oscar_spotlight_v1' );
+    delete_transient( 'lunara_home_deep_cuts_v1' );
+
+    // The rotating showcase keys carry the day-of-year and the card limit;
+    // clear today's (and tomorrow's, for imports near midnight) across the
+    // clamped 4-16 limit range.
+    $today = function_exists( 'wp_date' ) ? intval( wp_date( 'z' ) ) : intval( date( 'z' ) );
+    foreach ( array( $today, ( $today + 1 ) % 366 ) as $day ) {
+        for ( $limit = 4; $limit <= 16; $limit++ ) {
+            delete_transient( 'lunara_oscars_rotating_showcase_v3_' . $day . '_' . $limit );
+        }
+    }
+
+    if ( function_exists( 'rocket_clean_home' ) ) {
+        rocket_clean_home();
+    }
+}
+add_action( 'aat_after_data_import', 'lunara_flush_oscars_home_transients' );
+
+/**
  * Build a dynamic Oscars snapshot for the homepage from the active database plugin.
  */
 function lunara_get_home_oscars_snapshot() {
@@ -622,7 +652,11 @@ function lunara_get_home_oscars_snapshot() {
         ),
     );
 
-    set_transient( $cache_key, $snapshot, 5 * MINUTE_IN_SECONDS );
+    // 15 minutes, not 5: the old TTL aligned with Batcache's ~5-minute page
+    // cache, so both expired together and cold visitors paid a full rebuild.
+    // Freshness after an Oscars import is handled by explicit invalidation
+    // (lunara_flush_oscars_home_transients on aat_after_data_import).
+    set_transient( $cache_key, $snapshot, 15 * MINUTE_IN_SECONDS );
 
     return $snapshot;
 }

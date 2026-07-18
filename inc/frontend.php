@@ -427,6 +427,29 @@ function lunara_home_front_door_css() {
 add_action( 'wp_head', 'lunara_home_front_door_css', 45 );
 
 /**
+ * Preload the two faces every first paint waits on: the reading voice
+ * (Tiempos Text regular) and the headline face (Tiempos Headline
+ * semibold). Fonts require crossorigin on preload even same-origin.
+ * Filterable so the list can follow any future font re-tuning.
+ */
+function lunara_preload_critical_fonts() {
+    $fonts = apply_filters(
+        'lunara_critical_font_preloads',
+        array(
+            '/wp-content/uploads/lunara-fonts/v1/TiemposText-Regular.woff2',
+            '/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Semibold.woff2',
+        )
+    );
+    foreach ( (array) $fonts as $font_path ) {
+        printf(
+            '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin />' . "\n",
+            esc_url( home_url( $font_path ) )
+        );
+    }
+}
+add_action( 'wp_head', 'lunara_preload_critical_fonts', 3 );
+
+/**
  * Keep the masthead's layout CSS out of WP Rocket's used-CSS pipeline.
  *
  * Rocket's Remove Unused CSS collects inline styles into its async-applied
