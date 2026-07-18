@@ -387,3 +387,46 @@ body.post-type-archive-review .lunara-review-archive-run-grid .lunara-review-gri
     html:not(.lunara-gsap-motion) .lunara-pairing-desk-section.lunara-reveal.is-visible .lunara-pair-card:nth-child(3){transition-delay:.32s}
 }
 @media(max-width:900px){.lunara-pairing-desk-head{grid-template-columns:minmax(0,1fr)}.lunara-pairing-desk-intro{align-content:start;padding-bottom:0}}
+
+/* ============================================================
+   REVIEW DESK INSTRUMENTS (3.2.15) — the last two generic rows
+   on the review package, restyled into the house's instrument
+   language: gold hairline caps, label-face kickers, uniform pill
+   heights. CSS-only; markup and contracts untouched.
+   ============================================================ */
+.lunara-review-share-links,
+.lunara-review-share-row {
+    border-top: 1px solid rgba(201, 169, 97, 0.22);
+    padding-top: 16px;
+}
+.lunara-review-share-link {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 8px 15px !important;
+    border: 1px solid rgba(201, 169, 97, 0.3) !important;
+    border-radius: 999px !important;
+    background: rgba(15, 29, 46, 0.55) !important;
+    color: rgba(244, 239, 227, 0.86) !important;
+    font-family: var(--lunara-font-label, sans-serif) !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.14em !important;
+    text-transform: uppercase !important;
+    text-decoration: none !important;
+    transition: border-color 0.16s ease, background 0.16s ease;
+}
+.lunara-review-share-link:hover,
+.lunara-review-share-link:focus-visible {
+    border-color: rgba(201, 169, 97, 0.65) !important;
+    background: rgba(201, 169, 97, 0.12) !important;
+    color: var(--lunara-gold-light, #e0c481) !important;
+}
+.lunara-review-related-copy {
+    border-left: 2px solid rgba(201, 169, 97, 0.45);
+    padding-left: 14px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .lunara-review-share-link { transition: none; }
+}

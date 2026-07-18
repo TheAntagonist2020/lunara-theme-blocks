@@ -68,6 +68,6 @@ foreach ($legacyCall in @(
 Assert-True ($blocks -match 'lunara_debrief_public_renderer_enabled') 'Hidden bridge blocks must honor the staged native renderer switch.'
 Assert-True ($blocks -match 'lunara_render_review_debrief') 'Debrief bridge block must use the native renderer while enabled.'
 Assert-True ($blocks -match 'lunara_get_review_debrief_render_parts') 'Pair It With bridge block must use the atomic controller while enabled.'
-Assert-True ($style -match 'Version:\s*3\.2\.14') 'Theme version must identify the late Oscars CSS route scope.'
+Assert-True ($style -match 'Version:\s*3\.2\.15') 'Theme version must identify the late Oscars CSS route scope.'
 
 Write-Host 'Debrief public renderer contract passed.'

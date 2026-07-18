@@ -310,3 +310,32 @@
             if(hero)hero.style.viewTransitionName='';
         });
     })();
+
+    /* Reading Hairline (3.2.15) — scroll position as information, in the
+       house's hairline language. Self-mounting on review/journal singles;
+       no PHP markup, no contract surface. rAF-throttled, passive. */
+    (function(){
+        var b=document.body;
+        if(!b||!(b.classList.contains('single-review')||b.classList.contains('single-journal')))return;
+        var line=document.createElement('div');
+        line.className='lunara-reading-hairline';
+        line.setAttribute('aria-hidden','true');
+        b.appendChild(line);
+        var ticking=false;
+        function paint(){
+            ticking=false;
+            var doc=document.documentElement;
+            var max=(doc.scrollHeight-window.innerHeight);
+            var p=max>0?Math.min(1,Math.max(0,(window.scrollY||doc.scrollTop)/max)):0;
+            line.style.transform='scaleX('+p.toFixed(4)+')';
+            if(!line.classList.contains('is-live'))line.classList.add('is-live');
+        }
+        function onScroll(){
+            if(ticking)return;
+            ticking=true;
+            window.requestAnimationFrame(paint);
+        }
+        window.addEventListener('scroll',onScroll,{passive:true});
+        window.addEventListener('resize',onScroll,{passive:true});
+        paint();
+    })();
