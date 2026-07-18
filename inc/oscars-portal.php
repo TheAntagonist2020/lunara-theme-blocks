@@ -406,3 +406,93 @@ function lunara_oscars_portal_body_class( $classes ) {
     return $classes;
 }
 add_filter( 'body_class', 'lunara_oscars_portal_body_class' );
+
+if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
+	/**
+	 * The Board — the desk's predictions for the upcoming ceremony, as a
+	 * dense ranked ledger (category → call → status), not another card
+	 * grid. Powered by the same lunara_oscar_pick posts that feed the
+	 * homepage carousel; publishing a pick updates both surfaces. Empty
+	 * board renders nothing, so the portal degrades cleanly off-season.
+	 */
+	function lunara_render_oscars_prediction_board() {
+		if ( ! function_exists( 'lunara_get_oscar_picks' ) ) {
+			return '';
+		}
+
+		$picks = lunara_get_oscar_picks( array( 'posts_per_page' => 30 ) );
+		$posts = ( $picks instanceof WP_Query ) ? $picks->posts : (array) $picks;
+		if ( empty( $posts ) ) {
+			return '';
+		}
+
+		$ceremony_year = 0;
+		$rows          = array();
+		foreach ( $posts as $pick ) {
+			$pick_id  = $pick instanceof WP_Post ? $pick->ID : absint( $pick );
+			$terms    = get_the_terms( $pick_id, 'oscar_pick_category' );
+			$category = ( $terms && ! is_wp_error( $terms ) ) ? $terms[0]->name : '';
+			$film     = trim( (string) get_post_meta( $pick_id, '_lunara_pick_film', true ) );
+			$person   = trim( (string) get_post_meta( $pick_id, '_lunara_pick_person', true ) );
+			$status   = sanitize_key( (string) get_post_meta( $pick_id, '_lunara_pick_status', true ) );
+			$url      = trim( (string) get_post_meta( $pick_id, '_lunara_pick_oscar_entity_url', true ) );
+			$year     = absint( get_post_meta( $pick_id, '_lunara_pick_ceremony_year', true ) );
+			if ( $year > $ceremony_year ) {
+				$ceremony_year = $year;
+			}
+			$call = '' !== $person ? $person : $film;
+			if ( '' === $call ) {
+				$call = html_entity_decode( get_the_title( $pick_id ), ENT_QUOTES, 'UTF-8' );
+			}
+			$rows[] = array(
+				'category' => $category,
+				'call'     => $call,
+				'film'     => ( '' !== $person && '' !== $film ) ? $film : '',
+				'status'   => $status,
+				'url'      => $url,
+			);
+		}
+
+		if ( empty( $rows ) ) {
+			return '';
+		}
+
+		$heading = $ceremony_year
+			? sprintf( /* translators: %d: ceremony year */ __( 'The desk calls the %d ceremony, category by category.', 'lunara-film' ), $ceremony_year )
+			: __( 'The desk calls the next ceremony, category by category.', 'lunara-film' );
+
+		ob_start();
+		?>
+		<section id="oscars-board" class="lunara-home-section lunara-oscars-board lunara-oscars-portal-slot-board" aria-label="<?php esc_attr_e( 'Prediction board', 'lunara-film' ); ?>">
+			<div class="lunara-home-section-header">
+				<div>
+					<p class="lunara-home-section-kicker"><?php esc_html_e( 'The Board', 'lunara-film' ); ?></p>
+					<h2 class="lunara-oscars-board-title"><?php echo esc_html( $heading ); ?></h2>
+				</div>
+			</div>
+			<ol class="lunara-oscars-board-list">
+				<?php foreach ( $rows as $row ) : ?>
+					<li class="lunara-oscars-board-row<?php echo '' !== $row['status'] ? ' is-status-' . esc_attr( $row['status'] ) : ''; ?>">
+						<span class="lunara-oscars-board-category"><?php echo esc_html( $row['category'] ); ?></span>
+						<span class="lunara-oscars-board-call">
+							<?php if ( '' !== $row['url'] ) : ?>
+								<a href="<?php echo esc_url( $row['url'] ); ?>"><?php echo esc_html( $row['call'] ); ?></a>
+							<?php else : ?>
+								<?php echo esc_html( $row['call'] ); ?>
+							<?php endif; ?>
+							<?php if ( '' !== $row['film'] ) : ?>
+								<em><?php echo esc_html( $row['film'] ); ?></em>
+							<?php endif; ?>
+						</span>
+						<?php if ( '' !== $row['status'] ) : ?>
+							<span class="lunara-oscars-board-status"><?php echo esc_html( strtoupper( $row['status'] ) ); ?></span>
+						<?php endif; ?>
+					</li>
+				<?php endforeach; ?>
+			</ol>
+			<p class="lunara-oscars-board-note"><?php esc_html_e( 'Calls move as the season moves — argued by the desk, revised in the open, settled on ceremony night.', 'lunara-film' ); ?></p>
+		</section>
+		<?php
+		return trim( ob_get_clean() );
+	}
+}

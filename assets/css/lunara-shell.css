@@ -5233,3 +5233,135 @@ text-transform: none !important;
 padding-bottom: clamp(14px, 1.8vw, 20px) !important;
 padding-top: clamp(14px, 1.8vw, 20px) !important;
     }
+
+/* ============================================================
+   THE BOARD — prediction ledger on the Oscars portal (3.2.16).
+   Dense category → call → status rows in the portal card
+   language; tints follow the pick vocabulary (predicted gold,
+   won green, lost grey). No animation — reads instantly.
+   ============================================================ */
+
+body.lunara-oscars-portal-page .lunara-oscars-board {
+    border: 1px solid rgba(201, 169, 97, 0.2);
+    border-radius: 22px;
+    background:
+        radial-gradient(circle at top right, rgba(201, 169, 97, 0.1), transparent 38%),
+        linear-gradient(180deg, rgba(16, 28, 43, 0.94), rgba(7, 15, 26, 0.96));
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28);
+    padding: clamp(20px, 2.8vw, 34px);
+    overflow: hidden;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-title {
+    margin: 0;
+    color: #FAFBFC;
+    font-size: clamp(1.5rem, 2.2vw, 2.2rem);
+    line-height: 1.1;
+    text-wrap: balance;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-list {
+    list-style: none;
+    margin: clamp(18px, 2.2vw, 26px) 0 0;
+    padding: 0;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-row {
+    display: grid;
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 10px clamp(14px, 2vw, 26px);
+    padding: clamp(12px, 1.5vw, 16px) 0;
+    border-top: 1px solid rgba(201, 169, 97, 0.14);
+    min-width: 0;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-row:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-category {
+    color: rgba(224, 196, 129, 0.92);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.4;
+    text-transform: uppercase;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-call {
+    color: #FAFBFC;
+    font-size: clamp(1.02rem, 1.3vw, 1.18rem);
+    line-height: 1.35;
+    min-width: 0;
+    overflow-wrap: break-word;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-call a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: rgba(224, 196, 129, 0.55);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-call a:hover,
+body.lunara-oscars-portal-page .lunara-oscars-board-call a:focus-visible {
+    text-decoration-color: #e0c481;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-call em {
+    display: block;
+    color: rgba(244, 239, 227, 0.66);
+    font-size: 0.88em;
+    font-style: italic;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-status {
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border: 1px solid rgba(237, 210, 150, 0.34);
+    border-radius: 999px;
+    background: rgba(7, 15, 26, 0.62);
+    color: #e0c481;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.5;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-row.is-status-won .lunara-oscars-board-status {
+    border-color: rgba(82, 217, 147, 0.4);
+    color: rgba(82, 217, 147, 0.92);
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-row.is-status-lost .lunara-oscars-board-status {
+    border-color: rgba(255, 255, 255, 0.14);
+    color: rgba(180, 180, 180, 0.85);
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-row.is-status-lost .lunara-oscars-board-call {
+    color: rgba(244, 239, 227, 0.62);
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-board-note {
+    margin: clamp(16px, 2vw, 22px) 0 0;
+    color: rgba(244, 239, 227, 0.6);
+    font-size: 0.86rem;
+    line-height: 1.6;
+}
+
+@media (max-width: 782px) {
+    body.lunara-oscars-portal-page .lunara-oscars-board-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-board-category {
+        grid-column: 1 / -1;
+    }
+}

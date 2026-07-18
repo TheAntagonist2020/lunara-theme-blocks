@@ -368,9 +368,12 @@ $command_cards = array(
         </section>
         <?php endif; ?>
 
+        <?php $lunara_board_html = function_exists( 'lunara_render_oscars_prediction_board' ) ? lunara_render_oscars_prediction_board() : ''; ?>
+
         <?php if ( $show_portal_links && ! empty( $portal_links ) ) : ?>
         <nav class="lunara-oscars-navigator" aria-label="<?php esc_attr_e( 'Ledger navigator', 'lunara-film' ); ?>">
             <span class="lunara-oscars-navigator-label"><?php esc_html_e( 'Ledger', 'lunara-film' ); ?></span>
+            <?php if ( '' !== $lunara_board_html ) : ?><a href="#oscars-board"><?php esc_html_e( 'The Board', 'lunara-film' ); ?></a><?php endif; ?>
             <a href="#oscars-doors"><?php esc_html_e( 'Quick Start', 'lunara-film' ); ?></a>
             <?php if ( $show_spotlights ) : ?><a href="#oscars-spotlights"><?php esc_html_e( 'Spotlights', 'lunara-film' ); ?></a><?php endif; ?>
             <?php if ( $show_title_cards ) : ?><a href="#oscars-titles"><?php esc_html_e( 'Titles', 'lunara-film' ); ?></a><?php endif; ?>
@@ -379,7 +382,11 @@ $command_cards = array(
             <?php if ( $show_latest_winners ) : ?><a href="#oscars-winners"><?php esc_html_e( 'Winners', 'lunara-film' ); ?></a><?php endif; ?>
             <?php if ( $show_deep_cuts ) : ?><a href="#oscars-deep-cuts"><?php esc_html_e( 'Deep Cuts', 'lunara-film' ); ?></a><?php endif; ?>
         </nav>
+        <?php endif; ?>
 
+        <?php echo $lunara_board_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- renderer escapes internally. ?>
+
+        <?php if ( $show_portal_links && ! empty( $portal_links ) ) : ?>
         <section id="oscars-doors" class="lunara-home-section lunara-oscars-portal-links-section lunara-oscars-portal-slot-portal-links">
                 <div class="lunara-home-section-header">
                     <div>
