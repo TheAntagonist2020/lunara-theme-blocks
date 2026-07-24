@@ -30,6 +30,9 @@ require_once $lunara_inc . 'trailers.php';
 require_once $lunara_inc . 'publish-guards.php';
 require_once $lunara_inc . 'carousel.php';
 require_once $lunara_inc . 'control-desk.php';
+if ( is_admin() ) {
+    require_once $lunara_inc . 'control-desk-automation.php';
+}
 // Legacy homepage shortcodes are intentionally not booted from inc/ anymore.
 // The monolithic fallback in functions.php still covers older page content while
 // the canonical live homepage path remains the section-based front-page template.
