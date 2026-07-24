@@ -5397,6 +5397,7 @@ function lunara_control_desk_tab_definitions() {
         'operating-plan'    => __( 'Operating Plan', 'lunara-film' ),
         'publishing'        => __( 'Publishing', 'lunara-film' ),
         'journal-growth'    => __( 'Journal Growth', 'lunara-film' ),
+        'automation'        => __( 'Automation', 'lunara-film' ),
         'reviews'           => __( 'Reviews', 'lunara-film' ),
         'theme-studio'      => __( 'Theme Studio', 'lunara-film' ),
         'oscars-integrity'  => __( 'Oscars Integrity', 'lunara-film' ),
@@ -15078,6 +15079,9 @@ function lunara_render_control_desk_page() {
                 break;
             case 'journal-growth':
                 lunara_control_desk_render_journal_growth_tab( $rows );
+                break;
+            case 'automation':
+                lunara_control_desk_render_automation_tab();
                 break;
             case 'homepage-board':
                 lunara_control_desk_render_homepage_board_tab( $rows );
