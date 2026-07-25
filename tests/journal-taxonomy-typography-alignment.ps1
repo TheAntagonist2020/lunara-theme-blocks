@@ -15,8 +15,11 @@ $root = Split-Path -Parent $PSScriptRoot
 $style = Get-Content -LiteralPath (Join-Path $root 'style.css') -Raw
 $shell = Get-Content -LiteralPath (Join-Path $root 'assets\css\lunara-shell.css') -Raw
 $guardrails = Get-Content -LiteralPath (Join-Path $root 'assets\css\lunara-public-guardrails.css') -Raw
+$tokens = Get-Content -LiteralPath (Join-Path $root 'inc\design-tokens.php') -Raw
 
-Assert-True ($style -match 'Version:\s*3\.2\.17') 'Journal typography contract must remain intact in Theme 3.2.17.'
+Assert-True ($style -match 'Version:\s*3\.2\.18') 'Journal typography contract must remain intact in Theme 3.2.18.'
+Assert-True ($style -match '--lunara-font-body:\s*"Tiempos Text"') 'The shipped body token must remain Tiempos Text.'
+Assert-True ($tokens -match "'body'\s*=>\s*array\([\s\S]{0,300}?'default'\s*=>\s*'tiempos-text'") 'The editable body role must default to Tiempos Text.'
 Assert-True ($shell -match 'body\.post-type-archive-journal \.lunara-archive-page,[\s\S]*?font-family:\s*var\(--lunara-font-body') 'Journal pages must retain Tiempos Text through the body token.'
 Assert-True ($shell -match 'body\.post-type-archive-journal \.lunara-archive-hero-title[\s\S]*?font-family:\s*var\(--lunara-font-glamour') 'Journal route titles must use the Canela glamour token.'
 Assert-True ($shell -match 'body\.post-type-archive-journal \.lunara-journal-filter-label,[\s\S]*?body\.post-type-archive-journal \.lunara-journal-filter-count,[\s\S]*?font-family:\s*var\(--lunara-font-label') 'Journal lane labels and counts must retain the Tiempos label token.'

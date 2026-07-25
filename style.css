@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.17
+Version: 3.2.18
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -17570,21 +17570,9 @@ body.lunara-oscars-portal-page .lunara-oscars-portal-hero::after { right: 5%; tr
 }
 
 /* Lights Down — immersive screening mode on single reviews/journal.
-   The chrome dims once the reader is past the hero; a reading-progress
-   hairline tracks the article; --lunara-ambient (sampled from the hero
-   art by lunara-immersive-read.js) tints the hairline and blockquotes. */
-#lunara-read-progress {
-    background: linear-gradient(90deg, var(--lunara-gold, #c9a961), var(--lunara-ambient, var(--lunara-gold-light, #eadbb3)));
-    height: 2px;
-    left: 0;
-    pointer-events: none;
-    position: fixed;
-    top: 0;
-    transform: scaleX(0);
-    transform-origin: 0 50%;
-    width: 100%;
-    z-index: 9950;
-}
+   The chrome dims once the reader is past the hero; --lunara-ambient
+   (sampled from the hero art by lunara-immersive-read.js) tints
+   blockquotes without adding another moving line through the header. */
 #header, .site-footer, #main-container > footer { transition: opacity .55s ease; }
 body.is-lights-down #header,
 body.is-lights-down .site-footer,

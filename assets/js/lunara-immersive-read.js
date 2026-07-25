@@ -1,13 +1,12 @@
 /**
  * Lunara Lights Down — immersive screening mode for single reviews/journal.
  *
- * Three quiet moves once the reader is past the hero and into the text:
+ * Two quiet moves once the reader is past the hero and into the text:
  * 1. The chrome (header/footer) dims to 35% so the page reads like a theater
  *    going dark — hovering the header brings it back instantly.
- * 2. A 2px reading-progress hairline tracks the article along the top edge.
- * 3. The hero art is sampled (24x24 canvas average) into --lunara-ambient,
- *    which tints the progress hairline and blockquote rules to the film's
- *    own palette. Palette is kept under reduced motion (it's color, not
+ * 2. The hero art is sampled (24x24 canvas average) into --lunara-ambient,
+ *    which tints blockquote rules to the film's own palette. Palette is
+ *    kept under reduced motion (it's color, not
  *    motion); the dim transition is dropped there by CSS.
  *
  * Enqueued only on is_singular(review|journal). Everything bails safely:
@@ -28,29 +27,6 @@
 	if (!article) {
 		return;
 	}
-
-	// --- Reading progress hairline -------------------------------------
-	var bar = document.createElement('div');
-	bar.id = 'lunara-read-progress';
-	bar.setAttribute('aria-hidden', 'true');
-	body.appendChild(bar);
-
-	var ticking = false;
-	var updateProgress = function () {
-		ticking = false;
-		var rect = article.getBoundingClientRect();
-		var total = rect.height - window.innerHeight;
-		var p = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
-		bar.style.transform = 'scaleX(' + p.toFixed(4) + ')';
-	};
-	window.addEventListener('scroll', function () {
-		if (!ticking) {
-			ticking = true;
-			window.requestAnimationFrame(updateProgress);
-		}
-	}, { passive: true });
-	window.addEventListener('resize', updateProgress, { passive: true });
-	updateProgress();
 
 	// --- Lights down: dim the chrome while deep in the read -------------
 	var hero = document.querySelector('.lunara-review-single-cinematic-hero')

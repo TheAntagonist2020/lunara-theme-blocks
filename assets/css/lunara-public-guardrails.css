@@ -1221,18 +1221,6 @@ body.home .lunara-latest-reviews-section .lunara-review-grid {
 @media (prefers-reduced-motion: reduce) { .lunara-about-pillar { transition: none; } }
 
 /* ============================================================
-   READING HAIRLINE (3.2.15) — the new instrument. A 2px gold
-   progress line under the header on review/journal singles:
-   scroll position as information, in the house's own hairline
-   language. Width is set by lunara-public-runtime.js; readers
-   without JS simply never see it (opacity gate below).
-   ============================================================ */
-.lunara-reading-hairline { position: fixed; top: 0; left: 0; z-index: 985; width: 100%; height: 2px; pointer-events: none; opacity: 0; background: linear-gradient(90deg, var(--lunara-gold, #c9a961), var(--lunara-gold-light, #e0c481)); transform-origin: 0 50%; transform: scaleX(0); }
-.lunara-reading-hairline.is-live { opacity: 1; }
-body.lunara-header-takeover .lunara-reading-hairline { top: 64px; }
-@media (max-width: 1020px) { body.lunara-header-takeover .lunara-reading-hairline { top: 58px; } }
-
-/* ============================================================
    JOURNAL DESK CHIPS (3.2.15) — the archive's channel filters
    speak the same pill language as the search palette: one chip
    system across the site.

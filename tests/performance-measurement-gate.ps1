@@ -43,6 +43,6 @@ Assert-True ($runner -match "css\.match\(\/\^\\s\*Version:") 'Benchmark must rea
 Assert-True ($runner -match "searchParams\.set\('lunara_identity'") 'Theme identity probes must bypass stale CDN objects.'
 Assert-True ($launcher -match '\[Parameter\(Mandatory = \$true\)\][\s\S]*\[string\] \$OutputDirectory') 'Launcher must require an explicit evidence directory.'
 Assert-True ($launcher -match 'NODE_PATH') 'Launcher must wire the bundled Playwright dependency path.'
-Assert-True ($deployIgnore -match '(?m)^tests$') 'Benchmark tooling must remain excluded from WordPress.com deployments.'
+Assert-True ($deployIgnore -match '(?m)^tests\r?$') 'Benchmark tooling must remain excluded from WordPress.com deployments.'
 
 Write-Host 'Performance measurement gate contract passed.'
