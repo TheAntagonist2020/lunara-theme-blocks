@@ -29,12 +29,49 @@ get_header();
 
 <main id="primary" class="site-main lunara-front-page">
 	<?php
+	$lunara_front_door = '';
 	if ( function_exists( 'lunara_render_home_front_door' ) ) {
-		echo lunara_render_home_front_door(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-	} else {
+		$lunara_front_door = (string) lunara_render_home_front_door();
+	}
+
+	$lunara_uses_block_composition = function_exists( 'lunara_home_uses_block_composition' ) && lunara_home_uses_block_composition();
+	$lunara_block_composition      = $lunara_uses_block_composition && function_exists( 'lunara_render_home_block_composition' )
+		? (string) lunara_render_home_block_composition()
+		: '';
+
+	// Keep Home from shipping without a semantic H1, independent of whichever
+	// editable front-door renderer or block composition is active. Existing
+	// authored H1s remain authoritative; otherwise this screen-reader heading
+	// adds semantics without moving layout. The structured parser avoids false
+	// matches in scripts or comments; the regex is only for WordPress versions
+	// predating that parser.
+	$lunara_home_has_h1  = false;
+	$lunara_heading_parts = array( $lunara_front_door, $lunara_block_composition );
+	foreach ( $lunara_heading_parts as $lunara_heading_part ) {
+		if ( '' === $lunara_heading_part ) {
+			continue;
+		}
+
+		if ( class_exists( 'WP_HTML_Tag_Processor' ) ) {
+			$lunara_heading_processor = new WP_HTML_Tag_Processor( $lunara_heading_part );
+			$lunara_home_has_h1       = $lunara_heading_processor->next_tag( array( 'tag_name' => 'H1' ) );
+		} else {
+			$lunara_home_has_h1 = (bool) preg_match( '/<h1(?:\s|>)/i', $lunara_heading_part );
+		}
+
+		if ( $lunara_home_has_h1 ) {
+			break;
+		}
+	}
+
+	if ( ! $lunara_home_has_h1 ) {
 		?>
 		<h1 class="screen-reader-text lunara-screen-reader-text"><?php echo esc_html( get_bloginfo( 'name' ) ? get_bloginfo( 'name' ) : __( 'Lunara Film', 'lunara-film' ) ); ?></h1>
 		<?php
+	}
+
+	if ( '' !== $lunara_front_door ) {
+		echo $lunara_front_door; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
 	/*
@@ -44,8 +81,8 @@ get_header();
 	 * section blocks present, the Customizer registry below renders exactly
 	 * as before (which is also the rollback: remove the blocks, this resumes).
 	 */
-	if ( function_exists( 'lunara_home_uses_block_composition' ) && lunara_home_uses_block_composition() ) {
-		echo lunara_render_home_block_composition(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	if ( $lunara_uses_block_composition ) {
+		echo $lunara_block_composition; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		wp_reset_postdata();
 		?>
 </main>
