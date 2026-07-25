@@ -106,6 +106,14 @@ get_header();
 		'oscar-facts'    => 'lunara_render_oscar_facts_carousel',
 	);
 
+	// The cinematic front-door wrapper already contains the canonical Home
+	// hero. Do not render the legacy Customizer hero a second time beneath it.
+	// A non-cinematic Front Desk keeps the legacy hero available, preserving
+	// the existing fallback when the cinematic front door is disabled.
+	if ( '' !== $lunara_front_door && false !== strpos( $lunara_front_door, 'data-lunara-home-hero-source=' ) ) {
+		unset( $lunara_section_renderers['hero'] );
+	}
+
 	// Order the renderable sections by the Customizer "Section Order" setting.
 	$lunara_order_map    = function_exists( 'lunara_get_home_section_order_map' ) ? lunara_get_home_section_order_map() : array();
 	$lunara_render_slugs = array_keys( $lunara_section_renderers );
