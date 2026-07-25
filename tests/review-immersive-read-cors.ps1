@@ -51,8 +51,8 @@ if ($script -notmatch 'sample\.src\s*=\s*sampleUrl') {
 if ($script -match 'sample\.src\s*=\s*img\.(?:currentSrc|src)') {
     throw 'The ambient sampler must not re-fetch an unapproved cross-origin image directly.'
 }
-if ($style -notmatch 'Version:\s*3\.2\.20') {
-    throw 'Theme version must be 3.2.20 for the semantic Home heading release.'
+if ($style -notmatch 'Version:\s*3\.2\.21') {
+    throw 'Theme version must be 3.2.21 for the single-hero Home release.'
 }
 
 Write-Host 'Review immersive-read CORS contract passed.'
