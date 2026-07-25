@@ -469,6 +469,27 @@ add_filter( 'rocket_rucss_inline_atts_exclusions', 'lunara_rocket_preserve_front
 add_filter( 'rocket_rucss_external_exclusions', 'lunara_rocket_preserve_front_door_css' );
 
 /**
+ * Keep Jetpack's extensionless CSS aggregates out of Rocket's background-CSS
+ * lazy-loader.
+ *
+ * Rocket removes the query string when it creates the cached background-CSS
+ * filename. A Jetpack URL such as `/_jb_static/??hash` consequently becomes an
+ * extensionless `_jb_static` file. WordPress.com serves that generated file as
+ * application/octet-stream, so strict browsers reject it as a stylesheet and
+ * the public page temporarily loses its full layout while Used CSS regenerates.
+ * Leaving these aggregate URLs in place preserves their text/css MIME type.
+ *
+ * @param array $excluded_src Existing LazyLoad exclusions.
+ * @return array
+ */
+function lunara_rocket_preserve_jetpack_css_mime( $excluded_src ) {
+    $excluded_src   = is_array( $excluded_src ) ? $excluded_src : array();
+    $excluded_src[] = '/_jb_static/';
+    return array_values( array_unique( $excluded_src ) );
+}
+add_filter( 'rocket_lazyload_excluded_src', 'lunara_rocket_preserve_jetpack_css_mime' );
+
+/**
  * Determine whether review-card and Pair It With component CSS is needed.
  */
 function lunara_phase1c_review_components_needed() {
