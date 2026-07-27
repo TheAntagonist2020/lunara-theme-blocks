@@ -80,7 +80,10 @@ if ( have_posts() ) :
                 )
             )
             : '';
-        if ( '' === trim( $hero_visual ) && has_post_thumbnail( $post_id ) ) {
+        $hero_image_mode  = class_exists( 'Lunara_Review_Image_Studio' )
+            ? Lunara_Review_Image_Studio::get_mode( $post_id, 'hero_banner' )
+            : '';
+        if ( '' === trim( $hero_visual ) && 'off' !== $hero_image_mode && has_post_thumbnail( $post_id ) ) {
             $hero_attachment_id = get_post_thumbnail_id( $post_id );
             $hero_full_image    = $hero_attachment_id ? wp_get_attachment_image_src( $hero_attachment_id, 'full' ) : false;
             $is_poster_hero     = (

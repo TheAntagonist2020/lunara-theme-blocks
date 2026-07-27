@@ -2622,6 +2622,7 @@ if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
             </div>
         </div>
 
+        <?php if ( ! class_exists( 'Lunara_Review_Image_Studio' ) ) : ?>
         <div class="lunara-meta-section">
             <h4>CINEMATIC IMAGE STRUCTURE</h4>
 
@@ -2693,6 +2694,7 @@ if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
                 <input type="text" id="lunara_review_thematic_echo_caption" name="lunara_review_thematic_echo_caption" value="<?php echo esc_attr( get_post_meta( $post->ID, '_lunara_review_thematic_echo_caption', true ) ); ?>" placeholder="Optional context or source note">
             </div>
         </div>
+        <?php endif; ?>
         
         <div class="lunara-meta-section">
             <h4>PAIR IT WITH</h4>
@@ -4997,9 +4999,31 @@ function lunara_get_review_card_image_data( $post_id, $size = 'medium_large', $a
         )
     );
 
-    $url      = '';
-    $html     = '';
-    $card_url = trim( (string) get_post_meta( $post_id, '_lunara_review_card_image', true ) );
+    $url         = '';
+    $html        = '';
+    $core_source = class_exists( 'Lunara_Review_Image_Studio' )
+        ? Lunara_Review_Image_Studio::resolve_slot( $post_id, 'card' )
+        : array();
+
+    if ( isset( $core_source['mode'] ) && 'off' === $core_source['mode'] ) {
+        return array(
+            'url'       => '',
+            'html'      => '',
+            'has_image' => false,
+        );
+    }
+
+    $card_url = ! empty( $core_source['url'] )
+        ? trim( (string) $core_source['url'] )
+        : trim( (string) get_post_meta( $post_id, '_lunara_review_card_image', true ) );
+
+    if ( isset( $core_source['mode'] ) && 'custom' === $core_source['mode'] && '' === $card_url ) {
+        return array(
+            'url'       => '',
+            'html'      => '',
+            'has_image' => false,
+        );
+    }
 
     if ( '' !== $card_url ) {
         $attachment_id = attachment_url_to_postid( $card_url );
@@ -5402,8 +5426,18 @@ if ( ! function_exists( 'lunara_get_review_visual_slot_data' ) ) {
             return array();
         }
 
-        $config  = $configs[ $slot ];
-        $url     = trim( (string) get_post_meta( $post_id, $config['url_key'], true ) );
+        $config      = $configs[ $slot ];
+        $core_source = class_exists( 'Lunara_Review_Image_Studio' )
+            ? Lunara_Review_Image_Studio::resolve_slot( $post_id, $slot )
+            : array();
+
+        if ( isset( $core_source['mode'] ) && 'off' === $core_source['mode'] ) {
+            return array();
+        }
+
+        $url     = ! empty( $core_source['url'] )
+            ? trim( (string) $core_source['url'] )
+            : trim( (string) get_post_meta( $post_id, $config['url_key'], true ) );
         $caption = trim( (string) get_post_meta( $post_id, $config['caption_key'], true ) );
 
         if ( '' === $url ) {
@@ -5464,12 +5498,37 @@ if ( ! function_exists( 'lunara_render_review_visual_slot' ) ) {
             );
         }
 
+        $core_source   = class_exists( 'Lunara_Review_Image_Studio' )
+            ? Lunara_Review_Image_Studio::resolve_slot( $post_id, $slot )
+            : array();
+        $attachment_id = absint( $core_source['attachment_id'] ?? 0 );
+        $attributes     = array(
+            'class'    => 'lunara-review-visual-image',
+            'alt'      => $data['alt'],
+            'loading'  => $args['loading'],
+            'decoding' => 'async',
+            'sizes'    => '(max-width: 900px) 100vw, 960px',
+        );
+        if ( 'hero' === $args['context'] ) {
+            $attributes['fetchpriority']  = 'high';
+            $attributes['data-no-lazy']   = '1';
+            $attributes['data-skip-lazy'] = '1';
+        }
+        $image_html = $attachment_id ? (string) wp_get_attachment_image( $attachment_id, 'full', false, $attributes ) : '';
+        if ( '' === $image_html ) {
+            $image_html = sprintf(
+                '<img class="lunara-review-visual-image" src="%1$s" alt="%2$s" loading="%3$s" decoding="async" width="960" height="540" sizes="(max-width: 900px) 100vw, 960px"%4$s>',
+                esc_url( $data['url'] ),
+                esc_attr( $data['alt'] ),
+                esc_attr( $args['loading'] ),
+                'hero' === $args['context'] ? ' fetchpriority="high" data-no-lazy="1" data-skip-lazy="1"' : ''
+            );
+        }
+
         return sprintf(
-            '<figure class="%1$s"><div class="lunara-review-visual-frame"><img class="lunara-review-visual-image" src="%2$s" alt="%3$s" loading="%4$s" decoding="async"></div>%5$s</figure>',
+            '<figure class="%1$s"><div class="lunara-review-visual-frame">%2$s</div>%3$s</figure>',
             esc_attr( implode( ' ', $classes ) ),
-            esc_url( $data['url'] ),
-            esc_attr( $data['alt'] ),
-            esc_attr( $args['loading'] ),
+            $image_html,
             $caption_html
         );
     }

@@ -47,7 +47,10 @@ $doShortcodeCount = 0
 
 foreach ($file in $phpFiles) {
     $content = Get-Content -Raw -LiteralPath $file.FullName
-    $relative = [IO.Path]::GetRelativePath($themeRoot, $file.FullName)
+    # Windows PowerShell 5.1 targets an older .NET runtime without
+    # [IO.Path]::GetRelativePath(). Keep the contract runnable both locally
+    # and in newer CI shells without changing what it scans.
+    $relative = $file.FullName.Substring($themeRoot.Length).TrimStart('\', '/')
 
     foreach ($match in $registrationPattern.Matches($content)) {
         $tag = $match.Groups[1].Value
