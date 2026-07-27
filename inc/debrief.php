@@ -154,6 +154,7 @@ if ( ! defined( 'LUNARA_CORE_VERSION' ) ) {
             <p class="description">Use service names, theater status, URL alone, Label | URL, or Label | URL | affiliate for future sponsored links.</p>
         </div>
 
+        <?php if ( ! class_exists( 'Lunara_Review_Image_Studio' ) ) : ?>
         <div class="lunara-meta-section">
             <h4>CINEMATIC IMAGE STRUCTURE</h4>
 
@@ -201,6 +202,7 @@ if ( ! defined( 'LUNARA_CORE_VERSION' ) ) {
                 <input type="text" id="lunara_review_thematic_echo_caption" name="lunara_review_thematic_echo_caption" value="<?php echo esc_attr( get_post_meta( $post->ID, '_lunara_review_thematic_echo_caption', true ) ); ?>" placeholder="Optional context or source note">
             </div>
         </div>
+        <?php endif; ?>
 
         <div class="lunara-meta-section">
             <h4>PAIR IT WITH</h4>
