@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.22
+Version: 3.2.23
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -7879,13 +7879,13 @@ body.aat-shell-page .aat-entity-title {
 .lunara-review-single-debrief-wrap {
     display: grid;
     gap: 0;
-    border: 1px solid rgba(201,169,97,.16);
+    border: 1px solid rgba(201,169,97,.14);
     background:
-        radial-gradient(circle at top right, rgba(201,169,97,.12), transparent 34%),
-        linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.01));
+        radial-gradient(circle at 14% 0%, rgba(224,196,129,.08), transparent 32%),
+        linear-gradient(135deg, rgba(12,25,39,.84), rgba(5,14,23,.92));
     box-shadow:
-        0 28px 64px rgba(0,0,0,.2),
-        0 0 0 1px rgba(255,255,255,.03) inset;
+        0 18px 44px rgba(0,0,0,.2),
+        0 0 0 1px rgba(255,255,255,.02) inset;
     position: relative;
     overflow: hidden;
 }
@@ -7895,10 +7895,8 @@ body.aat-shell-page .aat-entity-title {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background:
-        radial-gradient(520px 180px at 12% 0%, rgba(255,255,255,.08), transparent 58%),
-        radial-gradient(440px 180px at 88% 10%, rgba(201,169,97,.12), transparent 60%);
-    opacity: .84;
+    background: radial-gradient(520px 180px at 12% 0%, rgba(255,255,255,.055), transparent 58%);
+    opacity: .42;
 }
 
 .lunara-review-single-debrief-wrap > * {
