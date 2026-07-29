@@ -171,6 +171,6 @@ Assert-True ($grain -match '<feTurbulence') 'The cacheable grain asset appears i
 Assert-True ($frontend -match 'function\s+lunara_rocket_preserve_jetpack_css_mime') 'The WordPress.com CSS MIME compatibility guard must remain registered.'
 Assert-True ($frontend -match "add_filter\(\s*'rocket_lazyload_excluded_src'\s*,\s*'lunara_rocket_preserve_jetpack_css_mime'\s*\)") 'The compatibility guard must use WP Rocket''s supported LazyLoad exclusion filter.'
 Assert-True ($frontend -match '\$excluded_src\[\]\s*=\s*''/_jb_static/''') 'Jetpack aggregate stylesheets must stay out of extensionless background-CSS generation.'
-Assert-True ($style -match 'Version:\s*3\.2\.22') 'Theme version must be 3.2.22 for the Review Image Studio integration release.'
+Assert-True ($style -match 'Version:\s*3\.2\.23') 'Theme version must be 3.2.23 for the Review visual-balance release.'
 
 Write-Host "Performance payload budget contract passed (critical: $criticalBytes; shell: $shellBytes; public: $publicGuardrailBytes; home: $homeModuleBytes; review: $reviewComponentBytes; public JS: $publicRuntimeBytes; carousel JS: $scrollCarouselBytes; home JS: $homeRuntimeBytes; Oscars: $lateOscarsBytes; dynamic: $dynamicSignatureBytes; grain: $grainBytes bytes)."

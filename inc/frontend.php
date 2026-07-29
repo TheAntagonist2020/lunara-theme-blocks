@@ -4683,8 +4683,8 @@ function lunara_output_review_debrief_polish_css() {
     ?>
     <style id="lunara-review-debrief-polish-css">
     body.single-review .lunara-review-single-debrief-section {
-        margin: clamp(52px, 6.5vw, 92px) auto clamp(54px, 7vw, 96px) !important;
-        width: min(1180px, calc(100vw - 108px)) !important;
+        margin: clamp(44px, 5.5vw, 72px) auto clamp(48px, 6vw, 78px) !important;
+        width: min(1060px, calc(100vw - 88px)) !important;
     }
 
     body.single-review .sharedaddy.sd-sharing-enabled {
@@ -4694,22 +4694,26 @@ function lunara_output_review_debrief_polish_css() {
     body.single-review .lunara-review-single-debrief-wrap {
         display: grid !important;
         isolation: isolate !important;
-        padding: clamp(24px, 3.4vw, 42px) !important;
-        border: 1px solid rgba(224, 196, 129, 0.22) !important;
-        border-radius: 24px !important;
+        padding: clamp(22px, 2.5vw, 30px) !important;
+        border: 1px solid rgba(224, 196, 129, 0.16) !important;
+        border-radius: 18px !important;
         background:
-            radial-gradient(circle at 16% 0%, rgba(224, 196, 129, 0.18), transparent 30%),
-            radial-gradient(circle at 92% 12%, rgba(112, 148, 185, 0.12), transparent 28%),
-            linear-gradient(135deg, rgba(14, 28, 43, 0.94), rgba(5, 13, 22, 0.98)) !important;
+            radial-gradient(circle at 14% 0%, rgba(224, 196, 129, 0.09), transparent 32%),
+            linear-gradient(135deg, rgba(12, 25, 39, 0.84), rgba(5, 14, 23, 0.92)) !important;
         box-shadow:
-            0 34px 76px rgba(0, 0, 0, 0.32),
-            0 0 0 1px rgba(255, 255, 255, 0.035) inset !important;
+            0 18px 44px rgba(0, 0, 0, 0.22),
+            0 0 0 1px rgba(255, 255, 255, 0.02) inset !important;
+    }
+
+    body.single-review .lunara-review-single-debrief-wrap::before {
+        background: radial-gradient(520px 180px at 12% 0%, rgba(255, 255, 255, 0.055), transparent 58%) !important;
+        opacity: 0.42 !important;
     }
 
     body.single-review .lunara-review-single-debrief-wrap.has-signature-media {
-        align-items: stretch !important;
-        grid-template-columns: minmax(210px, 300px) minmax(0, 1fr) !important;
-        gap: clamp(22px, 3.2vw, 40px) !important;
+        align-items: center !important;
+        grid-template-columns: minmax(200px, 280px) minmax(0, 1fr) !important;
+        gap: clamp(20px, 2.5vw, 28px) !important;
     }
 
     body.single-review .lunara-review-single-debrief-media {
@@ -4723,12 +4727,12 @@ function lunara_output_review_debrief_polish_css() {
 
     body.single-review .lunara-review-single-debrief-poster-shell {
         aspect-ratio: 2 / 3 !important;
-        max-width: 280px !important;
+        max-width: 260px !important;
         overflow: hidden !important;
         border: 1px solid rgba(224, 196, 129, 0.2) !important;
-        border-radius: 18px !important;
+        border-radius: 14px !important;
         background: rgba(255, 255, 255, 0.035) !important;
-        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.36) !important;
+        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28) !important;
     }
 
     body.single-review .lunara-review-single-debrief-poster {
@@ -4777,19 +4781,25 @@ function lunara_output_review_debrief_polish_css() {
 
     body.single-review .lunara-review-single-debrief .lunara-debrief-block--signature {
         display: grid !important;
-        gap: 18px !important;
+        gap: 14px !important;
         padding: 0 !important;
         border: 0 !important;
         background: transparent !important;
         box-shadow: none !important;
     }
 
+    body.single-review .lunara-review-single-debrief::before,
+    body.single-review .lunara-review-single-debrief .lunara-debrief-block--signature::before {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.022), transparent 38%) !important;
+        opacity: 0.34 !important;
+    }
+
     body.single-review .lunara-review-single-debrief .lunara-debrief-block--signature .lunara-debrief-heading {
         margin: 0 !important;
         max-width: 13ch !important;
         color: #f4d27e !important;
-        font-size: clamp(1.72rem, 2.9vw, 2.36rem) !important;
-        line-height: 0.98 !important;
+        font-size: clamp(1.62rem, 2.45vw, 2.08rem) !important;
+        line-height: 1 !important;
         letter-spacing: 0.06em !important;
     }
 
@@ -4805,7 +4815,7 @@ function lunara_output_review_debrief_polish_css() {
     body.single-review .lunara-review-single-debrief .lunara-debrief-block--signature .lunara-debrief-list--signature {
         display: grid !important;
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 12px !important;
+        gap: 10px !important;
     }
 
     body.single-review .lunara-review-single-debrief .lunara-debrief-list--signature li {
@@ -4813,11 +4823,11 @@ function lunara_output_review_debrief_polish_css() {
         grid-template-columns: minmax(0, 1fr) !important;
         gap: 7px !important;
         min-width: 0 !important;
-        padding: 14px 16px !important;
-        border: 1px solid rgba(224, 196, 129, 0.18) !important;
-        border-radius: 12px !important;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.018)) !important;
-        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14) !important;
+        padding: 12px 14px !important;
+        border: 1px solid rgba(224, 196, 129, 0.12) !important;
+        border-radius: 10px !important;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.01)) !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
     }
 
     body.single-review .lunara-review-single-debrief .lunara-debrief-list--signature li strong {
@@ -6740,7 +6750,7 @@ function lunara_output_review_full_scroll_rhythm_css() {
     ?>
     <style id="lunara-review-full-scroll-rhythm-css">
     body.single-review .lunara-review-single-debrief-wrap.has-signature-media {
-        grid-template-columns: minmax(240px, 340px) minmax(0, 1fr) !important;
+        grid-template-columns: minmax(220px, 300px) minmax(0, 1fr) !important;
     }
 
     body.single-review .lunara-review-single-debrief-media {
@@ -6751,16 +6761,16 @@ function lunara_output_review_full_scroll_rhythm_css() {
 
     body.single-review .lunara-review-single-debrief-poster-shell {
         position: relative !important;
-        width: min(100%, 320px) !important;
-        max-width: 320px !important;
+        width: min(100%, 280px) !important;
+        max-width: 280px !important;
         margin-inline: auto !important;
-        border-color: rgba(244, 210, 126, 0.34) !important;
+        border-color: rgba(244, 210, 126, 0.24) !important;
         background:
             radial-gradient(circle at 50% 18%, rgba(244, 210, 126, 0.13), transparent 45%),
             rgba(255, 255, 255, 0.05) !important;
         box-shadow:
-            0 28px 56px rgba(0, 0, 0, 0.42),
-            0 0 0 1px rgba(255, 255, 255, 0.045) inset !important;
+            0 18px 38px rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(255, 255, 255, 0.03) inset !important;
     }
 
     body.single-review .lunara-review-single-debrief-poster {
@@ -6777,7 +6787,7 @@ function lunara_output_review_full_scroll_rhythm_css() {
 
     @media (min-width: 1040px) {
         body.single-review .lunara-review-single-debrief-wrap.has-signature-media {
-            grid-template-columns: minmax(260px, 360px) minmax(0, 1fr) !important;
+            grid-template-columns: minmax(220px, 300px) minmax(0, 1fr) !important;
         }
     }
 
@@ -6921,7 +6931,7 @@ function lunara_output_review_single_studio_css() {
     );
 
     $section_gap          = lunara_get_review_single_studio_number_value( $preview_values, 'lunara_review_single_section_gap', 48, 24, 96 );
-    $debrief_poster_width = lunara_get_review_single_studio_number_value( $preview_values, 'lunara_review_single_debrief_poster_width', 320, 220, 420 );
+    $debrief_poster_width = lunara_get_review_single_studio_number_value( $preview_values, 'lunara_review_single_debrief_poster_width', 300, 220, 360 );
     $related_count        = lunara_get_review_single_studio_number_value( $preview_values, 'lunara_review_related_count', 4, 2, 6 );
 
     $body_gap_map = array(
@@ -6963,9 +6973,13 @@ function lunara_output_review_single_studio_css() {
     $related_excerpt_clamp = $related_excerpt_clamp_map[ $density ];
 
     if ( 'signature-forward' === $debrief_prominence ) {
-        $debrief_poster_width = min( 420, $debrief_poster_width + 36 );
+        // Signature-forward gives the editorial data more room instead of
+        // inflating the poster and recreating a full-width promo chamber.
+        $debrief_poster_width = min( 300, $debrief_poster_width );
     } elseif ( 'poster-forward' === $debrief_prominence ) {
-        $debrief_poster_width = min( 420, $debrief_poster_width + 18 );
+        $debrief_poster_width = min( 340, $debrief_poster_width + 18 );
+    } else {
+        $debrief_poster_width = min( 320, $debrief_poster_width );
     }
 
     if ( $related_count <= 3 ) {
@@ -7033,8 +7047,8 @@ function lunara_output_review_single_studio_css() {
     }
 
     body.single-review .lunara-review-single-debrief-wrap.has-signature-media {
-        grid-template-columns: minmax(220px, var(--lunara-review-single-debrief-poster-width)) minmax(0, 1fr) !important;
-        gap: clamp(18px, 2.4vw, 32px) !important;
+        grid-template-columns: minmax(200px, var(--lunara-review-single-debrief-poster-width)) minmax(0, 1fr) !important;
+        gap: clamp(18px, 2.2vw, 28px) !important;
     }
 
     body.single-review .lunara-review-single-debrief-poster-shell {
@@ -7074,12 +7088,12 @@ function lunara_output_review_single_studio_css() {
 
     <?php if ( 'signature-forward' === $debrief_prominence ) : ?>
     body.single-review .lunara-review-single-debrief-section {
-        padding-block: clamp(20px, 3vw, 42px) !important;
+        padding-block: clamp(12px, 2vw, 24px) !important;
     }
 
     body.single-review .lunara-review-single-debrief-wrap {
-        border-color: rgba(244, 210, 126, 0.34) !important;
-        box-shadow: 0 34px 70px rgba(0, 0, 0, 0.34) !important;
+        border-color: rgba(244, 210, 126, 0.2) !important;
+        box-shadow: 0 20px 46px rgba(0, 0, 0, 0.24) !important;
     }
     <?php endif; ?>
 
