@@ -15705,9 +15705,21 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
 	function lunara_render_cinematic_hero_slide( $data, $index = 0, $first_image_is_lcp = true ) {
 		$is_first          = ( 0 === (int) $index );
 		$is_priority_image = $is_first && (bool) $first_image_is_lcp;
+		$focal_x           = max( 0, min( 100, isset( $data['focal_x'] ) ? (int) $data['focal_x'] : 50 ) );
+		$focal_y           = max( 0, min( 100, isset( $data['focal_y'] ) ? (int) $data['focal_y'] : 30 ) );
+		$zoom_percent      = max( 100, min( 112, isset( $data['zoom'] ) ? (int) $data['zoom'] : 100 ) );
+		$zoom_start        = $zoom_percent / 100;
+		$zoom_end          = min( 1.17, $zoom_start + 0.05 );
+		$image_style       = sprintf(
+			'--lunara-hero-focal-x:%d%%;--lunara-hero-focal-y:%d%%;--lunara-hero-zoom-start:%.2F;--lunara-hero-zoom-end:%.2F;',
+			$focal_x,
+			$focal_y,
+			$zoom_start,
+			$zoom_end
+		);
 		$image_markup      = $is_priority_image
-			? '<img src="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" alt="" loading="eager" decoding="async" fetchpriority="high" sizes="100vw" />'
-			: '<img src="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" alt="" loading="lazy" decoding="async" fetchpriority="low" sizes="100vw" />';
+			? '<img src="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" style="' . esc_attr( $image_style ) . '" alt="" loading="eager" decoding="async" fetchpriority="high" sizes="100vw" />'
+			: '<img src="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" style="' . esc_attr( $image_style ) . '" alt="" loading="lazy" decoding="async" fetchpriority="low" sizes="100vw" />';
 
 		ob_start();
 		?>
