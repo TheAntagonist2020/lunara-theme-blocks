@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.25
+Version: 3.2.26
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -14889,6 +14889,21 @@ body.home .lunara-cinematic-hero + .lunara-home-section .lunara-home-section-hea
 	transform: scale(var(--lunara-hero-zoom-start, 1));
     will-change: transform;
     animation: lunara-cinematic-ken-burns 28s ease-in-out infinite alternate;
+}
+
+/* Art-directed full-frame slides preserve the photograph's complete native
+   composition. The surrounding chamber becomes a quiet cinematic matte
+   instead of enlarging a landscape still to fill an incompatible viewport. */
+.lunara-cinematic-hero-slide.is-full-frame .lunara-cinematic-hero-bg {
+    background: #06101b !important;
+}
+
+.lunara-cinematic-hero-img.is-full-frame {
+    object-fit: contain !important;
+    object-position: center top !important;
+    animation: none !important;
+    transform: none !important;
+    will-change: auto;
 }
 
 /* Disable Ken-Burns on mobile — saves CPU + battery, no perceptible loss
