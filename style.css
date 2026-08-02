@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.24
+Version: 3.2.25
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -14605,10 +14605,10 @@ body.home .lunara-home-hero {
 }
 
 @keyframes lunara-cinematic-ken-burns {
-    /* Gentler drift: the old 1.06→1.14 zoom cropped up to 14% of the frame,
-       which read as "the image is cut off". Keep the life, show the shot. */
-    0%   { transform: scale(1.02) translate3d(0, 0, 0); }
-    100% { transform: scale(1.07) translate3d(-0.8%, 0.6%, 0); }
+	/* Gentler drift: the old 1.06→1.14 zoom cropped up to 14% of the frame,
+	   which read as "the image is cut off". Keep the life, show the shot. */
+	0%   { transform: scale(var(--lunara-hero-zoom-start, 1)) translate3d(0, 0, 0); }
+	100% { transform: scale(var(--lunara-hero-zoom-end, 1.05)) translate3d(-0.8%, 0.6%, 0); }
 }
 
 /* Multi-stop dark gradient pulling text legibility from bottom up */
@@ -14884,9 +14884,9 @@ body.home .lunara-cinematic-hero + .lunara-home-section .lunara-home-section-hea
     object-fit: cover;
     /* Bias the crop toward the upper third — faces and subjects live there
        far more often than dead center on cinematic stills. */
-    object-position: center 30%;
-    display: block;
-    transform: scale(1.02);
+	object-position: var(--lunara-hero-focal-x, 50%) var(--lunara-hero-focal-y, 30%);
+	display: block;
+	transform: scale(var(--lunara-hero-zoom-start, 1));
     will-change: transform;
     animation: lunara-cinematic-ken-burns 28s ease-in-out infinite alternate;
 }
@@ -14894,10 +14894,10 @@ body.home .lunara-cinematic-hero + .lunara-home-section .lunara-home-section-hea
 /* Disable Ken-Burns on mobile — saves CPU + battery, no perceptible loss
    on small screens where the motion is barely visible anyway */
 @media (max-width: 900px) {
-    .lunara-cinematic-hero-img {
-        animation: none !important;
-        transform: none !important;
-    }
+	.lunara-cinematic-hero-img {
+		animation: none !important;
+		transform: scale(var(--lunara-hero-zoom-start, 1)) !important;
+	}
     /* Mobile content: true edge-to-edge — drop horizontal padding to 14px */
     .lunara-cinematic-hero-content {
         padding: 0 14px 48px !important;
