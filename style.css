@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.26
+Version: 3.2.27
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -14896,6 +14896,11 @@ body.home .lunara-cinematic-hero + .lunara-home-section .lunara-home-section-hea
    instead of enlarging a landscape still to fill an incompatible viewport. */
 .lunara-cinematic-hero-slide.is-full-frame .lunara-cinematic-hero-bg {
     background: #06101b !important;
+    /* The base background layer carries a legacy 1.06 scale. Reset the
+       parent as well as the image or "full frame" still trims both edges. */
+    transform: none !important;
+    animation: none !important;
+    will-change: auto;
 }
 
 .lunara-cinematic-hero-img.is-full-frame {

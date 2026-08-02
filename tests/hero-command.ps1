@@ -47,6 +47,7 @@ Assert-True ($themeCss -match 'object-position:\s*var\(--lunara-hero-focal-x,\s*
 Assert-True ($themeCss -match 'scale\(var\(--lunara-hero-zoom-start,\s*1\)\)') 'Hero imagery must consume the per-slide zoom while preserving the full frame by default.'
 Assert-True ($themeCss -match '\.lunara-cinematic-hero-img\.is-full-frame[\s\S]*object-fit:\s*contain\s*!important') 'Full-frame hero images must preserve the complete native composition.'
 Assert-True ($themeCss -match '\.lunara-cinematic-hero-img\.is-full-frame[\s\S]*animation:\s*none\s*!important') 'Full-frame hero images must not re-crop themselves through motion.'
+Assert-True ($themeCss -match '\.lunara-cinematic-hero-slide\.is-full-frame\s+\.lunara-cinematic-hero-bg\s*\{[\s\S]*?transform:\s*none\s*!important') 'Full-frame mode must reset the legacy background-layer scale so neither edge is trimmed.'
 Assert-True ($heroCarousel -match "is-hero-mounted', 'is-hero-static', 'is-rendered") 'A single-slide cinematic hero must release Splide visibility when rotation is skipped.'
 Assert-True ($themeFunctions -match '\$is_static\s*=\s*count\(\s*\$slides\s*\)\s*<\s*2') 'The server-rendered carousel must identify a one-slide static opener before first paint.'
 Assert-True ($themeFunctions -match '\$hero_classes\s*\.\=\s*'' is-hero-static''') 'The server-rendered static opener must expose its layout class before JavaScript runs.'
