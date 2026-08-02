@@ -15710,6 +15710,8 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
 		$zoom_percent      = max( 100, min( 112, isset( $data['zoom'] ) ? (int) $data['zoom'] : 100 ) );
 		$zoom_start        = $zoom_percent / 100;
 		$zoom_end          = min( 1.17, $zoom_start + 0.05 );
+		$frame_mode        = isset( $data['fit'] ) && 'full' === (string) $data['fit'] ? 'full' : 'cover';
+		$image_class       = 'lunara-cinematic-hero-img' . ( 'full' === $frame_mode ? ' is-full-frame' : '' );
 		$image_style       = sprintf(
 			'--lunara-hero-focal-x:%d%%;--lunara-hero-focal-y:%d%%;--lunara-hero-zoom-start:%.2F;--lunara-hero-zoom-end:%.2F;',
 			$focal_x,
@@ -15718,12 +15720,12 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
 			$zoom_end
 		);
 		$image_markup      = $is_priority_image
-			? '<img src="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" style="' . esc_attr( $image_style ) . '" alt="" loading="eager" decoding="async" fetchpriority="high" sizes="100vw" />'
-			: '<img src="' . esc_url( $data['image'] ) . '" class="lunara-cinematic-hero-img" style="' . esc_attr( $image_style ) . '" alt="" loading="lazy" decoding="async" fetchpriority="low" sizes="100vw" />';
+			? '<img src="' . esc_url( $data['image'] ) . '" class="' . esc_attr( $image_class ) . '" style="' . esc_attr( $image_style ) . '" alt="" loading="eager" decoding="async" fetchpriority="high" sizes="100vw" />'
+			: '<img src="' . esc_url( $data['image'] ) . '" class="' . esc_attr( $image_class ) . '" style="' . esc_attr( $image_style ) . '" alt="" loading="lazy" decoding="async" fetchpriority="low" sizes="100vw" />';
 
 		ob_start();
 		?>
-		<li class="splide__slide lunara-cinematic-hero-slide<?php echo $is_first ? ' is-active' : ''; ?>">
+		<li class="splide__slide lunara-cinematic-hero-slide<?php echo $is_first ? ' is-active' : ''; ?><?php echo 'full' === $frame_mode ? ' is-full-frame' : ''; ?>">
 			<a class="lunara-cinematic-hero-link" href="<?php echo esc_url( $data['url'] ); ?>" aria-label="<?php echo esc_attr( $data['title'] ); ?>">
 				<div class="lunara-cinematic-hero-bg" aria-hidden="true">
 					<?php echo $image_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
