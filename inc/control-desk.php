@@ -1013,7 +1013,28 @@ function lunara_control_desk_parse_oscar_pick_order( $raw ) {
 }
 
 function lunara_control_desk_get_homepage_oscar_pick_order_ids() {
-    return lunara_control_desk_parse_oscar_pick_order( get_theme_mod( 'lunara_home_oscar_picks_manual_order', '' ) );
+    $year = function_exists( 'lunara_home_oscar_picks_ceremony_year' )
+        ? lunara_home_oscar_picks_ceremony_year()
+        : absint( wp_date( 'Y' ) );
+
+    return lunara_control_desk_filter_oscar_pick_ids_by_ceremony(
+        get_theme_mod( 'lunara_home_oscar_picks_manual_order', '' ),
+        $year
+    );
+}
+
+function lunara_control_desk_filter_oscar_pick_ids_by_ceremony( $ids, $year ) {
+    $ids  = lunara_control_desk_parse_oscar_pick_order( $ids );
+    $year = absint( $year );
+
+    return array_values(
+        array_filter(
+            $ids,
+            static function ( $post_id ) use ( $year ) {
+                return (int) get_post_meta( $post_id, '_lunara_pick_ceremony_year', true ) === (int) $year;
+            }
+        )
+    );
 }
 
 function lunara_control_desk_get_homepage_oscar_pick_posts_by_ids( $ids ) {
@@ -1036,24 +1057,33 @@ function lunara_control_desk_get_homepage_oscar_pick_posts_by_ids( $ids ) {
     );
 }
 
-function lunara_control_desk_get_homepage_oscar_pick_candidates( $exclude_ids = array(), $limit = 30 ) {
+function lunara_control_desk_get_homepage_oscar_pick_candidates( $exclude_ids = array(), $limit = 30, $ceremony_year = 0 ) {
     $exclude_ids = array_map( 'absint', (array) $exclude_ids );
 
-    return get_posts(
-        array(
-            'post_type'           => 'lunara_oscar_pick',
-            'post_status'         => 'publish',
-            'posts_per_page'      => absint( $limit ),
-            'post__not_in'        => array_filter( $exclude_ids ),
-            'meta_key'            => '_lunara_pick_ceremony_year',
-            'orderby'             => array(
-                'meta_value_num' => 'DESC',
-                'date'           => 'DESC',
-            ),
-            'ignore_sticky_posts' => true,
-            'no_found_rows'       => true,
-        )
+    $args = array(
+        'post_type'           => 'lunara_oscar_pick',
+        'post_status'         => 'publish',
+        'posts_per_page'      => absint( $limit ),
+        'post__not_in'        => array_filter( $exclude_ids ),
+        'meta_key'            => '_lunara_pick_ceremony_year',
+        'orderby'             => array(
+            'meta_value_num' => 'DESC',
+            'date'           => 'DESC',
+        ),
+        'ignore_sticky_posts' => true,
+        'no_found_rows'       => true,
     );
+
+    if ( absint( $ceremony_year ) > 0 ) {
+        $args['meta_query'] = array(
+            array(
+                'key'   => '_lunara_pick_ceremony_year',
+                'value' => absint( $ceremony_year ),
+            ),
+        );
+    }
+
+    return get_posts( $args );
 }
 
 function lunara_control_desk_homepage_visibility_specs() {
@@ -1156,6 +1186,43 @@ function lunara_control_desk_save_homepage_studio() {
         }
     }
 
+    $default_oscar_ceremony_year = function_exists( 'lunara_home_oscar_picks_default_ceremony_year' )
+        ? lunara_home_oscar_picks_default_ceremony_year()
+        : (int) wp_date( 'Y' );
+    $oscar_ceremony_year = isset( $_POST['lunara_home_oscar_picks_ceremony_year'] )
+        ? absint( $_POST['lunara_home_oscar_picks_ceremony_year'] )
+        : $default_oscar_ceremony_year;
+    $oscar_ceremony_year = max( 1929, min( 2100, $oscar_ceremony_year ) );
+    set_theme_mod( 'lunara_home_oscar_picks_ceremony_year', (string) $oscar_ceremony_year );
+
+    $default_oscar_heading = function_exists( 'lunara_oscar_ceremony_ordinal_from_year' )
+        ? sprintf(
+            __( 'Road to the %s Academy Awards', 'lunara-film' ),
+            lunara_oscar_ceremony_ordinal_from_year( $oscar_ceremony_year )
+        )
+        : '';
+
+    $oscar_copy_fields = array(
+        'lunara_home_oscar_picks_kicker'   => __( 'Lunara Forecast', 'lunara-film' ),
+        'lunara_home_oscar_picks_heading'  => $default_oscar_heading,
+        'lunara_home_oscar_picks_summary'  => __( 'The board before the race hardens. Early forecasts move as films screen, campaigns take shape, and the season reveals itself.', 'lunara-film' ),
+        'lunara_home_oscar_picks_cta_text' => __( 'Open the awards-season board', 'lunara-film' ),
+    );
+
+    foreach ( $oscar_copy_fields as $key => $fallback ) {
+        if ( ! isset( $_POST[ $key ] ) ) {
+            continue;
+        }
+
+        $value = sanitize_text_field( wp_unslash( $_POST[ $key ] ) );
+
+        if ( '' === $value || $value === $fallback ) {
+            remove_theme_mod( $key );
+        } else {
+            set_theme_mod( $key, $value );
+        }
+    }
+
     $reset_oscar_picks = ! empty( $_POST['lunara_home_oscar_picks_reset_order'] );
     $order_source       = isset( $_POST['lunara_home_oscar_picks_order_source'] )
         ? sanitize_key( wp_unslash( $_POST['lunara_home_oscar_picks_order_source'] ) )
@@ -1168,6 +1235,9 @@ function lunara_control_desk_save_homepage_studio() {
         ? wp_unslash( $_POST['lunara_home_oscar_picks_add'] )
         : array();
     $add_oscar_pick_ids = lunara_control_desk_parse_oscar_pick_order( $raw_oscar_adds );
+
+    $oscar_pick_ids = lunara_control_desk_filter_oscar_pick_ids_by_ceremony( $oscar_pick_ids, $oscar_ceremony_year );
+    $add_oscar_pick_ids = lunara_control_desk_filter_oscar_pick_ids_by_ceremony( $add_oscar_pick_ids, $oscar_ceremony_year );
 
     foreach ( $add_oscar_pick_ids as $add_id ) {
         if ( ! in_array( $add_id, $oscar_pick_ids, true ) ) {
@@ -8119,8 +8189,17 @@ function lunara_control_desk_render_homepage_number_control( $key, $spec ) {
 }
 
 function lunara_control_desk_homepage_oscar_pick_default_order_ids() {
+    $ceremony_year = function_exists( 'lunara_home_oscar_picks_ceremony_year' )
+        ? lunara_home_oscar_picks_ceremony_year()
+        : absint( wp_date( 'Y' ) );
+
     if ( function_exists( 'lunara_get_oscar_picks' ) ) {
-        $query = lunara_get_oscar_picks( array( 'posts_per_page' => 16 ) );
+        $query = lunara_get_oscar_picks(
+            array(
+                'posts_per_page' => 16,
+                'ceremony_year'  => $ceremony_year,
+            )
+        );
         $ids   = wp_list_pluck( $query->posts, 'ID' );
         wp_reset_postdata();
 
@@ -8133,6 +8212,12 @@ function lunara_control_desk_homepage_oscar_pick_default_order_ids() {
                 'post_type'           => 'lunara_oscar_pick',
                 'post_status'         => 'publish',
                 'posts_per_page'      => 16,
+                'meta_query'          => array(
+                    array(
+                        'key'   => '_lunara_pick_ceremony_year',
+                        'value' => $ceremony_year,
+                    ),
+                ),
                 'ignore_sticky_posts' => true,
                 'no_found_rows'       => true,
             )
@@ -8230,23 +8315,62 @@ function lunara_control_desk_render_homepage_oscar_pick_candidate( $post ) {
 }
 
 function lunara_control_desk_render_homepage_oscar_picks_curation() {
+    $ceremony_year = function_exists( 'lunara_home_oscar_picks_ceremony_year' )
+        ? lunara_home_oscar_picks_ceremony_year()
+        : absint( wp_date( 'Y' ) );
+    $ceremony_ordinal = function_exists( 'lunara_oscar_ceremony_ordinal_from_year' )
+        ? lunara_oscar_ceremony_ordinal_from_year( $ceremony_year )
+        : (string) $ceremony_year;
+    $default_heading = sprintf(
+        /* translators: %s: ordinal Academy Awards ceremony number, such as 99th. */
+        __( 'Road to the %s Academy Awards', 'lunara-film' ),
+        $ceremony_ordinal
+    );
+    $kicker = (string) get_theme_mod( 'lunara_home_oscar_picks_kicker', __( 'Lunara Forecast', 'lunara-film' ) );
+    $heading = (string) get_theme_mod( 'lunara_home_oscar_picks_heading', $default_heading );
+    $summary = (string) get_theme_mod( 'lunara_home_oscar_picks_summary', __( 'The board before the race hardens. Early forecasts move as films screen, campaigns take shape, and the season reveals itself.', 'lunara-film' ) );
+    $cta_text = (string) get_theme_mod( 'lunara_home_oscar_picks_cta_text', __( 'Open the awards-season board', 'lunara-film' ) );
     $stored_ids      = lunara_control_desk_get_homepage_oscar_pick_order_ids();
     $order_is_custom = ! empty( $stored_ids );
     $ordered_ids     = $order_is_custom ? $stored_ids : lunara_control_desk_homepage_oscar_pick_default_order_ids();
     $ordered_posts   = lunara_control_desk_get_homepage_oscar_pick_posts_by_ids( $ordered_ids );
-    $candidate_posts = lunara_control_desk_get_homepage_oscar_pick_candidates( $ordered_ids, 24 );
+    $candidate_posts = lunara_control_desk_get_homepage_oscar_pick_candidates( $ordered_ids, 24, $ceremony_year );
     ?>
     <div class="lunara-control-desk-homepage-card lunara-control-desk-oscar-picks-curation" data-lunara-oscar-picks-curation>
         <div class="lunara-control-desk-card-head">
             <div>
                 <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Oscar Picks Curation', 'lunara-film' ); ?></p>
                 <h3><?php esc_html_e( 'Order the homepage awards rail', 'lunara-film' ); ?></h3>
-                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Move cards up or down, hold weaker cards out of the public rail, and add recent published picks back on save. This only stores a homepage order list.', 'lunara-film' ); ?></p>
+                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Choose the active ceremony, write the public framing, move cards up or down, and hold weaker forecasts out of the homepage rail. Historical picks remain intact.', 'lunara-film' ); ?></p>
             </div>
             <div class="lunara-control-desk-status-pill">
                 <strong><?php esc_html_e( 'Order source', 'lunara-film' ); ?></strong>
                 <span><?php echo esc_html( $order_is_custom ? __( 'manual homepage order', 'lunara-film' ) : __( 'smart default fallback', 'lunara-film' ) ); ?></span>
             </div>
+        </div>
+
+        <div class="lunara-control-desk-carousel-fields lunara-control-desk-oscar-season-fields">
+            <label>
+                <span><?php esc_html_e( 'Active ceremony year', 'lunara-film' ); ?></span>
+                <input type="number" name="lunara_home_oscar_picks_ceremony_year" min="1929" max="2100" step="1" value="<?php echo esc_attr( (string) $ceremony_year ); ?>" />
+                <small><?php echo esc_html( sprintf( __( 'Currently maps to the %s Academy Awards.', 'lunara-film' ), $ceremony_ordinal ) ); ?></small>
+            </label>
+            <label>
+                <span><?php esc_html_e( 'Kicker', 'lunara-film' ); ?></span>
+                <input type="text" name="lunara_home_oscar_picks_kicker" value="<?php echo esc_attr( $kicker ); ?>" />
+            </label>
+            <label class="lunara-control-desk-carousel-url-field">
+                <span><?php esc_html_e( 'Public heading', 'lunara-film' ); ?></span>
+                <input type="text" name="lunara_home_oscar_picks_heading" value="<?php echo esc_attr( $heading ); ?>" />
+            </label>
+            <label class="lunara-control-desk-carousel-url-field">
+                <span><?php esc_html_e( 'Season summary', 'lunara-film' ); ?></span>
+                <textarea name="lunara_home_oscar_picks_summary" rows="3"><?php echo esc_textarea( $summary ); ?></textarea>
+            </label>
+            <label class="lunara-control-desk-carousel-url-field">
+                <span><?php esc_html_e( 'Ledger button label', 'lunara-film' ); ?></span>
+                <input type="text" name="lunara_home_oscar_picks_cta_text" value="<?php echo esc_attr( $cta_text ); ?>" />
+            </label>
         </div>
 
         <div class="lunara-control-desk-carousel-toolbar">
