@@ -506,6 +506,27 @@ function lunara_rocket_preserve_jetpack_css_mime( $excluded_src ) {
 add_filter( 'rocket_lazyload_excluded_src', 'lunara_rocket_preserve_jetpack_css_mime' );
 
 /**
+ * Keep Jetpack Boost's Auto-Resize Lazy Images sub-feature disabled.
+ *
+ * Boost 4.6.3 calculates a responsive-image width descriptor from the raw
+ * viewport width multiplied by devicePixelRatio. Fractional DPR values can
+ * therefore produce invalid descriptors such as `390.0000116229057w`; Chrome
+ * drops those candidates after Boost has synchronously measured every image.
+ * Lunara already emits route-specific `srcset` and `sizes`, so the additional
+ * client-side rewrite is redundant as well as expensive. This filter disables
+ * only `image-cdn-liar`; the Image CDN and its quality controls remain active.
+ *
+ * @return string Disabled option value.
+ */
+function lunara_disable_jetpack_boost_auto_resize() {
+    return '0';
+}
+add_filter(
+    'pre_option_jetpack_boost_status_image-cdn-liar',
+    'lunara_disable_jetpack_boost_auto_resize'
+);
+
+/**
  * Determine whether review-card and Pair It With component CSS is needed.
  */
 function lunara_phase1c_review_components_needed() {

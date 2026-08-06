@@ -5,25 +5,22 @@
 
 (function () {
             var observer = null;
-
-            function shouldHydrateNow(img) {
-                if (!img) return false;
-
-                var loading = (img.getAttribute('loading') || '').toLowerCase();
-
-                if (loading === 'eager' || img.getAttribute('fetchpriority') === 'high') {
-                    return true;
-                }
-
-                if (!img.getBoundingClientRect) {
-                    return false;
-                }
-
-                var rect = img.getBoundingClientRect();
-                var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-
-                return rect.top < viewportHeight * 1.35 && rect.bottom > -120;
-            }
+            var imageSelector = [
+                '.lunara-review-grid-poster',
+                '.lunara-review-feature-image',
+                '.lunara-poster-card-image',
+                '.lunara-journal-home-card-image',
+                '.lunara-dispatch-archive-thumb',
+                '.lunara-dispatch-lead-image',
+                '.lunara-oscar-pick-card-image',
+                '.lunara-oscar-fact-card-poster-image',
+                '.aat-entity-poster',
+                '.aat-filmography-poster',
+                '.aat-winner-circle-photo',
+                '.aat-winner-circle-media img',
+                '.aat-hub-spotlight-media img',
+                '.aat-related-review-image'
+            ].join(',');
 
             function sanitizeSrcset(srcset) {
                 srcset = (srcset || '').trim();
@@ -42,38 +39,6 @@
                 }).filter(Boolean).join(', ');
             }
 
-            function installSrcsetGuard() {
-                if (window.lunaraSrcsetGuardInstalled || !window.Element) return;
-                window.lunaraSrcsetGuardInstalled = true;
-
-                var nativeSetAttribute = Element.prototype.setAttribute;
-                Element.prototype.setAttribute = function (name, value) {
-                    if (typeof name === 'string' && name.toLowerCase() === 'srcset') {
-                        value = sanitizeSrcset(String(value || ''));
-                    }
-
-                    return nativeSetAttribute.call(this, name, value);
-                };
-
-                [window.HTMLImageElement, window.HTMLSourceElement].forEach(function (Constructor) {
-                    if (!Constructor || !Constructor.prototype) return;
-
-                    var descriptor = Object.getOwnPropertyDescriptor(Constructor.prototype, 'srcset');
-                    if (!descriptor || !descriptor.set || !descriptor.get) return;
-
-                    Object.defineProperty(Constructor.prototype, 'srcset', {
-                        configurable: true,
-                        enumerable: descriptor.enumerable,
-                        get: function () {
-                            return descriptor.get.call(this);
-                        },
-                        set: function (value) {
-                            descriptor.set.call(this, sanitizeSrcset(String(value || '')));
-                        }
-                    });
-                });
-            }
-
             function sanitizeImageSrcset(node) {
                 if (!node || !node.getAttribute || !node.setAttribute) return;
 
@@ -89,22 +54,9 @@
                 }
             }
 
-            function sanitizeDocumentSrcsets(root) {
-                root = root || document;
-
-                if (root.matches && root.matches('img[srcset], source[srcset]')) {
-                    sanitizeImageSrcset(root);
-                }
-
-                if (root.querySelectorAll) {
-                    root.querySelectorAll('img[srcset], source[srcset]').forEach(sanitizeImageSrcset);
-                }
-            }
-
-            installSrcsetGuard();
-
             function hydrateImage(img) {
                 if (!img) return;
+                img.dataset.lunaraHydratorState = 'hydrated';
                 sanitizeImageSrcset(img);
 
                 var dataSrcset = img.getAttribute('data-srcset') || img.getAttribute('data-lazy-srcset') || '';
@@ -121,9 +73,11 @@
 
                 if (img.complete && img.naturalWidth > 1) {
                     img.classList.add('lunara-img-loaded');
+                    img.dataset.lunaraHydratorState = 'loaded';
                 } else {
                     var markLoaded = function () {
                         img.classList.add('lunara-img-loaded');
+                        img.dataset.lunaraHydratorState = 'loaded';
                     };
                     img.addEventListener('load', markLoaded, { once: true });
                     img.addEventListener('error', markLoaded, { once: true });
@@ -132,14 +86,16 @@
             }
 
             function observeImage(img) {
-                if (!img || img.dataset.lunaraHydratorObserved === '1') return;
+                if (!img || img.dataset.lunaraHydratorState) return;
 
-                if (shouldHydrateNow(img)) {
+                var loading = (img.getAttribute('loading') || '').toLowerCase();
+                if (loading === 'eager' || img.getAttribute('fetchpriority') === 'high') {
                     hydrateImage(img);
                     return;
                 }
 
                 if (!('IntersectionObserver' in window)) {
+                    hydrateImage(img);
                     return;
                 }
 
@@ -153,64 +109,52 @@
                     }, { rootMargin: '640px 0px' });
                 }
 
-                img.dataset.lunaraHydratorObserved = '1';
+                img.dataset.lunaraHydratorState = 'observed';
                 observer.observe(img);
             }
 
-            function hydrateCards() {
-                sanitizeDocumentSrcsets(document);
-
-                document.querySelectorAll([
-                    '.lunara-review-grid-poster',
-                    '.lunara-review-feature-image',
-                    '.lunara-poster-card-image',
-                    '.lunara-journal-home-card-image',
-                    '.lunara-dispatch-archive-thumb',
-                    '.lunara-dispatch-lead-image',
-                    '.lunara-oscar-pick-card-image',
-                    '.lunara-oscar-fact-card-poster-image',
-                    '.aat-entity-poster',
-                    '.aat-filmography-poster',
-                    '.aat-winner-circle-photo',
-                    '.aat-winner-circle-media img',
-                    '.aat-hub-spotlight-media img',
-                    '.aat-related-review-image'
-                ].join(',')).forEach(observeImage);
+            function scanImages(root) {
+                root = root || document;
+                if (root.matches && root.matches(imageSelector)) {
+                    observeImage(root);
+                }
+                if (root.querySelectorAll) {
+                    root.querySelectorAll(imageSelector).forEach(observeImage);
+                }
             }
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', hydrateCards);
-            } else {
-                hydrateCards();
-            }
+            function bootImageRuntime() {
+                scanImages(document);
+                if (!window.MutationObserver) return;
 
-            if (window.MutationObserver) {
                 new MutationObserver(function (mutations) {
-                    var needsHydration = false;
-
                     mutations.forEach(function (mutation) {
                         if (mutation.type === 'attributes') {
                             sanitizeImageSrcset(mutation.target);
+                            if (mutation.target.matches && mutation.target.matches(imageSelector)) {
+                                observeImage(mutation.target);
+                            }
                             return;
                         }
 
-                        needsHydration = true;
                         mutation.addedNodes.forEach(function (node) {
                             if (node.nodeType === 1) {
-                                sanitizeDocumentSrcsets(node);
+                                scanImages(node);
                             }
                         });
                     });
-
-                    if (needsHydration) {
-                        hydrateCards();
-                    }
-                }).observe(document.documentElement, {
+                }).observe(document.body || document.documentElement, {
                     attributes: true,
                     attributeFilter: ['srcset', 'data-srcset', 'data-lazy-srcset'],
                     childList: true,
                     subtree: true
                 });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', bootImageRuntime, { once: true });
+            } else {
+                bootImageRuntime();
             }
         }());
 

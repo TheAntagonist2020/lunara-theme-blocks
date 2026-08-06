@@ -29,7 +29,7 @@ $publicRuntime = Read-ThemeFile 'assets/js/lunara-public-runtime.js'
 $cinematicCss = Read-ThemeFile 'assets/css/lunara-cinematic-home.css'
 $reviewCss = Read-ThemeFile 'assets/css/lunara-review-components.css'
 
-Assert-True ($style -match 'Version:\s*3\.2\.31') 'Homepage progressive rendering release must report Theme 3.2.31.'
+Assert-True ($style -match 'Version:\s*3\.2\.32') 'Homepage progressive rendering must remain intact in Theme 3.2.32.'
 Assert-True ($frontPage -match "lunara_front_door_has_canonical_hero") 'Front Page must identify when the front door already owns the canonical hero.'
 Assert-True ($frontPage -match "lunara_render_home_block_composition\(\s*\`$lunara_front_door_has_canonical_hero\s*\?\s*array\(\s*'lunara/cinematic-hero'") 'Front Page must suppress the duplicate hero block only when the front door already owns the hero.'
 Assert-True ($homeBlocks -match 'function\s+lunara_render_home_block_composition\(\s*\$excluded_block_names') 'Block composition must accept a render-only exclusion list.'
