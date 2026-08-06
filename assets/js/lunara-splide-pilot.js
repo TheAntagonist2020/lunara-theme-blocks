@@ -203,7 +203,25 @@
 	}
 
 	function boot() {
-		document.querySelectorAll('[data-lunara-splide-pilot]').forEach(initPilot);
+		document.querySelectorAll('[data-lunara-splide-pilot]').forEach(function (root) {
+			if (!('IntersectionObserver' in window)) {
+				initPilot(root);
+				return;
+			}
+
+			var observer = new IntersectionObserver(function (entries) {
+				if (!entries.some(function (entry) { return entry.isIntersecting; })) {
+					return;
+				}
+
+				observer.disconnect();
+				initPilot(root);
+			}, {
+				rootMargin: '800px 0px'
+			});
+
+			observer.observe(root);
+		});
 	}
 
 	if (document.readyState === 'loading') {
