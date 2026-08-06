@@ -242,8 +242,7 @@
         staggerSels.forEach(function(s){
             document.querySelectorAll(s).forEach(function(el){el.classList.add('lunara-reveal-stagger');});
         });
-		var compactHome = isFrontPage && window.matchMedia('(max-width: 820px)').matches;
-		if(compactHome){
+		if(isFrontPage){
 			document.querySelectorAll('.lunara-reveal').forEach(function(el){el.classList.add('is-visible');});
 			return;
 		}
