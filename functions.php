@@ -12568,7 +12568,8 @@ if ( ! function_exists( 'lunara_register_oscar_pick_cpt' ) ) {
  */
 if ( ! function_exists( 'lunara_seed_oscar_pick_categories' ) ) {
 	function lunara_seed_oscar_pick_categories() {
-		if ( get_option( 'lunara_oscar_pick_categories_seeded' ) ) {
+		$schema_version = 2;
+		if ( (int) get_option( 'lunara_oscar_pick_categories_seeded' ) >= $schema_version ) {
 			return;
 		}
 		if ( ! taxonomy_exists( 'oscar_pick_category' ) ) {
@@ -12586,6 +12587,13 @@ if ( ! function_exists( 'lunara_seed_oscar_pick_categories' ) ) {
 			'Best Cinematography',
 			'Best Editing',
 			'Best Original Score',
+			'Best Casting',
+			'Best Production Design',
+			'Best Costume Design',
+			'Best Makeup and Hairstyling',
+			'Best Visual Effects',
+			'Best Sound',
+			'Best Original Song',
 			'Best International Feature',
 			'Best Documentary Feature',
 			'Best Animated Feature',
@@ -12595,7 +12603,7 @@ if ( ! function_exists( 'lunara_seed_oscar_pick_categories' ) ) {
 				wp_insert_term( $name, 'oscar_pick_category' );
 			}
 		}
-		update_option( 'lunara_oscar_pick_categories_seeded', 1 );
+		update_option( 'lunara_oscar_pick_categories_seeded', $schema_version );
 	}
 	add_action( 'init', 'lunara_seed_oscar_pick_categories', 20 );
 }
@@ -13012,6 +13020,8 @@ if ( ! function_exists( 'lunara_oscar_pick_canonical_category' ) ) {
 			'original song'             => 'MUSIC (Original Song)',
 			'best cinematography'       => 'CINEMATOGRAPHY',
 			'cinematography'            => 'CINEMATOGRAPHY',
+			'best casting'              => 'CASTING',
+			'casting'                   => 'CASTING',
 			'best editing'              => 'FILM EDITING',
 			'best film editing'         => 'FILM EDITING',
 			'film editing'              => 'FILM EDITING',

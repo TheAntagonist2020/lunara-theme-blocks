@@ -2,6 +2,7 @@
 	'use strict';
 
 	var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	var compactViewport = window.matchMedia && window.matchMedia('(max-width: 820px)').matches;
 	var selector = [
 		'.lunara-journal-home-card',
 		'.lunara-review-grid-card',
@@ -10,8 +11,9 @@
 	].join(',');
 	var cards = Array.prototype.slice.call(document.querySelectorAll(selector));
 
-	if (!cards.length || reduceMotion || !('IntersectionObserver' in window)) {
+	if (!cards.length || reduceMotion || compactViewport || !('IntersectionObserver' in window)) {
 		cards.forEach(function (card) {
+			card.classList.remove('is-cinematic-pending');
 			card.classList.add('is-cinematic-visible');
 		});
 		return;
@@ -32,8 +34,8 @@
 			observer.unobserve(entry.target);
 		});
 	}, {
-		rootMargin: '0px 0px -10% 0px',
-		threshold: 0.14
+		rootMargin: '240px 0px',
+		threshold: 0.01
 	});
 
 	cards.forEach(function (card) {
