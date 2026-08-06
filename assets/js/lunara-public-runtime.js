@@ -242,6 +242,11 @@
         staggerSels.forEach(function(s){
             document.querySelectorAll(s).forEach(function(el){el.classList.add('lunara-reveal-stagger');});
         });
+		var compactHome = isFrontPage && window.matchMedia('(max-width: 820px)').matches;
+		if(compactHome){
+			document.querySelectorAll('.lunara-reveal').forEach(function(el){el.classList.add('is-visible');});
+			return;
+		}
         var obs=new IntersectionObserver(function(entries){
             entries.forEach(function(entry){
                 if(entry.isIntersecting){
@@ -249,7 +254,7 @@
                     obs.unobserve(entry.target);
                 }
             });
-        },{threshold:0.08,rootMargin:'0px 0px -40px 0px'});
+		},{threshold:0.01,rootMargin:'240px 0px'});
         document.querySelectorAll('.lunara-reveal').forEach(function(el){obs.observe(el);});
     })();
 

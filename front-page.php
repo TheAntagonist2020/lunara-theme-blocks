@@ -33,10 +33,11 @@ get_header();
 	if ( function_exists( 'lunara_render_home_front_door' ) ) {
 		$lunara_front_door = (string) lunara_render_home_front_door();
 	}
+	$lunara_front_door_has_canonical_hero = '' !== $lunara_front_door && false !== strpos( $lunara_front_door, 'data-lunara-home-hero-source=' );
 
 	$lunara_uses_block_composition = function_exists( 'lunara_home_uses_block_composition' ) && lunara_home_uses_block_composition();
 	$lunara_block_composition      = $lunara_uses_block_composition && function_exists( 'lunara_render_home_block_composition' )
-		? (string) lunara_render_home_block_composition()
+		? (string) lunara_render_home_block_composition( $lunara_front_door_has_canonical_hero ? array( 'lunara/cinematic-hero' ) : array() )
 		: '';
 
 	// Keep Home from shipping without a semantic H1, independent of whichever
@@ -110,7 +111,7 @@ get_header();
 	// hero. Do not render the legacy Customizer hero a second time beneath it.
 	// A non-cinematic Front Desk keeps the legacy hero available, preserving
 	// the existing fallback when the cinematic front door is disabled.
-	if ( '' !== $lunara_front_door && false !== strpos( $lunara_front_door, 'data-lunara-home-hero-source=' ) ) {
+	if ( $lunara_front_door_has_canonical_hero ) {
 		unset( $lunara_section_renderers['hero'] );
 	}
 

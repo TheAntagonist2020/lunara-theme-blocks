@@ -76,7 +76,7 @@ if ( ! function_exists( 'lunara_render_home_block_composition' ) ) {
 	 * the_content appendages (sharing bars, related posts) can leak into
 	 * the front door, and the output stays exactly the section renderers'.
 	 */
-	function lunara_render_home_block_composition() {
+	function lunara_render_home_block_composition( $excluded_block_names = array() ) {
 		$page_id = lunara_home_front_page_id();
 		if ( $page_id <= 0 ) {
 			return '';
@@ -87,7 +87,22 @@ if ( ! function_exists( 'lunara_render_home_block_composition' ) ) {
 			return '';
 		}
 
-		return do_blocks( $content );
+		$excluded_block_names = array_filter( array_map( 'sanitize_text_field', (array) $excluded_block_names ) );
+		if ( empty( $excluded_block_names ) ) {
+			return do_blocks( $content );
+		}
+
+		$renderable_blocks = array();
+		foreach ( parse_blocks( $content ) as $block ) {
+			$block_name = isset( $block['blockName'] ) ? (string) $block['blockName'] : '';
+			if ( '' !== $block_name && in_array( $block_name, $excluded_block_names, true ) ) {
+				continue;
+			}
+
+			$renderable_blocks[] = serialize_block( $block );
+		}
+
+		return do_blocks( implode( "\n\n", $renderable_blocks ) );
 	}
 }
 
