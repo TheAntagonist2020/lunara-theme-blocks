@@ -15860,6 +15860,27 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
 }
 
 /**
+ * Resolve the homepage hero deck once per request.
+ *
+ * The first slide is needed in wp_head for the LCP preload and again when the
+ * front door renders. Sharing the result prevents a duplicate set of editorial
+ * queries while keeping Hero Command as the single source of truth.
+ *
+ * @return array<int,array<string,mixed>>
+ */
+if ( ! function_exists( 'lunara_get_home_cinematic_hero_slides' ) ) {
+	function lunara_get_home_cinematic_hero_slides() {
+		static $slides = null;
+
+		if ( null === $slides ) {
+			$slides = lunara_get_cinematic_hero_slides( 6 );
+		}
+
+		return is_array( $slides ) ? $slides : array();
+	}
+}
+
+/**
  * Render the rotating cinematic hero (Splide cross-fade carousel of latest
  * reviews + journal entries). Falls back to the single static hero when there
  * are fewer than two slides, so it's always safe to use as the hero renderer.
@@ -15868,7 +15889,7 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 	function lunara_render_cinematic_hero_carousel( $attrs = array() ) {
 		$attrs              = is_array( $attrs ) ? $attrs : array();
 		$first_image_is_lcp = ! array_key_exists( 'first_image_is_lcp', $attrs ) || (bool) $attrs['first_image_is_lcp'];
-		$slides             = lunara_get_cinematic_hero_slides( 6 );
+		$slides             = lunara_get_home_cinematic_hero_slides();
 
 		// A single curated Hero Command slide still renders through the
 		// carousel shell — the hero JS detects one slide and stays static, so
@@ -15905,6 +15926,45 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 		<?php
 		return (string) ob_get_clean();
 	}
+}
+
+/**
+ * Discover the canonical native homepage hero before the body parser reaches
+ * it. The rendered first image remains eager/high priority; this hint simply
+ * starts the identical request from the head instead of roughly 43 KB into the
+ * document. Plugin-owned hero shortcodes are excluded because their responsive
+ * source cannot be predicted safely by the theme.
+ */
+if ( ! function_exists( 'lunara_preload_home_cinematic_hero_image' ) ) {
+	function lunara_preload_home_cinematic_hero_image() {
+		if ( is_admin() || ! is_front_page() || ! function_exists( 'lunara_home_cinematic_front_door_is_enabled' ) || ! lunara_home_cinematic_front_door_is_enabled() ) {
+			return;
+		}
+
+		$shortcode     = function_exists( 'lunara_home_plugin_hero_shortcode' ) ? lunara_home_plugin_hero_shortcode() : '';
+		$shortcode_tag = function_exists( 'lunara_home_extract_shortcode_tag' ) ? lunara_home_extract_shortcode_tag( $shortcode ) : '';
+		if (
+			function_exists( 'lunara_home_plugin_hero_is_allowed' )
+			&& lunara_home_plugin_hero_is_allowed()
+			&& '' !== $shortcode
+			&& '' !== $shortcode_tag
+			&& shortcode_exists( $shortcode_tag )
+		) {
+			return;
+		}
+
+		$slides = lunara_get_home_cinematic_hero_slides();
+		$image  = isset( $slides[0]['image'] ) ? trim( (string) $slides[0]['image'] ) : '';
+		if ( '' === $image ) {
+			return;
+		}
+
+		printf(
+			'<link id="lunara-home-hero-preload" rel="preload" as="image" href="%s" fetchpriority="high">' . "\n",
+			esc_url( $image )
+		);
+	}
+	add_action( 'wp_head', 'lunara_preload_home_cinematic_hero_image', 1 );
 }
 
 /**
