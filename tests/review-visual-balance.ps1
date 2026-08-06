@@ -11,7 +11,7 @@ $front = Get-Content (Join-Path $root 'inc/frontend.php') -Raw
 $desk  = Get-Content (Join-Path $root 'inc/control-desk.php') -Raw
 $reviewCss = Get-Content (Join-Path $root 'assets/css/lunara-review-single.css') -Raw
 
-Assert-True ($style -match 'Version:\s*3\.2\.33') 'Theme must identify the homepage LCP preload gate.'
+Assert-True ($style -match 'Version:\s*3\.2\.34') 'Theme must identify the HTTP hero hint and lazy Splide gate.'
 Assert-True ($reviewCss -match 'width:\s*min\(1060px,\s*calc\(100vw\s*-\s*88px\)\)') 'The desktop Debrief must use the calmer 1060px editorial measure.'
 Assert-True ($reviewCss -match 'rgba\(224,\s*196,\s*129,\s*0\.09\)') 'The Debrief gradient must retain only the subtle warm-gold bloom.'
 Assert-True ($reviewCss -notmatch 'rgba\(112,\s*148,\s*185,\s*0\.12\)') 'The former steel-blue bloom must not return.'

@@ -15929,16 +15929,17 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 }
 
 /**
- * Discover the canonical native homepage hero before the body parser reaches
- * it. The rendered first image remains eager/high priority; this hint simply
- * starts the identical request from the head instead of roughly 43 KB into the
- * document. Plugin-owned hero shortcodes are excluded because their responsive
- * source cannot be predicted safely by the theme.
+ * Resolve the canonical native homepage LCP image.
+ *
+ * Plugin-owned hero shortcodes are excluded because their responsive source
+ * cannot be predicted safely by the theme.
+ *
+ * @return string
  */
-if ( ! function_exists( 'lunara_preload_home_cinematic_hero_image' ) ) {
-	function lunara_preload_home_cinematic_hero_image() {
+if ( ! function_exists( 'lunara_get_home_cinematic_hero_preload_url' ) ) {
+	function lunara_get_home_cinematic_hero_preload_url() {
 		if ( is_admin() || ! is_front_page() || ! function_exists( 'lunara_home_cinematic_front_door_is_enabled' ) || ! lunara_home_cinematic_front_door_is_enabled() ) {
-			return;
+			return '';
 		}
 
 		$shortcode     = function_exists( 'lunara_home_plugin_hero_shortcode' ) ? lunara_home_plugin_hero_shortcode() : '';
@@ -15950,11 +15951,43 @@ if ( ! function_exists( 'lunara_preload_home_cinematic_hero_image' ) ) {
 			&& '' !== $shortcode_tag
 			&& shortcode_exists( $shortcode_tag )
 		) {
-			return;
+			return '';
 		}
 
 		$slides = lunara_get_home_cinematic_hero_slides();
 		$image  = isset( $slides[0]['image'] ) ? trim( (string) $slides[0]['image'] ) : '';
+
+		return '' !== $image ? esc_url_raw( $image ) : '';
+	}
+}
+
+/**
+ * Send the hero preload as an HTTP response hint before WordPress.com streams
+ * the buffered document. The HTML link below remains the standards-friendly
+ * fallback and points to the exact same cached resolver result.
+ */
+if ( ! function_exists( 'lunara_send_home_cinematic_hero_preload_header' ) ) {
+	function lunara_send_home_cinematic_hero_preload_header() {
+		if ( headers_sent() ) {
+			return;
+		}
+
+		$image = lunara_get_home_cinematic_hero_preload_url();
+		if ( '' === $image ) {
+			return;
+		}
+
+		header( 'Link: <' . $image . '>; rel=preload; as=image; fetchpriority=high', false );
+	}
+	add_action( 'template_redirect', 'lunara_send_home_cinematic_hero_preload_header', 0 );
+}
+
+/**
+ * Keep an in-document preload fallback for proxies that discard Link headers.
+ */
+if ( ! function_exists( 'lunara_preload_home_cinematic_hero_image' ) ) {
+	function lunara_preload_home_cinematic_hero_image() {
+		$image = lunara_get_home_cinematic_hero_preload_url();
 		if ( '' === $image ) {
 			return;
 		}
