@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.13
+Version: 3.2.34
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -7879,13 +7879,13 @@ body.aat-shell-page .aat-entity-title {
 .lunara-review-single-debrief-wrap {
     display: grid;
     gap: 0;
-    border: 1px solid rgba(201,169,97,.16);
+    border: 1px solid rgba(201,169,97,.14);
     background:
-        radial-gradient(circle at top right, rgba(201,169,97,.12), transparent 34%),
-        linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.01));
+        radial-gradient(circle at 14% 0%, rgba(224,196,129,.08), transparent 32%),
+        linear-gradient(135deg, rgba(12,25,39,.84), rgba(5,14,23,.92));
     box-shadow:
-        0 28px 64px rgba(0,0,0,.2),
-        0 0 0 1px rgba(255,255,255,.03) inset;
+        0 18px 44px rgba(0,0,0,.2),
+        0 0 0 1px rgba(255,255,255,.02) inset;
     position: relative;
     overflow: hidden;
 }
@@ -7895,10 +7895,8 @@ body.aat-shell-page .aat-entity-title {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background:
-        radial-gradient(520px 180px at 12% 0%, rgba(255,255,255,.08), transparent 58%),
-        radial-gradient(440px 180px at 88% 10%, rgba(201,169,97,.12), transparent 60%);
-    opacity: .84;
+    background: radial-gradient(520px 180px at 12% 0%, rgba(255,255,255,.055), transparent 58%);
+    opacity: .42;
 }
 
 .lunara-review-single-debrief-wrap > * {
@@ -13703,6 +13701,17 @@ body[data-rail-card-layout="split"] .lunara-dispatch-rail-copy {
     --lunara-oscar-pick-accent: rgba(82,217,147,.85);
     border-color: rgba(82,217,147,.3);
 }
+.lunara-oscar-pick-card.is-status-front_runner {
+    --lunara-oscar-pick-accent: rgba(224,196,129,.96);
+    border-color: rgba(224,196,129,.38);
+}
+.lunara-oscar-pick-card.is-status-contender {
+    --lunara-oscar-pick-accent: rgba(154,194,224,.9);
+    border-color: rgba(154,194,224,.24);
+}
+.lunara-oscar-pick-card.is-status-watchlist {
+    --lunara-oscar-pick-accent: rgba(204,207,215,.78);
+}
 .lunara-oscar-pick-card.is-status-lost {
     --lunara-oscar-pick-accent: rgba(180,180,180,.6);
     border-color: rgba(255,255,255,.08);
@@ -13780,7 +13789,7 @@ body[data-rail-card-layout="split"] .lunara-dispatch-rail-copy {
 .lunara-oscar-pick-card-title {
     margin: 0;
     color: var(--lunara-gold) !important;
-    font-family: Georgia, serif;
+    font-family: var(--lunara-font-display, "Tiempos Headline", Georgia, serif);
     font-size: clamp(1.1rem, 1.5vw, 1.32rem);
     line-height: 1.22;
     text-wrap: balance;
@@ -13801,6 +13810,17 @@ body[data-rail-card-layout="split"] .lunara-dispatch-rail-copy {
     color: var(--lunara-text-muted);
     font-size: .82rem;
     letter-spacing: .04em;
+}
+.lunara-oscar-pick-card-rationale {
+    display: -webkit-box;
+    margin: 2px 0 0;
+    overflow: hidden;
+    color: rgba(239,232,214,.78);
+    font-family: var(--lunara-font-body, "Tiempos Text", Georgia, serif);
+    font-size: .9rem;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
 }
 
 .lunara-oscar-pick-card:hover {
@@ -14607,10 +14627,10 @@ body.home .lunara-home-hero {
 }
 
 @keyframes lunara-cinematic-ken-burns {
-    /* Gentler drift: the old 1.06→1.14 zoom cropped up to 14% of the frame,
-       which read as "the image is cut off". Keep the life, show the shot. */
-    0%   { transform: scale(1.02) translate3d(0, 0, 0); }
-    100% { transform: scale(1.07) translate3d(-0.8%, 0.6%, 0); }
+	/* Gentler drift: the old 1.06→1.14 zoom cropped up to 14% of the frame,
+	   which read as "the image is cut off". Keep the life, show the shot. */
+	0%   { transform: scale(var(--lunara-hero-zoom-start, 1)) translate3d(0, 0, 0); }
+	100% { transform: scale(var(--lunara-hero-zoom-end, 1.05)) translate3d(-0.8%, 0.6%, 0); }
 }
 
 /* Multi-stop dark gradient pulling text legibility from bottom up */
@@ -14886,20 +14906,40 @@ body.home .lunara-cinematic-hero + .lunara-home-section .lunara-home-section-hea
     object-fit: cover;
     /* Bias the crop toward the upper third — faces and subjects live there
        far more often than dead center on cinematic stills. */
-    object-position: center 30%;
-    display: block;
-    transform: scale(1.02);
+	object-position: var(--lunara-hero-focal-x, 50%) var(--lunara-hero-focal-y, 30%);
+	display: block;
+	transform: scale(var(--lunara-hero-zoom-start, 1));
     will-change: transform;
     animation: lunara-cinematic-ken-burns 28s ease-in-out infinite alternate;
+}
+
+/* Art-directed full-frame slides preserve the photograph's complete native
+   composition. The surrounding chamber becomes a quiet cinematic matte
+   instead of enlarging a landscape still to fill an incompatible viewport. */
+.lunara-cinematic-hero-slide.is-full-frame .lunara-cinematic-hero-bg {
+    background: #06101b !important;
+    /* The base background layer carries a legacy 1.06 scale. Reset the
+       parent as well as the image or "full frame" still trims both edges. */
+    transform: none !important;
+    animation: none !important;
+    will-change: auto;
+}
+
+.lunara-cinematic-hero-img.is-full-frame {
+    object-fit: contain !important;
+    object-position: center top !important;
+    animation: none !important;
+    transform: none !important;
+    will-change: auto;
 }
 
 /* Disable Ken-Burns on mobile — saves CPU + battery, no perceptible loss
    on small screens where the motion is barely visible anyway */
 @media (max-width: 900px) {
-    .lunara-cinematic-hero-img {
-        animation: none !important;
-        transform: none !important;
-    }
+	.lunara-cinematic-hero-img {
+		animation: none !important;
+		transform: scale(var(--lunara-hero-zoom-start, 1)) !important;
+	}
     /* Mobile content: true edge-to-edge — drop horizontal padding to 14px */
     .lunara-cinematic-hero-content {
         padding: 0 14px 48px !important;
@@ -15047,6 +15087,15 @@ body.home .lunara-front-page .lunara-review-grid-card.lunara-reveal,
 body.home .lunara-front-page .lunara-journal-home-card.lunara-reveal,
 body.home .lunara-front-page .lunara-poster-card.lunara-reveal,
 body.home .lunara-front-page .lunara-ledger-card.lunara-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+}
+
+body.home .lunara-front-page .lunara-reveal .lunara-home-section-kicker,
+body.home .lunara-front-page .lunara-reveal .lunara-home-pulse-kicker,
+body.home .lunara-front-page .lunara-reveal .lunara-home-section-title,
+body.home .lunara-front-page .lunara-reveal .lunara-home-section-summary {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;
@@ -17212,6 +17261,24 @@ body.post-type-archive-journal .lunara-review-grid-poster {
     to   { transform: scaleY(0); }
 }
 
+/* A one-slide Hero Command opener has no scroll sequence to reveal. Keep the
+   static editorial frame full-bleed and visible at first paint; the monolith
+   letterbox remains available for rotating decks with a real transition. */
+.lunara-cinematic-hero-carousel.is-hero-static {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    visibility: visible !important;
+}
+.lunara-cinematic-hero-carousel.is-hero-static .lunara-cinematic-hero-slide {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+}
+.lunara-cinematic-hero-carousel.is-hero-static .lunara-cinematic-hero-track::before,
+.lunara-cinematic-hero-carousel.is-hero-static .lunara-cinematic-hero-track::after {
+    content: none !important;
+    display: none !important;
+}
+
 /* ============================================================================
    THE "METHOD" FOOTER REVEAL (Design Spec 2.0 §7) — curtain effect.
    lunara-footer-curtain.js arms these classes only on desktop when the
@@ -17552,21 +17619,9 @@ body.lunara-oscars-portal-page .lunara-oscars-portal-hero::after { right: 5%; tr
 }
 
 /* Lights Down — immersive screening mode on single reviews/journal.
-   The chrome dims once the reader is past the hero; a reading-progress
-   hairline tracks the article; --lunara-ambient (sampled from the hero
-   art by lunara-immersive-read.js) tints the hairline and blockquotes. */
-#lunara-read-progress {
-    background: linear-gradient(90deg, var(--lunara-gold, #c9a961), var(--lunara-ambient, var(--lunara-gold-light, #eadbb3)));
-    height: 2px;
-    left: 0;
-    pointer-events: none;
-    position: fixed;
-    top: 0;
-    transform: scaleX(0);
-    transform-origin: 0 50%;
-    width: 100%;
-    z-index: 9950;
-}
+   The chrome dims once the reader is past the hero; --lunara-ambient
+   (sampled from the hero art by lunara-immersive-read.js) tints
+   blockquotes without adding another moving line through the header. */
 #header, .site-footer, #main-container > footer { transition: opacity .55s ease; }
 body.is-lights-down #header,
 body.is-lights-down .site-footer,

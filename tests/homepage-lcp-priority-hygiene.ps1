@@ -23,6 +23,7 @@ function Read-ThemeFile {
 
 $setup = Read-ThemeFile 'inc/setup.php'
 $frontend = Read-ThemeFile 'inc/frontend.php'
+$cinematicHome = Read-ThemeFile 'inc/cinematic-home.php'
 $headerCommand = Read-ThemeFile 'inc/header-command.php'
 $homeSections = Read-ThemeFile 'inc/home-sections.php'
 $reviewRendering = Read-ThemeFile 'inc/review-rendering.php'
@@ -108,12 +109,37 @@ Assert-True ($reviewRendering -match 'lunara_remove_img_attribute\( \$html, ''da
 Assert-True ($reviewRendering -match 'lunara_remove_img_attribute\( \$html, ''data-skip-lazy'' \)') 'Locked lazy Review markup must remove stale optimizer skip flags.'
 
 Assert-True ($frontPage -match '(?s)if \(\s*''hero''\s*===\s*\$lunara_slug\s*\).*?call_user_func\(\s*\$lunara_callback,\s*array\(\s*''first_image_is_lcp''\s*=>\s*false\s*\)') 'The lower Home hero must explicitly opt out of LCP priority.'
+Assert-True ($frontPage -match '\$lunara_front_door\s*=\s*\(string\)\s*lunara_render_home_front_door\(\)') 'Home must capture its active front-door markup before deciding whether a semantic H1 is missing.'
+Assert-True ($frontPage.Contains('$lunara_block_composition      = $lunara_uses_block_composition')) 'Home must capture editable block composition before deciding whether a semantic H1 is missing.'
+Assert-True ($frontPage.Contains('$lunara_heading_parts = array( $lunara_front_door, $lunara_block_composition );')) 'The semantic guard must inspect both front-door and editable block markup.'
+Assert-True ($frontPage -match "class_exists\(\s*'WP_HTML_Tag_Processor'\s*\)") 'Home must use WordPress structured HTML processing when detecting a real H1.'
+Assert-True ($frontPage -match "next_tag\(\s*array\(\s*'tag_name'\s*=>\s*'H1'\s*\)\s*\)") 'The structured Home heading guard must look specifically for an H1 element.'
+Assert-True ($frontPage -match "preg_match\(\s*'/<h1\(\?:\\s\|>\)/i',\s*\`$lunara_heading_part\s*\)") 'Home must retain a compatibility H1 guard for older WordPress versions.'
+Assert-True ($frontPage -match '<h1 class="screen-reader-text lunara-screen-reader-text">') 'The Home fallback H1 must remain geometry-neutral and accessible.'
+Assert-True (([regex]::Matches($frontPage, 'echo \$lunara_front_door')).Count -eq 1) 'Home must emit the captured front-door markup exactly once.'
+Assert-True (([regex]::Matches($frontPage, 'echo \$lunara_block_composition')).Count -eq 1) 'Home must emit captured editable block composition exactly once.'
+$blockCompositionStart = $frontPage.IndexOf('if ( $lunara_uses_block_composition )')
+$rendererMapStart = $frontPage.IndexOf('$lunara_section_renderers = array(')
+$rendererMapEnd = $frontPage.IndexOf('$lunara_render_slugs = array_keys( $lunara_section_renderers );')
+Assert-True ($blockCompositionStart -ge 0) 'Could not locate the editable Home block-composition gate.'
+Assert-True ($rendererMapStart -gt $blockCompositionStart) 'The Customizer renderer map must remain after the editable block-composition gate.'
+Assert-True ($rendererMapEnd -gt $rendererMapStart) 'Could not isolate the Customizer renderer map and single-hero gate.'
+$blockCompositionGate = $frontPage.Substring($blockCompositionStart, $rendererMapStart - $blockCompositionStart)
+$customizerHeroGate = $frontPage.Substring($rendererMapStart, $rendererMapEnd - $rendererMapStart)
+Assert-True ($blockCompositionGate.Contains('echo $lunara_block_composition')) 'Editable block composition must still emit its captured markup.'
+Assert-True ($blockCompositionGate -match 'get_footer\(\);\s*return;') 'Editable block composition must exit before Customizer sections render.'
+Assert-True ($customizerHeroGate.Contains("'hero'           => 'lunara_render_cinematic_hero_carousel'")) 'The legacy hero mapping must remain available when the cinematic front door is absent.'
+Assert-True ($frontPage -match '\$lunara_front_door_has_canonical_hero\s*=\s*''{2}\s*!==\s*\$lunara_front_door\s*&&\s*false\s*!==\s*strpos\(\s*\$lunara_front_door,\s*''data-lunara-home-hero-source=''\s*\)') 'The canonical-hero state must require both nonempty front-door markup and its explicit cinematic source marker.'
+Assert-True ($customizerHeroGate -match 'if \( \$lunara_front_door_has_canonical_hero \)') 'The duplicate-hero guard must reuse the canonical-hero state.'
+Assert-True (([regex]::Matches($customizerHeroGate, "unset\( \`$lunara_section_renderers\['hero'\] \)")).Count -eq 1) 'The duplicate-hero guard must remove the legacy hero exactly once before render order is calculated.'
+Assert-True ($cinematicHome.Contains('data-lunara-home-hero-source="native"')) 'The native cinematic front-door wrapper must retain the duplicate-detection marker.'
+Assert-True ($cinematicHome.Contains('data-lunara-home-hero-source="plugin"')) 'The plugin-backed cinematic front-door wrapper must retain the duplicate-detection marker.'
 Assert-True ($functions -match '(?s)register_block_type\(\s*''lunara/cinematic-hero''.*?if \( is_front_page\(\) \) \{\s*\$attributes\[''first_image_is_lcp''\]\s*=\s*false;') 'The editable Home cinematic-hero block must opt out after the Front Desk has claimed LCP.'
 Assert-True ($functions -match 'function lunara_render_cinematic_hero_slide\( \$data, \$index = 0, \$first_image_is_lcp = true \)') 'Cinematic hero slides must retain a backward-compatible LCP context argument.'
 Assert-True ($functions -match '\$is_priority_image\s*=\s*\$is_first\s*&&\s*\(bool\) \$first_image_is_lcp') 'Only the first slide in a true front-door context may receive high priority.'
 Assert-True ($functions -match 'loading="lazy" decoding="async" fetchpriority="low"') 'Non-LCP cinematic hero images must use native lazy loading at low priority.'
 Assert-True (([regex]::Matches($functions, "array_key_exists\(\s*'first_image_is_lcp'")).Count -eq 2) 'Both static and carousel hero renderers must honor the LCP context flag.'
 Assert-True ($functions -match 'lunara_render_cinematic_hero_slide\( \$slide_data, \$slide_index, \$first_image_is_lcp \)') 'The carousel must pass its LCP context into every slide renderer.'
-Assert-True ($style -match 'Version:\s*3\.2\.13') 'Theme version must be 3.2.13 for the late Oscars CSS route scope.'
+Assert-True ($style -match 'Version:\s*3\.2\.34') 'Theme version must be 3.2.34 for the HTTP hero hint and lazy Splide gate.'
 
 Write-Host 'Homepage LCP priority hygiene contract passed.'

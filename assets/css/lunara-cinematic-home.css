@@ -89,15 +89,17 @@ body.home .lunara-journal-home-card,
 body.home .lunara-review-grid-card,
 body.home .lunara-oscar-pick-card,
 body.home .lunara-oscar-fact-card {
-	transform: translate3d(0, 0, 0);
+	opacity: 1;
+	transform: none;
+	will-change: auto;
 }
 
 body.home .lunara-journal-home-card.is-cinematic-pending,
 body.home .lunara-review-grid-card.is-cinematic-pending,
 body.home .lunara-oscar-pick-card.is-cinematic-pending,
 body.home .lunara-oscar-fact-card.is-cinematic-pending {
-	opacity: 0;
-	transform: translate3d(0, 22px, 0);
+	opacity: 1;
+	transform: none;
 }
 
 body.home .lunara-journal-home-card.is-cinematic-visible,
@@ -105,29 +107,8 @@ body.home .lunara-review-grid-card.is-cinematic-visible,
 body.home .lunara-oscar-pick-card.is-cinematic-visible,
 body.home .lunara-oscar-fact-card.is-cinematic-visible {
 	opacity: 1;
-	transform: translate3d(0, 0, 0);
-	transition: opacity .64s ease, transform .72s cubic-bezier(.2, .7, .2, 1);
-}
-
-body.home .lunara-journal-home-card.is-cinematic-visible:nth-child(2),
-body.home .lunara-review-grid-card.is-cinematic-visible:nth-child(2),
-body.home .lunara-oscar-pick-card.is-cinematic-visible:nth-child(2),
-body.home .lunara-oscar-fact-card.is-cinematic-visible:nth-child(2) {
-	transition-delay: .08s;
-}
-
-body.home .lunara-journal-home-card.is-cinematic-visible:nth-child(3),
-body.home .lunara-review-grid-card.is-cinematic-visible:nth-child(3),
-body.home .lunara-oscar-pick-card.is-cinematic-visible:nth-child(3),
-body.home .lunara-oscar-fact-card.is-cinematic-visible:nth-child(3) {
-	transition-delay: .14s;
-}
-
-body.home .lunara-journal-home-card.is-cinematic-visible:nth-child(4),
-body.home .lunara-review-grid-card.is-cinematic-visible:nth-child(4),
-body.home .lunara-oscar-pick-card.is-cinematic-visible:nth-child(4),
-body.home .lunara-oscar-fact-card.is-cinematic-visible:nth-child(4) {
-	transition-delay: .2s;
+	transform: none;
+	transition: none;
 }
 
 body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-link,
@@ -159,6 +140,11 @@ body.home .lunara-journal-home-deskbar {
 	body.home .lunara-home-plugin-hero-frame :is(h1, h2, h3, p) {
 		max-width: min(100%, 22rem);
 	}
+
+}
+
+body.home .lunara-pairing-desk-section .lunara-pair-card {
+	will-change: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {

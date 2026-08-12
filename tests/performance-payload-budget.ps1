@@ -31,6 +31,7 @@ $publicGuardrails = Read-ThemeFile 'assets/css/lunara-public-guardrails.css'
 $homeModules = Read-ThemeFile 'assets/css/lunara-home-modules.css'
 $lateOscars = Read-ThemeFile 'assets/css/lunara-oscars-late-guardrails.css'
 $reviewComponents = Read-ThemeFile 'assets/css/lunara-review-components.css'
+$reviewSingle = Read-ThemeFile 'assets/css/lunara-review-single.css'
 $publicRuntime = Read-ThemeFile 'assets/js/lunara-public-runtime.js'
 $scrollCarousel = Read-ThemeFile 'assets/js/lunara-scroll-carousel.js'
 $homeRuntime = Read-ThemeFile 'assets/js/lunara-home-runtime.js'
@@ -49,6 +50,7 @@ $publicGuardrailBytes = [Text.Encoding]::UTF8.GetByteCount($publicGuardrails)
 $homeModuleBytes = [Text.Encoding]::UTF8.GetByteCount($homeModules)
 $lateOscarsBytes = [Text.Encoding]::UTF8.GetByteCount($lateOscars)
 $reviewComponentBytes = [Text.Encoding]::UTF8.GetByteCount($reviewComponents)
+$reviewSingleBytes = [Text.Encoding]::UTF8.GetByteCount($reviewSingle)
 $publicRuntimeBytes = [Text.Encoding]::UTF8.GetByteCount($publicRuntime)
 $scrollCarouselBytes = [Text.Encoding]::UTF8.GetByteCount($scrollCarousel)
 $homeRuntimeBytes = [Text.Encoding]::UTF8.GetByteCount($homeRuntime)
@@ -59,6 +61,7 @@ Assert-True ($publicGuardrailBytes -le 61440) "Public guardrail CSS exceeds its 
 Assert-True ($homeModuleBytes -le 61440) "Homepage module CSS exceeds its 60 KB budget: $homeModuleBytes bytes."
 Assert-True ($lateOscarsBytes -le 20480) "Late Oscars CSS exceeds its 20 KB budget: $lateOscarsBytes bytes."
 Assert-True ($reviewComponentBytes -le 20480) "Review component CSS exceeds its 20 KB budget: $reviewComponentBytes bytes."
+Assert-True ($reviewSingleBytes -le 77824) "Review single CSS exceeds its 76 KB transition budget: $reviewSingleBytes bytes."
 Assert-True ($publicRuntimeBytes -le 20480) "Public runtime exceeds its 20 KB budget: $publicRuntimeBytes bytes."
 Assert-True ($scrollCarouselBytes -le 10240) "Scroll carousel runtime exceeds its 10 KB budget: $scrollCarouselBytes bytes."
 Assert-True ($homeRuntimeBytes -le 10240) "Home runtime exceeds its 10 KB budget: $homeRuntimeBytes bytes."
@@ -68,11 +71,13 @@ Assert-True ($publicGuardrails -notmatch '<\?php') 'Public guardrails must remai
 Assert-True ($homeModules -notmatch '<\?php') 'Homepage modules must remain static CSS.'
 Assert-True ($lateOscars -notmatch '<\?php') 'Late Oscars guardrails must remain static CSS.'
 Assert-True ($reviewComponents -notmatch '<\?php') 'Review components must remain static CSS.'
+Assert-True ($reviewSingle -notmatch '<\?php|<style|</style>') 'Review single presentation must remain static cacheable CSS.'
 Assert-True ($shell -match 'body\.home \.lunara-front-page > \.lunara-home-section') 'The cacheable shell stylesheet appears incomplete.'
 Assert-True ($publicGuardrails -match 'body\.home \.lunara-journal-home-grid') 'The public guardrail stylesheet appears incomplete.'
 Assert-True ($homeModules -match 'body\.home \.lunara-oscar-facts-section') 'The homepage module stylesheet appears incomplete.'
 Assert-True ($lateOscars -match 'body\.aat-shell-page \.aat-container') 'The late Oscars stylesheet appears incomplete.'
 Assert-True ($reviewComponents -match 'lunara-pair-cards') 'The review component stylesheet appears incomplete.'
+Assert-True ($reviewSingle -match 'lunara-review-debrief-polish-css') 'The Review single asset is missing the Debrief cascade marker.'
 Assert-True ($setup -match "lunara_resolve_theme_asset\(\s*'assets/css/lunara-shell\.css'") 'The split loader must enqueue the cacheable shell stylesheet.'
 Assert-True ($fallback -match "lunara_resolve_theme_asset\(\s*'assets/css/lunara-shell\.css'") 'The fallback loader must enqueue the cacheable shell stylesheet.'
 Assert-True ($setup -match "add_action\(\s*'wp_enqueue_scripts'\s*,\s*'lunara_enqueue_shell_styles'\s*,\s*100\s*\)") 'The cacheable shell must load after route-specific theme styles.'
@@ -150,6 +155,7 @@ Assert-True ($frontend -match "assets/js/lunara-public-runtime\.js") 'The public
 Assert-True ($frontend -match "assets/js/lunara-scroll-carousel\.js") 'The route-scoped carousel runtime must be enqueued.'
 Assert-True ($frontend -match "assets/js/lunara-home-runtime\.js") 'The Home runtime must be enqueued.'
 Assert-True ($frontend -match "assets/css/lunara-review-components\.css") 'The route-scoped Review component stylesheet must be enqueued.'
+Assert-True ($frontend -match "assets/css/lunara-review-single\.css") 'The route-scoped Review single stylesheet must be enqueued.'
 Assert-True ($publicRuntime -match "addEventListener\('error',\s*markLoaded") 'The public image runtime must reveal failed images instead of leaving invisible card chambers.'
 Assert-True ($publicRuntime -match 'setTimeout\(markLoaded,\s*1800\)') 'The public image runtime must retain its bounded visibility fallback.'
 Assert-True ($publicRuntime -notmatch 'img\.src\s*=') 'The public runtime must leave lazy image URL promotion to WordPress.com rather than trusting DOM data attributes.'
@@ -168,6 +174,9 @@ Assert-True ($fallback -match 'id="lunara-grain"') 'The fallback loader must emi
 Assert-True (($setup + $fallback) -notmatch 'lunara-film-grain') 'The unused legacy grain node must stay removed.'
 Assert-True ($style -match 'background-image:\s*url\("assets/images/lunara-grain\.svg"\)') 'Room Tone CSS must use the cacheable grain asset.'
 Assert-True ($grain -match '<feTurbulence') 'The cacheable grain asset appears incomplete.'
-Assert-True ($style -match 'Version:\s*3\.2\.13') 'Theme version must be 3.2.13 for the late Oscars CSS route scope.'
+Assert-True ($frontend -match 'function\s+lunara_rocket_preserve_jetpack_css_mime') 'The WordPress.com CSS MIME compatibility guard must remain registered.'
+Assert-True ($frontend -match "add_filter\(\s*'rocket_lazyload_excluded_src'\s*,\s*'lunara_rocket_preserve_jetpack_css_mime'\s*\)") 'The compatibility guard must use WP Rocket''s supported LazyLoad exclusion filter.'
+Assert-True ($frontend -match '\$excluded_src\[\]\s*=\s*''/_jb_static/''') 'Jetpack aggregate stylesheets must stay out of extensionless background-CSS generation.'
+Assert-True ($style -match 'Version:\s*3\.2\.34') 'Theme version must be 3.2.34 for the HTTP hero hint and lazy Splide gate.'
 
-Write-Host "Performance payload budget contract passed (critical: $criticalBytes; shell: $shellBytes; public: $publicGuardrailBytes; home: $homeModuleBytes; review: $reviewComponentBytes; public JS: $publicRuntimeBytes; carousel JS: $scrollCarouselBytes; home JS: $homeRuntimeBytes; Oscars: $lateOscarsBytes; dynamic: $dynamicSignatureBytes; grain: $grainBytes bytes)."
+Write-Host "Performance payload budget contract passed (critical: $criticalBytes; shell: $shellBytes; public: $publicGuardrailBytes; home: $homeModuleBytes; review components: $reviewComponentBytes; review single: $reviewSingleBytes; public JS: $publicRuntimeBytes; carousel JS: $scrollCarouselBytes; home JS: $homeRuntimeBytes; Oscars: $lateOscarsBytes; dynamic: $dynamicSignatureBytes; grain: $grainBytes bytes)."

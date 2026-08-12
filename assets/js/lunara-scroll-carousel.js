@@ -138,6 +138,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 start();
             }
-            syncDots();
+            // The first dot is already marked active in server-rendered HTML.
+            // Defer geometry reads until the rail actually scrolls or a reader
+            // uses a control; this keeps below-fold carousels out of first paint.
         });
     });

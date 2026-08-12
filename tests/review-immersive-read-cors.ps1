@@ -3,6 +3,8 @@ $ErrorActionPreference = 'Stop'
 $themeRoot = Split-Path -Parent $PSScriptRoot
 $scriptPath = Join-Path $themeRoot 'assets/js/lunara-immersive-read.js'
 $stylePath = Join-Path $themeRoot 'style.css'
+$runtimePath = Join-Path $themeRoot 'assets/js/lunara-public-runtime.js'
+$guardrailsPath = Join-Path $themeRoot 'assets/css/lunara-public-guardrails.css'
 
 if (-not (Test-Path -LiteralPath $scriptPath)) {
     throw 'Missing Review immersive-read runtime.'
@@ -10,6 +12,21 @@ if (-not (Test-Path -LiteralPath $scriptPath)) {
 
 $script = Get-Content -Raw -LiteralPath $scriptPath
 $style = Get-Content -Raw -LiteralPath $stylePath
+$runtime = Get-Content -Raw -LiteralPath $runtimePath
+$guardrails = Get-Content -Raw -LiteralPath $guardrailsPath
+
+if ($script -match "bar\.id\s*=\s*'lunara-read-progress'" -or $style -match '#lunara-read-progress') {
+    throw 'The retired immersive reading-progress line must not return.'
+}
+if ($runtime -match "line\.className\s*=\s*'lunara-reading-hairline'" -or $guardrails -match '\.lunara-reading-hairline') {
+    throw 'The duplicate public reading-progress line must not return.'
+}
+if ($script -notmatch "body\.classList\.toggle\('is-lights-down',\s*above\)" -or $style -notmatch 'body\.is-lights-down') {
+    throw 'Lights Down must remain available after the progress lines are retired.'
+}
+if ($script -notmatch "style\.setProperty\(\s*'--lunara-ambient'") {
+    throw 'The hero-derived ambient color must remain available.'
+}
 
 if ($script -notmatch 'var ambientSampleUrl\s*=\s*function') {
     throw 'The Review ambient sampler must resolve a canvas-safe URL before loading.'
@@ -34,8 +51,8 @@ if ($script -notmatch 'sample\.src\s*=\s*sampleUrl') {
 if ($script -match 'sample\.src\s*=\s*img\.(?:currentSrc|src)') {
     throw 'The ambient sampler must not re-fetch an unapproved cross-origin image directly.'
 }
-if ($style -notmatch 'Version:\s*3\.2\.13') {
-    throw 'Theme version must be 3.2.13 for the late Oscars CSS route scope.'
+if ($style -notmatch 'Version:\s*3\.2\.34') {
+    throw 'Theme version must be 3.2.34 for the HTTP hero hint and lazy Splide gate.'
 }
 
 Write-Host 'Review immersive-read CORS contract passed.'

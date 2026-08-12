@@ -65,7 +65,7 @@ if ( ! function_exists( 'lunara_hero_command_sanitize' ) ) {
 	 * Normalize a raw settings payload into the canonical shape.
 	 *
 	 * @param mixed $raw Anything claiming to be Hero Command settings.
-	 * @return array{enabled:int,overlay:int,slides:array<int,array{post_id:int,kicker:string,cta:string,overlay:int}>}
+	 * @return array{enabled:int,overlay:int,slides:array<int,array{post_id:int,kicker:string,cta:string,overlay:int,focal_x:int,focal_y:int,zoom:int,fit:string}>}
 	 */
 	function lunara_hero_command_sanitize( $raw ) {
 		$defaults = lunara_hero_command_default_settings();
@@ -106,6 +106,10 @@ if ( ! function_exists( 'lunara_hero_command_sanitize' ) ) {
 
 				$slide_overlay = isset( $entry['overlay'] ) ? (int) $entry['overlay'] : 0;
 				$slide_overlay = $slide_overlay > 0 ? max( 20, min( 100, $slide_overlay ) ) : 0;
+				$focal_x      = isset( $entry['focal_x'] ) ? (int) $entry['focal_x'] : 50;
+				$focal_y      = isset( $entry['focal_y'] ) ? (int) $entry['focal_y'] : 30;
+				$zoom         = isset( $entry['zoom'] ) ? (int) $entry['zoom'] : 100;
+				$fit          = isset( $entry['fit'] ) && 'full' === sanitize_key( (string) $entry['fit'] ) ? 'full' : 'cover';
 
 				$seen_ids[ $post_id ] = true;
 				$clean['slides'][]    = array(
@@ -113,6 +117,10 @@ if ( ! function_exists( 'lunara_hero_command_sanitize' ) ) {
 					'kicker'  => mb_substr( sanitize_text_field( (string) ( $entry['kicker'] ?? '' ) ), 0, 60 ),
 					'cta'     => mb_substr( sanitize_text_field( (string) ( $entry['cta'] ?? '' ) ), 0, 40 ),
 					'overlay' => $slide_overlay,
+					'focal_x' => max( 0, min( 100, $focal_x ) ),
+					'focal_y' => max( 0, min( 100, $focal_y ) ),
+					'zoom'    => max( 100, min( 112, $zoom ) ),
+					'fit'     => $fit,
 				);
 			}
 		}
@@ -170,6 +178,10 @@ if ( ! function_exists( 'lunara_hero_command_slides' ) ) {
 			if ( (int) $entry['overlay'] > 0 ) {
 				$slide['overlay'] = (int) $entry['overlay'];
 			}
+			$slide['focal_x'] = (int) $entry['focal_x'];
+			$slide['focal_y'] = (int) $entry['focal_y'];
+			$slide['zoom']    = (int) $entry['zoom'];
+			$slide['fit']     = (string) $entry['fit'];
 			$cache[] = $slide;
 		}
 
@@ -288,14 +300,16 @@ if ( ! function_exists( 'lunara_hero_command_save' ) ) {
 		check_admin_referer( 'lunara_save_hero_command', 'lunara_hero_command_nonce' );
 
 		$raw = array(
-			'enabled' => isset( $_POST['lunara_hero_command_enabled'] ) ? 1 : 0,
-			'overlay' => isset( $_POST['lunara_hero_command_overlay'] ) ? (int) $_POST['lunara_hero_command_overlay'] : 100,
-			'slides'  => isset( $_POST['lunara_hero_command_slides'] ) && is_array( $_POST['lunara_hero_command_slides'] )
+			'enabled'          => isset( $_POST['lunara_hero_command_enabled'] ) ? 1 : 0,
+			'cinematic_opener' => isset( $_POST['lunara_hero_command_cinematic_opener'] ) ? 1 : 0,
+			'overlay'          => isset( $_POST['lunara_hero_command_overlay'] ) ? (int) $_POST['lunara_hero_command_overlay'] : 100,
+			'slides'           => isset( $_POST['lunara_hero_command_slides'] ) && is_array( $_POST['lunara_hero_command_slides'] )
 				? array_values( wp_unslash( $_POST['lunara_hero_command_slides'] ) ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized field-by-field below.
 				: array(),
 		);
 
 		update_option( 'lunara_hero_command', lunara_hero_command_sanitize( $raw ), true );
+		set_theme_mod( 'lunara_home_cinematic_front_door_enabled', ! empty( $raw['cinematic_opener'] ) ? 1 : 0 );
 
 		// The hero is the homepage LCP band — make the change visible now.
 		if ( function_exists( 'rocket_clean_home' ) ) {
@@ -329,9 +343,12 @@ if ( ! function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) {
 			return;
 		}
 
-		$settings   = lunara_hero_command_settings();
-		$deck       = $settings['slides'];
-		$live_count = count( lunara_hero_command_slides() );
+		$settings                 = lunara_hero_command_settings();
+		$deck                     = $settings['slides'];
+		$live_count               = count( lunara_hero_command_slides() );
+		$cinematic_opener_enabled = function_exists( 'lunara_home_cinematic_front_door_is_enabled' )
+			? lunara_home_cinematic_front_door_is_enabled()
+			: (bool) get_theme_mod( 'lunara_home_cinematic_front_door_enabled', false );
 		?>
 		<section id="lunara-theme-studio-hero-command" class="lunara-control-desk-homepage-studio">
 			<div class="lunara-control-desk-panel-header">
@@ -376,6 +393,14 @@ if ( ! function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) {
 							</span>
 						</label>
 
+						<label class="lunara-hero-command-enable <?php echo $cinematic_opener_enabled ? 'is-enabled' : 'is-disabled'; ?>">
+							<input type="checkbox" name="lunara_hero_command_cinematic_opener" value="1" <?php checked( $cinematic_opener_enabled ); ?> />
+							<span>
+								<strong><?php esc_html_e( 'Use Cinematic Hero as homepage opener', 'lunara-film' ); ?></strong>
+								<small><?php esc_html_e( 'Make the full-bleed cinematic hero the first viewport. Leave this off to retain the reversible fallback during staging.', 'lunara-film' ); ?></small>
+							</span>
+						</label>
+
 						<label class="lunara-control-desk-homepage-number" data-lunara-brand-number-control>
 							<span>
 								<strong><?php esc_html_e( 'Overlay intensity', 'lunara-film' ); ?></strong>
@@ -395,7 +420,7 @@ if ( ! function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) {
 						<div>
 							<p class="lunara-control-desk-kicker"><?php esc_html_e( 'The Deck', 'lunara-film' ); ?></p>
 							<h3><?php esc_html_e( 'Curated slides, top card leads', 'lunara-film' ); ?></h3>
-							<p class="lunara-control-desk-subtle"><?php esc_html_e( 'Blank kicker or CTA falls back to the smart per-type default. Per-slide overlay of 0 inherits the global dial. A slide without a wide (landscape) image waits safely off-air until its artwork lands.', 'lunara-film' ); ?></p>
+							<p class="lunara-control-desk-subtle"><?php esc_html_e( 'Blank kicker or CTA falls back to the smart per-type default. Full frame preserves the complete shot without cropping; Full bleed fills the chamber and uses Focal X/Y plus Zoom for art direction.', 'lunara-film' ); ?></p>
 						</div>
 					</div>
 
@@ -447,6 +472,25 @@ if ( ! function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) {
 										<span><?php esc_html_e( 'Overlay', 'lunara-film' ); ?></span>
 										<input type="number" name="lunara_hero_command_slides[<?php echo (int) $slide_index; ?>][overlay]" value="<?php echo esc_attr( $entry['overlay'] > 0 ? $entry['overlay'] : '' ); ?>" min="20" max="100" step="5" placeholder="<?php esc_attr_e( 'Global', 'lunara-film' ); ?>" data-hero-field="overlay" />
 									</label>
+									<label>
+										<span><?php esc_html_e( 'Focal X', 'lunara-film' ); ?></span>
+										<input type="number" name="lunara_hero_command_slides[<?php echo (int) $slide_index; ?>][focal_x]" value="<?php echo esc_attr( $entry['focal_x'] ); ?>" min="0" max="100" step="1" data-hero-field="focal_x" />
+									</label>
+									<label>
+										<span><?php esc_html_e( 'Focal Y', 'lunara-film' ); ?></span>
+										<input type="number" name="lunara_hero_command_slides[<?php echo (int) $slide_index; ?>][focal_y]" value="<?php echo esc_attr( $entry['focal_y'] ); ?>" min="0" max="100" step="1" data-hero-field="focal_y" />
+									</label>
+									<label>
+										<span><?php esc_html_e( 'Zoom %', 'lunara-film' ); ?></span>
+										<input type="number" name="lunara_hero_command_slides[<?php echo (int) $slide_index; ?>][zoom]" value="<?php echo esc_attr( $entry['zoom'] ); ?>" min="100" max="112" step="1" data-hero-field="zoom" />
+									</label>
+									<label>
+										<span><?php esc_html_e( 'Frame', 'lunara-film' ); ?></span>
+										<select name="lunara_hero_command_slides[<?php echo (int) $slide_index; ?>][fit]" data-hero-field="fit">
+											<option value="cover" <?php selected( $entry['fit'], 'cover' ); ?>><?php esc_html_e( 'Full bleed crop', 'lunara-film' ); ?></option>
+											<option value="full" <?php selected( $entry['fit'], 'full' ); ?>><?php esc_html_e( 'Full frame (no crop)', 'lunara-film' ); ?></option>
+										</select>
+									</label>
 								</div>
 							</li>
 						<?php endforeach; ?>
@@ -491,10 +535,11 @@ if ( ! function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) {
 				.lunara-hero-command-pill.is-live { background: #edfaef; color: #007017; border: 1px solid #68de7c; }
 				.lunara-hero-command-pill.is-waiting { background: #fcf9e8; color: #996800; border: 1px solid #f0c33c; }
 				.lunara-hero-command-row-actions { flex: 0 0 auto; display: inline-flex; gap: 4px; }
-				.lunara-hero-command-row-fields { display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 10px; margin-top: 10px; }
+				.lunara-hero-command-row-fields { display: grid; grid-template-columns: 2fr 2fr repeat(4, minmax(82px, .8fr)) minmax(150px, 1.2fr); gap: 10px; margin-top: 10px; }
+				@media (max-width: 1200px) { .lunara-hero-command-row-fields { grid-template-columns: repeat(3, 1fr); } }
 				@media (max-width: 900px) { .lunara-hero-command-row-fields { grid-template-columns: 1fr; } }
 				.lunara-hero-command-row-fields label span { display: block; font-size: 11px; font-weight: 600; color: #646970; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
-				.lunara-hero-command-row-fields input { width: 100%; }
+				.lunara-hero-command-row-fields input, .lunara-hero-command-row-fields select { width: 100%; }
 				.lunara-hero-command-empty { color: #646970; font-style: italic; }
 				.lunara-hero-command-add { margin-top: 16px; position: relative; }
 				.lunara-hero-command-add label { display: block; margin-bottom: 4px; }
@@ -530,6 +575,12 @@ if ( ! function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) {
 					kicker:  <?php echo wp_json_encode( __( 'Kicker', 'lunara-film' ) ); ?>,
 					cta:     <?php echo wp_json_encode( __( 'Call to action', 'lunara-film' ) ); ?>,
 					overlay: <?php echo wp_json_encode( __( 'Overlay', 'lunara-film' ) ); ?>,
+					focalX:  <?php echo wp_json_encode( __( 'Focal X', 'lunara-film' ) ); ?>,
+					focalY:  <?php echo wp_json_encode( __( 'Focal Y', 'lunara-film' ) ); ?>,
+					zoom:    <?php echo wp_json_encode( __( 'Zoom %', 'lunara-film' ) ); ?>,
+					frame:   <?php echo wp_json_encode( __( 'Frame', 'lunara-film' ) ); ?>,
+					cover:   <?php echo wp_json_encode( __( 'Full bleed crop', 'lunara-film' ) ); ?>,
+					full:    <?php echo wp_json_encode( __( 'Full frame (no crop)', 'lunara-film' ) ); ?>,
 					global:  <?php echo wp_json_encode( __( 'Global', 'lunara-film' ) ); ?>,
 					smart:   <?php echo wp_json_encode( __( 'Smart default', 'lunara-film' ) ); ?>,
 					remove:  <?php echo wp_json_encode( __( 'Remove', 'lunara-film' ) ); ?>
@@ -570,6 +621,23 @@ if ( ! function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) {
 					if (opts.className) { label.className = opts.className; }
 					label.appendChild(span);
 					label.appendChild(input);
+					return label;
+				}
+
+				function makeSelectField(labelText, field, options) {
+					var label = document.createElement('label');
+					var span  = document.createElement('span');
+					var select = document.createElement('select');
+					span.textContent = labelText;
+					select.setAttribute('data-hero-field', field);
+					options.forEach(function (item) {
+						var option = document.createElement('option');
+						option.value = item[0];
+						option.textContent = item[1];
+						select.appendChild(option);
+					});
+					label.appendChild(span);
+					label.appendChild(select);
 					return label;
 				}
 
@@ -630,6 +698,16 @@ if ( ! function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) {
 					fields.appendChild(makeField(i18n.kicker, 'kicker', { maxlength: 60, placeholder: i18n.smart }));
 					fields.appendChild(makeField(i18n.cta, 'cta', { maxlength: 40, placeholder: i18n.smart }));
 					fields.appendChild(makeField(i18n.overlay, 'overlay', { type: 'number', min: 20, max: 100, step: 5, placeholder: i18n.global, className: 'lunara-hero-command-overlay-field' }));
+					var focalX = makeField(i18n.focalX, 'focal_x', { type: 'number', min: 0, max: 100, step: 1 });
+					var focalY = makeField(i18n.focalY, 'focal_y', { type: 'number', min: 0, max: 100, step: 1 });
+					var zoom   = makeField(i18n.zoom, 'zoom', { type: 'number', min: 100, max: 112, step: 1 });
+					focalX.querySelector('input').value = '50';
+					focalY.querySelector('input').value = '30';
+					zoom.querySelector('input').value = '100';
+					fields.appendChild(focalX);
+					fields.appendChild(focalY);
+					fields.appendChild(zoom);
+					fields.appendChild(makeSelectField(i18n.frame, 'fit', [['cover', i18n.cover], ['full', i18n.full]]));
 					row.appendChild(fields);
 
 					deck.appendChild(row);

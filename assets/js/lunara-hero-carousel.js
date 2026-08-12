@@ -44,8 +44,10 @@
 
 			var slideCount = root.querySelectorAll('.splide__slide').length;
 			if (slideCount < 2) {
-				// Nothing to rotate — leave the single slide as static markup.
-				root.classList.add('is-hero-mounted', 'is-hero-static');
+				// Nothing to rotate — leave the single slide as static markup. Splide
+				// keeps .splide roots hidden until is-initialized/is-rendered, so
+				// release that guard explicitly when no mount is needed.
+				root.classList.add('is-hero-mounted', 'is-hero-static', 'is-rendered');
 				return;
 			}
 

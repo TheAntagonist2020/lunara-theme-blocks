@@ -6,6 +6,100 @@
     --lcd-bg: #ffffff;
 }
 
+/* Journal Automation is admin-only and adds no public-site assets. */
+.lunara-control-desk-automation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin: 18px 0;
+}
+
+.lunara-control-desk-automation-steps {
+    display: grid;
+    gap: 14px;
+    margin: 18px 0;
+    padding-left: 24px;
+}
+
+.lunara-control-desk-automation-steps li {
+    padding-left: 6px;
+}
+
+.lunara-control-desk-automation-steps strong,
+.lunara-control-desk-automation-steps span {
+    display: block;
+}
+
+.lunara-control-desk-automation-steps span {
+    color: var(--lcd-muted, #64748b);
+    margin-top: 4px;
+}
+
+.lunara-control-desk-automation-workflows {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.lunara-control-desk-automation-workflow {
+    border: 1px solid #dcdcde;
+    border-radius: 12px;
+    padding: 16px;
+    background: #fff;
+}
+
+.lunara-control-desk-automation-workflow.is-ready {
+    border-color: #77a464;
+    box-shadow: inset 3px 0 0 #77a464;
+}
+
+.lunara-control-desk-automation-workflow.is-pending {
+    box-shadow: inset 3px 0 0 #c9a961;
+}
+
+.lunara-control-desk-automation-workflow > span {
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+}
+
+.lunara-control-desk-automation-workflow h4 {
+    margin: 8px 0;
+    font-size: 18px;
+}
+
+.lunara-control-desk-automation-endpoints {
+    display: grid;
+    gap: 12px;
+}
+
+.lunara-control-desk-automation-endpoints label,
+.lunara-control-desk-automation-endpoints span {
+    display: block;
+}
+
+.lunara-control-desk-automation-endpoints span {
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.lunara-control-desk-automation-endpoints input {
+    width: 100%;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.lunara-control-desk-automation-guardrail {
+    border-left: 4px solid #c9a961;
+}
+
+@media (max-width: 1100px) {
+    .lunara-control-desk-automation-grid,
+    .lunara-control-desk-automation-workflows {
+        grid-template-columns: 1fr;
+    }
+}
+
 .lunara-control-desk-hero,
 .lunara-control-desk-panel,
 .lunara-control-desk-stats > div {
