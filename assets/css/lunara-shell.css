@@ -22,6 +22,15 @@ body.home .lunara-front-page .lunara-ledger-card.lunara-reveal {
     transition: none !important;
 }
 
+/* Mobile CLS gate: the decorative Pairing Desk backdrop previously occupied
+ * the viewport before settling below the fold. The section's atmospheric
+ * gradient remains; only the non-content backdrop is removed on phones. */
+@media (max-width: 820px) {
+    body.home .lunara-pairing-desk-backdrop {
+        display: none !important;
+    }
+}
+
 body.post-type-archive-review #main-container > main#main,
 body.post-type-archive-journal #main-container > main#main {
     width: 100% !important;

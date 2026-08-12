@@ -25,7 +25,7 @@ $style = Read-ThemeFile 'style.css'
 $setup = Read-ThemeFile 'inc/setup.php'
 $homeModules = Read-ThemeFile 'assets/css/lunara-home-modules.css'
 
-Assert-True ($style -match 'Version:\s*3\.2\.34') 'Theme version must preserve annotated homepage density in Theme 3.2.34.'
+Assert-True ($style -match 'Version:\s*3\.2\.35') 'Theme version must preserve annotated homepage density in Theme 3.2.35.'
 Assert-True ($setup -match "assets/css/lunara-home-modules\.css") 'The annotated homepage treatment must remain in the cacheable route stylesheet.'
 Assert-True ($homeModules -match 'lunara-home-annotated-density-css') 'The annotated homepage density block must retain its named asset marker.'
 
