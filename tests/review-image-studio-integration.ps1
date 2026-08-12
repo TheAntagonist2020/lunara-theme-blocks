@@ -14,7 +14,7 @@ function Assert-True {
     }
 }
 
-Assert-True ($style -match 'Version:\s*3\.2\.34') 'Theme must identify the HTTP hero hint and lazy Splide gate.'
+Assert-True ($style -match 'Version:\s*3\.2\.35') 'Theme must identify the mobile CLS gate.'
 Assert-True ($single -match "get_mode\(\s*\`$post_id,\s*'hero_banner'\s*\)") 'Single Review must read the explicit hero mode.'
 Assert-True ($single -match "'off'\s*!==\s*\`$hero_image_mode") 'Off mode must suppress the Featured Image hero fallback.'
 Assert-True ($rendering -match "resolve_slot\(\s*\`$post_id,\s*'card'\s*\)") 'Review cards must resolve the shared Core image contract.'
