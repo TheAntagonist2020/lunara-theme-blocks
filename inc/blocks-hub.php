@@ -28,10 +28,15 @@ if ( ! function_exists( 'lunara_blocks_hub_enqueue_editor' ) ) {
 			return;
 		}
 
+		$dependencies = array( 'wp-plugins', 'wp-edit-post', 'wp-editor', 'wp-components', 'wp-element', 'wp-blocks', 'wp-data', 'wp-i18n' );
+		if ( function_exists( 'wp_script_is' ) && wp_script_is( 'lunara-dispatch-blocks', 'registered' ) ) {
+			$dependencies[] = 'lunara-dispatch-blocks';
+		}
+
 		wp_enqueue_script(
 			'lunara-blocks-hub',
 			$asset['uri'],
-			array( 'wp-plugins', 'wp-edit-post', 'wp-editor', 'wp-components', 'wp-element', 'wp-blocks', 'wp-data', 'wp-i18n' ),
+			$dependencies,
 			function_exists( 'lunara_theme_asset_version' ) ? lunara_theme_asset_version( $asset['path'] ) : null,
 			true
 		);
@@ -57,7 +62,8 @@ if ( ! function_exists( 'lunara_blocks_hub_register_patterns' ) ) {
 			return;
 		}
 
-		$registry = WP_Block_Patterns_Registry::get_instance();
+		$registry       = WP_Block_Patterns_Registry::get_instance();
+		$block_registry = class_exists( 'WP_Block_Type_Registry' ) ? WP_Block_Type_Registry::get_instance() : null;
 		$patterns = array(
 			'lunara/starter-reviews-grid' => array(
 				'title'       => __( 'Reviews Grid — Latest', 'lunara-film' ),
@@ -123,6 +129,38 @@ PATTERN,
 				'content'     => '<!-- wp:lunara/pairing-desk /-->',
 			),
 		);
+
+		$dispatch_patterns = array(
+			'lunara/starter-dispatch-journal-feed' => array(
+				'block'       => 'lunara-dispatch/journal-feed',
+				'title'       => __( 'Journal Feed — Latest', 'lunara-film' ),
+				'description' => __( 'A query-driven six-story Journal grid that updates as entries are published.', 'lunara-film' ),
+				'keywords'    => array( 'journal', 'dispatch', 'feed' ),
+				'content'     => '<!-- wp:lunara-dispatch/journal-feed {"count":6,"layout":"grid","showImage":true,"showExcerpt":true,"excludeArchive":true} /-->',
+			),
+			'lunara/starter-dispatch-journal-spotlight' => array(
+				'block'       => 'lunara-dispatch/journal-spotlight',
+				'title'       => __( 'Journal Spotlight — Latest', 'lunara-film' ),
+				'description' => __( 'A query-driven latest-story spotlight with three supporting Journal entries.', 'lunara-film' ),
+				'keywords'    => array( 'journal', 'dispatch', 'spotlight' ),
+				'content'     => '<!-- wp:lunara-dispatch/journal-spotlight {"count":4,"showImage":true,"showExcerpt":true,"excludeArchive":true} /-->',
+			),
+			'lunara/starter-dispatch-journal-lanes' => array(
+				'block'       => 'lunara-dispatch/journal-lanes',
+				'title'       => __( 'Journal Lanes', 'lunara-film' ),
+				'description' => __( 'A query-driven directory of Journal types with live entry counts.', 'lunara-film' ),
+				'keywords'    => array( 'journal', 'dispatch', 'lanes' ),
+				'content'     => '<!-- wp:lunara-dispatch/journal-lanes {"showCounts":true,"hideEmpty":false} /-->',
+			),
+		);
+
+		foreach ( $dispatch_patterns as $name => $pattern ) {
+			$block_name = $pattern['block'];
+			unset( $pattern['block'] );
+			if ( $block_registry && $block_registry->is_registered( $block_name ) ) {
+				$patterns[ $name ] = $pattern;
+			}
+		}
 
 		foreach ( $patterns as $name => $pattern ) {
 			if ( $registry->is_registered( $name ) ) {

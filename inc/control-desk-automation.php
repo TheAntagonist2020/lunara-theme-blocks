@@ -42,6 +42,138 @@ if ( ! function_exists( 'lunara_control_desk_automation_status_class' ) ) {
     }
 }
 
+if ( ! function_exists( 'lunara_control_desk_automation_format_cost' ) ) {
+    /**
+     * Format a bounded cost estimate without implying unreported data is free.
+     *
+     * @param mixed $cost Estimated run cost in US dollars.
+     * @return string
+     */
+    function lunara_control_desk_automation_format_cost( $cost ) {
+        if ( null === $cost || '' === $cost || ! is_numeric( $cost ) ) {
+            return __( 'Not reported', 'lunara-film' );
+        }
+
+        return '$' . number_format_i18n( max( 0, (float) $cost ), 4 );
+    }
+}
+
+if ( ! function_exists( 'lunara_control_desk_render_dispatch_telemetry' ) ) {
+    /**
+     * Render the private, non-secret Dispatch 3.2.5 operating snapshot.
+     *
+     * Foundation owns collection and sanitization. This theme renderer stays
+     * backward-compatible when Foundation 1.2.10 omits the additive fields.
+     *
+     * @param array $dispatch Foundation-owned Dispatch snapshot.
+     * @return void
+     */
+    function lunara_control_desk_render_dispatch_telemetry( $dispatch ) {
+        $runtime  = isset( $dispatch['runtime'] ) && is_array( $dispatch['runtime'] ) ? $dispatch['runtime'] : array();
+        $last_run = isset( $dispatch['last_run'] ) && is_array( $dispatch['last_run'] ) ? $dispatch['last_run'] : array();
+
+        $has_output_cap    = ! empty( $runtime['max_output_tokens'] );
+        $has_source_budget = ! empty( $runtime['source_budget'] );
+        $provider          = ! empty( $runtime['provider'] ) ? strtoupper( (string) $runtime['provider'] ) : __( 'Not reported', 'lunara-film' );
+        $configured_model  = ! empty( $runtime['model'] ) ? $runtime['model'] : __( 'Not reported', 'lunara-film' );
+        $output_cap        = $has_output_cap ? number_format_i18n( absint( $runtime['max_output_tokens'] ) ) : __( 'Not reported', 'lunara-film' );
+        $source_budget     = $has_source_budget ? number_format_i18n( absint( $runtime['source_budget'] ) ) : __( 'Not reported', 'lunara-film' );
+
+        $requested_model = ! empty( $last_run['requested_model'] ) ? $last_run['requested_model'] : '';
+        $effective_model = ! empty( $last_run['effective_model'] ) ? $last_run['effective_model'] : '';
+        $model_route     = $effective_model ? $effective_model : ( $requested_model ? $requested_model : __( 'Awaiting run telemetry', 'lunara-film' ) );
+        $model_note      = __( 'No model override reported.', 'lunara-film' );
+        if ( $requested_model && $effective_model && $requested_model !== $effective_model ) {
+            $model_route = sprintf( '%1$s → %2$s', $requested_model, $effective_model );
+            $model_note  = __( 'Cost guard override applied.', 'lunara-film' );
+        }
+
+        $has_usage = array_key_exists( 'usage_reported', $last_run )
+            ? ! empty( $last_run['usage_reported'] )
+            : ( ( array_key_exists( 'input_tokens', $last_run ) && null !== $last_run['input_tokens'] ) || ( array_key_exists( 'output_tokens', $last_run ) && null !== $last_run['output_tokens'] ) );
+
+        $input_reported  = $has_usage && array_key_exists( 'input_tokens', $last_run ) && null !== $last_run['input_tokens'];
+        $cached_reported = $has_usage && array_key_exists( 'cached_input_tokens', $last_run ) && null !== $last_run['cached_input_tokens'];
+        $output_reported = $has_usage && array_key_exists( 'output_tokens', $last_run ) && null !== $last_run['output_tokens'];
+        $input_label     = $input_reported ? number_format_i18n( absint( $last_run['input_tokens'] ) ) : __( 'Not reported', 'lunara-film' );
+        $cached_label    = $cached_reported ? number_format_i18n( absint( $last_run['cached_input_tokens'] ) ) : __( 'Not reported', 'lunara-film' );
+        $output_label    = $output_reported ? number_format_i18n( absint( $last_run['output_tokens'] ) ) : __( 'Not reported', 'lunara-film' );
+        $usage_label     = $has_usage
+            ? sprintf(
+                /* translators: 1: input tokens, 2: cached input tokens, 3: output tokens */
+                __( '%1$s in · %2$s cached · %3$s out', 'lunara-film' ),
+                $input_label,
+                $cached_label,
+                $output_label
+            )
+            : __( 'Not reported', 'lunara-film' );
+
+        $processed_reported = ( array_key_exists( 'processed_source_items', $last_run ) && null !== $last_run['processed_source_items'] ) || ( array_key_exists( 'imported', $last_run ) && null !== $last_run['imported'] );
+        $deferred_reported  = array_key_exists( 'deferred_source_items', $last_run ) && null !== $last_run['deferred_source_items'];
+        $processed       = isset( $last_run['processed_source_items'] ) ? absint( $last_run['processed_source_items'] ) : ( isset( $last_run['imported'] ) ? absint( $last_run['imported'] ) : 0 );
+        $deferred        = isset( $last_run['deferred_source_items'] ) ? absint( $last_run['deferred_source_items'] ) : 0;
+        $processed_label = $processed_reported ? number_format_i18n( $processed ) : __( 'Not reported', 'lunara-film' );
+        $deferred_label  = $deferred_reported ? number_format_i18n( $deferred ) : __( 'Not reported', 'lunara-film' );
+        $fallback         = ! empty( $last_run['fallback_used'] );
+        $packet_drafts    = isset( $last_run['source_packet_drafts'] ) ? absint( $last_run['source_packet_drafts'] ) : 0;
+        $actual_provider  = ! empty( $last_run['provider'] ) ? strtoupper( (string) $last_run['provider'] ) : __( 'Not reported', 'lunara-film' );
+        $draft_mode       = $fallback
+            ? __( 'Safe source packets', 'lunara-film' )
+            : ( $effective_model ? __( 'AI-assisted drafts', 'lunara-film' ) : __( 'Not reported', 'lunara-film' ) );
+        $run_state = isset( $last_run['success'] ) ? $last_run['success'] : null;
+        $run_label = null === $run_state
+            ? __( 'Waiting for first report', 'lunara-film' )
+            : ( $run_state ? __( 'Completed safely', 'lunara-film' ) : __( 'Needs attention', 'lunara-film' ) );
+        $run_time   = ! empty( $last_run['timestamp_gmt'] ) ? $last_run['timestamp_gmt'] . ' GMT' : __( 'No run recorded', 'lunara-film' );
+        $error_code = ! empty( $last_run['error_code'] ) ? $last_run['error_code'] : '';
+        ?>
+        <section class="lunara-control-desk-panel lunara-control-desk-dispatch-telemetry">
+            <div class="lunara-control-desk-panel-header">
+                <div>
+                    <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Dispatch Runway', 'lunara-film' ); ?></p>
+                    <h3><?php esc_html_e( 'Cost-safe drafting status', 'lunara-film' ); ?></h3>
+                    <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Configured limits and the latest actual run, reported by Journal Foundation without prompts, credentials, response IDs, or story bodies.', 'lunara-film' ); ?></p>
+                </div>
+                <div class="lunara-control-desk-status-pill <?php echo esc_attr( null === $run_state ? '' : lunara_control_desk_automation_status_class( (bool) $run_state ) ); ?>">
+                    <strong><?php echo esc_html( $run_label ); ?></strong>
+                    <span><?php echo esc_html( $run_time ); ?></span>
+                </div>
+            </div>
+
+            <div class="lunara-control-desk-telemetry-grid">
+                <article class="lunara-control-desk-telemetry-card">
+                    <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Configured Guardrails', 'lunara-film' ); ?></p>
+                    <dl>
+                        <div><dt><?php esc_html_e( 'Provider', 'lunara-film' ); ?></dt><dd><?php echo esc_html( $provider ); ?></dd></div>
+                        <div><dt><?php esc_html_e( 'Configured model', 'lunara-film' ); ?></dt><dd><?php echo esc_html( $configured_model ); ?></dd></div>
+                        <div><dt><?php esc_html_e( 'Output cap', 'lunara-film' ); ?></dt><dd><?php echo esc_html( $output_cap ); ?><?php echo $has_output_cap ? esc_html__( ' tokens', 'lunara-film' ) : ''; ?></dd></div>
+                        <div><dt><?php esc_html_e( 'Source budget', 'lunara-film' ); ?></dt><dd><?php echo esc_html( $source_budget ); ?><?php echo $has_source_budget ? esc_html__( ' per run', 'lunara-film' ) : ''; ?></dd></div>
+                    </dl>
+                </article>
+
+                <article class="lunara-control-desk-telemetry-card <?php echo esc_attr( $fallback ? 'is-fallback' : '' ); ?>">
+                    <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Latest Run', 'lunara-film' ); ?></p>
+                    <dl>
+                        <div><dt><?php esc_html_e( 'Model route', 'lunara-film' ); ?></dt><dd><?php echo esc_html( $model_route ); ?><small><?php echo esc_html( $model_note ); ?></small></dd></div>
+                        <div><dt><?php esc_html_e( 'Actual provider', 'lunara-film' ); ?></dt><dd><?php echo esc_html( $actual_provider ); ?></dd></div>
+                        <div><dt><?php esc_html_e( 'Draft mode', 'lunara-film' ); ?></dt><dd><?php echo esc_html( $draft_mode ); ?><?php if ( $fallback ) : ?><small><?php echo esc_html( sprintf( __( '%1$d source-packet draft(s)%2$s', 'lunara-film' ), $packet_drafts, $error_code ? ' · ' . $error_code : '' ) ); ?></small><?php endif; ?></dd></div>
+                        <div><dt><?php esc_html_e( 'Source queue', 'lunara-film' ); ?></dt><dd><?php echo esc_html( sprintf( __( '%1$s processed · %2$s deferred', 'lunara-film' ), $processed_label, $deferred_label ) ); ?></dd></div>
+                        <div><dt><?php esc_html_e( 'Token use', 'lunara-film' ); ?></dt><dd><?php echo esc_html( $usage_label ); ?></dd></div>
+                        <div><dt><?php esc_html_e( 'Estimated cost', 'lunara-film' ); ?></dt><dd><?php echo esc_html( lunara_control_desk_automation_format_cost( isset( $last_run['estimated_cost_usd'] ) ? $last_run['estimated_cost_usd'] : null ) ); ?></dd></div>
+                    </dl>
+                </article>
+            </div>
+
+            <?php if ( ! empty( $last_run['message'] ) ) : ?>
+                <p class="lunara-control-desk-telemetry-message"><strong><?php esc_html_e( 'Latest result:', 'lunara-film' ); ?></strong> <?php echo esc_html( $last_run['message'] ); ?></p>
+            <?php elseif ( empty( $runtime ) ) : ?>
+                <p class="lunara-control-desk-telemetry-message"><?php esc_html_e( 'Detailed telemetry will appear after Journal Foundation 1.2.11 is active and Dispatch completes its next run.', 'lunara-film' ); ?></p>
+            <?php endif; ?>
+        </section>
+        <?php
+    }
+}
+
 if ( ! function_exists( 'lunara_control_desk_render_automation_tab' ) ) {
     function lunara_control_desk_render_automation_tab() {
         lunara_control_desk_render_automation_notice();
@@ -132,6 +264,8 @@ if ( ! function_exists( 'lunara_control_desk_render_automation_tab' ) ) {
                 </div>
             </div>
         </section>
+
+        <?php lunara_control_desk_render_dispatch_telemetry( $dispatch ); ?>
 
         <div class="lunara-control-desk-automation-grid">
             <section class="lunara-control-desk-panel">
