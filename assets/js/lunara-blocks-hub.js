@@ -25,9 +25,18 @@
 			label: __( 'Content blocks', 'lunara-film' ),
 			items: [
 				{ name: 'lunara/reviews-grid', label: __( 'Reviews Grid', 'lunara-film' ), desc: __( 'Curate a responsive grid of reviews.', 'lunara-film' ), icon: 'star-filled' },
-				{ name: 'lunara/journal-grid', label: __( 'Journal Grid', 'lunara-film' ), desc: __( 'Arrange dispatches and essays in a lead grid.', 'lunara-film' ), icon: 'editor-ul' },
+				{ name: 'lunara/journal-grid', label: __( 'Journal Grid', 'lunara-film' ), desc: __( 'Curate specific stories, or let latest entries fill the remaining spaces.', 'lunara-film' ), icon: 'editor-ul' },
 				{ name: 'lunara/media-showcase', label: __( 'Media Showcase', 'lunara-film' ), desc: __( 'Build a gallery, slider, or carousel from stills.', 'lunara-film' ), icon: 'format-gallery' },
 				{ name: 'lunara/pairing', label: __( 'Pair It With — Curated', 'lunara-film' ), desc: __( 'Place three films in an editorial conversation.', 'lunara-film' ), icon: 'screenoptions' }
+			]
+		},
+		{
+			label: __( 'Journal presentation', 'lunara-film' ),
+			optional: true,
+			items: [
+				{ name: 'lunara-dispatch/journal-feed', label: __( 'Journal Feed', 'lunara-film' ), desc: __( 'Query-driven latest Journal cards; use Journal Grid when you need hand curation.', 'lunara-film' ), icon: 'format-aside' },
+				{ name: 'lunara-dispatch/journal-spotlight', label: __( 'Journal Spotlight', 'lunara-film' ), desc: __( 'Query-driven newest-story lead with automatic supporting entries.', 'lunara-film' ), icon: 'welcome-view-site' },
+				{ name: 'lunara-dispatch/journal-lanes', label: __( 'Journal Lanes', 'lunara-film' ), desc: __( 'Query-driven Journal-type links and live counts, with no manual story selection.', 'lunara-film' ), icon: 'category' }
 			]
 		},
 		{
@@ -43,7 +52,7 @@
 	];
 
 	function insert( name ) {
-		if ( ! blocks.createBlock || ! data.dispatch ) {
+		if ( ! blocks.createBlock || ! data.dispatch || ( blocks.getBlockType && ! blocks.getBlockType( name ) ) ) {
 			return;
 		}
 		var blockEditor = data.dispatch( 'core/block-editor' );
@@ -81,8 +90,14 @@
 		];
 
 		GROUPS.forEach( function ( group ) {
+			var items = group.optional
+				? ( blocks.getBlockType ? group.items.filter( function ( item ) { return !! blocks.getBlockType( item.name ); } ) : [] )
+				: group.items;
+			if ( ! items.length ) {
+				return;
+			}
 			panelChildren.push( el( 'h3', { key: group.label, style: { fontSize: '11px', letterSpacing: '0.04em', textTransform: 'uppercase', margin: '18px 0 4px' } }, group.label ) );
-			group.items.forEach( function ( item ) {
+			items.forEach( function ( item ) {
 				panelChildren.push( blockCard( item ) );
 			} );
 		} );

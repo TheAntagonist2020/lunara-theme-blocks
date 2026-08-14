@@ -3812,7 +3812,7 @@ function lunara_control_desk_get_system_status() {
             'label' => __( 'Academy Awards plugin', 'lunara-film' ),
             'value' => $aat_version ? $aat_version : __( 'Not detected', 'lunara-film' ),
             'state' => '2.7.89' === $aat_version ? 'ready' : ( $aat_version ? 'weak' : 'needs' ),
-            'note'  => __( 'The active source is the GitHub-backed Oscars Ledger work tree under G:\\lunara-backups\\work.', 'lunara-film' ),
+            'note'  => __( 'Canonical source: TheAntagonist2020/lunara-plugin-oscars-ledger.', 'lunara-film' ),
         ),
         array(
             'label' => __( 'Object cache', 'lunara-film' ),
@@ -3917,98 +3917,134 @@ function lunara_control_desk_get_omdb_review_state_cards() {
 function lunara_control_desk_get_source_status() {
     return array(
         array(
-            'label' => __( 'Theme source', 'lunara-film' ),
-            'value' => 'G:\\lunara-backups\\work\\lunara-theme-blocks-20260513-2300',
+            'label' => __( 'Theme repository', 'lunara-film' ),
+            'value' => 'TheAntagonist2020/lunara-theme-blocks',
             'state' => 'ready',
-            'note'  => 'github.com/TheAntagonist2020/lunara-theme-blocks',
+            'note'  => __( 'GitHub main is the canonical source; live identity is measured below.', 'lunara-film' ),
         ),
         array(
-            'label' => __( 'Live theme', 'lunara-film' ),
-            'value' => '/home/151589083/htdocs/wp-content/themes/lunara-theme-blocks-20260513-2300',
+            'label' => __( 'AI Classic repository', 'lunara-film' ),
+            'value' => 'TheAntagonist2020/lunara-plugin-ai-assistant-classic',
             'state' => 'ready',
         ),
         array(
-            'label' => __( 'AI plugin source', 'lunara-film' ),
-            'value' => 'G:\\lunara-backups\\work\\lunara-ai-assistant-classic',
+            'label' => __( 'Core repository', 'lunara-film' ),
+            'value' => 'TheAntagonist2020/lunara-plugin-core',
             'state' => 'ready',
-            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-ai-assistant-classic',
         ),
         array(
-            'label' => __( 'Core plugin source', 'lunara-film' ),
-            'value' => 'G:\\lunara-backups\\work\\lunara-core',
+            'label' => __( 'Oscars repository', 'lunara-film' ),
+            'value' => 'TheAntagonist2020/lunara-plugin-oscars-ledger',
             'state' => 'ready',
-            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-core',
         ),
         array(
-            'label' => __( 'Oscars plugin source', 'lunara-film' ),
-            'value' => 'G:\\lunara-backups\\work\\academy-awards-table-optimized-ceremony-depth',
+            'label' => __( 'Dispatch repository', 'lunara-film' ),
+            'value' => 'TheAntagonist2020/lunara-plugin-dispatch',
             'state' => 'ready',
-            'note'  => 'feat/ceremony-depth-thesis; Image Integrity Review Pack prepared for Oscars 2.7.89.',
         ),
         array(
-            'label' => __( 'Dispatch plugin source', 'lunara-film' ),
-            'value' => 'G:\\lunara-backups\\work\\lunara-dispatch',
+            'label' => __( 'IMDb Guard repository', 'lunara-film' ),
+            'value' => 'TheAntagonist2020/lunara-plugin-imdb-guard',
             'state' => 'ready',
-            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-dispatch',
-        ),
-        array(
-            'label' => __( 'IMDb Guard source', 'lunara-film' ),
-            'value' => 'G:\\lunara-backups\\work\\lunara-imdb-guard',
-            'state' => 'ready',
-            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-imdb-guard',
-        ),
-        array(
-            'label' => __( 'Legacy AI source reference', 'lunara-film' ),
-            'value' => 'C:\\Users\\silve_i21do49\\OneDrive\\Documents\\New project\\plugins\\lunara-ai-assistant-classic',
-            'state' => 'weak',
-            'note'  => __( 'Historical source location only; use the G: work tree for new edits.', 'lunara-film' ),
-        ),
-        array(
-            'label' => __( 'Stale Oscars copy warning', 'lunara-film' ),
-            'value' => 'C:\\Users\\silve_i21do49\\OneDrive\\Desktop\\New folder\\academy-awards-table-optimized',
-            'state' => 'weak',
-            'note'  => __( 'This root-level copy is stale; do not edit it for live work.', 'lunara-film' ),
         ),
     );
 }
 
-function lunara_control_desk_get_source_control_status() {
+function lunara_control_desk_deployed_file_hash( $absolute_file ) {
+    if ( ! is_string( $absolute_file ) || ! is_readable( $absolute_file ) ) {
+        return '';
+    }
+
+    $hash = hash_file( 'sha256', $absolute_file );
+
+    return is_string( $hash ) ? substr( $hash, 0, 12 ) : '';
+}
+
+function lunara_control_desk_deployed_commit( $constant_name, $option_name ) {
+    $commit = defined( $constant_name ) ? constant( $constant_name ) : get_option( $option_name, '' );
+    $commit = trim( sanitize_text_field( (string) $commit ) );
+
+    return preg_match( '/^[a-f0-9]{7,40}$/i', $commit ) ? $commit : '';
+}
+
+function lunara_control_desk_source_control_card( $label, $version, $absolute_file, $repo, $constant_name, $option_name ) {
+    $hash   = lunara_control_desk_deployed_file_hash( $absolute_file );
+    $commit = lunara_control_desk_deployed_commit( $constant_name, $option_name );
+    $parts  = array();
+
+    if ( $version ) {
+        $parts[] = sprintf( __( 'version %s', 'lunara-film' ), $version );
+    }
+    if ( $commit ) {
+        $parts[] = sprintf( __( 'commit %s', 'lunara-film' ), substr( $commit, 0, 12 ) );
+    }
+    if ( $hash ) {
+        $parts[] = sprintf( __( 'SHA256 %s', 'lunara-film' ), $hash );
+    }
+
     return array(
-        array(
-            'label' => __( 'Theme repo', 'lunara-film' ),
-            'value' => 'main @ 0c93adb',
-            'state' => 'ready',
-            'note'  => 'github.com/TheAntagonist2020/lunara-theme-blocks',
+        'label' => $label,
+        'value' => $parts ? implode( ' · ', $parts ) : __( 'Not detected', 'lunara-film' ),
+        'state' => $version && $hash ? 'ready' : 'weak',
+        'note'  => $commit
+            ? sprintf( __( '%s · deployed commit recorded.', 'lunara-film' ), $repo )
+            : sprintf( __( '%s · deployed commit not recorded; the live version and entry-file hash remain authoritative.', 'lunara-film' ), $repo ),
+    );
+}
+
+function lunara_control_desk_get_source_control_status() {
+    $theme         = wp_get_theme();
+    $plugin_dir    = trailingslashit( WP_PLUGIN_DIR );
+    $theme_version = (string) $theme->get( 'Version' );
+
+    return array(
+        lunara_control_desk_source_control_card(
+            __( 'Live theme', 'lunara-film' ),
+            $theme_version,
+            get_stylesheet_directory() . '/style.css',
+            'TheAntagonist2020/lunara-theme-blocks',
+            'LUNARA_THEME_COMMIT',
+            'lunara_theme_deploy_commit'
         ),
-        array(
-            'label' => __( 'Core repo', 'lunara-film' ),
-            'value' => 'main @ d88777b',
-            'state' => 'ready',
-            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-core',
+        lunara_control_desk_source_control_card(
+            __( 'Live Core', 'lunara-film' ),
+            lunara_control_desk_plugin_file_version( 'lunara-core/lunara-core.php' ),
+            $plugin_dir . 'lunara-core/lunara-core.php',
+            'TheAntagonist2020/lunara-plugin-core',
+            'LUNARA_CORE_COMMIT',
+            'lunara_core_deploy_commit'
         ),
-        array(
-            'label' => __( 'Oscars repo', 'lunara-film' ),
-            'value' => 'feat/ceremony-depth-thesis @ 7d5dd1c',
-            'state' => 'ready',
-            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-oscars-ledger',
+        lunara_control_desk_source_control_card(
+            __( 'Live Oscars', 'lunara-film' ),
+            defined( 'AAT_VERSION' ) ? AAT_VERSION : lunara_control_desk_plugin_file_version( 'academy-awards-table-optimized/academy-awards-table.php' ),
+            $plugin_dir . 'academy-awards-table-optimized/academy-awards-table.php',
+            'TheAntagonist2020/lunara-plugin-oscars-ledger',
+            'LUNARA_OSCARS_COMMIT',
+            'lunara_oscars_deploy_commit'
         ),
-        array(
-            'label' => __( 'Dispatch repo', 'lunara-film' ),
-            'value' => 'main @ 2c2dbc7',
-            'state' => 'ready',
-            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-dispatch',
+        lunara_control_desk_source_control_card(
+            __( 'Live Dispatch', 'lunara-film' ),
+            defined( 'LUNARA_DISPATCH_VERSION' ) ? LUNARA_DISPATCH_VERSION : lunara_control_desk_plugin_file_version( 'lunara-dispatch/lunara-dispatch.php' ),
+            $plugin_dir . 'lunara-dispatch/lunara-dispatch.php',
+            'TheAntagonist2020/lunara-plugin-dispatch',
+            'LUNARA_DISPATCH_COMMIT',
+            'lunara_dispatch_deploy_commit'
         ),
-        array(
-            'label' => __( 'IMDb Guard repo', 'lunara-film' ),
-            'value' => 'main @ 75aae10',
-            'state' => 'ready',
-            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-imdb-guard',
+        lunara_control_desk_source_control_card(
+            __( 'Live IMDb Guard', 'lunara-film' ),
+            lunara_control_desk_plugin_file_version( 'lunara-imdb-guard/lunara-imdb-guard.php' ),
+            $plugin_dir . 'lunara-imdb-guard/lunara-imdb-guard.php',
+            'TheAntagonist2020/lunara-plugin-imdb-guard',
+            'LUNARA_IMDB_GUARD_COMMIT',
+            'lunara_imdb_guard_deploy_commit'
         ),
-        array(
-            'label' => __( 'AI Classic repo', 'lunara-film' ),
-            'value' => 'main @ 1b041f3',
-            'state' => 'ready',
-            'note'  => 'github.com/TheAntagonist2020/lunara-plugin-ai-assistant-classic',
+        lunara_control_desk_source_control_card(
+            __( 'Live AI Classic', 'lunara-film' ),
+            lunara_control_desk_plugin_file_version( 'lunara-ai-assistant-classic/lunara-ai-assistant-classic.php' ),
+            $plugin_dir . 'lunara-ai-assistant-classic/lunara-ai-assistant-classic.php',
+            'TheAntagonist2020/lunara-plugin-ai-assistant-classic',
+            'LUNARA_AI_CLASSIC_COMMIT',
+            'lunara_ai_classic_deploy_commit'
         ),
     );
 }
@@ -6194,8 +6230,8 @@ function lunara_control_desk_render_operating_plan_tab() {
         array( __( 'Website changelog', 'lunara-film' ), 'C:\\Users\\silve_i21do49\\OneDrive\\Desktop\\New folder\\LUNARA_WORLD_CHANGELOG.md' ),
         array( __( 'Visual QA / evidence', 'lunara-film' ), 'C:\\Users\\silve_i21do49\\OneDrive\\Desktop\\New folder\\10_VISUAL_EVIDENCE' ),
         array( __( 'Forbidden website artifact path', 'lunara-film' ), 'C:\\Users\\silve_i21do49\\OneDrive\\Documents\\New project' ),
-        array( __( 'Active local theme source', 'lunara-film' ), 'G:\\lunara-backups\\work\\lunara-theme-blocks-20260513-2300' ),
-        array( __( 'Live theme', 'lunara-film' ), '/home/151589083/htdocs/wp-content/themes/lunara-theme-blocks-20260513-2300' ),
+        array( __( 'Canonical theme repository', 'lunara-film' ), 'github.com/TheAntagonist2020/lunara-theme-blocks' ),
+        array( __( 'Live deployment identity', 'lunara-film' ), __( 'System Status > Deploy Truth (version, deploy time, and SHA256)', 'lunara-film' ) ),
         array( __( 'Latest remote backup', 'lunara-film' ), '/home/151589083/lunara-backups/lunara-review-card-exact-quote-20260601-0408' ),
     );
     ?>
@@ -6324,6 +6360,8 @@ function lunara_control_desk_get_deploy_truth_cards() {
     $dir        = get_stylesheet_directory();
     $style_path = $dir . '/style.css';
     $deployed   = file_exists( $style_path ) ? (int) filemtime( $style_path ) : 0;
+    $style_hash = lunara_control_desk_deployed_file_hash( $style_path );
+    $commit     = lunara_control_desk_deployed_commit( 'LUNARA_THEME_COMMIT', 'lunara_theme_deploy_commit' );
 
     $cards   = array();
     $cards[] = array(
@@ -6331,6 +6369,14 @@ function lunara_control_desk_get_deploy_truth_cards() {
         'value' => (string) $theme->get( 'Version' ) ? (string) $theme->get( 'Version' ) : __( 'Unknown', 'lunara-film' ),
         'note'  => sprintf( /* translators: %s: theme directory name */ __( 'Active directory: %s', 'lunara-film' ), basename( $dir ) ),
         'state' => 'ready',
+    );
+    $cards[] = array(
+        'label' => __( 'Live fingerprint', 'lunara-film' ),
+        'value' => $style_hash ? 'SHA256 ' . $style_hash : __( 'Hash unavailable', 'lunara-film' ),
+        'note'  => $commit
+            ? sprintf( __( 'Deployed commit: %s', 'lunara-film' ), substr( $commit, 0, 12 ) )
+            : __( 'Deployed commit is not recorded; the served version and style.css hash are the live authority.', 'lunara-film' ),
+        'state' => $style_hash ? 'ready' : 'warnings',
     );
     $cards[] = array(
         'label' => __( 'Deployed', 'lunara-film' ),

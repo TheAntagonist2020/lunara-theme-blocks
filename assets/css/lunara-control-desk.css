@@ -93,9 +93,69 @@
     border-left: 4px solid #c9a961;
 }
 
+.lunara-control-desk-dispatch-telemetry {
+    margin-top: 18px;
+}
+
+.lunara-control-desk-telemetry-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.lunara-control-desk-telemetry-card {
+    padding: 16px;
+    border: 1px solid var(--lcd-line);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.lunara-control-desk-telemetry-card.is-fallback {
+    border-color: #c9a961;
+    box-shadow: inset 3px 0 0 #c9a961;
+}
+
+.lunara-control-desk-telemetry-card dl,
+.lunara-control-desk-telemetry-card dl > div {
+    margin: 0;
+}
+
+.lunara-control-desk-telemetry-card dl > div {
+    display: grid;
+    grid-template-columns: minmax(118px, .75fr) minmax(0, 1.25fr);
+    gap: 12px;
+    padding: 9px 0;
+    border-top: 1px solid #e5e7eb;
+}
+
+.lunara-control-desk-telemetry-card dt {
+    color: var(--lcd-muted);
+}
+
+.lunara-control-desk-telemetry-card dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+}
+
+.lunara-control-desk-telemetry-card dd small {
+    display: block;
+    margin-top: 3px;
+    color: var(--lcd-muted);
+    font-weight: 400;
+}
+
+.lunara-control-desk-telemetry-message {
+    margin: 14px 0 0;
+    padding: 12px 14px;
+    border-left: 3px solid var(--lcd-gold);
+    background: #f8fafc;
+}
+
 @media (max-width: 1100px) {
     .lunara-control-desk-automation-grid,
-    .lunara-control-desk-automation-workflows {
+    .lunara-control-desk-automation-workflows,
+    .lunara-control-desk-telemetry-grid {
         grid-template-columns: 1fr;
     }
 }
