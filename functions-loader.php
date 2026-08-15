@@ -79,6 +79,11 @@ require_once $lunara_inc . 'hero-command.php';
 // only image delivery; Hero Command remains the editorial deck source.
 require_once $lunara_inc . 'hero-delivery.php';
 
+// Layer 10c — Journal archive cards use uncropped native candidates and a
+// bounded WordPress.com Image CDN fallback when attachment metadata has no
+// compatible responsive set.
+require_once $lunara_inc . 'journal-archive-media.php';
+
 // Layer 11 — Modular Essay Builder (Design Spec §12): renders the ACF
 // flexible-content modules registered by Lunara Core after essay content.
 require_once $lunara_inc . 'essay-builder.php';

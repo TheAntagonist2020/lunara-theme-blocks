@@ -200,7 +200,8 @@ if ( ! empty( $journal_archive_posts ) ) :
 			setup_postdata( $post );
 			$pid = get_the_ID();
 			$journal_card_index++;
-			$entry_kicker = 1 === $journal_card_index ? $journal_labels['lead_kicker'] : $journal_labels['card_kicker'];
+			$is_visual_lead = lunara_journal_archive_card_is_visual_lead( $journal_card_index );
+			$entry_kicker = $is_visual_lead ? $journal_labels['lead_kicker'] : $journal_labels['card_kicker'];
 			$entry_type = function_exists( 'lunara_get_dispatch_type_label' ) ? lunara_get_dispatch_type_label( $pid ) : ( function_exists( 'lunara_get_journal_kicker' ) ? lunara_get_journal_kicker( $pid ) : __( 'Dispatch', 'lunara-film' ) );
 			$entry_excerpt = has_excerpt( $pid ) ? wp_trim_words( get_the_excerpt( $pid ), 28 ) : wp_trim_words( wp_strip_all_tags( get_post_field( 'post_content', $pid ) ), 28 );
 			$updated_label = function_exists( 'lunara_get_editorial_card_updated_label' ) ? lunara_get_editorial_card_updated_label( $pid ) : '';
@@ -211,23 +212,12 @@ if ( ! empty( $journal_archive_posts ) ) :
 				if ( '' === $media_alt ) {
 					$media_alt = get_the_title( $pid );
 				}
-				$media_markup = wp_get_attachment_image(
-					$featured_id,
-					'lunara-hero-spotlight',
-					false,
-					array(
-						'class'         => 'lunara-review-grid-poster',
-						'loading'       => 1 === $journal_card_index ? 'eager' : 'lazy',
-						'fetchpriority' => 1 === $journal_card_index ? 'high' : 'auto',
-						'decoding'      => 'async',
-						'sizes'         => '(max-width: 640px) 92vw, (max-width: 980px) 46vw, (max-width: 1280px) 31vw, 380px',
-						'alt'           => $media_alt,
-					)
-				);
+				$media_attributes = lunara_journal_archive_card_image_attributes( $is_visual_lead, $media_alt );
+				$media_markup     = lunara_journal_archive_card_image_markup( $featured_id, $media_attributes );
 			}
 			$has_media = '' !== trim( (string) $media_markup );
 			?>
-			<article class="lunara-review-grid-card lunara-journal-archive-card<?php echo 1 === $journal_card_index ? ' is-lead' : ''; ?><?php echo $has_media ? ' has-media' : ' is-text-brief'; ?>">
+			<article class="lunara-review-grid-card lunara-journal-archive-card<?php echo $is_visual_lead ? ' is-lead' : ''; ?><?php echo $has_media ? ' has-media' : ' is-text-brief'; ?>">
 				<a class="lunara-review-grid-link" href="<?php the_permalink(); ?>">
 					<?php if ( $has_media ) : ?>
 						<div class="lunara-review-grid-poster-wrap">

@@ -87,7 +87,11 @@ function laneMarkup(slug, scenario) {
         return '<div class="lunara-editorial-archive-toolbar lunara-journal-archive-toolbar lunara-journal-archive-slot-toolbar"><div class="lunara-home-section-head lunara-editorial-archive-toolbar-head"><div><p class="lunara-home-section-kicker">Desk Order</p><h2 class="lunara-section-title">Latest files from the desk</h2><p class="lunara-home-section-summary">Follow the Journal in the order that suits the reporting day.</p></div></div><div class="lunara-archive-sort"><a class="lunara-archive-sort-link is-active">Newest Filed</a><a class="lunara-archive-sort-link">Oldest Filed</a><a class="lunara-archive-sort-link">Recently Updated</a></div></div>';
     }
     if (slug === 'grid') {
-        const card = (index, media) => `<article class="lunara-review-grid-card lunara-journal-archive-card${index === 0 ? ' is-lead' : ''}${media ? ' has-media' : ' is-text-brief'}"><a class="lunara-review-grid-link" href="#">${media ? `<div class="lunara-review-grid-poster-wrap"><img class="lunara-review-grid-poster" src="${imageData}" width="1920" height="1080" alt="Wide editorial still"></div>` : ''}<div class="lunara-review-grid-copy"><p class="lunara-review-grid-kicker">${index === 0 ? 'Lead file' : 'From the desk'}</p><p class="lunara-dispatch-type lunara-journal-archive-card-type">Industry Dispatch</p><div class="lunara-journal-card-provenance"><span class="lunara-journal-card-provenance-pill">Original reporting</span></div><h3 class="lunara-review-grid-title">Lanterns Is Doing Something Stranger Than DC Usually Gets Away With</h3><p class="lunara-review-grid-excerpt">A specific reported argument gives the archive card enough editorial density to exercise its real line rhythm.</p><div class="lunara-review-grid-footer lunara-journal-archive-card-footer"><span class="lunara-review-grid-meta">August 15, 2026</span><span class="lunara-review-grid-updated">Updated today</span><span class="lunara-journal-archive-card-cta">Read file</span></div></div></a></article>`;
+        const card = (index, media) => {
+            const visualLead = index === 0 && !scenario.paged && !scenario.taxonomy;
+            const hasMedia = media && !(index === 0 && scenario.undersizedLead);
+            return `<article class="lunara-review-grid-card lunara-journal-archive-card${visualLead ? ' is-lead' : ''}${hasMedia ? ' has-media' : ' is-text-brief'}"><a class="lunara-review-grid-link" href="#">${hasMedia ? `<div class="lunara-review-grid-poster-wrap"><img class="lunara-review-grid-poster" src="${imageData}" width="1920" height="1080" loading="${visualLead ? 'eager' : 'lazy'}" fetchpriority="${visualLead ? 'high' : 'auto'}" alt="Wide editorial still"></div>` : ''}<div class="lunara-review-grid-copy"><p class="lunara-review-grid-kicker">${visualLead ? 'Lead file' : 'From the desk'}</p><p class="lunara-dispatch-type lunara-journal-archive-card-type">Industry Dispatch</p><div class="lunara-journal-card-provenance"><span class="lunara-journal-card-provenance-pill">Original reporting</span></div><h3 class="lunara-review-grid-title">Lanterns Is Doing Something Stranger Than DC Usually Gets Away With</h3><p class="lunara-review-grid-excerpt">A specific reported argument gives the archive card enough editorial density to exercise its real line rhythm.</p><div class="lunara-review-grid-footer lunara-journal-archive-card-footer"><span class="lunara-review-grid-meta">August 15, 2026</span><span class="lunara-review-grid-updated">Updated today</span><span class="lunara-journal-archive-card-cta">Read file</span></div></div></a></article>`;
+        };
         return `<section class="lunara-journal-archive-grid lunara-review-grid lunara-review-archive-uniform lunara-journal-archive-slot-grid">${card(0, true)}${card(1, true)}${card(2, false)}${card(3, true)}${card(4, true)}</section>`;
     }
     if (slug === 'retention') {
@@ -413,6 +417,42 @@ async function assertMediaFailureBehavior(browser, headCss) {
     }
 }
 
+async function assertCardScopeBehavior(browser, headCss) {
+    for (const scenario of [
+        { name: 'paged', paged: true, order: defaultOrder, gallery: false, retentionMedia: false },
+        { name: 'taxonomy', taxonomy: true, order: defaultOrder, gallery: false, retentionMedia: false },
+    ]) {
+        const testPage = await openTestPage(browser, 390);
+        await testPage.page.setContent(documentHtml(scenario, headCss), { waitUntil: 'load' });
+        const state = await testPage.page.evaluate(() => ({
+            leads: document.querySelectorAll('.lunara-journal-archive-card.is-lead').length,
+            leadKickers: Array.from(document.querySelectorAll('.lunara-review-grid-kicker')).filter((node) => node.textContent.trim() === 'Lead file').length,
+            eager: document.querySelectorAll('.lunara-journal-archive-card img[loading="eager"]').length,
+            high: document.querySelectorAll('.lunara-journal-archive-card img[fetchpriority="high"]').length,
+        }));
+        await testPage.context.close();
+        if (state.leads || state.leadKickers || state.eager || state.high) {
+            throw new Error(`${scenario.name} Journal cards must remain uniform/lazy/non-high: ${JSON.stringify(state)}`);
+        }
+    }
+
+    const undersized = await openTestPage(browser, 390);
+    await undersized.page.setContent(documentHtml({ order: defaultOrder, gallery: false, retentionMedia: false, undersizedLead: true }, headCss), { waitUntil: 'load' });
+    const undersizedState = await undersized.page.evaluate(() => {
+        const card = document.querySelector('.lunara-journal-archive-card');
+        return {
+            textLed: card.classList.contains('is-text-brief'),
+            hasMedia: card.classList.contains('has-media'),
+            wrappers: card.querySelectorAll('.lunara-review-grid-poster-wrap').length,
+            images: card.querySelectorAll('img').length,
+        };
+    });
+    await undersized.context.close();
+    if (!undersizedState.textLed || undersizedState.hasMedia || undersizedState.wrappers || undersizedState.images) {
+        throw new Error(`An undersized source must leave no browser media chamber: ${JSON.stringify(undersizedState)}`);
+    }
+}
+
 (async () => {
     const browser = await chromium.launch({ headless: true, executablePath: process.env.LUNARA_BROWSER_EXECUTABLE || undefined, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     if (!staleAggregate.exact) throw new Error('Journal first-paint gate requires the exact production aggregate.');
@@ -459,6 +499,7 @@ async function assertMediaFailureBehavior(browser, headCss) {
             }
         }
         await assertMediaFailureBehavior(browser, headCss);
+        await assertCardScopeBehavior(browser, headCss);
     } finally {
         await browser.close();
     }
