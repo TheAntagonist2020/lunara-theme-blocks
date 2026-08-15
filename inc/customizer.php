@@ -2981,6 +2981,9 @@ function lunara_output_runtime_customizer_css() {
     foreach ( lunara_get_registry_slugs( lunara_get_reviews_archive_section_registry() ) as $slug ) {
         $order = isset( $review_section_order[ $slug ] ) ? intval( $review_section_order[ $slug ] ) : 99;
         $css  .= '.lunara-review-archive-page > .lunara-review-archive-slot-' . $slug . '{order:' . $order . ';}';
+        if ( 'grid' === $slug ) {
+            $css .= '.lunara-review-archive-page > .lunara-review-archive-slot-utility{order:' . $order . ';}';
+        }
     }
 
     foreach ( lunara_get_registry_slugs( lunara_get_journal_archive_section_registry() ) as $slug ) {
