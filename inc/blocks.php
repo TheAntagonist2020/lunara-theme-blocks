@@ -203,8 +203,19 @@ function lunara_enqueue_homepage_editor_card_assets() {
             'sections'      => lunara_homepage_editor_section_config(),
         )
     );
+}
+add_action( 'enqueue_block_editor_assets', 'lunara_enqueue_homepage_editor_card_assets', 20 );
 
-    if ( ! function_exists( 'lunara_resolve_theme_asset' ) ) {
+/**
+ * Load compact homepage-card styles through WordPress' iframe-aware path.
+ *
+ * enqueue_block_assets also fires for public rendering, so the explicit admin
+ * guard is required to keep this stylesheet out of anonymous responses.
+ *
+ * @return void
+ */
+function lunara_enqueue_homepage_editor_card_style() {
+    if ( ! is_admin() || ! function_exists( 'lunara_resolve_theme_asset' ) ) {
         return;
     }
 
@@ -218,7 +229,7 @@ function lunara_enqueue_homepage_editor_card_assets() {
         );
     }
 }
-add_action( 'enqueue_block_editor_assets', 'lunara_enqueue_homepage_editor_card_assets', 20 );
+add_action( 'enqueue_block_assets', 'lunara_enqueue_homepage_editor_card_style', 20 );
 
 function lunara_render_home_block() {
     return function_exists( 'lunara_home_shortcode' ) ? lunara_home_shortcode() : '';
