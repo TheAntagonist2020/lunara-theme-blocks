@@ -11,6 +11,29 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-15 — Theme 3.2.45 Journal Responsive Media Repair
+
+- Preserved existing native Journal archive card markup byte-for-byte whenever
+  the registered route image already supplies a valid responsive source set.
+  Attachments missing that set now recover through an uncropped native source
+  first, then a bounded HTTPS WordPress.com Image CDN width set when eligible.
+- Enforced honest local attachment provenance, intrinsic dimensions, strictly
+  ascending candidates, a 768-pixel source-width floor, and fail-closed
+  text-led cards for deleted, remote, undersized, non-image, or invalid media.
+  The settled 16:10 archive-card chamber and object-fit treatment are unchanged.
+- Limited visual lead treatment, lead language, eager loading, and high fetch
+  priority to the first card on the unpaged root Journal archive. Paged and
+  taxonomy archives retain their existing query order with uniform lazy cards.
+- Added an environment-signed payload comparator for matched non-production
+  evidence while retaining two absolute production `/journal/` limits:
+  190,000 decoded bytes total and 118,000 decoded bytes after subtracting
+  exactly one measured Boost critical block. Redirected origins/routes,
+  duplicate blocks, or byte/hash drift fail closed and cannot normalize either
+  production limit.
+- Added isolated PHP, JavaScript, static, and exact-aggregate browser coverage.
+  This local theme-only candidate does not alter plugins, content, WordPress
+  options, query ordering, cache/CDN settings, global CSS, or route geometry.
+
 ## 2026-08-15 — Theme 3.2.44 Journal Archive Studio
 
 - Added a focused Journal Archive Studio that aggregates the archive's existing

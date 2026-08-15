@@ -18,6 +18,7 @@ $loader = Get-Content -LiteralPath (Join-Path $root 'functions-loader.php') -Raw
 $single = Get-Content -LiteralPath (Join-Path $root 'single-journal.php') -Raw
 $archive = Get-Content -LiteralPath (Join-Path $root 'archive-journal.php') -Raw
 $archiveStudio = Get-Content -LiteralPath (Join-Path $root 'inc\journal-archive-studio.php') -Raw
+$archiveMedia = Get-Content -LiteralPath (Join-Path $root 'inc\journal-archive-media.php') -Raw
 $controlDesk = Get-Content -LiteralPath (Join-Path $root 'inc\control-desk.php') -Raw
 $related = Get-Content -LiteralPath (Join-Path $root 'inc\review-rendering.php') -Raw
 $frontend = Get-Content -LiteralPath (Join-Path $root 'inc\frontend.php') -Raw
@@ -68,7 +69,7 @@ Assert-True ($single -match "'journal_image_alt'") 'Journal single must consume 
 Assert-True ($controlDesk -match "lunara_get_journal_source_items") 'Control Desk must consume canonical Foundation source rows.'
 Assert-True ($controlDesk -match "lunara_get_journal_field_value\([^\r\n]*'journal_deck'") 'Control Desk must prefer the canonical Foundation deck.'
 Assert-True ($related -match "lunara_get_journal_kicker") 'Related Journal rendering must use the shared canonical-first kicker.'
-Assert-True ($style -match 'Version:\s*3\.2\.44') 'Theme version must be 3.2.44 for the Journal Archive Studio gate.'
+Assert-True ($style -match 'Version:\s*3\.2\.45') 'Theme version must be 3.2.45 for the Journal Archive Studio gate.'
 Assert-True ($fixtureSource -match "LUNARA_JOURNAL_FOUNDATION_VERSION',\s*'1\.2\.1'") 'Journal integration fixture must target stabilized Foundation 1.2.1.'
 Assert-True ($loader -match 'require_once\s+\$lunara_inc\s*\.\s*''journal-family\.php''') 'Split loader must include the dedicated Journal-family adapter module.'
 Assert-True ($journalFamily -match 'function\s+lunara_get_journal_related_tax_query') 'Related-query adapters belong in the dedicated Journal-family module.'
@@ -109,7 +110,9 @@ Assert-True ($journalFamily -match '\$terms\[\]\s*=\s*\$current_term') 'Journal 
 Assert-True ($single -match 'lunara_get_journal_related_tax_query') 'Journal related entries must use canonical section/topic query adapters.'
 Assert-True ($frontend -match "is_tax\(\s*array\(\s*'journal_section',\s*'journal_topic',\s*'journal_type'\s*\)\s*\)") 'Journal taxonomy routes must receive route-scoped archive behavior.'
 Assert-True ($archive -notmatch '(?m)^\s*\$copy\s*=\s*''\s*;') 'Journal archive copy must remain editable instead of being forcibly blanked.'
-Assert-True ($archive -match "'loading'\s*=>\s*1\s*===\s*\`$journal_card_index\s*\?\s*'eager'\s*:\s*'lazy'") 'Only the true Journal lead image may load eagerly through native attachment markup.'
-Assert-True ($archive -match "'fetchpriority'\s*=>\s*1\s*===\s*\`$journal_card_index\s*\?\s*'high'\s*:\s*'auto'") 'Only the true Journal lead image may receive high fetch priority.'
+Assert-True ($archiveMedia -match "'loading'\s*=>\s*\`$is_visual_lead\s*\?\s*'eager'\s*:\s*'lazy'") 'Only canonical visual-lead state may load a Journal archive image eagerly.'
+Assert-True ($archiveMedia -match "'fetchpriority'\s*=>\s*\`$is_visual_lead\s*\?\s*'high'\s*:\s*'auto'") 'Only canonical visual-lead state may receive high fetch priority.'
+Assert-True ($archiveMedia -match "is_post_type_archive\(\s*'journal'\s*\)[\s\S]{0,100}!\s*is_paged\(\)") 'The visual Journal lead must be limited to the unpaged main post-type archive.'
+Assert-True ($archive -match 'lunara_journal_archive_card_image_attributes\(\s*\$is_visual_lead\s*,') 'The Journal template must pass route-aware visual-lead state into native attachment markup.'
 
 Write-Output 'Journal Foundation theme integration contract passed.'
