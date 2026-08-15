@@ -5110,6 +5110,46 @@
 	overflow-wrap: anywhere;
 }
 
+/*
+ * Archive geometry controls sit inside a two-column workspace on desktop.
+ * Let the inner grid respond to its card width—not only to the viewport—so
+ * range, number, and reset controls cannot widen the WordPress document.
+ */
+.lunara-site-studio .lunara-control-desk-homepage-number-grid {
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+	min-width: 0;
+}
+
+.lunara-site-studio .lunara-control-desk-homepage-number,
+.lunara-site-studio .lunara-control-desk-brand-number-value,
+.lunara-site-studio .lunara-control-desk-brand-reset {
+	min-width: 0;
+}
+
+.lunara-site-studio .lunara-control-desk-homepage-number {
+	grid-template-columns: minmax(0, 1fr) minmax(80px, 1fr) minmax(0, auto) minmax(0, auto);
+}
+
+.lunara-site-studio .lunara-control-desk-homepage-number > * {
+	min-width: 0;
+}
+
+.lunara-site-studio .lunara-control-desk-brand-number-value {
+	flex-wrap: wrap;
+}
+
+.lunara-site-studio .lunara-control-desk-brand-number-value input {
+	box-sizing: border-box;
+	max-width: 100%;
+	min-width: 0;
+	width: 82px;
+}
+
+.lunara-site-studio .lunara-control-desk-brand-reset label {
+	flex-wrap: wrap;
+	white-space: normal;
+}
+
 .lunara-site-studio-effective-copy {
 	margin: 0 0 20px;
 	padding: 18px;
@@ -5139,5 +5179,18 @@
 @media (max-width: 782px) {
 	.lunara-site-studio-nav {
 		grid-template-columns: 1fr;
+	}
+
+	.lunara-site-studio .lunara-control-desk-homepage-number {
+		grid-template-columns: 1fr;
+	}
+
+	.lunara-site-studio .lunara-control-desk-brand-number-value,
+	.lunara-site-studio .lunara-control-desk-brand-reset {
+		justify-self: stretch;
+	}
+
+	.lunara-site-studio .lunara-control-desk-brand-reset {
+		justify-items: start;
 	}
 }
