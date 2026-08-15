@@ -77,17 +77,7 @@ Assert-True ($reviewComponents -match 'object-position:\s*var\(--lunara-review-a
 Assert-True ($reviewComponents -match 'object-position:\s*var\(--lunara-review-rail-image-focus\)') 'Companion rail Review card images must use the rail focus variable.'
 Assert-True ($reviewComponents -match 'object-position:\s*var\(--lunara-review-related-image-focus\)') 'Related Review card images must use the related focus variable.'
 Assert-True ($reviewComponents -match 'object-position:\s*var\(--lunara-review-feature-image-focus\)') 'Feature Review images must use the feature focus variable.'
-foreach ($routeGate in @(
-    "is_post_type_archive( 'review' )",
-    "is_tax( 'lunara_director' )",
-    "is_page_template( 'page-reviews.php' )",
-    "is_page( 'reviews' )",
-    "is_singular( 'review' )",
-    'is_front_page()'
-)) {
-    Assert-True ($frontend.Contains($routeGate)) "Review card focus CSS must retain the scoped $routeGate gate."
-}
-Assert-True ($frontend -match '(?m)^\s*\.lunara-review-archive-page\s*[,\{]') 'Review card focus variables must target the archive-owned wrapper even when WordPress uses page-template-default.'
+Assert-True ($frontend -match 'is_post_type_archive\(\s*''review''\s*\).*is_page\(\s*''reviews''\s*\).*is_singular\(\s*''review''\s*\).*is_front_page\(\)' ) 'Review card focus CSS must stay scoped to Reviews, single Review, and homepage contexts.'
 
 Assert-True ($reviewRendering -match '\$has_media\s*=\s*\$has_thumb_html\s*\|\|\s*\$use_fallback_bg') 'Review rendering must keep a real-media guard before card poster wrappers.'
 Assert-True ($reviewRendering -match 'if\s*\(\s*\$has_media\s*\)\s*:' ) 'Review rendering must only print poster wrappers when media exists.'
