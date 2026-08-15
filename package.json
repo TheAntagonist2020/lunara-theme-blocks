@@ -1,0 +1,11 @@
+{
+  "name": "lunara-theme-ci",
+  "version": "3.2.44",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "playwright-core": "1.62.1"
+  }
+}

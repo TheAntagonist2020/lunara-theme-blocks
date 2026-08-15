@@ -25,6 +25,7 @@ require_once $lunara_inc . 'customizer.php';
 require_once $lunara_inc . 'reviews-cpt.php';
 require_once $lunara_inc . 'journal-cpt.php';    // Journal CPT + journal_type taxonomy + per-post meta
 require_once $lunara_inc . 'journal-family.php'; // Canonical fields, taxonomy routes, and legacy presentation adapters
+require_once $lunara_inc . 'journal-archive-studio.php'; // Focused revisionable Journal archive curation + preview.
 require_once $lunara_inc . 'editorial-meta.php';
 require_once $lunara_inc . 'trailers.php';
 require_once $lunara_inc . 'publish-guards.php';
@@ -60,6 +61,7 @@ require_once $lunara_inc . 'oscars-portal.php';
 require_once $lunara_inc . 'blocks.php';
 require_once $lunara_inc . 'block-migration.php';
 require_once $lunara_inc . 'review-archive-critical.php';
+require_once $lunara_inc . 'journal-archive-critical.php';
 require_once $lunara_inc . 'frontend.php';
 require_once $lunara_inc . 'cinematic-home.php';
 

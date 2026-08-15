@@ -11,6 +11,39 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-15 — Theme 3.2.44 Journal Archive Studio
+
+- Added a focused Journal Archive Studio that aggregates the archive's existing
+  WordPress owners into one bounded editorial surface while preserving those
+  owners as canonical storage. Editors can control identity, public labels,
+  filter caps, item count, seven-section visibility/order, lead and curated
+  files, retention cards, and a page-one archive gallery without changing
+  global reading settings.
+- Made lead behavior explicit and deterministic across every root Journal sort:
+  automatic selects the newest eligible file, shared uses the homepage lead and
+  falls back to newest, and manual validates one published Journal file. Curated
+  and lead priorities remain unique across pagination, with stable ID
+  tie-breakers; taxonomy archives remain query-native.
+- Added strict last-valid promotion, bounded revision/audit history, restore,
+  and private preview-on-demand with nonce, owner, expiry, 403, and no-store
+  protections. Invalid input cannot replace public state, and the Studio does
+  not publish, schedule, rewrite, or mutate Journal posts.
+- Added three editable retention cards and a bounded, ordered archive-only media
+  gallery with attachment validation, responsive intrinsic image markup,
+  editorial alt/caption/credit/source/link ownership, visible provenance, and
+  local broken-media fallback. Empty or failed media emits no blank chamber.
+- Moved Journal archive structure into one route-owned, server-rendered visual
+  system while retaining the shared Lunara font tokens. Route CSS is delivered
+  synchronously and remains under 40 KiB; generated variables plus the critical
+  seed remain under 8 KiB.
+- Locked a portable browser regression to the exact Theme 3.2.43 production
+  Boost critical CSS and 847,152-byte aggregate. Root Journal, alternate order,
+  hidden-Hero, populated/empty media, and taxonomy scenarios at 390, 768, and
+  1440 pixels all hold delivery, critical-withdrawal, and seed-removal geometry
+  within the one-pixel release gate.
+- This is a local theme-only candidate. It does not alter plugins, content,
+  WordPress options, Jetpack Boost, cache/CDN state, staging, or production.
+
 ## 2026-08-15 — Theme 3.2.43 Reviews Mobile Card Legibility
 
 - Repaired image-less Review support cards at 390 and 782 pixels so their
