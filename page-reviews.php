@@ -14,6 +14,9 @@ $paged = max(
 $review_sort = function_exists( 'lunara_get_review_archive_sort' )
     ? lunara_get_review_archive_sort()
     : 'release_desc';
+$review_year = function_exists( 'lunara_get_review_archive_year' )
+    ? lunara_get_review_archive_year()
+    : '';
 
 $query_args = array(
     'post_type'              => 'review',
@@ -25,8 +28,8 @@ $query_args = array(
     'update_post_term_cache' => true,
 );
 
-if ( function_exists( 'lunara_apply_review_archive_sort_args' ) ) {
-    $query_args = lunara_apply_review_archive_sort_args( $query_args, $review_sort );
+if ( function_exists( 'lunara_get_review_archive_query_args' ) ) {
+    $query_args = lunara_get_review_archive_query_args( $query_args, $review_sort, $review_year );
 }
 
 $reviews_query = new WP_Query(
@@ -43,11 +46,19 @@ $archive_copy = function_exists( 'lunara_theme_mod_text' )
     ? lunara_theme_mod_text( 'lunara_reviews_archive_copy', 'Spoiler-free criticism, full-spoiler companion files, festival finds, and the films that deserve a longer argument after the credits roll.' )
     : 'Spoiler-free criticism, full-spoiler companion files, festival finds, and the films that deserve a longer argument after the credits roll.';
 
+$pagination_args = array();
+if ( 'release_desc' !== $review_sort ) {
+    $pagination_args['sort'] = $review_sort;
+}
+if ( '' !== $review_year ) {
+    $pagination_args['review_year'] = $review_year;
+}
+
 $pagination = paginate_links(
     array(
         'total'   => max( 1, intval( $reviews_query->max_num_pages ) ),
         'current' => $paged,
-        'add_args' => 'release_desc' === $review_sort ? false : array( 'sort' => $review_sort ),
+        'add_args' => empty( $pagination_args ) ? false : $pagination_args,
     )
 );
 

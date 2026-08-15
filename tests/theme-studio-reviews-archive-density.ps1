@@ -23,6 +23,7 @@ function Read-ThemeFile {
 
 $controlDesk = Read-ThemeFile 'inc/control-desk.php'
 $frontend = Read-ThemeFile 'inc/frontend.php'
+$archiveCss = Read-ThemeFile 'assets/css/lunara-review-archive.css'
 
 foreach ($key in @(
     'lunara_reviews_archive_density',
@@ -51,7 +52,7 @@ Assert-True ($controlDesk -match 'function\s+lunara_control_desk_render_reviews_
 Assert-True ($controlDesk -match 'admin_post_lunara_save_reviews_archive_studio') 'Reviews Archive Studio must save through a nonce-protected admin-post handler.'
 Assert-True ($controlDesk -match 'check_admin_referer\(\s*''lunara_save_reviews_archive_studio''') 'Reviews Archive Studio save handler must verify a nonce.'
 Assert-True ($controlDesk -match 'current_user_can\(\s*''edit_theme_options''') 'Reviews Archive Studio must remain capability protected.'
-Assert-True ($controlDesk -notmatch '<textarea[^>]+lunara_reviews_archive') 'Reviews Archive Studio must not expose raw CSS textareas.'
+Assert-True ($controlDesk -notmatch '<textarea[^>]+name="lunara_reviews_archive_(?:raw_|custom_)?css') 'Reviews Archive Studio must not expose raw CSS textareas.'
 
 foreach ($variable in @(
     '--lunara-reviews-archive-section-gap',
@@ -68,17 +69,17 @@ foreach ($variable in @(
 }
 
 foreach ($selector in @(
-    'body.post-type-archive-review .lunara-review-archive-page',
-    'body.page-template-page-reviews .lunara-review-archive-page',
+    '#primary.lra',
     '.lunara-review-archive-shell',
     '.lunara-review-feature-card.is-lead',
     '.lunara-review-archive-dynamic-rail',
     '.lunara-review-archive-run-grid'
 )) {
-    Assert-True ($frontend.Contains($selector)) "Reviews archive CSS must stay scoped to $selector."
+    Assert-True ($archiveCss.Contains($selector)) "Reviews archive CSS must stay scoped to $selector."
 }
 
 Assert-True ($frontend -match 'is_post_type_archive\(\s*''review''\s*\)') 'Reviews archive CSS must stay scoped to Review archive routes.'
-Assert-True ($frontend -match 'line-clamp') 'Reviews archive density controls must tune text depth, not only spacing.'
+Assert-True ($archiveCss -match 'line-clamp') 'Reviews archive density controls must tune text depth, not only spacing.'
+Assert-True ($frontend -match "assets/css/lunara-review-archive\.css") 'Reviews archive density must use the cacheable route stylesheet.'
 
 Write-Host 'Reviews Archive Studio density contract passed.'

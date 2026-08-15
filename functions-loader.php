@@ -59,6 +59,7 @@ require_once $lunara_inc . 'oscars-portal.php';
 // Layer 7 — Frontend output (footer, nav, search, content filters, animations).
 require_once $lunara_inc . 'blocks.php';
 require_once $lunara_inc . 'block-migration.php';
+require_once $lunara_inc . 'review-archive-critical.php';
 require_once $lunara_inc . 'frontend.php';
 require_once $lunara_inc . 'cinematic-home.php';
 
