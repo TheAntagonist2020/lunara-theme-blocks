@@ -94,8 +94,8 @@ $criticalHash = -join ($criticalHashBytes | ForEach-Object { $_.ToString('x2') }
 if ($criticalBytes.Count -ne 11387 -or $criticalHash -ne 'c75c82013220aacd5d45e0d9ccd846aa2dd6ef2d2373ddcce6543870b1571d57') {
     throw "The 3.2.43 card repair must not alter the independently approved CLS seed ($($criticalBytes.Count)B $criticalHash)."
 }
-if ($style -notmatch '(?m)^Version:\s*3\.2\.45\s*$') {
-    throw 'Theme version must preserve the mobile text-led card repair in 3.2.45.'
+if ($style -notmatch '(?m)^Version:\s*3\.2\.43\s*$') {
+    throw 'Theme version must identify the 3.2.43 mobile text-led card repair.'
 }
 foreach ($viewport in @('375', '390', '782', '1440')) {
     if ($runtime -notmatch "(?m)for \(const viewportWidth of \[[^\]]*\b$viewport\b") {
@@ -117,4 +117,4 @@ foreach ($runtimeGate in @(
     }
 }
 
-Write-Host 'Theme 3.2.45 Reviews mobile card legibility contract passed.'
+Write-Host 'Theme 3.2.43 Reviews mobile card legibility contract passed.'
