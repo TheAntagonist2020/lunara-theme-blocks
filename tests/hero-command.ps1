@@ -22,6 +22,7 @@ function Read-ThemeFile {
 }
 
 $heroCommand = Read-ThemeFile 'inc/hero-command.php'
+$heroDelivery = Read-ThemeFile 'inc/hero-delivery.php'
 $heroCarousel = Read-ThemeFile 'assets/js/lunara-hero-carousel.js'
 $themeFunctions = Read-ThemeFile 'functions.php'
 $themeCss = Read-ThemeFile 'style.css'
@@ -41,8 +42,8 @@ Assert-True ($heroCommand -match 'data-hero-field="zoom"') 'Hero Command must ex
 Assert-True ($heroCommand -match '''fit''\s*=>\s*\$fit') 'Hero Command must retain the sanitized per-slide frame mode.'
 Assert-True ($heroCommand -match 'data-hero-field="fit"') 'Hero Command must expose the per-slide frame-mode selector.'
 Assert-True ($heroCommand -match 'Full frame \(no crop\)') 'Hero Command must offer an explicit no-crop framing choice.'
-Assert-True ($themeFunctions -match '--lunara-hero-focal-x:%d%%;--lunara-hero-focal-y:%d%%;--lunara-hero-zoom-start:%.2F;--lunara-hero-zoom-end:%.2F;') 'The hero renderer must emit sanitized per-slide framing variables.'
-Assert-True ($themeFunctions -match '''full''\s*===\s*\$frame_mode\s*\?\s*'' is-full-frame''') 'The hero renderer must mark full-frame slides before paint.'
+Assert-True ($heroDelivery -match '--lunara-hero-focal-x:%d%%;--lunara-hero-focal-y:%d%%;--lunara-hero-zoom-start:%.2F;--lunara-hero-zoom-end:%.2F;') 'The active hero image renderer must emit sanitized per-slide framing variables.'
+Assert-True ($heroDelivery -match '''full''\s*===\s*\$fit\s*\?\s*'' is-full-frame''') 'The active hero image renderer must mark full-frame slides before paint.'
 Assert-True ($themeCss -match 'object-position:\s*var\(--lunara-hero-focal-x,\s*50%\)\s*var\(--lunara-hero-focal-y,\s*30%\)') 'Hero imagery must consume the per-slide focal point.'
 Assert-True ($themeCss -match 'scale\(var\(--lunara-hero-zoom-start,\s*1\)\)') 'Hero imagery must consume the per-slide zoom while preserving the full frame by default.'
 Assert-True ($themeCss -match '\.lunara-cinematic-hero-img\.is-full-frame[\s\S]*object-fit:\s*contain\s*!important') 'Full-frame hero images must preserve the complete native composition.'

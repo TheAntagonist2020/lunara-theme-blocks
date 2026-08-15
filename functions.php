@@ -15048,7 +15048,9 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_data' ) ) {
 			$image_url     = (string) wp_get_attachment_image_url( $attr_image_id, 'full' );
 		} elseif ( '' !== $override_image ) {
 			$image_url     = $override_image;
-			$attachment_id = (int) attachment_url_to_postid( $override_image );
+			$attachment_id = function_exists( 'lunara_hero_attachment_id_from_url' )
+				? lunara_hero_attachment_id_from_url( $override_image )
+				: 0;
 		} elseif ( $latest_review ) {
 			// Reviews store their art in meta (TMDB imports), not as the WP
 			// featured image — prefer the purpose-built hero banner, then the
@@ -15065,7 +15067,9 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_data' ) ) {
 				$candidate = trim( (string) $candidate );
 				if ( '' !== $candidate ) {
 					$image_url     = $candidate;
-					$attachment_id = (int) attachment_url_to_postid( $candidate );
+					$attachment_id = function_exists( 'lunara_hero_attachment_id_from_url' )
+						? lunara_hero_attachment_id_from_url( $candidate )
+						: 0;
 					break;
 				}
 			}
@@ -15136,29 +15140,10 @@ if ( ! function_exists( 'lunara_render_cinematic_hero' ) ) {
 			return '';
 		}
 
-		// Build the <img> tag â€” use wp_get_attachment_image() if we have the
-		// attachment ID (gives us native srcset/sizes for responsive loading),
-		// otherwise fall back to a raw <img> with the URL.
-		// The default remains eager/high for contexts where this is the true
-		// front door. Lower-page callers can explicitly opt into lazy/low.
-		$img_attrs = array(
-			'class'         => 'lunara-cinematic-hero-img',
-			'alt'           => '',
-			'loading'       => $first_image_is_lcp ? 'eager' : 'lazy',
-			'decoding'      => 'async',
-			'fetchpriority' => $first_image_is_lcp ? 'high' : 'low',
-			'sizes'         => '100vw',
-		);
-
-		if ( $data['attachment_id'] > 0 ) {
-			$img_html = wp_get_attachment_image( $data['attachment_id'], 'full', false, $img_attrs );
-		} else {
-			$attr_string = '';
-			foreach ( $img_attrs as $k => $v ) {
-				$attr_string .= ' ' . $k . '="' . esc_attr( $v ) . '"';
-			}
-			$img_html = '<img src="' . esc_url( $data['image_url'] ) . '"' . $attr_string . ' />';
-		}
+		$data['image'] = (string) $data['image_url'];
+		$img_html     = function_exists( 'lunara_render_cinematic_hero_image' )
+			? lunara_render_cinematic_hero_image( $data, $first_image_is_lcp )
+			: '';
 
 		ob_start();
 		?>
@@ -15276,9 +15261,8 @@ if ( ! function_exists( 'lunara_hero_image_qualifies' ) ) {
 		}
 
 		// Local uploads: measure via attachment metadata when resolvable.
-		$base = (string) preg_replace( '/\?.*$/', '', $url );
-		if ( function_exists( 'attachment_url_to_postid' ) ) {
-			$att_id = attachment_url_to_postid( $base );
+		if ( function_exists( 'lunara_hero_attachment_id_from_url' ) ) {
+			$att_id = lunara_hero_attachment_id_from_url( $url );
 			if ( $att_id ) {
 				$meta = wp_get_attachment_metadata( $att_id );
 				if ( is_array( $meta ) && ! empty( $meta['width'] ) ) {
@@ -15375,6 +15359,7 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
 						'excerpt' => (string) $excerpt,
 						'url'     => get_permalink( $review->ID ),
 						'cta'     => __( 'Read the review', 'lunara-film' ),
+						'attachment_id' => lunara_hero_attachment_id_from_url( $image ),
 						'image'   => lunara_rightsize_backdrop_url( $image ),
 					);
 				}
@@ -15402,6 +15387,7 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
 						'excerpt' => (string) $excerpt,
 						'url'     => get_permalink( $entry->ID ),
 						'cta'     => __( 'Read the entry', 'lunara-film' ),
+						'attachment_id' => lunara_hero_attachment_id_from_url( $image ),
 						'image'   => lunara_rightsize_backdrop_url( $image ),
 					);
 				}
@@ -15513,6 +15499,10 @@ if ( ! function_exists( 'lunara_build_hero_slide_for_post' ) ) {
 			return null;
 		}
 
+		$attachment_id = function_exists( 'lunara_hero_attachment_id_from_url' )
+			? lunara_hero_attachment_id_from_url( $image )
+			: 0;
+
 		if ( function_exists( 'lunara_rightsize_backdrop_url' ) ) {
 			$image = lunara_rightsize_backdrop_url( $image );
 		}
@@ -15543,6 +15533,7 @@ if ( ! function_exists( 'lunara_build_hero_slide_for_post' ) ) {
 			'excerpt' => (string) $excerpt,
 			'url'     => get_permalink( $post_id ),
 			'cta'     => $cta,
+			'attachment_id' => $attachment_id,
 			'image'   => $image,
 		);
 	}
@@ -15823,23 +15814,10 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
 	function lunara_render_cinematic_hero_slide( $data, $index = 0, $first_image_is_lcp = true ) {
 		$is_first          = ( 0 === (int) $index );
 		$is_priority_image = $is_first && (bool) $first_image_is_lcp;
-		$focal_x           = max( 0, min( 100, isset( $data['focal_x'] ) ? (int) $data['focal_x'] : 50 ) );
-		$focal_y           = max( 0, min( 100, isset( $data['focal_y'] ) ? (int) $data['focal_y'] : 30 ) );
-		$zoom_percent      = max( 100, min( 112, isset( $data['zoom'] ) ? (int) $data['zoom'] : 100 ) );
-		$zoom_start        = $zoom_percent / 100;
-		$zoom_end          = min( 1.17, $zoom_start + 0.05 );
 		$frame_mode        = isset( $data['fit'] ) && 'full' === (string) $data['fit'] ? 'full' : 'cover';
-		$image_class       = 'lunara-cinematic-hero-img' . ( 'full' === $frame_mode ? ' is-full-frame' : '' );
-		$image_style       = sprintf(
-			'--lunara-hero-focal-x:%d%%;--lunara-hero-focal-y:%d%%;--lunara-hero-zoom-start:%.2F;--lunara-hero-zoom-end:%.2F;',
-			$focal_x,
-			$focal_y,
-			$zoom_start,
-			$zoom_end
-		);
-		$image_markup      = $is_priority_image
-			? '<img src="' . esc_url( $data['image'] ) . '" class="' . esc_attr( $image_class ) . '" style="' . esc_attr( $image_style ) . '" alt="" loading="eager" decoding="async" fetchpriority="high" sizes="100vw" />'
-			: '<img src="' . esc_url( $data['image'] ) . '" class="' . esc_attr( $image_class ) . '" style="' . esc_attr( $image_style ) . '" alt="" loading="lazy" decoding="async" fetchpriority="low" sizes="100vw" />';
+		$image_markup      = function_exists( 'lunara_render_cinematic_hero_image' )
+			? lunara_render_cinematic_hero_image( $data, $is_priority_image )
+			: '';
 
 		ob_start();
 		?>
@@ -15935,77 +15913,9 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 	}
 }
 
-/**
- * Resolve the canonical native homepage LCP image.
- *
- * Plugin-owned hero shortcodes are excluded because their responsive source
- * cannot be predicted safely by the theme.
- *
- * @return string
- */
-if ( ! function_exists( 'lunara_get_home_cinematic_hero_preload_url' ) ) {
-	function lunara_get_home_cinematic_hero_preload_url() {
-		if ( is_admin() || ! is_front_page() || ! function_exists( 'lunara_home_cinematic_front_door_is_enabled' ) || ! lunara_home_cinematic_front_door_is_enabled() ) {
-			return '';
-		}
-
-		$shortcode     = function_exists( 'lunara_home_plugin_hero_shortcode' ) ? lunara_home_plugin_hero_shortcode() : '';
-		$shortcode_tag = function_exists( 'lunara_home_extract_shortcode_tag' ) ? lunara_home_extract_shortcode_tag( $shortcode ) : '';
-		if (
-			function_exists( 'lunara_home_plugin_hero_is_allowed' )
-			&& lunara_home_plugin_hero_is_allowed()
-			&& '' !== $shortcode
-			&& '' !== $shortcode_tag
-			&& shortcode_exists( $shortcode_tag )
-		) {
-			return '';
-		}
-
-		$slides = lunara_get_home_cinematic_hero_slides();
-		$image  = isset( $slides[0]['image'] ) ? trim( (string) $slides[0]['image'] ) : '';
-
-		return '' !== $image ? esc_url_raw( $image ) : '';
-	}
-}
-
-/**
- * Send the hero preload as an HTTP response hint before WordPress.com streams
- * the buffered document. The HTML link below remains the standards-friendly
- * fallback and points to the exact same cached resolver result.
- */
-if ( ! function_exists( 'lunara_send_home_cinematic_hero_preload_header' ) ) {
-	function lunara_send_home_cinematic_hero_preload_header() {
-		if ( headers_sent() ) {
-			return;
-		}
-
-		$image = lunara_get_home_cinematic_hero_preload_url();
-		if ( '' === $image ) {
-			return;
-		}
-
-		header( 'Link: <' . $image . '>; rel=preload; as=image; fetchpriority=high', false );
-	}
-	add_action( 'template_redirect', 'lunara_send_home_cinematic_hero_preload_header', 0 );
-}
-
-/**
- * Keep an in-document preload fallback for proxies that discard Link headers.
- */
-if ( ! function_exists( 'lunara_preload_home_cinematic_hero_image' ) ) {
-	function lunara_preload_home_cinematic_hero_image() {
-		$image = lunara_get_home_cinematic_hero_preload_url();
-		if ( '' === $image ) {
-			return;
-		}
-
-		printf(
-			'<link id="lunara-home-hero-preload" rel="preload" as="image" href="%s" fetchpriority="high">' . "\n",
-			esc_url( $image )
-		);
-	}
-	add_action( 'wp_head', 'lunara_preload_home_cinematic_hero_image', 1 );
-}
+// Native hero image markup and preload hints are owned by
+// inc/hero-delivery.php so the browser sees one responsive resource-selection
+// contract after every WordPress.com image filter has run.
 
 /**
  * Cache invalidation: when a review is published or the customizer is saved,
