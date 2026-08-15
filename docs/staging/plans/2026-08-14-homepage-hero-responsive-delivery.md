@@ -18,4 +18,3 @@
 Rollback is the previous successful Theme 3.2.38 deployment. This release does
 not alter posts, Hero Command settings, plugins, cache/CDN settings, public copy,
 motion, or lower-page Journal image delivery.
-

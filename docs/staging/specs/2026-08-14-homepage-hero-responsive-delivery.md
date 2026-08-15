@@ -5,7 +5,7 @@
 The production native cinematic hero announced a fixed Photon preload at
 `?resize=1600,900&quality=86&ssl=1` (about 134 KB), while WordPress.com rewrote
 the visible LCP image to the 3038×1713 i0.wp.com original (about 348 KB) with no
-`srcset`. Chrome therefore ignored the preload and estimated roughly 360 KB / 
+`srcset`. Chrome therefore ignored the preload and estimated roughly 360 KB /
 350 ms of avoidable mobile work.
 
 ## Delivery contract
@@ -51,4 +51,3 @@ candidate is forced for every device.
   routes emit no native Home hero preload and incur no hero-deck query.
 - WordPress.com/Jetpack does not replace the responsive markup after output; if
   it does, rollback Theme 3.2.39 and inspect the staging response optimizer.
-
