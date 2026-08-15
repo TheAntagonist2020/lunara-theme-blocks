@@ -1,0 +1,122 @@
+{
+    "key": "group_lunara_review_debrief",
+    "title": "Lunara Review — The Debrief",
+    "fields": [
+        {
+            "key": "field_lunara_review_where",
+            "label": "Where to Watch",
+            "name": "acf_lunara_review_where",
+            "type": "textarea",
+            "instructions": "Legacy-compatible availability text. One item per line works best. Bridges to _lunara_where.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "100", "class": "", "id": "" },
+            "default_value": "",
+            "new_lines": "",
+            "maxlength": "",
+            "rows": 5,
+            "placeholder": "In Theaters\nMax | https://play.max.com/...\nAmazon | https://amazon.com/... | affiliate"
+        },
+        {
+            "key": "field_lunara_debrief_theme_echo",
+            "label": "Theme Echo — Legacy Line",
+            "name": "acf_lunara_debrief_theme_echo",
+            "type": "text",
+            "instructions": "Legacy-compatible Pair It With line. Bridges to _lunara_theme_echo. Example: There Will Be Blood (2007) — shared thematic DNA | tt0469494",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "100", "class": "", "id": "" },
+            "default_value": "",
+            "maxlength": "",
+            "placeholder": "Film Title (Year) — reason it pairs | tt1234567"
+        },
+        {
+            "key": "field_lunara_debrief_counter_program",
+            "label": "Counter-Program — Legacy Line",
+            "name": "acf_lunara_debrief_counter_program",
+            "type": "text",
+            "instructions": "Legacy-compatible Pair It With line. Bridges to _lunara_counter_program.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "100", "class": "", "id": "" },
+            "default_value": "",
+            "maxlength": "",
+            "placeholder": "Film Title (Year) — opposing pressure or tonal counterweight | tt1234567"
+        },
+        {
+            "key": "field_lunara_debrief_career_context",
+            "label": "Career Context — Legacy Line",
+            "name": "acf_lunara_debrief_career_context",
+            "type": "text",
+            "instructions": "Legacy-compatible Pair It With line. Bridges to _lunara_career_context and _lunara_craft_mirror.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "100", "class": "", "id": "" },
+            "default_value": "",
+            "maxlength": "",
+            "placeholder": "Film Title (Year) — career or craft context | tt1234567"
+        },
+        {
+            "key": "field_lunara_debrief_theme_echo_structured",
+            "label": "Theme Echo — Structured Future Fields",
+            "name": "acf_lunara_debrief_theme_echo_structured",
+            "type": "group",
+            "instructions": "Structured replacement for the legacy line. Not yet the primary renderer; included now so migration can begin safely.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "100", "class": "", "id": "" },
+            "layout": "block",
+            "sub_fields": [
+                { "key": "field_lunara_debrief_theme_echo_title", "label": "Title", "name": "title", "type": "text", "required": 0, "conditional_logic": 0, "wrapper": { "width": "35", "class": "", "id": "" }, "default_value": "", "placeholder": "Film title" },
+                { "key": "field_lunara_debrief_theme_echo_year", "label": "Year", "name": "year", "type": "number", "required": 0, "conditional_logic": 0, "wrapper": { "width": "15", "class": "", "id": "" }, "default_value": "", "min": 1888, "max": 2035, "step": 1, "placeholder": "2007" },
+                { "key": "field_lunara_debrief_theme_echo_imdb", "label": "IMDb Title ID", "name": "imdb_title_id", "type": "text", "required": 0, "conditional_logic": 0, "wrapper": { "width": "25", "class": "", "id": "" }, "default_value": "", "placeholder": "tt1234567" },
+                { "key": "field_lunara_debrief_theme_echo_note", "label": "Note", "name": "note", "type": "textarea", "required": 0, "conditional_logic": 0, "wrapper": { "width": "100", "class": "", "id": "" }, "default_value": "", "rows": 3, "new_lines": "", "placeholder": "Why this film belongs beside the review." }
+            ]
+        },
+        {
+            "key": "field_lunara_debrief_counter_structured",
+            "label": "Counter-Program — Structured Future Fields",
+            "name": "acf_lunara_debrief_counter_structured",
+            "type": "group",
+            "instructions": "Structured replacement for the legacy line. Not yet the primary renderer; included now so migration can begin safely.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "100", "class": "", "id": "" },
+            "layout": "block",
+            "sub_fields": [
+                { "key": "field_lunara_debrief_counter_title", "label": "Title", "name": "title", "type": "text", "required": 0, "conditional_logic": 0, "wrapper": { "width": "35", "class": "", "id": "" }, "default_value": "", "placeholder": "Film title" },
+                { "key": "field_lunara_debrief_counter_year", "label": "Year", "name": "year", "type": "number", "required": 0, "conditional_logic": 0, "wrapper": { "width": "15", "class": "", "id": "" }, "default_value": "", "min": 1888, "max": 2035, "step": 1, "placeholder": "2007" },
+                { "key": "field_lunara_debrief_counter_imdb", "label": "IMDb Title ID", "name": "imdb_title_id", "type": "text", "required": 0, "conditional_logic": 0, "wrapper": { "width": "25", "class": "", "id": "" }, "default_value": "", "placeholder": "tt1234567" },
+                { "key": "field_lunara_debrief_counter_note", "label": "Note", "name": "note", "type": "textarea", "required": 0, "conditional_logic": 0, "wrapper": { "width": "100", "class": "", "id": "" }, "default_value": "", "rows": 3, "new_lines": "", "placeholder": "Why this film counters the review." }
+            ]
+        },
+        {
+            "key": "field_lunara_debrief_career_structured",
+            "label": "Career Context — Structured Future Fields",
+            "name": "acf_lunara_debrief_career_structured",
+            "type": "group",
+            "instructions": "Structured replacement for the legacy line. Not yet the primary renderer; included now so migration can begin safely.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": { "width": "100", "class": "", "id": "" },
+            "layout": "block",
+            "sub_fields": [
+                { "key": "field_lunara_debrief_career_title", "label": "Title", "name": "title", "type": "text", "required": 0, "conditional_logic": 0, "wrapper": { "width": "35", "class": "", "id": "" }, "default_value": "", "placeholder": "Film title" },
+                { "key": "field_lunara_debrief_career_year", "label": "Year", "name": "year", "type": "number", "required": 0, "conditional_logic": 0, "wrapper": { "width": "15", "class": "", "id": "" }, "default_value": "", "min": 1888, "max": 2035, "step": 1, "placeholder": "2007" },
+                { "key": "field_lunara_debrief_career_imdb", "label": "IMDb Title ID", "name": "imdb_title_id", "type": "text", "required": 0, "conditional_logic": 0, "wrapper": { "width": "25", "class": "", "id": "" }, "default_value": "", "placeholder": "tt1234567" },
+                { "key": "field_lunara_debrief_career_note", "label": "Note", "name": "note", "type": "textarea", "required": 0, "conditional_logic": 0, "wrapper": { "width": "100", "class": "", "id": "" }, "default_value": "", "rows": 3, "new_lines": "", "placeholder": "Why this film clarifies the artist's career or craft." }
+            ]
+        }
+    ],
+    "location": [ [ { "param": "post_type", "operator": "==", "value": "review" } ] ],
+    "menu_order": 2,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "ACF Pro field group for The Debrief. Legacy-compatible fields are live through the bridge; structured fields are staged for the next renderer refactor.",
+    "show_in_rest": 1,
+    "modified": 1782262800
+}
