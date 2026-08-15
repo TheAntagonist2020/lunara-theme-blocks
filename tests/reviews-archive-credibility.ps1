@@ -3,7 +3,6 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $reviewRendering = Join-Path $root 'inc\review-rendering.php'
 $frontend = Join-Path $root 'inc\frontend.php'
-$archiveCss = Join-Path $root 'assets\css\lunara-review-archive.css'
 $dynamicRail = Join-Path $root 'assets\js\lunara-dynamic-rails.js'
 
 function Assert-Contains {
@@ -32,9 +31,9 @@ Assert-Contains $reviewRendering 'lunara_render_review_grid_card' 'Review archiv
 
 Assert-Contains $frontend 'lunara_enqueue_review_archive_dynamic_rails' 'Frontend must enqueue the Reviews dynamic rail asset through a theme-owned function.'
 Assert-Contains $frontend 'lunara-dynamic-rails\.js' 'Frontend must reference the theme-owned dynamic rail asset.'
-Assert-Contains $archiveCss 'lunara-review-archive-dynamic-rail' 'Cacheable archive CSS must scope rail polish to the Reviews archive.'
-Assert-Contains $archiveCss 'body\.post-type-archive-review\s+\.lunara-review-archive-dynamic-rail[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)' 'Dynamic rail CSS must use body-scoped specificity to override the old static rail grid and keep the track full-width.'
-Assert-Contains $archiveCss 'prefers-reduced-motion' 'Reviews archive rail CSS must include reduced-motion handling.'
+Assert-Contains $frontend 'lunara-review-archive-dynamic-rail' 'Frontend CSS must scope rail polish to the Reviews archive.'
+Assert-Contains $frontend 'body\.post-type-archive-review\s+\.lunara-review-archive-dynamic-rail[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)' 'Dynamic rail CSS must use body-scoped specificity to override the old static rail grid and keep the track full-width.'
+Assert-Contains $frontend 'prefers-reduced-motion' 'Reviews archive rail CSS must include reduced-motion handling.'
 
 Assert-Contains $dynamicRail 'prefers-reduced-motion: reduce' 'Dynamic rail JS must respect reduced-motion preferences.'
 Assert-Contains $dynamicRail 'pointerenter' 'Dynamic rail JS must pause on pointer hover.'

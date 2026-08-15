@@ -1482,44 +1482,6 @@ function lunara_control_desk_reviews_archive_number_value( $key ) {
     );
 }
 
-function lunara_control_desk_reviews_archive_copy_specs() {
-    return array(
-        'lunara_reviews_archive_kicker' => array(
-            'label'   => __( 'Kicker', 'lunara-film' ),
-            'default' => __( 'Criticism Desk', 'lunara-film' ),
-            'max'     => 80,
-            'type'    => 'text',
-        ),
-        'lunara_reviews_archive_title'  => array(
-            'label'   => __( 'Archive title', 'lunara-film' ),
-            'default' => __( 'Lunara Reviews', 'lunara-film' ),
-            'max'     => 140,
-            'type'    => 'text',
-        ),
-        'lunara_reviews_archive_copy'   => array(
-            'label'   => __( 'Archive deck', 'lunara-film' ),
-            'default' => __( 'Spoiler-free criticism, full-spoiler companion files, festival finds, and the films that deserve a longer argument after the credits roll.', 'lunara-film' ),
-            'max'     => 600,
-            'type'    => 'textarea',
-        ),
-    );
-}
-
-function lunara_control_desk_reviews_archive_lead_options() {
-    return get_posts(
-        array(
-            'post_type'              => 'review',
-            'post_status'            => 'publish',
-            'posts_per_page'         => 100,
-            'orderby'                => 'modified',
-            'order'                  => 'DESC',
-            'no_found_rows'          => true,
-            'update_post_meta_cache' => false,
-            'update_post_term_cache' => false,
-        )
-    );
-}
-
 function lunara_control_desk_save_reviews_archive_studio() {
     $legacy_redirect = lunara_control_desk_admin_url(
         array(
@@ -1534,53 +1496,6 @@ function lunara_control_desk_save_reviews_archive_studio() {
     }
 
     check_admin_referer( 'lunara_save_reviews_archive_studio', 'lunara_reviews_archive_nonce' );
-
-    $raw_copy = isset( $_POST['lunara_reviews_archive_copy'] ) && is_array( $_POST['lunara_reviews_archive_copy'] )
-        ? wp_unslash( $_POST['lunara_reviews_archive_copy'] )
-        : array();
-    foreach ( lunara_control_desk_reviews_archive_copy_specs() as $key => $spec ) {
-        if ( ! array_key_exists( $key, $raw_copy ) ) {
-            continue;
-        }
-
-        $value = 'textarea' === $spec['type']
-            ? sanitize_textarea_field( $raw_copy[ $key ] )
-            : sanitize_text_field( $raw_copy[ $key ] );
-        $value = function_exists( 'mb_substr' )
-            ? mb_substr( $value, 0, absint( $spec['max'] ) )
-            : substr( $value, 0, absint( $spec['max'] ) );
-        set_theme_mod( $key, $value );
-    }
-
-    $lead_id = isset( $_POST['lunara_reviews_archive_lead_id'] )
-        ? absint( wp_unslash( $_POST['lunara_reviews_archive_lead_id'] ) )
-        : 0;
-    if ( function_exists( 'lunara_set_pinned_review_id' ) ) {
-        lunara_set_pinned_review_id( $lead_id );
-    }
-
-    $registry       = function_exists( 'lunara_get_reviews_archive_section_registry' ) ? lunara_get_reviews_archive_section_registry() : array();
-    $raw_visibility = isset( $_POST['lunara_reviews_archive_visibility'] ) && is_array( $_POST['lunara_reviews_archive_visibility'] )
-        ? wp_unslash( $_POST['lunara_reviews_archive_visibility'] )
-        : array();
-    $raw_order      = isset( $_POST['lunara_reviews_archive_order'] ) && is_array( $_POST['lunara_reviews_archive_order'] )
-        ? wp_unslash( $_POST['lunara_reviews_archive_order'] )
-        : array();
-    $ordered_slugs  = array();
-
-    foreach ( $registry as $slug => $section ) {
-        if ( ! empty( $section['setting'] ) ) {
-            set_theme_mod( $section['setting'], isset( $raw_visibility[ $slug ] ) ? '1' : '0' );
-        }
-        $ordered_slugs[ $slug ] = isset( $raw_order[ $slug ] ) ? absint( $raw_order[ $slug ] ) : 99;
-    }
-
-    asort( $ordered_slugs, SORT_NUMERIC );
-    $section_order = implode( ',', array_keys( $ordered_slugs ) );
-    if ( function_exists( 'lunara_sanitize_reviews_archive_section_order' ) ) {
-        $section_order = lunara_sanitize_reviews_archive_section_order( $section_order );
-    }
-    set_theme_mod( 'lunara_reviews_archive_section_order', $section_order );
 
     $raw_selects = isset( $_POST['lunara_reviews_archive_select'] ) && is_array( $_POST['lunara_reviews_archive_select'] )
         ? wp_unslash( $_POST['lunara_reviews_archive_select'] )
@@ -8891,12 +8806,7 @@ function lunara_control_desk_render_reviews_archive_studio( $context = 'control-
         <?php
         return;
     }
-    $context          = 'site-studio' === sanitize_key( (string) $context ) ? 'site-studio' : 'control-desk';
-    $copy_specs       = lunara_control_desk_reviews_archive_copy_specs();
-    $lead_options     = lunara_control_desk_reviews_archive_lead_options();
-    $pinned_review_id = function_exists( 'lunara_get_pinned_review_id' ) ? lunara_get_pinned_review_id() : 0;
-    $section_registry = function_exists( 'lunara_get_reviews_archive_section_registry' ) ? lunara_get_reviews_archive_section_registry() : array();
-    $section_order    = function_exists( 'lunara_get_reviews_archive_section_order_map' ) ? lunara_get_reviews_archive_section_order_map() : array();
+    $context = 'site-studio' === sanitize_key( (string) $context ) ? 'site-studio' : 'control-desk';
     ?>
     <section id="lunara-theme-studio-reviews-archive-studio" class="lunara-control-desk-homepage-studio">
         <div class="lunara-control-desk-panel-header">
@@ -8910,97 +8820,6 @@ function lunara_control_desk_render_reviews_archive_studio( $context = 'control-
             <?php wp_nonce_field( 'lunara_save_reviews_archive_studio', 'lunara_reviews_archive_nonce' ); ?>
 
             <div class="lunara-control-desk-homepage-grid">
-                <div class="lunara-control-desk-homepage-card">
-                    <div class="lunara-control-desk-card-head">
-                        <div>
-                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Archive Identity', 'lunara-film' ); ?></p>
-                            <h3><?php esc_html_e( 'Write the public Reviews introduction here', 'lunara-film' ); ?></h3>
-                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'These fields are the same theme settings the Reviews template already reads. No duplicate page builder copy is created.', 'lunara-film' ); ?></p>
-                        </div>
-                    </div>
-                    <div class="lunara-control-desk-homepage-field-grid">
-                        <?php foreach ( $copy_specs as $key => $spec ) : ?>
-                            <?php $value = (string) get_theme_mod( $key, $spec['default'] ); ?>
-                            <label class="lunara-control-desk-homepage-field">
-                                <strong><?php echo esc_html( $spec['label'] ); ?></strong>
-                                <?php if ( 'textarea' === $spec['type'] ) : ?>
-                                    <textarea name="lunara_reviews_archive_copy[<?php echo esc_attr( $key ); ?>]" rows="4" maxlength="<?php echo esc_attr( absint( $spec['max'] ) ); ?>"><?php echo esc_textarea( $value ); ?></textarea>
-                                <?php else : ?>
-                                    <input type="text" name="lunara_reviews_archive_copy[<?php echo esc_attr( $key ); ?>]" value="<?php echo esc_attr( $value ); ?>" maxlength="<?php echo esc_attr( absint( $spec['max'] ) ); ?>" />
-                                <?php endif; ?>
-                            </label>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <div class="lunara-control-desk-homepage-card">
-                    <div class="lunara-control-desk-card-head">
-                        <div>
-                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Lead Review', 'lunara-film' ); ?></p>
-                            <h3><?php esc_html_e( 'Choose the archive lead or return to automatic', 'lunara-film' ); ?></h3>
-                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'The list is bounded to the 100 most recently edited published Reviews. Saving one choice clears every older pin automatically.', 'lunara-film' ); ?></p>
-                        </div>
-                    </div>
-                    <label class="lunara-control-desk-homepage-field">
-                        <strong><?php esc_html_e( 'Featured Review', 'lunara-film' ); ?></strong>
-                        <select name="lunara_reviews_archive_lead_id">
-                            <option value="0"><?php esc_html_e( 'Automatic — newest release', 'lunara-film' ); ?></option>
-                            <?php
-                            $listed_lead_ids = array();
-                            foreach ( $lead_options as $review_option ) :
-                                if ( ! ( $review_option instanceof WP_Post ) ) {
-                                    continue;
-                                }
-                                $listed_lead_ids[] = (int) $review_option->ID;
-                                ?>
-                                <option value="<?php echo esc_attr( (string) $review_option->ID ); ?>" <?php selected( $pinned_review_id, (int) $review_option->ID ); ?>>
-                                    <?php echo esc_html( get_the_title( $review_option ) . ' — ' . get_the_modified_date( 'M j, Y', $review_option ) ); ?>
-                                </option>
-                            <?php endforeach; ?>
-                            <?php if ( $pinned_review_id > 0 && ! in_array( $pinned_review_id, $listed_lead_ids, true ) ) : ?>
-                                <option value="<?php echo esc_attr( (string) $pinned_review_id ); ?>" selected><?php echo esc_html( get_the_title( $pinned_review_id ) . ' — ' . __( 'current pinned lead', 'lunara-film' ) ); ?></option>
-                            <?php endif; ?>
-                        </select>
-                    </label>
-                </div>
-
-                <div class="lunara-control-desk-homepage-card">
-                    <div class="lunara-control-desk-card-head">
-                        <div>
-                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Archive Composition', 'lunara-film' ); ?></p>
-                            <h3><?php esc_html_e( 'Show and order the four Reviews lanes', 'lunara-film' ); ?></h3>
-                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'The Review Order toolbar travels with the Review Grid lane, so the public order always matches what this control says.', 'lunara-film' ); ?></p>
-                        </div>
-                    </div>
-                    <div class="lunara-control-desk-homepage-choice-grid">
-                        <?php foreach ( $section_registry as $slug => $section ) : ?>
-                            <?php
-                            $setting = isset( $section['setting'] ) ? (string) $section['setting'] : '';
-                            $enabled = '' === $setting ? true : (bool) get_theme_mod( $setting, true );
-                            $order   = isset( $section_order[ $slug ] ) ? absint( $section_order[ $slug ] ) : 99;
-                            ?>
-                            <fieldset class="lunara-control-desk-homepage-choice">
-                                <legend>
-                                    <strong><?php echo esc_html( $section['label'] ?? $slug ); ?></strong>
-                                    <small><?php echo esc_html( $section['description'] ?? '' ); ?></small>
-                                </legend>
-                                <label>
-                                    <input type="checkbox" name="lunara_reviews_archive_visibility[<?php echo esc_attr( $slug ); ?>]" value="1" <?php checked( $enabled ); ?> />
-                                    <span><strong><?php echo esc_html( $section['toggle_label'] ?? __( 'Show lane', 'lunara-film' ) ); ?></strong></span>
-                                </label>
-                                <label>
-                                    <span><?php esc_html_e( 'Position', 'lunara-film' ); ?></span>
-                                    <select name="lunara_reviews_archive_order[<?php echo esc_attr( $slug ); ?>]">
-                                        <?php for ( $position = 1; $position <= count( $section_registry ); $position++ ) : ?>
-                                            <option value="<?php echo esc_attr( (string) $position ); ?>" <?php selected( $order, $position ); ?>><?php echo esc_html( (string) $position ); ?></option>
-                                        <?php endfor; ?>
-                                    </select>
-                                </label>
-                            </fieldset>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
                 <div class="lunara-control-desk-homepage-card">
                     <div class="lunara-control-desk-card-head">
                         <div>

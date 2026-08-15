@@ -28,6 +28,6 @@ Assert-True ($delivery -match 'shortcode_exists\(\s*\$shortcode_tag\s*\)') 'Plug
 $syncCalls = ([regex]::Matches($carousel, 'syncDots\s*\(\s*\)\s*;')).Count
 Assert-True ($syncCalls -eq 1) 'Carousel dot geometry must run only after an actual scroll, not during first paint.'
 Assert-True ($carousel -match 'first dot is already marked active in server-rendered HTML') 'The first-paint carousel optimization must retain its server-state rationale.'
-Assert-True ($style -match 'Version:\s*3\.2\.40') 'Homepage hero preload/reflow gate must report Theme 3.2.40.'
+Assert-True ($style -match 'Version:\s*3\.2\.39') 'Homepage hero preload/reflow gate must report Theme 3.2.39.'
 
 Write-Host 'Homepage hero preload and first-paint reflow gate passed.'
