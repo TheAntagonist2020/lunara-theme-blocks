@@ -78,6 +78,6 @@ if ($LASTEXITCODE -ne 0) {
 }
 Assert-True (($phpOutput -join "`n") -match 'all assertions passed') 'Homepage hero responsive runtime did not report success.'
 
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.40\s*$') 'Theme version must preserve responsive hero delivery in 3.2.40.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.41\s*$') 'Theme version must preserve responsive hero delivery in 3.2.41.'
 
 Write-Host 'homepage-hero-responsive-delivery: all assertions passed.'
