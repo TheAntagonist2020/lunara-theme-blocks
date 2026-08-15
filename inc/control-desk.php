@@ -69,16 +69,11 @@ function lunara_enqueue_control_desk_assets( $hook ) {
             array(
                 'suggestUrl' => esc_url_raw( rest_url( 'lunara-ai-classic/v1/suggest' ) ),
                 'nonce'      => wp_create_nonce( 'wp_rest' ),
-                'journalSearchUrl'   => admin_url( 'admin-ajax.php' ),
-                'journalSearchNonce' => wp_create_nonce( 'lunara_journal_archive_studio_search' ),
                 'i18n'       => array(
                     'working' => __( 'Asking the private AI desk...', 'lunara-film' ),
                     'ready'   => __( 'Suggestion saved privately.', 'lunara-film' ),
                     'failed'  => __( 'Suggestion request failed.', 'lunara-film' ),
                     'copied'  => __( 'Copied.', 'lunara-film' ),
-                    'journalSearching'    => __( 'Searching published Journal files…', 'lunara-film' ),
-                    'journalSearchReady'  => __( 'Published matches updated.', 'lunara-film' ),
-                    'journalSearchFailed' => __( 'Search could not be completed. Your current selection is unchanged.', 'lunara-film' ),
                 ),
             )
         );
@@ -3084,6 +3079,57 @@ function lunara_control_desk_journal_archive_number_value( $key ) {
         get_theme_mod( $key, $specs[ $key ]['default'] )
     );
 }
+
+function lunara_control_desk_save_journal_archive_studio() {
+    $legacy_redirect = lunara_control_desk_admin_url(
+        array(
+            'tab' => 'theme-studio',
+        )
+    ) . '#lunara-theme-studio-journal-archive-studio';
+    $redirect = lunara_control_desk_bounded_return_url( 'lunara_journal_archive_return', 'journal-archive', $legacy_redirect );
+
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        wp_safe_redirect( add_query_arg( 'lunara_notice', 'journal_archive_studio_forbidden', $redirect ) );
+        exit;
+    }
+
+    check_admin_referer( 'lunara_save_journal_archive_studio', 'lunara_journal_archive_nonce' );
+
+    $raw_selects = isset( $_POST['lunara_journal_archive_select'] ) && is_array( $_POST['lunara_journal_archive_select'] )
+        ? wp_unslash( $_POST['lunara_journal_archive_select'] )
+        : array();
+
+    foreach ( lunara_control_desk_journal_archive_select_specs() as $key => $spec ) {
+        $value = isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'];
+        if ( ! isset( $spec['options'][ $value ] ) ) {
+            $value = (string) $spec['default'];
+        }
+        set_theme_mod( $key, $value );
+    }
+
+    $raw_numbers = isset( $_POST['lunara_journal_archive_number'] ) && is_array( $_POST['lunara_journal_archive_number'] )
+        ? wp_unslash( $_POST['lunara_journal_archive_number'] )
+        : array();
+    $raw_resets  = isset( $_POST['lunara_journal_archive_reset'] ) && is_array( $_POST['lunara_journal_archive_reset'] )
+        ? wp_unslash( $_POST['lunara_journal_archive_reset'] )
+        : array();
+    $resets      = array_map( 'sanitize_key', array_keys( $raw_resets ) );
+
+    foreach ( lunara_control_desk_journal_archive_number_specs() as $key => $spec ) {
+        if ( in_array( $key, $resets, true ) ) {
+            remove_theme_mod( $key );
+            continue;
+        }
+
+        if ( array_key_exists( $key, $raw_numbers ) ) {
+            set_theme_mod( $key, (string) lunara_control_desk_journal_archive_clamp_number( $key, $raw_numbers[ $key ] ) );
+        }
+    }
+
+    wp_safe_redirect( add_query_arg( 'lunara_notice', 'journal_archive_studio_saved', $redirect ) );
+    exit;
+}
+add_action( 'admin_post_lunara_save_journal_archive_studio', 'lunara_control_desk_save_journal_archive_studio' );
 
 function lunara_control_desk_utility_search_select_specs() {
     return array(
@@ -10287,11 +10333,6 @@ function lunara_control_desk_render_journal_archive_number_control( $key, $spec 
 }
 
 function lunara_control_desk_render_journal_archive_studio( $context = 'control-desk' ) {
-    if ( function_exists( 'lunara_journal_archive_studio_render_control_surface' ) ) {
-        lunara_journal_archive_studio_render_control_surface( $context );
-        return;
-    }
-
     if ( ! current_user_can( 'edit_theme_options' ) ) {
         ?>
         <section id="lunara-theme-studio-journal-archive-studio" class="lunara-control-desk-homepage-studio">
@@ -15329,10 +15370,6 @@ function lunara_control_desk_render_notice() {
         return;
     }
 
-    $journal_archive_reason = function_exists( 'lunara_journal_archive_studio_validation_message' )
-        ? lunara_journal_archive_studio_validation_message()
-        : __( 'Review the Journal Archive fields and try again.', 'lunara-film' );
-
     $messages = array(
         'pairing_desk_copy_saved'     => array(
             'class'   => 'notice-success',
@@ -15452,19 +15489,7 @@ function lunara_control_desk_render_notice() {
         ),
         'journal_archive_studio_saved' => array(
             'class'   => 'notice-success',
-            'message' => __( 'Journal Archive Studio saved. Identity, curation, labels, sections, media, retention, and presentation now read the validated public configuration.', 'lunara-film' ),
-        ),
-        'journal_archive_studio_invalid' => array(
-            'class'   => 'notice-error',
-            'message' => sprintf( __( 'Journal Archive Studio was not saved. %s Your rejected values remain in the private form below; the last valid public archive is unchanged.', 'lunara-film' ), $journal_archive_reason ),
-        ),
-        'journal_archive_studio_restored' => array(
-            'class'   => 'notice-success',
-            'message' => __( 'Journal Archive Studio restored the selected prior-valid public configuration and recorded the state it replaced.', 'lunara-film' ),
-        ),
-        'journal_archive_studio_restore_invalid' => array(
-            'class'   => 'notice-error',
-            'message' => sprintf( __( 'Journal Archive Studio could not restore that revision. %s The current public archive is unchanged.', 'lunara-film' ), $journal_archive_reason ),
+            'message' => __( 'Journal Archive Studio saved. The live-desk rhythm and archive card geometry now read the updated values.', 'lunara-film' ),
         ),
         'journal_archive_studio_forbidden' => array(
             'class'   => 'notice-error',
