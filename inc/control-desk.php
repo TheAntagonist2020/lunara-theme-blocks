@@ -8941,7 +8941,7 @@ function lunara_control_desk_render_reviews_archive_studio( $context = 'control-
                             <p class="lunara-control-desk-subtle"><?php esc_html_e( 'The list is bounded to the 100 most recently edited published Reviews. Saving one choice clears every older pin automatically.', 'lunara-film' ); ?></p>
                         </div>
                     </div>
-                    <label class="lunara-control-desk-homepage-field lunara-control-desk-reviews-lead-field">
+                    <label class="lunara-control-desk-homepage-field">
                         <strong><?php esc_html_e( 'Featured Review', 'lunara-film' ); ?></strong>
                         <select name="lunara_reviews_archive_lead_id">
                             <option value="0"><?php esc_html_e( 'Automatic — newest release', 'lunara-film' ); ?></option>
