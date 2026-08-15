@@ -5110,6 +5110,22 @@
 	overflow-wrap: anywhere;
 }
 
+.lunara-site-studio #lunara-theme-studio-reviews-archive-studio .lunara-control-desk-reviews-lead-field {
+	box-sizing: border-box;
+	display: grid;
+	gap: 6px;
+	max-width: 100%;
+	min-width: 0;
+	width: 100%;
+}
+
+.lunara-site-studio #lunara-theme-studio-reviews-archive-studio .lunara-control-desk-reviews-lead-field select[name="lunara_reviews_archive_lead_id"] {
+	box-sizing: border-box;
+	max-width: 100%;
+	min-width: 0;
+	width: 100%;
+}
+
 /*
  * Archive geometry controls sit inside a two-column workspace on desktop.
  * Let the inner grid respond to its card width—not only to the viewport—so

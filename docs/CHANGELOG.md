@@ -11,6 +11,67 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-15 — Theme 3.2.42 Reviews First-Paint Stability
+
+- Preserved the reviewed Reviews Archive Studio and composition work from
+  3.2.40/3.2.41 while repairing the production-only interaction with stale
+  Jetpack Boost critical and aggregate CSS.
+- Added an 11,387-byte universal structural guard in `wp_head`, bounded by a
+  12,288-byte contract; the full 37,271-byte visual system remains external and
+  cacheable instead of returning to the former 43 KB inline cascade.
+- Kept the `lunara-review-archive` stylesheet direct, unaggregated, and
+  render-blocking through handle-specific Jetpack Boost filters while leaving
+  every unrelated stylesheet's optimizer state untouched.
+- Moved Archive Studio geometry/order variables to head phase with ID-level
+  authority, preserving non-default saved lane order and density before stale
+  optimizer CSS is withdrawn.
+- Locked every rendered lane, Release Year controls, responsive lead geometry,
+  and the complete Pairing Desk containing/card structure without hiding page
+  overflow or changing public data/storage.
+- Moved the settled route geometry under the renderer-owned `#primary.lra`
+  wrapper, so the CPT archive, director
+  taxonomy, explicit page template, and slug-selected default page share the
+  same first-paint and settled layout without relying on body-class aliases.
+- Added an actual-asset browser regression at 1440, 782, and 390 pixels for the
+  default, Pairing-first, Hero-hidden, director, explicit-template, and
+  slug-selected page compositions. It replays the
+  archived 53,864-byte production Boost critical payload and the exact 821 KB
+  stale aggregate, then proves deferred dependency delivery, critical removal,
+  and the persistent seed each move geometry by no more than one pixel.
+- Production approval now explicitly requires a real-iPhone Safari smoke on
+  staging because the compact route-owned first-paint guard uses native CSS
+  nesting; desktop emulation alone is not sufficient for this release.
+- This is a theme-only staging candidate. No plugin, post, production, cache,
+  CDN, or WordPress-option changes are part of the release.
+
+## 2026-08-15 — Theme 3.2.41 Reviews Studio Mobile Containment
+
+- Made the Reviews Archive lead label and selector shrink to their Site Studio
+  card at 390 px and 375 px without hiding overflow.
+- Scoped the repair to the private Site Studio Reviews panel; public rendering,
+  lead storage, archive composition, and WordPress options are unchanged.
+- Added a portable production-markup/CSS contract plus an actual-CSS browser
+  regression that verifies document, workspace, label, and selector widths.
+
+---
+
+## 2026-08-15 — Theme 3.2.40 Reviews Archive Composition
+
+- Added a focused Reviews Archive Studio for canonical copy, bounded lead
+  curation, four-lane visibility/order, and existing density geometry.
+- Repaired featured-card anchor semantics and made every saved lane position
+  truthful, including Review Grid's utility toolbar and Pairing Desk.
+- Composed the pinned lead into SQL ordering, added a no-JS Review Year filter,
+  preserved pagination/query state, and repaired the one-item last-page pager.
+- Preserved native attachment candidates, bounded canonical TMDB delivery to
+  `w342`/`w500`/`w780`, and kept below-fold archive media lazy.
+- Extracted approximately 42 KB of static Reviews CSS into a route-scoped,
+  cacheable asset while retaining under 2 KB of dynamic variables inline.
+- No plugin, post, production, cache, CDN, or WordPress option writes are part
+  of this release.
+
+---
+
 ## 1. Repository map
 
 | Repo | Purpose | Version at end of period |

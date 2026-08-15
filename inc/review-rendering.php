@@ -1140,6 +1140,127 @@ if ( ! function_exists( 'lunara_apply_review_archive_sort_args' ) ) {
     }
 }
 
+if ( ! function_exists( 'lunara_get_review_archive_year' ) ) {
+    /**
+     * Resolve the public no-JS Review Year filter.
+     */
+    function lunara_get_review_archive_year() {
+        $year = isset( $_GET['review_year'] ) ? sanitize_text_field( wp_unslash( $_GET['review_year'] ) ) : '';
+
+        return preg_match( '/^(?:18|19|20|21)\d{2}$/', $year ) ? $year : '';
+    }
+}
+
+if ( ! function_exists( 'lunara_get_review_archive_year_options' ) ) {
+    /**
+     * Published Review Year terms for the server-rendered archive filter.
+     */
+    function lunara_get_review_archive_year_options() {
+        if ( ! taxonomy_exists( 'lunara_review_year' ) ) {
+            return array();
+        }
+
+        $terms = get_terms(
+            array(
+                'taxonomy'   => 'lunara_review_year',
+                'hide_empty' => true,
+                'orderby'    => 'name',
+                'order'      => 'DESC',
+            )
+        );
+
+        return is_wp_error( $terms ) || ! is_array( $terms ) ? array() : $terms;
+    }
+}
+
+if ( ! function_exists( 'lunara_apply_review_archive_year_args' ) ) {
+    /**
+     * Add a Review Year taxonomy clause without discarding another filter.
+     */
+    function lunara_apply_review_archive_year_args( $query_args, $year = '' ) {
+        $query_args = is_array( $query_args ) ? $query_args : array();
+        $year       = '' !== (string) $year ? sanitize_text_field( (string) $year ) : lunara_get_review_archive_year();
+
+        if ( ! preg_match( '/^(?:18|19|20|21)\d{2}$/', $year ) ) {
+            return $query_args;
+        }
+
+        $tax_query   = isset( $query_args['tax_query'] ) && is_array( $query_args['tax_query'] )
+            ? $query_args['tax_query']
+            : array();
+        $tax_query[] = array(
+            'taxonomy' => 'lunara_review_year',
+            'field'    => 'slug',
+            'terms'    => array( $year ),
+            'operator' => 'IN',
+        );
+        $query_args['tax_query'] = $tax_query;
+
+        return $query_args;
+    }
+}
+
+if ( ! function_exists( 'lunara_get_review_archive_query_args' ) ) {
+    /**
+     * Compose public archive ordering and taxonomy filtering in one place.
+     */
+    function lunara_get_review_archive_query_args( $query_args, $sort = '', $year = '' ) {
+        $sort       = '' !== (string) $sort ? sanitize_key( (string) $sort ) : lunara_get_review_archive_sort();
+        $year       = '' !== (string) $year ? sanitize_text_field( (string) $year ) : lunara_get_review_archive_year();
+        $query_args = lunara_apply_review_archive_sort_args( $query_args, $sort );
+        $query_args = lunara_apply_review_archive_year_args( $query_args, $year );
+
+        if ( 'release_desc' === $sort && '' === $year && function_exists( 'lunara_get_pinned_review_id' ) ) {
+            $pinned_id = lunara_get_pinned_review_id();
+            if ( $pinned_id > 0 ) {
+                $query_args['lunara_reviews_archive_pinned_orderby'] = $pinned_id;
+            }
+        }
+
+        return $query_args;
+    }
+}
+
+if ( ! function_exists( 'lunara_reviews_archive_pinned_orderby' ) ) {
+    /**
+     * Put the curated Review first inside SQL so paging remains stable.
+     */
+    function lunara_reviews_archive_pinned_orderby( $orderby, $query ) {
+        $pinned_id = $query instanceof WP_Query
+            ? absint( $query->get( 'lunara_reviews_archive_pinned_orderby' ) )
+            : 0;
+
+        if ( $pinned_id <= 0 ) {
+            return $orderby;
+        }
+
+        global $wpdb;
+
+        $pinned_order = 'CASE WHEN ' . $wpdb->posts . '.ID = ' . $pinned_id . ' THEN 0 ELSE 1 END ASC';
+        return '' !== trim( (string) $orderby ) ? $pinned_order . ', ' . $orderby : $pinned_order;
+    }
+}
+add_filter( 'posts_orderby', 'lunara_reviews_archive_pinned_orderby', 20, 2 );
+
+if ( ! function_exists( 'lunara_get_review_archive_lane_order' ) ) {
+    /**
+     * Resolve a public archive slot against the canonical four-lane order.
+     *
+     * The utility toolbar is part of the Review Grid lane rather than a fifth
+     * independently configurable lane, so both direct children share an order
+     * and retain their source order (toolbar, then cards).
+     */
+    function lunara_get_review_archive_lane_order( $section_order, $slot ) {
+        $section_order = is_array( $section_order ) ? $section_order : array();
+        $slot          = sanitize_key( (string) $slot );
+        $lane          = 'utility' === $slot ? 'grid' : $slot;
+
+        return isset( $section_order[ $lane ] )
+            ? max( 1, absint( $section_order[ $lane ] ) )
+            : 99;
+    }
+}
+
 if ( ! function_exists( 'lunara_get_review_card_modified_label' ) ) {
     /**
      * Return a compact updated label when modified date is meaningfully newer
@@ -1419,6 +1540,102 @@ if ( ! function_exists( 'lunara_lock_review_image_markup' ) ) {
     }
 }
 
+if ( ! function_exists( 'lunara_get_review_remote_image_markup' ) ) {
+    /**
+     * Build card markup for an external image without making a runtime API call.
+     *
+     * TMDB URLs receive a small, bounded CDN srcset. Every other provider keeps
+     * the exact stored URL so the archive never guesses derivative semantics.
+     */
+    function lunara_get_review_remote_image_markup( $source_url, $attrs, $profile ) {
+        $source_url = esc_url_raw( html_entity_decode( trim( (string) $source_url ), ENT_QUOTES, 'UTF-8' ) );
+        $attrs      = is_array( $attrs ) ? $attrs : array();
+        $profile    = is_array( $profile ) ? $profile : array();
+
+        if ( '' === $source_url ) {
+            return array(
+                'url'       => '',
+                'html'      => '',
+                'has_image' => false,
+            );
+        }
+
+        if ( ! empty( $profile['width'] ) && ! empty( $profile['height'] ) ) {
+            $attrs['width']  = absint( $profile['width'] );
+            $attrs['height'] = absint( $profile['height'] );
+        }
+        if ( ! empty( $profile['sizes'] ) ) {
+            $attrs['sizes'] = (string) $profile['sizes'];
+        }
+
+        $host      = strtolower( (string) wp_parse_url( $source_url, PHP_URL_HOST ) );
+        $path      = (string) wp_parse_url( $source_url, PHP_URL_PATH );
+        $is_tmdb   = 'image.tmdb.org' === $host
+            && 1 === preg_match( '#^/t/p/(?:w\d+|original)/#i', $path );
+        $src     = $source_url;
+
+        if ( $is_tmdb ) {
+            $candidate_sizes = array(
+                'w342' => 342,
+                'w500' => 500,
+                'w780' => 780,
+            );
+            $srcset            = array();
+            $seen_candidates   = array();
+            foreach ( $candidate_sizes as $tmdb_size => $candidate_width ) {
+                $candidate_url = function_exists( 'lunara_resize_tmdb_image_url' )
+                    ? lunara_resize_tmdb_image_url( $source_url, $tmdb_size )
+                    : preg_replace( '#https://image\.tmdb\.org/t/p/(?:w\d+|original)(?=/)#i', 'https://image.tmdb.org/t/p/' . $tmdb_size, $source_url );
+                $candidate_url = is_string( $candidate_url ) ? esc_url_raw( $candidate_url ) : '';
+                $candidate_path = (string) wp_parse_url( $candidate_url, PHP_URL_PATH );
+                if (
+                    '' !== $candidate_url
+                    && ! isset( $seen_candidates[ $candidate_url ] )
+                    && 1 === preg_match( '#^/t/p/' . preg_quote( $tmdb_size, '#' ) . '/#i', $candidate_path )
+                ) {
+                    $seen_candidates[ $candidate_url ] = true;
+                    $srcset[] = $candidate_url . ' ' . $candidate_width . 'w';
+                    if ( 'w500' === $tmdb_size ) {
+                        $src = $candidate_url;
+                    }
+                }
+            }
+            if ( ! empty( $srcset ) ) {
+                $attrs['srcset'] = implode( ', ', $srcset );
+            }
+        }
+
+        $attr_html = '';
+        foreach ( $attrs as $attr_name => $attr_value ) {
+            $attr_name = preg_replace( '/[^a-zA-Z0-9:_-]/', '', (string) $attr_name );
+            if ( '' === $attr_name || false === $attr_value || null === $attr_value ) {
+                continue;
+            }
+            if ( true === $attr_value ) {
+                $attr_html .= ' ' . esc_attr( $attr_name );
+            } elseif ( is_scalar( $attr_value ) && '' !== (string) $attr_value ) {
+                $attr_html .= ' ' . esc_attr( $attr_name ) . '="' . esc_attr( (string) $attr_value ) . '"';
+            }
+        }
+
+        $html = sprintf( '<img src="%1$s"%2$s>', esc_url( $src ), $attr_html );
+
+        if ( ! $is_tmdb ) {
+            return array(
+                'url'       => $source_url,
+                'html'      => $html,
+                'has_image' => true,
+            );
+        }
+
+        return array(
+            'url'       => $src,
+            'html'      => $html,
+            'has_image' => true,
+        );
+    }
+}
+
 /**
  * Resolve the preferred image for review cards and feature placements.
  */
@@ -1448,11 +1665,6 @@ if ( ! function_exists( 'lunara_get_review_card_image_data' ) ) {
 
         $profile = lunara_get_review_image_profile( isset( $attrs['class'] ) ? (string) $attrs['class'] : '' );
         $size    = isset( $profile['size'] ) ? (string) $profile['size'] : (string) $size;
-
-        if ( ! empty( $profile['width'] ) && ! empty( $profile['height'] ) ) {
-            $attrs['width']  = absint( $profile['width'] );
-            $attrs['height'] = absint( $profile['height'] );
-        }
 
         if ( ! empty( $profile['sizes'] ) ) {
             $attrs['sizes'] = (string) $profile['sizes'];
@@ -1496,72 +1708,17 @@ if ( ! function_exists( 'lunara_get_review_card_image_data' ) ) {
             $attachment_id = attachment_url_to_postid( $card_url );
 
             if ( $attachment_id > 0 ) {
-                $source_url = (string) wp_get_attachment_image_url( $attachment_id, 'full' );
-
-                if ( '' === $source_url ) {
-                    $source_url = (string) wp_get_attachment_image_url( $attachment_id, $size );
-                }
-
-                if ( '' === $source_url ) {
-                    $source_url = esc_url_raw( $card_url );
-                }
-
-                $url  = lunara_lock_review_image_url( $source_url, $profile );
-                $html = (string) wp_get_attachment_image( $attachment_id, 'full', false, $attrs );
-
-                if ( '' === $url ) {
-                    $url = esc_url_raw( $card_url );
-                }
-
-                if ( '' !== $html ) {
-                    $html = lunara_lock_review_image_markup( $html, $source_url, $profile );
-                }
+                $url  = (string) wp_get_attachment_image_url( $attachment_id, $size );
+                $html = (string) wp_get_attachment_image( $attachment_id, $size, false, $attrs );
             } else {
-                $url = lunara_lock_review_image_url( $card_url, $profile );
-
-                if ( '' !== $url ) {
-                    $attr_html = '';
-
-                    foreach ( $attrs as $attr_name => $attr_value ) {
-                        $attr_name = preg_replace( '/[^a-zA-Z0-9:_-]/', '', (string) $attr_name );
-
-                        if ( '' === $attr_name || false === $attr_value || null === $attr_value ) {
-                            continue;
-                        }
-
-                        if ( true === $attr_value ) {
-                            $attr_html .= ' ' . esc_attr( $attr_name );
-                            continue;
-                        }
-
-                        if ( is_scalar( $attr_value ) && '' !== (string) $attr_value ) {
-                            $attr_html .= ' ' . esc_attr( $attr_name ) . '="' . esc_attr( (string) $attr_value ) . '"';
-                        }
-                    }
-
-                    $html = sprintf( '<img src="%1$s"%2$s>', esc_url( $url ), $attr_html );
-                }
+                return lunara_get_review_remote_image_markup( $card_url, $attrs, $profile );
             }
         }
 
         if ( '' === $html && has_post_thumbnail( $post_id ) ) {
             $thumbnail_id = get_post_thumbnail_id( $post_id );
-            $source_url   = $thumbnail_id ? (string) wp_get_attachment_image_url( $thumbnail_id, 'full' ) : '';
-
-            if ( '' === $source_url ) {
-                $source_url = $thumbnail_id ? (string) wp_get_attachment_image_url( $thumbnail_id, $size ) : '';
-            }
-
-            $url  = lunara_lock_review_image_url( $source_url, $profile );
-            $html = (string) get_the_post_thumbnail( $post_id, 'full', $attrs );
-
-            if ( '' === $url ) {
-                $url = (string) get_the_post_thumbnail_url( $post_id, $size );
-            }
-
-            if ( '' !== $html ) {
-                $html = lunara_lock_review_image_markup( $html, $source_url, $profile );
-            }
+            $url  = $thumbnail_id ? (string) wp_get_attachment_image_url( $thumbnail_id, $size ) : '';
+            $html = (string) get_the_post_thumbnail( $post_id, $size, $attrs );
         }
 
         return array(
@@ -2178,24 +2335,32 @@ if ( ! function_exists( 'lunara_render_review_feature_card' ) ) {
         $args = wp_parse_args(
             $args,
             array(
-                'variant' => 'lead',
+                'variant'       => 'lead',
                 'excerpt_words' => 30,
+                'loading'       => 'lazy',
+                'fetchpriority' => '',
             )
         );
 
         $variant      = 'compact' === $args['variant'] ? 'compact' : 'lead';
+        $loading      = 'eager' === strtolower( (string) $args['loading'] ) ? 'eager' : 'lazy';
+        $priority     = 'high' === strtolower( (string) $args['fetchpriority'] ) ? 'high' : '';
         $score        = trim( (string) get_post_meta( $post_id, '_lunara_score', true ) );
         $excerpt      = lunara_get_review_archive_excerpt( $post_id, intval( $args['excerpt_words'] ) );
         $review_tt    = function_exists( 'lunara_get_review_imdb_title_id' ) ? lunara_get_review_imdb_title_id( $post_id ) : '';
+        $image_attrs  = array(
+            'class'    => 'lunara-review-feature-image',
+            'loading'  => $loading,
+            'decoding' => 'async',
+            'sizes'    => '(max-width: 900px) 100vw, 48vw',
+        );
+        if ( '' !== $priority ) {
+            $image_attrs['fetchpriority'] = $priority;
+        }
         $image_data   = lunara_get_review_card_image_data(
             $post_id,
-            'large',
-            array(
-                'class'    => 'lunara-review-feature-image',
-                'loading'  => 'lazy',
-                'decoding' => 'async',
-                'sizes'    => '(max-width: 900px) 100vw, 48vw',
-            )
+            'lunara-review-feature',
+            $image_attrs
         );
         $ledger_pill  = '';
         $has_media    = ! empty( $image_data['html'] );
@@ -2214,21 +2379,23 @@ if ( ! function_exists( 'lunara_render_review_feature_card' ) ) {
         ob_start();
         ?>
         <article class="<?php echo esc_attr( implode( ' ', array_filter( $card_classes ) ) ); ?>">
-            <a class="lunara-review-feature-link" href="<?php echo esc_url( get_permalink( $post_id ) ); ?>">
+            <div class="lunara-review-feature-layout lunara-review-feature-link">
                 <?php if ( $has_media ) : ?>
-                    <div class="lunara-review-feature-media">
-                        <?php echo $image_data['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                        <?php if ( '' !== $score ) : ?>
-                            <span class="lunara-score-badge"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
-                        <?php endif; ?>
-                    </div>
+                    <a class="lunara-review-feature-media-link" href="<?php echo esc_url( get_permalink( $post_id ) ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'Read %s', 'lunara-film' ), get_the_title( $post_id ) ) ); ?>">
+                        <div class="lunara-review-feature-media">
+                            <?php echo $image_data['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                            <?php if ( '' !== $score ) : ?>
+                                <span class="lunara-score-badge"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
+                            <?php endif; ?>
+                        </div>
+                    </a>
                 <?php endif; ?>
                 <div class="lunara-review-feature-copy">
                     <p class="lunara-home-section-kicker"><?php esc_html_e( 'Lunara Review', 'lunara-film' ); ?></p>
                     <?php if ( ! $has_media && '' !== $score ) : ?>
                         <span class="lunara-score-badge lunara-score-badge-inline"><?php echo wp_kses_post( lunara_render_stars( $score ) ); ?></span>
                     <?php endif; ?>
-                    <h2 class="lunara-review-feature-title"><?php echo esc_html( get_the_title( $post_id ) ); ?></h2>
+                    <h2 class="lunara-review-feature-title"><a class="lunara-review-feature-title-link" href="<?php echo esc_url( get_permalink( $post_id ) ); ?>"><?php echo esc_html( get_the_title( $post_id ) ); ?></a></h2>
                     <?php if ( $has_excerpt ) : ?>
                         <p class="lunara-review-feature-excerpt lunara-review-feature-quote"><?php echo esc_html( $excerpt ); ?></p>
                     <?php endif; ?>
@@ -2236,10 +2403,10 @@ if ( ! function_exists( 'lunara_render_review_feature_card' ) ) {
                         <?php if ( '' !== $ledger_pill ) : ?>
                             <div class="lunara-review-feature-ledger"><?php echo wp_kses_post( $ledger_pill ); ?></div>
                         <?php endif; ?>
-                        <span class="lunara-section-link"><?php esc_html_e( 'Read Review', 'lunara-film' ); ?></span>
+                        <a class="lunara-section-link lunara-review-feature-cta" href="<?php echo esc_url( get_permalink( $post_id ) ); ?>"><?php esc_html_e( 'Read Review', 'lunara-film' ); ?></a>
                     </div>
                 </div>
-            </a>
+            </div>
         </article>
         <?php
 
@@ -3377,7 +3544,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
         if ( '' === $copy && ! $is_director_archive ) {
             $copy = (string) $defaults['copy'];
         }
-        $classes         = trim( 'site-main lunara-archive-page ' . $base_classes );
+        $classes         = trim( 'site-main lunara-archive-page lra ' . $base_classes );
         $total_reviews   = wp_count_posts( 'review' );
         $total_reviews   = isset( $total_reviews->publish ) ? intval( $total_reviews->publish ) : 0;
         $visible_count   = count( $posts );
@@ -3386,24 +3553,8 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
             $latest_ts = max( $latest_ts, (int) get_post_modified_time( 'U', true, $post_item ) );
         }
         $current_sort    = isset( $args['current_sort'] ) ? sanitize_key( (string) $args['current_sort'] ) : lunara_get_review_archive_sort();
-
-        // Reviews Page Lead pin: on page one of the default newest-release
-        // view, a pinned review takes the lead slot (see
-        // lunara_review_pin_meta_callback). Explicit sorts and deeper pages
-        // keep their true order, and the director archive is untouched.
-        $current_page = max( 1, intval( get_query_var( 'paged' ) ), intval( get_query_var( 'page' ) ) );
-        if ( 'release_desc' === $current_sort && 1 === $current_page && ! $is_director_archive && function_exists( 'lunara_get_pinned_review_id' ) ) {
-            $pinned_review_id = lunara_get_pinned_review_id();
-            if ( $pinned_review_id > 0 ) {
-                $posts = array_values( array_filter( $posts, static function ( $post_item ) use ( $pinned_review_id ) {
-                    return (int) $post_item->ID !== $pinned_review_id;
-                } ) );
-                $pinned_review = get_post( $pinned_review_id );
-                if ( $pinned_review instanceof WP_Post && 'publish' === $pinned_review->post_status && 'review' === $pinned_review->post_type ) {
-                    array_unshift( $posts, $pinned_review );
-                }
-            }
-        }
+        $current_year    = $is_director_archive ? '' : lunara_get_review_archive_year();
+        $year_options    = $is_director_archive ? array() : lunara_get_review_archive_year_options();
 
         $lead_post       = ! empty( $posts ) ? array_shift( $posts ) : null;
         $support_posts   = array_slice( $posts, 0, 4 );
@@ -3414,35 +3565,47 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
             ? ( ! empty( $remaining_posts ) ? __( 'Lead / Support / Archive Run', 'lunara-film' ) : __( 'Lead / Support', 'lunara-film' ) )
             : __( 'Standby', 'lunara-film' );
         $sort_options    = isset( $args['sort_options'] ) && is_array( $args['sort_options'] ) ? $args['sort_options'] : lunara_get_review_archive_sort_options();
-        $section_order = function_exists( 'lunara_get_reviews_archive_section_order_map' )
-            ? lunara_get_reviews_archive_section_order_map()
-            : array();
-        $show_hero      = function_exists( 'lunara_reviews_archive_section_is_enabled' )
+        $section_order = array();
+        if ( $is_director_archive && function_exists( 'lunara_get_reviews_archive_section_registry' ) ) {
+            foreach ( array_keys( lunara_get_reviews_archive_section_registry() ) as $index => $slug ) {
+                $section_order[ $slug ] = $index + 1;
+            }
+        } elseif ( function_exists( 'lunara_get_reviews_archive_section_order_map' ) ) {
+            $section_order = lunara_get_reviews_archive_section_order_map();
+        }
+        $lane_orders = array();
+        foreach ( array( 'hero', 'utility', 'grid', 'pagination', 'pairing-desk' ) as $slot ) {
+            $lane_orders[ $slot ] = lunara_get_review_archive_lane_order( $section_order, $slot );
+        }
+        $show_hero      = $is_director_archive || ( function_exists( 'lunara_reviews_archive_section_is_enabled' )
             ? lunara_reviews_archive_section_is_enabled( 'hero' )
-            : true;
-        $show_grid      = function_exists( 'lunara_reviews_archive_section_is_enabled' )
+            : true );
+        $show_grid      = $is_director_archive || ( function_exists( 'lunara_reviews_archive_section_is_enabled' )
             ? lunara_reviews_archive_section_is_enabled( 'grid' )
-            : true;
-        $show_pagination = function_exists( 'lunara_reviews_archive_section_is_enabled' )
+            : true );
+        $show_pagination = $is_director_archive || ( function_exists( 'lunara_reviews_archive_section_is_enabled' )
             ? lunara_reviews_archive_section_is_enabled( 'pagination' )
-            : true;
+            : true );
         // Pairing Desk closes the review index only — director/taxonomy
         // archives reuse this shell and should stay focused on their run.
-        $show_pairing_desk = is_post_type_archive( 'review' )
-            && ! $is_director_archive
+        $show_pairing_desk = ! $is_director_archive
             && function_exists( 'lunara_render_home_pairing_desk' )
             && ( function_exists( 'lunara_reviews_archive_section_is_enabled' )
                 ? lunara_reviews_archive_section_is_enabled( 'pairing-desk' )
                 : true );
         $sort_base_url  = remove_query_arg( array( 'sort', 'paged' ), get_pagenum_link( 1 ) );
+        $filter_base_url = remove_query_arg( array( 'sort', 'review_year', 'paged' ), get_pagenum_link( 1 ) );
         $sort_label     = lunara_get_review_archive_sort_label( $current_sort );
         $latest_label   = $latest_ts > 0 ? wp_date( 'M j, Y', $latest_ts ) : __( 'Standby', 'lunara-film' );
 
         ob_start();
         ?>
         <main id="primary" class="<?php echo esc_attr( $classes ); ?>">
+            <?php if ( ! $show_hero ) : ?>
+                <h1 class="screen-reader-text lunara-review-archive-fallback-title"><?php echo esc_html( $args['title'] ); ?></h1>
+            <?php endif; ?>
             <?php if ( $show_hero ) : ?>
-            <section class="lunara-home-section lunara-archive-hero lunara-review-archive-hero lunara-review-archive-slot-hero" data-lunara-section="hero">
+            <section class="lunara-home-section lunara-archive-hero lunara-review-archive-hero lunara-review-archive-slot-hero" data-lunara-section="hero" style="order:<?php echo esc_attr( (string) $lane_orders['hero'] ); ?> !important;">
                 <div class="lunara-review-archive-hero-shell">
                     <div class="lunara-review-archive-hero-copy-wrap">
                         <p class="lunara-archive-hero-kicker"><?php echo esc_html( $args['kicker'] ); ?></p>
@@ -3484,7 +3647,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
             <?php endif; ?>
 
             <?php if ( $show_grid && ! empty( $sort_options ) ) : ?>
-            <section class="lunara-home-section lunara-review-archive-utility lunara-review-archive-slot-utility" data-lunara-section="utility">
+            <section class="lunara-home-section lunara-review-archive-utility lunara-review-archive-slot-utility" data-lunara-section="utility" style="order:<?php echo esc_attr( (string) $lane_orders['utility'] ); ?> !important;">
                 <div class="lunara-review-archive-toolbar">
                     <div class="lunara-home-section-head lunara-review-archive-toolbar-head">
                         <div>
@@ -3504,15 +3667,42 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                             </a>
                         <?php endforeach; ?>
                     </div>
+                    <?php if ( ! empty( $year_options ) ) : ?>
+                        <form class="lunara-review-archive-year-filter" method="get" action="<?php echo esc_url( $filter_base_url ); ?>">
+                            <label for="lunara-review-archive-year"><?php esc_html_e( 'Release year', 'lunara-film' ); ?></label>
+                            <select id="lunara-review-archive-year" name="review_year">
+                                <option value=""><?php esc_html_e( 'All years', 'lunara-film' ); ?></option>
+                                <?php foreach ( $year_options as $year_term ) : ?>
+                                    <?php if ( $year_term instanceof WP_Term ) : ?>
+                                        <option value="<?php echo esc_attr( $year_term->slug ); ?>" <?php selected( $current_year, $year_term->slug ); ?>><?php echo esc_html( $year_term->name ); ?></option>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </select>
+                            <?php if ( 'release_desc' !== $current_sort ) : ?>
+                                <input type="hidden" name="sort" value="<?php echo esc_attr( $current_sort ); ?>" />
+                            <?php endif; ?>
+                            <button type="submit"><?php esc_html_e( 'Filter', 'lunara-film' ); ?></button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             </section>
             <?php endif; ?>
 
             <?php if ( $show_grid ) : ?>
-            <section class="lunara-home-section lunara-review-archive-shell lunara-review-archive-slot-grid" data-lunara-section="grid">
+            <section class="lunara-home-section lunara-review-archive-shell lunara-review-archive-slot-grid" data-lunara-section="grid" style="order:<?php echo esc_attr( (string) $lane_orders['grid'] ); ?> !important;">
                 <?php if ( $lead_post instanceof WP_Post ) : ?>
                     <div class="lunara-review-archive-spotlight" data-lunara-section="spotlight">
-                        <?php echo lunara_render_review_feature_card( $lead_post->ID, array( 'variant' => 'lead', 'excerpt_words' => 44 ) ); ?>
+                        <?php
+                        echo lunara_render_review_feature_card(
+                            $lead_post->ID,
+                            array(
+                                'variant'       => 'lead',
+                                'excerpt_words' => 44,
+                                'loading'       => $show_hero ? 'lazy' : 'eager',
+                                'fetchpriority' => $show_hero ? '' : 'high',
+                            )
+                        );
+                        ?>
 
                         <?php if ( ! empty( $support_posts ) ) : ?>
                             <div class="lunara-review-archive-support-suite">
@@ -3540,7 +3730,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                                     <div class="lunara-review-archive-rail-track" data-lunara-dynamic-rail-track tabindex="0">
                                     <?php foreach ( $support_posts as $support_index => $support_post ) : ?>
                                         <div class="lunara-review-archive-rail-item" data-lunara-dynamic-rail-item>
-                                            <?php echo lunara_render_review_grid_card( $support_post->ID, $support_index + 2 ); ?>
+                                            <?php echo lunara_render_review_grid_card( $support_post->ID ); ?>
                                         </div>
                                     <?php endforeach; ?>
                                     </div>
@@ -3587,7 +3777,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                             </div>
                             <div class="<?php echo esc_attr( implode( ' ', $run_grid_classes ) ); ?>">
                                 <?php foreach ( $remaining_posts as $review_index => $review_post ) : ?>
-                                    <?php echo lunara_render_review_grid_card( $review_post->ID, $review_index + count( $support_posts ) + 2 ); ?>
+                                    <?php echo lunara_render_review_grid_card( $review_post->ID ); ?>
                                 <?php endforeach; ?>
                                 <?php if ( $retention_span > 0 ) : ?>
                                     <aside class="lunara-review-archive-retention-card spans-<?php echo esc_attr( (string) $retention_span ); ?>" aria-label="<?php esc_attr_e( 'More Lunara destinations', 'lunara-film' ); ?>">
@@ -3597,7 +3787,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                                             <p><?php esc_html_e( 'Follow the latest updates, jump into the Journal, or cross-reference the Oscar Ledger.', 'lunara-film' ); ?></p>
                                         </div>
                                         <div class="lunara-review-archive-retention-actions">
-                                            <a href="<?php echo esc_url( add_query_arg( 'sort', 'date_desc', $sort_base_url ) ); ?>"><?php esc_html_e( 'Recently Updated', 'lunara-film' ); ?></a>
+                                            <a href="<?php echo esc_url( add_query_arg( 'sort', 'modified_desc', $sort_base_url ) ); ?>"><?php esc_html_e( 'Recently Updated', 'lunara-film' ); ?></a>
                                             <a href="<?php echo esc_url( home_url( '/journal/' ) ); ?>"><?php esc_html_e( 'Journal Desk', 'lunara-film' ); ?></a>
                                             <a href="<?php echo esc_url( home_url( '/oscars/' ) ); ?>"><?php esc_html_e( 'Oscar Ledger', 'lunara-film' ); ?></a>
                                         </div>
@@ -3617,12 +3807,12 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
             </section>
             <?php endif; ?>
 
-            <?php if ( $show_grid && $show_pagination && ! empty( $posts ) && ! empty( $args['pagination'] ) ) : ?>
-                    <div class="lunara-archive-pagination lunara-review-archive-slot-pagination" data-lunara-section="pagination">
+            <?php if ( $show_grid && $show_pagination && $has_posts && ! empty( $args['pagination'] ) ) : ?>
+                    <div class="lunara-archive-pagination lunara-review-archive-slot-pagination" data-lunara-section="pagination" style="order:<?php echo esc_attr( (string) $lane_orders['pagination'] ); ?> !important;">
                         <?php echo wp_kses_post( $args['pagination'] ); ?>
                     </div>
             <?php elseif ( ! $show_grid && $show_pagination && ! empty( $args['pagination'] ) ) : ?>
-                    <div class="lunara-archive-pagination lunara-review-archive-slot-pagination" data-lunara-section="pagination">
+                    <div class="lunara-archive-pagination lunara-review-archive-slot-pagination" data-lunara-section="pagination" style="order:<?php echo esc_attr( (string) $lane_orders['pagination'] ); ?> !important;">
                         <div class="lunara-archive-pagination">
                             <?php echo wp_kses_post( $args['pagination'] ); ?>
                         </div>
@@ -3630,7 +3820,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
             <?php endif; ?>
 
             <?php if ( $show_pairing_desk ) : ?>
-                <div class="lunara-review-archive-slot-pairing-desk" data-lunara-section="pairing-desk">
+                <div class="lunara-review-archive-slot-pairing-desk" data-lunara-section="pairing-desk" style="order:<?php echo esc_attr( (string) $lane_orders['pairing-desk'] ); ?> !important;">
                     <?php echo lunara_render_home_pairing_desk(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- module renderer escapes internally. ?>
                 </div>
             <?php endif; ?>
