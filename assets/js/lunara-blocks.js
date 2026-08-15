@@ -1,15 +1,18 @@
-( function ( blocks, blockEditor, components, element, i18n, serverSideRender ) {
+( function ( blocks, blockEditor, components, element, i18n, serverSideRender, homepageEditor ) {
     'use strict';
 
     var el = element.createElement;
     var __ = i18n.__;
     var InspectorControls = blockEditor.InspectorControls;
+    var MediaUpload = blockEditor.MediaUpload;
     var PanelBody = components.PanelBody;
+    var Button = components.Button;
     var TextControl = components.TextControl;
     var TextareaControl = components.TextareaControl;
     var SelectControl = components.SelectControl;
     var RangeControl = components.RangeControl;
     var ServerSideRender = serverSideRender;
+    homepageEditor = homepageEditor || {};
 
     function preview( name, props ) {
         return el( 'div', { className: 'lunara-block-preview' },
@@ -30,6 +33,34 @@
                 onChange( Number.isFinite( next ) ? next : 1 );
             }
         } );
+    }
+
+    function homepageSectionCard( name, title, description ) {
+        var sections = homepageEditor.sections || {};
+        var section = sections[ name ] || {};
+        var actions = [];
+
+        if ( section.editUrl ) {
+            actions.push( el( 'a', { className: 'components-button is-primary', href: section.editUrl, key: 'edit' }, section.editLabel || __( 'Open in Site Studio', 'lunara-film' ) ) );
+        }
+        if ( section.viewUrl ) {
+            actions.push( el( 'a', { className: 'components-button is-secondary', href: section.viewUrl, target: '_blank', rel: 'noopener noreferrer', key: 'view' }, __( 'View Section', 'lunara-film' ) ) );
+        }
+
+        return el(
+            'div',
+            { className: 'lunara-homepage-editor-card' + ( section.fixed ? ' is-fixed' : '' ), 'data-lunara-home-section': name },
+            el(
+                'div',
+                { className: 'lunara-homepage-editor-card__heading' },
+                el( 'span', { className: 'lunara-homepage-editor-card__kicker' }, __( 'Homepage section', 'lunara-film' ) ),
+                el( 'h3', {}, title )
+            ),
+            el( 'p', { className: 'lunara-homepage-editor-card__description' }, section.description || description ),
+            section.status ? el( 'p', { className: 'lunara-homepage-editor-card__status' }, section.status ) : null,
+            section.fixed ? el( 'strong', { className: 'lunara-homepage-editor-card__fixed' }, __( 'Fixed by Hero Command', 'lunara-film' ) ) : null,
+            actions.length ? el( 'div', { className: 'lunara-homepage-editor-card__actions' }, actions ) : null
+        );
     }
 
     blocks.registerBlockType( 'lunara/home', {
@@ -276,10 +307,10 @@
         }
     } );
 
-    /* ── Homepage section kit (hybrid composition, 3.1.50) ─────────────────
-       These blocks compose the front page: block order is section order,
-       block presence is visibility. Every edit() is a live server render of
-       the exact markup front-page.php ships. */
+    /* ── Homepage section kit (focused editor, 3.2.37) ─────────────────────
+       These six blocks remain the stored homepage composition. Their public
+       dynamic callbacks are unchanged; compact editor cards prevent the
+       block editor from downloading and laying out the entire live site. */
 
     function sectionBlock( name, title, icon, description ) {
         blocks.registerBlockType( name, {
@@ -287,9 +318,9 @@
             icon: icon,
             category: 'lunara',
             description: description,
-            supports: { html: false, reusable: false, multiple: true },
-            edit: function ( props ) {
-                return preview( name, props );
+            supports: { html: false, reusable: false, multiple: false },
+            edit: function () {
+                return homepageSectionCard( name, title, description );
             },
             save: function () {
                 return null;
@@ -310,10 +341,21 @@
             overrideUrl: { type: 'string', default: '' },
             overrideCta: { type: 'string', default: '' }
         },
-        supports: { html: false, reusable: false, multiple: true },
+        supports: { html: false, reusable: false, multiple: false },
         edit: function ( props ) {
             function text( label, key ) {
                 return el( TextControl, {
+                    label: label,
+                    value: props.attributes[ key ] || '',
+                    onChange: function ( value ) {
+                        var next = {};
+                        next[ key ] = value || '';
+                        props.setAttributes( next );
+                    }
+                } );
+            }
+            function textarea( label, key ) {
+                return el( TextareaControl, {
                     label: label,
                     value: props.attributes[ key ] || '',
                     onChange: function ( value ) {
@@ -329,14 +371,83 @@
                         el( 'p', { style: { opacity: 0.75 } },
                             __( 'The slide deck and overlay dial live in Control Desk → Hero Command. These overrides apply only when the hero falls back to a single static slide.', 'lunara-film' )
                         ),
+                        MediaUpload && Button ? el( MediaUpload, {
+                            onSelect: function ( media ) { props.setAttributes( { overrideImageId: media && media.id ? media.id : 0 } ); },
+                            allowedTypes: [ 'image' ],
+                            value: props.attributes.overrideImageId,
+                            render: function ( mediaControl ) {
+                                return el(
+                                    'div',
+                                    { className: 'lunara-homepage-editor-media-control' },
+                                    el( Button, { onClick: mediaControl.open, variant: 'secondary' }, props.attributes.overrideImageId ? __( 'Replace fallback hero image', 'lunara-film' ) : __( 'Select fallback hero image', 'lunara-film' ) ),
+                                    props.attributes.overrideImageId ? el( Button, { onClick: function () { props.setAttributes( { overrideImageId: 0 } ); }, variant: 'tertiary' }, __( 'Clear', 'lunara-film' ) ) : null
+                                );
+                            }
+                        } ) : null,
                         text( __( 'Fallback kicker', 'lunara-film' ), 'overrideKicker' ),
                         text( __( 'Fallback title', 'lunara-film' ), 'overrideTitle' ),
-                        text( __( 'Fallback excerpt', 'lunara-film' ), 'overrideExcerpt' ),
+                        textarea( __( 'Fallback excerpt', 'lunara-film' ), 'overrideExcerpt' ),
                         text( __( 'Fallback link URL', 'lunara-film' ), 'overrideUrl' ),
                         text( __( 'Fallback CTA label', 'lunara-film' ), 'overrideCta' )
                     )
                 ),
-                preview( 'lunara/cinematic-hero', props )
+                homepageSectionCard(
+                    'lunara/cinematic-hero',
+                    __( 'Homepage: Cinematic Hero', 'lunara-film' ),
+                    __( 'The rotating cinematic lead. Use Hero Command while the front-door mode is active.', 'lunara-film' )
+                )
+            ];
+        },
+        save: function () {
+            return null;
+        }
+    } );
+
+    blocks.registerBlockType( 'lunara/latest-reviews', {
+        title: __( 'Homepage: Latest Reviews', 'lunara-film' ),
+        icon: 'star-filled',
+        category: 'lunara',
+        description: __( 'A curated or newest-first Reviews grid with per-instance heading and CTA overrides.', 'lunara-film' ),
+        attributes: {
+            source: { type: 'string', default: 'curated' },
+            count: { type: 'number', default: 8 },
+            heading: { type: 'string', default: '' },
+            kicker: { type: 'string', default: '' },
+            ctaLabel: { type: 'string', default: '' },
+            ctaUrl: { type: 'string', default: '' }
+        },
+        supports: { html: false, reusable: false, multiple: false },
+        edit: function ( props ) {
+            return [
+                el( InspectorControls, {},
+                    el( PanelBody, { title: __( 'Latest Reviews Settings', 'lunara-film' ) },
+                        el( SelectControl, {
+                            label: __( 'Source', 'lunara-film' ),
+                            value: props.attributes.source || 'curated',
+                            options: [
+                                { label: __( 'Homepage curated shelf', 'lunara-film' ), value: 'curated' },
+                                { label: __( 'Newest reviews', 'lunara-film' ), value: 'latest' },
+                                { label: __( 'Top homepage showcase', 'lunara-film' ), value: 'hero' }
+                            ],
+                            onChange: function ( value ) { props.setAttributes( { source: value || 'curated' } ); }
+                        } ),
+                        el( TextControl, {
+                            label: __( 'Count', 'lunara-film' ),
+                            type: 'number',
+                            value: props.attributes.count,
+                            onChange: function ( value ) { props.setAttributes( { count: Math.max( 1, Math.min( 24, parseInt( value, 10 ) || 8 ) ) } ); }
+                        } ),
+                        el( TextControl, { label: __( 'Heading override', 'lunara-film' ), value: props.attributes.heading || '', onChange: function ( value ) { props.setAttributes( { heading: value || '' } ); } } ),
+                        el( TextControl, { label: __( 'Kicker override', 'lunara-film' ), value: props.attributes.kicker || '', onChange: function ( value ) { props.setAttributes( { kicker: value || '' } ); } } ),
+                        el( TextControl, { label: __( 'CTA label override', 'lunara-film' ), value: props.attributes.ctaLabel || '', onChange: function ( value ) { props.setAttributes( { ctaLabel: value || '' } ); } } ),
+                        el( TextControl, { label: __( 'CTA URL override', 'lunara-film' ), value: props.attributes.ctaUrl || '', onChange: function ( value ) { props.setAttributes( { ctaUrl: value || '' } ); } } )
+                    )
+                ),
+                homepageSectionCard(
+                    'lunara/latest-reviews',
+                    __( 'Homepage: Latest Reviews', 'lunara-film' ),
+                    __( 'The curated Reviews shelf, with newest Reviews as its safe fallback.', 'lunara-film' )
+                )
             ];
         },
         save: function () {
@@ -371,11 +482,14 @@
         'screenoptions',
         __( 'The signature Pair It With showcase — three films in conversation with the newest paired review.', 'lunara-film' )
     );
+
+    /* ── End homepage section kit ─────────────────────────────────────── */
 } )(
     window.wp.blocks,
     window.wp.blockEditor,
     window.wp.components,
     window.wp.element,
     window.wp.i18n,
-    window.wp.serverSideRender
+    window.wp.serverSideRender,
+    window.LunaraHomepageEditorConfig
 );

@@ -10,6 +10,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Built-in homepage Lunara Method copy shared by admin and public renderers.
+ *
+ * @return array<string,string>
+ */
+function lunara_home_pairing_desk_copy_defaults() {
+    return array(
+        'kicker' => __( 'The Lunara Method', 'lunara-film' ),
+        'title'  => __( 'Every review ends with three more films.', 'lunara-film' ),
+        'copy'   => __( 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm. No other film desk builds this rail.', 'lunara-film' ),
+    );
+}
+
+/**
  * Canonical homepage section registry used for labels, ordering, and visibility.
  */
 function lunara_get_home_section_registry() {

@@ -134,6 +134,92 @@ function lunara_register_dynamic_blocks() {
 }
 add_action( 'init', 'lunara_register_dynamic_blocks' );
 
+/**
+ * Editor-only links and truthful ownership notes for the six homepage blocks.
+ *
+ * @return array<string,array<string,mixed>>
+ */
+function lunara_homepage_editor_section_config() {
+    $map      = function_exists( 'lunara_home_section_block_map' ) ? lunara_home_section_block_map() : array();
+    $registry = function_exists( 'lunara_get_home_section_registry' ) ? lunara_get_home_section_registry() : array();
+    $can_edit = current_user_can( 'edit_theme_options' );
+    $sections = array();
+
+    foreach ( $map as $slug => $block_name ) {
+        $is_hero_fixed = 'hero' === $slug
+            && function_exists( 'lunara_home_cinematic_front_door_is_enabled' )
+            && lunara_home_cinematic_front_door_is_enabled();
+        $edit_surface  = 'pairing-desk' === $slug ? 'lunara-method' : 'homepage-structure';
+        $edit_url      = $can_edit && function_exists( 'lunara_site_studio_admin_url' )
+            ? lunara_site_studio_admin_url( $edit_surface )
+            : '';
+
+        if ( $can_edit && $is_hero_fixed && function_exists( 'lunara_control_desk_admin_url' ) ) {
+            $edit_url = lunara_control_desk_admin_url( array( 'tab' => 'theme-studio' ) ) . '#lunara-theme-studio-hero-command';
+        }
+
+        if ( $is_hero_fixed ) {
+            $edit_label = __( 'Edit in Hero Command', 'lunara-film' );
+        } elseif ( 'pairing-desk' === $slug ) {
+            $edit_label = __( 'Edit Lunara Method', 'lunara-film' );
+        } else {
+            $edit_label = __( 'Open Homepage Structure', 'lunara-film' );
+        }
+
+        $sections[ $block_name ] = array(
+            'slug'        => $slug,
+            'label'       => isset( $registry[ $slug ]['label'] ) ? (string) $registry[ $slug ]['label'] : $slug,
+            'description' => isset( $registry[ $slug ]['description'] ) ? (string) $registry[ $slug ]['description'] : '',
+            'editUrl'     => esc_url_raw( $edit_url ),
+            'editLabel'   => $edit_label,
+            'viewUrl'     => esc_url_raw( 'pairing-desk' === $slug ? home_url( '/#pairing-desk' ) : home_url( '/' ) ),
+            'fixed'       => $is_hero_fixed,
+            'status'      => $is_hero_fixed
+                ? __( 'The public front-door hero is currently owned by Hero Command. This block remains stored, but its presence does not hide that live hero.', 'lunara-film' )
+                : __( 'Public output renders only when WordPress displays the page; this compact card makes no content query.', 'lunara-film' ),
+        );
+    }
+
+    return $sections;
+}
+
+/**
+ * Attach compact homepage-card configuration only inside the block editor.
+ *
+ * @return void
+ */
+function lunara_enqueue_homepage_editor_card_assets() {
+    if ( ! wp_script_is( 'lunara-blocks', 'registered' ) ) {
+        return;
+    }
+
+    wp_localize_script(
+        'lunara-blocks',
+        'LunaraHomepageEditorConfig',
+        array(
+            'siteStudioUrl' => current_user_can( 'edit_theme_options' ) && function_exists( 'lunara_site_studio_admin_url' )
+                ? esc_url_raw( lunara_site_studio_admin_url( 'lunara-method' ) )
+                : '',
+            'sections'      => lunara_homepage_editor_section_config(),
+        )
+    );
+
+    if ( ! function_exists( 'lunara_resolve_theme_asset' ) ) {
+        return;
+    }
+
+    $style = lunara_resolve_theme_asset( 'assets/css/lunara-homepage-editor.css' );
+    if ( ! empty( $style['path'] ) && ! empty( $style['uri'] ) ) {
+        wp_enqueue_style(
+            'lunara-homepage-editor',
+            $style['uri'],
+            array(),
+            function_exists( 'lunara_theme_asset_version' ) ? lunara_theme_asset_version( $style['path'] ) : null
+        );
+    }
+}
+add_action( 'enqueue_block_editor_assets', 'lunara_enqueue_homepage_editor_card_assets', 20 );
+
 function lunara_render_home_block() {
     return function_exists( 'lunara_home_shortcode' ) ? lunara_home_shortcode() : '';
 }

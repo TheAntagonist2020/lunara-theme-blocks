@@ -3,8 +3,9 @@
  * Hybrid Homepage Composition (3.1.50).
  *
  * The Home page's blocks ARE the homepage: block order is section order,
- * block presence is section visibility, and every section previews live in
- * the editor. Homepage Studio stays alive as a macro layer — applying a
+ * block presence is section visibility, while compact editor cards link to
+ * each public section without rendering the full site in the canvas.
+ * Homepage Studio stays alive as a macro layer — applying a
  * publication package or changing order/visibility there writes through to
  * the same blocks, so both surfaces always tell the truth.
  *
@@ -128,22 +129,46 @@ if ( ! function_exists( 'lunara_write_home_section_blocks' ) ) {
 
 		// Harvest existing instances so their attributes survive.
 		$existing = array();
-		foreach ( parse_blocks( $current ) as $block ) {
+		$blocks   = parse_blocks( $current );
+		foreach ( $blocks as $block ) {
 			$name = isset( $block['blockName'] ) ? (string) $block['blockName'] : '';
 			if ( '' !== $name && in_array( $name, $map, true ) && ! isset( $existing[ $name ] ) ) {
 				$existing[ $name ] = serialize_block( $block );
 			}
 		}
 
-		$pieces = array();
+		$desired = array();
 		foreach ( (array) $slugs as $slug ) {
 			if ( ! isset( $map[ $slug ] ) ) {
 				continue;
 			}
 			$block_name = $map[ $slug ];
-			$pieces[]   = isset( $existing[ $block_name ] )
+			$desired[]  = isset( $existing[ $block_name ] )
 				? $existing[ $block_name ]
 				: '<!-- wp:' . $block_name . ' /-->';
+		}
+
+		// Replace only canonical lane slots. Every unknown/core block is copied
+		// back into its exact stream position, so a Structure save can reorder
+		// the six owned lanes without deleting editorial content or plugin blocks.
+		$pieces        = array();
+		$desired_index = 0;
+		foreach ( $blocks as $block ) {
+			$name = isset( $block['blockName'] ) ? (string) $block['blockName'] : '';
+			if ( '' !== $name && in_array( $name, $map, true ) ) {
+				if ( isset( $desired[ $desired_index ] ) ) {
+					$pieces[] = $desired[ $desired_index ];
+					++$desired_index;
+				}
+				continue;
+			}
+
+			$pieces[] = serialize_block( $block );
+		}
+
+		while ( isset( $desired[ $desired_index ] ) ) {
+			$pieces[] = $desired[ $desired_index ];
+			++$desired_index;
 		}
 
 		$new_content = implode( "\n\n", $pieces );

@@ -40,6 +40,26 @@ if ( ! function_exists( 'lunara_blocks_hub_enqueue_editor' ) ) {
 			function_exists( 'lunara_theme_asset_version' ) ? lunara_theme_asset_version( $asset['path'] ) : null,
 			true
 		);
+
+		$can_manage = current_user_can( 'edit_theme_options' );
+		$front_page = function_exists( 'lunara_home_front_page_id' )
+			? lunara_home_front_page_id()
+			: ( 'page' === get_option( 'show_on_front' ) ? absint( get_option( 'page_on_front' ) ) : 0 );
+		wp_localize_script(
+			'lunara-blocks-hub',
+			'LunaraSiteStudioConfig',
+			array(
+				'frontPageId'  => $front_page,
+				'canManage'    => $can_manage,
+				'siteStudioUrl' => $can_manage && function_exists( 'lunara_site_studio_admin_url' )
+					? esc_url_raw( lunara_site_studio_admin_url( 'homepage-structure' ) )
+					: '',
+				'methodUrl'     => $can_manage && function_exists( 'lunara_site_studio_admin_url' )
+					? esc_url_raw( lunara_site_studio_admin_url( 'lunara-method' ) )
+					: '',
+				'homepageUrl'   => esc_url_raw( home_url( '/' ) ),
+			)
+		);
 	}
 	add_action( 'enqueue_block_editor_assets', 'lunara_blocks_hub_enqueue_editor' );
 }
@@ -103,6 +123,12 @@ PATTERN,
 				'description' => __( 'The cinematic hero section from Homepage Studio.', 'lunara-film' ),
 				'keywords'    => array( 'homepage', 'hero', 'cinematic' ),
 				'content'     => '<!-- wp:lunara/cinematic-hero /-->',
+			),
+			'lunara/section-latest-reviews' => array(
+				'title'       => __( 'Homepage Section — Latest Reviews', 'lunara-film' ),
+				'description' => __( 'The curated or newest-first Reviews shelf from Homepage Studio.', 'lunara-film' ),
+				'keywords'    => array( 'homepage', 'reviews', 'criticism' ),
+				'content'     => '<!-- wp:lunara/latest-reviews /-->',
 			),
 			'lunara/section-journal-lane' => array(
 				'title'       => __( 'Homepage Section — Journal Lane', 'lunara-film' ),

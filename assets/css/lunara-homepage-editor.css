@@ -1,0 +1,97 @@
+/* Homepage section cards — block editor only. */
+.editor-styles-wrapper .lunara-homepage-editor-card {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: min(860px, 100%);
+	min-height: 188px;
+	margin: 18px auto;
+	padding: clamp(22px, 4vw, 38px);
+	overflow: hidden;
+	border: 1px solid rgba(201, 169, 97, 0.45);
+	border-radius: 18px;
+	background: linear-gradient(135deg, #07111f 0%, #101f30 100%);
+	box-shadow: 0 18px 48px rgba(7, 17, 31, 0.18);
+	color: #f8f4ea;
+}
+
+.lunara-homepage-editor-card__kicker,
+.lunara-homepage-editor-card__fixed {
+	display: block;
+	margin-bottom: 8px;
+	color: #d7b969;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	line-height: 1.4;
+	text-transform: uppercase;
+}
+
+.lunara-homepage-editor-card__heading h3 {
+	margin: 0;
+	color: #fffdf6;
+	font-size: clamp(24px, 4vw, 38px);
+	line-height: 1.02;
+	overflow-wrap: anywhere;
+}
+
+.lunara-homepage-editor-card__description,
+.lunara-homepage-editor-card__status {
+	max-width: 68ch;
+	margin: 14px 0 0;
+	color: rgba(248, 244, 234, 0.82);
+	font-size: 14px;
+	line-height: 1.6;
+	overflow-wrap: anywhere;
+}
+
+.lunara-homepage-editor-card__status {
+	padding-left: 12px;
+	border-left: 2px solid rgba(201, 169, 97, 0.66);
+}
+
+.lunara-homepage-editor-card__fixed {
+	margin-top: 15px;
+}
+
+.lunara-homepage-editor-card__actions,
+.lunara-studio-site-callout__actions,
+.lunara-homepage-editor-media-control {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 18px;
+}
+
+.lunara-homepage-editor-card__actions .components-button.is-primary {
+	background: #c9a961;
+	color: #07111f;
+}
+
+.lunara-homepage-editor-card__actions .components-button.is-secondary {
+	border-color: rgba(201, 169, 97, 0.72);
+	box-shadow: inset 0 0 0 1px rgba(201, 169, 97, 0.72);
+	color: #f6dd9a;
+}
+
+.lunara-studio-site-callout {
+	margin: 0 0 16px;
+	padding: 14px;
+	border: 1px solid rgba(201, 169, 97, 0.5);
+	border-radius: 8px;
+	background: #07111f;
+	color: #f8f4ea;
+}
+
+.lunara-studio-site-callout p {
+	margin: 6px 0 0;
+	color: rgba(248, 244, 234, 0.78);
+	line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+	.editor-styles-wrapper .lunara-homepage-editor-card {
+		min-height: 0;
+		padding: 20px;
+		border-radius: 12px;
+	}
+}

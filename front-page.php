@@ -78,7 +78,7 @@ get_header();
 	/*
 	 * Hybrid composition (3.1.50): when the Home page carries Lunara section
 	 * blocks, the blocks ARE the homepage — order is block order, presence is
-	 * visibility, and the editor previews match the front end. With no
+	 * visibility, and compact editor cards link back to the public result. With no
 	 * section blocks present, the Customizer registry below renders exactly
 	 * as before (which is also the rollback: remove the blocks, this resumes).
 	 */
