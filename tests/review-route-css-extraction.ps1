@@ -18,7 +18,7 @@ $style = Get-Content -LiteralPath $stylePath -Raw
 $assetBytes = [Text.Encoding]::UTF8.GetByteCount($asset)
 $frontendBytes = [Text.Encoding]::UTF8.GetByteCount($frontend)
 
-Assert-True ($style -match 'Version:\s*3\.2\.40') 'Theme version must identify the Reviews Archive composition release.'
+Assert-True ($style -match 'Version:\s*3\.2\.41') 'Theme version must identify the Reviews Archive composition release.'
 Assert-True ($assetBytes -le 77824) "Review route asset exceeds its 76 KB transition budget: $assetBytes bytes."
 Assert-True ($frontendBytes -le 345000) "frontend.php still carries excessive static delivery code: $frontendBytes bytes."
 Assert-True ($asset -notmatch '<\?php|<style|</style>') 'The Review route asset must contain CSS only.'

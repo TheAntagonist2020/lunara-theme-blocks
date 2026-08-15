@@ -11,6 +11,17 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-15 — Theme 3.2.41 Reviews Studio Mobile Containment
+
+- Made the Reviews Archive lead label and selector shrink to their Site Studio
+  card at 390 px and 375 px without hiding overflow.
+- Scoped the repair to the private Site Studio Reviews panel; public rendering,
+  lead storage, archive composition, and WordPress options are unchanged.
+- Added a portable production-markup/CSS contract plus an actual-CSS browser
+  regression that verifies document, workspace, label, and selector widths.
+
+---
+
 ## 2026-08-15 — Theme 3.2.40 Reviews Archive Composition
 
 - Added a focused Reviews Archive Studio for canonical copy, bounded lead

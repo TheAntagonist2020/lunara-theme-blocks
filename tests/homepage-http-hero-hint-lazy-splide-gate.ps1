@@ -30,6 +30,6 @@ Assert-True ($pilot -match "'IntersectionObserver'\s+in\s+window") 'Below-fold S
 Assert-True ($pilot -match "rootMargin:\s*'800px 0px'") 'The Oscar Facts carousel must initialize shortly before it approaches the viewport.'
 Assert-True ($pilot -match 'observer\.disconnect\(\);\s*\r?\n\s*initPilot\(root\);') 'The lazy observer must disconnect before mounting Splide once.'
 Assert-True ($pilot -match "if\s*\(!\('IntersectionObserver'\s+in\s+window\)\)\s*\{\s*\r?\n\s*initPilot\(root\)") 'Older browsers must retain the functional immediate-mount fallback.'
-Assert-True ($style -match 'Version:\s*3\.2\.40') 'HTTP hero hint and lazy Splide gate must report Theme 3.2.40.'
+Assert-True ($style -match 'Version:\s*3\.2\.41') 'HTTP hero hint and lazy Splide gate must report Theme 3.2.41.'
 
 Write-Host 'Homepage HTTP hero hint and lazy Splide gate passed.'
