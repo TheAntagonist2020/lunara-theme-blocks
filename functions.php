@@ -15714,15 +15714,22 @@ if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 			return "\n<!-- lunara-pairing-desk: review " . (int) $review_id . " produced no cards -->\n";
 		}
 
+		$copy_defaults = function_exists( 'lunara_home_pairing_desk_copy_defaults' )
+			? lunara_home_pairing_desk_copy_defaults()
+			: array(
+				'kicker' => 'The Lunara Method',
+				'title'  => 'Every review ends with three more films.',
+				'copy'   => 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm. No other film desk builds this rail.',
+			);
 		$kicker = function_exists( 'lunara_theme_mod_text' )
-			? lunara_theme_mod_text( 'lunara_home_pairing_desk_kicker', 'The Lunara Method' )
-			: 'The Lunara Method';
+			? lunara_theme_mod_text( 'lunara_home_pairing_desk_kicker', $copy_defaults['kicker'] )
+			: $copy_defaults['kicker'];
 		$title = function_exists( 'lunara_theme_mod_text' )
-			? lunara_theme_mod_text( 'lunara_home_pairing_desk_title', 'Every review ends with three more films.' )
-			: 'Every review ends with three more films.';
+			? lunara_theme_mod_text( 'lunara_home_pairing_desk_title', $copy_defaults['title'] )
+			: $copy_defaults['title'];
 		$copy = function_exists( 'lunara_theme_mod_text' )
-			? lunara_theme_mod_text( 'lunara_home_pairing_desk_copy', 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm. No other film desk builds this rail.' )
-			: 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm. No other film desk builds this rail.';
+			? lunara_theme_mod_text( 'lunara_home_pairing_desk_copy', $copy_defaults['copy'] )
+			: $copy_defaults['copy'];
 
 		$review_title = get_the_title( $review_id );
 		$review_url   = get_permalink( $review_id );
@@ -16044,7 +16051,7 @@ if ( ! function_exists( 'lunara_register_homepage_blocks' ) ) {
 			'supports'      => array(
 				'html'      => false,
 				'reusable'  => false,
-				'multiple'  => true,
+				'multiple'  => false,
 				// Hybrid homepage composition (3.1.50): these ARE the homepage
 				// kit. front-page.php renders the Home page's blocks when any
 				// are present (order = block order, presence = visibility);
@@ -16478,298 +16485,16 @@ if ( ! function_exists( 'lunara_render_homepage_journal_lane' ) ) {
 }
 
 
-/* ============================================================================
- * PATH B â€” EDITOR-SIDE BLOCK REGISTRATION (added 2026-05-10)
- *
- * Server-side register_block_type() makes blocks render on the FRONT-END,
- * but the block editor (React) doesn't know about them and shows
- * "Your site doesn't include support for the X block" warnings.
- *
- * This enqueues a tiny inline JS that registers each block client-side
- * with a ServerSideRender component â€” so the editor shows a LIVE preview
- * of the rendered output as the block placeholder. Dalton can see what
- * the block will look like without leaving the editor.
- * ============================================================================ */
-if ( ! function_exists( 'lunara_enqueue_homepage_block_editor_assets' ) ) {
-	function lunara_enqueue_homepage_block_editor_assets() {
-		wp_register_script(
-			'lunara-homepage-blocks-editor',
-			'',
-			array( 'wp-blocks', 'wp-element', 'wp-server-side-render', 'wp-block-editor', 'wp-components', 'wp-i18n' ),
-			'1.1.0',
-			true
-		);
-		wp_enqueue_script( 'lunara-homepage-blocks-editor' );
-
-		$js = <<<'JS'
-(function (blocks, element, ssrPkg, blockEditor, components, i18n) {
-	if (!blocks || !element) { return; }
-	var el = element.createElement;
-	var Fragment = element.Fragment;
-	var ServerSideRender = (ssrPkg && (ssrPkg.default || ssrPkg)) || (window.wp && window.wp.serverSideRender);
-	if (!ServerSideRender) { return; }
-
-	var InspectorControls = blockEditor && blockEditor.InspectorControls;
-	var MediaUpload = blockEditor && blockEditor.MediaUpload;
-	var PanelBody = components && components.PanelBody;
-	var SelectControl = components && components.SelectControl;
-	var TextControl = components && components.TextControl;
-	var TextareaControl = components && components.TextareaControl;
-	var Button = components && components.Button;
-	var __ = (i18n && i18n.__) || function (s) { return s; };
-
-	// CINEMATIC HERO with rich override controls in the sidebar
-	if (!blocks.getBlockType || !blocks.getBlockType('lunara/cinematic-hero')) {
-		blocks.registerBlockType('lunara/cinematic-hero', {
-			apiVersion: 3,
-			title: __('Lunara Cinematic Hero'),
-			icon: 'cover-image',
-			category: 'theme',
-			description: __('Full-viewport image-first opener. Per-instance overrides for image / kicker / title / excerpt / URL / CTA.'),
-			supports: { html: false, reusable: false, multiple: true, inserter: true },
-			attributes: {
-				overrideImageId: { type: 'number', default: 0 },
-				overrideKicker:  { type: 'string', default: '' },
-				overrideTitle:   { type: 'string', default: '' },
-				overrideExcerpt: { type: 'string', default: '' },
-				overrideUrl:     { type: 'string', default: '' },
-				overrideCta:     { type: 'string', default: '' }
-			},
-			edit: function (props) {
-				var attrs = props.attributes;
-				var setAttrs = props.setAttributes;
-
-				var inspector = InspectorControls && PanelBody ? el(InspectorControls, {},
-					el(PanelBody, { title: __('Hero Overrides'), initialOpen: true },
-						el('p', { style: { fontSize: '12px', color: '#666', margin: '0 0 12px' } },
-							__('Leave any field blank to use the auto value (latest review or Customizer override).')
-						),
-						MediaUpload ? el(MediaUpload, {
-							onSelect: function (media) { setAttrs({ overrideImageId: media.id }); },
-							allowedTypes: ['image'],
-							value: attrs.overrideImageId,
-							render: function (obj) {
-								return el('div', { style: { marginBottom: '14px' } },
-									el(Button, { onClick: obj.open, variant: 'secondary' },
-										attrs.overrideImageId ? __('Replace hero image') : __('Select hero image')
-									),
-									attrs.overrideImageId ? el(Button, {
-										onClick: function () { setAttrs({ overrideImageId: 0 }); },
-										variant: 'tertiary',
-										style: { marginLeft: '8px', color: '#cc1818' }
-									}, __('Clear')) : null,
-									attrs.overrideImageId ? el('div', { style: { fontSize: '11px', color: '#888', marginTop: '6px' } },
-										__('Image ID: ') + attrs.overrideImageId
-									) : null
-								);
-							}
-						}) : null,
-						TextControl ? el(TextControl, {
-							label: __('Kicker (override)'),
-							value: attrs.overrideKicker,
-							onChange: function (v) { setAttrs({ overrideKicker: v }); },
-							placeholder: __('e.g. LUNARA SPOTLIGHT')
-						}) : null,
-						TextControl ? el(TextControl, {
-							label: __('Title (override)'),
-							value: attrs.overrideTitle,
-							onChange: function (v) { setAttrs({ overrideTitle: v }); },
-							placeholder: __('Custom headline')
-						}) : null,
-						TextareaControl ? el(TextareaControl, {
-							label: __('Excerpt (override)'),
-							value: attrs.overrideExcerpt,
-							onChange: function (v) { setAttrs({ overrideExcerpt: v }); },
-							placeholder: __('Optional 1-2 sentence dek')
-						}) : null,
-						TextControl ? el(TextControl, {
-							label: __('CTA URL (override)'),
-							value: attrs.overrideUrl,
-							onChange: function (v) { setAttrs({ overrideUrl: v }); },
-							placeholder: __('https://')
-						}) : null,
-						TextControl ? el(TextControl, {
-							label: __('CTA button text (override)'),
-							value: attrs.overrideCta,
-							onChange: function (v) { setAttrs({ overrideCta: v }); },
-							placeholder: __('Read the review')
-						}) : null
-					)
-				) : null;
-
-				var preview = el(
-					'div',
-					{ className: 'lunara-block-editor-preview', style: { border: '1px dashed #c9a961', padding: '12px', borderRadius: '8px', background: 'rgba(7, 15, 26, 0.04)' } },
-					el('div', { style: { fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em', color: '#c9a961', marginBottom: '8px', fontFamily: 'sans-serif' } },
-						__('Lunara Cinematic Hero')
-					),
-					el(ServerSideRender, {
-						block: 'lunara/cinematic-hero',
-						attributes: attrs,
-						EmptyResponsePlaceholder: function () {
-							return el('div', { style: { padding: '20px', color: '#888', fontStyle: 'italic' } }, __('(no hero image â€” set an override image or publish a review with a featured image)'));
-						}
-					})
-				);
-
-				return el(Fragment, {}, inspector, preview);
-			},
-			save: function () { return null; }
-		});
-	}
-
-	// LATEST REVIEWS with override controls in the sidebar
-	if (!blocks.getBlockType || !blocks.getBlockType('lunara/latest-reviews')) {
-		blocks.registerBlockType('lunara/latest-reviews', {
-			apiVersion: 3,
-			title: __('Lunara Latest Reviews'),
-			icon: 'star-filled',
-			category: 'theme',
-			description: __('Grid of curated homepage reviews or the most recent published reviews. Per-instance overrides for source / count / heading / kicker / CTA.'),
-			supports: { html: false, reusable: false, multiple: true, inserter: true },
-			attributes: {
-				source:   { type: 'string', default: 'curated' },
-				count:    { type: 'number', default: 8 },
-				heading:  { type: 'string', default: '' },
-				kicker:   { type: 'string', default: '' },
-				ctaLabel: { type: 'string', default: '' },
-				ctaUrl:   { type: 'string', default: '' }
-			},
-			edit: function (props) {
-				var attrs = props.attributes;
-				var setAttrs = props.setAttributes;
-
-				var inspector = InspectorControls && PanelBody ? el(InspectorControls, {},
-					el(PanelBody, { title: __('Latest Reviews Settings'), initialOpen: true },
-						el('p', { style: { fontSize: '12px', color: '#666', margin: '0 0 12px' } },
-							__('Default source uses the homepage curated review shelf, then falls back to featured/latest reviews.')
-						),
-						SelectControl ? el(SelectControl, {
-							label: __('Source'),
-							value: attrs.source || 'curated',
-							options: [
-								{ label: __('Homepage curated shelf'), value: 'curated' },
-								{ label: __('Newest reviews'), value: 'latest' },
-								{ label: __('Top homepage showcase'), value: 'hero' }
-							],
-							onChange: function (v) { setAttrs({ source: v || 'curated' }); },
-							help: __('Use curated shelf when you want to feature an older review again.')
-						}) : null,
-						TextControl ? el(TextControl, {
-							label: __('Count'),
-							type: 'number',
-							value: attrs.count,
-							onChange: function (v) { setAttrs({ count: Math.max(1, Math.min(24, parseInt(v, 10) || 8)) }); },
-							help: __('Between 1 and 24.')
-						}) : null,
-						TextControl ? el(TextControl, {
-							label: __('Heading (override)'),
-							value: attrs.heading,
-							onChange: function (v) { setAttrs({ heading: v }); },
-							placeholder: __('Latest Reviews')
-						}) : null,
-						TextControl ? el(TextControl, {
-							label: __('Kicker (override)'),
-							value: attrs.kicker,
-							onChange: function (v) { setAttrs({ kicker: v }); },
-							placeholder: __('Lunara Reviews')
-						}) : null,
-						TextControl ? el(TextControl, {
-							label: __('CTA label (override)'),
-							value: attrs.ctaLabel,
-							onChange: function (v) { setAttrs({ ctaLabel: v }); },
-							placeholder: __('All Reviews')
-						}) : null,
-						TextControl ? el(TextControl, {
-							label: __('CTA URL (override)'),
-							value: attrs.ctaUrl,
-							onChange: function (v) { setAttrs({ ctaUrl: v }); },
-							placeholder: __('https://lunarafilm.com/reviews/')
-						}) : null
-					)
-				) : null;
-
-				var preview = el(
-					'div',
-					{ className: 'lunara-block-editor-preview', style: { border: '1px dashed #c9a961', padding: '12px', borderRadius: '8px', background: 'rgba(7, 15, 26, 0.04)' } },
-					el('div', { style: { fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em', color: '#c9a961', marginBottom: '8px', fontFamily: 'sans-serif' } },
-						__('Lunara Latest Reviews')
-					),
-					el(ServerSideRender, {
-						block: 'lunara/latest-reviews',
-						attributes: attrs,
-						EmptyResponsePlaceholder: function () {
-							return el('div', { style: { padding: '20px', color: '#888', fontStyle: 'italic' } }, __('(no published reviews yet)'));
-						}
-					})
-				);
-
-				return el(Fragment, {}, inspector, preview);
-			},
-			save: function () { return null; }
-		});
-	}
-
-	// Simpler blocks (no per-instance attributes yet) â€” journal/picks/facts
-	var simpleDefs = [
-		{ name: 'lunara/journal-lane', title: __('Lunara Journal Lane'), icon: 'editor-ul',  description: __('The Journal home grid: 1 lead + 3 supporting cards.') },
-		{ name: 'lunara/oscar-picks',  title: __('Lunara Oscar Picks'),  icon: 'awards',     description: __('Behind-the-scenes editorial Oscar picks carousel.') },
-		{ name: 'lunara/oscar-facts',  title: __('Lunara Oscar Facts'),  icon: 'lightbulb',  description: __('Text-forward Oscar fact carousel.') }
-	];
-
-	simpleDefs.forEach(function (def) {
-		if (blocks.getBlockType && blocks.getBlockType(def.name)) { return; }
-
-		blocks.registerBlockType(def.name, {
-			apiVersion: 3,
-			title: def.title,
-			icon: def.icon,
-			category: 'theme',
-			description: def.description,
-			supports: { html: false, reusable: false, multiple: true, inserter: true },
-			edit: function () {
-				return el(
-					'div',
-					{ className: 'lunara-block-editor-preview', style: { border: '1px dashed #c9a961', padding: '12px', borderRadius: '8px', background: 'rgba(7, 15, 26, 0.04)' } },
-					el('div', { style: { fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em', color: '#c9a961', marginBottom: '8px', fontFamily: 'sans-serif' } },
-						def.title
-					),
-					el(ServerSideRender, {
-						block: def.name,
-						EmptyResponsePlaceholder: function () {
-							return el('div', { style: { padding: '20px', color: '#888', fontStyle: 'italic' } }, __('(empty â€” publish a record to see this block render)'));
-						}
-					})
-				);
-			},
-			save: function () { return null; }
-		});
-	});
-})(
-	window.wp && window.wp.blocks,
-	window.wp && window.wp.element,
-	window.wp && window.wp.serverSideRender,
-	window.wp && window.wp.blockEditor,
-	window.wp && window.wp.components,
-	window.wp && window.wp.i18n
-);
-JS;
-
-		wp_add_inline_script( 'lunara-homepage-blocks-editor', $js );
-	}
-	add_action( 'enqueue_block_editor_assets', 'lunara_enqueue_homepage_block_editor_assets' );
-}
-
+/* Homepage block editor registration is owned by assets/js/lunara-blocks.js. */
 
 /* ============================================================================
  * LUNARA HUB — Block Patterns (RETIRED FROM THE EDITOR, 2026-07-03)
  *
- * These five hub patterns date from the Gutenberg-homepage experiment ("Path
- * B"). The homepage is now Customizer-owned — front-page.php renders the
- * section registry directly and never reads page block content — so offering
- * whole hub compositions in the pattern browser only cluttered the editor
- * ("countless instances of hubs"). The 2026-07 content census confirmed no
- * page is built from them except Home (4055), whose blocks are dormant.
+ * These five multi-section patterns date from the first Gutenberg-homepage
+ * experiment. Home now uses six canonical section blocks, but restoring an
+ * entire second composition from one of these legacy patterns would create
+ * duplicate lanes. The current Lunara Studio therefore offers one lightweight
+ * starter per section instead.
  *
  * Patterns are stamps, not references: removing their registration does NOT
  * affect any content previously created from them. To temporarily restore
@@ -17006,14 +16731,15 @@ if ( ! function_exists( 'lunara_register_latest_reviews_block' ) ) {
 
 		register_block_type( 'lunara/latest-reviews', array(
 			'api_version' => 3,
-			'category'    => 'theme',
+			'category'    => 'lunara',
+			'editor_script' => 'lunara-blocks',
 			'title'       => __( 'Lunara Latest Reviews', 'lunara-film' ),
 			'icon'        => 'star-filled',
 			'description' => __( 'Grid of curated homepage reviews or newest published reviews. Per-instance source + count + heading + kicker + CTA overrides.', 'lunara-film' ),
 			'supports'    => array(
 				'html'     => false,
 				'reusable' => false,
-				'multiple' => true,
+				'multiple' => false,
 				'inserter' => true,
 			),
 			'attributes'  => array(

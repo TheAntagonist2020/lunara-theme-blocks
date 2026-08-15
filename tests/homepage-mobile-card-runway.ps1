@@ -49,6 +49,6 @@ foreach ($needle in @(
 Assert-True ($block -notmatch 'font-family\s*:') 'Homepage mobile card runway must not introduce another font family.'
 Assert-True ($block -notmatch 'set_theme_mod|get_option\(|<\?php') 'Homepage mobile card runway must remain static CSS.'
 Assert-True ($controlDesk -match "'mobile_order'\s*=>\s*array\(\s*'hero',\s*'dispatch',\s*'latest-reviews'") 'Homepage mobile order presets must still put Journal before Latest Reviews.'
-Assert-True ($controlDesk -match "'desktop_order'\s*=>\s*array\(\s*'hero',\s*'latest-reviews',\s*'dispatch'") 'Homepage desktop order presets must still put Latest Reviews before Journal.'
+Assert-True ($controlDesk -match "'desktop_order'\s*=>\s*array\(\s*'hero',\s*'latest-reviews',\s*'pairing-desk',\s*'dispatch'") 'Homepage desktop order presets must keep Lunara Method directly under Latest Reviews and before Journal.'
 
 Write-Host 'Homepage mobile card runway contract passed.'

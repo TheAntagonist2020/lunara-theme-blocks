@@ -70,7 +70,7 @@ Assert-True ($block -notmatch 'font-family\s*:') 'Homepage first-viewport polish
 Assert-True ($block -notmatch 'set_theme_mod|get_option\(') 'Homepage first-viewport polish must not mutate or add settings.'
 Assert-True ($functions -match 'lunara_get_home_section_mobile_order_map') 'Theme must still expose the mobile homepage order helper.'
 Assert-True ($controlDesk -match "'mobile_order'\s*=>\s*array\(\s*'hero',\s*'dispatch',\s*'latest-reviews'") 'Homepage mobile order presets must still put Journal before Latest Reviews.'
-Assert-True ($controlDesk -match "'desktop_order'\s*=>\s*array\(\s*'hero',\s*'latest-reviews',\s*'dispatch'") 'Homepage desktop order presets must still put Latest Reviews before Journal.'
+Assert-True ($controlDesk -match "'desktop_order'\s*=>\s*array\(\s*'hero',\s*'latest-reviews',\s*'pairing-desk',\s*'dispatch'") 'Homepage desktop order presets must keep Lunara Method directly under Latest Reviews and before Journal.'
 
 foreach ($file in @($frontend, $functions)) {
     Assert-True ($file -match 'wp_get_attachment_image\(\s*\$custom_logo_id,\s*''full''') 'Footer logo renderers must use the full logo source, not a small rewritten thumbnail.'

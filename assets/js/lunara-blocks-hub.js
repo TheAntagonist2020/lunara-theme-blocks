@@ -1,5 +1,5 @@
 /* global window */
-( function ( plugins, editPost, editor, element, components, blocks, data, i18n ) {
+( function ( plugins, editPost, editor, element, components, blocks, data, i18n, siteStudio ) {
 	'use strict';
 
 	if ( ! plugins || ! plugins.registerPlugin || ! element || ! components || ! blocks || ! data ) {
@@ -15,6 +15,7 @@
 	var PluginSidebarMoreMenuItem    = editPost.PluginSidebarMoreMenuItem || editor.PluginSidebarMoreMenuItem;
 	var Panel                        = components.Panel;
 	var Button                       = components.Button;
+	siteStudio                      = siteStudio || {};
 
 	if ( ! PluginSidebar || ! PluginSidebarMoreMenuItem || ! Panel || ! Button ) {
 		return;
@@ -43,6 +44,7 @@
 			label: __( 'Homepage sections', 'lunara-film' ),
 			items: [
 				{ name: 'lunara/cinematic-hero', label: __( 'Cinematic Hero', 'lunara-film' ), desc: __( 'The rotating cinematic lead section.', 'lunara-film' ), icon: 'cover-image' },
+				{ name: 'lunara/latest-reviews', label: __( 'Latest Reviews', 'lunara-film' ), desc: __( 'The curated or newest-first homepage Reviews shelf.', 'lunara-film' ), icon: 'star-filled' },
 				{ name: 'lunara/journal-lane', label: __( 'Journal Lane', 'lunara-film' ), desc: __( 'The homepage Journal lead and supporting cards.', 'lunara-film' ), icon: 'editor-ul' },
 				{ name: 'lunara/oscar-picks', label: __( 'Oscar Picks', 'lunara-film' ), desc: __( 'A horizontal carousel of Oscar picks.', 'lunara-film' ), icon: 'awards' },
 				{ name: 'lunara/oscar-facts', label: __( 'Oscar Facts', 'lunara-film' ), desc: __( 'Text-forward Oscar fact cards.', 'lunara-film' ), icon: 'lightbulb' },
@@ -81,6 +83,37 @@
 		);
 	}
 
+	function isFrontPageEditor() {
+		if ( ! siteStudio.canManage || ! siteStudio.frontPageId || ! data.select ) {
+			return false;
+		}
+		var editorStore = data.select( 'core/editor' );
+		if ( ! editorStore || ! editorStore.getCurrentPostId ) {
+			return false;
+		}
+		return Number( editorStore.getCurrentPostId() ) === Number( siteStudio.frontPageId );
+	}
+
+	function frontPageStudioCallout() {
+		if ( ! isFrontPageEditor() ) {
+			return null;
+		}
+
+		return el(
+			'div',
+			{ className: 'lunara-studio-site-callout', key: 'site-studio' },
+			el( 'strong', {}, __( 'Editing the Lunara homepage?', 'lunara-film' ) ),
+			el( 'p', {}, __( 'Use the focused Site Studio for section structure and Lunara Method copy without loading the full public page in this canvas.', 'lunara-film' ) ),
+			el(
+				'div',
+				{ className: 'lunara-studio-site-callout__actions' },
+				siteStudio.siteStudioUrl ? el( Button, { variant: 'primary', href: siteStudio.siteStudioUrl }, __( 'Open Site Studio', 'lunara-film' ) ) : null,
+				siteStudio.methodUrl ? el( Button, { variant: 'secondary', href: siteStudio.methodUrl }, __( 'Edit Lunara Method', 'lunara-film' ) ) : null,
+				siteStudio.homepageUrl ? el( Button, { variant: 'tertiary', href: siteStudio.homepageUrl, target: '_blank', rel: 'noopener noreferrer' }, __( 'View Homepage', 'lunara-film' ) ) : null
+			)
+		);
+	}
+
 	function render() {
 		var children = [
 			el( PluginSidebarMoreMenuItem, { target: 'lunara-studio', icon: 'video-alt2', key: 'menu' }, __( 'Lunara Studio', 'lunara-film' ) )
@@ -88,6 +121,10 @@
 		var panelChildren = [
 			el( 'p', { key: 'intro' }, __( 'Insert Lunara’s flagship blocks and homepage sections, then fine-tune every instance in the block settings.', 'lunara-film' ) )
 		];
+		var studioCallout = frontPageStudioCallout();
+		if ( studioCallout ) {
+			panelChildren.unshift( studioCallout );
+		}
 
 		GROUPS.forEach( function ( group ) {
 			var items = group.optional
@@ -123,5 +160,6 @@
 	window.wp && window.wp.components,
 	window.wp && window.wp.blocks,
 	window.wp && window.wp.data,
-	window.wp && window.wp.i18n
+	window.wp && window.wp.i18n,
+	window.LunaraSiteStudioConfig
 );

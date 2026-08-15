@@ -5051,3 +5051,93 @@
         display: none !important;
     }
 }
+.lunara-site-studio-nav {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px;
+	margin: 22px 0;
+}
+
+.lunara-site-studio-nav-group {
+	padding: 16px;
+	border: 1px solid rgba(201, 169, 97, 0.28);
+	border-radius: 14px;
+	background: #fff;
+}
+
+.lunara-site-studio-nav-group > strong {
+	display: block;
+	margin-bottom: 9px;
+	color: #7a5d18;
+	font-size: 11px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+.lunara-site-studio-nav-group > div {
+	display: grid;
+	gap: 7px;
+}
+
+.lunara-site-studio-nav-group a {
+	display: grid;
+	gap: 3px;
+	padding: 11px 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 9px;
+	background: #f6f7f7;
+	color: #1d2327;
+	text-decoration: none;
+}
+
+.lunara-site-studio-nav-group a:hover,
+.lunara-site-studio-nav-group a:focus,
+.lunara-site-studio-nav-group a.is-active {
+	border-color: #a9822c;
+	background: #07111f;
+	color: #fff;
+}
+
+.lunara-site-studio-nav-group a small {
+	color: inherit;
+	opacity: 0.72;
+	line-height: 1.4;
+}
+
+.lunara-site-studio-workspace,
+.lunara-site-studio-effective-copy {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.lunara-site-studio-effective-copy {
+	margin: 0 0 20px;
+	padding: 18px;
+	border-left: 4px solid #c9a961;
+	border-radius: 10px;
+	background: #07111f;
+	color: #f8f4ea;
+}
+
+.lunara-site-studio-effective-copy > span,
+.lunara-site-studio-effective-copy > strong,
+.lunara-site-studio-effective-copy > p {
+	display: block;
+	margin: 5px 0;
+}
+
+.lunara-site-studio-effective-copy > strong {
+	font-size: clamp(22px, 3vw, 34px);
+	line-height: 1.08;
+}
+
+.lunara-control-desk-homepage-visibility-grid label.is-locked {
+	border-color: rgba(201, 169, 97, 0.52);
+	background: rgba(201, 169, 97, 0.08);
+}
+
+@media (max-width: 782px) {
+	.lunara-site-studio-nav {
+		grid-template-columns: 1fr;
+	}
+}

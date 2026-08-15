@@ -31,6 +31,7 @@ require_once $lunara_inc . 'publish-guards.php';
 require_once $lunara_inc . 'carousel.php';
 require_once $lunara_inc . 'control-desk.php';
 if ( is_admin() ) {
+    require_once $lunara_inc . 'site-studio.php';
     require_once $lunara_inc . 'control-desk-automation.php';
 }
 // Legacy homepage shortcodes are intentionally not booted from inc/ anymore.
