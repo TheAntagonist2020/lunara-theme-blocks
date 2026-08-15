@@ -300,6 +300,15 @@
             min-height: 148px !important;
         }
 
+        #primary.lra .lunara-review-archive-uniform .lunara-review-grid-card.is-text-led .lunara-review-grid-link {
+            grid-template-columns: minmax(0, 1fr) !important;
+            min-height: 0 !important;
+        }
+
+        #primary.lra .lunara-review-archive-uniform .lunara-review-grid-card.is-text-led .lunara-review-grid-copy {
+            grid-column: 1 / -1 !important;
+        }
+
         #primary.lra .lunara-review-archive-uniform .lunara-review-grid-poster-wrap {
             aspect-ratio: auto !important;
             border-radius: 14px 0 0 14px !important;

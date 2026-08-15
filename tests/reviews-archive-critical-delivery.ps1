@@ -204,6 +204,8 @@ Assert-True ($browserRuntime -match "bodyClass:\s*'page page-template-page-revie
 Assert-True ($browserRuntime -match "bodyClass:\s*'page page-template-default'") 'The browser regression must exercise the slug-selected Reviews page with the default body class.'
 Assert-True ($browserRuntime -match 'showPairing:\s*false' -and $browserRuntime -match 'showYearFilter:\s*false' -and $browserRuntime -match 'showHeroActions:\s*false') 'The director fixture must omit Pairing, Release Year, and archive-only hero actions.'
 Assert-True ($browserRuntime -match 'structural seed must be inert when the renderer-owned lra class is absent') 'The browser regression must prove the seed is inert without the internal route marker.'
+Assert-True ($browserRuntime -match 'function\s+pairingCollisionSnapshot\s*\(' -and $browserRuntime -match 'function\s+assertPairingCollisionFree\s*\(') 'The first-paint Pairing fixture must detect numeral collisions geometrically.'
+Assert-True ($browserRuntime -match 'assertPairingCollisionFree\(afterPairingCollisions' -and $browserRuntime -match 'assertPairingCollisionFree\(canonicalPairingCollisions') 'Pairing numeral clearance must survive deferred delivery and settled current CSS.'
 
 $routeCssBytes = (Get-Item -LiteralPath $archiveCssPath).Length
 Assert-True ($routeCssBytes -gt 30000 -and $routeCssBytes -le 45000) "Cacheable Reviews route CSS must stay within 45 KB; measured $routeCssBytes bytes."
@@ -217,7 +219,7 @@ Assert-True ($pageTemplate -match "'classes'\s*=>\s*'lunara-review-archive-page'
 Assert-True ($directorTemplate -match "'classes'\s*=>\s*'lunara-review-archive-page\s+lunara-director-archive-page'") 'The director archive must emit the route-owned Reviews wrapper.'
 Assert-True ($frontend -match "wp_enqueue_style\([\s\S]{0,180}'lunara-review-archive'[\s\S]{0,180}array\(\s*'lunara-review-components',\s*'lunara-shell'\s*\)") 'The Reviews route asset must keep its explicit component and shell dependencies.'
 Assert-True ($frontend -notmatch '<style id="lunara-review-archive-authority-css">') 'The legacy 43 KB inline archive cascade must not return.'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.42\s*$') 'Theme version must identify the 3.2.42 critical-delivery repair.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.43\s*$') 'Theme version must identify the 3.2.43 critical-delivery repair.'
 Assert-True ($stagingGate -match 'real iPhone[\s\S]{0,80}Safari' -and $stagingGate -match 'native\s+CSS nesting') 'The staging gate must require a real-iPhone Safari smoke for the nested critical guard.'
 
-Write-Host "Theme 3.2.42 Reviews critical delivery contract passed: universal seed ${seedByteCount}B ($seedSha256); route CSS ${routeCssBytes}B; Boost fixture ${fixtureBytes}B."
+Write-Host "Theme 3.2.43 Reviews critical delivery contract passed: universal seed ${seedByteCount}B ($seedSha256); route CSS ${routeCssBytes}B; Boost fixture ${fixtureBytes}B."

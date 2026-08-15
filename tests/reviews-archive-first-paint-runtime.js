@@ -353,6 +353,76 @@ function styleSnapshot() {
     };
 }
 
+function pairingCollisionSnapshot() {
+    const numeric = (value) => Number.parseFloat(value) || 0;
+    const textRects = (element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        return Array.from(range.getClientRects()).map((rect) => ({
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            left: rect.left,
+        }));
+    };
+    const intersectionArea = (a, b) => {
+        const width = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+        const height = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+        return width * height;
+    };
+
+    const cards = Array.from(document.querySelectorAll('.lunara-pairing-desk-section .lunara-pair-card')).map((card, index) => {
+        const pseudo = getComputedStyle(card, '::after');
+        if (pseudo.display === 'none' || !pseudo.content || pseudo.content === 'none' || pseudo.content === 'normal') {
+            return { active: false, counterDisplay: pseudo.display, roleIntersection: 0, titleIntersection: 0 };
+        }
+        const cardRect = card.getBoundingClientRect();
+        // Chromium exposes the unresolved counter() expression through
+        // getComputedStyle(). Measure the visibly rendered 01/02/03 label.
+        const content = String(index + 1).padStart(2, '0');
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        context.font = `${pseudo.fontStyle} ${pseudo.fontWeight} ${pseudo.fontSize} ${pseudo.fontFamily}`;
+        const measuredWidth = context.measureText(content).width + Math.max(0, content.length - 1) * numeric(pseudo.letterSpacing);
+        const counterWidth = numeric(pseudo.width) || measuredWidth;
+        const counterHeight = numeric(pseudo.height) || numeric(pseudo.lineHeight) || numeric(pseudo.fontSize);
+        const counter = {
+            top: cardRect.top + numeric(pseudo.top),
+            right: cardRect.right - numeric(pseudo.right),
+            bottom: cardRect.top + numeric(pseudo.top) + counterHeight,
+            left: cardRect.right - numeric(pseudo.right) - counterWidth,
+        };
+        const role = card.querySelector('.lunara-pair-card-role');
+        const title = card.querySelector('.lunara-pair-card-title-link');
+
+        return {
+            active: true,
+            counterDisplay: pseudo.display,
+            counterFontSize: pseudo.fontSize,
+            counterLineHeight: pseudo.lineHeight,
+            counterRight: pseudo.right,
+            counterTop: pseudo.top,
+            rolePaddingRight: getComputedStyle(role).paddingRight,
+            titlePaddingRight: getComputedStyle(card.querySelector('.lunara-pair-card-title')).paddingRight,
+            roleIntersection: Math.max(0, ...textRects(role).map((rect) => intersectionArea(counter, rect))),
+            titleIntersection: Math.max(0, ...textRects(title).map((rect) => intersectionArea(counter, rect))),
+        };
+    });
+
+    return { cards };
+}
+
+function assertPairingCollisionFree(snapshot, label) {
+    for (const [index, card] of snapshot.cards.entries()) {
+        if (card.active || card.counterDisplay !== 'none') {
+            throw new Error(`${label}: decorative Pairing numeral ${index + 1} must be hidden on phones.`);
+        }
+        if (card.roleIntersection > 0.5 || card.titleIntersection > 0.5) {
+            throw new Error(`${label}: Pairing numeral ${index + 1} overlaps its role/title (${card.roleIntersection}/${card.titleIntersection}).`);
+        }
+    }
+}
+
 (async () => {
     const browser = await puppeteer.launch({ headless: true });
     const results = [];
@@ -425,18 +495,22 @@ function styleSnapshot() {
                 await page.addStyleTag({ content: `${baseCss}\n${componentCss}` });
                 const after = await page.evaluate(rectSnapshot);
                 const afterStyles = await page.evaluate(styleSnapshot);
+                const afterPairingCollisions = await page.evaluate(pairingCollisionSnapshot);
                 await page.evaluate(() => document.getElementById('stale-boost-critical').remove());
                 const settled = await page.evaluate(rectSnapshot);
                 const settledStyles = await page.evaluate(styleSnapshot);
+                const settledPairingCollisions = await page.evaluate(pairingCollisionSnapshot);
                 const deliveryDelta = largestDelta(before, after, viewport.height);
                 const withdrawalDelta = largestDelta(after, settled, viewport.height);
                 await page.evaluate(() => document.getElementById('stale-boost-aggregate').remove());
                 const currentWithSeed = await page.evaluate(rectSnapshot);
                 const currentWithSeedStyles = await page.evaluate(styleSnapshot);
+                const currentPairingCollisions = await page.evaluate(pairingCollisionSnapshot);
                 const aggregateWithdrawalDelta = largestDelta(settled, currentWithSeed, viewport.height);
                 await page.evaluate(() => document.getElementById('current-structural-seed').remove());
                 const canonical = await page.evaluate(rectSnapshot);
                 const canonicalStyles = await page.evaluate(styleSnapshot);
+                const canonicalPairingCollisions = await page.evaluate(pairingCollisionSnapshot);
                 const seedPersistenceDelta = largestDelta(currentWithSeed, canonical, viewport.height);
                 // Aggregate replacement happens on a later request, not as a
                 // live-page media flip. Record it for diagnosis, but gate the
@@ -446,10 +520,16 @@ function styleSnapshot() {
                 if (orders.showPairing !== false && viewport.width <= 820 && (beforeStyles.backdrop.display !== 'none' || afterStyles.backdrop.display !== 'none')) {
                     throw new Error(`Pairing backdrop must stay hidden through mobile first paint; before=${beforeStyles.backdrop.display} after=${afterStyles.backdrop.display}`);
                 }
+                if (orders.showPairing !== false && viewport.width <= 680) {
+                    assertPairingCollisionFree(afterPairingCollisions, `${orderScenario}/${viewport.width}px deferred delivery`);
+                    assertPairingCollisionFree(settledPairingCollisions, `${orderScenario}/${viewport.width}px critical withdrawal`);
+                    assertPairingCollisionFree(currentPairingCollisions, `${orderScenario}/${viewport.width}px aggregate withdrawal`);
+                    assertPairingCollisionFree(canonicalPairingCollisions, `${orderScenario}/${viewport.width}px settled current CSS`);
+                }
                 if (viewport.width > 820 && beforeStyles.copy.padding === '0px') {
                     throw new Error('Desktop lead copy padding must resolve from the saved authority variable before route CSS arrives.');
                 }
-                results.push({ orderScenario, viewport, delta, deliveryDelta, withdrawalDelta, aggregateWithdrawalDelta, seedPersistenceDelta, before, after, settled, currentWithSeed, canonical, beforeStyles, afterStyles, settledStyles, currentWithSeedStyles, canonicalStyles });
+                results.push({ orderScenario, viewport, delta, deliveryDelta, withdrawalDelta, aggregateWithdrawalDelta, seedPersistenceDelta, before, after, settled, currentWithSeed, canonical, beforeStyles, afterStyles, settledStyles, currentWithSeedStyles, canonicalStyles, afterPairingCollisions, settledPairingCollisions, currentPairingCollisions, canonicalPairingCollisions });
                 await page.close();
             }
         }

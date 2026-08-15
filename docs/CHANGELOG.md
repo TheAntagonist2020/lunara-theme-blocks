@@ -11,6 +11,26 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-15 — Theme 3.2.43 Reviews Mobile Card Legibility
+
+- Repaired image-less Review support cards at 390 and 782 pixels so their
+  single copy child occupies the full archive card instead of being trapped in
+  the media-backed 104-pixel poster column.
+- Scoped the image-less-card override to the Reviews archive's renderer-owned
+  wrapper and uniform grid; media-backed mobile cards retain their poster/copy
+  columns and desktop cards retain the existing composition.
+- Hid the purely decorative Pairing Desk card numerals below 680 pixels in the
+  canonical component asset, eliminating arbitrary role/title collisions on
+  both Home and Reviews without reflowing copy or changing tablet/desktop
+  treatment.
+- Preserved the independently approved 3.2.42 first-paint structural seed
+  byte-for-byte, kept the route asset within its 45 KB budget, and added a real
+  browser regression covering Home and Reviews at 375, 390, 782, and 1440
+  pixels, including text-versus-numeral intersection checks through the
+  Reviews first-paint phases.
+- This is a local theme-only candidate. It does not alter plugins, content,
+  WordPress options, cache, CDN, staging, or production.
+
 ## 2026-08-15 — Theme 3.2.42 Reviews First-Paint Stability
 
 - Preserved the reviewed Reviews Archive Studio and composition work from
