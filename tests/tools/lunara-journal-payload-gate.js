@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 
+const JOURNAL_PRODUCTION_TOTAL_MAX_BYTES = 190000;
 const JOURNAL_PRODUCTION_HTML_MAX_BYTES = 118000;
 const JOURNAL_STAGING_MAX_DELTA_PCT = 5;
 const ENVIRONMENT_STYLE_IDS = new Set([
@@ -104,15 +105,46 @@ function evaluateJournalHtmlPayload({ control = null, candidate }) {
 	const stagingHost = finalCandidateValid && secureOrigin && canonicalRoute && candidateHost.endsWith('.wpcomstaging.com');
 
     if (productionHost) {
-        const passed = candidate.totalBytes <= JOURNAL_PRODUCTION_HTML_MAX_BYTES;
+        const boostBlockId = 'jetpack-boost-critical-css';
+        const duplicateBoostBlock = (candidate.duplicateEnvironmentBlockIds || []).includes(boostBlockId);
+        const hasBoostDescriptor = Boolean(
+            candidate.environmentBlocks
+            && Object.prototype.hasOwnProperty.call(candidate.environmentBlocks, boostBlockId)
+        );
+        const boostDescriptor = hasBoostDescriptor
+            ? candidate.environmentBlocks[boostBlockId]
+            : null;
+        const validBoostDescriptor = !hasBoostDescriptor || Boolean(
+            boostDescriptor
+            && Number.isInteger(boostDescriptor.bytes)
+            && boostDescriptor.bytes > 0
+            && boostDescriptor.bytes <= candidate.totalBytes
+            && typeof boostDescriptor.sha256 === 'string'
+            && /^[a-f0-9]{64}$/.test(boostDescriptor.sha256)
+        );
+        const productionEvidenceValid = !duplicateBoostBlock && validBoostDescriptor;
+        const productionBoostCriticalBytes = productionEvidenceValid && hasBoostDescriptor
+            ? boostDescriptor.bytes
+            : 0;
+        const productionNormalizedBytes = candidate.totalBytes - productionBoostCriticalBytes;
+        const productionTotalCapPassed = candidate.totalBytes <= JOURNAL_PRODUCTION_TOTAL_MAX_BYTES;
+        const productionHardCapPassed = productionEvidenceValid
+            && productionNormalizedBytes <= JOURNAL_PRODUCTION_HTML_MAX_BYTES;
+        const passed = productionEvidenceValid && productionTotalCapPassed && productionHardCapPassed;
         return {
             mode: 'production-absolute',
-            comparable: true,
-            environmentComparable: true,
+            comparable: productionEvidenceValid,
+            environmentComparable: productionEvidenceValid,
             passed,
             candidateBytes: candidate.totalBytes,
+            productionTotalBytes: candidate.totalBytes,
+            productionBoostCriticalBytes,
+            productionNormalizedBytes,
+            productionEvidenceValid,
+            productionTotalLimitBytes: JOURNAL_PRODUCTION_TOTAL_MAX_BYTES,
+            productionTotalCapPassed,
             productionLimitBytes: JOURNAL_PRODUCTION_HTML_MAX_BYTES,
-            productionHardCapPassed: passed,
+            productionHardCapPassed,
             rawDeltaPct: null,
             normalizedDeltaPct: null,
         };
@@ -215,6 +247,7 @@ async function main() {
 }
 
 module.exports = {
+    JOURNAL_PRODUCTION_TOTAL_MAX_BYTES,
     JOURNAL_PRODUCTION_HTML_MAX_BYTES,
     JOURNAL_STAGING_MAX_DELTA_PCT,
     measureJournalHtmlPayload,

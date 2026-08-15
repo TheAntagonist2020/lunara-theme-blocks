@@ -3,12 +3,14 @@
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const {
+    JOURNAL_PRODUCTION_TOTAL_MAX_BYTES,
     JOURNAL_PRODUCTION_HTML_MAX_BYTES,
     JOURNAL_STAGING_MAX_DELTA_PCT,
     measureJournalHtmlPayload,
     evaluateJournalHtmlPayload,
 } = require('./tools/lunara-journal-payload-gate');
 
+assert.equal(JOURNAL_PRODUCTION_TOTAL_MAX_BYTES, 190000, 'The decoded production response must remain at or below 190,000 bytes in total.');
 assert.equal(JOURNAL_PRODUCTION_HTML_MAX_BYTES, 118000, 'The production-host hard cap must remain exactly 118,000 bytes.');
 assert.equal(JOURNAL_STAGING_MAX_DELTA_PCT, 5, 'Matched staging may regress by no more than five percent.');
 
@@ -51,37 +53,121 @@ const block = (bytes, seed) => ({
     sha256: crypto.createHash('sha256').update(`${seed}:${bytes}`).digest('hex'),
 });
 
-const productionPass = evaluateJournalHtmlPayload({
+const productionBaseline = evaluateJournalHtmlPayload({
     candidate: {
         url: 'https://lunarafilm.com/journal/',
         hostname: 'lunarafilm.com',
+        totalBytes: 180069,
+        environmentBlocks: {
+            'jetpack-boost-critical-css': block(69065, 'production-3.2.43-critical'),
+        },
+        environmentBlockBytes: 69065,
+    },
+});
+assert.equal(productionBaseline.mode, 'production-absolute');
+assert.equal(productionBaseline.passed, true, 'The locked 180,069B production response must pass after subtracting its one exact 69,065B Boost critical block.');
+assert.equal(productionBaseline.productionTotalBytes, 180069);
+assert.equal(productionBaseline.productionBoostCriticalBytes, 69065);
+assert.equal(productionBaseline.productionNormalizedBytes, 111004);
+assert.equal(productionBaseline.productionTotalCapPassed, true);
+assert.equal(productionBaseline.productionHardCapPassed, true);
+
+const productionWithoutBoost = evaluateJournalHtmlPayload({
+    candidate: {
+        url: 'https://lunarafilm.com/journal/',
         totalBytes: 117999,
         environmentBlocks: {},
         environmentBlockBytes: 0,
     },
 });
-assert.equal(productionPass.mode, 'production-absolute');
-assert.equal(productionPass.passed, true);
-assert.equal(productionPass.productionHardCapPassed, true);
+assert.equal(productionWithoutBoost.passed, true, 'A production response with no Boost block must subtract zero and pass only on its raw bytes.');
+assert.equal(productionWithoutBoost.productionBoostCriticalBytes, 0);
+assert.equal(productionWithoutBoost.productionNormalizedBytes, 117999);
 
-const productionFail = evaluateJournalHtmlPayload({
-    control: {
-        url: 'https://lunarafilm.com/journal/?baseline=1',
-        hostname: 'lunarafilm.com',
-        totalBytes: 200000,
-        environmentBlocks: { 'global-styles-inline-css': block(90000, 'prod-control') },
-        environmentBlockBytes: 90000,
-    },
+const productionTotalFail = evaluateJournalHtmlPayload({
     candidate: {
         url: 'https://lunarafilm.com/journal/',
-        hostname: 'lunarafilm.com',
+        totalBytes: 190001,
+        environmentBlocks: {
+            'jetpack-boost-critical-css': block(80000, 'total-cap-critical'),
+        },
+        environmentBlockBytes: 80000,
+    },
+});
+assert.equal(productionTotalFail.productionNormalizedBytes, 110001);
+assert.equal(productionTotalFail.productionHardCapPassed, true);
+assert.equal(productionTotalFail.productionTotalCapPassed, false);
+assert.equal(productionTotalFail.passed, false, 'Passing the no-Boost cap must never waive the 190,000-byte decoded-total cap.');
+
+const productionNormalizedFail = evaluateJournalHtmlPayload({
+    candidate: {
+        url: 'https://lunarafilm.com/journal/',
+        totalBytes: 180000,
+        environmentBlocks: {
+            'jetpack-boost-critical-css': block(60000, 'normalized-cap-critical'),
+        },
+        environmentBlockBytes: 60000,
+    },
+});
+assert.equal(productionNormalizedFail.productionTotalCapPassed, true);
+assert.equal(productionNormalizedFail.productionNormalizedBytes, 120000);
+assert.equal(productionNormalizedFail.productionHardCapPassed, false);
+assert.equal(productionNormalizedFail.passed, false, 'Production HTML minus only Boost critical CSS must remain within 118,000 bytes.');
+
+const productionOtherEnvironmentFail = evaluateJournalHtmlPayload({
+    candidate: {
+        url: 'https://lunarafilm.com/journal/',
         totalBytes: 118001,
-        environmentBlocks: {},
+        environmentBlocks: {
+            'global-styles-inline-css': block(50000, 'must-not-subtract'),
+        },
+        environmentBlockBytes: 50000,
+    },
+});
+assert.equal(productionOtherEnvironmentFail.productionBoostCriticalBytes, 0);
+assert.equal(productionOtherEnvironmentFail.productionNormalizedBytes, 118001);
+assert.equal(productionOtherEnvironmentFail.passed, false, 'Production normalization must never subtract global styles or any environment block other than Boost critical CSS.');
+
+const productionDuplicateBoostFail = evaluateJournalHtmlPayload({
+    candidate: {
+        url: 'https://lunarafilm.com/journal/',
+        totalBytes: 180069,
+        environmentBlocks: {
+            'jetpack-boost-critical-css': block(69065, 'production-3.2.43-critical'),
+        },
+        environmentBlockBytes: 69065,
+        duplicateEnvironmentBlockIds: ['jetpack-boost-critical-css'],
+    },
+});
+assert.equal(productionDuplicateBoostFail.productionEvidenceValid, false);
+assert.equal(productionDuplicateBoostFail.passed, false, 'Duplicate Boost critical IDs must fail closed instead of permitting an ambiguous subtraction.');
+
+const productionMalformedBoostFail = evaluateJournalHtmlPayload({
+    candidate: {
+        url: 'https://lunarafilm.com/journal/',
+        totalBytes: 180069,
+        environmentBlocks: {
+            'jetpack-boost-critical-css': { bytes: 69065, sha256: 'not-a-hash' },
+        },
+        environmentBlockBytes: 69065,
+    },
+});
+assert.equal(productionMalformedBoostFail.productionEvidenceValid, false);
+assert.equal(productionMalformedBoostFail.passed, false, 'A present Boost block must carry its exact measured byte count and SHA-256 before subtraction.');
+
+const productionNullBoostFail = evaluateJournalHtmlPayload({
+    candidate: {
+        url: 'https://lunarafilm.com/journal/',
+        totalBytes: 117000,
+        environmentBlocks: {
+            'jetpack-boost-critical-css': null,
+        },
         environmentBlockBytes: 0,
     },
 });
-assert.equal(productionFail.passed, false, 'Environment normalization must never waive the production hard cap.');
-assert.equal(productionFail.productionLimitBytes, 118000);
+assert.equal(productionNullBoostFail.productionEvidenceValid, false);
+assert.equal(productionNullBoostFail.comparable, false);
+assert.equal(productionNullBoostFail.passed, false, 'A present null or wrong-shaped Boost descriptor must fail closed, never masquerade as the explicit absent-Boost path.');
 
 const stagingBaseline = {
     url: 'https://staging-example.wpcomstaging.com/journal/?version=3.2.43',

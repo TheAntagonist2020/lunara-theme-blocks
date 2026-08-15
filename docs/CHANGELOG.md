@@ -25,9 +25,11 @@ directly from each repo's `git log`, not reconstructed from memory.
   priority to the first card on the unpaged root Journal archive. Paged and
   taxonomy archives retain their existing query order with uniform lazy cards.
 - Added an environment-signed payload comparator for matched non-production
-  evidence while retaining the absolute 118,000-byte production `/journal/`
-  hard cap. Redirected origins/routes, duplicate blocks, or byte/hash drift
-  fail closed and cannot be used to normalize the production gate.
+  evidence while retaining two absolute production `/journal/` limits:
+  190,000 decoded bytes total and 118,000 decoded bytes after subtracting
+  exactly one measured Boost critical block. Redirected origins/routes,
+  duplicate blocks, or byte/hash drift fail closed and cannot normalize either
+  production limit.
 - Added isolated PHP, JavaScript, static, and exact-aggregate browser coverage.
   This local theme-only candidate does not alter plugins, content, WordPress
   options, query ordering, cache/CDN settings, global CSS, or route geometry.
