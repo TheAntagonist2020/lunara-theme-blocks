@@ -5,7 +5,12 @@ const path = require('path');
 const crypto = require('crypto');
 const zlib = require('zlib');
 const { execFileSync } = require('child_process');
-const { chromium } = require('playwright');
+let chromium;
+try {
+    ({ chromium } = require('playwright'));
+} catch (playwrightError) {
+    ({ chromium } = require('playwright-core'));
+}
 
 const themeRoot = path.resolve(__dirname, '..');
 const fixturePath = path.join(themeRoot, 'tests/fixtures/journal-production-boost-critical-3.2.43.css');

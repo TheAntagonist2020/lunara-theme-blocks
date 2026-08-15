@@ -26,7 +26,9 @@ Assert-True ($LASTEXITCODE -eq 0) ("Journal Archive Studio runtime failed: " + (
 
 $browserLauncher = Join-Path $PSScriptRoot 'run-journal-archive-first-paint.ps1'
 Assert-True (Test-Path -LiteralPath $browserLauncher) 'Missing the portable Journal Playwright launcher.'
-$browserOutput = & powershell -NoProfile -ExecutionPolicy Bypass -File $browserLauncher 2>&1
+$powerShellHost = (Get-Process -Id $PID).Path
+Assert-True (Test-Path -LiteralPath $powerShellHost) 'The current PowerShell host could not be resolved for the portable Journal launcher.'
+$browserOutput = & $powerShellHost -NoProfile -ExecutionPolicy Bypass -File $browserLauncher 2>&1
 Assert-True ($LASTEXITCODE -eq 0) ("Journal exact first-paint browser gate failed: " + ($browserOutput -join [Environment]::NewLine))
 $browserResult = (($browserOutput | ForEach-Object { "$_" }) -join [Environment]::NewLine) | ConvertFrom-Json
 Assert-True ($browserResult.exactAggregate -eq $true) 'The portable Journal browser gate must replay the exact production aggregate by default.'
@@ -34,11 +36,25 @@ Assert-True ($browserResult.fixtureBytes -eq 69065 -and $browserResult.fixtureHa
 Assert-True ($browserResult.aggregateBytes -eq 847152 -and $browserResult.aggregateHash -eq '6670f9bc1f11eb7c082e7c43e3f2ec66a2472d5131f3e3a935eb691415cfaeae') 'The decompressed production aggregate byte/hash lock must pass.'
 Assert-True ($browserResult.routeBytes -le 40960) "Journal route CSS exceeds 40 KiB: $($browserResult.routeBytes)B."
 Assert-True ($browserResult.headBytes -le 8192) "Journal variables plus critical seed exceed 8 KiB: $($browserResult.headBytes)B."
+Assert-True ($browserResult.browserSkipped -ne $true) 'The exact Journal browser gate may never be skipped in CI or locally.'
+Assert-True (@($browserResult.results).Count -eq 12) 'The exact Journal browser gate must execute all four scenarios at all three viewports.'
 foreach ($browserCase in $browserResult.results) {
     Assert-True ($browserCase.exactAggregate -eq $true) "Browser case $($browserCase.scenario)/$($browserCase.width) did not use the exact aggregate."
     Assert-True ($browserCase.deliveryDelta.max -le 1) "Browser case $($browserCase.scenario)/$($browserCase.width) shifted $($browserCase.deliveryDelta.max)px during deferred delivery."
     Assert-True ($browserCase.criticalWithdrawalDelta.max -le 1) "Browser case $($browserCase.scenario)/$($browserCase.width) shifted $($browserCase.criticalWithdrawalDelta.max)px when stale critical CSS withdrew."
     Assert-True ($browserCase.seedPersistenceDelta.max -le 1) "Browser case $($browserCase.scenario)/$($browserCase.width) shifted $($browserCase.seedPersistenceDelta.max)px when the seed withdrew."
+}
+
+$priorUserProfile = $env:USERPROFILE
+$priorHome = $env:HOME
+try {
+    $env:USERPROFILE = $null
+    $env:HOME = $themeRoot
+    $fallbackHome = & $powerShellHost -NoProfile -ExecutionPolicy Bypass -File $browserLauncher -ResolveHomeOnly 2>&1
+    Assert-True ($LASTEXITCODE -eq 0 -and "$fallbackHome" -eq $themeRoot) 'The portable launcher must resolve HOME when Linux pwsh has no USERPROFILE.'
+} finally {
+    $env:USERPROFILE = $priorUserProfile
+    $env:HOME = $priorHome
 }
 
 $loader   = Read-ThemeFile 'functions-loader.php'
@@ -54,6 +70,22 @@ $shell    = Read-ThemeFile 'assets/css/lunara-shell.css'
 $guardrails = Read-ThemeFile 'assets/css/lunara-public-guardrails.css'
 $critical = Read-ThemeFile 'inc/journal-archive-critical.php'
 $routeCss = Read-ThemeFile 'assets/css/lunara-journal-archive.css'
+$browserLauncherSource = Read-ThemeFile 'tests/run-journal-archive-first-paint.ps1'
+$browserRuntimeSource = Read-ThemeFile 'tests/journal-archive-first-paint-runtime.js'
+$lintWorkflow = Read-ThemeFile '.github/workflows/lint.yml'
+$nodePackage = Read-ThemeFile 'package.json'
+$nodeLock = Read-ThemeFile 'package-lock.json'
+$deployIgnore = Read-ThemeFile '.deployignore'
+$gitIgnore = Read-ThemeFile '.gitignore'
+$deployIgnoreLines = @($deployIgnore -split '\r?\n')
+Assert-True ($browserLauncherSource -notmatch '(?m)&\s*powershell(?:\.exe)?\b') 'The portable Journal launcher must not invoke the Windows-only powershell command.'
+Assert-True (($browserLauncherSource -notmatch '(?m)^\s*\$isWindows\s*=') -and ($browserLauncherSource -match '\$runningOnWindows')) 'The pwsh launcher must not collide with the read-only case-insensitive IsWindows automatic variable.'
+Assert-True ($browserLauncherSource -match '/usr/bin/google-chrome[\s\S]*?/usr/bin/google-chrome-stable[\s\S]*?/usr/bin/chromium[\s\S]*?/usr/bin/chromium-browser') 'The portable Journal launcher must resolve system Chrome/Chromium on the Ubuntu lint runner.'
+Assert-True ($browserRuntimeSource -match "require\(\s*'playwright'\s*\)[\s\S]*?require\(\s*'playwright-core'\s*\)") 'The browser runtime must support both the bundled Playwright package and the pinned CI playwright-core package.'
+Assert-True (($nodePackage -match '"playwright-core"\s*:\s*"1\.62\.1"') -and ($nodeLock -match 'node_modules/playwright-core[\s\S]*?"version"\s*:\s*"1\.62\.1"')) 'The exact browser gate must pin playwright-core 1.62.1 in package and lock files.'
+Assert-True ($lintWorkflow -match 'npm ci --ignore-scripts[\s\S]*?Theme contract tests') 'Lint CI must install the pinned browser dependency before executing the PowerShell contract suite.'
+Assert-True (($deployIgnoreLines -contains 'package.json') -and ($deployIgnoreLines -contains 'package-lock.json') -and ($deployIgnoreLines -contains 'node_modules/**')) 'CI-only Node manifests and dependencies must remain excluded from theme deployment.'
+Assert-True (@($gitIgnore -split '\r?\n') -contains 'node_modules/') 'Pinned CI dependencies must remain outside source control.'
 $searchFunctionStart = $studio.IndexOf('function lunara_journal_archive_studio_search_posts')
 Assert-True ($searchFunctionStart -ge 0) 'Missing the bounded private Journal search helper.'
 $searchFunctionEnd = $studio.IndexOf('/**', $searchFunctionStart + 1)
