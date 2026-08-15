@@ -338,10 +338,6 @@ body.post-type-archive-review .lunara-review-archive-run-grid .lunara-review-gri
             padding: 13px 14px;
         }
 
-        .lunara-pairing-desk-section .lunara-pair-card::after {
-            display: none !important;
-        }
-
         .lunara-pair-card-mark {
             width: 34px;
             height: 34px;

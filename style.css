@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.43
+Version: 3.2.39
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -15107,6 +15107,7 @@ body.post-type-archive-journal .lunara-archive-page {
     flex-direction: column !important;
 }
 
+body.post-type-archive-review .lunara-archive-hero,
 body.post-type-archive-journal .lunara-archive-hero {
     order: 1 !important;
 }
@@ -15115,6 +15116,7 @@ body.post-type-archive-journal .lunara-journal-archive-deskbar {
     order: 2 !important;
 }
 
+body.post-type-archive-review .lunara-review-archive-toolbar,
 body.post-type-archive-journal .lunara-journal-archive-filters {
     order: 3 !important;
 }
@@ -15123,6 +15125,7 @@ body.post-type-archive-journal .lunara-editorial-archive-toolbar {
     order: 4 !important;
 }
 
+body.post-type-archive-review .lunara-review-archive-shell,
 body.post-type-archive-journal .lunara-editorial-archive-shell {
     order: 5 !important;
 }
@@ -16458,6 +16461,7 @@ body.lunara-oscars-portal-page .lunara-oscars-portal {
     padding: 0 clamp(16px, 4vw, 40px) 80px !important;
 }
 
+body.post-type-archive-review .lunara-review-archive-slot-hero,
 body.post-type-archive-journal .lunara-journal-archive-slot-hero {
     order: 1 !important;
 }
@@ -16486,6 +16490,7 @@ body.post-type-archive-journal .lunara-journal-filter-label {
     text-transform: uppercase;
 }
 
+body.post-type-archive-review .lunara-review-archive-slot-grid,
 body.post-type-archive-journal .lunara-journal-archive-toolbar {
     order: 4 !important;
 }
@@ -16494,6 +16499,7 @@ body.post-type-archive-journal .lunara-journal-archive-slot-grid {
     order: 5 !important;
 }
 
+body.post-type-archive-review .lunara-review-archive-slot-pagination,
 body.post-type-archive-journal .lunara-journal-archive-slot-pagination {
     order: 6 !important;
     width: 100% !important;
