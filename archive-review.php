@@ -8,6 +8,16 @@ get_header();
 $review_sort = function_exists( 'lunara_get_review_archive_sort' )
     ? lunara_get_review_archive_sort()
     : 'release_desc';
+$review_year = function_exists( 'lunara_get_review_archive_year' )
+    ? lunara_get_review_archive_year()
+    : '';
+$pagination_args = array();
+if ( 'release_desc' !== $review_sort ) {
+    $pagination_args['sort'] = $review_sort;
+}
+if ( '' !== $review_year ) {
+    $pagination_args['review_year'] = $review_year;
+}
 
 $archive_kicker = function_exists( 'lunara_theme_mod_text' )
     ? lunara_theme_mod_text( 'lunara_reviews_archive_kicker', 'Criticism Desk' )
@@ -31,7 +41,7 @@ echo lunara_render_review_archive_shell(
         'empty_copy'  => '',
         'pagination'  => paginate_links(
             array(
-                'add_args' => 'release_desc' === $review_sort ? false : array( 'sort' => $review_sort ),
+                'add_args' => empty( $pagination_args ) ? false : $pagination_args,
             )
         ),
     )

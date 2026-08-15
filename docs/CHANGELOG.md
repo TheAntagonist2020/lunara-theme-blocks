@@ -11,6 +11,23 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-15 — Theme 3.2.40 Reviews Archive Composition
+
+- Added a focused Reviews Archive Studio for canonical copy, bounded lead
+  curation, four-lane visibility/order, and existing density geometry.
+- Repaired featured-card anchor semantics and made every saved lane position
+  truthful, including Review Grid's utility toolbar and Pairing Desk.
+- Composed the pinned lead into SQL ordering, added a no-JS Review Year filter,
+  preserved pagination/query state, and repaired the one-item last-page pager.
+- Preserved native attachment candidates, bounded canonical TMDB delivery to
+  `w342`/`w500`/`w780`, and kept below-fold archive media lazy.
+- Extracted approximately 42 KB of static Reviews CSS into a route-scoped,
+  cacheable asset while retaining under 2 KB of dynamic variables inline.
+- No plugin, post, production, cache, CDN, or WordPress option writes are part
+  of this release.
+
+---
+
 ## 1. Repository map
 
 | Repo | Purpose | Version at end of period |
