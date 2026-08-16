@@ -11,6 +11,32 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-16 — Theme 3.2.49 Journal Canonical Cache-Coherency Reissue
+
+- Reissued the independently approved Theme 3.2.48 licensed Journal typography
+  product tree after its direct-production canary was automatically rolled
+  back: the anonymous no-query `/journal/` response kept serving legacy cached
+  archive markup while query-bearing Journal routes, pagination, taxonomies,
+  and authenticated requests had advanced to the candidate — a mixed public
+  identity and therefore a mandatory hard stop.
+- Advanced only the public theme version and matching test version locks so
+  this reissue can never be confused with the publicly served, rolled-back
+  3.2.48 canary identity; the licensed Tiempos label/control typography, the
+  custom Studio bypass (Lora), and the priority 6/7/8 first-paint ordering are
+  unchanged from the reviewed candidate tree.
+- Stamped the modern Journal archive root with a `data-lunara-theme-version`
+  attribute so the served archive HTML carries a cache-borne identity that
+  deployment verification can compare against the deployed stylesheet version.
+- Added a fail-closed anonymous canonical cache-coherency sentinel
+  (`tests/tools/lunara-journal-canonical-coherency-gate.js`, with offline
+  runtime and contract coverage) that must pass on the exact no-query public
+  `/journal/` URL before any functional or performance continuation: expected
+  version binding, exactly one modern archive root and zero legacy roots,
+  exactly one lead and eight nonblank cards, structural route CSS before the
+  body, no legacy route assets, and Tiempos marker/preload ownership that
+  matches the resolved Studio label token. Query-bearing, cache-busted, or
+  authenticated variants remain diagnostic only and cannot satisfy the proof.
+
 ## 2026-08-16 — Theme 3.2.48 Licensed Journal Typography Recovery
 
 - Restored the Journal label and control voice to Dalton's licensed Tiempos
