@@ -18,7 +18,6 @@ screenshots/
 output/
 
 # Build/release artifacts
-node_modules/
 *.zip
 *.tar
 *.tar.gz

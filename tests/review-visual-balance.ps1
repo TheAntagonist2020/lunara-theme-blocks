@@ -11,7 +11,7 @@ $front = Get-Content (Join-Path $root 'inc/frontend.php') -Raw
 $desk  = Get-Content (Join-Path $root 'inc/control-desk.php') -Raw
 $reviewCss = Get-Content (Join-Path $root 'assets/css/lunara-review-single.css') -Raw
 
-Assert-True ($style -match 'Version:\s*3\.2\.47') 'Theme must preserve the Reviews Archive visual-balance release.'
+Assert-True ($style -match 'Version:\s*3\.2\.43') 'Theme must identify the Reviews Archive composition release.'
 Assert-True ($reviewCss -match 'width:\s*min\(1060px,\s*calc\(100vw\s*-\s*88px\)\)') 'The desktop Debrief must use the calmer 1060px editorial measure.'
 Assert-True ($reviewCss -match 'rgba\(224,\s*196,\s*129,\s*0\.09\)') 'The Debrief gradient must retain only the subtle warm-gold bloom.'
 Assert-True ($reviewCss -notmatch 'rgba\(112,\s*148,\s*185,\s*0\.12\)') 'The former steel-blue bloom must not return.'
