@@ -16,6 +16,7 @@ test-results/
 coverage/
 screenshots/
 output/
+.cache/
 
 # Build/release artifacts
 node_modules/
