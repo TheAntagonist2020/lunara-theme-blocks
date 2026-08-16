@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.47
+Version: 3.2.43
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -1957,7 +1957,8 @@ h1, h2, h3, h4, h5, h6,
     gap: 22px;
 }
 
-.lunara-review-grid-card {
+.lunara-review-grid-card,
+.lunara-journal-archive-card {
     contain: layout paint;
     min-width: 0;
 }
@@ -1997,6 +1998,16 @@ h1, h2, h3, h4, h5, h6,
 
 .lunara-review-grid-quote {
     color: var(--lunara-gold-light);
+}
+
+.lunara-journal-archive-card .lunara-review-grid-title {
+    min-height: calc(1.22em * 3);
+    -webkit-line-clamp: 3;
+}
+
+.lunara-journal-archive-card .lunara-review-grid-excerpt {
+    min-height: calc(1.7em * 3);
+    -webkit-line-clamp: 3;
 }
 
 .lunara-ledger-card-meta {
@@ -5383,12 +5394,14 @@ footer.site-footer .lunara-footer-copyright {
    -webkit-line-clamp, leaving a clipped sliver of the next line on long titles
    (most visible on the journal lead card). Clip cleanly at exactly three
    line-heights via the lh unit, independent of the cascade's line-height. */
+.lunara-journal-archive-grid .lunara-journal-archive-card .lunara-review-grid-title,
 .lunara-review-archive-grid .lunara-review-archive-card .lunara-review-grid-title {
     display: block !important;
     overflow: hidden !important;
     min-height: 3lh !important;
     max-height: 3lh !important;
 }
+.lunara-journal-archive-grid .lunara-journal-archive-card .lunara-review-grid-excerpt,
 .lunara-review-archive-grid .lunara-review-archive-card .lunara-review-grid-excerpt {
     display: block !important;
     overflow: hidden !important;
@@ -5496,6 +5509,7 @@ footer.site-footer .lunara-footer-copyright {
     display: grid;
 }
 .lunara-review-archive-page,
+.lunara-journal-archive-page,
 .lunara-news-archive-page {
     display: grid;
     gap: var(--lunara-home-gap, 72px);
@@ -11290,6 +11304,173 @@ h6 {
 
 
 /* =========================================================================
+   JOURNAL ARCHIVE — bigger, more present cards + real pill styling
+   2026-04-20
+   ========================================================================= */
+
+/* Grid: 2 big cards per row on desktop, 1 on mobile.
+   Overrides the generic .lunara-review-grid 6-column default. */
+.lunara-journal-archive-grid.lunara-review-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+}
+
+@media (max-width: 900px) {
+    .lunara-journal-archive-grid.lunara-review-grid {
+        grid-template-columns: 1fr;
+        gap: 22px;
+    }
+}
+
+/* Card bump — more presence, more breathing room */
+.lunara-journal-archive-card {
+    padding: 22px;
+    border-radius: 22px;
+}
+
+.lunara-journal-archive-card .lunara-review-grid-poster-wrap {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 14px;
+    margin-bottom: 20px;
+}
+
+.lunara-journal-archive-card .lunara-review-grid-poster,
+.lunara-journal-archive-card .lunara-review-grid-poster-placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .5s ease, filter .5s ease;
+}
+
+.lunara-journal-archive-card:hover .lunara-review-grid-poster {
+    transform: scale(1.04);
+    filter: saturate(1.1) brightness(1.05);
+}
+
+.lunara-journal-archive-card .lunara-review-grid-kicker {
+    font-size: 0.76rem;
+    letter-spacing: 0.18em;
+    margin-bottom: 12px;
+}
+
+.lunara-journal-archive-card .lunara-review-grid-title {
+    font-size: clamp(1.55rem, 2.3vw, 2rem);
+    line-height: 1.15;
+    margin-bottom: 14px;
+}
+
+.lunara-journal-archive-card .lunara-review-grid-excerpt {
+    font-size: 1.02rem;
+    line-height: 1.65;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.lunara-journal-archive-card .lunara-review-grid-footer {
+    padding-top: 14px;
+    border-top: 1px solid rgba(201,169,97,.14);
+}
+
+
+/* =========================================================================
+   FILTER PILLS — dynamic, tactile, gold-trimmed
+   Replaces "just text" default with proper interactive pills.
+   ========================================================================= */
+
+.lunara-journal-archive-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 28px 0 0;
+    padding: 0;
+}
+
+.lunara-journal-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+    border: 1px solid rgba(201,169,97,.22);
+    color: var(--lunara-text, #FAFBFC);
+    font-size: 0.82rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        transform .22s ease,
+        border-color .22s ease,
+        background .22s ease,
+        color .22s ease,
+        box-shadow .22s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.lunara-journal-filter-pill::before {
+    content: "";
+    position: absolute;
+    inset: 0 -30% 0 auto;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgba(224,196,129,.18), transparent);
+    transform: translateX(-120%) skewX(-18deg);
+    transition: transform .6s ease;
+    pointer-events: none;
+}
+
+.lunara-journal-filter-pill:hover {
+    transform: translateY(-2px);
+    border-color: rgba(224,196,129,.55);
+    background: linear-gradient(180deg, rgba(201,169,97,.12), rgba(201,169,97,.04));
+    color: var(--lunara-gold-light, #e0c481);
+    box-shadow: 0 10px 28px rgba(0,0,0,.24), inset 0 0 0 1px rgba(224,196,129,.28);
+}
+
+.lunara-journal-filter-pill:hover::before {
+    transform: translateX(180%) skewX(-18deg);
+}
+
+.lunara-journal-filter-pill.is-active {
+    background: linear-gradient(180deg, rgba(201,169,97,.32), rgba(201,169,97,.14));
+    border-color: rgba(224,196,129,.65);
+    color: #fff5d8;
+    box-shadow:
+        inset 0 0 0 1px rgba(224,196,129,.4),
+        0 14px 36px rgba(201,169,97,.14);
+    font-weight: 600;
+}
+
+.lunara-journal-filter-count {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.22);
+    color: var(--lunara-text-muted, #888);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+    transition: background .22s ease, color .22s ease;
+}
+
+.lunara-journal-filter-pill.is-active .lunara-journal-filter-count,
+.lunara-journal-filter-pill:hover .lunara-journal-filter-count {
+    background: rgba(7,15,26,.45);
+    color: var(--lunara-gold-light, #e0c481);
+}
+
+/* Archive hero kicker above the filters needs more breathing room */
+.lunara-journal-archive-hero .lunara-archive-hero-copy {
+    max-width: 60ch;
+}
+
+/* =========================================================================
    OSCAR LORE — carousel motion + inline expansion (Option A)
    2026-04-20
    ========================================================================= */
@@ -14920,12 +15101,34 @@ body.home .lunara-front-page .lunara-reveal .lunara-home-section-summary {
     transition: none !important;
 }
 
-body.post-type-archive-review .lunara-archive-page {
+body.post-type-archive-review .lunara-archive-page,
+body.post-type-archive-journal .lunara-archive-page {
     display: flex !important;
     flex-direction: column !important;
 }
 
-body.post-type-archive-review .lunara-archive-page .lunara-reveal {
+body.post-type-archive-journal .lunara-archive-hero {
+    order: 1 !important;
+}
+
+body.post-type-archive-journal .lunara-journal-archive-deskbar {
+    order: 2 !important;
+}
+
+body.post-type-archive-journal .lunara-journal-archive-filters {
+    order: 3 !important;
+}
+
+body.post-type-archive-journal .lunara-editorial-archive-toolbar {
+    order: 4 !important;
+}
+
+body.post-type-archive-journal .lunara-editorial-archive-shell {
+    order: 5 !important;
+}
+
+body.post-type-archive-review .lunara-archive-page .lunara-reveal,
+body.post-type-archive-journal .lunara-archive-page .lunara-reveal {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;
@@ -15010,7 +15213,8 @@ body.home .lunara-journal-home-card.is-lead {
 
 body.home .lunara-journal-home-card-media,
 body.home .lunara-journal-home-card.is-lead .lunara-journal-home-card-media,
-.lunara-dispatch-archive-thumb-wrap {
+.lunara-dispatch-archive-thumb-wrap,
+.lunara-journal-archive-card .lunara-review-grid-poster-wrap {
     aspect-ratio: 16 / 10 !important;
     max-height: none !important;
     width: 100% !important;
@@ -15029,7 +15233,8 @@ body.page-template-page-reviews .lunara-review-grid-poster-wrap {
 
 body.home .lunara-journal-home-card-image,
 .lunara-dispatch-archive-thumb,
-.lunara-dispatch-archive-thumb-wrap img {
+.lunara-dispatch-archive-thumb-wrap img,
+.lunara-journal-archive-card .lunara-review-grid-poster-wrap img {
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
@@ -15662,7 +15867,8 @@ body.home .lunara-journal-home-card.is-lead .lunara-journal-home-card-title {
 }
 
 /* ---- Journal desk polish + Oscar Ledger affordances -------------------- */
-.lunara-journal-home-deskbar {
+.lunara-journal-home-deskbar,
+.lunara-journal-archive-deskbar {
     display: flex;
     flex-wrap: wrap;
     gap: 10px 18px;
@@ -15674,7 +15880,8 @@ body.home .lunara-journal-home-card.is-lead .lunara-journal-home-card-title {
     color: rgba(239,232,214,.82);
 }
 
-.lunara-journal-home-deskbar span {
+.lunara-journal-home-deskbar span,
+.lunara-journal-archive-deskbar span {
     display: inline-flex;
     flex-wrap: wrap;
     gap: 7px;
@@ -15684,19 +15891,22 @@ body.home .lunara-journal-home-card.is-lead .lunara-journal-home-card-title {
     line-height: 1.35;
 }
 
-.lunara-journal-home-deskbar strong {
+.lunara-journal-home-deskbar strong,
+.lunara-journal-archive-deskbar strong {
     color: rgba(224,196,129,.95);
     font-size: .68rem;
     letter-spacing: 0;
     text-transform: uppercase;
 }
 
+.lunara-journal-archive-filters,
 .lunara-archive-sort {
     display: flex !important;
     flex-wrap: wrap !important;
     gap: 10px !important;
 }
 
+.lunara-journal-filter-pill,
 .lunara-archive-sort-link {
     display: inline-flex !important;
     align-items: center !important;
@@ -15715,10 +15925,25 @@ body.home .lunara-journal-home-card.is-lead .lunara-journal-home-card-title {
     text-transform: uppercase !important;
 }
 
+.lunara-journal-filter-pill.is-active,
 .lunara-archive-sort-link.is-active {
     border-color: rgba(224,196,129,.64) !important;
     color: rgba(255,245,216,.98) !important;
     background: rgba(201,169,97,.14) !important;
+}
+
+.lunara-journal-filter-count {
+    color: rgba(239,232,214,.72) !important;
+    font-size: .75rem !important;
+    letter-spacing: 0 !important;
+}
+
+.lunara-journal-archive-page .lunara-archive-hero {
+    margin-bottom: 16px;
+}
+
+.lunara-journal-archive-page .lunara-editorial-archive-toolbar {
+    margin-top: 22px;
 }
 
 .lunara-oscar-pick-card-ledger {
@@ -15739,12 +15964,14 @@ body.home .lunara-journal-home-card.is-lead .lunara-journal-home-card-title {
 }
 
 @media (max-width: 720px) {
-    .lunara-journal-home-deskbar {
+    .lunara-journal-home-deskbar,
+    .lunara-journal-archive-deskbar {
         align-items: stretch;
         gap: 8px;
     }
 
-    .lunara-journal-home-deskbar span {
+    .lunara-journal-home-deskbar span,
+    .lunara-journal-archive-deskbar span {
         width: 100%;
         justify-content: space-between;
     }
@@ -16103,6 +16330,7 @@ body.single-journal .lunara-review-single-content a:not(.lunara-reader-toc-link)
 
 .lunara-review-archive-sort-link,
 .lunara-archive-sort-link,
+.lunara-journal-filter-pill,
 .lunara-section-link,
 .lunara-btn {
     min-height: 44px !important;
@@ -16181,7 +16409,8 @@ body.single-review .lunara-review-single-detail-list span {
     outline-offset: 3px !important;
 }
 
-body.post-type-archive-review .lunara-archive-hero-copy {
+body.post-type-archive-review .lunara-archive-hero-copy,
+body.post-type-archive-journal .lunara-archive-hero-copy {
     max-width: 68ch !important;
 }
 
@@ -16200,7 +16429,8 @@ body.post-type-archive-review .lunara-archive-hero-copy {
 
     .lunara-reader-toc-links,
     .lunara-review-archive-sort,
-    .lunara-archive-sort {
+    .lunara-archive-sort,
+    .lunara-journal-archive-filters {
         flex-wrap: nowrap !important;
         overflow-x: auto !important;
         padding-bottom: 4px !important;
@@ -16209,7 +16439,8 @@ body.post-type-archive-review .lunara-archive-hero-copy {
 
     .lunara-reader-toc-link,
     .lunara-review-archive-sort-link,
-    .lunara-archive-sort-link {
+    .lunara-archive-sort-link,
+    .lunara-journal-filter-pill {
         flex: 0 0 auto !important;
         max-width: min(78vw, 320px) !important;
         white-space: normal !important;
@@ -16218,6 +16449,7 @@ body.post-type-archive-review .lunara-archive-hero-copy {
 
 /* Incognito page-surface rescue pass - 2026-05-16 */
 body.post-type-archive-review .lunara-archive-page,
+body.post-type-archive-journal .lunara-archive-page,
 body.lunara-oscars-portal-page .lunara-oscars-portal {
     width: min(1180px, calc(100vw - 40px)) !important;
     max-width: 1180px !important;
@@ -16226,12 +16458,62 @@ body.lunara-oscars-portal-page .lunara-oscars-portal {
     padding: 0 clamp(16px, 4vw, 40px) 80px !important;
 }
 
-body.post-type-archive-review .lunara-review-archive-toolbar {
+body.post-type-archive-journal .lunara-journal-archive-slot-hero {
+    order: 1 !important;
+}
+
+body.post-type-archive-journal .lunara-journal-archive-deskbar {
+    order: 2 !important;
+}
+
+body.post-type-archive-journal .lunara-journal-archive-slot-filters {
+    order: 3 !important;
+}
+
+body.post-type-archive-journal .lunara-journal-filter-groups {
+    display: grid;
+    gap: 10px;
+}
+
+body.post-type-archive-journal .lunara-journal-filter-label {
+    align-self: center;
+    color: var(--theme-text-color, currentColor);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0;
+    margin-right: 4px;
+    opacity: 0.7;
+    text-transform: uppercase;
+}
+
+body.post-type-archive-journal .lunara-journal-archive-toolbar {
+    order: 4 !important;
+}
+
+body.post-type-archive-journal .lunara-journal-archive-slot-grid {
+    order: 5 !important;
+}
+
+body.post-type-archive-journal .lunara-journal-archive-slot-pagination {
+    order: 6 !important;
+    width: 100% !important;
+    margin: clamp(28px, 4vw, 42px) auto 0 !important;
+}
+
+body.post-type-archive-review .lunara-review-archive-toolbar,
+body.post-type-archive-journal .lunara-journal-archive-toolbar {
     margin: 0 0 clamp(18px, 3vw, 28px) !important;
 }
 
 body.post-type-archive-review .lunara-review-archive-grid,
 body.post-type-archive-review .lunara-review-archive-uniform {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: clamp(20px, 2.4vw, 30px) !important;
+}
+
+body.post-type-archive-journal .lunara-journal-archive-grid,
+body.post-type-archive-journal .lunara-review-archive-uniform {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: clamp(20px, 2.4vw, 30px) !important;
@@ -16343,6 +16625,8 @@ body.lunara-oscars-portal-page .lunara-oscars-portal-title-card {
 @media (max-width: 980px) {
     body.post-type-archive-review .lunara-review-archive-grid,
     body.post-type-archive-review .lunara-review-archive-uniform,
+    body.post-type-archive-journal .lunara-journal-archive-grid,
+    body.post-type-archive-journal .lunara-review-archive-uniform,
     body.lunara-oscars-portal-page .lunara-oscars-portal-link-grid,
     body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-grid,
     body.lunara-oscars-portal-page .lunara-oscars-research-card-grid,
@@ -16374,6 +16658,7 @@ body.lunara-oscars-portal-page .lunara-oscars-portal-title-card {
 
 @media (max-width: 620px) {
     body.post-type-archive-review .lunara-archive-page,
+    body.post-type-archive-journal .lunara-archive-page,
     body.lunara-oscars-portal-page .lunara-oscars-portal {
         width: min(100%, calc(100vw - 28px)) !important;
         max-width: calc(100vw - 28px) !important;
@@ -16399,6 +16684,8 @@ body.lunara-oscars-portal-page .lunara-oscars-portal-title-card {
 
     body.post-type-archive-review .lunara-review-archive-grid,
     body.post-type-archive-review .lunara-review-archive-uniform,
+    body.post-type-archive-journal .lunara-journal-archive-grid,
+    body.post-type-archive-journal .lunara-review-archive-uniform,
     body.lunara-oscars-portal-page .lunara-oscars-portal-link-grid,
     body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-grid,
     body.lunara-oscars-portal-page .lunara-oscars-portal-title-grid,
@@ -16540,6 +16827,37 @@ body.home main.lunara-front-page > .lunara-home-section,
     max-width: 100%;
 }
 
+body.post-type-archive-journal .lunara-journal-archive-page,
+body.post-type-archive-journal .lunara-journal-archive-slot-hero,
+body.post-type-archive-journal .lunara-journal-archive-deskbar,
+body.post-type-archive-journal .lunara-journal-archive-slot-filters,
+body.post-type-archive-journal .lunara-journal-archive-toolbar,
+body.post-type-archive-journal .lunara-journal-archive-grid,
+body.post-type-archive-journal .lunara-journal-archive-card,
+body.post-type-archive-journal .lunara-review-grid-link,
+body.post-type-archive-journal .lunara-review-grid-copy,
+body.post-type-archive-journal .lunara-review-grid-poster-wrap {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
+}
+
+body.post-type-archive-journal .lunara-archive-hero-title,
+body.post-type-archive-journal .lunara-archive-hero-copy,
+body.post-type-archive-journal .lunara-section-title,
+body.post-type-archive-journal .lunara-review-grid-title,
+body.post-type-archive-journal .lunara-review-grid-excerpt {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-wrap: pretty;
+}
+
+body.post-type-archive-journal .lunara-review-grid-poster-wrap img,
+body.post-type-archive-journal .lunara-review-grid-poster {
+    display: block;
+    max-width: 100%;
+}
+
 .lunara-review-visual-frame {
     overflow: hidden;
 }
@@ -16580,7 +16898,8 @@ body.home main.lunara-front-page > .lunara-home-section,
 @media (max-width: 520px) {
     body.home .lunara-home-section-head,
     body.home .lunara-home-section-head.is-with-summary,
-    body.post-type-archive-review .lunara-archive-hero {
+    body.post-type-archive-review .lunara-archive-hero,
+    body.post-type-archive-journal .lunara-archive-hero {
         width: min(100%, 324px) !important;
         max-width: 324px !important;
         margin-inline: auto !important;
@@ -16599,14 +16918,16 @@ body.home main.lunara-front-page > .lunara-home-section,
     }
 
     body.home .lunara-home-section-summary,
-    body.post-type-archive-review .lunara-archive-hero-copy {
+    body.post-type-archive-review .lunara-archive-hero-copy,
+    body.post-type-archive-journal .lunara-archive-hero-copy {
         width: 100% !important;
         max-width: 324px !important;
         overflow-wrap: break-word !important;
         text-wrap: pretty !important;
     }
 
-    body.post-type-archive-review .lunara-archive-hero-title {
+    body.post-type-archive-review .lunara-archive-hero-title,
+    body.post-type-archive-journal .lunara-archive-hero-title {
         width: 100% !important;
         max-width: 324px !important;
         font-size: clamp(2.2rem, 9.4vw, 2.72rem) !important;
