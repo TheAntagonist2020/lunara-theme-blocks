@@ -269,8 +269,11 @@ $journal_section_markup['pagination'] = ob_get_clean();
 
 $journal_section_order      = $journal_config['section_order'];
 $journal_section_visibility = $journal_config['section_visibility'];
+$journal_label_font_class   = function_exists( 'lunara_journal_archive_uses_tiempos_label_face' ) && lunara_journal_archive_uses_tiempos_label_face()
+	? ' is-label-font-tiempos'
+	: '';
 ?>
-<main id="primary" class="lunara-archive-page lunara-journal-archive-page">
+<main id="primary" class="lunara-archive-page lunara-journal-archive-page<?php echo esc_attr( $journal_label_font_class ); ?>">
 	<?php echo lunara_journal_archive_studio_render_sections( $journal_section_markup, $journal_section_order, $journal_section_visibility ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 </main>
 <?php

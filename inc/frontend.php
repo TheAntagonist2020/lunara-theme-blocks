@@ -450,6 +450,26 @@ function lunara_preload_critical_fonts() {
 add_action( 'wp_head', 'lunara_preload_critical_fonts', 3 );
 
 /**
+ * Give the licensed Journal label face a first-paint opportunity without
+ * imposing its heavier weight on routes or custom Studio font choices.
+ */
+function lunara_preload_journal_archive_label_font() {
+    $is_journal_archive = function_exists( 'lunara_is_journal_archive_family' )
+        ? lunara_is_journal_archive_family()
+        : ( is_post_type_archive( 'journal' ) || is_tax( array( 'journal_section', 'journal_topic', 'journal_type' ) ) );
+
+    if ( is_admin() || is_feed() || ! $is_journal_archive || ! function_exists( 'lunara_journal_archive_uses_tiempos_label_face' ) || ! lunara_journal_archive_uses_tiempos_label_face() ) {
+        return;
+    }
+
+    printf(
+        '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin />' . "\n",
+        esc_url( home_url( '/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2' ) )
+    );
+}
+add_action( 'wp_head', 'lunara_preload_journal_archive_label_font', 4 );
+
+/**
  * Keep the masthead's layout CSS out of WP Rocket's used-CSS pipeline.
  *
  * Rocket's Remove Unused CSS collects inline styles into its async-applied
@@ -870,7 +890,7 @@ function lunara_output_journal_archive_critical_css() {
         printf( '<style id="lunara-journal-archive-critical-css">%s</style>', $css ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Theme-owned CSS only.
     }
 }
-add_action( 'wp_head', 'lunara_output_journal_archive_critical_css', 9 );
+add_action( 'wp_head', 'lunara_output_journal_archive_critical_css', 7 );
 
 /**
  * The canonical Home renderer does not consume block or theme.json markup.
@@ -3498,7 +3518,7 @@ function lunara_output_journal_archive_studio_css() {
         printf( '<style id="lunara-journal-archive-vars">%s</style>', $css ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Validated theme-owned variables only.
     }
 }
-add_action( 'wp_head', 'lunara_output_journal_archive_studio_css', 8 );
+add_action( 'wp_head', 'lunara_output_journal_archive_studio_css', 6 );
 
 function lunara_output_journal_archive_media_guard_js() {
     if ( is_admin() || is_feed() ) {

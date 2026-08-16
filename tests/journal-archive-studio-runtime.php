@@ -37,6 +37,7 @@ $lunara_test_posts = array(
 );
 $lunara_test_images = array( 101 => 'image/jpeg', 102 => 'image/webp', 103 => 'application/pdf', 104 => 'image/png', 105 => 'image/jpeg', 11 => 'image/jpeg' );
 $lunara_test_attachment_renderable = true;
+$lunara_test_design_tokens = array();
 
 function lunara_test_assert( $condition, $message ) {
 	if ( ! $condition ) {
@@ -91,6 +92,14 @@ function is_wp_error( $value ) { return $value instanceof WP_Error; }
 function __( $value ) { return $value; }
 function sanitize_key( $value ) { if ( ! is_scalar( $value ) ) { throw new TypeError( 'sanitize_key expects a scalar test value' ); } return preg_replace( '/[^a-z0-9_-]/', '', strtolower( (string) $value ) ); }
 function sanitize_title( $value ) { return sanitize_key( $value ); }
+function lunara_get_design_tokens() { return $GLOBALS['lunara_test_design_tokens']; }
+function lunara_design_token_font_choices() {
+	return array(
+		'tiempos-text' => array( 'stack' => '"Tiempos Text", Georgia, serif' ),
+		'lora'         => array( 'stack' => '"Lora", Georgia, serif' ),
+		'georgia'      => array( 'stack' => 'Georgia, serif' ),
+	);
+}
 function sanitize_text_field( $value ) { return trim( strip_tags( (string) $value ) ); }
 function sanitize_textarea_field( $value ) { return trim( strip_tags( (string) $value ) ); }
 function wp_unslash( $value ) { return $value; }
@@ -179,6 +188,24 @@ function nocache_headers() { global $lunara_test_nocache_calls; $lunara_test_noc
 require dirname( __DIR__ ) . '/inc/journal-archive-studio.php';
 require dirname( __DIR__ ) . '/inc/helpers.php';
 require dirname( __DIR__ ) . '/inc/journal-archive-critical.php';
+
+lunara_test_assert( 'tiempos-text' === lunara_journal_archive_resolved_label_font_slug(), 'An absent label token must resolve to the approved licensed Tiempos default.' );
+lunara_test_assert( true === lunara_journal_archive_uses_tiempos_label_face(), 'The approved default label token must activate the route-aware licensed Tiempos face.' );
+$lunara_test_design_tokens = array( 'fonts' => array( 'label' => 'lora' ) );
+lunara_test_assert( 'lora' === lunara_journal_archive_resolved_label_font_slug(), 'A valid non-default Studio label token must round-trip without Tiempos substitution.' );
+lunara_test_assert( false === lunara_journal_archive_uses_tiempos_label_face(), 'A valid non-default Studio label token must bypass the route-owned Tiempos face.' );
+$lunara_test_design_tokens = array( 'fonts' => array( 'label' => array( 'bad-shape' ) ) );
+lunara_test_assert( 'tiempos-text' === lunara_journal_archive_resolved_label_font_slug(), 'A corrupt label token must repair field-locally to the default without a type error.' );
+$lunara_test_design_tokens = array( 'fonts' => array( 'label' => 'not-a-choice' ) );
+lunara_test_assert( 'tiempos-text' === lunara_journal_archive_resolved_label_font_slug(), 'An unknown label token must repair field-locally to the default.' );
+$lunara_test_design_tokens = array( 'fonts' => array( 'label' => ' lora ' ) );
+lunara_test_assert( 'tiempos-text' === lunara_journal_archive_resolved_label_font_slug(), 'A whitespace-corrupt near-match must not become a valid custom label token.' );
+lunara_test_assert( true === lunara_journal_archive_uses_tiempos_label_face(), 'A whitespace-corrupt near-match must retain the canonical default Tiempos behavior.' );
+$lunara_test_design_tokens = array( 'fonts' => array( 'label' => 'lora!' ) );
+lunara_test_assert( 'tiempos-text' === lunara_journal_archive_resolved_label_font_slug(), 'A punctuation-corrupt near-match must not become a valid custom label token.' );
+$lunara_test_design_tokens = array( 'fonts' => array( 'label' => 'LORA' ) );
+lunara_test_assert( 'tiempos-text' === lunara_journal_archive_resolved_label_font_slug(), 'A case-corrupt near-match must follow the canonical exact-key validator.' );
+$lunara_test_design_tokens = array();
 
 $defaults = lunara_journal_archive_studio_defaults();
 lunara_test_assert(

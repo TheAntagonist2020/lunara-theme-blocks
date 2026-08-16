@@ -60,6 +60,28 @@ function loadStaleAggregate() {
 
 const staleAggregate = loadStaleAggregate();
 
+function loadLicensedLabelFontFixtures() {
+    const paths = {
+        regular: process.env.LUNARA_TIEMPOS_TEXT_REGULAR_WOFF2 || '',
+        bold: process.env.LUNARA_TIEMPOS_TEXT_BOLD_WOFF2 || '',
+    };
+    if (!paths.regular && !paths.bold) return null;
+    if (!paths.regular || !paths.bold) {
+        throw new Error('Both LUNARA_TIEMPOS_TEXT_REGULAR_WOFF2 and LUNARA_TIEMPOS_TEXT_BOLD_WOFF2 are required.');
+    }
+    return Object.fromEntries(Object.entries(paths).map(([weight, fontPath]) => {
+        const resolved = path.resolve(fontPath);
+        const body = fs.readFileSync(resolved);
+        return [weight, {
+            body,
+            bytes: body.length,
+            sha256: crypto.createHash('sha256').update(body).digest('hex'),
+        }];
+    }));
+}
+
+const licensedLabelFontFixtures = loadLicensedLabelFontFixtures();
+
 function renderHeadCss(presentation) {
     const encoded = Buffer.from(JSON.stringify(presentation || {})).toString('base64');
     return JSON.parse(execFileSync('php', [criticalRenderer, encoded], { encoding: 'utf8' }));
@@ -104,7 +126,7 @@ function laneMarkup(slug, scenario) {
             const hasMedia = media && !(index === 0 && scenario.undersizedLead);
             return `<article class="lunara-review-grid-card lunara-journal-archive-card${visualLead ? ' is-lead' : ''}${hasMedia ? ' has-media' : ' is-text-brief'}"><a class="lunara-review-grid-link" href="#">${hasMedia ? `<div class="lunara-review-grid-poster-wrap"><img class="lunara-review-grid-poster" src="${imageData}" width="1920" height="1080" loading="${visualLead ? 'eager' : 'lazy'}" fetchpriority="${visualLead ? 'high' : 'auto'}" alt="Wide editorial still"></div>` : ''}<div class="lunara-review-grid-copy"><p class="lunara-review-grid-kicker">${visualLead ? 'Lead file' : 'From the desk'}</p><p class="lunara-dispatch-type lunara-journal-archive-card-type">Industry Dispatch</p><div class="lunara-journal-card-provenance"><span class="lunara-journal-card-provenance-pill">Original reporting</span></div><h3 class="lunara-review-grid-title">Lanterns Is Doing Something Stranger Than DC Usually Gets Away With</h3><p class="lunara-review-grid-excerpt">A specific reported argument gives the archive card enough editorial density to exercise its real line rhythm.</p><div class="lunara-review-grid-footer lunara-journal-archive-card-footer"><span class="lunara-review-grid-meta">August 15, 2026</span><span class="lunara-review-grid-updated">Updated today</span><span class="lunara-journal-archive-card-cta">Read file</span></div></div></a></article>`;
         };
-        return `<section class="lunara-journal-archive-grid lunara-review-grid lunara-review-archive-uniform lunara-journal-archive-slot-grid">${card(0, true)}${card(1, true)}${card(2, false)}${card(3, true)}${card(4, true)}</section>`;
+        return `<section class="lunara-journal-archive-grid lunara-review-grid lunara-review-archive-uniform lunara-journal-archive-slot-grid">${card(0, true)}${card(1, true)}${card(2, false)}${card(3, true)}${card(4, true)}${card(5, false)}${card(6, true)}${card(7, true)}</section>`;
     }
     if (slug === 'retention') {
         const media = scenario.retentionMedia ? `<span class="lunara-journal-archive-retention-media" style="--lunara-retention-focus-x:31%;--lunara-retention-focus-y:67%"><img src="${imageData}" width="1920" height="1080" alt="Retention still"></span>` : '';
@@ -124,7 +146,11 @@ function documentHtml(scenario, headCss) {
         ? 'archive post-type-archive-journal tax-journal_topic lunara-journal-taxonomy-archive'
         : 'archive post-type-archive-journal';
     const telemetry = scenario.captureCls ? `<script>${localTelemetryScript()}</script>` : '';
-    return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${telemetry}<style id="production-critical">${productionCritical}</style><style id="blocking-route">${routeCss}</style><style id="journal-vars">${headCss.variables}</style><style id="current-structural-seed">${headCss.seed}</style></head><body class="${bodyClass}"><div class="site-main"><main id="primary" class="lunara-archive-page lunara-journal-archive-page">${fallbackH1}${lanes}</main></div><script>${mediaGuardJs}</script></body></html>`;
+    const base = scenario.fontBase ? '<base href="https://lunara.test/">' : '';
+    const globalCss = scenario.includeGlobalCss ? `<style id="canonical-global">${currentGlobalCss}</style>` : '';
+    const labelFontClass = scenario.customLabelFont ? '' : ' is-label-font-tiempos';
+    const customLabelCss = scenario.customLabelFont ? '<style id="custom-label-token">:root{--lunara-font-label:Lora,serif}</style>' : '';
+    return `<!doctype html><html><head><meta charset="utf-8">${base}<meta name="viewport" content="width=device-width,initial-scale=1">${telemetry}${globalCss}${customLabelCss}<style id="production-critical">${productionCritical}</style><style id="blocking-route">${routeCss}</style><style id="journal-vars">${headCss.variables}</style><style id="current-structural-seed">${headCss.seed}</style></head><body class="${bodyClass}"><div class="site-main"><main id="primary" class="lunara-archive-page lunara-journal-archive-page${labelFontClass}">${fallbackH1}${lanes}</main></div><script>${mediaGuardJs}</script></body></html>`;
 }
 
 function rectSnapshot() {
@@ -390,6 +416,185 @@ async function openTestPage(browser, width, height = 900) {
     return { context, page };
 }
 
+function largestRectArrayDelta(before, after) {
+    let max = 0;
+    let source = '';
+    for (let index = 0; index < Math.min(before.length, after.length); index += 1) {
+        for (const metric of ['x', 'y', 'width', 'height']) {
+            const delta = Math.abs(before[index][metric] - after[index][metric]);
+            if (delta > max) {
+                max = delta;
+                source = `${index}.${metric}`;
+            }
+        }
+    }
+    return { max, source };
+}
+
+async function labelFontContractSnapshot(page) {
+    return page.evaluate(() => {
+        const rect = (element) => {
+            const value = element.getBoundingClientRect();
+            return { x: value.x, y: value.y, width: value.width, height: value.height };
+        };
+        const cards = Array.from(document.querySelectorAll('.lunara-journal-archive-card'));
+        const shellSelectors = [
+            '#primary',
+            '.lunara-journal-archive-slot-hero',
+            '.lunara-journal-archive-slot-deskbar',
+            '.lunara-journal-archive-slot-filters',
+            '.lunara-journal-archive-slot-toolbar',
+            '.lunara-journal-archive-slot-grid',
+            '.lunara-journal-archive-slot-retention',
+            '.lunara-journal-archive-retention-grid',
+            '.lunara-journal-archive-slot-pagination',
+            '.lunara-journal-archive-filters',
+        ];
+        const parentElements = shellSelectors.map((selector) => document.querySelector(selector)).concat(
+            cards.flatMap((card) => [
+                card,
+                card.querySelector('.lunara-review-grid-link'),
+                card.querySelector('.lunara-review-grid-copy'),
+                card.querySelector('.lunara-review-grid-footer'),
+            ])
+        );
+        const childElements = cards.flatMap((card) => [
+            card.querySelector('.lunara-review-grid-meta'),
+            card.querySelector('.lunara-review-grid-updated'),
+            card.querySelector('.lunara-journal-archive-card-cta'),
+        ]);
+        const visibilitySelectors = [
+            '.lunara-archive-hero-kicker',
+            '.lunara-journal-filter-label',
+            '.lunara-journal-filter-pill',
+            '.lunara-archive-sort-link',
+            '.lunara-journal-card-provenance-pill',
+            '.lunara-journal-archive-card-cta',
+            '.lunara-journal-archive-retention-kicker',
+            '.page-numbers',
+        ];
+        const visible = visibilitySelectors.every((selector) => {
+            const element = document.querySelector(selector);
+            if (!element) return false;
+            const style = getComputedStyle(element);
+            const bounds = element.getBoundingClientRect();
+            return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0' && bounds.width > 0 && bounds.height > 0;
+        });
+        return {
+            cardCount: cards.length,
+            nonblank: cards.every((card) => ['.lunara-review-grid-title', '.lunara-review-grid-excerpt', '.lunara-review-grid-meta', '.lunara-review-grid-updated', '.lunara-journal-archive-card-cta'].every((selector) => (card.querySelector(selector)?.textContent || '').trim() !== '')),
+            parentRects: parentElements.filter(Boolean).map(rect),
+            childRects: childElements.filter(Boolean).map(rect),
+            visible,
+            marker: document.querySelector('#primary')?.classList.contains('is-label-font-tiempos') || false,
+            ctaFontFamily: getComputedStyle(document.querySelector('.lunara-journal-archive-card-cta')).fontFamily,
+            font400: document.fonts ? document.fonts.check('400 16px "Lunara Journal Tiempos Text"') : false,
+            font700: document.fonts ? document.fonts.check('700 16px "Lunara Journal Tiempos Text"') : false,
+        };
+    });
+}
+
+async function assertLicensedLabelFontCohorts(browser, headCss) {
+    if (!licensedLabelFontFixtures) {
+        return { executed: false, reason: 'Licensed local WOFF2 fixtures were not provided.' };
+    }
+    const cases = [
+        { name: 'licensed-immediate', delayMs: 0, missing: false, expectLoaded: true },
+        { name: 'licensed-delayed-optional', delayMs: 750, missing: false, expectLoaded: null },
+        { name: 'forced-missing-tiempos', delayMs: 0, missing: true, expectLoaded: false },
+    ];
+    const runs = [];
+    for (const fontCase of cases) {
+        for (const width of [390, 768, 1440]) {
+            const testPage = await openTestPage(browser, width, width === 390 ? 844 : 900);
+            const { context, page } = testPage;
+            const requests = [];
+            page.on('request', (request) => requests.push(request.url()));
+            await page.route('https://lunara.test/wp-content/uploads/lunara-fonts/v1/**', async (route) => {
+                const name = path.basename(new URL(route.request().url()).pathname).toLowerCase();
+                if (fontCase.missing) {
+                    await route.abort('failed');
+                    return;
+                }
+                const fixture = name === 'tiempostext-regular.woff2'
+                    ? licensedLabelFontFixtures.regular
+                    : (name === 'tiempostext-bold.woff2' ? licensedLabelFontFixtures.bold : null);
+                if (!fixture) {
+                    await route.abort('blockedbyclient');
+                    return;
+                }
+                if (fontCase.delayMs) await new Promise((resolve) => setTimeout(resolve, fontCase.delayMs));
+                try {
+                    await route.fulfill({ status: 200, contentType: 'font/woff2', body: fixture.body });
+                } catch (error) {
+                    if (!/cancel|closed|handled|intercept/i.test(String(error))) throw error;
+                }
+            });
+            const scenario = { order: defaultOrder, gallery: false, retentionMedia: true, captureCls: true, fontBase: true, includeGlobalCss: true };
+            await page.setContent(documentHtml(scenario, headCss), { waitUntil: 'load' });
+            await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+            const early = await labelFontContractSnapshot(page);
+            await Promise.race([
+                page.evaluate(() => document.fonts && document.fonts.ready),
+                page.waitForTimeout(2600),
+            ]);
+            await page.waitForTimeout(fontCase.delayMs ? 350 : 100);
+            const settled = await labelFontContractSnapshot(page);
+            await addLateStyle(page, 'stale-aggregate', staleAggregate.css);
+            const delivered = await labelFontContractSnapshot(page);
+            const deliveryTelemetry = await page.evaluate(() => window.__lunaraLocal || { cls: 0, shifts: [] });
+            await removeStyle(page, 'production-critical');
+            const criticalWithdrawn = await labelFontContractSnapshot(page);
+            await removeStyle(page, 'stale-aggregate');
+            const canonicalWithSeed = await labelFontContractSnapshot(page);
+            await removeStyle(page, 'current-structural-seed');
+            const canonicalWithoutSeed = await labelFontContractSnapshot(page);
+            const stages = [early, settled, delivered, criticalWithdrawn, canonicalWithSeed, canonicalWithoutSeed];
+            const parentDeltas = stages.slice(1).map((stage, index) => largestRectArrayDelta(stages[index].parentRects, stage.parentRects));
+            const childDeltas = stages.slice(1).map((stage, index) => largestRectArrayDelta(stages[index].childRects, stage.childRects));
+            const hardParentDeltas = [parentDeltas[0], parentDeltas[1], parentDeltas[2], parentDeltas[4]];
+            const hardChildDeltas = [childDeltas[0], childDeltas[1], childDeltas[2], childDeltas[4]];
+            const fontRequests = requests.filter((url) => url.startsWith('https://lunara.test/wp-content/uploads/lunara-fonts/v1/'));
+            const externalRequests = requests.filter((url) => !url.startsWith('https://lunara.test/wp-content/uploads/lunara-fonts/v1/'));
+            const themeOwnedShiftEntries = (deliveryTelemetry.shifts || []).filter((shift) => shift.value > 0.02 && shift.sources.some((source) => source.withinPrimary));
+            const clsLimit = width === 390 ? 0.015 : 0.03;
+            const contractStable = stages.every((stage) => stage.cardCount === 8 && stage.nonblank && stage.parentRects.length === 42 && stage.childRects.length === 24 && stage.visible);
+            const loaded = settled.font400 && settled.font700;
+            if (!contractStable || hardParentDeltas.some((delta) => delta.max > 1) || hardChildDeltas.some((delta) => delta.max > 1) || deliveryTelemetry.cls > clsLimit || themeOwnedShiftEntries.length || externalRequests.length || !fontRequests.length || (fontCase.expectLoaded !== null && loaded !== fontCase.expectLoaded)) {
+                throw new Error(`Journal licensed label-font cohort failed: ${JSON.stringify({ case: fontCase.name, width, contractStable, parentDeltas, childDeltas, hardParentDeltas, hardChildDeltas, deliveryCls: deliveryTelemetry.cls, clsLimit, themeOwnedShiftEntries, fontRequests, externalRequests, loaded, expectLoaded: fontCase.expectLoaded, stages })}`);
+            }
+            runs.push({ case: fontCase.name, width, hardParentDeltas, hardChildDeltas, aggregateWithdrawalParentDiagnostic: parentDeltas[3], aggregateWithdrawalChildDiagnostic: childDeltas[3], deliveryCls: deliveryTelemetry.cls, clsLimit, themeOwnedShiftEntries: themeOwnedShiftEntries.length, fontRequestCount: fontRequests.length, externalRequestCount: externalRequests.length, loaded });
+            await context.close();
+        }
+    }
+    const customBypassRuns = [];
+    for (const width of [390, 768, 1440]) {
+        const testPage = await openTestPage(browser, width, width === 390 ? 844 : 900);
+        const { context, page } = testPage;
+        const requests = [];
+        page.on('request', (request) => requests.push(request.url()));
+        await page.route('https://lunara.test/wp-content/uploads/lunara-fonts/v1/**', (route) => route.abort('blockedbyclient'));
+        await page.setContent(documentHtml({ order: defaultOrder, gallery: false, retentionMedia: true, fontBase: true, includeGlobalCss: true, customLabelFont: true }, headCss), { waitUntil: 'load' });
+        await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        const snapshot = await labelFontContractSnapshot(page);
+        const externalRequests = requests.filter((url) => !url.startsWith('https://lunara.test/wp-content/uploads/lunara-fonts/v1/'));
+        if (snapshot.marker || !/^Lora\b/.test(snapshot.ctaFontFamily) || externalRequests.length) {
+            throw new Error(`Journal custom Studio label bypass failed: ${JSON.stringify({ width, snapshot, requests, externalRequests })}`);
+        }
+        customBypassRuns.push({ width, marker: snapshot.marker, ctaFontFamily: snapshot.ctaFontFamily, externalRequestCount: externalRequests.length });
+        await context.close();
+    }
+    return {
+        executed: true,
+        fixture: {
+            regular: { bytes: licensedLabelFontFixtures.regular.bytes, sha256: licensedLabelFontFixtures.regular.sha256 },
+            bold: { bytes: licensedLabelFontFixtures.bold.bytes, sha256: licensedLabelFontFixtures.bold.sha256 },
+        },
+        runs,
+        customBypassRuns,
+    };
+}
+
 async function assertMediaFailureBehavior(browser, headCss) {
     const galleryOnly = await openTestPage(browser, 390);
     const galleryOnlyPage = galleryOnly.page;
@@ -554,6 +759,7 @@ async function assertLocalClsCohort(browser, headCss) {
     if (headBytes > 8192) throw new Error(`Journal head CSS exceeds 8 KiB: ${headBytes}B`);
     const results = [];
     let localClsCohort;
+    let labelFontCohort;
     try {
         for (const [scenarioName, scenario] of Object.entries(scenarios)) {
             for (const width of [390, 768, 1440]) {
@@ -595,13 +801,14 @@ async function assertLocalClsCohort(browser, headCss) {
         await assertMediaFailureBehavior(browser, headCss);
         await assertCardScopeBehavior(browser, headCss);
         localClsCohort = await assertLocalClsCohort(browser, headCss);
+        labelFontCohort = await assertLicensedLabelFontCohorts(browser, headCss);
     } finally {
         await browser.close();
     }
     const candidateBase = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: themeRoot, encoding: 'utf8' }).trim();
     const candidateIndexTree = execFileSync('git', ['write-tree'], { cwd: themeRoot, encoding: 'utf8' }).trim();
-    const candidateDiff = execFileSync('git', ['diff', '--binary', 'HEAD'], { cwd: themeRoot });
-    const report = { capturedAt: new Date().toISOString(), browserVersion, candidateBase, candidateIndexTree, candidateDiffHash: crypto.createHash('sha256').update(candidateDiff).digest('hex'), fixtureBytes, fixtureHash, aggregateBytes: 847152, aggregateHash: '6670f9bc1f11eb7c082e7c43e3f2ec66a2472d5131f3e3a935eb691415cfaeae', compressedAggregateBytes: staleAggregate.compressedBytes, compressedAggregateHash: staleAggregate.compressedHash, routeBytes, routeHash, criticalModuleHash, variablesHash: crypto.createHash('sha256').update(headCss.variables, 'utf8').digest('hex'), seedHash: crypto.createHash('sha256').update(headCss.seed, 'utf8').digest('hex'), headBytes, exactAggregate: staleAggregate.exact, localClsCohort, results };
+    const candidateDiff = execFileSync('git', ['-c', 'core.autocrlf=false', '-c', 'core.safecrlf=false', 'diff', '--binary', 'HEAD'], { cwd: themeRoot });
+    const report = { capturedAt: new Date().toISOString(), browserVersion, candidateBase, candidateIndexTree, candidateDiffHash: crypto.createHash('sha256').update(candidateDiff).digest('hex'), fixtureBytes, fixtureHash, aggregateBytes: 847152, aggregateHash: '6670f9bc1f11eb7c082e7c43e3f2ec66a2472d5131f3e3a935eb691415cfaeae', compressedAggregateBytes: staleAggregate.compressedBytes, compressedAggregateHash: staleAggregate.compressedHash, routeBytes, routeHash, criticalModuleHash, variablesHash: crypto.createHash('sha256').update(headCss.variables, 'utf8').digest('hex'), seedHash: crypto.createHash('sha256').update(headCss.seed, 'utf8').digest('hex'), headBytes, exactAggregate: staleAggregate.exact, localClsCohort, labelFontCohort, results };
     const serialized = JSON.stringify(report, null, 2) + '\n';
     if (process.env.LUNARA_JOURNAL_EVIDENCE_OUT) fs.writeFileSync(path.resolve(process.env.LUNARA_JOURNAL_EVIDENCE_OUT), serialized);
     process.stdout.write(serialized);

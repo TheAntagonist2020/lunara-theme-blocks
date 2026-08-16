@@ -14,6 +14,35 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! function_exists( 'lunara_journal_archive_resolved_label_font_slug' ) ) {
+	/**
+	 * Resolve the Studio label role without allowing one malformed field to
+	 * corrupt the rest of the design-token document.
+	 *
+	 * @return string
+	 */
+	function lunara_journal_archive_resolved_label_font_slug() {
+		$default = 'tiempos-text';
+		$tokens  = function_exists( 'lunara_get_design_tokens' ) ? lunara_get_design_tokens() : array();
+		$fonts   = isset( $tokens['fonts'] ) && is_array( $tokens['fonts'] ) ? $tokens['fonts'] : array();
+		$slug    = isset( $fonts['label'] ) && is_scalar( $fonts['label'] ) ? (string) $fonts['label'] : $default;
+		$choices = function_exists( 'lunara_design_token_font_choices' ) ? lunara_design_token_font_choices() : array();
+
+		return is_array( $choices ) && isset( $choices[ $slug ] ) ? $slug : $default;
+	}
+}
+
+if ( ! function_exists( 'lunara_journal_archive_uses_tiempos_label_face' ) ) {
+	/**
+	 * Whether the default Studio label role should use the licensed route face.
+	 *
+	 * @return bool
+	 */
+	function lunara_journal_archive_uses_tiempos_label_face() {
+		return 'tiempos-text' === lunara_journal_archive_resolved_label_font_slug();
+	}
+}
+
 if ( ! function_exists( 'lunara_journal_archive_minify_structural_css' ) ) {
 	function lunara_journal_archive_minify_structural_css( $css ) {
 		$css = preg_replace( '#/\*[^!][\s\S]*?\*/#', '', (string) $css );

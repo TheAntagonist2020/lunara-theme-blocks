@@ -6,6 +6,44 @@
  * optimizer-era numeric order declarations to `initial`.
  */
 
+@font-face {
+    font-display: optional;
+    font-family: "Lunara Journal Tiempos Text";
+    font-style: normal;
+    font-weight: 400;
+    src: url("/wp-content/uploads/lunara-fonts/v1/TiemposText-Regular.woff2") format("woff2");
+}
+
+@font-face {
+    font-display: optional;
+    font-family: "Lunara Journal Tiempos Text";
+    font-style: normal;
+    font-weight: 700;
+    src: url("/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2") format("woff2");
+}
+
+#primary#primary.lunara-journal-archive-page.is-label-font-tiempos :is(
+    .lunara-archive-hero-kicker,
+    .lunara-journal-archive-slot-deskbar strong,
+    .lunara-journal-filter-label,
+    .lunara-journal-filter-pill,
+    .lunara-archive-sort-link,
+    .lunara-home-section-kicker,
+    .lunara-review-grid-kicker,
+    .lunara-dispatch-type,
+    .lunara-journal-card-provenance-pill,
+    .lunara-journal-archive-card-cta,
+    .lunara-journal-archive-retention-kicker,
+    .lunara-journal-archive-retention-provenance,
+    .page-numbers
+) {
+    font-family: "Lunara Journal Tiempos Text", Georgia, "Times New Roman", serif !important;
+}
+
+#primary#primary.lunara-journal-archive-page .lunara-journal-archive-card-cta {
+    border: 0 !important;
+}
+
 #primary.lunara-journal-archive-page {
     align-items: stretch !important;
     box-sizing: border-box;

@@ -11,6 +11,21 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-16 — Theme 3.2.48 Licensed Journal Typography Recovery
+
+- Restored the Journal label and control voice to Dalton's licensed Tiempos
+  Text files only when the resolved Studio label token remains the approved
+  `tiempos-text` default; valid custom choices such as Lora remain authoritative.
+- Kept the route-owned typography boundary to Journal kickers, filters, sort,
+  provenance, calls to action, and pagination while preserving titles, excerpts,
+  prose, display typography, media, queries, and editorial state.
+- Added route-aware licensed-font delivery with Georgia and Times New Roman as
+  stable zero-network fallbacks, plus native, delayed, and forced-missing-font
+  lifecycle coverage at 390, 768, and 1440 pixels.
+- Preserved exact first-paint ordering at variables priority 6, critical seed
+  priority 7, and linked route stylesheet priority 8; retained the bounded
+  Journal CTA border correction after settled and dynamic parity remained green.
+
 ## 2026-08-15 — Theme 3.2.47 Exact Journal Recovery Reissue
 
 - Reissued the independently approved Theme 3.2.46 Journal product tree after
