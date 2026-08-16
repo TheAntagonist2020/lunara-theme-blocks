@@ -9,10 +9,18 @@
  */
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 const {
 	CANONICAL_JOURNAL_URL,
 	EXPECTED_CARD_COUNT,
 	EXPECTED_LEAD_COUNT,
+	LIVE_COHERENT_EXIT,
+	INCOHERENT_EXIT,
+	USAGE_ERROR_EXIT,
+	REPLAY_COHERENT_EXIT,
 	APPROVED_DEFAULT_LABEL_TOKEN,
 	VERSION_ATTRIBUTE,
 	STRUCTURAL_VARS_STYLE_ID,
@@ -62,10 +70,15 @@ function candidateHtml({
 	seed = true,
 	routeLink = true,
 	structuralInBody = false,
+	duplicateModernRoot = false,
+	substringCardDecoys = false,
+	preloadRel = 'preload',
+	preloadAs = 'font',
+	legacyRootDataIdSpoof = false,
 } = {}) {
 	const markerClass = marker ? ' is-label-font-tiempos' : '';
 	const preloadTag = preload
-		? '<link rel="preload" href="https://lunarafilm.com/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2" as="font" type="font/woff2" crossorigin />'
+		? '<link rel="' + preloadRel + '" href="https://lunarafilm.com/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2" as="' + preloadAs + '" type="font/woff2" crossorigin />'
 		: '';
 	const varsTag = vars ? '<style id="' + STRUCTURAL_VARS_STYLE_ID + '">:root{--x:1}</style>' : '';
 	const seedTag = seed ? '<style id="' + STRUCTURAL_SEED_STYLE_ID + '">.lunara-journal-archive-grid{display:grid}</style>' : '';
@@ -78,14 +91,21 @@ function candidateHtml({
 	for (let i = 0; i < cards; i += 1) {
 		cardBlocks += cardMarkup({ lead: i < leads, blankTitle: i >= cards - blankTitles, index: i });
 	}
+	if (substringCardDecoys) {
+		// Class tokens that merely CONTAIN the card class must never count.
+		cardBlocks += '<article class="pre-lunara-journal-archive-card"><h3 class="lunara-review-grid-title">Decoy</h3></article>'
+			+ '<article class="lunara-journal-archive-cardx is-lead"><h3 class="lunara-review-grid-title">Decoy lead</h3></article>';
+	}
+	const modernMainTag = '<main id="primary" class="lunara-archive-page lunara-journal-archive-page' + markerClass + '" ' + VERSION_ATTRIBUTE + '="' + version + '">';
 	const modernMain = modernRoot
-		? '<main id="primary" class="lunara-archive-page lunara-journal-archive-page' + markerClass + '" ' + VERSION_ATTRIBUTE + '="' + version + '">'
+		? modernMainTag
 			+ '<section class="lunara-journal-archive-grid lunara-review-grid lunara-review-archive-uniform lunara-journal-archive-slot-grid">'
 			+ cardBlocks
 			+ '</section>' + retentionMarkup() + '</main>'
+			+ (duplicateModernRoot ? modernMainTag + '</main>' : '')
 		: '';
 	const legacyMain = legacyRoot
-		? '<main class="lunara-archive-page lunara-journal-archive-page"><section class="lunara-journal-archive-grid">' + cardBlocks + '</section></main>'
+		? '<main ' + (legacyRootDataIdSpoof ? 'data-id="primary" ' : '') + 'class="lunara-archive-page lunara-journal-archive-page"><section class="lunara-journal-archive-grid">' + cardBlocks + '</section></main>'
 		: '';
 	return '<!doctype html><html><head><meta charset="utf-8">'
 		+ '<style id="jetpack-boost-critical-css">.lunara-journal-archive-page{opacity:1}</style>'
@@ -195,9 +215,98 @@ assert.equal(analyze({}, { blankTitles: 1 }).coherent, false, 'A blank card titl
 const censusDetail = analyze();
 assert.equal(censusDetail.detail.cardCount, 8, 'Retention cards and -card-type/-card-cta/-card-footer substrings must never inflate the card census.');
 
+// Authenticated variants and serialization tricks can never be canonical proof.
+assert.equal(isCanonicalJournalUrl('https://user:pass@lunarafilm.com/journal/'), false, 'A credentials-bearing URL is an authenticated variant, never the anonymous proof.');
+assert.equal(isCanonicalJournalUrl('https://admin@lunarafilm.com/journal/'), false, 'A username-bearing URL is an authenticated variant, never the anonymous proof.');
+assert.equal(isCanonicalJournalUrl('https://lunarafilm.com/journal/?'), false, 'A bare-? URL serializes to a distinct request identity and must be refused.');
+assert.equal(isCanonicalJournalUrl('https://lunarafilm.com/journal/#'), false, 'A bare-# URL must be refused.');
+assert.equal(isCanonicalJournalUrl('https://lunarafilm.com/journal/?#'), false, 'A bare-?# URL must be refused.');
+assert.equal(isCanonicalJournalUrl('https://lunarafilm.com/journal/#section'), false, 'A fragment-bearing URL must be refused.');
+assert.equal(analyze({ finalUrl: 'https://user:pass@lunarafilm.com/journal/' }).coherent, false, 'An authenticated finalUrl must fail the response identity contract.');
+
+// Root census discipline: duplicates and attribute spoofs are pinned.
+const duplicated = analyze({}, { duplicateModernRoot: true });
+assert.equal(duplicated.coherent, false, 'Two modern roots are ambiguous identity and must fail.');
+assert.equal(duplicated.detail.modernRootCount, 2, 'The census must count both modern roots, not stop at the first.');
+const spoofed = analyze({}, { modernRoot: false, legacyRoot: true, legacyRootDataIdSpoof: true });
+assert.equal(spoofed.detail.legacyRootCount, 1, 'A data-id="primary" attribute must never satisfy the id="primary" modern-root probe.');
+assert.equal(spoofed.detail.modernRootCount, 0, 'A data-id spoof must not be classified as the modern root.');
+assert.equal(spoofed.coherent, false);
+
+// Token-exact card census: substring class tokens never count.
+const decoys = analyze({}, { substringCardDecoys: true });
+assert.equal(decoys.coherent, true, 'Substring card-class decoys must not disturb the census: ' + decoys.failures.join('; '));
+assert.equal(decoys.detail.cardCount, 8, 'Decoy articles whose class merely contains the card class must not be counted.');
+assert.equal(decoys.detail.leadCount, 1, 'A decoy is-lead article must not inflate the lead census.');
+
+// Preload binding is a real font preload, not any link mentioning the file.
+assert.equal(analyze({}, { preloadRel: 'prefetch' }).coherent, false, 'rel=prefetch of the Bold file is not the required preload.');
+assert.equal(analyze({}, { preloadAs: 'style' }).coherent, false, 'A non-font as= attribute is not the required font preload.');
+
+// Studio-aware card expectation: legal overrides work, everything else fails closed.
+const twelve = analyze({ expectedCardCount: 12 }, { cards: 12 });
+assert.equal(twelve.coherent, true, 'A legal Studio items-per-page override must be honored: ' + twelve.failures.join('; '));
+assert.equal(analyze({ expectedCardCount: 12 }).coherent, false, 'An override still demands the exact served count.');
+assert.equal(analyze({ expectedCardCount: 30 }, { cards: 30 }).coherent, false, 'A count outside Studio legal bounds must fail closed.');
+assert.equal(analyze({ expectedCardCount: 0 }).coherent, false, 'Zero expected cards must fail closed.');
+assert.equal(analyze({ expectedCardCount: 8.5 }).coherent, false, 'A non-integer expectation must fail closed.');
+assert.equal(analyze({ expectedCardCount: '8' }).coherent, false, 'A string expectation must fail closed.');
+
 // Unparseable input fails closed.
 assert.equal(analyzeJournalCanonicalCoherency({ url: CANONICAL_JOURNAL_URL, finalUrl: CANONICAL_JOURNAL_URL, statusCode: 200, html: '', expectedVersion: '3.2.49' }).coherent, false, 'An empty response must fail closed.');
 assert.equal(analyzeJournalCanonicalCoherency({ url: CANONICAL_JOURNAL_URL, finalUrl: CANONICAL_JOURNAL_URL, statusCode: 200, html: '<html><head></head>no body tag', expectedVersion: '3.2.49' }).coherent, false, 'A response with no <body> must fail closed.');
 assert.equal(analyzeJournalCanonicalCoherency({ url: CANONICAL_JOURNAL_URL, finalUrl: CANONICAL_JOURNAL_URL, statusCode: 200, html: null, expectedVersion: '3.2.49' }).coherent, false, 'A null body must fail closed.');
+
+// CLI enforcement layer: exit-code wiring, replay provenance, and usage
+// discipline are exercised end-to-end via child processes, offline.
+const gatePath = path.join(__dirname, 'tools', 'lunara-journal-canonical-coherency-gate.js');
+const cliDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lunara-coherency-cli-'));
+const coherentFixture = path.join(cliDir, 'coherent.html');
+const legacyFixture = path.join(cliDir, 'legacy.html');
+fs.writeFileSync(coherentFixture, candidateHtml());
+fs.writeFileSync(legacyFixture, candidateHtml({ modernRoot: false, legacyRoot: true, vars: false, seed: false, routeLink: false }));
+
+function runCli(cliArgs) {
+	const result = spawnSync(process.execPath, [gatePath].concat(cliArgs), { encoding: 'utf8' });
+	let parsed = null;
+	try {
+		parsed = JSON.parse(result.stdout);
+	} catch (error) {
+		parsed = null;
+	}
+	return { status: result.status, stdout: result.stdout, stderr: result.stderr, json: parsed };
+}
+
+assert.equal(REPLAY_COHERENT_EXIT !== LIVE_COHERENT_EXIT, true, 'Replay success must never share the live-proof exit code.');
+
+const cliCoherentReplay = runCli(['--expected-version', '3.2.49', '--replay-html-file', coherentFixture, '--replay-status', '200', '--replay-final-url', CANONICAL_JOURNAL_URL]);
+assert.equal(cliCoherentReplay.status, REPLAY_COHERENT_EXIT, 'A coherent replay must exit ' + REPLAY_COHERENT_EXIT + ' (diagnostic), got ' + cliCoherentReplay.status + ': ' + cliCoherentReplay.stderr);
+assert.equal(cliCoherentReplay.json.mode, 'replay');
+assert.equal(cliCoherentReplay.json.proof, false, 'A replay must never be labeled as deployment proof.');
+assert.equal(cliCoherentReplay.json.coherent, true);
+
+const cliLegacyReplay = runCli(['--expected-version', '3.2.49', '--replay-html-file', legacyFixture, '--replay-status', '200', '--replay-final-url', CANONICAL_JOURNAL_URL]);
+assert.equal(cliLegacyReplay.status, INCOHERENT_EXIT, 'The legacy canary shape must exit ' + INCOHERENT_EXIT + ' from the CLI.');
+assert.equal(cliLegacyReplay.json.detail.legacyRootCount, 1);
+assert.equal(cliLegacyReplay.json.detail.modernRootCount, 0);
+
+const cliAuthReplay = runCli(['--expected-version', '3.2.49', '--replay-html-file', coherentFixture, '--replay-status', '200', '--replay-final-url', 'https://admin@lunarafilm.com/journal/']);
+assert.equal(cliAuthReplay.status, INCOHERENT_EXIT, 'An authenticated-variant final URL must fail the CLI even with coherent HTML.');
+
+const cliQueryReplay = runCli(['--expected-version', '3.2.49', '--replay-html-file', coherentFixture, '--replay-status', '200', '--replay-final-url', 'https://lunarafilm.com/journal/?nocache=1']);
+assert.equal(cliQueryReplay.status, INCOHERENT_EXIT, 'A cache-busted final URL must fail the CLI even with coherent HTML.');
+
+const cliStatusReplay = runCli(['--expected-version', '3.2.49', '--replay-html-file', coherentFixture, '--replay-status', '503', '--replay-final-url', CANONICAL_JOURNAL_URL]);
+assert.equal(cliStatusReplay.status, INCOHERENT_EXIT, 'A non-200 replay status must fail the CLI.');
+
+const cliCards = runCli(['--expected-version', '3.2.49', '--expected-cards', '12', '--replay-html-file', coherentFixture, '--replay-status', '200', '--replay-final-url', CANONICAL_JOURNAL_URL]);
+assert.equal(cliCards.status, INCOHERENT_EXIT, 'An --expected-cards override must reach the analyzer and fail an 8-card capture.');
+
+assert.equal(runCli([]).status, USAGE_ERROR_EXIT, 'Missing --expected-version must be a usage error.');
+assert.equal(runCli(['--expected-version', '3.2.49', '--bogus-flag', 'x']).status, USAGE_ERROR_EXIT, 'An unknown flag must be a usage error.');
+assert.equal(runCli(['--expected-version', '3.2.49', '--replay-html-file', coherentFixture, '--replay-status', '200']).status, USAGE_ERROR_EXIT, 'Replay without an explicit --replay-final-url must be refused, never defaulted.');
+assert.equal(runCli(['--expected-version', '3.2.49', '--replay-html-file', coherentFixture, '--replay-final-url', CANONICAL_JOURNAL_URL]).status, USAGE_ERROR_EXIT, 'Replay without an explicit --replay-status must be refused, never defaulted.');
+
+fs.rmSync(cliDir, { recursive: true, force: true });
 
 process.stdout.write('Journal canonical cache-coherency sentinel runtime passed.\n');

@@ -41,8 +41,10 @@ const ROUTE_STYLESHEET_LINK_ID = 'lunara-journal-archive-css';
 const LEGACY_STUDIO_STYLE_ID = 'lunara-journal-archive-studio-css';
 
 function attributeValue(tag, name) {
+	// Lookbehind instead of \b: a word boundary would let `data-id` satisfy a
+	// probe for `id` and misclassify a root.
 	const match = String(tag).match(
-		new RegExp('\\b' + name + '\\s*=\\s*("([^"]*)"|\'([^\']*)\')', 'i')
+		new RegExp('(?<![\\w-])' + name + '\\s*=\\s*("([^"]*)"|\'([^\']*)\')', 'i')
 	);
 	if (!match) {
 		return null;
@@ -75,11 +77,18 @@ function isCanonicalJournalUrl(value) {
 		return false;
 	}
 	return parsed.protocol === 'https:'
+		&& parsed.username === ''
+		&& parsed.password === ''
 		&& parsed.hostname.toLowerCase() === 'lunarafilm.com'
 		&& parsed.port === ''
 		&& parsed.pathname === '/journal/'
 		&& parsed.search === ''
-		&& parsed.hash === '';
+		&& parsed.hash === ''
+		// Exact-serialization backstop: a bare '?' or '#' parses to empty
+		// search/hash yet still serializes to a distinct request identity, and
+		// userinfo is an authenticated variant — none of them are the
+		// anonymous canonical proof.
+		&& parsed.href === CANONICAL_JOURNAL_URL;
 }
 
 /**
@@ -94,6 +103,7 @@ function analyzeJournalCanonicalCoherency({
 	html,
 	expectedVersion,
 	expectedLabelToken = APPROVED_DEFAULT_LABEL_TOKEN,
+	expectedCardCount = EXPECTED_CARD_COUNT,
 }) {
 	const contracts = {
 		'canonical-request-identity': false,
@@ -137,6 +147,15 @@ function analyzeJournalCanonicalCoherency({
 	} else if (!isCanonicalJournalUrl(finalUrl)) {
 		fail('canonical-response-identity', 'the response settled off the canonical route: ' + String(finalUrl));
 	}
+
+	// The card expectation may track a legitimate Journal Archive Studio
+	// items-per-page change, but only inside the Studio's own legal bounds —
+	// anything else fails closed instead of running open.
+	if (!Number.isInteger(expectedCardCount) || expectedCardCount < 1 || expectedCardCount > 24) {
+		fail('eight-nonblank-cards', 'expectedCardCount must be an integer between 1 and 24; failing closed');
+		return finalizeVerdict(contracts, failures, detail);
+	}
+	detail.expectedCardCount = expectedCardCount;
 
 	const document = typeof html === 'string' ? html : '';
 	const bodyIndex = document.search(/<body\b/i);
@@ -229,11 +248,11 @@ function analyzeJournalCanonicalCoherency({
 	if (detail.leadCount !== EXPECTED_LEAD_COUNT) {
 		fail('one-page-one-lead', 'expected exactly ' + EXPECTED_LEAD_COUNT + ' lead on page one, found ' + detail.leadCount);
 	}
-	contracts['eight-nonblank-cards'] = detail.cardCount === EXPECTED_CARD_COUNT
-		&& detail.nonblankCardCount === EXPECTED_CARD_COUNT;
-	if (detail.cardCount !== EXPECTED_CARD_COUNT) {
-		fail('eight-nonblank-cards', 'expected exactly ' + EXPECTED_CARD_COUNT + ' Journal cards, found ' + detail.cardCount);
-	} else if (detail.nonblankCardCount !== EXPECTED_CARD_COUNT) {
+	contracts['eight-nonblank-cards'] = detail.cardCount === expectedCardCount
+		&& detail.nonblankCardCount === expectedCardCount;
+	if (detail.cardCount !== expectedCardCount) {
+		fail('eight-nonblank-cards', 'expected exactly ' + expectedCardCount + ' Journal cards, found ' + detail.cardCount);
+	} else if (detail.nonblankCardCount !== expectedCardCount) {
 		fail('eight-nonblank-cards', (detail.cardCount - detail.nonblankCardCount) + ' card(s) have a blank title');
 	}
 
@@ -242,7 +261,9 @@ function analyzeJournalCanonicalCoherency({
 	detail.tiemposBoldPreload = headLinks.some((tag) => {
 		const rel = attributeValue(tag, 'rel');
 		const href = attributeValue(tag, 'href');
+		const asAttr = attributeValue(tag, 'as');
 		return rel !== null && rel.toLowerCase() === 'preload'
+			&& asAttr !== null && asAttr.toLowerCase() === 'font'
 			&& href !== null && href.includes(TIEMPOS_BOLD_PRELOAD_FILE);
 	});
 	if (expectedLabelToken === APPROVED_DEFAULT_LABEL_TOKEN) {
@@ -288,14 +309,26 @@ async function fetchCanonicalJournal() {
 	};
 }
 
+/**
+ * Exit-code discipline: only a LIVE coherent probe exits 0. A replay that
+ * passes every contract exits REPLAY_COHERENT_EXIT so no wrapper can mistake
+ * a diagnostic replay for the anonymous canonical deployment proof.
+ */
+const LIVE_COHERENT_EXIT = 0;
+const INCOHERENT_EXIT = 1;
+const USAGE_ERROR_EXIT = 2;
+const REPLAY_COHERENT_EXIT = 3;
+
 function parseArgs(argv) {
-	const args = { expectedLabelToken: APPROVED_DEFAULT_LABEL_TOKEN };
+	const args = { expectedLabelToken: APPROVED_DEFAULT_LABEL_TOKEN, expectedCardCount: EXPECTED_CARD_COUNT };
 	for (let i = 0; i < argv.length; i += 1) {
 		const flag = argv[i];
 		if (flag === '--expected-version') {
 			args.expectedVersion = argv[++i];
 		} else if (flag === '--expected-label-token') {
 			args.expectedLabelToken = argv[++i];
+		} else if (flag === '--expected-cards') {
+			args.expectedCardCount = Number(argv[++i]);
 		} else if (flag === '--replay-html-file') {
 			args.replayHtmlFile = argv[++i];
 		} else if (flag === '--replay-final-url') {
@@ -309,6 +342,17 @@ function parseArgs(argv) {
 	if (typeof args.expectedVersion !== 'string' || args.expectedVersion.trim() === '') {
 		throw new Error('--expected-version is required: pass the deployed theme version this HTML must match.');
 	}
+	if (args.replayHtmlFile) {
+		// Replay provenance must be stated, never fabricated: a capture's real
+		// final URL and status are part of the evidence, so silent defaults
+		// are refused.
+		if (typeof args.replayFinalUrl !== 'string' || args.replayFinalUrl.trim() === '') {
+			throw new Error('--replay-final-url is required with --replay-html-file: state the capture\'s real final URL.');
+		}
+		if (!Number.isFinite(args.replayStatus)) {
+			throw new Error('--replay-status is required with --replay-html-file: state the capture\'s real HTTP status.');
+		}
+	}
 	return args;
 }
 
@@ -318,8 +362,9 @@ async function main() {
 		args = parseArgs(process.argv.slice(2));
 	} catch (error) {
 		process.stderr.write(String(error.message) + '\n');
-		process.stderr.write('Usage: node lunara-journal-canonical-coherency-gate.js --expected-version <version> [--expected-label-token <token>] [--replay-html-file <path> --replay-status <code> [--replay-final-url <url>]]\n');
-		process.exitCode = 2;
+		process.stderr.write('Usage: node lunara-journal-canonical-coherency-gate.js --expected-version <version> [--expected-label-token <token>] [--expected-cards <1-24>] [--replay-html-file <path> --replay-status <code> --replay-final-url <url>]\n');
+		process.stderr.write('Exit codes: 0 live coherent (the only deployment proof); 1 incoherent; 2 usage error; 3 replay coherent (diagnostic only, never proof).\n');
+		process.exitCode = USAGE_ERROR_EXIT;
 		return;
 	}
 
@@ -329,8 +374,8 @@ async function main() {
 		mode = 'replay';
 		capture = {
 			url: CANONICAL_JOURNAL_URL,
-			finalUrl: args.replayFinalUrl || CANONICAL_JOURNAL_URL,
-			statusCode: Number.isFinite(args.replayStatus) ? args.replayStatus : 0,
+			finalUrl: args.replayFinalUrl,
+			statusCode: args.replayStatus,
 			html: fs.readFileSync(args.replayHtmlFile, 'utf8'),
 		};
 	} else {
@@ -338,8 +383,8 @@ async function main() {
 		try {
 			capture = await fetchCanonicalJournal();
 		} catch (error) {
-			process.stdout.write(JSON.stringify({ mode, coherent: false, failures: ['canonical-response-identity: fetch failed — ' + String(error.message)] }, null, 2) + '\n');
-			process.exitCode = 1;
+			process.stdout.write(JSON.stringify({ mode, coherent: false, proof: false, failures: ['canonical-response-identity: fetch failed — ' + String(error.message)] }, null, 2) + '\n');
+			process.exitCode = INCOHERENT_EXIT;
 			return;
 		}
 	}
@@ -351,9 +396,15 @@ async function main() {
 		html: capture.html,
 		expectedVersion: args.expectedVersion,
 		expectedLabelToken: args.expectedLabelToken,
+		expectedCardCount: args.expectedCardCount,
 	});
-	process.stdout.write(JSON.stringify({ mode, ...verdict }, null, 2) + '\n');
-	process.exitCode = verdict.coherent ? 0 : 1;
+	const proof = mode === 'live' && verdict.coherent;
+	process.stdout.write(JSON.stringify({ mode, proof, ...verdict }, null, 2) + '\n');
+	if (!verdict.coherent) {
+		process.exitCode = INCOHERENT_EXIT;
+	} else {
+		process.exitCode = mode === 'live' ? LIVE_COHERENT_EXIT : REPLAY_COHERENT_EXIT;
+	}
 }
 
 if (require.main === module) {
@@ -364,6 +415,10 @@ module.exports = {
 	CANONICAL_JOURNAL_URL,
 	EXPECTED_CARD_COUNT,
 	EXPECTED_LEAD_COUNT,
+	LIVE_COHERENT_EXIT,
+	INCOHERENT_EXIT,
+	USAGE_ERROR_EXIT,
+	REPLAY_COHERENT_EXIT,
 	APPROVED_DEFAULT_LABEL_TOKEN,
 	TIEMPOS_MARKER_CLASS,
 	TIEMPOS_BOLD_PRELOAD_FILE,
