@@ -26,7 +26,7 @@ $frontend = Read-ThemeFile 'inc/frontend.php'
 $runtime = Read-ThemeFile 'assets/js/lunara-public-runtime.js'
 $imageRuntimeMatch = [regex]::Match($runtime, '(?s)\A.*?\}\(\)\);')
 
-Assert-True ($style -match 'Version:\s*3\.2\.43') 'Jetpack Boost image-runtime gate must report Theme 3.2.43.'
+Assert-True ($style -match 'Version:\s*3\.2\.49') 'Jetpack Boost image-runtime gate must report Theme 3.2.49.'
 Assert-True ($frontend -match "pre_option_jetpack_boost_status_image-cdn-liar") 'Theme must disable only Boost Auto-Resize Lazy Images.'
 Assert-True ($frontend -match "function\s+lunara_disable_jetpack_boost_auto_resize") 'Boost compatibility callback is missing.'
 Assert-True ($frontend -match "return\s+'0';") 'Boost Auto-Resize compatibility callback must short-circuit to disabled.'

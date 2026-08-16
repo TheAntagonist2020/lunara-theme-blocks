@@ -130,7 +130,7 @@ $pinRuntimeOutput = & php (Join-Path $PSScriptRoot 'reviews-archive-pin-runtime.
 Assert-True ($LASTEXITCODE -eq 0) ("Reviews Archive pin runtime failed: " + ($pinRuntimeOutput -join [Environment]::NewLine))
 Assert-True (($pinRuntimeOutput -join "`n") -match 'all assertions passed') 'Reviews Archive pin runtime did not report success.'
 
-$versionLine = (Read-ThemeFile 'style.css' | Select-String -Pattern 'Version:\s*3\.2\.43').Matches.Count
-Assert-True ($versionLine -ge 1) 'Theme version must be 3.2.43.'
+$versionLine = (Read-ThemeFile 'style.css' | Select-String -Pattern 'Version:\s*3\.2\.49').Matches.Count
+Assert-True ($versionLine -ge 1) 'Theme version must be 3.2.49.'
 
-Write-Host 'Theme 3.2.43 Reviews Archive composition contract passed.'
+Write-Host 'Theme 3.2.49 Reviews Archive composition contract passed.'
