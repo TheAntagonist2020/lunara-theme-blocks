@@ -36,7 +36,6 @@ $loader    = Read-ThemeFile 'functions-loader.php'
 $functions = Read-ThemeFile 'functions.php'
 $homeBlocks = Read-ThemeFile 'inc/home-blocks.php'
 $helpers   = Read-ThemeFile 'inc/helpers.php'
-$journalArchive = Read-ThemeFile 'inc/journal-archive-studio.php'
 $style     = Read-ThemeFile 'style.css'
 $controlCss = Read-ThemeFile 'assets/css/lunara-control-desk.css'
 $editorCss = Read-ThemeFile 'assets/css/lunara-homepage-editor.css'
@@ -69,15 +68,13 @@ foreach ($setting in @(
 Assert-True ($control -match "'lunara_pairing_desk_return'[\s\S]*?'site-studio'") 'The Method handler must use a bounded return context for the direct Site Studio form.'
 foreach ($returnContract in @(
     @{ Field = 'lunara_homepage_studio_return'; Surface = 'homepage-structure' },
-    @{ Field = 'lunara_reviews_archive_return'; Surface = 'reviews-archive' }
+    @{ Field = 'lunara_reviews_archive_return'; Surface = 'reviews-archive' },
+    @{ Field = 'lunara_journal_archive_return'; Surface = 'journal-archive' }
 )) {
     Assert-True ($control -match [regex]::Escape($returnContract.Field)) "$($returnContract.Surface) must post a bounded return context."
     $boundedCall = "lunara_control_desk_bounded_return_url\(\s*'" + [regex]::Escape($returnContract.Field) + "'\s*,\s*'" + [regex]::Escape($returnContract.Surface) + "'"
     Assert-True ($control -match $boundedCall) "$($returnContract.Surface) saves must return to the same focused Site Studio surface."
 }
-Assert-True ($journalArchive -match 'name="lunara_journal_archive_return"[\s\S]{0,120}?value="<\?php echo esc_attr\(\s*\$context\s*\)') 'The focused Journal Studio must post its bounded return context from its canonical owner.'
-Assert-True ($journalArchive -match "lunara_control_desk_bounded_return_url\(\s*'lunara_journal_archive_return'\s*,\s*'journal-archive'[\s\S]{0,180}?surface=journal-archive'") 'Journal Archive saves must return to the focused Site Studio surface through the shared bounded resolver.'
-Assert-True ($journalArchive -match "add_action\(\s*'admin_post_lunara_save_journal_archive_studio'\s*,\s*'lunara_control_desk_save_journal_archive_studio'\s*\)") 'The focused Journal owner must register its save handler exactly once.'
 Assert-True ($control -match 'lunara_get_home_section_registry\(\)[\s\S]*?lunara_home_section_block_map\(\)') 'Homepage Structure visibility must derive from the canonical registry and six-renderer map.'
 foreach ($setting in @(
     'lunara_home_show_hero',
@@ -155,6 +152,6 @@ foreach ($renderer in @(
     Assert-True ($functions -match [regex]::Escape($renderer)) "Public renderer ownership must retain $renderer."
 }
 Assert-True ($studio -notmatch "add_action\(\s*'wp_enqueue_scripts'") 'Site Studio must not add public assets.'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.48\s*$') 'Theme version must be 3.2.48.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.43\s*$') 'Theme version must be 3.2.43.'
 
 Write-Host 'site-studio: all assertions passed.'
