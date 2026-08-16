@@ -175,7 +175,21 @@ Assert-True (-not $boostResult.concat_archive_true -and -not $boostResult.concat
 Assert-True ($boostResult.concat_other_true -and -not $boostResult.concat_other_false) 'The concat filter must preserve unrelated handle state.'
 Assert-True (-not $boostResult.async_archive_true -and -not $boostResult.async_archive_false) 'The Reviews route handle must remain synchronous in Jetpack Boost.'
 Assert-True ($boostResult.async_other_true -and -not $boostResult.async_other_false) 'The async filter must preserve unrelated handle state.'
-Assert-True ($boostResult.registrations.Count -eq 2) 'Exactly two handle-scoped Jetpack Boost delivery filters must register.'
+Assert-True (-not $boostResult.concat_journal_true -and -not $boostResult.concat_journal_false) 'The Journal route handle must never enter Jetpack Boost concatenation.'
+Assert-True ($boostResult.concat_journal_other) 'The Journal concat filter must preserve unrelated handle state.'
+Assert-True (-not $boostResult.async_journal_true -and -not $boostResult.async_journal_false) 'The Journal route handle must remain synchronous in Jetpack Boost.'
+Assert-True ($boostResult.async_journal_other) 'The Journal async filter must preserve unrelated handle state.'
+Assert-True ($boostResult.registrations.Count -eq 4) 'Reviews and Journal must each register one concat and one async handle-scoped Boost filter.'
+$expectedBoostRegistrations = @(
+    @{ Hook = 'css_do_concat'; Callback = 'lunara_keep_review_archive_css_unaggregated' },
+    @{ Hook = 'jetpack_boost_async_style'; Callback = 'lunara_keep_review_archive_css_synchronous' },
+    @{ Hook = 'css_do_concat'; Callback = 'lunara_keep_journal_archive_css_unaggregated' },
+    @{ Hook = 'jetpack_boost_async_style'; Callback = 'lunara_keep_journal_archive_css_synchronous' }
+)
+foreach ($expectedRegistration in $expectedBoostRegistrations) {
+    $matches = @($boostResult.registrations | Where-Object { $_.hook -eq $expectedRegistration.Hook -and $_.callback -eq $expectedRegistration.Callback })
+    Assert-True ($matches.Count -eq 1) "Expected one $($expectedRegistration.Hook) registration for $($expectedRegistration.Callback)."
+}
 foreach ($registration in $boostResult.registrations) {
     Assert-True ($registration.priority -eq 10 -and $registration.accepted_args -eq 2) "Boost filter $($registration.hook) must receive the stylesheet handle."
 }
@@ -219,7 +233,7 @@ Assert-True ($pageTemplate -match "'classes'\s*=>\s*'lunara-review-archive-page'
 Assert-True ($directorTemplate -match "'classes'\s*=>\s*'lunara-review-archive-page\s+lunara-director-archive-page'") 'The director archive must emit the route-owned Reviews wrapper.'
 Assert-True ($frontend -match "wp_enqueue_style\([\s\S]{0,180}'lunara-review-archive'[\s\S]{0,180}array\(\s*'lunara-review-components',\s*'lunara-shell'\s*\)") 'The Reviews route asset must keep its explicit component and shell dependencies.'
 Assert-True ($frontend -notmatch '<style id="lunara-review-archive-authority-css">') 'The legacy 43 KB inline archive cascade must not return.'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.43\s*$') 'Theme version must identify the 3.2.43 critical-delivery repair.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.47\s*$') 'Theme version must preserve the Reviews critical-delivery repair in 3.2.47.'
 Assert-True ($stagingGate -match 'real iPhone[\s\S]{0,80}Safari' -and $stagingGate -match 'native\s+CSS nesting') 'The staging gate must require a real-iPhone Safari smoke for the nested critical guard.'
 
-Write-Host "Theme 3.2.43 Reviews critical delivery contract passed: universal seed ${seedByteCount}B ($seedSha256); route CSS ${routeCssBytes}B; Boost fixture ${fixtureBytes}B."
+Write-Host "Theme 3.2.47 Reviews critical delivery contract passed: universal seed ${seedByteCount}B ($seedSha256); route CSS ${routeCssBytes}B; Boost fixture ${fixtureBytes}B."

@@ -1723,7 +1723,7 @@ function lunara_customize_register( $wp_customize ) {
             'label'       => __( 'Journal Archive Section Order', 'lunara-film' ),
             'section'     => 'lunara_editorial_archive_sections_options',
             'type'        => 'text',
-            'description' => __( 'Comma-separated slugs: hero, filters, grid, pagination.', 'lunara-film' ),
+            'description' => __( 'Comma-separated slugs: hero, deskbar, filters, toolbar, grid, retention, pagination.', 'lunara-film' ),
         )
     );
 
@@ -2867,9 +2867,6 @@ function lunara_output_runtime_customizer_css() {
     $review_section_order = function_exists( 'lunara_get_reviews_archive_section_order_map' )
         ? lunara_get_reviews_archive_section_order_map()
         : array();
-    $journal_section_order = function_exists( 'lunara_get_journal_archive_section_order_map' )
-        ? lunara_get_journal_archive_section_order_map()
-        : array();
     $journal_live_section_order = function_exists( 'lunara_get_news_archive_live_section_order_map' )
         ? lunara_get_news_archive_live_section_order_map()
         : array();
@@ -2984,11 +2981,6 @@ function lunara_output_runtime_customizer_css() {
         if ( 'grid' === $slug ) {
             $css .= '.lunara-review-archive-page > .lunara-review-archive-slot-utility{order:' . $order . ';}';
         }
-    }
-
-    foreach ( lunara_get_registry_slugs( lunara_get_journal_archive_section_registry() ) as $slug ) {
-        $order = isset( $journal_section_order[ $slug ] ) ? intval( $journal_section_order[ $slug ] ) : 99;
-        $css  .= '.lunara-journal-archive-page > .lunara-journal-archive-slot-' . $slug . '{order:' . $order . ';}';
     }
 
     foreach ( lunara_get_registry_slugs( lunara_get_news_archive_live_section_registry() ) as $slug ) {

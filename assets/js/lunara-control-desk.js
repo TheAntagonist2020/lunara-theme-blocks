@@ -699,6 +699,368 @@
         toggleCarouselEmpty(form);
     }
 
+    function filterJournalPostOptions(input) {
+        var selector = input.getAttribute('data-lunara-journal-post-filter');
+        var select = selector ? qs(selector) : null;
+        var needle = String(input.value || '').toLowerCase().trim();
+
+        if (!select) {
+            return;
+        }
+
+        qsa('option', select).forEach(function (option, index) {
+            option.hidden = index > 0 && !!needle && option.textContent.toLowerCase().indexOf(needle) === -1;
+        });
+    }
+
+    function setJournalPostSearchStatus(input, message) {
+        var status = input.parentNode ? qs('[data-lunara-journal-post-search-status]', input.parentNode) : null;
+
+        if (status) {
+            status.textContent = message || '';
+        }
+    }
+
+    function setJournalPostSearchBusy(input, isBusy) {
+        input.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+    }
+
+    function replaceJournalPostOptions(select, items) {
+        var currentValue = String(select.value || '0');
+        var currentOption = select.options[select.selectedIndex] || null;
+        var currentText = currentOption ? currentOption.textContent : '';
+        var placeholder = select.options.length ? select.options[0].textContent : 'Choose a published Journal file';
+        var seen = {};
+
+        while (select.firstChild) {
+            select.removeChild(select.firstChild);
+        }
+
+        function appendOption(value, label) {
+            var option = document.createElement('option');
+            option.value = String(value);
+            option.textContent = String(label || '');
+            select.appendChild(option);
+            seen[String(value)] = true;
+        }
+
+        appendOption('0', placeholder);
+        if ('0' !== currentValue && currentText) {
+            appendOption(currentValue, currentText);
+        }
+
+        (Array.isArray(items) ? items : []).slice(0, 20).forEach(function (item) {
+            var postId = item && /^\d+$/.test(String(item.id || '')) ? String(item.id) : '';
+
+            if (!postId || seen[postId]) {
+                return;
+            }
+            appendOption(postId, item.text || ('#' + postId));
+        });
+
+        select.value = seen[currentValue] ? currentValue : '0';
+    }
+
+    function searchJournalPostOptions(input) {
+        var config = window.LunaraControlDesk || {};
+        var selector = input.getAttribute('data-lunara-journal-post-filter');
+        var select = selector ? qs(selector) : null;
+        var needle = String(input.value || '').trim();
+        var requestNumber;
+
+        filterJournalPostOptions(input);
+        window.clearTimeout(input._lunaraJournalSearchTimer);
+        input._lunaraJournalSearchRequest = (input._lunaraJournalSearchRequest || 0) + 1;
+        requestNumber = input._lunaraJournalSearchRequest;
+
+        if (!select || !config.journalSearchUrl || !config.journalSearchNonce || (!/^\d+$/.test(needle) && needle.length < 2)) {
+            setJournalPostSearchBusy(input, false);
+            setJournalPostSearchStatus(input, '');
+            return;
+        }
+
+        input._lunaraJournalSearchTimer = window.setTimeout(function () {
+            var requestUrl = config.journalSearchUrl
+                + (config.journalSearchUrl.indexOf('?') === -1 ? '?' : '&')
+                + 'action=lunara_journal_archive_studio_search'
+                + '&nonce=' + encodeURIComponent(config.journalSearchNonce)
+                + '&q=' + encodeURIComponent(needle.slice(0, 100));
+
+            setJournalPostSearchBusy(input, true);
+            setJournalPostSearchStatus(input, (config.i18n && config.i18n.journalSearching) || 'Searching published Journal files…');
+            window.fetch(requestUrl, {
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json' }
+            }).then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Journal search failed.');
+                }
+                return response.json();
+            }).then(function (payload) {
+                if (requestNumber !== input._lunaraJournalSearchRequest) {
+                    return;
+                }
+                if (!payload || !payload.success || !payload.data || !Array.isArray(payload.data.items)) {
+                    throw new Error('Journal search failed.');
+                }
+                replaceJournalPostOptions(select, payload.data.items);
+                setJournalPostSearchBusy(input, false);
+                setJournalPostSearchStatus(input, (config.i18n && config.i18n.journalSearchReady) || 'Published matches updated.');
+            }).catch(function () {
+                if (requestNumber !== input._lunaraJournalSearchRequest) {
+                    return;
+                }
+                setJournalPostSearchBusy(input, false);
+                setJournalPostSearchStatus(input, (config.i18n && config.i18n.journalSearchFailed) || 'Search could not be completed. Your current selection is unchanged.');
+            });
+        }, 250);
+    }
+
+    function createJournalCuratedItem(postId, label) {
+        var item = document.createElement('li');
+        var text = document.createElement('span');
+        var input = document.createElement('input');
+        var actions = document.createElement('span');
+
+        item.setAttribute('data-lunara-journal-curated-item', '');
+        item.setAttribute('data-post-id', postId);
+        text.textContent = label;
+        input.type = 'hidden';
+        input.name = 'lunara_journal_archive_curated_ids[]';
+        input.value = postId;
+        actions.className = 'lunara-control-desk-actions';
+
+        [
+            { label: 'Up', attr: 'data-lunara-journal-curated-move', value: 'up' },
+            { label: 'Down', attr: 'data-lunara-journal-curated-move', value: 'down' },
+            { label: 'Remove', attr: 'data-lunara-journal-curated-remove', value: '' }
+        ].forEach(function (spec) {
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'button button-small';
+            button.textContent = spec.label;
+            button.setAttribute(spec.attr, spec.value);
+            actions.appendChild(button);
+        });
+
+        item.appendChild(text);
+        item.appendChild(input);
+        item.appendChild(actions);
+        return item;
+    }
+
+    function addJournalCuratedItem(button) {
+        var shell = button.closest('[data-lunara-journal-curation]');
+        var picker = shell ? qs('[data-lunara-journal-curated-picker]', shell) : null;
+        var list = shell ? qs('[data-lunara-journal-curated-list]', shell) : null;
+        var postId = picker ? String(picker.value || '') : '';
+
+        if (!picker || !list || !postId || '0' === postId || qsa('[data-post-id="' + postId + '"]', list).length || qsa('[data-lunara-journal-curated-item]', list).length >= 24) {
+            return;
+        }
+
+        list.appendChild(createJournalCuratedItem(postId, picker.options[picker.selectedIndex].textContent));
+    }
+
+    function moveJournalCuratedItem(button) {
+        var item = button.closest('[data-lunara-journal-curated-item]');
+        var direction = button.getAttribute('data-lunara-journal-curated-move');
+
+        if (!item) {
+            return;
+        }
+        if ('up' === direction && item.previousElementSibling) {
+            item.parentNode.insertBefore(item, item.previousElementSibling);
+        }
+        if ('down' === direction && item.nextElementSibling) {
+            item.parentNode.insertBefore(item.nextElementSibling, item);
+        }
+    }
+
+    function journalArchiveGalleryItems(shell) {
+        return qsa('[data-lunara-journal-archive-gallery-item]', shell);
+    }
+
+    function syncJournalArchiveGallery(shell) {
+        var field = qs('[data-lunara-journal-archive-gallery-ids]', shell);
+
+        if (!field) {
+            return;
+        }
+
+        field.value = journalArchiveGalleryItems(shell).map(function (item) {
+            return item.getAttribute('data-attachment-id');
+        }).filter(Boolean).join(',');
+    }
+
+    function toggleJournalArchiveGalleryEmpty(shell) {
+        var list = qs('[data-lunara-journal-archive-gallery-list]', shell);
+        var empty = qs('[data-lunara-journal-archive-gallery-empty]', shell);
+
+        if (!list) {
+            return;
+        }
+        if (journalArchiveGalleryItems(shell).length) {
+            if (empty) {
+                empty.remove();
+            }
+            return;
+        }
+        if (!empty) {
+            list.innerHTML = '<div class="lunara-control-desk-empty" data-lunara-journal-archive-gallery-empty><p>No archive gallery images selected. The public Journal has no gallery wrapper or reserved space.</p></div>';
+        }
+    }
+
+    function journalArchiveGalleryField(field, id, label, type, value, required) {
+        var tag = 'caption' === field ? 'textarea' : 'input';
+        var input = '<' + tag + ' data-lunara-journal-archive-gallery-field="' + escapeAttr(field) + '" name="lunara_journal_archive_gallery_' + escapeAttr(field) + '[' + escapeAttr(id) + ']"';
+        var limits = { alt: 180, caption: 360, link_url: 2048, credit: 180, source: 180, source_url: 2048 };
+
+        if ('input' === tag) {
+            input += ' type="' + escapeAttr(type || 'text') + '" value="' + escapeAttr(value || '') + '"';
+        }
+        if ('focal_x' === field || 'focal_y' === field) {
+            input += ' min="0" max="100"';
+        }
+        if (limits[field]) {
+            input += ' maxlength="' + limits[field] + '"';
+        }
+        if (required) {
+            input += ' required';
+        }
+        input += '>';
+        if ('textarea' === tag) {
+            input += escapeHtml(value || '') + '</textarea>';
+        }
+        return '<label><span>' + escapeHtml(label) + '</span>' + input + '</label>';
+    }
+
+    function createJournalArchiveGalleryCard(model) {
+        var raw = model && model.toJSON ? model.toJSON() : (model || {});
+        var attachment = normalizeMediaAttachment(raw);
+        var id = String(attachment.id || '');
+        var alt = raw.alt || '';
+        var caption = raw.caption || '';
+
+        return (
+            '<article class="lunara-control-desk-carousel-item lunara-journal-archive-gallery-editor-item is-new" data-lunara-journal-archive-gallery-item data-attachment-id="' + escapeAttr(id) + '">' +
+            '<div class="lunara-control-desk-carousel-thumb">' + (attachment.thumb ? '<img src="' + escapeAttr(attachment.thumb) + '" alt="">' : '') + '</div>' +
+            '<div class="lunara-control-desk-carousel-copy"><div class="lunara-control-desk-carousel-title-row"><div><strong data-lunara-journal-archive-gallery-item-title>' + escapeHtml(attachment.title) + '</strong><span>' + escapeHtml(attachment.meta) + '</span></div>' +
+            '<div class="lunara-control-desk-carousel-controls"><button type="button" class="button button-small" data-lunara-journal-archive-gallery-move="up">Up</button><button type="button" class="button button-small" data-lunara-journal-archive-gallery-move="down">Down</button><button type="button" class="button button-small" data-lunara-journal-archive-gallery-replace>Replace</button><button type="button" class="button button-small" data-lunara-journal-archive-gallery-remove>Remove</button></div></div>' +
+            '<div class="lunara-control-desk-carousel-fields">' +
+            journalArchiveGalleryField('alt', id, 'Alt text', 'text', alt, true) +
+            journalArchiveGalleryField('caption', id, 'Caption', 'text', caption, false) +
+            journalArchiveGalleryField('link_url', id, 'Optional image link', 'url', '', false) +
+            journalArchiveGalleryField('credit', id, 'Credit', 'text', '', true) +
+            journalArchiveGalleryField('source', id, 'Source name', 'text', '', true) +
+            journalArchiveGalleryField('source_url', id, 'Source URL', 'url', '', true) +
+            journalArchiveGalleryField('focal_x', id, 'Focal X', 'number', '50', false) +
+            journalArchiveGalleryField('focal_y', id, 'Focal Y', 'number', '50', false) +
+            '</div></div></article>'
+        );
+    }
+
+    function openJournalArchiveGalleryPicker(button) {
+        var shell = button.closest('[data-lunara-journal-archive-gallery-form]');
+        var list = shell ? qs('[data-lunara-journal-archive-gallery-list]', shell) : null;
+        var frame;
+
+        if (!shell || !list || !window.wp || !window.wp.media) {
+            return;
+        }
+        frame = window.wp.media({
+            title: 'Add Journal archive gallery images',
+            button: { text: 'Add images' },
+            library: { type: 'image' },
+            multiple: 'add'
+        });
+        frame.on('select', function () {
+            var existing = {};
+
+            journalArchiveGalleryItems(shell).forEach(function (item) {
+                existing[item.getAttribute('data-attachment-id')] = true;
+            });
+            frame.state().get('selection').each(function (model) {
+                var id = String(model.get('id') || '');
+
+                if (!id || existing[id] || journalArchiveGalleryItems(shell).length >= 12) {
+                    return;
+                }
+                existing[id] = true;
+                list.insertAdjacentHTML('beforeend', createJournalArchiveGalleryCard(model));
+            });
+            toggleJournalArchiveGalleryEmpty(shell);
+            syncJournalArchiveGallery(shell);
+        });
+        frame.open();
+    }
+
+    function replaceJournalArchiveGalleryItem(button) {
+        var item = button.closest('[data-lunara-journal-archive-gallery-item]');
+        var shell = button.closest('[data-lunara-journal-archive-gallery-form]');
+        var frame;
+
+        if (!item || !shell || !window.wp || !window.wp.media) {
+            return;
+        }
+        frame = window.wp.media({ title: 'Replace archive gallery image', button: { text: 'Replace image' }, library: { type: 'image' }, multiple: false });
+        frame.on('select', function () {
+            var model = frame.state().get('selection').first();
+            var id = model ? String(model.get('id') || '') : '';
+            var currentId = item.getAttribute('data-attachment-id');
+            var duplicate = id ? qs('[data-lunara-journal-archive-gallery-item][data-attachment-id="' + id + '"]', shell) : null;
+
+            // Choosing the same attachment must preserve every unsaved field.
+            if (!id || id === currentId || (duplicate && duplicate !== item)) {
+                return;
+            }
+            item.insertAdjacentHTML('afterend', createJournalArchiveGalleryCard(model));
+            item.remove();
+            syncJournalArchiveGallery(shell);
+        });
+        frame.open();
+    }
+
+    function moveJournalArchiveGalleryItem(button) {
+        var item = button.closest('[data-lunara-journal-archive-gallery-item]');
+        var shell = button.closest('[data-lunara-journal-archive-gallery-form]');
+        var direction = button.getAttribute('data-lunara-journal-archive-gallery-move');
+
+        if (!item || !shell) {
+            return;
+        }
+        if ('up' === direction && item.previousElementSibling && item.previousElementSibling.hasAttribute('data-lunara-journal-archive-gallery-item')) {
+            item.parentNode.insertBefore(item, item.previousElementSibling);
+        }
+        if ('down' === direction && item.nextElementSibling && item.nextElementSibling.hasAttribute('data-lunara-journal-archive-gallery-item')) {
+            item.parentNode.insertBefore(item.nextElementSibling, item);
+        }
+        syncJournalArchiveGallery(shell);
+    }
+
+    function removeJournalArchiveGalleryItem(button) {
+        var item = button.closest('[data-lunara-journal-archive-gallery-item]');
+        var shell = button.closest('[data-lunara-journal-archive-gallery-form]');
+
+        if (item && shell) {
+            item.remove();
+            syncJournalArchiveGallery(shell);
+            toggleJournalArchiveGalleryEmpty(shell);
+        }
+    }
+
+    function clearJournalArchiveGallery(button) {
+        var shell = button.closest('[data-lunara-journal-archive-gallery-form]');
+        var list = shell ? qs('[data-lunara-journal-archive-gallery-list]', shell) : null;
+
+        if (!shell || !list) {
+            return;
+        }
+        list.innerHTML = '';
+        syncJournalArchiveGallery(shell);
+        toggleJournalArchiveGalleryEmpty(shell);
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         qsa('.lunara-control-desk-suggest').forEach(function (button) {
             button.addEventListener('click', function () {
@@ -717,6 +1079,14 @@
             var carouselPicker = event.target.closest('[data-lunara-carousel-picker]');
             var carouselMove = event.target.closest('[data-lunara-carousel-move]');
             var carouselRemove = event.target.closest('[data-lunara-carousel-remove]');
+            var curatedAdd = event.target.closest('[data-lunara-journal-curated-add]');
+            var curatedMove = event.target.closest('[data-lunara-journal-curated-move]');
+            var curatedRemove = event.target.closest('[data-lunara-journal-curated-remove]');
+            var archiveGalleryPicker = event.target.closest('[data-lunara-journal-archive-gallery-picker]');
+            var archiveGalleryMove = event.target.closest('[data-lunara-journal-archive-gallery-move]');
+            var archiveGalleryReplace = event.target.closest('[data-lunara-journal-archive-gallery-replace]');
+            var archiveGalleryRemove = event.target.closest('[data-lunara-journal-archive-gallery-remove]');
+            var archiveGalleryClear = event.target.closest('[data-lunara-journal-archive-gallery-clear]');
 
             if (historyButton) {
                 selectSnapshot(historyButton);
@@ -765,13 +1135,71 @@
 
             if (carouselRemove) {
                 removeCarouselItem(carouselRemove);
+                return;
             }
+
+            if (curatedAdd) {
+                addJournalCuratedItem(curatedAdd);
+                return;
+            }
+
+            if (curatedMove) {
+                moveJournalCuratedItem(curatedMove);
+                return;
+            }
+
+            if (curatedRemove) {
+                var curatedItem = curatedRemove.closest('[data-lunara-journal-curated-item]');
+                if (curatedItem) {
+                    curatedItem.remove();
+                }
+                return;
+            }
+
+            if (archiveGalleryPicker) {
+                openJournalArchiveGalleryPicker(archiveGalleryPicker);
+                return;
+            }
+
+            if (archiveGalleryMove) {
+                moveJournalArchiveGalleryItem(archiveGalleryMove);
+                return;
+            }
+
+            if (archiveGalleryReplace) {
+                replaceJournalArchiveGalleryItem(archiveGalleryReplace);
+                return;
+            }
+
+            if (archiveGalleryRemove) {
+                removeJournalArchiveGalleryItem(archiveGalleryRemove);
+                return;
+            }
+
+            if (archiveGalleryClear) {
+                clearJournalArchiveGallery(archiveGalleryClear);
+            }
+        });
+
+        qsa('[data-lunara-journal-post-filter]').forEach(function (input) {
+            input.addEventListener('input', function () {
+                searchJournalPostOptions(input);
+            });
         });
 
         qsa('[data-lunara-carousel-form]').forEach(function (form) {
             form.addEventListener('submit', function () {
                 syncCarouselIds(form);
             });
+        });
+
+        qsa('[data-lunara-journal-archive-gallery-form]').forEach(function (shell) {
+            var form = shell.closest('form');
+            if (form) {
+                form.addEventListener('submit', function () {
+                    syncJournalArchiveGallery(shell);
+                });
+            }
         });
 
         qsa('[data-lunara-brand-number-control]').forEach(function (control) {
