@@ -470,6 +470,31 @@ function lunara_preload_journal_archive_label_font() {
 add_action( 'wp_head', 'lunara_preload_journal_archive_label_font', 4 );
 
 /**
+ * Give the licensed Reviews label face a first-paint opportunity without
+ * imposing its heavier weight on routes or custom Studio font choices.
+ *
+ * Label typography is Design Tokens state, not Studio state, so director
+ * (`lunara_director`) term archives are deliberately part of this route
+ * family even though they are exempt from all Reviews Archive Studio state.
+ */
+function lunara_preload_reviews_archive_label_font() {
+    $is_reviews_archive = is_post_type_archive( 'review' )
+        || is_tax( 'lunara_director' )
+        || is_page_template( 'page-reviews.php' )
+        || is_page( 'reviews' );
+
+    if ( is_admin() || is_feed() || ! $is_reviews_archive || ! function_exists( 'lunara_reviews_archive_uses_tiempos_label_face' ) || ! lunara_reviews_archive_uses_tiempos_label_face() ) {
+        return;
+    }
+
+    printf(
+        '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin />' . "\n",
+        esc_url( home_url( '/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2' ) )
+    );
+}
+add_action( 'wp_head', 'lunara_preload_reviews_archive_label_font', 4 );
+
+/**
  * Keep the masthead's layout CSS out of WP Rocket's used-CSS pipeline.
  *
  * Rocket's Remove Unused CSS collects inline styles into its async-applied
@@ -3623,13 +3648,40 @@ function lunara_output_review_archive_authority_css() {
         }
     }
 
-    $archive_density  = lunara_home_select_setting( 'lunara_reviews_archive_density', 'editorial', array( 'compact', 'editorial', 'showcase' ) );
-    $lead_prominence  = lunara_home_select_setting( 'lunara_reviews_archive_lead_prominence', 'standard', array( 'restrained', 'standard', 'feature' ) );
-    $rail_density     = lunara_home_select_setting( 'lunara_reviews_archive_rail_density', 'editorial', array( 'compact', 'editorial', 'showcase' ) );
-    $section_gap      = lunara_home_brand_number_setting( 'lunara_reviews_archive_section_gap', 40, 20, 90 );
-    $lead_min_height  = lunara_home_brand_number_setting( 'lunara_reviews_archive_lead_min_height', 460, 340, 640 );
-    $card_min_height  = lunara_home_brand_number_setting( 'lunara_reviews_archive_card_min_height', 360, 260, 540 );
-    $compact_media_w  = lunara_home_brand_number_setting( 'lunara_reviews_archive_compact_media_width', 116, 92, 150 );
+    // The Reviews Archive Studio public config resolves the same presentation
+    // theme mods with the same defaults and bounds, so identical stored values
+    // emit byte-identical variables — while an authorized private preview can
+    // drive them without touching any public owner. Director archives read the
+    // config without preview overrides: they stay exempt from Studio state.
+    $studio_presentation = array();
+    if ( function_exists( 'lunara_reviews_archive_studio_get_public_config' ) ) {
+        $studio_config       = lunara_reviews_archive_studio_get_public_config( ! $is_director_archive );
+        $studio_presentation = isset( $studio_config['presentation'] ) && is_array( $studio_config['presentation'] )
+            ? $studio_config['presentation']
+            : array();
+    }
+
+    $archive_density  = isset( $studio_presentation['density'] ) && is_scalar( $studio_presentation['density'] )
+        ? (string) $studio_presentation['density']
+        : lunara_home_select_setting( 'lunara_reviews_archive_density', 'editorial', array( 'compact', 'editorial', 'showcase' ) );
+    $lead_prominence  = isset( $studio_presentation['lead_prominence'] ) && is_scalar( $studio_presentation['lead_prominence'] )
+        ? (string) $studio_presentation['lead_prominence']
+        : lunara_home_select_setting( 'lunara_reviews_archive_lead_prominence', 'standard', array( 'restrained', 'standard', 'feature' ) );
+    $rail_density     = isset( $studio_presentation['rail_density'] ) && is_scalar( $studio_presentation['rail_density'] )
+        ? (string) $studio_presentation['rail_density']
+        : lunara_home_select_setting( 'lunara_reviews_archive_rail_density', 'editorial', array( 'compact', 'editorial', 'showcase' ) );
+    $section_gap      = isset( $studio_presentation['section_gap'] )
+        ? absint( $studio_presentation['section_gap'] )
+        : lunara_home_brand_number_setting( 'lunara_reviews_archive_section_gap', 40, 20, 90 );
+    $lead_min_height  = isset( $studio_presentation['lead_min_height'] )
+        ? absint( $studio_presentation['lead_min_height'] )
+        : lunara_home_brand_number_setting( 'lunara_reviews_archive_lead_min_height', 460, 340, 640 );
+    $card_min_height  = isset( $studio_presentation['card_min_height'] )
+        ? absint( $studio_presentation['card_min_height'] )
+        : lunara_home_brand_number_setting( 'lunara_reviews_archive_card_min_height', 360, 260, 540 );
+    $compact_media_w  = isset( $studio_presentation['compact_media_width'] )
+        ? absint( $studio_presentation['compact_media_width'] )
+        : lunara_home_brand_number_setting( 'lunara_reviews_archive_compact_media_width', 116, 92, 150 );
     $compact_media_h  = (int) round( $compact_media_w * 1.3276 );
 
     $shell_gap_map = array(
@@ -6417,6 +6469,12 @@ if ( ! function_exists( 'lunara_separate_review_from_editorial_archives' ) ) {
                 }
                 if ( isset( $query_vars['lunara_reviews_archive_pinned_orderby'] ) ) {
                     $query->set( 'lunara_reviews_archive_pinned_orderby', $query_vars['lunara_reviews_archive_pinned_orderby'] );
+                }
+                if ( isset( $query_vars['posts_per_page'] ) ) {
+                    $query->set( 'posts_per_page', $query_vars['posts_per_page'] );
+                }
+                if ( isset( $query_vars['lunara_reviews_archive_priority_ids'] ) ) {
+                    $query->set( 'lunara_reviews_archive_priority_ids', $query_vars['lunara_reviews_archive_priority_ids'] );
                 }
             }
             return;

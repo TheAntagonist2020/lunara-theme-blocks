@@ -1716,6 +1716,640 @@ function lunara_reviews_archive_studio_preflight_preview_query( $query ) {
 add_action( 'pre_get_posts', 'lunara_reviews_archive_studio_preflight_preview_query', 1 );
 
 /**
+ * Resolve the newest eligible Review ID with one bounded, request-local query.
+ *
+ * The lookup deliberately suppresses query filters so the archive priority
+ * hook cannot recurse into itself. A request-local cache is enough: publication
+ * changes become visible on the next public request without a persistent-key
+ * invalidation dependency.
+ *
+ * @return int
+ */
+function lunara_reviews_archive_studio_get_newest_id() {
+	static $newest_id = null;
+	if ( null !== $newest_id ) {
+		return $newest_id;
+	}
+
+	$ids = get_posts(
+		array(
+			'post_type'              => 'review',
+			'post_status'            => 'publish',
+			'posts_per_page'         => 1,
+			'fields'                 => 'ids',
+			'orderby'                => array(
+				'date' => 'DESC',
+				'ID'   => 'DESC',
+			),
+			'ignore_sticky_posts'    => true,
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+			'cache_results'          => false,
+			'suppress_filters'       => true,
+		)
+	);
+	$newest_id = ! empty( $ids[0] ) ? lunara_reviews_archive_studio_validate_post_id( $ids[0] ) : 0;
+	return $newest_id;
+}
+
+/**
+ * Resolve the active archive lead without inventing a second lead owner.
+ *
+ * Automatic mode follows the newest eligible published Review. Manual mode is
+ * exactly the `_lunara_review_pinned` pin: the resolved config already reads
+ * it, and the canonical pin helper remains the fallback source of truth.
+ *
+ * @param array<string,mixed>|null $config Configuration.
+ * @return int
+ */
+function lunara_reviews_archive_studio_get_lead_id( $config = null ) {
+	$config = is_array( $config ) ? $config : lunara_reviews_archive_studio_get_public_config();
+	if ( 'manual' === $config['lead_mode'] ) {
+		$lead_id = lunara_reviews_archive_studio_validate_post_id( $config['lead_id'] );
+		if ( $lead_id ) {
+			return $lead_id;
+		}
+		return function_exists( 'lunara_get_pinned_review_id' )
+			? lunara_reviews_archive_studio_validate_post_id( lunara_get_pinned_review_id() )
+			: 0;
+	}
+	return lunara_reviews_archive_studio_get_newest_id();
+}
+
+/**
+ * Prepend one stable curated CASE expression behind the pin owner.
+ *
+ * Composition contract: this filter runs at priority 19, deliberately BEFORE
+ * the existing `lunara_reviews_archive_pinned_orderby` at priority 20
+ * (inc/review-rendering.php), which stays untouched. Priority 19 rewrites the
+ * native order into `CURATED CASE, native order`; priority 20 then prepends
+ * the pin CASE, so the final SQL reads: pin CASE first, curated CASE second,
+ * native order third. Curated CASE positions start at 1, the priority-ID list
+ * never contains the pinned ID (the query composer subtracts it), and a
+ * stable posts.ID tiebreak keeps pagination deterministic.
+ *
+ * @param string   $orderby Existing SQL.
+ * @param WP_Query $query Query.
+ * @return string
+ */
+function lunara_reviews_archive_studio_priority_orderby( $orderby, $query ) {
+	$ids = $query->get( 'lunara_reviews_archive_priority_ids' );
+	if ( ! is_array( $ids ) || empty( $ids ) ) {
+		return $orderby;
+	}
+	global $wpdb;
+	$cases = array();
+	foreach ( array_values( array_unique( array_map( 'absint', $ids ) ) ) as $position => $post_id ) {
+		if ( $post_id ) {
+			$cases[] = 'WHEN ' . $wpdb->posts . '.ID = ' . $post_id . ' THEN ' . ( $position + 1 );
+		}
+	}
+	if ( empty( $cases ) ) {
+		return $orderby;
+	}
+	$tie_direction = preg_match( '/\bASC\b/i', (string) $orderby ) ? 'ASC' : 'DESC';
+	$stable_order  = trim( (string) $orderby );
+	$id_pattern    = '/\b' . preg_quote( $wpdb->posts, '/' ) . '\.ID\s+(?:ASC|DESC)\b/i';
+	if ( ! preg_match( $id_pattern, $stable_order ) ) {
+		$stable_order .= ( '' !== $stable_order ? ', ' : '' ) . $wpdb->posts . '.ID ' . $tie_direction;
+	}
+	return 'CASE ' . implode( ' ', $cases ) . ' ELSE ' . ( count( $cases ) + 1 ) . ' END ASC, ' . $stable_order;
+}
+add_filter( 'posts_orderby', 'lunara_reviews_archive_studio_priority_orderby', 19, 2 );
+
+/**
+ * Resolve one optional retention-card attachment into native responsive markup.
+ *
+ * A valid attachment record can still point at a missing derivative or stale
+ * physical file. Returning an empty string lets the renderer degrade to the
+ * text card without emitting `has-media` or a fixed-ratio empty wrapper.
+ *
+ * @param array<string,mixed> $card Retention card config.
+ * @return string
+ */
+function lunara_reviews_archive_studio_retention_media_markup( $card ) {
+	$image_id = lunara_reviews_archive_studio_validate_attachment_id( isset( $card['image_id'] ) ? $card['image_id'] : 0 );
+	if ( ! $image_id || ! function_exists( 'wp_get_attachment_image' ) ) {
+		return '';
+	}
+
+	$alt = isset( $card['image_alt'] ) ? trim( (string) $card['image_alt'] ) : '';
+	if ( '' === $alt && function_exists( 'get_post_meta' ) ) {
+		$alt = trim( (string) get_post_meta( $image_id, '_wp_attachment_image_alt', true ) );
+	}
+	if ( '' === $alt && function_exists( 'get_the_title' ) ) {
+		$alt = trim( (string) get_the_title( $image_id ) );
+	}
+
+	$markup = wp_get_attachment_image(
+		$image_id,
+		'lunara-hero-spotlight',
+		false,
+		array(
+			'loading'  => 'lazy',
+			'decoding' => 'async',
+			'sizes'    => '(max-width: 700px) 92vw, 31vw',
+			'alt'      => $alt,
+		)
+	);
+
+	return is_string( $markup ) ? trim( $markup ) : '';
+}
+
+/**
+ * Resolve one archive-gallery attachment into native responsive markup.
+ *
+ * @param array<string,mixed> $item Valid gallery item.
+ * @return string
+ */
+function lunara_reviews_archive_studio_gallery_media_markup( $item ) {
+	$image_id = lunara_reviews_archive_studio_validate_attachment_id( isset( $item['attachment_id'] ) ? $item['attachment_id'] : 0 );
+	if ( ! $image_id || ! function_exists( 'wp_get_attachment_image' ) ) {
+		return '';
+	}
+	$markup = wp_get_attachment_image(
+		$image_id,
+		'lunara-hero-spotlight',
+		false,
+		array(
+			'class'    => 'lunara-review-archive-gallery-image',
+			'loading'  => 'lazy',
+			'decoding' => 'async',
+			'sizes'    => '(max-width: 700px) 92vw, (max-width: 1100px) 46vw, 31vw',
+			'alt'      => isset( $item['alt'] ) ? trim( (string) $item['alt'] ) : '',
+		)
+	);
+	return is_string( $markup ) ? trim( $markup ) : '';
+}
+
+/**
+ * Render the optional archive-only gallery as responsive, public SSR.
+ *
+ * Missing derivatives are skipped before any fixed-ratio chamber is opened.
+ * If no selected attachment renders, this returns an exact empty string so
+ * the default/cleared state adds no heading, wrapper, geometry, or script.
+ *
+ * @param array<string,mixed> $gallery Last-valid gallery configuration.
+ * @return string
+ */
+function lunara_reviews_archive_studio_render_gallery( $gallery ) {
+	if ( ! is_array( $gallery ) || empty( $gallery['items'] ) || ! is_array( $gallery['items'] ) ) {
+		return '';
+	}
+	$items = $gallery['items'];
+	usort(
+		$items,
+		static function ( $left, $right ) {
+			return absint( isset( $left['order'] ) ? $left['order'] : 0 ) <=> absint( isset( $right['order'] ) ? $right['order'] : 0 );
+		}
+	);
+	$figures = array();
+	foreach ( $items as $item ) {
+		if ( ! is_array( $item ) ) {
+			continue;
+		}
+		$media = lunara_reviews_archive_studio_gallery_media_markup( $item );
+		if ( '' === $media ) {
+			continue;
+		}
+		$link_url   = isset( $item['link_url'] ) ? (string) $item['link_url'] : '';
+		$source_url = isset( $item['source_url'] ) ? (string) $item['source_url'] : '';
+		$media_html = '' !== $link_url
+			? '<a class="lunara-review-archive-gallery-destination" href="' . esc_url( $link_url ) . '">' . $media . '</a>'
+			: $media;
+		$caption = '';
+		if ( ! empty( $item['caption'] ) ) {
+			$caption .= '<p>' . esc_html( $item['caption'] ) . '</p>';
+		}
+		$credit = '<span class="lunara-review-archive-gallery-credit">' . esc_html( $item['credit'] ) . '</span>';
+		$source = '<a class="lunara-review-archive-gallery-source" href="' . esc_url( $source_url ) . '" rel="noopener noreferrer">' . esc_html( $item['source'] ) . '</a>';
+		$caption .= '<small>' . $credit . '<span aria-hidden="true"> · </span>' . $source . '</small>';
+		$figures[] = '<figure class="lunara-review-archive-gallery-item"><div class="lunara-review-archive-gallery-media" style="--lunara-gallery-focus-x:' . esc_attr( absint( $item['focal_x'] ) ) . '%;--lunara-gallery-focus-y:' . esc_attr( absint( $item['focal_y'] ) ) . '%">' . $media_html . '</div><figcaption>' . $caption . '</figcaption></figure>';
+	}
+	if ( empty( $figures ) ) {
+		return '';
+	}
+	$copy = ! empty( $gallery['copy'] ) ? '<p class="lunara-review-archive-gallery-copy">' . esc_html( $gallery['copy'] ) . '</p>' : '';
+	return '<section class="lunara-review-archive-gallery" aria-labelledby="lunara-review-archive-gallery-title"><header class="lunara-review-archive-gallery-head"><p class="lunara-home-section-kicker">' . esc_html( $gallery['kicker'] ) . '</p><h3 id="lunara-review-archive-gallery-title" class="lunara-section-title">' . esc_html( $gallery['title'] ) . '</h3>' . $copy . '</header><div class="lunara-review-archive-gallery-grid">' . implode( '', $figures ) . '</div></section>';
+}
+
+/**
+ * Keep archive-only media lanes on the root Reviews index and off every
+ * paginated, director, or taxonomy route.
+ *
+ * `lunara_director` term archives are contractually exempt from all Studio
+ * state, so they can never qualify regardless of the other route checks.
+ *
+ * @return bool
+ */
+function lunara_reviews_archive_studio_is_gallery_request() {
+	if ( is_tax( 'lunara_director' ) || is_paged() ) {
+		return false;
+	}
+	if ( is_post_type_archive( 'review' ) ) {
+		return true;
+	}
+	if ( is_page( 'reviews' ) || is_page_template( 'page-reviews.php' ) ) {
+		$paged = max( absint( get_query_var( 'paged' ) ), absint( get_query_var( 'page' ) ) );
+		return $paged <= 1;
+	}
+	return false;
+}
+
+/**
+ * Compose the retention showcase lane with the root-only gallery after cards.
+ *
+ * @param string $cards_markup Retention media-card grid markup, or empty.
+ * @param string $gallery_markup Root archive gallery SSR, or empty.
+ * @param bool   $has_posts Whether the archive has eligible Review posts.
+ * @return string
+ */
+function lunara_reviews_archive_studio_compose_retention_lane( $cards_markup, $gallery_markup, $has_posts ) {
+	$cards_markup   = is_string( $cards_markup ) ? trim( $cards_markup ) : '';
+	$gallery_markup = is_string( $gallery_markup ) ? trim( $gallery_markup ) : '';
+	if ( ! $has_posts || ( '' === $cards_markup && '' === $gallery_markup ) ) {
+		return '';
+	}
+	return '<section class="lunara-review-archive-retention lunara-review-archive-slot-retention" aria-label="' . esc_attr( __( 'Continue through the Reviews desk', 'lunara-film' ) ) . '">' . $cards_markup . $gallery_markup . '</section>';
+}
+
+/**
+ * Search a bounded published-Review window for the private Studio pickers.
+ *
+ * Empty search returns the twenty newest eligible files. Numeric search is an
+ * exact post-ID lookup; text search is title/content search handled by core.
+ * IDs are hydrated only after the bounded query so no archive-wide post, meta,
+ * or taxonomy cache is created.
+ *
+ * @param mixed $raw_search Search text or exact ID.
+ * @param mixed $raw_limit  Requested result count (clamped to twenty).
+ * @return array<int,WP_Post>
+ */
+function lunara_reviews_archive_studio_search_posts( $raw_search = '', $raw_limit = 20 ) {
+	$search = is_scalar( $raw_search ) ? trim( sanitize_text_field( (string) $raw_search ) ) : '';
+	$limit  = is_scalar( $raw_limit ) ? absint( $raw_limit ) : 20;
+	$limit  = max( 1, min( 20, $limit ) );
+	$search = function_exists( 'mb_substr' ) ? mb_substr( $search, 0, 100 ) : substr( $search, 0, 100 );
+
+	$args = array(
+		'post_type'              => 'review',
+		'post_status'            => 'publish',
+		'posts_per_page'         => $limit,
+		'orderby'                => 'date',
+		'order'                  => 'DESC',
+		'ignore_sticky_posts'    => true,
+		'no_found_rows'          => true,
+		'suppress_filters'       => true,
+		'cache_results'          => false,
+		'update_post_meta_cache' => false,
+		'update_post_term_cache' => false,
+	);
+	if ( '' !== $search ) {
+		if ( ctype_digit( $search ) ) {
+			$args['post__in'] = array( absint( $search ) );
+			$args['orderby']  = 'post__in';
+		} else {
+			$args['s'] = $search;
+		}
+	}
+
+	$posts = array();
+	foreach ( (array) get_posts( $args ) as $post ) {
+		if ( $post instanceof WP_Post && 'review' === $post->post_type && 'publish' === $post->post_status ) {
+			$posts[] = $post;
+		}
+	}
+	return $posts;
+}
+
+/**
+ * Return a bounded private Review title/ID search result.
+ *
+ * @return void
+ */
+function lunara_reviews_archive_studio_ajax_search_posts() {
+	if ( ! current_user_can( 'edit_theme_options' ) ) {
+		wp_send_json_error( array( 'message' => __( 'Theme editing permission is required.', 'lunara-film' ) ), 403 );
+		return;
+	}
+	check_ajax_referer( 'lunara_reviews_archive_studio_search', 'nonce' );
+
+	$raw_search = isset( $_GET['q'] ) && is_scalar( $_GET['q'] ) ? wp_unslash( $_GET['q'] ) : '';
+	$search     = trim( sanitize_text_field( (string) $raw_search ) );
+	$search     = function_exists( 'mb_substr' ) ? mb_substr( $search, 0, 100 ) : substr( $search, 0, 100 );
+	if ( '' === $search || ( ! ctype_digit( $search ) && strlen( $search ) < 2 ) ) {
+		wp_send_json_success( array( 'items' => array() ) );
+		return;
+	}
+
+	$items = array();
+	foreach ( lunara_reviews_archive_studio_search_posts( $search, 20 ) as $post ) {
+		$items[] = array(
+			'id'   => absint( $post->ID ),
+			'text' => sprintf( '#%1$d — %2$s', $post->ID, get_the_title( $post ) ),
+		);
+	}
+	wp_send_json_success( array( 'items' => $items ) );
+}
+add_action( 'wp_ajax_lunara_reviews_archive_studio_search', 'lunara_reviews_archive_studio_ajax_search_posts' );
+
+/**
+ * Recent published Review choices plus configured older selections.
+ *
+ * @param array<string,mixed> $config Current config.
+ * @return array<int,WP_Post>
+ */
+function lunara_reviews_archive_studio_editor_posts( $config ) {
+	$posts    = lunara_reviews_archive_studio_search_posts( '', 20 );
+	$required = array_slice( array_values( array_unique( array_filter( array_merge( array( absint( $config['lead_id'] ) ), array_map( 'absint', (array) $config['curated_ids'] ) ) ) ) ), 0, 25 );
+	$by_id    = array();
+	foreach ( $posts as $post ) {
+		if ( $post instanceof WP_Post ) {
+			$by_id[ $post->ID ] = $post;
+		}
+	}
+	$missing = array_values( array_diff( $required, array_keys( $by_id ) ) );
+	if ( $missing ) {
+		$configured_posts = get_posts(
+			array(
+				'post_type'              => 'review',
+				'post_status'            => 'publish',
+				'post__in'               => $missing,
+				'posts_per_page'         => count( $missing ),
+				'orderby'                => 'post__in',
+				'ignore_sticky_posts'    => true,
+				'no_found_rows'          => true,
+				'suppress_filters'       => true,
+				'cache_results'          => false,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+			)
+		);
+		foreach ( (array) $configured_posts as $post ) {
+			if ( $post instanceof WP_Post && 'review' === $post->post_type && 'publish' === $post->post_status ) {
+				$by_id[ $post->ID ] = $post;
+			}
+		}
+	}
+	return array_values( $by_id );
+}
+
+/**
+ * Render the complete focused admin surface.
+ *
+ * @param string $context Return context.
+ * @return void
+ */
+function lunara_reviews_archive_studio_render_control_surface( $context = 'site-studio' ) {
+	if ( ! current_user_can( 'edit_theme_options' ) ) {
+		?>
+		<section id="lunara-theme-studio-reviews-archive-studio" class="lunara-control-desk-homepage-studio">
+			<div class="lunara-control-desk-panel-header"><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Reviews Archive Studio', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Theme editing permission is required', 'lunara-film' ); ?></h3></div>
+		</section>
+		<?php
+		return;
+	}
+
+	$public_config = lunara_reviews_archive_studio_get_public_config( false );
+	$invalid_stage = lunara_reviews_archive_studio_get_invalid_stage();
+	$config        = is_array( $invalid_stage ) ? $invalid_stage : $public_config;
+	$posts         = lunara_reviews_archive_studio_editor_posts( $config );
+	$active_id     = lunara_reviews_archive_studio_get_lead_id( $config );
+	$active_post   = $active_id ? get_post( $active_id ) : ( ! empty( $posts[0] ) ? $posts[0] : null );
+	$registry      = function_exists( 'lunara_get_reviews_archive_section_registry' ) ? lunara_get_reviews_archive_section_registry() : array();
+	$positions     = array_flip( $config['section_order'] );
+	if ( ! empty( $config['_staged_positions'] ) && is_array( $config['_staged_positions'] ) ) {
+		foreach ( $config['_staged_positions'] as $slug => $position ) {
+			$positions[ $slug ] = max( 0, absint( $position ) - 1 );
+		}
+	}
+	$revisions    = lunara_reviews_archive_studio_get_revisions();
+	$context      = 'site-studio' === sanitize_key( (string) $context ) ? 'site-studio' : 'control-desk';
+	$featured_id  = $active_post instanceof WP_Post ? get_post_thumbnail_id( $active_post->ID ) : 0;
+	$featured_dim = $featured_id && function_exists( 'lunara_control_desk_get_attachment_dimensions_label' ) ? lunara_control_desk_get_attachment_dimensions_label( $featured_id ) : '';
+	?>
+	<section id="lunara-theme-studio-reviews-archive-studio" class="lunara-control-desk-homepage-studio lunara-reviews-archive-studio-admin" data-lunara-archive-studio="reviews">
+		<div class="lunara-control-desk-panel-header">
+			<p class="lunara-control-desk-kicker"><?php esc_html_e( 'Reviews Archive Studio', 'lunara-film' ); ?></p>
+			<h3><?php esc_html_e( 'Run the Reviews desk without a code release', 'lunara-film' ); ?></h3>
+			<p class="lunara-control-desk-subtle"><?php esc_html_e( 'This is the focused owner for archive identity, lead behavior, published curation, labels, lane order, retention, and responsive preview. It never publishes or schedules a Review.', 'lunara-film' ); ?></p>
+		</div>
+
+		<?php
+		$quality_warnings   = array_intersect( (array) ( isset( $config['_warnings'] ) ? $config['_warnings'] : array() ), array( 'retention_image_wide_quality', 'gallery_image_wide_quality' ) );
+		$reference_warnings = array_diff( (array) ( isset( $config['_warnings'] ) ? $config['_warnings'] : array() ), array( 'retention_image_wide_quality', 'gallery_image_wide_quality' ) );
+		?>
+		<?php if ( ! empty( $reference_warnings ) ) : ?>
+			<div class="notice notice-warning inline"><p><?php esc_html_e( 'The last valid archive remains live, but one referenced review or image is no longer eligible. The affected field has fallen back safely; review the highlighted selection before saving again.', 'lunara-film' ); ?></p></div>
+		<?php endif; ?>
+		<?php if ( ! empty( $quality_warnings ) ) : ?>
+			<div class="notice notice-warning inline"><p><?php esc_html_e( 'One selected wide image is below the 1920×1080 target or is not close to 16:9. It remains live without stretching inside the intentional crop chamber; replace it with a stronger wide source when practical.', 'lunara-film' ); ?></p></div>
+		<?php endif; ?>
+		<?php if ( is_array( $invalid_stage ) ) : ?>
+			<div class="notice notice-error inline"><p><strong><?php esc_html_e( 'Your rejected edits are restored below and remain private.', 'lunara-film' ); ?></strong> <?php echo esc_html( lunara_reviews_archive_studio_validation_message() ); ?> <?php esc_html_e( 'The last valid public Reviews archive is unchanged.', 'lunara-film' ); ?></p></div>
+		<?php endif; ?>
+
+		<form class="lunara-control-desk-homepage-form lunara-reviews-archive-studio-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<input type="hidden" name="action" value="lunara_save_reviews_archive_studio" />
+			<input type="hidden" name="lunara_reviews_archive_return" value="<?php echo esc_attr( $context ); ?>" />
+			<?php wp_nonce_field( 'lunara_save_reviews_archive_studio', 'lunara_reviews_archive_nonce' ); ?>
+			<?php wp_nonce_field( 'lunara_preview_reviews_archive_studio', 'lunara_reviews_archive_preview_nonce' ); ?>
+
+			<div class="lunara-control-desk-homepage-card">
+				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Archive Identity', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Kicker, headline, deck, and supporting copy', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'These write through to the existing Editorial Archives owner; exact words are preserved.', 'lunara-film' ); ?></p></div></div>
+				<div class="lunara-control-desk-homepage-number-grid">
+					<label><span><strong><?php esc_html_e( 'Kicker', 'lunara-film' ); ?></strong></span><input type="text" maxlength="80" name="lunara_reviews_archive_identity[kicker]" value="<?php echo esc_attr( $config['kicker'] ); ?>" required /></label>
+					<label><span><strong><?php esc_html_e( 'Headline', 'lunara-film' ); ?></strong></span><input type="text" maxlength="140" name="lunara_reviews_archive_identity[title]" value="<?php echo esc_attr( $config['title'] ); ?>" required /></label>
+				</div>
+				<label class="lunara-reviews-archive-wide-field"><span><strong><?php esc_html_e( 'Deck', 'lunara-film' ); ?></strong></span><textarea maxlength="600" rows="3" name="lunara_reviews_archive_identity[deck]"><?php echo esc_textarea( $config['deck'] ); ?></textarea></label>
+				<label class="lunara-reviews-archive-wide-field"><span><strong><?php esc_html_e( 'Supporting copy', 'lunara-film' ); ?></strong><small><?php esc_html_e( 'Appears with the Review Order framing when supplied.', 'lunara-film' ); ?></small></span><textarea maxlength="700" rows="3" name="lunara_reviews_archive_identity[supporting_copy]"><?php echo esc_textarea( $config['supporting_copy'] ); ?></textarea></label>
+			</div>
+
+			<div class="lunara-control-desk-homepage-grid">
+				<div class="lunara-control-desk-homepage-card">
+					<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Lead Curator', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Choose who owns the first file', 'lunara-film' ); ?></h3></div></div>
+					<fieldset class="lunara-control-desk-homepage-choice"><legend><strong><?php esc_html_e( 'Lead behavior', 'lunara-film' ); ?></strong></legend><div class="lunara-control-desk-homepage-choice-options">
+						<?php
+						$lead_modes = array(
+							'automatic' => array( __( 'Automatic newest', 'lunara-film' ), __( 'The newest eligible published Review leads the archive.', 'lunara-film' ) ),
+							'manual'    => array( __( 'Manual pinned lead', 'lunara-film' ), __( 'Pin one published Review through the existing pin owner.', 'lunara-film' ) ),
+						);
+						foreach ( $lead_modes as $mode => $mode_copy ) : ?>
+							<label class="<?php echo $config['lead_mode'] === $mode ? 'is-selected' : ''; ?>"><input type="radio" name="lunara_reviews_archive_lead_mode" value="<?php echo esc_attr( $mode ); ?>" <?php checked( $config['lead_mode'], $mode ); ?> /><span><strong><?php echo esc_html( $mode_copy[0] ); ?></strong><small><?php echo esc_html( $mode_copy[1] ); ?></small></span></label>
+						<?php endforeach; ?>
+					</div></fieldset>
+					<label><span><strong><?php esc_html_e( 'Find a published lead', 'lunara-film' ); ?></strong><small><?php esc_html_e( 'Twenty recent choices load first; type at least two title characters or an exact ID to search every published Review.', 'lunara-film' ); ?></small></span><input type="search" data-lunara-journal-post-filter="#lunara-reviews-archive-lead-id" placeholder="<?php esc_attr_e( 'Search title or ID', 'lunara-film' ); ?>" /><small data-lunara-journal-post-search-status aria-live="polite"></small></label>
+					<label><span><strong><?php esc_html_e( 'Manual lead file', 'lunara-film' ); ?></strong></span><select id="lunara-reviews-archive-lead-id" name="lunara_reviews_archive_lead_id"><option value="0"><?php esc_html_e( 'Choose a published Review', 'lunara-film' ); ?></option><?php foreach ( $posts as $review_post ) : ?><option value="<?php echo esc_attr( $review_post->ID ); ?>" <?php selected( $config['lead_id'], $review_post->ID ); ?>><?php echo esc_html( sprintf( '#%1$d — %2$s', $review_post->ID, get_the_title( $review_post ) ) ); ?></option><?php endforeach; ?></select></label>
+				</div>
+
+				<div class="lunara-control-desk-homepage-card">
+					<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Archive Run', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Automatic query or curated selection', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'Both modes remain published-only. Curated files lead in the selected list order, then the normal query fills the page without duplicates.', 'lunara-film' ); ?></p></div></div>
+					<div class="lunara-control-desk-homepage-choice-options">
+						<label class="<?php echo 'query' === $config['lane_mode'] ? 'is-selected' : ''; ?>"><input type="radio" name="lunara_reviews_archive_lane_mode" value="query" <?php checked( 'query', $config['lane_mode'] ); ?> /><span><strong><?php esc_html_e( 'Automatic query', 'lunara-film' ); ?></strong><small><?php esc_html_e( 'Newest published Reviews, following the active sort.', 'lunara-film' ); ?></small></span></label>
+						<label class="<?php echo 'curated' === $config['lane_mode'] ? 'is-selected' : ''; ?>"><input type="radio" name="lunara_reviews_archive_lane_mode" value="curated" <?php checked( 'curated', $config['lane_mode'] ); ?> /><span><strong><?php esc_html_e( 'Curated selection', 'lunara-film' ); ?></strong><small><?php esc_html_e( 'Selected published Reviews first; automatic query fills the rest.', 'lunara-film' ); ?></small></span></label>
+					</div>
+					<label><span><strong><?php esc_html_e( 'Items per Reviews page', 'lunara-film' ); ?></strong><small><?php esc_html_e( 'Reviews only; does not change WordPress global reading settings.', 'lunara-film' ); ?></small></span><input type="number" name="lunara_reviews_archive_item_count" min="4" max="24" step="1" value="<?php echo esc_attr( $config['item_count'] ); ?>" /></label>
+					<div class="lunara-reviews-curation-builder" data-lunara-journal-curation>
+						<label><span><strong><?php esc_html_e( 'Find any published Review', 'lunara-film' ); ?></strong><small><?php esc_html_e( 'Twenty recent choices load first; type at least two title characters or an exact ID to search every eligible published Review.', 'lunara-film' ); ?></small></span><input type="search" data-lunara-journal-post-filter="#lunara-reviews-archive-curated-picker" placeholder="<?php esc_attr_e( 'Search title or ID', 'lunara-film' ); ?>" /><small data-lunara-journal-post-search-status aria-live="polite"></small></label>
+						<div class="lunara-control-desk-actions"><select id="lunara-reviews-archive-curated-picker" data-lunara-journal-curated-picker><option value="0"><?php esc_html_e( 'Choose a published Review', 'lunara-film' ); ?></option><?php foreach ( $posts as $review_post ) : ?><option value="<?php echo esc_attr( $review_post->ID ); ?>"><?php echo esc_html( sprintf( '#%1$d — %2$s', $review_post->ID, get_the_title( $review_post ) ) ); ?></option><?php endforeach; ?></select><button type="button" class="button" data-lunara-journal-curated-add><?php esc_html_e( 'Add to curated run', 'lunara-film' ); ?></button></div>
+						<ol class="lunara-reviews-curated-list" data-lunara-journal-curated-list aria-label="<?php esc_attr_e( 'Curated Review order', 'lunara-film' ); ?>">
+							<?php foreach ( $config['curated_ids'] as $curated_id ) : $curated_post = get_post( $curated_id ); if ( ! $curated_post instanceof WP_Post ) { continue; } ?><li data-lunara-journal-curated-item data-post-id="<?php echo esc_attr( $curated_id ); ?>"><span><?php echo esc_html( sprintf( '#%1$d — %2$s', $curated_id, get_the_title( $curated_post ) ) ); ?></span><input type="hidden" name="lunara_reviews_archive_curated_ids[]" value="<?php echo esc_attr( $curated_id ); ?>" /><span class="lunara-control-desk-actions"><button type="button" class="button button-small" data-lunara-journal-curated-move="up"><?php esc_html_e( 'Up', 'lunara-film' ); ?></button><button type="button" class="button button-small" data-lunara-journal-curated-move="down"><?php esc_html_e( 'Down', 'lunara-film' ); ?></button><button type="button" class="button button-small" data-lunara-journal-curated-remove><?php esc_html_e( 'Remove', 'lunara-film' ); ?></button></span></li><?php endforeach; ?>
+						</ol>
+						<p class="lunara-control-desk-subtle"><?php esc_html_e( 'Up and Down define the exact server-rendered priority order. Buttons are keyboard accessible; duplicates are refused.', 'lunara-film' ); ?></p>
+					</div>
+				</div>
+			</div>
+
+			<div class="lunara-control-desk-homepage-card">
+				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Current Public File', 'lunara-film' ); ?></p><h3><?php echo $active_post instanceof WP_Post ? esc_html( get_the_title( $active_post ) ) : esc_html__( 'No eligible published Review', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'Status and links are read from the existing Review post, featured-image, and provenance owners. This Studio does not duplicate them.', 'lunara-film' ); ?></p></div></div>
+				<div class="lunara-control-desk-journal-checks">
+					<article class="lunara-control-desk-journal-check is-<?php echo $active_post instanceof WP_Post ? 'ready' : 'weak'; ?>"><div><strong><?php esc_html_e( 'Validator', 'lunara-film' ); ?></strong><span><?php echo esc_html( $active_post instanceof WP_Post ? __( 'Published lead resolved', 'lunara-film' ) : __( 'No eligible file', 'lunara-film' ) ); ?></span></div><p><?php esc_html_e( 'Only published Reviews can be selected; automation receives no publication authority here.', 'lunara-film' ); ?></p></article>
+					<article class="lunara-control-desk-journal-check is-<?php echo $featured_id ? 'ready' : 'needs'; ?>"><div><strong><?php esc_html_e( 'Featured image', 'lunara-film' ); ?></strong><span><?php echo $featured_id ? esc_html( sprintf( '#%1$d%2$s', $featured_id, $featured_dim ? ' / ' . $featured_dim : '' ) ) : esc_html__( 'Missing', 'lunara-film' ); ?></span></div><p><?php esc_html_e( 'Archive cards continue to use the post featured image and Media Library alt/provenance owners.', 'lunara-film' ); ?></p></article>
+				</div>
+				<?php if ( $active_post instanceof WP_Post ) : ?><div class="lunara-control-desk-actions"><a class="button" href="<?php echo esc_url( get_edit_post_link( $active_post->ID, 'raw' ) ); ?>"><?php esc_html_e( 'Edit file, featured image, and post metadata', 'lunara-film' ); ?></a><a class="button" href="<?php echo esc_url( get_permalink( $active_post ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View public file', 'lunara-film' ); ?></a></div><?php endif; ?>
+			</div>
+
+			<div class="lunara-control-desk-homepage-card">
+				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Section Composer', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Visibility and true server-rendered order', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'All four lanes move in the HTML itself. Hiding the visual Hero retains one accessible page heading.', 'lunara-film' ); ?></p></div></div>
+				<div class="lunara-reviews-archive-section-grid">
+				<?php foreach ( $registry as $slug => $spec ) : ?>
+					<article class="lunara-reviews-archive-section-control"><input type="hidden" name="lunara_reviews_archive_section_visibility[<?php echo esc_attr( $slug ); ?>]" value="0" /><label><input type="checkbox" name="lunara_reviews_archive_section_visibility[<?php echo esc_attr( $slug ); ?>]" value="1" <?php checked( ! empty( $config['section_visibility'][ $slug ] ) ); ?> /> <strong><?php echo esc_html( $spec['label'] ); ?></strong></label><small><?php echo esc_html( isset( $spec['description'] ) ? $spec['description'] : '' ); ?></small><label><span><?php esc_html_e( 'Position', 'lunara-film' ); ?></span><select name="lunara_reviews_archive_section_positions[<?php echo esc_attr( $slug ); ?>]"><?php for ( $position = 1; $position <= count( $registry ); $position++ ) : ?><option value="<?php echo esc_attr( $position ); ?>" <?php selected( isset( $positions[ $slug ] ) ? $positions[ $slug ] + 1 : 99, $position ); ?>><?php echo esc_html( $position ); ?></option><?php endfor; ?></select></label></article>
+				<?php endforeach; ?>
+				</div>
+			</div>
+
+			<div class="lunara-control-desk-homepage-card">
+				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Public Language', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Desk, toolbar, retention, and pagination labels', 'lunara-film' ); ?></h3></div></div>
+				<div class="lunara-reviews-archive-label-grid"><?php foreach ( $config['labels'] as $label_key => $label_value ) : ?><label><span><strong><?php echo esc_html( ucwords( str_replace( '_', ' ', $label_key ) ) ); ?></strong></span><input type="text" maxlength="120" name="lunara_reviews_archive_labels[<?php echo esc_attr( $label_key ); ?>]" value="<?php echo esc_attr( $label_value ); ?>" required /></label><?php endforeach; ?></div>
+			</div>
+
+			<div class="lunara-control-desk-homepage-card">
+				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Retention Cards', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Three independently visible, ordered continuation routes', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'Images are optional. Empty image fields preserve the current text-only public design.', 'lunara-film' ); ?></p></div></div>
+				<div class="lunara-reviews-archive-retention-editor">
+				<?php foreach ( $config['retention'] as $index => $card ) : ?>
+					<article class="lunara-control-desk-homepage-card lunara-reviews-retention-editor-card">
+						<input type="hidden" name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][visible]" value="0" />
+						<label><input type="checkbox" name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][visible]" value="1" <?php checked( ! empty( $card['visible'] ) ); ?> /> <strong><?php echo esc_html( sprintf( __( 'Show retention card %d', 'lunara-film' ), $index + 1 ) ); ?></strong></label>
+						<label><span><?php esc_html_e( 'Order', 'lunara-film' ); ?></span><select name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][order]"><?php for ( $card_order = 1; $card_order <= 3; $card_order++ ) : ?><option value="<?php echo esc_attr( $card_order ); ?>" <?php selected( $card['order'], $card_order ); ?>><?php echo esc_html( $card_order ); ?></option><?php endfor; ?></select></label>
+						<label><span><?php esc_html_e( 'Label', 'lunara-film' ); ?></span><input type="text" maxlength="80" name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][label]" value="<?php echo esc_attr( $card['label'] ); ?>" required /></label>
+						<label><span><?php esc_html_e( 'Destination', 'lunara-film' ); ?></span><select name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][destination]"><?php foreach ( array( 'latest' => __( 'Recently updated Reviews', 'lunara-film' ), 'journal' => __( 'Journal archive', 'lunara-film' ), 'oscars' => __( 'Oscar Ledger', 'lunara-film' ), 'reviews' => __( 'Reviews archive', 'lunara-film' ), 'custom' => __( 'Custom secure URL', 'lunara-film' ) ) as $destination => $destination_label ) : ?><option value="<?php echo esc_attr( $destination ); ?>" <?php selected( $card['destination'], $destination ); ?>><?php echo esc_html( $destination_label ); ?></option><?php endforeach; ?></select></label>
+						<label><span><?php esc_html_e( 'Custom destination URL', 'lunara-film' ); ?></span><input type="url" name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][url]" value="<?php echo esc_attr( $card['url'] ); ?>" placeholder="https://" /></label>
+						<?php if ( function_exists( 'lunara_control_desk_render_brand_media_control' ) ) { lunara_control_desk_render_brand_media_control( array( 'value' => $card['image_id'], 'field' => sprintf( 'lunara_reviews_archive_retention[%d][image_id]', $index ), 'eyebrow' => __( 'Optional Image', 'lunara-film' ), 'label' => __( 'Retention card image', 'lunara-film' ), 'note' => __( 'Choose, replace, or clear a Media Library image.', 'lunara-film' ), 'affects' => __( 'This retention card only.', 'lunara-film' ), 'picker_title' => __( 'Choose a retention image', 'lunara-film' ), 'picker_button' => __( 'Use this image', 'lunara-film' ) ) ); } else { ?><label><span><?php esc_html_e( 'Image attachment ID', 'lunara-film' ); ?></span><input type="number" min="0" name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][image_id]" value="<?php echo esc_attr( absint( $card['image_id'] ) ); ?>" /></label><?php } ?>
+						<label><span><?php esc_html_e( 'Image alt', 'lunara-film' ); ?></span><input type="text" maxlength="180" name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][image_alt]" value="<?php echo esc_attr( $card['image_alt'] ); ?>" /></label>
+						<label><span><?php esc_html_e( 'Image credit', 'lunara-film' ); ?></span><input type="text" maxlength="180" name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][image_credit]" value="<?php echo esc_attr( $card['image_credit'] ); ?>" /></label>
+						<label><span><?php esc_html_e( 'Image source', 'lunara-film' ); ?></span><input type="text" maxlength="180" name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][image_source]" value="<?php echo esc_attr( $card['image_source'] ); ?>" /></label>
+						<label><span><?php esc_html_e( 'Image source URL', 'lunara-film' ); ?></span><input type="url" name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][image_source_url]" value="<?php echo esc_attr( $card['image_source_url'] ); ?>" /></label>
+						<div class="lunara-control-desk-homepage-number-grid"><label><span><?php esc_html_e( 'Focal X', 'lunara-film' ); ?></span><input type="number" min="0" max="100" name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][focal_x]" value="<?php echo esc_attr( $card['focal_x'] ); ?>" /></label><label><span><?php esc_html_e( 'Focal Y', 'lunara-film' ); ?></span><input type="number" min="0" max="100" name="lunara_reviews_archive_retention[<?php echo esc_attr( $index ); ?>][focal_y]" value="<?php echo esc_attr( $card['focal_y'] ); ?>" /></label></div>
+					</article>
+				<?php endforeach; ?>
+				</div>
+			</div>
+
+			<div class="lunara-control-desk-homepage-card" data-lunara-journal-archive-gallery-form>
+				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Archive Gallery', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'A bounded visual sequence after the retention cards', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'Choose up to twelve Media Library images, then move, replace, remove, or clear them here. An empty gallery adds nothing to the public page. Wide media should target 1920×1080; smaller legacy sources stay proportional and surface a warning.', 'lunara-film' ); ?></p></div></div>
+				<div class="lunara-control-desk-homepage-number-grid">
+					<label><span><strong><?php esc_html_e( 'Gallery kicker', 'lunara-film' ); ?></strong></span><input type="text" maxlength="80" name="lunara_reviews_archive_gallery[kicker]" value="<?php echo esc_attr( $config['gallery']['kicker'] ); ?>" required /></label>
+					<label><span><strong><?php esc_html_e( 'Gallery heading', 'lunara-film' ); ?></strong></span><input type="text" maxlength="140" name="lunara_reviews_archive_gallery[title]" value="<?php echo esc_attr( $config['gallery']['title'] ); ?>" required /></label>
+				</div>
+				<label class="lunara-reviews-archive-wide-field"><span><strong><?php esc_html_e( 'Gallery introduction', 'lunara-film' ); ?></strong></span><textarea maxlength="500" rows="3" name="lunara_reviews_archive_gallery[copy]"><?php echo esc_textarea( $config['gallery']['copy'] ); ?></textarea></label>
+				<input type="hidden" name="lunara_reviews_archive_gallery_ids" value="<?php echo esc_attr( implode( ',', array_map( 'absint', array_column( $config['gallery']['items'], 'attachment_id' ) ) ) ); ?>" data-lunara-journal-archive-gallery-ids />
+				<div class="lunara-control-desk-actions"><button type="button" class="button button-secondary" data-lunara-journal-archive-gallery-picker><?php esc_html_e( 'Add Images', 'lunara-film' ); ?></button><button type="button" class="button" data-lunara-journal-archive-gallery-clear><?php esc_html_e( 'Clear Gallery', 'lunara-film' ); ?></button></div>
+				<div class="lunara-control-desk-carousel-list lunara-reviews-archive-gallery-editor" data-lunara-journal-archive-gallery-list>
+					<?php if ( empty( $config['gallery']['items'] ) ) : ?><div class="lunara-control-desk-empty" data-lunara-journal-archive-gallery-empty><p><?php esc_html_e( 'No archive gallery images selected. The public Reviews archive has no gallery wrapper or reserved space.', 'lunara-film' ); ?></p></div><?php endif; ?>
+					<?php foreach ( $config['gallery']['items'] as $gallery_item ) : $gallery_id = absint( $gallery_item['attachment_id'] ); ?>
+						<article class="lunara-control-desk-carousel-item lunara-reviews-archive-gallery-editor-item" data-lunara-journal-archive-gallery-item data-attachment-id="<?php echo esc_attr( $gallery_id ); ?>">
+							<div class="lunara-control-desk-carousel-thumb"><?php echo wp_get_attachment_image( $gallery_id, 'thumbnail', false, array( 'alt' => '' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+							<div class="lunara-control-desk-carousel-copy"><div class="lunara-control-desk-carousel-title-row"><div><strong data-lunara-journal-archive-gallery-item-title><?php echo esc_html( get_the_title( $gallery_id ) ); ?></strong><span><?php echo esc_html( sprintf( __( 'Attachment #%d', 'lunara-film' ), $gallery_id ) ); ?></span></div><div class="lunara-control-desk-carousel-controls"><button type="button" class="button button-small" data-lunara-journal-archive-gallery-move="up"><?php esc_html_e( 'Up', 'lunara-film' ); ?></button><button type="button" class="button button-small" data-lunara-journal-archive-gallery-move="down"><?php esc_html_e( 'Down', 'lunara-film' ); ?></button><button type="button" class="button button-small" data-lunara-journal-archive-gallery-replace><?php esc_html_e( 'Replace', 'lunara-film' ); ?></button><button type="button" class="button button-small" data-lunara-journal-archive-gallery-remove><?php esc_html_e( 'Remove', 'lunara-film' ); ?></button></div></div>
+								<div class="lunara-control-desk-carousel-fields">
+									<label><span><?php esc_html_e( 'Alt text', 'lunara-film' ); ?></span><input data-lunara-journal-archive-gallery-field="alt" type="text" maxlength="180" name="lunara_reviews_archive_gallery_alt[<?php echo esc_attr( $gallery_id ); ?>]" value="<?php echo esc_attr( $gallery_item['alt'] ); ?>" required /></label>
+									<label><span><?php esc_html_e( 'Caption', 'lunara-film' ); ?></span><textarea data-lunara-journal-archive-gallery-field="caption" maxlength="360" rows="2" name="lunara_reviews_archive_gallery_caption[<?php echo esc_attr( $gallery_id ); ?>]"><?php echo esc_textarea( $gallery_item['caption'] ); ?></textarea></label>
+									<label><span><?php esc_html_e( 'Optional image link', 'lunara-film' ); ?></span><input data-lunara-journal-archive-gallery-field="link_url" type="url" maxlength="2048" name="lunara_reviews_archive_gallery_link_url[<?php echo esc_attr( $gallery_id ); ?>]" value="<?php echo esc_attr( $gallery_item['link_url'] ); ?>" placeholder="https://" /></label>
+									<label><span><?php esc_html_e( 'Credit', 'lunara-film' ); ?></span><input data-lunara-journal-archive-gallery-field="credit" type="text" maxlength="180" name="lunara_reviews_archive_gallery_credit[<?php echo esc_attr( $gallery_id ); ?>]" value="<?php echo esc_attr( $gallery_item['credit'] ); ?>" required /></label>
+									<label><span><?php esc_html_e( 'Source name', 'lunara-film' ); ?></span><input data-lunara-journal-archive-gallery-field="source" type="text" maxlength="180" name="lunara_reviews_archive_gallery_source[<?php echo esc_attr( $gallery_id ); ?>]" value="<?php echo esc_attr( $gallery_item['source'] ); ?>" required /></label>
+									<label><span><?php esc_html_e( 'Source URL', 'lunara-film' ); ?></span><input data-lunara-journal-archive-gallery-field="source_url" type="url" maxlength="2048" name="lunara_reviews_archive_gallery_source_url[<?php echo esc_attr( $gallery_id ); ?>]" value="<?php echo esc_attr( $gallery_item['source_url'] ); ?>" placeholder="https://" required /></label>
+									<label><span><?php esc_html_e( 'Focal X', 'lunara-film' ); ?></span><input data-lunara-journal-archive-gallery-field="focal_x" type="number" min="0" max="100" name="lunara_reviews_archive_gallery_focal_x[<?php echo esc_attr( $gallery_id ); ?>]" value="<?php echo esc_attr( $gallery_item['focal_x'] ); ?>" /></label>
+									<label><span><?php esc_html_e( 'Focal Y', 'lunara-film' ); ?></span><input data-lunara-journal-archive-gallery-field="focal_y" type="number" min="0" max="100" name="lunara_reviews_archive_gallery_focal_y[<?php echo esc_attr( $gallery_id ); ?>]" value="<?php echo esc_attr( $gallery_item['focal_y'] ); ?>" /></label>
+								</div>
+							</div>
+						</article>
+					<?php endforeach; ?>
+				</div>
+			</div>
+
+			<div class="lunara-control-desk-homepage-grid">
+				<div class="lunara-control-desk-homepage-card"><div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Editorial Rhythm', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Density, lead, and rail emphasis', 'lunara-film' ); ?></h3></div></div><div class="lunara-control-desk-homepage-choice-grid"><?php if ( function_exists( 'lunara_control_desk_reviews_archive_select_specs' ) && function_exists( 'lunara_control_desk_render_reviews_archive_select_control' ) ) : foreach ( lunara_control_desk_reviews_archive_select_specs() as $key => $spec ) : ?><?php lunara_control_desk_render_reviews_archive_select_control( $key, $spec ); ?><?php endforeach; endif; ?></div></div>
+				<div class="lunara-control-desk-homepage-card"><div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Geometry', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Bounded spacing and media chambers', 'lunara-film' ); ?></h3></div></div><div class="lunara-control-desk-homepage-number-grid"><?php if ( function_exists( 'lunara_control_desk_reviews_archive_number_specs' ) && function_exists( 'lunara_control_desk_render_reviews_archive_number_control' ) ) : foreach ( lunara_control_desk_reviews_archive_number_specs() as $key => $spec ) : ?><?php lunara_control_desk_render_reviews_archive_number_control( $key, $spec ); ?><?php endforeach; endif; ?></div></div>
+			</div>
+
+			<div class="lunara-control-desk-homepage-footer"><div><strong><?php esc_html_e( 'Last-valid promotion', 'lunara-film' ); ?></strong><span><?php esc_html_e( 'Invalid input changes nothing public. Preview is private and expires after 30 minutes.', 'lunara-film' ); ?></span></div><div class="lunara-control-desk-actions"><button type="submit" class="button button-primary"><?php esc_html_e( 'Validate and Save Public Configuration', 'lunara-film' ); ?></button><button type="submit" class="button" name="action" value="lunara_preview_reviews_archive_studio" formtarget="_blank"><?php esc_html_e( 'Preview unsaved desktop + mobile', 'lunara-film' ); ?></button><a class="button" href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open current Reviews', 'lunara-film' ); ?></a></div></div>
+		</form>
+
+		<div class="lunara-control-desk-homepage-card lunara-reviews-archive-history">
+			<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Configuration History', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Restore a prior valid public state', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'Up to twelve prior-public snapshots retain who changed the Studio, when, why, and the validator result.', 'lunara-film' ); ?></p></div></div>
+			<?php if ( empty( $revisions ) ) : ?><p><?php esc_html_e( 'No Reviews Archive Studio revisions exist yet.', 'lunara-film' ); ?></p><?php else : ?><div class="lunara-reviews-archive-revision-list"><?php foreach ( $revisions as $revision ) : ?><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="lunara_restore_reviews_archive_studio" /><input type="hidden" name="lunara_reviews_archive_revision_id" value="<?php echo esc_attr( $revision['id'] ); ?>" /><?php wp_nonce_field( 'lunara_restore_reviews_archive_studio', 'lunara_reviews_archive_restore_nonce' ); ?><span><strong><?php echo esc_html( $revision['saved_at'] ); ?></strong><small><?php echo esc_html( sprintf( __( 'User %1$d / %2$s / validator %3$s', 'lunara-film' ), absint( $revision['saved_by'] ), $revision['action'], $revision['validator_result'] ) ); ?></small></span><button type="submit" class="button" onclick="return confirm('<?php echo esc_js( __( 'Restore this prior public Reviews configuration?', 'lunara-film' ) ); ?>');"><?php esc_html_e( 'Restore this revision', 'lunara-film' ); ?></button></form><?php endforeach; ?></div><?php endif; ?>
+		</div>
+	</section>
+	<?php
+}
+
+/**
+ * Focused save flow. Validation happens before any public owner is touched.
+ *
+ * The `admin_post_lunara_save_reviews_archive_studio` action registration
+ * remains in inc/control-desk.php; that handler delegates here when this
+ * module is loaded, keeping its legacy body as the fallback.
+ */
+function lunara_reviews_archive_studio_handle_save() {
+	$legacy_redirect = function_exists( 'lunara_control_desk_admin_url' )
+		? lunara_control_desk_admin_url( array( 'tab' => 'theme-studio' ) ) . '#lunara-theme-studio-reviews-archive-studio'
+		: admin_url( 'admin.php?page=lunara-site-studio&surface=reviews-archive' );
+	$redirect = function_exists( 'lunara_control_desk_bounded_return_url' )
+		? lunara_control_desk_bounded_return_url( 'lunara_reviews_archive_return', 'reviews-archive', $legacy_redirect )
+		: $legacy_redirect;
+	if ( ! current_user_can( 'edit_theme_options' ) ) {
+		wp_safe_redirect( add_query_arg( 'lunara_notice', 'reviews_archive_studio_forbidden', $redirect ) );
+		exit;
+	}
+	check_admin_referer( 'lunara_save_reviews_archive_studio', 'lunara_reviews_archive_nonce' );
+	$candidate = lunara_reviews_archive_studio_config_from_request( $_POST );
+	$result    = lunara_reviews_archive_studio_promote_config( $candidate, 'save' );
+	if ( is_wp_error( $result ) ) {
+		lunara_reviews_archive_studio_store_invalid_stage( $candidate, $_POST, $result->get_error_code() );
+		$notice = 'reviews_archive_studio_invalid';
+	} else {
+		lunara_reviews_archive_studio_clear_invalid_stage();
+		$notice = 'reviews_archive_studio_saved';
+	}
+	wp_safe_redirect( add_query_arg( 'lunara_notice', $notice, $redirect ) );
+	exit;
+}
+
+/**
+ * Restore handler for a selected prior-public snapshot.
+ */
+function lunara_control_desk_restore_reviews_archive_studio() {
+	$redirect = admin_url( 'admin.php?page=lunara-site-studio&surface=reviews-archive' );
+	if ( ! current_user_can( 'edit_theme_options' ) ) {
+		wp_safe_redirect( add_query_arg( 'lunara_notice', 'reviews_archive_studio_forbidden', $redirect ) );
+		exit;
+	}
+	check_admin_referer( 'lunara_restore_reviews_archive_studio', 'lunara_reviews_archive_restore_nonce' );
+	$revision_id = isset( $_POST['lunara_reviews_archive_revision_id'] ) ? sanitize_text_field( wp_unslash( $_POST['lunara_reviews_archive_revision_id'] ) ) : '';
+	$result      = lunara_reviews_archive_studio_restore_revision( $revision_id );
+	if ( is_wp_error( $result ) ) {
+		lunara_reviews_archive_studio_store_feedback( $result->get_error_code() );
+		$notice = 'reviews_archive_studio_restore_invalid';
+	} else {
+		lunara_reviews_archive_studio_clear_invalid_stage();
+		$notice = 'reviews_archive_studio_restored';
+	}
+	wp_safe_redirect( add_query_arg( 'lunara_notice', $notice, $redirect ) );
+	exit;
+}
+add_action( 'admin_post_lunara_restore_reviews_archive_studio', 'lunara_control_desk_restore_reviews_archive_studio' );
+
+/**
  * Private side-by-side preview of an unsaved candidate.
  */
 function lunara_control_desk_preview_reviews_archive_studio() {

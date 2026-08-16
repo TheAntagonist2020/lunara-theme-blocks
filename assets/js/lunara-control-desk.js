@@ -699,6 +699,16 @@
         toggleCarouselEmpty(form);
     }
 
+    function archiveStudioVariant(element) {
+        var scope = element && element.closest ? element.closest('[data-lunara-archive-studio]') : null;
+
+        return scope && 'reviews' === scope.getAttribute('data-lunara-archive-studio') ? 'reviews' : 'journal';
+    }
+
+    function archiveStudioGalleryPrefix(element) {
+        return 'reviews' === archiveStudioVariant(element) ? 'lunara_reviews_archive_gallery_' : 'lunara_journal_archive_gallery_';
+    }
+
     function filterJournalPostOptions(input) {
         var selector = input.getAttribute('data-lunara-journal-post-filter');
         var select = selector ? qs(selector) : null;
@@ -763,9 +773,21 @@
 
     function searchJournalPostOptions(input) {
         var config = window.LunaraControlDesk || {};
+        var i18n = config.i18n || {};
         var selector = input.getAttribute('data-lunara-journal-post-filter');
         var select = selector ? qs(selector) : null;
         var needle = String(input.value || '').trim();
+        var variant = archiveStudioVariant(input);
+        var searchNonce = 'reviews' === variant ? config.reviewsSearchNonce : config.journalSearchNonce;
+        var searchingText = 'reviews' === variant
+            ? (i18n.reviewsSearching || 'Searching published Reviews…')
+            : (i18n.journalSearching || 'Searching published Journal files…');
+        var readyText = 'reviews' === variant
+            ? (i18n.reviewsSearchReady || 'Published matches updated.')
+            : (i18n.journalSearchReady || 'Published matches updated.');
+        var failedText = 'reviews' === variant
+            ? (i18n.reviewsSearchFailed || 'Search could not be completed. Your current selection is unchanged.')
+            : (i18n.journalSearchFailed || 'Search could not be completed. Your current selection is unchanged.');
         var requestNumber;
 
         filterJournalPostOptions(input);
@@ -773,27 +795,28 @@
         input._lunaraJournalSearchRequest = (input._lunaraJournalSearchRequest || 0) + 1;
         requestNumber = input._lunaraJournalSearchRequest;
 
-        if (!select || !config.journalSearchUrl || !config.journalSearchNonce || (!/^\d+$/.test(needle) && needle.length < 2)) {
+        if (!select || !config.journalSearchUrl || !searchNonce || (!/^\d+$/.test(needle) && needle.length < 2)) {
             setJournalPostSearchBusy(input, false);
             setJournalPostSearchStatus(input, '');
             return;
         }
 
         input._lunaraJournalSearchTimer = window.setTimeout(function () {
+            var searchAction = 'reviews' === variant ? 'lunara_reviews_archive_studio_search' : 'lunara_journal_archive_studio_search';
             var requestUrl = config.journalSearchUrl
                 + (config.journalSearchUrl.indexOf('?') === -1 ? '?' : '&')
-                + 'action=lunara_journal_archive_studio_search'
-                + '&nonce=' + encodeURIComponent(config.journalSearchNonce)
+                + 'action=' + searchAction
+                + '&nonce=' + encodeURIComponent(searchNonce)
                 + '&q=' + encodeURIComponent(needle.slice(0, 100));
 
             setJournalPostSearchBusy(input, true);
-            setJournalPostSearchStatus(input, (config.i18n && config.i18n.journalSearching) || 'Searching published Journal files…');
+            setJournalPostSearchStatus(input, searchingText);
             window.fetch(requestUrl, {
                 credentials: 'same-origin',
                 headers: { Accept: 'application/json' }
             }).then(function (response) {
                 if (!response.ok) {
-                    throw new Error('Journal search failed.');
+                    throw new Error('Archive search failed.');
                 }
                 return response.json();
             }).then(function (payload) {
@@ -801,22 +824,22 @@
                     return;
                 }
                 if (!payload || !payload.success || !payload.data || !Array.isArray(payload.data.items)) {
-                    throw new Error('Journal search failed.');
+                    throw new Error('Archive search failed.');
                 }
                 replaceJournalPostOptions(select, payload.data.items);
                 setJournalPostSearchBusy(input, false);
-                setJournalPostSearchStatus(input, (config.i18n && config.i18n.journalSearchReady) || 'Published matches updated.');
+                setJournalPostSearchStatus(input, readyText);
             }).catch(function () {
                 if (requestNumber !== input._lunaraJournalSearchRequest) {
                     return;
                 }
                 setJournalPostSearchBusy(input, false);
-                setJournalPostSearchStatus(input, (config.i18n && config.i18n.journalSearchFailed) || 'Search could not be completed. Your current selection is unchanged.');
+                setJournalPostSearchStatus(input, failedText);
             });
         }, 250);
     }
 
-    function createJournalCuratedItem(postId, label) {
+    function createJournalCuratedItem(postId, label, fieldName) {
         var item = document.createElement('li');
         var text = document.createElement('span');
         var input = document.createElement('input');
@@ -826,7 +849,7 @@
         item.setAttribute('data-post-id', postId);
         text.textContent = label;
         input.type = 'hidden';
-        input.name = 'lunara_journal_archive_curated_ids[]';
+        input.name = fieldName || 'lunara_journal_archive_curated_ids[]';
         input.value = postId;
         actions.className = 'lunara-control-desk-actions';
 
@@ -859,7 +882,11 @@
             return;
         }
 
-        list.appendChild(createJournalCuratedItem(postId, picker.options[picker.selectedIndex].textContent));
+        list.appendChild(createJournalCuratedItem(
+            postId,
+            picker.options[picker.selectedIndex].textContent,
+            'reviews' === archiveStudioVariant(shell) ? 'lunara_reviews_archive_curated_ids[]' : 'lunara_journal_archive_curated_ids[]'
+        ));
     }
 
     function moveJournalCuratedItem(button) {
@@ -907,13 +934,17 @@
             return;
         }
         if (!empty) {
-            list.innerHTML = '<div class="lunara-control-desk-empty" data-lunara-journal-archive-gallery-empty><p>No archive gallery images selected. The public Journal has no gallery wrapper or reserved space.</p></div>';
+            list.innerHTML = '<div class="lunara-control-desk-empty" data-lunara-journal-archive-gallery-empty><p>' + (
+                'reviews' === archiveStudioVariant(shell)
+                    ? 'No archive gallery images selected. The public Reviews archive has no gallery wrapper or reserved space.'
+                    : 'No archive gallery images selected. The public Journal has no gallery wrapper or reserved space.'
+            ) + '</p></div>';
         }
     }
 
-    function journalArchiveGalleryField(field, id, label, type, value, required) {
+    function journalArchiveGalleryField(field, id, label, type, value, required, namePrefix) {
         var tag = 'caption' === field ? 'textarea' : 'input';
-        var input = '<' + tag + ' data-lunara-journal-archive-gallery-field="' + escapeAttr(field) + '" name="lunara_journal_archive_gallery_' + escapeAttr(field) + '[' + escapeAttr(id) + ']"';
+        var input = '<' + tag + ' data-lunara-journal-archive-gallery-field="' + escapeAttr(field) + '" name="' + escapeAttr(namePrefix || 'lunara_journal_archive_gallery_') + escapeAttr(field) + '[' + escapeAttr(id) + ']"';
         var limits = { alt: 180, caption: 360, link_url: 2048, credit: 180, source: 180, source_url: 2048 };
 
         if ('input' === tag) {
@@ -935,7 +966,7 @@
         return '<label><span>' + escapeHtml(label) + '</span>' + input + '</label>';
     }
 
-    function createJournalArchiveGalleryCard(model) {
+    function createJournalArchiveGalleryCard(model, namePrefix) {
         var raw = model && model.toJSON ? model.toJSON() : (model || {});
         var attachment = normalizeMediaAttachment(raw);
         var id = String(attachment.id || '');
@@ -948,14 +979,14 @@
             '<div class="lunara-control-desk-carousel-copy"><div class="lunara-control-desk-carousel-title-row"><div><strong data-lunara-journal-archive-gallery-item-title>' + escapeHtml(attachment.title) + '</strong><span>' + escapeHtml(attachment.meta) + '</span></div>' +
             '<div class="lunara-control-desk-carousel-controls"><button type="button" class="button button-small" data-lunara-journal-archive-gallery-move="up">Up</button><button type="button" class="button button-small" data-lunara-journal-archive-gallery-move="down">Down</button><button type="button" class="button button-small" data-lunara-journal-archive-gallery-replace>Replace</button><button type="button" class="button button-small" data-lunara-journal-archive-gallery-remove>Remove</button></div></div>' +
             '<div class="lunara-control-desk-carousel-fields">' +
-            journalArchiveGalleryField('alt', id, 'Alt text', 'text', alt, true) +
-            journalArchiveGalleryField('caption', id, 'Caption', 'text', caption, false) +
-            journalArchiveGalleryField('link_url', id, 'Optional image link', 'url', '', false) +
-            journalArchiveGalleryField('credit', id, 'Credit', 'text', '', true) +
-            journalArchiveGalleryField('source', id, 'Source name', 'text', '', true) +
-            journalArchiveGalleryField('source_url', id, 'Source URL', 'url', '', true) +
-            journalArchiveGalleryField('focal_x', id, 'Focal X', 'number', '50', false) +
-            journalArchiveGalleryField('focal_y', id, 'Focal Y', 'number', '50', false) +
+            journalArchiveGalleryField('alt', id, 'Alt text', 'text', alt, true, namePrefix) +
+            journalArchiveGalleryField('caption', id, 'Caption', 'text', caption, false, namePrefix) +
+            journalArchiveGalleryField('link_url', id, 'Optional image link', 'url', '', false, namePrefix) +
+            journalArchiveGalleryField('credit', id, 'Credit', 'text', '', true, namePrefix) +
+            journalArchiveGalleryField('source', id, 'Source name', 'text', '', true, namePrefix) +
+            journalArchiveGalleryField('source_url', id, 'Source URL', 'url', '', true, namePrefix) +
+            journalArchiveGalleryField('focal_x', id, 'Focal X', 'number', '50', false, namePrefix) +
+            journalArchiveGalleryField('focal_y', id, 'Focal Y', 'number', '50', false, namePrefix) +
             '</div></div></article>'
         );
     }
@@ -963,13 +994,14 @@
     function openJournalArchiveGalleryPicker(button) {
         var shell = button.closest('[data-lunara-journal-archive-gallery-form]');
         var list = shell ? qs('[data-lunara-journal-archive-gallery-list]', shell) : null;
+        var namePrefix = shell ? archiveStudioGalleryPrefix(shell) : '';
         var frame;
 
         if (!shell || !list || !window.wp || !window.wp.media) {
             return;
         }
         frame = window.wp.media({
-            title: 'Add Journal archive gallery images',
+            title: 'reviews' === archiveStudioVariant(shell) ? 'Add Reviews archive gallery images' : 'Add Journal archive gallery images',
             button: { text: 'Add images' },
             library: { type: 'image' },
             multiple: 'add'
@@ -987,7 +1019,7 @@
                     return;
                 }
                 existing[id] = true;
-                list.insertAdjacentHTML('beforeend', createJournalArchiveGalleryCard(model));
+                list.insertAdjacentHTML('beforeend', createJournalArchiveGalleryCard(model, namePrefix));
             });
             toggleJournalArchiveGalleryEmpty(shell);
             syncJournalArchiveGallery(shell);
@@ -1014,7 +1046,7 @@
             if (!id || id === currentId || (duplicate && duplicate !== item)) {
                 return;
             }
-            item.insertAdjacentHTML('afterend', createJournalArchiveGalleryCard(model));
+            item.insertAdjacentHTML('afterend', createJournalArchiveGalleryCard(model, archiveStudioGalleryPrefix(shell)));
             item.remove();
             syncJournalArchiveGallery(shell);
         });
