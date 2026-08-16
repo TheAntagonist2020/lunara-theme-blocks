@@ -93,6 +93,8 @@ $requiredSeedFragments = @(
     '&>:is(.lunara-review-archive-slot-utility,.lunara-review-archive-slot-grid)',
     '&>.lunara-review-archive-slot-pagination',
     '&>.lunara-review-archive-slot-pairing-desk',
+    '&>.lunara-review-archive-slot-retention{margin:0!important;order:var(--lunara-reviews-archive-order-grid,2)!important;width:100%!important}',
+    '& .lunara-review-archive-gallery{min-width:0!important;width:100%!important}',
     'margin:0 auto!important;width:100%!important',
     '.lunara-review-archive-hero-shell',
     '.lunara-review-archive-toolbar-head',
@@ -165,6 +167,7 @@ foreach ($property in @(
     Assert-True ($authority.Groups['css'].Value -match $propertyPattern) "Authority variable $property must beat stale optimizer values from first paint."
 }
 Assert-True ($frontend -match "add_action\(\s*'wp_head',\s*'lunara_output_review_archive_authority_css',\s*7\s*\)") 'Dynamic Reviews geometry variables must print in wp_head.'
+Assert-True ($frontend -match 'function\s+lunara_output_review_archive_authority_css[\s\S]{0,2600}lunara_reviews_archive_studio_get_public_config\(\s*!\s*\$is_director_archive\s*\)') 'Authority geometry must consume the last-valid Reviews Archive Studio config, with previews disabled on the Studio-exempt director routes.'
 Assert-True ($frontend -match 'lunara_get_reviews_archive_section_order_map[\s\S]{0,650}lunara_get_review_archive_lane_order') 'Head-phase lane variables must come from the canonical saved Archive Studio map.'
 Assert-True ($frontend -notmatch "add_action\(\s*'wp_footer',\s*'lunara_output_review_archive_authority_css'") 'Reviews geometry variables must never arrive from wp_footer.'
 
@@ -217,6 +220,9 @@ Assert-True ($browserRuntime -match "bodyClass:\s*'tax-lunara_director'") 'The b
 Assert-True ($browserRuntime -match "bodyClass:\s*'page page-template-page-reviews'") 'The browser regression must exercise an explicitly selected Reviews page template.'
 Assert-True ($browserRuntime -match "bodyClass:\s*'page page-template-default'") 'The browser regression must exercise the slug-selected Reviews page with the default body class.'
 Assert-True ($browserRuntime -match 'showPairing:\s*false' -and $browserRuntime -match 'showYearFilter:\s*false' -and $browserRuntime -match 'showHeroActions:\s*false') 'The director fixture must omit Pairing, Release Year, and archive-only hero actions.'
+Assert-True ($browserRuntime -match 'showRetention:\s*false') 'The director fixture must omit the Studio-owned retention/gallery lane.'
+Assert-True ($browserRuntime -match 'class="lunara-review-archive-retention lunara-review-archive-slot-retention"' -and $browserRuntime -match 'lunara-review-archive-gallery-media') 'The first-paint fixture must model the Studio retention slot and root archive gallery markup.'
+Assert-True ($browserRuntime -match 'lunara-review-archive-page lra is-label-font-tiempos') 'The first-paint fixture must exercise the resolver-emitted Tiempos label marker.'
 Assert-True ($browserRuntime -match 'structural seed must be inert when the renderer-owned lra class is absent') 'The browser regression must prove the seed is inert without the internal route marker.'
 Assert-True ($browserRuntime -match 'function\s+pairingCollisionSnapshot\s*\(' -and $browserRuntime -match 'function\s+assertPairingCollisionFree\s*\(') 'The first-paint Pairing fixture must detect numeral collisions geometrically.'
 Assert-True ($browserRuntime -match 'assertPairingCollisionFree\(afterPairingCollisions' -and $browserRuntime -match 'assertPairingCollisionFree\(canonicalPairingCollisions') 'Pairing numeral clearance must survive deferred delivery and settled current CSS.'

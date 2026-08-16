@@ -1053,7 +1053,7 @@
     font-family: "Lunara Review Tiempos Text", Georgia, "Times New Roman", serif !important;
 }
 
-#primary.lra > .lunara-review-archive-slot-retention { background: linear-gradient(135deg, rgba(10, 24, 41, 0.92), rgba(18, 36, 55, 0.72)), radial-gradient(circle at 90% 10%, rgba(224, 196, 129, 0.14), transparent 34%) !important; border: 1px solid rgba(224, 196, 129, 0.24) !important; border-radius: 20px !important; display: grid !important; gap: 18px !important; margin: 0 !important; padding: clamp(18px, 2.4vw, 30px) !important; width: 100% !important; }
+#primary.lra > .lunara-review-archive-slot-retention { background: linear-gradient(135deg, rgba(10, 24, 41, 0.92), rgba(18, 36, 55, 0.72)), radial-gradient(circle at 90% 10%, rgba(224, 196, 129, 0.14), transparent 34%) !important; border: 1px solid rgba(224, 196, 129, 0.24) !important; border-radius: 20px !important; display: grid !important; gap: 18px !important; margin: 0 !important; order: var(--lunara-reviews-archive-order-grid, 2) !important; padding: clamp(18px, 2.4vw, 30px) !important; width: 100% !important; }
 
 .lunara-review-archive-page .lunara-review-archive-retention-showcase-head,
 .lunara-review-archive-page .lunara-review-archive-gallery-head { display: grid !important; gap: 7px !important; min-width: 0 !important; }
