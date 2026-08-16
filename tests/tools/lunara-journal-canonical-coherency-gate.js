@@ -65,6 +65,21 @@ function elementIdPattern(id) {
 }
 
 /**
+ * Reduce a markup fragment to its visible text for the blank-title census.
+ * Tags are stripped to a fixpoint so nested/overlapping angle brackets can
+ * never leave a tag-shaped residue behind a single pass.
+ */
+function visibleTextContent(fragment) {
+	let text = String(fragment);
+	let previous;
+	do {
+		previous = text;
+		text = text.replace(/<[^>]*>/g, '');
+	} while (text !== previous);
+	return text.replace(/&[a-z#0-9]+;/gi, ' ').trim();
+}
+
+/**
  * The requested URL must be the exact anonymous canonical route. Anything
  * else — a query string, a fragment, another origin, another path — is
  * refused as proof rather than evaluated.
@@ -238,7 +253,7 @@ function analyzeJournalCanonicalCoherency({
 			detail.leadCount += 1;
 		}
 		const titleMatch = article.match(/<h3\b[^>]*class\s*=\s*["'][^"']*\blunara-review-grid-title\b[^"']*["'][^>]*>([\s\S]*?)<\/h3>/i);
-		const titleText = titleMatch ? titleMatch[1].replace(/<[^>]*>/g, '').replace(/&[a-z#0-9]+;/gi, ' ').trim() : '';
+		const titleText = titleMatch ? visibleTextContent(titleMatch[1]) : '';
 		if (titleText !== '') {
 			detail.nonblankCardCount += 1;
 		}
