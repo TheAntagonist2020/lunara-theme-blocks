@@ -143,6 +143,6 @@ Assert-True ($heroDelivery -match '''fetchpriority''\s*=>\s*\$is_priority\s*\?\s
 Assert-True ($heroDelivery -match 'if\s*\(\s*\$is_priority\s*\)[\s\S]*?''data-no-lazy''[\s\S]*?''data-skip-lazy''') 'Only the true hero LCP may opt out of optimizer lazy loading.'
 Assert-True (([regex]::Matches($functions, "array_key_exists\(\s*'first_image_is_lcp'")).Count -eq 2) 'Both static and carousel hero renderers must honor the LCP context flag.'
 Assert-True ($functions -match 'lunara_render_cinematic_hero_slide\( \$slide_data, \$slide_index, \$first_image_is_lcp \)') 'The carousel must pass its LCP context into every slide renderer.'
-Assert-True ($style -match 'Version:\s*3\.2\.43') 'Theme version must be 3.2.43 for the mobile CLS gate.'
+Assert-True ($style -match 'Version:\s*3\.2\.46') 'Theme version must be 3.2.46 for the mobile CLS gate.'
 
 Write-Host 'Homepage LCP priority hygiene contract passed.'

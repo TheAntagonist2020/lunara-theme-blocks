@@ -51,6 +51,6 @@ $configFunction = $blocks.Substring($configFunctionStart, $configFunctionEnd - $
 Assert-True ($configFunction -notmatch 'wp_enqueue_style') 'The block-editor configuration hook must not inject the stylesheet into the iframe incorrectly.'
 Assert-True ($blocks -notmatch "add_action\(\s*'wp_enqueue_scripts'[^\r\n]*lunara_enqueue_homepage_editor_card_style") 'Homepage editor-card CSS must never be attached to the public enqueue hook.'
 
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.43\s*$') 'Theme version must preserve the Site Studio overflow and iframe follow-up in 3.2.43.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.46\s*$') 'Theme version must preserve the Site Studio overflow and iframe follow-up in 3.2.46.'
 
 Write-Host 'site-studio-responsive-assets: all assertions passed.'
