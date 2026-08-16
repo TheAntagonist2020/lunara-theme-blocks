@@ -15,6 +15,14 @@ jobs:
         with:
           php-version: '8.2'
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install pinned browser contract runtime
+        run: npm ci --ignore-scripts
+
       - name: Theme contract tests
         shell: pwsh
         run: |

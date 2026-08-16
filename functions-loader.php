@@ -25,6 +25,7 @@ require_once $lunara_inc . 'customizer.php';
 require_once $lunara_inc . 'reviews-cpt.php';
 require_once $lunara_inc . 'journal-cpt.php';    // Journal CPT + journal_type taxonomy + per-post meta
 require_once $lunara_inc . 'journal-family.php'; // Canonical fields, taxonomy routes, and legacy presentation adapters
+require_once $lunara_inc . 'journal-archive-studio.php'; // Focused revisionable Journal archive curation + preview.
 require_once $lunara_inc . 'editorial-meta.php';
 require_once $lunara_inc . 'trailers.php';
 require_once $lunara_inc . 'publish-guards.php';
@@ -60,6 +61,7 @@ require_once $lunara_inc . 'oscars-portal.php';
 require_once $lunara_inc . 'blocks.php';
 require_once $lunara_inc . 'block-migration.php';
 require_once $lunara_inc . 'review-archive-critical.php';
+require_once $lunara_inc . 'journal-archive-critical.php';
 require_once $lunara_inc . 'frontend.php';
 require_once $lunara_inc . 'cinematic-home.php';
 
@@ -76,6 +78,11 @@ require_once $lunara_inc . 'hero-command.php';
 // Layer 10b — responsive native hero image + preload parity. This module owns
 // only image delivery; Hero Command remains the editorial deck source.
 require_once $lunara_inc . 'hero-delivery.php';
+
+// Layer 10c — Journal archive cards use uncropped native candidates and a
+// bounded WordPress.com Image CDN fallback when attachment metadata has no
+// compatible responsive set.
+require_once $lunara_inc . 'journal-archive-media.php';
 
 // Layer 11 — Modular Essay Builder (Design Spec §12): renders the ACF
 // flexible-content modules registered by Lunara Core after essay content.
