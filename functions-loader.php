@@ -65,6 +65,7 @@ require_once $lunara_inc . 'blocks.php';
 require_once $lunara_inc . 'block-migration.php';
 require_once $lunara_inc . 'review-archive-critical.php';
 require_once $lunara_inc . 'journal-archive-critical.php';
+require_once $lunara_inc . 'oscars-portal-critical.php';
 require_once $lunara_inc . 'frontend.php';
 require_once $lunara_inc . 'cinematic-home.php';
 

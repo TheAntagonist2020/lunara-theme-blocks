@@ -2879,11 +2879,12 @@ function lunara_control_desk_apply_oscars_dossier_values( $values ) {
 }
 
 function lunara_control_desk_save_oscars_dossier_studio() {
-    $redirect = lunara_control_desk_admin_url(
+    $legacy_redirect = lunara_control_desk_admin_url(
         array(
             'tab' => 'theme-studio',
         )
     ) . '#lunara-theme-studio-oscars-dossier-studio';
+    $redirect = lunara_control_desk_bounded_return_url( 'lunara_oscars_dossier_return', 'oscars-ledger', $legacy_redirect );
 
     if ( ! current_user_can( 'edit_theme_options' ) ) {
         wp_safe_redirect( add_query_arg( 'lunara_notice', 'oscars_dossier_studio_forbidden', $redirect ) );
@@ -10092,7 +10093,7 @@ function lunara_control_desk_render_oscars_dossier_preset_card( $preset_key, $pr
     <?php
 }
 
-function lunara_control_desk_render_oscars_dossier_studio() {
+function lunara_control_desk_render_oscars_dossier_studio( $context = 'control-desk' ) {
     if ( ! current_user_can( 'edit_theme_options' ) ) {
         ?>
         <section id="lunara-theme-studio-oscars-dossier-studio" class="lunara-control-desk-homepage-studio lunara-control-desk-oscars-dossier-studio">
@@ -10106,6 +10107,7 @@ function lunara_control_desk_render_oscars_dossier_studio() {
         return;
     }
 
+    $context           = 'site-studio' === sanitize_key( (string) $context ) ? 'site-studio' : 'control-desk';
     $presets           = lunara_control_desk_oscars_dossier_preset_specs();
     $active_preset_key = lunara_control_desk_oscars_dossier_active_preset_key();
     $active_label      = $active_preset_key && isset( $presets[ $active_preset_key ] )
@@ -10142,6 +10144,7 @@ function lunara_control_desk_render_oscars_dossier_studio() {
         </div>
         <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
             <input type="hidden" name="action" value="lunara_save_oscars_dossier_studio" />
+            <input type="hidden" name="lunara_oscars_dossier_return" value="<?php echo esc_attr( $context ); ?>" />
             <?php wp_nonce_field( 'lunara_save_oscars_dossier_studio', 'lunara_oscars_dossier_nonce' ); ?>
 
             <div class="lunara-control-desk-homepage-card">
@@ -12412,6 +12415,16 @@ function lunara_control_desk_theme_studio_command_index_items() {
             'preview_url'        => home_url( '/reviews/sinners-2025/' ),
             'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/reviews/sinners-2025/' ) ),
             'next'               => __( 'Next frontier: older Oscars poster chambers and route-family image backlog triage.', 'lunara-film' ),
+        ),
+        array(
+            'label'              => __( 'Oscars Portal Studio', 'lunara-film' ),
+            'status'             => __( 'Live controls', 'lunara-film' ),
+            'surface'            => __( 'Route-family front door', 'lunara-film' ),
+            'affects'            => __( 'Portal identity copy, eleven-slot order and visibility, bounded geometry, private previews, and restorable history.', 'lunara-film' ),
+            'anchor'             => '#lunara-oscars-portal-studio',
+            'preview_url'        => home_url( '/oscars/' ),
+            'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/oscars/' ) ),
+            'next'               => __( 'Next frontier: portal chamber presets and per-slot art direction.', 'lunara-film' ),
         ),
         array(
             'label'              => __( 'Oscars Dossier Studio', 'lunara-film' ),

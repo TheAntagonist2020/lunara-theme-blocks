@@ -58,6 +58,12 @@ if (
     );
 }
 
+// Typography is Design Tokens state, not Studio state: the route stylesheet's
+// Tiempos label rules engage only through this resolver-driven root marker.
+$oscars_portal_label_font_class = function_exists( 'lunara_oscars_portal_uses_tiempos_label_face' ) && lunara_oscars_portal_uses_tiempos_label_face()
+    ? ' is-label-font-tiempos'
+    : '';
+
 $hero_kicker       = $oscars_portal_text( 'kicker', 'lunara_oscars_portal_kicker', 'The Lunara Oscar Ledger' );
 $hero_title        = $oscars_portal_text( 'title', 'lunara_oscars_portal_title', 'Academy Awards history, treated like a living editorial system.' );
 $hero_copy         = '';
@@ -323,7 +329,7 @@ $command_cards = array(
     ),
 );
 ?>
-<main id="primary" class="site-main lunara-oscars-portal" data-lunara-theme-version="<?php echo esc_attr( (string) wp_get_theme()->get( 'Version' ) ); ?>"<?php if ( '' !== $oscars_portal_geometry_style ) : ?> style="<?php echo esc_attr( $oscars_portal_geometry_style ); ?>"<?php endif; ?>>
+<main id="primary" class="site-main lunara-oscars-portal<?php echo esc_attr( $oscars_portal_label_font_class ); ?>" data-lunara-theme-version="<?php echo esc_attr( (string) wp_get_theme()->get( 'Version' ) ); ?>"<?php if ( '' !== $oscars_portal_geometry_style ) : ?> style="<?php echo esc_attr( $oscars_portal_geometry_style ); ?>"<?php endif; ?>>
     <?php if ( empty( $snapshot ) && empty( $database_spotlight ) ) : ?>
         <section class="lunara-home-section lunara-archive-hero">
             <p class="lunara-archive-hero-kicker"><?php echo esc_html( $hero_kicker ); ?></p>

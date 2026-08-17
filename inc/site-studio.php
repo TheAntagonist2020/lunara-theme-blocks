@@ -45,6 +45,18 @@ if ( ! function_exists( 'lunara_site_studio_surfaces' ) ) {
 				'description' => __( 'Control the live-desk rhythm, lead file, filters, cards, and retention lane.', 'lunara-film' ),
 				'renderer'    => 'lunara_control_desk_render_journal_archive_studio',
 			),
+			'oscars-portal'      => array(
+				'group'       => __( 'Oscars', 'lunara-film' ),
+				'label'       => __( 'Oscars Portal', 'lunara-film' ),
+				'description' => __( 'Compose the /oscars/ portal copy, eleven-slot order and visibility, and bounded geometry.', 'lunara-film' ),
+				'renderer'    => 'lunara_control_desk_render_oscars_portal_studio',
+			),
+			'oscars-ledger'      => array(
+				'group'       => __( 'Oscars', 'lunara-film' ),
+				'label'       => __( 'Oscars Ledger Routes', 'lunara-film' ),
+				'description' => __( 'Tune ceremony, category, title, and person dossiers while the Academy plugin owns the data.', 'lunara-film' ),
+				'renderer'    => 'lunara_control_desk_render_oscars_dossier_studio',
+			),
 		);
 	}
 }
@@ -119,7 +131,9 @@ if ( ! function_exists( 'lunara_render_site_studio_page' ) ) {
 		$surfaces       = lunara_site_studio_surfaces();
 		$active_surface = lunara_site_studio_current_surface();
 		$active         = $surfaces[ $active_surface ];
-		$groups         = array( __( 'Homepage', 'lunara-film' ), __( 'Archives', 'lunara-film' ) );
+		// Navigation groups derive from the surface registry (first-appearance
+		// order), so registering a surface never needs a second hardcoded list.
+		$groups         = array_values( array_unique( array_column( $surfaces, 'group' ) ) );
 		?>
 		<div class="wrap lunara-control-desk lunara-site-studio">
 			<div class="lunara-control-desk-hero">
