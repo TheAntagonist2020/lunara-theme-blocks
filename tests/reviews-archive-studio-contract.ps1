@@ -129,7 +129,11 @@ Assert-True ($studio -match 'nocache_headers\(\)[\s\S]*?Cache-Control:\s*private
 Assert-True ($studio -match 'function\s+lunara_reviews_archive_studio_prepare_preview_response[\s\S]*?lunara_reviews_archive_studio_send_private_no_store[\s\S]*?status[^\r\n]*403') 'Preview responses must become no-store before invalid, expired, guessed, anonymous, or foreign tokens are denied.'
 Assert-True ($studio -match "add_action\(\s*'template_redirect'\s*,\s*'lunara_reviews_archive_studio_guard_preview_request'\s*,\s*0\s*\)") 'Every Reviews preview query must be guarded before template rendering.'
 Assert-True ($studio -match "add_action\(\s*'pre_get_posts'\s*,\s*'lunara_reviews_archive_studio_preflight_preview_query'\s*,\s*1\s*\)") 'Invalid preview tokens must be denied before the Reviews query composes Studio state.'
-Assert-True ($studio -match 'hash_equals[\s\S]*?get_current_user_id') 'Preview retrieval must bind an unguessable token to the current authorized user.'
+# Anchored inside the get_preview_config body: the tempered (?!function\s)
+# scan cannot skip past the next function boundary, so the revision-restore
+# hash_equals can never satisfy this owner-binding assertion (verified against
+# a mutant with the owner-binding clause deleted).
+Assert-True ($studio -match 'function\s+lunara_reviews_archive_studio_get_preview_config\((?:(?!function\s)[\s\S])*?get_current_user_id\(\)(?:(?!function\s)[\s\S])*?hash_equals\(') 'Preview retrieval must bind an unguessable token to the current authorized user inside get_preview_config itself.'
 Assert-True ($studio -match 'set_transient[\s\S]*?lunara_reviews_archive_preview') 'Unsaved previews must be short-lived and must not replace public state.'
 Assert-True ($studio -match 'data-lunara-reviews-preview-frame="desktop"[\s\S]*?data-lunara-reviews-preview-frame="mobile"') 'Preview output must render actual desktop and mobile frames.'
 Assert-True ($studio -match 'data-lunara-reviews-preview-frame="mobile"[^>]*style="[^"]*width:\s*390px') 'The mobile preview frame must have a real 390px viewport.'
@@ -197,6 +201,7 @@ Assert-True ($studio -notmatch '\bwp_(insert|update)_post\s*\(') 'Reviews Studio
 Assert-True ($studio -notmatch "post_status\s*=>\s*'(publish|future)'") 'Reviews Studio must not grant publication or scheduling authority.'
 Assert-True ($studio -notmatch '\bwp_cache_flush\s*\(') 'Reviews saves must never trigger a global object-cache purge.'
 Assert-True ($studio -match "wp_cache_delete\(\s*'reviews_archive_studio_public'\s*,\s*'lunara'\s*\)") 'Reviews saves must invalidate only their route/data cache key.'
+Assert-True ($studio -notmatch '\bwp_cache_(get|set)\s*\(') 'The public config resolver is deliberately uncached: no object-cache read or write may return to the module.'
 Assert-True ($studio -notmatch 'rocket_clean_domain') 'Reviews saves must never purge the full WP Rocket domain cache.'
 $validationPos = $studio.IndexOf('lunara_reviews_archive_studio_validate_config')
 $applyPos      = $studio.IndexOf('lunara_reviews_archive_studio_apply_config')

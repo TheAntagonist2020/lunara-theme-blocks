@@ -3649,10 +3649,15 @@ function lunara_output_review_archive_authority_css() {
     }
 
     // The Reviews Archive Studio public config resolves the same presentation
-    // theme mods with the same defaults and bounds, so identical stored values
-    // emit byte-identical variables — while an authorized private preview can
-    // drive them without touching any public owner. Director archives read the
-    // config without preview overrides: they stay exempt from Studio state.
+    // theme mods with the same defaults and bounds, so identical stored
+    // in-bounds values emit byte-identical variables. Legacy out-of-bounds
+    // stored values are the one intentional divergence: the Studio repair
+    // pass resets them to their defaults instead of clamping to the nearest
+    // bound as the legacy lunara_home_brand_number_setting readers did
+    // (intentional Studio repair semantics). An authorized private preview
+    // can drive the variables without touching any public owner. Director
+    // archives read the config without preview overrides: they stay exempt
+    // from Studio state.
     $studio_presentation = array();
     if ( function_exists( 'lunara_reviews_archive_studio_get_public_config' ) ) {
         $studio_config       = lunara_reviews_archive_studio_get_public_config( ! $is_director_archive );

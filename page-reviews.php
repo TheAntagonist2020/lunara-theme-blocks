@@ -32,6 +32,14 @@ if ( function_exists( 'lunara_get_review_archive_query_args' ) ) {
     $query_args = lunara_get_review_archive_query_args( $query_args, $review_sort, $review_year );
 }
 
+// The composer injects posts_per_page only when the Studio option carries an
+// explicitly saved item_count. This hub page never followed the Reading
+// setting: its exact pre-release behavior is the literal nine files per page,
+// so restore that literal whenever no explicit Studio count applied.
+if ( ! isset( $query_args['posts_per_page'] ) ) {
+    $query_args['posts_per_page'] = 9;
+}
+
 $reviews_query = new WP_Query(
     $query_args
 );

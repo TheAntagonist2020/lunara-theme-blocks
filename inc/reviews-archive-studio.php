@@ -73,8 +73,12 @@ function lunara_reviews_archive_studio_defaults() {
 			'retention_kicker'    => __( 'Keep Moving', 'lunara-film' ),
 			'retention_title'     => __( 'More routes through the desk.', 'lunara-film' ),
 			'retention_copy'      => __( 'Follow the latest updates, jump into the Journal, or cross-reference the Oscar Ledger.', 'lunara-film' ),
-			'empty_title'         => __( 'No reviews yet.', 'lunara-film' ),
-			'empty_copy'          => __( 'When new criticism is published, it will appear here automatically.', 'lunara-film' ),
+			// The public empty state is deliberately NOT a Studio label: its
+			// canonical owner is the lunara_archive_review_empty_text theme
+			// mod (archive-review.php) and the hub template's literal
+			// (page-reviews.php). Unknown legacy label keys stored under the
+			// removed empty_title/empty_copy controls are dropped by
+			// normalize_public_shape, which copies defaults keys only.
 			'pagination_prev'     => __( '&laquo; Previous', 'lunara-film' ),
 			'pagination_next'     => __( 'Next &raquo;', 'lunara-film' ),
 		),
@@ -185,6 +189,22 @@ function lunara_reviews_archive_studio_expand_section_order( $raw ) {
 function lunara_reviews_archive_studio_get_new_fields() {
 	$stored = get_option( LUNARA_REVIEWS_ARCHIVE_STUDIO_OPTION, array() );
 	return is_array( $stored ) ? $stored : array();
+}
+
+/**
+ * Whether the stored public option carries an explicitly saved item count.
+ *
+ * Provenance gate for public pagination: the resolved public config always
+ * exposes a bounded item_count (default 9), so consumers that must only act
+ * on an editor's explicit save — the Reviews query composer's posts_per_page
+ * injection — read the raw stored option here instead. A site that never
+ * saved the Studio keeps its WordPress Reading setting on the CPT archive.
+ *
+ * @return bool
+ */
+function lunara_reviews_archive_studio_has_saved_item_count() {
+	$stored = get_option( LUNARA_REVIEWS_ARCHIVE_STUDIO_OPTION, array() );
+	return is_array( $stored ) && isset( $stored['item_count'] );
 }
 
 /**
@@ -427,6 +447,14 @@ function lunara_reviews_archive_studio_repair_public_config( $config, $defaults 
 /**
  * Resolve the current, last-valid public configuration.
  *
+ * The resolved config is deliberately uncached and recomputed on every call,
+ * exactly like the journal reference (inc/journal-archive-studio.php):
+ * get_theme_mod reads are Customizer-preview-filtered, and the lead pin meta
+ * has independent writers (the editor meta box), so a persistent object-cache
+ * entry could pin poisoned preview state or go stale against an owner this
+ * module never writes. The wp_cache_delete calls in apply_config and
+ * flush_route_cache remain as harmless hygiene for any legacy cached entry.
+ *
  * @param bool $allow_preview Whether a private token may override the request.
  * @return array<string,mixed>
  */
@@ -436,11 +464,6 @@ function lunara_reviews_archive_studio_get_public_config( $allow_preview = true 
 		if ( is_array( $preview ) ) {
 			return $preview;
 		}
-	}
-
-	$cached = wp_cache_get( 'reviews_archive_studio_public', 'lunara' );
-	if ( is_array( $cached ) ) {
-		return $cached;
 	}
 
 	$defaults = lunara_reviews_archive_studio_defaults();
@@ -504,8 +527,6 @@ function lunara_reviews_archive_studio_get_public_config( $allow_preview = true 
 		$validated = lunara_reviews_archive_studio_validate_config( $defaults );
 	}
 	$validated['_warnings'] = $warnings;
-
-	wp_cache_set( 'reviews_archive_studio_public', $validated, 'lunara' );
 
 	return $validated;
 }

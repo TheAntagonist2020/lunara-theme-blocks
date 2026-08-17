@@ -470,8 +470,13 @@ function assertPairingCollisionFree(snapshot, label) {
                 const yearFilterMarkup = orders.showYearFilter === false
                     ? ''
                     : `<form class="lunara-review-archive-year-filter"><label for="review-year">Release year</label><select id="review-year" name="review_year"><option>All years</option><option>2026</option><option>2025</option><option>2024</option></select><input type="hidden" name="sort" value="modified_desc"><button type="submit">Filter</button></form>`;
-                // Faithful clone of lunara_reviews_archive_studio_compose_retention_lane
-                // output: the slot carries no inline order (the persistent
+                // Hand-maintained approximation of the
+                // lunara_reviews_archive_studio_compose_retention_lane output.
+                // This fixture is maintained by hand and statically inspected
+                // only — it is never generated from or executed against the
+                // PHP builders; the executed builder coverage lives in
+                // tests/reviews-archive-studio-runtime.php. Modeled traits:
+                // the slot carries no inline order (the persistent
                 // first-paint seed maps it onto the grid lane variable), the
                 // showcase card precedes the root-only gallery, and media use
                 // truthful 16:9 intrinsic dimensions.

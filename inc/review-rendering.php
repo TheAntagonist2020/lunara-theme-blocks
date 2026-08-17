@@ -1215,10 +1215,20 @@ if ( ! function_exists( 'lunara_get_review_archive_query_args' ) ) {
         // post type archive and the /reviews/ hub page; `lunara_director`
         // term archives never route through it, keeping director archives
         // contractually exempt from all Studio state.
+        //
+        // Provenance gate: posts_per_page is composed ONLY when the stored
+        // Studio option carries an explicitly saved item_count. The resolved
+        // config always reports a bounded default (9), so without this gate a
+        // site that never saved the Studio would silently move its CPT
+        // archive off get_option( 'posts_per_page' ). When unsaved, no
+        // posts_per_page key is set at all and the main query keeps the
+        // WordPress Reading setting.
         $studio_config = function_exists( 'lunara_reviews_archive_studio_get_public_config' )
             ? lunara_reviews_archive_studio_get_public_config()
             : null;
-        if ( is_array( $studio_config ) && isset( $studio_config['item_count'] ) ) {
+        if ( is_array( $studio_config ) && isset( $studio_config['item_count'] )
+            && function_exists( 'lunara_reviews_archive_studio_has_saved_item_count' )
+            && lunara_reviews_archive_studio_has_saved_item_count() ) {
             $studio_item_count = absint( $studio_config['item_count'] );
             if ( $studio_item_count >= 4 && $studio_item_count <= 24 ) {
                 $query_args['posts_per_page'] = $studio_item_count;

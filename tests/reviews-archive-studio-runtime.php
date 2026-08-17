@@ -121,7 +121,10 @@ function esc_url( $value ) { return esc_url_raw( $value ); }
 function esc_html( $value ) { return htmlspecialchars( (string) $value, ENT_QUOTES, 'UTF-8' ); }
 function esc_attr( $value ) { return esc_html( $value ); }
 function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $component ); }
-function wp_http_validate_url( $url ) { return 'https' === parse_url( $url, PHP_URL_SCHEME ) && (bool) parse_url( $url, PHP_URL_HOST ) ? $url : false; }
+// Faithful to real WordPress: wp_http_validate_url accepts BOTH http and
+// https. The https-only rejection of http:// fixtures must therefore come
+// from the module's own lunara_reviews_archive_studio_safe_https_url guard.
+function wp_http_validate_url( $url ) { return in_array( parse_url( $url, PHP_URL_SCHEME ), array( 'http', 'https' ), true ) && (bool) parse_url( $url, PHP_URL_HOST ) ? $url : false; }
 function home_url( $path = '' ) { return 'https://example.test/' . ltrim( $path, '/' ); }
 function get_theme_mod( $key, $default = '' ) { global $lunara_test_theme_mods; return array_key_exists( $key, $lunara_test_theme_mods ) ? $lunara_test_theme_mods[ $key ] : $default; }
 function set_theme_mod( $key, $value ) { global $lunara_test_theme_mods; $lunara_test_theme_mods[ $key ] = $value; }
@@ -169,9 +172,24 @@ function wp_get_attachment_metadata( $id ) {
 	return isset( $dimensions[ $id ] ) ? $dimensions[ $id ] : false;
 }
 function get_the_title( $post ) { global $lunara_test_title_args; $lunara_test_title_args[] = $post; return is_object( $post ) && isset( $post->post_title ) ? $post->post_title : 'Attachment ' . $post; }
-function wp_get_attachment_image( $id, $size, $icon, $attrs ) { global $lunara_test_attachment_renderable; return $lunara_test_attachment_renderable ? '<img width="1920" height="1080" src="image-' . $id . '.jpg" srcset="image-' . $id . '.jpg 1920w" sizes="' . $attrs['sizes'] . '" alt="' . $attrs['alt'] . '">' : ''; }
-function wp_cache_get() { return false; }
-function wp_cache_set() { return true; }
+function wp_get_attachment_image( $id, $size, $icon, $attrs ) {
+	global $lunara_test_attachment_renderable;
+	if ( ! $lunara_test_attachment_renderable ) {
+		return '';
+	}
+	// Like core, attribute values are escaped and requested loading/decoding
+	// attributes are reflected so lazy-loading is executable, not assumed.
+	$extra = '';
+	foreach ( array( 'class', 'loading', 'decoding' ) as $attr ) {
+		if ( isset( $attrs[ $attr ] ) && '' !== $attrs[ $attr ] ) {
+			$extra .= ' ' . $attr . '="' . esc_attr( $attrs[ $attr ] ) . '"';
+		}
+	}
+	return '<img width="1920" height="1080" src="image-' . $id . '.jpg" srcset="image-' . $id . '.jpg 1920w" sizes="' . esc_attr( $attrs['sizes'] ) . '"' . $extra . ' alt="' . esc_attr( $attrs['alt'] ) . '">';
+}
+// FIX: the module's public config resolver is deliberately uncached, so the
+// harness defines no wp_cache_get/wp_cache_set at all — any reintroduced
+// object-cache read or write in the module fatals this runtime immediately.
 function wp_cache_delete( $key, $group ) { global $lunara_test_cache_deletes; $lunara_test_cache_deletes[] = array( $key, $group ); return true; }
 function do_action( $hook, $payload = null, $extra = null ) { global $lunara_test_actions_fired; $lunara_test_actions_fired[] = array( $hook, $payload, $extra ); }
 function get_current_user_id() { global $lunara_test_user_id; return $lunara_test_user_id; }
@@ -184,7 +202,29 @@ function wp_json_encode( $value ) { return json_encode( $value ); }
 function wp_generate_uuid4() { static $uuid_counter = 0; return 'uuid-4-test-' . ( ++$uuid_counter ); }
 function wp_hash( $value ) { return hash( 'sha256', 'test-salt|' . $value ); }
 function set_transient( $key, $value, $ttl ) { global $lunara_test_transients, $lunara_test_now; $lunara_test_transients[ $key ] = array( 'value' => $value, 'expires' => $lunara_test_now + $ttl ); return true; }
-function get_transient( $key ) { global $lunara_test_transients, $lunara_test_now; return isset( $lunara_test_transients[ $key ] ) && $lunara_test_transients[ $key ]['expires'] > $lunara_test_now ? $lunara_test_transients[ $key ]['value'] : false; }
+function get_transient( $key ) {
+	global $lunara_test_transients, $lunara_test_now, $lunara_test_actions_fired;
+	// Preview-token transient reads land in the same fired-actions array the
+	// no-store sender uses, so tests can assert the no-store transition
+	// happened strictly BEFORE any token work — not merely that it happened.
+	if ( 0 === strpos( (string) $key, 'lunara_reviews_archive_preview_' ) ) {
+		$lunara_test_actions_fired[] = array( 'reviews_archive_preview_transient_read', $key, null );
+	}
+	return isset( $lunara_test_transients[ $key ] ) && $lunara_test_transients[ $key ]['expires'] > $lunara_test_now ? $lunara_test_transients[ $key ]['value'] : false;
+}
+function lunara_test_no_store_precedes_transient_read( $actions ) {
+	$no_store_index = null;
+	$transient_index = null;
+	foreach ( array_values( $actions ) as $index => $fired ) {
+		if ( null === $no_store_index && 'lunara_reviews_archive_preview_no_store_sent' === $fired[0] ) {
+			$no_store_index = $index;
+		}
+		if ( null === $transient_index && 'reviews_archive_preview_transient_read' === $fired[0] ) {
+			$transient_index = $index;
+		}
+	}
+	return null !== $no_store_index && null !== $transient_index && $no_store_index < $transient_index;
+}
 function delete_transient( $key ) { global $lunara_test_transients; unset( $lunara_test_transients[ $key ] ); return true; }
 function get_post_type_archive_link( $type = 'review' ) { return 'https://example.test/reviews/'; }
 function get_page_by_path( $path ) { return 'reviews' === $path ? (object) array( 'ID' => 900, 'post_type' => 'page', 'post_status' => 'publish' ) : null; }
@@ -269,14 +309,17 @@ $expected_label_literals = array(
 	'retention_kicker'    => 'Keep Moving',
 	'retention_title'     => 'More routes through the desk.',
 	'retention_copy'      => 'Follow the latest updates, jump into the Journal, or cross-reference the Oscar Ledger.',
-	'empty_title'         => 'No reviews yet.',
-	'empty_copy'          => 'When new criticism is published, it will appear here automatically.',
 	'pagination_prev'     => '&laquo; Previous',
 	'pagination_next'     => 'Next &raquo;',
 );
 foreach ( $expected_label_literals as $label_key => $label_literal ) {
 	lunara_test_assert( isset( $defaults['labels'][ $label_key ] ) && $label_literal === $defaults['labels'][ $label_key ], 'Default label ' . $label_key . ' must reproduce its shipped public literal byte-for-byte.' );
 }
+lunara_test_assert( array_keys( $expected_label_literals ) === array_keys( $defaults['labels'] ), 'The Studio label set must be exactly the consumed public-language keys — no dead controls.' );
+// The empty state's canonical owners are the lunara_archive_review_empty_text
+// theme mod (archive-review.php) and the hub template literal; the Studio
+// must expose no dead empty_title/empty_copy controls.
+lunara_test_assert( ! array_key_exists( 'empty_title', $defaults['labels'] ) && ! array_key_exists( 'empty_copy', $defaults['labels'] ), 'The removed empty-state controls must not resurface in the Studio defaults.' );
 lunara_test_assert(
 	array( 40, 460, 360, 116 ) === array(
 		$defaults['presentation']['section_gap'],
@@ -622,7 +665,7 @@ update_option(
 	array(
 		'item_count'      => 14,
 		'supporting_copy' => 'Keep this custom toolbar copy.',
-		'labels'          => array_replace( $defaults['labels'], array( 'empty_copy' => 'Keep this custom empty-state copy.' ) ),
+		'labels'          => array_replace( $defaults['labels'], array( 'retention_copy' => 'Keep this custom retention copy.', 'empty_copy' => 'Legacy dead-control value.' ) ),
 	)
 );
 set_theme_mod( 'lunara_reviews_archive_title', 'Preserve My Reviews' );
@@ -630,7 +673,8 @@ set_theme_mod( 'lunara_reviews_archive_section_gap', 999 );
 $repaired_legacy = lunara_reviews_archive_studio_get_public_config( false );
 lunara_test_assert( 'Preserve My Reviews' === $repaired_legacy['title'], 'One malformed legacy presentation owner must not reset a valid customized title.' );
 lunara_test_assert( 14 === $repaired_legacy['item_count'] && 'Keep this custom toolbar copy.' === $repaired_legacy['supporting_copy'], 'Field-local geometry repair must preserve unrelated option-owned copy byte-for-byte.' );
-lunara_test_assert( 'Keep this custom empty-state copy.' === $repaired_legacy['labels']['empty_copy'], 'Field-local repair must preserve valid custom labels.' );
+lunara_test_assert( 'Keep this custom retention copy.' === $repaired_legacy['labels']['retention_copy'], 'Field-local repair must preserve valid custom labels.' );
+lunara_test_assert( ! array_key_exists( 'empty_copy', $repaired_legacy['labels'] ) && ! array_key_exists( 'empty_title', $repaired_legacy['labels'] ), 'A legacy stored dead-control label must be dropped from the resolved public config, not resurfaced.' );
 lunara_test_assert( 40 === $repaired_legacy['presentation']['section_gap'], 'Only the malformed geometry field must fall back to its validated default.' );
 delete_option( LUNARA_REVIEWS_ARCHIVE_STUDIO_OPTION );
 remove_theme_mod( 'lunara_reviews_archive_title' );
@@ -684,6 +728,23 @@ lunara_test_assert( 11 === $newest_id, 'Automatic newest must resolve the newest
 lunara_test_assert( 1 === count( $lunara_test_get_posts_args ) && 1 === $lunara_test_get_posts_args[0]['posts_per_page'] && 'ids' === $lunara_test_get_posts_args[0]['fields'] && true === $lunara_test_get_posts_args[0]['suppress_filters'], 'Automatic newest must use one bounded, filter-suppressed, ID-only published-Review lookup.' );
 lunara_test_assert( 11 === lunara_reviews_archive_studio_get_lead_id( $public_after ), 'Manual lead resolution must return the validated pinned Review.' );
 lunara_test_assert( 11 === lunara_reviews_archive_studio_get_lead_id( $defaults ), 'Automatic lead resolution must follow the newest eligible published Review.' );
+
+// --- Provenance gate: posts_per_page composes ONLY from an explicitly saved
+// item_count in the stored Studio option. The resolved config always reports
+// a bounded default (9), so an unsaved site must produce NO posts_per_page
+// key at all — the CPT archive keeps get_option( 'posts_per_page' ), its
+// exact pre-release Reading-settings behavior.
+$saved_option_snapshot = get_option( LUNARA_REVIEWS_ARCHIVE_STUDIO_OPTION );
+lunara_test_assert( is_array( $saved_option_snapshot ) && true === lunara_reviews_archive_studio_has_saved_item_count(), 'A promoted Studio option must report an explicitly saved item count.' );
+delete_option( LUNARA_REVIEWS_ARCHIVE_STUDIO_OPTION );
+lunara_test_assert( false === lunara_reviews_archive_studio_has_saved_item_count(), 'An unsaved site must report no explicitly saved item count.' );
+$unsaved_args = lunara_get_review_archive_query_args( array(), 'release_desc', '' );
+lunara_test_assert( ! array_key_exists( 'posts_per_page', $unsaved_args ), 'An unsaved site must compose NO posts_per_page key; the Reading setting stays authoritative.' );
+update_option( LUNARA_REVIEWS_ARCHIVE_STUDIO_OPTION, array( 'schema_version' => 1, 'supporting_copy' => 'Saved without an item count.' ) );
+lunara_test_assert( false === lunara_reviews_archive_studio_has_saved_item_count(), 'A stored option without item_count must not count as saved pagination provenance.' );
+$partial_args = lunara_get_review_archive_query_args( array(), 'release_desc', '' );
+lunara_test_assert( ! array_key_exists( 'posts_per_page', $partial_args ), 'An option lacking item_count must compose NO posts_per_page key.' );
+update_option( LUNARA_REVIEWS_ARCHIVE_STUDIO_OPTION, $saved_option_snapshot );
 
 // --- Query-args composition: item count, pin, and curated priority minus the pinned ID.
 $composed_args = lunara_get_review_archive_query_args( array(), 'release_desc', '' );
@@ -741,6 +802,37 @@ lunara_test_assert( true === lunara_reviews_archive_studio_is_gallery_request(),
 $lunara_test_is_paged = true;
 lunara_test_assert( false === lunara_reviews_archive_studio_is_gallery_request(), 'The archive-only gallery must not repeat on paged Reviews routes.' );
 $lunara_test_is_paged = false;
+
+// --- EXECUTED retention/gallery builder coverage. The browser fixture in
+// tests/reviews-archive-first-paint-runtime.js is hand-maintained and only
+// statically inspected; these calls run the real module builders.
+lunara_test_assert( '' === lunara_reviews_archive_studio_retention_media_markup( $defaults['retention'][1] ), 'An unconfigured retention card must produce the exact empty string from the real builder.' );
+lunara_test_assert( '' === lunara_reviews_archive_studio_compose_retention_lane( lunara_reviews_archive_studio_retention_media_markup( $defaults['retention'][0] ), lunara_reviews_archive_studio_render_gallery( $defaults['gallery'] ), true ), 'Composing the real default builder outputs must reserve no retention lane markup at all.' );
+$executed_retention_card  = array_replace( $defaults['retention'][0], array( 'image_id' => 101, 'image_alt' => 'Retention route art', 'image_credit' => 'Studio credit', 'image_source' => 'Studio source', 'image_source_url' => 'https://source.example/retention', 'focal_x' => 40, 'focal_y' => 60 ) );
+$executed_retention_media = lunara_reviews_archive_studio_retention_media_markup( $executed_retention_card );
+lunara_test_assert( false !== strpos( $executed_retention_media, 'loading="lazy"' ) && false !== strpos( $executed_retention_media, 'decoding="async"' ), 'Configured retention media must actually emit lazy, async image markup.' );
+lunara_test_assert( false === strpos( $executed_retention_media, '<script' ), 'Retention media markup must contain no script element.' );
+$hostile_gallery = array(
+	'kicker' => 'Visual File',
+	'title'  => '<script>x</script>',
+	'copy'   => 'Copy <script>x</script>',
+	'items'  => array(
+		array( 'order' => 1, 'attachment_id' => 102, 'alt' => 'Frame one', 'caption' => 'Caption <script>x</script>', 'link_url' => 'https://example.test/first', 'credit' => 'Credit <script>x</script>', 'source' => 'Source <script>x</script>', 'source_url' => 'https://source.example/first', 'focal_x' => 31, 'focal_y' => 67 ),
+		array( 'order' => 2, 'attachment_id' => 104, 'alt' => 'Frame two', 'caption' => '', 'link_url' => '', 'credit' => 'Second credit', 'source' => 'Second source', 'source_url' => 'https://source.example/second', 'focal_x' => 50, 'focal_y' => 50 ),
+	),
+);
+$hostile_gallery_markup = lunara_reviews_archive_studio_render_gallery( $hostile_gallery );
+lunara_test_assert( false !== strpos( $hostile_gallery_markup, '&lt;script&gt;x&lt;/script&gt;' ), 'Hostile stored strings must arrive entity-escaped in the executed gallery SSR.' );
+lunara_test_assert( false === strpos( $hostile_gallery_markup, '<script' ), 'The executed gallery SSR must contain no script element or unescaped fixture string.' );
+lunara_test_assert( false !== strpos( $hostile_gallery_markup, 'loading="lazy"' ) && false !== strpos( $hostile_gallery_markup, 'decoding="async"' ), 'Executed gallery images must be lazy and async.' );
+lunara_test_assert( false !== strpos( $hostile_gallery_markup, '--lunara-gallery-focus-x:31%;--lunara-gallery-focus-y:67%' ), 'Executed gallery media chambers must carry the focal-point CSS variables.' );
+lunara_test_assert( 1 === substr_count( $hostile_gallery_markup, 'lunara-review-archive-gallery-destination' ), 'The optional image destination anchor must render only for the item that configured one.' );
+lunara_test_assert( 1 === substr_count( $hostile_gallery_markup, '<p>' ), 'Captions must render only when configured; an empty caption adds no paragraph.' );
+lunara_test_assert( false !== strpos( $hostile_gallery_markup, 'Second credit' ) && false !== strpos( $hostile_gallery_markup, 'https://source.example/second' ), 'Configured provenance must reach the executed SSR.' );
+$executed_lane = lunara_reviews_archive_studio_compose_retention_lane( $executed_retention_media, $hostile_gallery_markup, true );
+lunara_test_assert( false !== strpos( $executed_lane, 'lunara-review-archive-slot-retention' ), 'The executed composed lane wrapper must carry the first-paint retention slot class.' );
+lunara_test_assert( strpos( $executed_lane, 'image-101.jpg' ) < strpos( $executed_lane, 'lunara-review-archive-gallery' ), 'The executed composition must keep retention media before the gallery.' );
+lunara_test_assert( '' === lunara_reviews_archive_studio_compose_retention_lane( $executed_retention_media, $hostile_gallery_markup, false ), 'An archive with no posts must reserve no executed retention lane.' );
 
 // --- Revision history: audit fields, restore round trip, tamper fail-closed, limit 12.
 update_option( LUNARA_REVIEWS_ARCHIVE_STUDIO_REVISIONS_OPTION, array() );
@@ -800,6 +892,7 @@ $normal_response = lunara_reviews_archive_studio_prepare_preview_response();
 lunara_test_assert( false === $normal_response['handled'] && true === $normal_response['authorized'] && 200 === $normal_response['status'] && $lunara_test_nocache_calls === $nocache_before, 'A normal Reviews request must remain public/cacheable and never receive preview denial headers.' );
 $_GET['lunara_reviews_preview'] = $preview_token;
 $nocache_before = $lunara_test_nocache_calls;
+$actions_before_preview = count( $lunara_test_actions_fired );
 $preview_response = lunara_reviews_archive_studio_prepare_preview_response();
 lunara_test_assert( true === $preview_response['authorized'] && 200 === $preview_response['status'] && is_array( $preview_response['config'] ), 'The owner with capability and a live token must receive the private preview response.' );
 lunara_test_assert( $lunara_test_nocache_calls === $nocache_before + 1, 'Every preview-query response must become no-store before access validation.' );
@@ -811,11 +904,14 @@ foreach ( array_reverse( $lunara_test_actions_fired ) as $fired_action ) {
 	}
 }
 lunara_test_assert( null !== $no_store_marker, 'The no-store transition must be observable before token validation work.' );
+lunara_test_assert( lunara_test_no_store_precedes_transient_read( array_slice( $lunara_test_actions_fired, $actions_before_preview ) ), 'The no-store marker must fire at a strictly earlier index than the preview transient read.' );
 $lunara_test_user_id = 8;
 lunara_test_assert( false === lunara_reviews_archive_studio_get_preview_config( $preview_token ), 'A different logged-in user must not retrieve the preview.' );
 $nocache_before = $lunara_test_nocache_calls;
+$actions_before_foreign = count( $lunara_test_actions_fired );
 $foreign_response = lunara_reviews_archive_studio_prepare_preview_response();
 lunara_test_assert( false === $foreign_response['authorized'] && 403 === $foreign_response['status'] && $lunara_test_nocache_calls === $nocache_before + 1, 'A foreign-user token URL must be denied as a non-cacheable 403 response.' );
+lunara_test_assert( lunara_test_no_store_precedes_transient_read( array_slice( $lunara_test_actions_fired, $actions_before_foreign ) ), 'A foreign-user denial must also send no-store strictly before its token transient read.' );
 $lunara_test_user_id = 7;
 $lunara_test_can_edit = false;
 lunara_test_assert( false === lunara_reviews_archive_studio_get_preview_config( $preview_token ), 'A user without theme-edit capability must not retrieve the preview.' );
@@ -824,8 +920,10 @@ lunara_test_assert( false === $anonymous_response['authorized'] && 403 === $anon
 $lunara_test_can_edit = true;
 lunara_test_assert( false === lunara_reviews_archive_studio_get_preview_config( 'wrong-token' ), 'A guessed token must not retrieve the preview.' );
 $_GET['lunara_reviews_preview'] = 'wrong-token';
+$actions_before_guessed = count( $lunara_test_actions_fired );
 $guessed_response = lunara_reviews_archive_studio_prepare_preview_response();
 lunara_test_assert( false === $guessed_response['authorized'] && 403 === $guessed_response['status'], 'A guessed token URL must receive a no-store 403 response.' );
+lunara_test_assert( lunara_test_no_store_precedes_transient_read( array_slice( $lunara_test_actions_fired, $actions_before_guessed ) ), 'A guessed-token denial must also send no-store strictly before its token transient read.' );
 $_GET['lunara_reviews_preview'] = $preview_token;
 $preview_transient_key = 'lunara_reviews_archive_preview_' . hash( 'sha256', $preview_token );
 $genuine_hash = $lunara_test_transients[ $preview_transient_key ]['value']['token_hash'];
