@@ -882,8 +882,6 @@ function lunara_get_home_snapshot_spotlight( $snapshot, $canonical_category ) {
  * Determine whether a category debuts in the supplied ceremony.
  */
 function lunara_home_category_debuts_in_ceremony( $canonical_category, $ceremony ) {
-    global $wpdb;
-
     $canonical_category = trim( (string) $canonical_category );
     $ceremony           = intval( $ceremony );
 
@@ -891,15 +889,16 @@ function lunara_home_category_debuts_in_ceremony( $canonical_category, $ceremony
         return false;
     }
 
-    $table_name = $wpdb->prefix . 'academy_awards';
-    $first_seen = intval(
-        $wpdb->get_var(
-            $wpdb->prepare(
-                "SELECT MIN(ceremony) FROM $table_name WHERE canonical_category = %s",
-                $canonical_category
-            )
-        )
-    );
+    // The MIN(ceremony) debut lookup now lives behind the plugin's public
+    // get_category_first_ceremony() accessor. Without the reader the debut
+    // framing simply never claims a debut — no theme-side SQL fallback.
+    $reader = function_exists( 'lunara_oscars_reader' ) ? lunara_oscars_reader() : null;
+
+    if ( ! $reader || ! method_exists( $reader, 'get_category_first_ceremony' ) ) {
+        return false;
+    }
+
+    $first_seen = intval( $reader->get_category_first_ceremony( $canonical_category ) );
 
     return $first_seen > 0 && $first_seen === $ceremony;
 }
@@ -987,76 +986,47 @@ function lunara_build_home_title_story( $imdb_id, $args = array() ) {
     );
     $args = wp_parse_args( $args, $defaults );
 
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'academy_awards';
-    $imdb_id    = strtolower( trim( (string) $imdb_id ) );
+    $imdb_id = strtolower( trim( (string) $imdb_id ) );
 
     if ( $imdb_id === '' ) {
         return array();
     }
 
-    $like = '%' . $wpdb->esc_like( $imdb_id ) . '%';
-    $rows = $wpdb->get_results(
-        $wpdb->prepare(
-            "SELECT ceremony, year, canonical_category, film, winner FROM $table_name WHERE (film_id = %s OR film_id LIKE %s) AND canonical_category != '' ORDER BY ceremony DESC, winner DESC, canonical_category ASC",
-            $imdb_id,
-            $like
-        ),
-        ARRAY_A
-    );
+    // The per-title award rows plus winner-first category ordering now live
+    // behind the plugin's public get_title_award_context() accessor (which
+    // also owns the format_category_display / lookup_title_label fallbacks).
+    // Without that accessor the story card degrades to empty — the section
+    // skips the title — instead of ever running theme-side SQL.
+    $reader = function_exists( 'lunara_oscars_reader' ) ? lunara_oscars_reader() : null;
 
-    if ( ! is_array( $rows ) || empty( $rows ) ) {
+    if ( ! $reader || ! method_exists( $reader, 'get_title_award_context' ) ) {
         return array();
     }
 
-    $winner_rows = array_values(
-        array_filter(
-            $rows,
-            static function( $row ) {
-                return ! empty( $row['winner'] );
-            }
+    $context = $reader->get_title_award_context(
+        $imdb_id,
+        array(
+            'preferred_categories' => (array) $args['preferred_categories'],
+            'max_categories'       => intval( $args['max_categories'] ),
         )
     );
 
-    $raw_categories = array();
-    foreach ( $winner_rows as $row ) {
-        $canonical = trim( (string) ( $row['canonical_category'] ?? '' ) );
-        if ( $canonical !== '' && ! in_array( $canonical, $raw_categories, true ) ) {
-            $raw_categories[] = $canonical;
-        }
+    if ( ! is_array( $context ) || empty( $context ) ) {
+        return array();
     }
 
-    $ordered_categories = array();
-    foreach ( (array) $args['preferred_categories'] as $preferred ) {
-        if ( in_array( $preferred, $raw_categories, true ) ) {
-            $ordered_categories[] = $preferred;
-        }
-    }
-    foreach ( $raw_categories as $canonical ) {
-        if ( ! in_array( $canonical, $ordered_categories, true ) ) {
-            $ordered_categories[] = $canonical;
-        }
-    }
-
-    $display_categories = array();
-    foreach ( array_slice( $ordered_categories, 0, intval( $args['max_categories'] ) ) as $canonical ) {
-        $display_categories[] = method_exists( $aat, 'format_category_display' ) ? $aat->format_category_display( $canonical ) : $canonical;
-    }
-
-    $first_row = $rows[0];
-    $title     = trim( (string) ( $first_row['film'] ?? '' ) );
-    if ( $title === '' && method_exists( $aat, 'lookup_title_label' ) ) {
-        $title = $aat->lookup_title_label( $imdb_id );
-    }
+    $display_categories = isset( $context['display_categories'] ) && is_array( $context['display_categories'] )
+        ? array_values( array_filter( array_map( 'strval', array_filter( $context['display_categories'], 'is_scalar' ) ), 'strlen' ) )
+        : array();
 
     return array(
         'imdb_id'         => $imdb_id,
-        'title'           => $title,
-        'year'            => trim( (string) ( $first_row['year'] ?? '' ) ),
+        'title'           => trim( (string) ( $context['title'] ?? '' ) ),
+        'year'            => trim( (string) ( $context['year'] ?? '' ) ),
         'url'             => method_exists( $aat, 'build_entity_url_from_id' ) ? $aat->build_entity_url_from_id( $imdb_id ) : home_url( '/oscars/title/' . $imdb_id . '/' ),
         'visual'          => $aat->get_title_visual_package( $imdb_id, 'medium_large' ),
-        'wins'            => count( $winner_rows ),
-        'nominations'     => count( $rows ),
+        'wins'            => intval( $context['wins'] ?? 0 ),
+        'nominations'     => intval( $context['nominations'] ?? 0 ),
         'categories'      => $display_categories,
         'categories_line' => implode( ' / ', $display_categories ),
     );
