@@ -180,7 +180,10 @@ assert.equal(analyze({}, { preloadRel: 'prefetch' }).coherent, false, 'rel=prefe
 assert.equal(analyze({}, { preloadAs: 'style' }).coherent, false, 'A non-font as= attribute is not the required font preload.');
 
 // Stale version: candidate HTML carrying the prior identity must fail.
-const staleVersion = analyze({}, { version: '3.2.51' });
+// The stale fixture uses the permanently rolled-back 3.2.48 identity (the
+// Journal runtime's convention) so mechanical version sweeps can never
+// collapse it onto the expected version.
+const staleVersion = analyze({}, { version: '3.2.48' });
 assert.equal(staleVersion.coherent, false);
 assert.equal(staleVersion.contracts['theme-version-binding'], false);
 const missingBinding = analyzeOscarsCanonicalCoherency({

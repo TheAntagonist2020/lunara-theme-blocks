@@ -182,12 +182,16 @@ Assert-True (-not $boostResult.concat_journal_true -and -not $boostResult.concat
 Assert-True ($boostResult.concat_journal_other) 'The Journal concat filter must preserve unrelated handle state.'
 Assert-True (-not $boostResult.async_journal_true -and -not $boostResult.async_journal_false) 'The Journal route handle must remain synchronous in Jetpack Boost.'
 Assert-True ($boostResult.async_journal_other) 'The Journal async filter must preserve unrelated handle state.'
-Assert-True ($boostResult.registrations.Count -eq 4) 'Reviews and Journal must each register one concat and one async handle-scoped Boost filter.'
+Assert-True ($boostResult.registrations.Count -eq 8) 'Reviews, Journal, Oscars portal, and Oscars ledger must each register one concat and one async handle-scoped Boost filter.'
 $expectedBoostRegistrations = @(
     @{ Hook = 'css_do_concat'; Callback = 'lunara_keep_review_archive_css_unaggregated' },
     @{ Hook = 'jetpack_boost_async_style'; Callback = 'lunara_keep_review_archive_css_synchronous' },
     @{ Hook = 'css_do_concat'; Callback = 'lunara_keep_journal_archive_css_unaggregated' },
-    @{ Hook = 'jetpack_boost_async_style'; Callback = 'lunara_keep_journal_archive_css_synchronous' }
+    @{ Hook = 'jetpack_boost_async_style'; Callback = 'lunara_keep_journal_archive_css_synchronous' },
+    @{ Hook = 'css_do_concat'; Callback = 'lunara_keep_oscars_portal_css_unaggregated' },
+    @{ Hook = 'jetpack_boost_async_style'; Callback = 'lunara_keep_oscars_portal_css_synchronous' },
+    @{ Hook = 'css_do_concat'; Callback = 'lunara_keep_oscars_ledger_css_unaggregated' },
+    @{ Hook = 'jetpack_boost_async_style'; Callback = 'lunara_keep_oscars_ledger_css_synchronous' }
 )
 foreach ($expectedRegistration in $expectedBoostRegistrations) {
     $matches = @($boostResult.registrations | Where-Object { $_.hook -eq $expectedRegistration.Hook -and $_.callback -eq $expectedRegistration.Callback })
