@@ -111,3 +111,65 @@ function lunara_oscars_reader() {
 
 	return Academy_Awards_Table::get_instance();
 }
+
+/**
+ * Theme seam for the plugin's hub route section composer (plugin 2.7.82+).
+ *
+ * templates/hub-page.php captures every top-level section and emits
+ * `implode( '', apply_filters( 'aat_hub_route_sections', $sections, $ctx ) )`.
+ * Array shape, owned by the plugin templates:
+ *
+ * - $sections: array<string,string> — section slug => fully rendered HTML.
+ *   Insertion order is emission order. Ceremony slugs: dossier-hero,
+ *   neighbor-nav, editorial-writeup, thesis, marquee, best-picture-nominees,
+ *   stats-bar, major-races, ballot-ledger, gallery, related-reviews,
+ *   category-chips, winner-circle, explorer-callout, table-shell.
+ *   Category slugs: hero, latest-winner, stats-bar, history, gallery,
+ *   related-reviews, explorer-callout, table-shell.
+ * - $route_context: array{kind:string,id:int|string|null} from the plugin's
+ *   get_route_context() — hub kinds: ceremony, category, ceremonies,
+ *   categories, about.
+ *
+ * This phase is deliberately an identity pass: it proves the seam carries the
+ * composed page without altering a byte, so the later Ledger Studio phase can
+ * reorder/hide sections here. Contract for ANY future body: pure array
+ * transform only — reorder, drop, or wrap entries; no output, no state
+ * writes, no user-conditional logic (these routes are anonymous-cacheable).
+ * Sections a transform does not recognize must pass through unchanged so a
+ * newer plugin's sections never silently disappear.
+ *
+ * @param array<string,string> $sections      Rendered sections keyed by slug.
+ * @param array<string,mixed>  $route_context Plugin route context.
+ * @return array<string,string>
+ */
+function lunara_oscars_compose_hub_route_sections( $sections, $route_context = array() ) {
+	unset( $route_context ); // Reserved for the Ledger Studio phase.
+
+	// Normalizing a malformed upstream value to an array is the one permitted
+	// non-identity: the plugin composer implodes the return value directly.
+	return is_array( $sections ) ? $sections : array();
+}
+add_filter( 'aat_hub_route_sections', 'lunara_oscars_compose_hub_route_sections', 10, 2 );
+
+/**
+ * Theme seam for the plugin's entity route section composer (plugin 2.7.82+).
+ *
+ * templates/entity-page.php mirrors the hub composer through
+ * `aat_entity_route_sections`. Same shape and same purity contract as
+ * lunara_oscars_compose_hub_route_sections(). Entity slugs: breadcrumbs,
+ * hero, latest-result, stats-bar, crossroads, review-module, oscar-history,
+ * filmography, related-reviews, footer. Entity kinds: title, person, company.
+ *
+ * On plugin builds older than 2.7.82 neither filter hook ever fires, so both
+ * seams are inert — zero behavior change.
+ *
+ * @param array<string,string> $sections      Rendered sections keyed by slug.
+ * @param array<string,mixed>  $route_context Plugin route context.
+ * @return array<string,string>
+ */
+function lunara_oscars_compose_entity_route_sections( $sections, $route_context = array() ) {
+	unset( $route_context ); // Reserved for the Ledger Studio phase.
+
+	return is_array( $sections ) ? $sections : array();
+}
+add_filter( 'aat_entity_route_sections', 'lunara_oscars_compose_entity_route_sections', 10, 2 );

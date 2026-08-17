@@ -634,6 +634,36 @@ add_filter( 'rocket_rucss_inline_content_exclusions', 'lunara_rocket_preserve_os
 add_filter( 'rocket_rucss_inline_atts_exclusions', 'lunara_rocket_preserve_oscars_portal_inline_css' );
 
 /**
+ * Preserve the Oscars ledger overlay stylesheet during Used CSS rebuilds.
+ * The file is route-scoped to body.aat-shell-page and cascades after the
+ * plugin's own chain; Rocket must never prune it from the ledger routes.
+ *
+ * @param array $exclusions Existing external CSS exclusions.
+ * @return array
+ */
+function lunara_rocket_preserve_oscars_ledger_css( $exclusions ) {
+    $exclusions   = is_array( $exclusions ) ? $exclusions : array();
+    $exclusions[] = 'lunara-oscars-ledger.css';
+    return array_values( array_unique( $exclusions ) );
+}
+add_filter( 'rocket_rucss_external_exclusions', 'lunara_rocket_preserve_oscars_ledger_css' );
+
+/**
+ * Preserve the synchronous Oscars ledger first-paint seed and its variables.
+ *
+ * @param array $exclusions Existing inline CSS exclusions.
+ * @return array
+ */
+function lunara_rocket_preserve_oscars_ledger_inline_css( $exclusions ) {
+    $exclusions   = is_array( $exclusions ) ? $exclusions : array();
+    $exclusions[] = 'lunara-oscars-ledger-vars';
+    $exclusions[] = 'lunara-oscars-ledger-critical-css';
+    return array_values( array_unique( $exclusions ) );
+}
+add_filter( 'rocket_rucss_inline_content_exclusions', 'lunara_rocket_preserve_oscars_ledger_inline_css' );
+add_filter( 'rocket_rucss_inline_atts_exclusions', 'lunara_rocket_preserve_oscars_ledger_inline_css' );
+
+/**
  * Keep Jetpack's extensionless CSS aggregates out of Rocket's background-CSS
  * lazy-loader.
  *
@@ -942,6 +972,81 @@ function lunara_keep_oscars_portal_css_synchronous( $async, $handle ) {
 add_filter( 'jetpack_boost_async_style', 'lunara_keep_oscars_portal_css_synchronous', 10, 2 );
 
 /**
+ * Whether the current request is a plugin-owned Oscars ledger route, with the
+ * same open-coded aat_* query-var fallback the late-guardrails hook uses so
+ * asset delivery never depends on module load order.
+ *
+ * @return bool
+ */
+function lunara_frontend_is_oscars_ledger_route() {
+    if ( function_exists( 'lunara_is_oscars_ledger_route' ) ) {
+        return lunara_is_oscars_ledger_route();
+    }
+
+    $aat_entity    = get_query_var( 'aat_entity' );
+    $aat_entity_id = get_query_var( 'aat_entity_id' );
+    $aat_hub       = get_query_var( 'aat_hub' );
+
+    return ( ! empty( $aat_entity ) && ! empty( $aat_entity_id ) ) || ! empty( $aat_hub );
+}
+
+/**
+ * Enqueue the Oscars ledger overlay stylesheet behind the plugin's chain.
+ *
+ * Priority 112 places it after the plugin's default-priority enqueues and the
+ * theme's other route sheets; depending on aat-styles makes WordPress print
+ * it after aat-styles → aat-ceremony-dossier → aat-hub-polish. When the
+ * plugin (or an older build without the route styles) is absent the
+ * dependency falls back to the theme shell — and the route detector already
+ * returns false without the aat_* query vars, so this is belt and braces.
+ */
+function lunara_enqueue_oscars_ledger_styles() {
+    if ( is_admin() || is_feed() || ! lunara_frontend_is_oscars_ledger_route() ) {
+        return;
+    }
+
+    $asset = lunara_resolve_theme_asset( 'assets/css/lunara-oscars-ledger.css' );
+    if ( empty( $asset['uri'] ) ) {
+        return;
+    }
+
+    $dependencies = wp_style_is( 'aat-styles', 'registered' ) ? array( 'aat-styles' ) : array( 'lunara-shell' );
+
+    wp_enqueue_style(
+        'lunara-oscars-ledger',
+        $asset['uri'],
+        $dependencies,
+        lunara_theme_asset_version( $asset['path'] ),
+        'all'
+    );
+}
+add_action( 'wp_enqueue_scripts', 'lunara_enqueue_oscars_ledger_styles', 112 );
+
+/**
+ * Keep the Oscars ledger overlay out of Boost's deferred aggregate.
+ *
+ * @param bool   $do_concat Current concatenation decision.
+ * @param string $handle    WordPress stylesheet handle.
+ * @return bool
+ */
+function lunara_keep_oscars_ledger_css_unaggregated( $do_concat, $handle ) {
+    return 'lunara-oscars-ledger' === (string) $handle ? false : $do_concat;
+}
+add_filter( 'css_do_concat', 'lunara_keep_oscars_ledger_css_unaggregated', 10, 2 );
+
+/**
+ * Keep the Oscars ledger overlay stylesheet render-blocking.
+ *
+ * @param bool   $async  Current asynchronous-loading decision.
+ * @param string $handle WordPress stylesheet handle.
+ * @return bool
+ */
+function lunara_keep_oscars_ledger_css_synchronous( $async, $handle ) {
+    return 'lunara-oscars-ledger' === (string) $handle ? false : $async;
+}
+add_filter( 'jetpack_boost_async_style', 'lunara_keep_oscars_ledger_css_synchronous', 10, 2 );
+
+/**
  * Reserve Reviews archive geometry before optimized/deferred CSS arrives.
  *
  * The complete visual system remains in the cacheable route stylesheet. This
@@ -1066,6 +1171,70 @@ function lunara_output_oscars_portal_critical_css() {
     }
 }
 add_action( 'wp_head', 'lunara_output_oscars_portal_critical_css', 7 );
+
+/**
+ * Resolve the SAVED Oscars Dossier control values for early ledger delivery.
+ *
+ * Deliberately passes an empty preview array: the wp_head 6 variables print
+ * identically for every visitor on the anonymous-cacheable ledger routes.
+ * Admin preset previews keep working through the priority-1002 emitter,
+ * whose preview-aware re-emission of the same variables cascades later.
+ * The key reads live here in inc/frontend.php by contract
+ * (tests/theme-studio-oscars-dossier-controls.ps1).
+ *
+ * @return array<string,mixed>
+ */
+function lunara_get_oscars_dossier_saved_control_values() {
+    return array(
+        'density'                   => lunara_get_oscars_dossier_studio_select_value( array(), 'lunara_oscars_dossier_density', 'balanced', array( 'balanced', 'dense', 'showcase' ) ),
+        'major_race_prominence'     => lunara_get_oscars_dossier_studio_select_value( array(), 'lunara_oscars_major_race_prominence', 'standard', array( 'standard', 'feature', 'compact' ) ),
+        'profile_scale'             => lunara_get_oscars_dossier_studio_select_value( array(), 'lunara_oscars_profile_scale', 'standard', array( 'standard', 'cinematic', 'compact' ) ),
+        'profile_media_treatment'   => lunara_get_oscars_dossier_studio_select_value( array(), 'lunara_oscars_profile_media_treatment', 'poster-frame', array( 'poster-frame', 'cinematic-crop', 'archival-fit' ) ),
+        'writeup_prominence'        => lunara_get_oscars_dossier_studio_select_value( array(), 'lunara_oscars_writeup_prominence', 'inline', array( 'inline', 'feature', 'compact' ) ),
+        'related_reviews_treatment' => lunara_get_oscars_dossier_studio_select_value( array(), 'lunara_oscars_related_reviews_treatment', 'standard-grid', array( 'standard-grid', 'compact-rail', 'feature-strip' ) ),
+        'title_image_focus'         => lunara_get_oscars_dossier_studio_select_value( array(), 'lunara_oscars_title_image_focus', 'center-center', array( 'center-center', 'center-top', 'center-bottom', 'left-center', 'right-center' ) ),
+        'section_gap'               => lunara_get_oscars_dossier_studio_number_value( array(), 'lunara_oscars_dossier_section_gap', 48, 24, 96 ),
+        'card_min'                  => lunara_get_oscars_dossier_studio_number_value( array(), 'lunara_oscars_dossier_card_min', 280, 220, 420 ),
+        'profile_media_width'       => lunara_get_oscars_dossier_studio_number_value( array(), 'lunara_oscars_profile_media_width', 340, 220, 520 ),
+        'profile_media_height'      => lunara_get_oscars_dossier_studio_number_value( array(), 'lunara_oscars_profile_media_height', 500, 320, 700 ),
+        'related_reviews_count'     => lunara_get_oscars_dossier_studio_number_value( array(), 'lunara_oscars_related_reviews_count', 6, 2, 8 ),
+    );
+}
+
+/**
+ * Stamp the Dossier custom properties at the head of the ledger cascade.
+ *
+ * The structural seed one priority later consumes these variables, so they
+ * must exist before it. The priority-1002 Dossier Studio emitter stays intact
+ * and re-emits the same variables (preview-aware) later in the head — for
+ * anonymous requests the two blocks are value-identical.
+ */
+function lunara_output_oscars_ledger_vars_css() {
+    if ( is_admin() || is_feed() || ! lunara_frontend_is_oscars_ledger_route() || ! function_exists( 'lunara_oscars_ledger_variable_css' ) ) {
+        return;
+    }
+
+    $css = lunara_oscars_ledger_variable_css( lunara_get_oscars_dossier_saved_control_values() );
+    if ( '' !== $css ) {
+        printf( '<style id="lunara-oscars-ledger-vars">%s</style>', $css ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Validated theme-owned variables only.
+    }
+}
+add_action( 'wp_head', 'lunara_output_oscars_ledger_vars_css', 6 );
+
+/**
+ * Reserve ledger route geometry before optimizer-deferred plugin CSS settles.
+ */
+function lunara_output_oscars_ledger_critical_css() {
+    if ( is_admin() || is_feed() || ! lunara_frontend_is_oscars_ledger_route() || ! function_exists( 'lunara_oscars_ledger_critical_css' ) ) {
+        return;
+    }
+
+    $css = lunara_oscars_ledger_critical_css();
+    if ( '' !== $css ) {
+        printf( '<style id="lunara-oscars-ledger-critical-css">%s</style>', $css ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Theme-owned CSS only.
+    }
+}
+add_action( 'wp_head', 'lunara_output_oscars_ledger_critical_css', 7 );
 
 /**
  * The canonical Home renderer does not consume block or theme.json markup.

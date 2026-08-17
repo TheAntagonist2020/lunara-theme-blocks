@@ -1,0 +1,121 @@
+/*
+ * Oscars ledger route family — the theme overlay for body.aat-shell-page.
+ *
+ * Cascades AFTER the plugin's own chain (aat-styles → aat-ceremony-dossier →
+ * aat-hub-polish): enqueued at wp_enqueue_scripts 112 with aat-styles as its
+ * dependency, so WordPress prints it behind every plugin sheet. It is an
+ * overlay, not a restyle: label faces, control text, and a light spacing
+ * rhythm only — plugin selectors keep their shipped geometry and color.
+ *
+ * Deliberately NOT here: the `body.aat-shell-page` structural rules from the
+ * theme's priority-1002 inline Dossier emitter (inc/frontend.php,
+ * lunara_output_oscars_dossier_studio_css). That emitter stays intact —
+ * the Dossier Studio controls contract pins its key reads, variables, and
+ * selectors to inc/frontend.php — and its !important rules print after this
+ * sheet, so copying them here would be dead bytes with a second owner.
+ *
+ * The Tiempos rules engage only under the resolver-driven body marker
+ * `lunara-label-font-tiempos` (inc/oscars-ledger-critical.php stamps it via
+ * body_class from the Design Tokens label role — the same raw-token resolver
+ * as the portal's `is-label-font-tiempos` root marker). Without the marker,
+ * every label keeps the device stack the plugin inherits from the theme.
+ *
+ * Budget: ≤ 20,000 bytes.
+ */
+
+
+@font-face {
+    font-display: optional;
+    font-family: "Lunara Oscars Tiempos Text";
+    font-style: normal;
+    font-weight: 400;
+    src: url("/wp-content/uploads/lunara-fonts/v1/TiemposText-Regular.woff2") format("woff2");
+}
+
+@font-face {
+    font-display: optional;
+    font-family: "Lunara Oscars Tiempos Text";
+    font-style: normal;
+    font-weight: 700;
+    src: url("/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2") format("woff2");
+}
+
+
+/* ============================================================
+   LABEL FACES — kickers, categorical labels, and file-card meta
+   take the licensed route face behind the resolver marker, with
+   device-serif fallbacks. font-family only: size, weight, case,
+   and tracking stay with the plugin (and the rhythm pass below).
+   ============================================================ */
+
+body.aat-shell-page.lunara-label-font-tiempos .aat-hub-kicker,
+body.aat-shell-page.lunara-label-font-tiempos .aat-crossroads-kicker,
+body.aat-shell-page.lunara-label-font-tiempos .aat-related-review-kicker,
+body.aat-shell-page.lunara-label-font-tiempos .aat-ceremony-neighbor-kicker,
+body.aat-shell-page.lunara-label-font-tiempos .aat-editorial-ref-type,
+body.aat-shell-page.lunara-label-font-tiempos .aat-stat-label,
+body.aat-shell-page.lunara-label-font-tiempos .aat-hub-metric-label,
+body.aat-shell-page.lunara-label-font-tiempos .aat-department-credit-label,
+body.aat-shell-page.lunara-label-font-tiempos .aat-winner-circle-category,
+body.aat-shell-page.lunara-label-font-tiempos .aat-major-race-category,
+body.aat-shell-page.lunara-label-font-tiempos .aat-ceremony-guide-meta {
+    font-family: "Lunara Oscars Tiempos Text", Georgia, "Times New Roman", serif !important;
+}
+
+
+/* ============================================================
+   CONTROL TEXT — buttons, chips, pills, badges, and breadcrumb
+   trails follow the same face behind the same marker so route
+   controls and route labels read as one voice.
+   ============================================================ */
+
+body.aat-shell-page.lunara-label-font-tiempos .aat-btn,
+body.aat-shell-page.lunara-label-font-tiempos .aat-hub-chip,
+body.aat-shell-page.lunara-label-font-tiempos .aat-category-pill,
+body.aat-shell-page.lunara-label-font-tiempos .aat-entity-status-tag,
+body.aat-shell-page.lunara-label-font-tiempos .aat-winner-badge,
+body.aat-shell-page.lunara-label-font-tiempos .aat-nominee-badge,
+body.aat-shell-page.lunara-label-font-tiempos .aat-card-badge,
+body.aat-shell-page.lunara-label-font-tiempos .aat-hub-breadcrumbs,
+body.aat-shell-page.lunara-label-font-tiempos .aat-breadcrumbs {
+    font-family: "Lunara Oscars Tiempos Text", Georgia, "Times New Roman", serif !important;
+}
+
+
+/* ============================================================
+   SPACING + TRACKING RHYTHM — a first, conservative pass. Each
+   rule nudges a verified plugin baseline (noted inline); grid
+   gaps, section gaps, and every var()-driven metric remain owned
+   by the priority-1002 Dossier emitter and are not touched here.
+   ============================================================ */
+
+/* Hub masthead air: plugin ships 30px/22px (academy-awards-table.css). */
+body.aat-shell-page .aat-hub-header {
+    margin-bottom: 34px;
+    padding-bottom: 24px;
+}
+
+/* Primary kicker tracking: plugin ships .18em. */
+body.aat-shell-page .aat-hub-kicker {
+    letter-spacing: 0.2em;
+}
+
+/* Card-level kickers: plugin ships .14em; meet the masthead halfway. */
+body.aat-shell-page .aat-crossroads-kicker,
+body.aat-shell-page .aat-related-review-kicker,
+body.aat-shell-page .aat-ceremony-neighbor-kicker,
+body.aat-shell-page .aat-editorial-ref-type {
+    letter-spacing: 0.16em;
+}
+
+/* Stat labels: plugin ships an absolute 1px; track relative to size. */
+body.aat-shell-page .aat-stat-label {
+    letter-spacing: 0.12em;
+}
+
+/* Control text settles with a whisper of tracking. */
+body.aat-shell-page .aat-btn,
+body.aat-shell-page .aat-hub-chip,
+body.aat-shell-page .aat-category-pill {
+    letter-spacing: 0.02em;
+}
