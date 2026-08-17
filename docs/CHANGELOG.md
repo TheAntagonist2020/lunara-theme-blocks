@@ -11,6 +11,39 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-16 — Theme 3.2.50 Reviews Archive Studio Parity
+
+- Brought the Reviews Archive Studio to full capability parity with the
+  Journal Archive Studio via a dedicated `inc/reviews-archive-studio.php`
+  module: archive identity, lead curator, automatic-or-curated archive runs
+  (up to 24 reviews), a four-lane section composer, public-language label
+  ownership with byte-identical defaults, retention cards with optional
+  media showcase, an archive gallery (up to 12 images), editorial rhythm and
+  geometry controls, twelve-snapshot configuration history with restore and
+  audit, and capability-gated private preview tokens.
+- Existing WordPress owners stay canonical: identity/order/visibility/
+  presentation theme mods are read and written in place, and the archive
+  lead still lives only in `_lunara_review_pinned` written through
+  `lunara_set_pinned_review_id()`. Validation follows the Journal's raw-token
+  discipline — no broad sanitization before allowlist checks; invalid input
+  repairs fail-closed to defaults and never replaces the public file.
+- Curated runs compose into the query as a stable SQL CASE at priority 19 so
+  the existing pinned-lead filter (priority 20) stays untouched: pin first,
+  curated order second, native order third, with exact page-unique results.
+- Added the Reviews route label-face resolver mirroring the Journal's exact
+  raw-token rule, the licensed Tiempos Text Bold preload at head priority 4
+  for the default token only, and label/control-scoped route CSS inside the
+  45KB budget; the retention slot owns its flex order in both the critical
+  seed and the route stylesheet, and the Reviews root now stamps
+  `data-lunara-theme-version` for cache-identity verification.
+- Director taxonomy archives remain contractually exempt from every Studio
+  surface — they read pure defaults unconditionally, and the existing
+  composition contract asserts are unchanged.
+- Coverage: a 209-assertion Studio runtime harness and a dedicated suite
+  contract lock the module roster, validator reachability, revision and
+  preview flows, SQL composition, typography discipline, byte budgets, and
+  the director exemption.
+
 ## 2026-08-16 — Theme 3.2.49 Journal Canonical Cache-Coherency Reissue
 
 - Reissued the independently approved Theme 3.2.48 licensed Journal typography

@@ -117,6 +117,9 @@ const orderScenarios = {
         showPairing: false,
         showYearFilter: false,
         showHeroActions: false,
+        // Director archives are contractually exempt from all Reviews Archive
+        // Studio state, so the retention/gallery lane never renders there.
+        showRetention: false,
     },
 };
 
@@ -467,6 +470,23 @@ function assertPairingCollisionFree(snapshot, label) {
                 const yearFilterMarkup = orders.showYearFilter === false
                     ? ''
                     : `<form class="lunara-review-archive-year-filter"><label for="review-year">Release year</label><select id="review-year" name="review_year"><option>All years</option><option>2026</option><option>2025</option><option>2024</option></select><input type="hidden" name="sort" value="modified_desc"><button type="submit">Filter</button></form>`;
+                // Hand-maintained approximation of the
+                // lunara_reviews_archive_studio_compose_retention_lane output.
+                // This fixture is maintained by hand and statically inspected
+                // only — it is never generated from or executed against the
+                // PHP builders; the executed builder coverage lives in
+                // tests/reviews-archive-studio-runtime.php. Modeled traits:
+                // the slot carries no inline order (the persistent
+                // first-paint seed maps it onto the grid lane variable), the
+                // showcase card precedes the root-only gallery, and media use
+                // truthful 16:9 intrinsic dimensions.
+                const retentionMarkup = orders.showRetention === false
+                    ? ''
+                    : `<section class="lunara-review-archive-retention lunara-review-archive-slot-retention" aria-label="Continue through the Reviews desk">
+                        <div class="lunara-review-archive-retention-showcase-head"><p class="lunara-home-section-kicker">Keep Moving</p><h2 class="lunara-section-title">More routes through the desk.</h2></div>
+                        <div class="lunara-review-archive-retention-showcase-grid"><article class="lunara-review-archive-retention-media-card has-media"><a class="lunara-review-archive-retention-media-link" href="#latest"><span class="lunara-review-archive-retention-media" style="--lunara-retention-focus-x:50%;--lunara-retention-focus-y:50%"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Crect width='1920' height='1080' fill='%230b1b2a'/%3E%3C/svg%3E" width="1920" height="1080" loading="lazy" alt="Retention route art"></span><span class="lunara-review-archive-retention-kicker">Recently Updated</span></a><small class="lunara-review-archive-retention-provenance"><span>Studio credit</span><span aria-hidden="true"> · </span><a href="#retention-source" rel="noopener noreferrer">Studio source</a></small></article></div>
+                        <section class="lunara-review-archive-gallery" aria-labelledby="lunara-review-archive-gallery-title"><header class="lunara-review-archive-gallery-head"><p class="lunara-home-section-kicker">Visual File</p><h3 id="lunara-review-archive-gallery-title" class="lunara-section-title">From the Reviews desk</h3></header><div class="lunara-review-archive-gallery-grid"><figure class="lunara-review-archive-gallery-item"><div class="lunara-review-archive-gallery-media" style="--lunara-gallery-focus-x:31%;--lunara-gallery-focus-y:67%"><img class="lunara-review-archive-gallery-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Crect width='1920' height='1080' fill='%23122232'/%3E%3C/svg%3E" width="1920" height="1080" loading="lazy" alt="Gallery frame"></div><figcaption><p>First caption</p><small><span class="lunara-review-archive-gallery-credit">First credit</span><span aria-hidden="true"> · </span><a class="lunara-review-archive-gallery-source" href="#gallery-source" rel="noopener noreferrer">First source</a></small></figcaption></figure></div></section>
+                    </section>`;
                 const pairingMarkup = orders.showPairing === false
                     ? ''
                     : `<div class="lunara-review-archive-slot-pairing-desk" style="order:${orders.pairing}!important">
@@ -476,7 +496,7 @@ function assertPairingCollisionFree(snapshot, label) {
                 <html><head><meta name="viewport" content="width=device-width,initial-scale=1">
                 <style id="stale-boost-critical">${productionBoostCritical}</style><style>${authorityCss(orders)}</style><style id="blocking-review-archive">${routeCss}</style><style id="current-structural-seed">${criticalSeed}</style></head>
                 <body class="${bodyClass}"><header class="lunara-site-header" style="height:132px"></header>
-                <main id="primary" class="lunara-archive-page lunara-review-archive-page lra">
+                <main id="primary" class="lunara-archive-page lunara-review-archive-page lra is-label-font-tiempos">
                     ${heroMarkup}
                     <section class="lunara-home-section lunara-review-archive-utility lunara-review-archive-slot-utility" style="order:${orders.utility}!important">
                         <div class="lunara-review-archive-toolbar"><div class="lunara-home-section-head lunara-review-archive-toolbar-head"><div><p class="lunara-home-section-kicker">Review Order</p><h2 class="lunara-section-title">Release timeline or real editing activity</h2></div></div><nav class="lunara-review-archive-sort"><span class="lunara-review-archive-sort-label">Sort by</span><a class="lunara-review-archive-sort-link">Release Timeline</a><a class="lunara-review-archive-sort-link">Recently Updated</a><a class="lunara-review-archive-sort-link">Score</a></nav>${yearFilterMarkup}</div>
@@ -484,6 +504,7 @@ function assertPairingCollisionFree(snapshot, label) {
                     <section class="lunara-home-section lunara-review-archive-shell lunara-review-archive-slot-grid" style="order:${orders.grid}!important">
                         <article class="lunara-review-feature-card is-lead has-review-media has-review-quote"><div class="lunara-review-feature-layout lunara-review-feature-link"><a class="lunara-review-feature-media-link" href="#review"><div class="lunara-review-feature-media"><img class="lunara-review-feature-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1500 2000'%3E%3Crect width='1500' height='2000' fill='%23122232'/%3E%3C/svg%3E" width="1500" height="2000" loading="lazy" sizes="(max-width:900px) 88vw,520px" alt="Review poster"><span class="lunara-score-badge"><span class="lunara-stars">★★★★½</span></span></div></a><div class="lunara-review-feature-copy"><p class="lunara-home-section-kicker">Lunara Review</p><h2 class="lunara-review-feature-title"><a class="lunara-review-feature-title-link" href="#review">A Long, Exacting Lead Review Headline That Exercises the Real Archive Geometry</a></h2><p class="lunara-review-feature-excerpt lunara-review-feature-quote">A critic follows the argument through performance, form, history, and consequence, allowing enough real copy to expose any minimum-height-only first-paint mistake before the full archive stylesheet arrives.</p><div class="lunara-review-feature-footer"><div class="lunara-review-feature-ledger"><a class="lunara-oscar-ledger" href="#ledger"><span class="lunara-oscar-ledger-pill">Oscar Ledger</span><span class="lunara-oscar-ledger-counts">5 nominations · 2 wins</span></a></div><a class="lunara-section-link lunara-review-feature-cta" href="#review">Read Review</a></div></div></div></article>
                     </section>
+                    ${retentionMarkup}
                     <nav class="lunara-review-archive-slot-pagination" style="order:${orders.pagination}!important">Previous · Next</nav>
                     ${pairingMarkup}
                 </main></body></html>`);

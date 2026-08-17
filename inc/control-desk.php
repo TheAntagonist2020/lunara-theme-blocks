@@ -71,6 +71,7 @@ function lunara_enqueue_control_desk_assets( $hook ) {
                 'nonce'      => wp_create_nonce( 'wp_rest' ),
                 'journalSearchUrl'   => admin_url( 'admin-ajax.php' ),
                 'journalSearchNonce' => wp_create_nonce( 'lunara_journal_archive_studio_search' ),
+                'reviewsSearchNonce' => wp_create_nonce( 'lunara_reviews_archive_studio_search' ),
                 'i18n'       => array(
                     'working' => __( 'Asking the private AI desk...', 'lunara-film' ),
                     'ready'   => __( 'Suggestion saved privately.', 'lunara-film' ),
@@ -79,6 +80,9 @@ function lunara_enqueue_control_desk_assets( $hook ) {
                     'journalSearching'    => __( 'Searching published Journal files…', 'lunara-film' ),
                     'journalSearchReady'  => __( 'Published matches updated.', 'lunara-film' ),
                     'journalSearchFailed' => __( 'Search could not be completed. Your current selection is unchanged.', 'lunara-film' ),
+                    'reviewsSearching'    => __( 'Searching published Reviews…', 'lunara-film' ),
+                    'reviewsSearchReady'  => __( 'Published matches updated.', 'lunara-film' ),
+                    'reviewsSearchFailed' => __( 'Search could not be completed. Your current selection is unchanged.', 'lunara-film' ),
                 ),
             )
         );
@@ -1526,6 +1530,11 @@ function lunara_control_desk_reviews_archive_lead_options() {
 }
 
 function lunara_control_desk_save_reviews_archive_studio() {
+    if ( function_exists( 'lunara_reviews_archive_studio_promote_config' ) && function_exists( 'lunara_reviews_archive_studio_handle_save' ) ) {
+        lunara_reviews_archive_studio_handle_save();
+        return;
+    }
+
     $legacy_redirect = lunara_control_desk_admin_url(
         array(
             'tab' => 'theme-studio',
@@ -8833,6 +8842,11 @@ function lunara_control_desk_render_reviews_archive_number_control( $key, $spec 
 }
 
 function lunara_control_desk_render_reviews_archive_studio( $context = 'control-desk' ) {
+    if ( function_exists( 'lunara_reviews_archive_studio_render_control_surface' ) ) {
+        lunara_reviews_archive_studio_render_control_surface( $context );
+        return;
+    }
+
     if ( ! current_user_can( 'edit_theme_options' ) ) {
         ?>
         <section id="lunara-theme-studio-reviews-archive-studio" class="lunara-control-desk-homepage-studio">
@@ -15333,6 +15347,10 @@ function lunara_control_desk_render_notice() {
         ? lunara_journal_archive_studio_validation_message()
         : __( 'Review the Journal Archive fields and try again.', 'lunara-film' );
 
+    $reviews_archive_reason = function_exists( 'lunara_reviews_archive_studio_validation_message' )
+        ? lunara_reviews_archive_studio_validation_message()
+        : __( 'Review the Reviews Archive fields and try again.', 'lunara-film' );
+
     $messages = array(
         'pairing_desk_copy_saved'     => array(
             'class'   => 'notice-success',
@@ -15405,6 +15423,18 @@ function lunara_control_desk_render_notice() {
         'reviews_archive_studio_forbidden' => array(
             'class'   => 'notice-error',
             'message' => __( 'You can view the Control Desk, but changing Reviews Archive Studio controls requires theme editing permission.', 'lunara-film' ),
+        ),
+        'reviews_archive_studio_invalid' => array(
+            'class'   => 'notice-error',
+            'message' => sprintf( __( 'Reviews Archive Studio was not saved. %s Your rejected values remain in the private form below; the last valid public archive is unchanged.', 'lunara-film' ), $reviews_archive_reason ),
+        ),
+        'reviews_archive_studio_restored' => array(
+            'class'   => 'notice-success',
+            'message' => __( 'Reviews Archive Studio restored the selected prior-valid public configuration and recorded the state it replaced.', 'lunara-film' ),
+        ),
+        'reviews_archive_studio_restore_invalid' => array(
+            'class'   => 'notice-error',
+            'message' => sprintf( __( 'Reviews Archive Studio could not restore that revision. %s The current public archive is unchanged.', 'lunara-film' ), $reviews_archive_reason ),
         ),
         'review_card_image_focus_saved' => array(
             'class'   => 'notice-success',
