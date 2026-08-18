@@ -397,9 +397,21 @@ function lunara_render_oscars_portal_direct() {
 
 /**
  * Add a body class so the portal can be styled without relying on generic page shells.
+ *
+ * Gate parity: the route seed and stylesheet enqueue on the whole portal
+ * family (lunara_is_oscars_portal_route — the resolved /oscars/ page OR any
+ * page assigned page-oscars.php), so the class-scoped styling owner must
+ * stamp on the same family or a template-assigned page renders half-styled
+ * (seed only, no body.lunara-oscars-portal-page rules). The narrow
+ * is_page('oscars') detector remains the fallback when the family module
+ * is not loaded.
  */
 function lunara_oscars_portal_body_class( $classes ) {
-    if ( lunara_is_oscars_portal_page() ) {
+    $is_portal_route = function_exists( 'lunara_is_oscars_portal_route' )
+        ? ( ! is_admin() && lunara_is_oscars_portal_route() )
+        : lunara_is_oscars_portal_page();
+
+    if ( $is_portal_route ) {
         $classes[] = 'lunara-oscars-portal-page';
     }
 

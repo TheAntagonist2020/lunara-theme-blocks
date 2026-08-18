@@ -38,7 +38,8 @@ foreach ($relative in $sqlFreeFiles) {
     $path = Join-Path $themeRoot $relative
     Assert-True (Test-Path -LiteralPath $path) "Missing expected file: $relative"
     $content = Get-Content -LiteralPath $path -Raw
-    Assert-True ($content -notmatch '\$wpdb') "$relative must carry zero direct `$wpdb references; the plugin read accessors are the only data door."
+    # Catches both the global variable and its $GLOBALS['wpdb'] alias spelling.
+    Assert-True ($content -notmatch '\$wpdb|GLOBALS\[\s*[''"]wpdb') "$relative must carry zero direct `$wpdb references (including the `$GLOBALS['wpdb'] alias); the plugin read accessors are the only data door."
 }
 
 # --- (b) The pinned academy_awards reference count. -------------------------

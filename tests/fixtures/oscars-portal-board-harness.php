@@ -65,7 +65,43 @@ function sanitize_key( $value ) { if ( ! is_scalar( $value ) ) { throw new TypeE
 function absint( $value ) { if ( ! is_scalar( $value ) ) { throw new TypeError( 'absint expects a scalar test value' ); } return abs( (int) $value ); }
 function esc_html( $value ) { return htmlspecialchars( (string) $value, ENT_QUOTES, 'UTF-8' ); }
 function esc_attr( $value ) { return esc_html( $value ); }
-function esc_url( $value ) { if ( ! is_scalar( $value ) ) { throw new TypeError( 'esc_url expects a scalar test value' ); } return filter_var( (string) $value, FILTER_SANITIZE_URL ); }
+/**
+ * Faithful model of WP esc_url() in its default href display context — the
+ * parts that matter for href safety. The previous FILTER_SANITIZE_URL stub
+ * was WEAKER than WordPress: it passed javascript: hrefs straight through.
+ * Real esc_url(): (1) ltrims and turns spaces into %20, then deletes every
+ * character outside its allowed set — a raw double quote is REMOVED, not
+ * encoded, so it can never break out of a quoted attribute; (2) in display
+ * context entity-encodes a bare '&' to '&#038;' and "'" to '&#039;';
+ * (3) runs wp_kses_bad_protocol against the allowed-protocol list and
+ * returns '' when that changes the URL — so javascript:/data:/vbscript:
+ * collapse to the empty string (this harness allows http/https plus
+ * relative URLs, the only protocols the board context links).
+ */
+function esc_url( $value ) {
+	if ( ! is_scalar( $value ) ) { throw new TypeError( 'esc_url expects a scalar test value' ); }
+	$url = (string) $value;
+	if ( '' === $url ) {
+		return '';
+	}
+	$url = str_replace( ' ', '%20', ltrim( $url ) );
+	$url = (string) preg_replace( '|[^a-z0-9\-~+_.?#=!&;,/:%@$\|*\'()\[\]\x80-\xff]|i', '', $url );
+	if ( '' === $url ) {
+		return '';
+	}
+	// Display context: bare ampersands and single quotes become entities.
+	$url = (string) preg_replace( '/&(?!#\d+;|#x[0-9a-f]+;|[a-z][a-z0-9]{1,7};)/i', '&#038;', $url );
+	$url = str_replace( '&amp;', '&#038;', $url );
+	$url = str_replace( "'", '&#039;', $url );
+	// Protocol allowlist: relative URLs pass; anything with a scheme must be
+	// http/https or the whole URL collapses to '' exactly like esc_url().
+	if ( ! in_array( substr( $url, 0, 1 ), array( '/', '#', '?' ), true ) && preg_match( '/^([a-z][a-z0-9+.\-]*):/i', $url, $scheme_match ) ) {
+		if ( ! in_array( strtolower( $scheme_match[1] ), array( 'http', 'https' ), true ) ) {
+			return '';
+		}
+	}
+	return $url;
+}
 function __( $value, $domain = '' ) { return $value; }
 function esc_html_e( $value, $domain = '' ) { echo esc_html( $value ); }
 function esc_attr_e( $value, $domain = '' ) { echo esc_attr( $value ); }
@@ -266,6 +302,51 @@ $record(
 	array(
 		'no_nonce'  => false === stripos( $shape_output . $hostile_output . $status_output, 'nonce' ),
 		'no_cookie' => false === stripos( $shape_output . $hostile_output . $status_output, 'cookie' ),
+	)
+);
+
+// Case 6: hostile entity-URL metas attack the href lane itself. esc_url()
+// must refuse a javascript: protocol outright (empty href) and strip a raw
+// double quote so it can never break out of the quoted href attribute.
+$hostile_url_output = lunara_board_render_with_picks(
+	array(
+		331 => array(
+			'category' => 'Best Picture',
+			'film'     => '',
+			'person'   => 'Proto Call',
+			'status'   => '',
+			'url'      => 'javascript:alert(1)',
+			'year'     => 2027,
+			'title'    => 'Pick 331',
+		),
+		332 => array(
+			'category' => 'Best Director',
+			'film'     => '',
+			'person'   => 'Quote Break',
+			'status'   => '',
+			'url'      => 'https://x/" onmouseover=alert(1) x="',
+			'year'     => 2027,
+			'title'    => 'Pick 332',
+		),
+	)
+);
+preg_match_all( '/href="([^"]*)"/', $hostile_url_output, $hostile_href_matches );
+$hostile_href_values   = $hostile_href_matches[1];
+$hrefs_have_javascript = false;
+foreach ( $hostile_href_values as $hostile_href_value ) {
+	if ( false !== stripos( $hostile_href_value, 'javascript:' ) ) {
+		$hrefs_have_javascript = true;
+	}
+}
+$record(
+	'hostile-url-meta-neutralized',
+	array(
+		'two_hrefs_rendered'          => count( $hostile_href_values ) >= 2,
+		'no_javascript_href'          => ! $hrefs_have_javascript,
+		'no_javascript_anywhere'      => false === stripos( $hostile_url_output, 'javascript:' ),
+		'bad_protocol_href_emptied'   => false !== strpos( $hostile_url_output, 'href=""' ),
+		'no_double_quote_breakout'    => false === strpos( $hostile_url_output, '" onmouseover' ),
+		'quote_stripped_not_breaking' => false !== strpos( $hostile_url_output, 'href="https://x/%20onmouseover=alert(1)%20x="' ),
 	)
 );
 

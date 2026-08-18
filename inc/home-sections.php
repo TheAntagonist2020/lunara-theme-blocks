@@ -992,6 +992,21 @@ function lunara_build_home_title_story( $imdb_id, $args = array() ) {
         return array();
     }
 
+    // The awards table's film_id column is pipe-joined multi-value for
+    // co-productions (e.g. 'tt0111161|tt0110912'), but the plugin's
+    // get_title_award_context() accessor hard-gates on a single ^tt\d+$
+    // token (its internal query then LIKE-matches that token against the
+    // pipe-joined column, so one token still finds the co-production rows).
+    // Normalize here: pass the FIRST tt token through, otherwise the raw
+    // pipe-joined value is silently rejected and the card disappears.
+    if ( ! preg_match( '/^tt\d+$/', $imdb_id ) ) {
+        if ( preg_match( '/tt\d+/', $imdb_id, $imdb_id_match ) ) {
+            $imdb_id = $imdb_id_match[0];
+        } else {
+            return array();
+        }
+    }
+
     // The per-title award rows plus winner-first category ordering now live
     // behind the plugin's public get_title_award_context() accessor (which
     // also owns the format_category_display / lookup_title_label fallbacks).

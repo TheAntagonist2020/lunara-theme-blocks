@@ -176,6 +176,7 @@ assert.equal(mixed.contracts['journal-zero-legacy-roots'], false);
 assert.equal(analyze({}, { legacyStudioStyle: true }).coherent, false, 'Legacy route assets must fail the no-mixed-assets contract.');
 
 // Version binding: stale candidate HTML with the prior version must fail.
+assert.notEqual('3.2.48', '3.2.51', 'A version sweep must never collapse the stale fixture onto the expected version.');
 const staleVersion = analyze({}, { version: '3.2.48' });
 assert.equal(staleVersion.coherent, false);
 assert.equal(staleVersion.contracts['theme-version-binding'], false);
@@ -256,6 +257,21 @@ assert.equal(analyze({ expectedCardCount: '8' }).coherent, false, 'A string expe
 assert.equal(analyzeJournalCanonicalCoherency({ url: CANONICAL_JOURNAL_URL, finalUrl: CANONICAL_JOURNAL_URL, statusCode: 200, html: '', expectedVersion: '3.2.51' }).coherent, false, 'An empty response must fail closed.');
 assert.equal(analyzeJournalCanonicalCoherency({ url: CANONICAL_JOURNAL_URL, finalUrl: CANONICAL_JOURNAL_URL, statusCode: 200, html: '<html><head></head>no body tag', expectedVersion: '3.2.51' }).coherent, false, 'A response with no <body> must fail closed.');
 assert.equal(analyzeJournalCanonicalCoherency({ url: CANONICAL_JOURNAL_URL, finalUrl: CANONICAL_JOURNAL_URL, statusCode: 200, html: null, expectedVersion: '3.2.51' }).coherent, false, 'A null body must fail closed.');
+
+// Isolate the missing-body early return itself: a FULLY coherent candidate
+// whose opening <body> tag is swapped for <div> carries every other passing
+// signal, so only the missing-body guard can fail it. A mutation replacing
+// that guard with if(false) would let this candidate pass.
+const bodilessCoherent = analyzeJournalCanonicalCoherency({
+	url: CANONICAL_JOURNAL_URL,
+	finalUrl: CANONICAL_JOURNAL_URL,
+	statusCode: 200,
+	html: candidateHtml().replace('<body', '<div'),
+	expectedVersion: '3.2.51',
+	expectedLabelToken: APPROVED_DEFAULT_LABEL_TOKEN,
+});
+assert.equal(bodilessCoherent.coherent, false, 'An otherwise-coherent candidate with no <body> must fail closed.');
+assert.equal(bodilessCoherent.failures.join('; ').includes('failing closed'), true, 'The missing-body guard must report its fail-closed reason.');
 
 // CLI enforcement layer: exit-code wiring, replay provenance, and usage
 // discipline are exercised end-to-end via child processes, offline.

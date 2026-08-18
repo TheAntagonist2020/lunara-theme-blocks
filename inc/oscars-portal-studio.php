@@ -373,11 +373,19 @@ function lunara_oscars_portal_studio_get_public_config( $allow_preview = true ) 
 	// mirrors lunara_theme_mod_text: a trimmed non-empty mod wins, anything
 	// else keeps the shipped literal, so an unsaved site renders today's copy
 	// byte-for-byte (with a scalar guard instead of a raw string cast).
+	// Mod-sourced identity is VERBATIM (the reviews-archive-studio shape): the
+	// sanitize/cap discipline in lunara_oscars_portal_studio_text() is a
+	// save-time gate for request input (config_from_request → validate_config
+	// before promotion), never a rewrite of copy an existing owner already
+	// stores. Escaping stays at output — page-oscars.php esc_html()s every
+	// identity field.
+	$verbatim_identity = array();
 	foreach ( lunara_oscars_portal_studio_identity_specs() as $field => $spec ) {
 		$stored_copy = lunara_oscars_portal_studio_scalar_or( get_theme_mod( $spec['setting'], '' ), '' );
 		$stored_copy = trim( (string) $stored_copy );
-		$config['identity'][ $field ] = '' !== $stored_copy ? $stored_copy : $spec['default'];
+		$verbatim_identity[ $field ] = '' !== $stored_copy ? $stored_copy : $spec['default'];
 	}
+	$config['identity'] = $verbatim_identity;
 
 	// The lunara_oscars_show_* mods (and the rotating-winners enable) remain
 	// the visibility owners; bound slots derive after the owned reads.
@@ -405,6 +413,14 @@ function lunara_oscars_portal_studio_get_public_config( $allow_preview = true ) 
 		// Every validator family is repaired above. Keep this impossible-state
 		// fallback valid without pretending the malformed candidate was public.
 		$validated = lunara_oscars_portal_studio_validate_config( $defaults );
+	}
+
+	// Re-assert the mod-sourced identity after the repair/validate pass. The
+	// validator's identity sanitize/cap exists for SAVE candidates; on a pure
+	// public read it must not rewrite what the theme-mod owner stores, or an
+	// unsaved site loses byte-parity with today's trim-then-esc_html render.
+	if ( is_array( $validated ) ) {
+		$validated['identity'] = $verbatim_identity;
 	}
 
 	return $validated;
@@ -1025,7 +1041,22 @@ function lunara_oscars_portal_studio_preflight_preview_query( $query ) {
 	// Pre-query, the family resolves as the /oscars/ page; the page-template
 	// variant is finished by the template_redirect guard. Ledger routes are
 	// deliberately never part of the family.
-	if ( ! $query->is_page( 'oscars' ) ) {
+	//
+	// WP_Query::is_page( 'oscars' ) CANNOT resolve at pre_get_posts — the
+	// queried object is only determined once posts are fetched — so the
+	// pre-query detection reads the query vars directly: the pagename var,
+	// or a page_id var matching the resolved /oscars/ page (get_page_by_path
+	// is core-cached). is_page() stays only as a late fallback for a query
+	// whose object has already resolved.
+	$is_portal_pre_query = 'oscars' === (string) $query->get( 'pagename' );
+	if ( ! $is_portal_pre_query ) {
+		$page_id = absint( $query->get( 'page_id' ) );
+		if ( $page_id > 0 ) {
+			$oscars_page         = get_page_by_path( 'oscars' );
+			$is_portal_pre_query = $oscars_page && isset( $oscars_page->ID ) && $page_id === (int) $oscars_page->ID;
+		}
+	}
+	if ( ! $is_portal_pre_query && ! $query->is_page( 'oscars' ) ) {
 		return;
 	}
 	$response = lunara_oscars_portal_studio_prepare_preview_response( true );

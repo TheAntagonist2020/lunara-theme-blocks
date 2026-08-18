@@ -4,10 +4,13 @@
  *
  * The portal template already emits the exact saved slot order in the DOM.
  * This compact route-scoped seed reserves that geometry before an optimizer's
- * deferred aggregate can settle, and deliberately neutralizes historic
- * numeric `order` declarations so CSS can never become a second order owner.
- * Every metric derives from the migrated portal layers (the former
- * priority-1001 emitter, the lunara-shell Prediction Board block); the
+ * deferred aggregate can settle. The slot `order:initial` rule is purely
+ * forward-defensive: no numeric `order` declarations exist in any portal
+ * layer today, and the rule keeps CSS from ever becoming a second order
+ * owner if one appears. The container declarations are calibrated to the
+ * standing body.lunara-oscars-portal-page authority in lunara-shell.css
+ * (grid, minmax(0,1fr) column, min(1180px, calc(100vw - 48px)) width) so
+ * the seed reserves the true final geometry instead of flipping it; the
  * cacheable route stylesheet remains the complete visual authority.
  *
  * @package Lunara_Film
@@ -108,7 +111,7 @@ if ( ! function_exists( 'lunara_oscars_portal_critical_css' ) ) {
 	 */
 	function lunara_oscars_portal_critical_css() {
 		$css = <<<'CSS'
-#primary.lunara-oscars-portal{box-sizing:border-box;display:flex!important;flex-direction:column!important;gap:var(--lunara-oscars-portal-section-gap,clamp(34px,4.8vw,58px))!important;margin-inline:auto!important;max-width:min(100%,1180px)!important;min-width:0!important;overflow-x:clip!important;padding:clamp(14px,2.4vw,24px) clamp(18px,3vw,30px) clamp(48px,6vw,76px)!important;width:100%!important}
+#primary.lunara-oscars-portal{box-sizing:border-box;display:grid!important;grid-template-columns:minmax(0,1fr)!important;justify-items:stretch!important;gap:var(--lunara-oscars-portal-section-gap,clamp(34px,4.8vw,58px))!important;margin-inline:auto!important;max-width:1180px!important;min-width:0!important;overflow-x:clip!important;padding:clamp(14px,2.4vw,24px) clamp(18px,3vw,30px) clamp(48px,6vw,76px)!important;width:min(1180px,calc(100vw - 48px))!important}
 #primary.lunara-oscars-portal>:is([class*="lunara-oscars-portal-slot-"],.lunara-oscars-navigator){box-sizing:border-box;max-width:100%;min-width:0;order:initial!important}
 #primary.lunara-oscars-portal>.lunara-home-section{max-width:100%!important;min-width:0!important;overflow:hidden!important;width:100%!important}
 #primary.lunara-oscars-portal>.lunara-oscars-portal-slot-hero{min-height:var(--lunara-oscars-portal-hero-min-height,clamp(360px,42vh,540px))!important}

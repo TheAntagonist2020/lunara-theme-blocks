@@ -48,6 +48,27 @@ function lunara_is_oscars_portal_route() {
  * @return bool
  */
 function lunara_is_oscars_ledger_route() {
+	// Per-request memo: this detector fires 5+ times per request (body
+	// classes, asset gates, late guardrails) and the reader's
+	// get_route_context() resolves categories against transients/DB each
+	// time. Ledger-ness is a pure function of the aat_* query vars (both
+	// classification branches read nothing else), so the memo keys on that
+	// cheap fingerprint: a real request computes once, while multi-request
+	// harnesses that swap query vars inside one process stay correct.
+	static $memo = array();
+
+	$aat_entity    = get_query_var( 'aat_entity' );
+	$aat_entity_id = get_query_var( 'aat_entity_id' );
+	$aat_hub       = get_query_var( 'aat_hub' );
+
+	$fingerprint = ( is_scalar( $aat_entity ) ? (string) $aat_entity : '' ) . '|'
+		. ( is_scalar( $aat_entity_id ) ? (string) $aat_entity_id : '' ) . '|'
+		. ( is_scalar( $aat_hub ) ? (string) $aat_hub : '' );
+
+	if ( array_key_exists( $fingerprint, $memo ) ) {
+		return $memo[ $fingerprint ];
+	}
+
 	$reader = lunara_oscars_reader();
 
 	if ( $reader && method_exists( $reader, 'get_route_context' ) ) {
@@ -56,14 +77,12 @@ function lunara_is_oscars_ledger_route() {
 
 		// The portal kind is the theme page, owned by the portal detector;
 		// every other resolved kind is a ledger route.
-		return ! in_array( $kind, array( 'none', 'portal' ), true );
+		$memo[ $fingerprint ] = ! in_array( $kind, array( 'none', 'portal' ), true );
+		return $memo[ $fingerprint ];
 	}
 
-	$aat_entity    = get_query_var( 'aat_entity' );
-	$aat_entity_id = get_query_var( 'aat_entity_id' );
-	$aat_hub       = get_query_var( 'aat_hub' );
-
-	return ( ! empty( $aat_entity ) && ! empty( $aat_entity_id ) ) || ! empty( $aat_hub );
+	$memo[ $fingerprint ] = ( ! empty( $aat_entity ) && ! empty( $aat_entity_id ) ) || ! empty( $aat_hub );
+	return $memo[ $fingerprint ];
 }
 
 /**

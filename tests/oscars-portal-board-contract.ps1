@@ -38,7 +38,8 @@ $expectedCases = @(
     'hostile-strings-entity-escaped',
     'status-class-bounded-via-sanitize-key',
     'board-shape-and-order',
-    'no-state-conditional-output'
+    'no-state-conditional-output',
+    'hostile-url-meta-neutralized'
 )
 
 foreach ($caseName in $expectedCases) {
@@ -63,6 +64,15 @@ Assert-True ($renderer -match "'\s?is-status-'\s*\.\s*esc_attr\(\s*\`$row\['stat
 
 # The board id is stable and emitted exactly once by the renderer.
 Assert-True (([regex]::Matches($renderer, 'id="oscars-board"')).Count -eq 1) 'The renderer must own exactly one stable #oscars-board id.'
+
+# href discipline: every href the renderer emits must route through esc_url.
+# Bounded to the renderer body via the tempered (?!function\s) scan.
+$boardBody = [regex]::Match($renderer, 'function\s+lunara_render_oscars_prediction_board\s*\((?:(?!function\s)[\s\S])*').Value
+Assert-True ($boardBody.Length -gt 0) 'Unable to isolate the Prediction Board renderer body.'
+$hrefEmissionCount = ([regex]::Matches($boardBody, 'href=')).Count
+$escUrlHrefCount = ([regex]::Matches($boardBody, 'href="<\?php\s+echo\s+esc_url\(')).Count
+Assert-True ($hrefEmissionCount -ge 1) 'The Prediction Board renderer must emit at least one href.'
+Assert-True ($hrefEmissionCount -eq $escUrlHrefCount) 'Every href the Prediction Board renderer emits must route through esc_url.'
 
 # Empty board renders nothing: both the no-posts and no-rows paths return the
 # exact empty string before any markup buffer opens.

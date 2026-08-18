@@ -521,23 +521,22 @@ function lunara_oscars_linked_reviews_query( $count = 4 ) {
     // Awards ledger. The postmeta-to-awards join this function used to run
     // directly now lives behind the plugin's public
     // get_reviewed_award_title_post_ids() accessor; when the reader (or the
-    // accessor) is unavailable the section degrades to an empty query — and
-    // the portal hides it — instead of ever falling back to theme-side SQL.
+    // accessor) is unavailable the ledger-joined priority is skipped and the
+    // section degrades to the SQL-FREE meta_query fallback below (a plain
+    // WP_Query on _lunara_imdb_title_id) — never to theme-side awards SQL.
     $reader = function_exists( 'lunara_oscars_reader' ) ? lunara_oscars_reader() : null;
-
-    if ( ! $reader || ! method_exists( $reader, 'get_reviewed_award_title_post_ids' ) ) {
-        return new WP_Query();
-    }
 
     $oscar_ids = array();
 
-    // Rotate daily through the reviewed-title pool (same fetch-extra window
-    // the direct query used, expressed as the accessor's limit/offset).
-    $day_offset = intval( date( 'z' ) ) % 20; // rotate through the pool
-    $oscar_pool = $reader->get_reviewed_award_title_post_ids( $count * 3, $day_offset );
+    if ( $reader && method_exists( $reader, 'get_reviewed_award_title_post_ids' ) ) {
+        // Rotate daily through the reviewed-title pool (same fetch-extra window
+        // the direct query used, expressed as the accessor's limit/offset).
+        $day_offset = intval( date( 'z' ) ) % 20; // rotate through the pool
+        $oscar_pool = $reader->get_reviewed_award_title_post_ids( $count * 3, $day_offset );
 
-    if ( is_array( $oscar_pool ) && ! empty( $oscar_pool ) ) {
-        $oscar_ids = array_map( 'intval', array_slice( $oscar_pool, 0, $count ) );
+        if ( is_array( $oscar_pool ) && ! empty( $oscar_pool ) ) {
+            $oscar_ids = array_map( 'intval', array_slice( $oscar_pool, 0, $count ) );
+        }
     }
 
     if ( ! empty( $oscar_ids ) ) {

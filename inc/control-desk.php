@@ -12421,7 +12421,13 @@ function lunara_control_desk_theme_studio_command_index_items() {
             'status'             => __( 'Live controls', 'lunara-film' ),
             'surface'            => __( 'Route-family front door', 'lunara-film' ),
             'affects'            => __( 'Portal identity copy, eleven-slot order and visibility, bounded geometry, private previews, and restorable history.', 'lunara-film' ),
-            'anchor'             => '#lunara-oscars-portal-studio',
+            // The composer section (#lunara-oscars-portal-studio) renders on
+            // the Site Studio oscars-portal surface, never on the theme-studio
+            // tab, so this entry carries a full control_url (the
+            // lunara_site_studio_admin_url + anchor shape control-desk already
+            // uses elsewhere) instead of a dead tab anchor.
+            'anchor'             => '',
+            'control_url'        => function_exists( 'lunara_site_studio_admin_url' ) ? lunara_site_studio_admin_url( 'oscars-portal' ) . '#lunara-oscars-portal-studio' : '',
             'preview_url'        => home_url( '/oscars/' ),
             'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/oscars/' ) ),
             'next'               => __( 'Next frontier: portal chamber presets and per-slot art direction.', 'lunara-film' ),
@@ -12480,7 +12486,13 @@ function lunara_control_desk_render_theme_studio_command_index() {
             <?php foreach ( $items as $item ) : ?>
                 <?php
                 $anchor      = isset( $item['anchor'] ) ? (string) $item['anchor'] : '';
-                $control_url = $anchor ? $base_url . $anchor : $base_url;
+                // A complete control_url wins over the theme-studio tab +
+                // anchor assembly: Studios whose controls live on a Site
+                // Studio surface link straight there instead of pointing at
+                // an anchor this tab never renders.
+                $control_url = isset( $item['control_url'] ) && '' !== (string) $item['control_url']
+                    ? (string) $item['control_url']
+                    : ( $anchor ? $base_url . $anchor : $base_url );
                 ?>
                 <article class="lunara-control-desk-command-card">
                     <div class="lunara-control-desk-command-card-head">

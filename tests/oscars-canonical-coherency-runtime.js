@@ -70,7 +70,7 @@ function candidateHtml({
 	const preloadTag = preload
 		? '<link rel="' + preloadRel + '" href="https://lunarafilm.com/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2" as="' + preloadAs + '" type="font/woff2" crossorigin />'
 		: '';
-	const seedTag = seed ? '<style id="' + STRUCTURAL_SEED_STYLE_ID + '">#primary.lunara-oscars-portal{display:flex}</style>' : '';
+	const seedTag = seed ? '<style id="' + STRUCTURAL_SEED_STYLE_ID + '">#primary.lunara-oscars-portal{display:grid}</style>' : '';
 	const routeLinkTag = routeLink
 		? "<link rel='stylesheet' id='" + ROUTE_STYLESHEET_LINK_ID + "' href='https://lunarafilm.com/wp-content/themes/lunara-theme-blocks/assets/css/lunara-oscars-portal.css?ver=1786874737' type='text/css' media='all' />"
 		: '';
@@ -183,6 +183,7 @@ assert.equal(analyze({}, { preloadAs: 'style' }).coherent, false, 'A non-font as
 // The stale fixture uses the permanently rolled-back 3.2.48 identity (the
 // Journal runtime's convention) so mechanical version sweeps can never
 // collapse it onto the expected version.
+assert.notEqual('3.2.48', FIXTURE_VERSION, 'A version sweep must never collapse the stale fixture onto the expected version.');
 const staleVersion = analyze({}, { version: '3.2.48' });
 assert.equal(staleVersion.coherent, false);
 assert.equal(staleVersion.contracts['theme-version-binding'], false);
@@ -257,6 +258,21 @@ assert.equal(analyze({ statusCode: 503 }).coherent, false, 'A non-200 response m
 assert.equal(analyzeOscarsCanonicalCoherency({ url: CANONICAL_OSCARS_URL, finalUrl: CANONICAL_OSCARS_URL, statusCode: 200, html: '', expectedVersion: FIXTURE_VERSION }).coherent, false, 'An empty response must fail closed.');
 assert.equal(analyzeOscarsCanonicalCoherency({ url: CANONICAL_OSCARS_URL, finalUrl: CANONICAL_OSCARS_URL, statusCode: 200, html: '<html><head></head>no body tag', expectedVersion: FIXTURE_VERSION }).coherent, false, 'A response with no <body> must fail closed.');
 assert.equal(analyzeOscarsCanonicalCoherency({ url: CANONICAL_OSCARS_URL, finalUrl: CANONICAL_OSCARS_URL, statusCode: 200, html: null, expectedVersion: FIXTURE_VERSION }).coherent, false, 'A null body must fail closed.');
+
+// Isolate the missing-body early return itself: a FULLY coherent candidate
+// whose opening <body> tag is swapped for <div> carries every other passing
+// signal, so only the missing-body guard can fail it. A mutation replacing
+// that guard with if(false) would let this candidate pass.
+const bodilessCoherent = analyzeOscarsCanonicalCoherency({
+	url: CANONICAL_OSCARS_URL,
+	finalUrl: CANONICAL_OSCARS_URL,
+	statusCode: 200,
+	html: candidateHtml().replace('<body', '<div'),
+	expectedVersion: FIXTURE_VERSION,
+	expectedLabelToken: APPROVED_DEFAULT_LABEL_TOKEN,
+});
+assert.equal(bodilessCoherent.coherent, false, 'An otherwise-coherent candidate with no <body> must fail closed.');
+assert.equal(bodilessCoherent.failures.join('; ').includes('failing closed'), true, 'The missing-body guard must report its fail-closed reason.');
 
 // CLI enforcement layer: exit-code wiring, replay provenance, and usage
 // discipline are exercised end-to-end via child processes, offline. Exit 0

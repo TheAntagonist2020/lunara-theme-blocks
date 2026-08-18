@@ -224,16 +224,24 @@ if ( ! function_exists( 'lunara_oscars_ledger_critical_css' ) ) {
 	/**
 	 * Compose the synchronous ledger route geometry seed.
 	 *
-	 * Reserves only what the deferred plugin stylesheets would otherwise
-	 * leave unpainted: container width/padding, the hub header grid, the
+	 * Reserves only what the deferred stylesheets would otherwise leave
+	 * unpainted: container width/padding, the hub header grid, the
 	 * hub/winner-circle/crossroads/profile grid columns, and the entity and
-	 * ceremony hero two-column shells. Sources, value for value:
-	 *   - .aat-container 1400px/30px (15px @768) — academy-awards-table.css
-	 *   - .aat-hub-header grid, 18px gap             — academy-awards-table.css
+	 * ceremony hero two-column shells. Calibration source for every contested
+	 * property is assets/css/lunara-shell.css: the plugin CSS declares these
+	 * first, but the shell's body.aat-shell-page !important layer wins each
+	 * contest, so the seed must reserve the SHELL's final values or first
+	 * paint flips when the shell arrives. Values, verified against
+	 * lunara-shell.css's last-wins cascade:
+	 *   - .aat-container max-width min(1200px, calc(100vw - 36px)),
+	 *     padding clamp(22px,3vw,42px) (16px @560)   — lunara-shell.css
+	 *   - .aat-hub-header grid, clamp(18px,3vw,36px) gap
+	 *                                                — lunara-shell.css
+	 *   - .aat-entity-hero minmax(150px,210px)/minmax(0,1fr),
+	 *     gap clamp(16px,2vw,24px), align-items start (@900 → 1fr)
+	 *                                                — lunara-shell.css
 	 *   - .aat-hub-grid minmax(240px,1fr) base       — academy-awards-table.css
 	 *   - .aat-winner-circle-grid minmax(290px,1fr)  — academy-awards-table.css
-	 *   - .aat-entity-hero minmax(0,320px)/1fr (@900 → 1fr)
-	 *                                                — academy-awards-table.css
 	 *   - .aat-ceremony-dossier(-hero) columns/gaps (@980 → 1fr)
 	 *                                                — ceremony-dossier.css
 	 * Grid columns and gaps consume the `--lunara-oscars-dossier-*` variables
@@ -247,14 +255,14 @@ if ( ! function_exists( 'lunara_oscars_ledger_critical_css' ) ) {
 	 */
 	function lunara_oscars_ledger_critical_css() {
 		$css = <<<'CSS'
-body.aat-shell-page .aat-container{box-sizing:border-box;margin-left:auto;margin-right:auto;max-width:1400px;padding:30px}
-body.aat-shell-page .aat-hub-header{display:grid;gap:18px;margin-bottom:30px;padding-bottom:22px;text-align:center}
+body.aat-shell-page .aat-container{box-sizing:border-box;margin-left:auto;margin-right:auto;max-width:min(1200px,calc(100vw - 36px));padding:clamp(22px,3vw,42px)}
+body.aat-shell-page .aat-hub-header{display:grid;gap:clamp(18px,3vw,36px);margin-bottom:30px;padding-bottom:22px;text-align:center}
 body.aat-shell-page .aat-hub-grid,
 body.aat-shell-page .aat-crossroads-grid,
 body.aat-shell-page .aat-profile-grid{display:grid;gap:calc(18px * var(--lunara-oscars-dossier-density-scale,1));grid-template-columns:repeat(auto-fit,minmax(min(100%,var(--lunara-oscars-dossier-card-min,240px)),1fr))}
 body.aat-shell-page .aat-winner-circle-grid{display:grid;gap:calc(18px * var(--lunara-oscars-dossier-density-scale,1));grid-template-columns:repeat(auto-fit,minmax(min(100%,var(--lunara-oscars-dossier-card-min,290px)),1fr))}
 body.aat-shell-page .aat-hub-grid{margin-top:18px}
-body.aat-shell-page .aat-entity-hero{align-items:center;display:grid;gap:32px;grid-template-columns:minmax(0,320px) minmax(0,1fr)}
+body.aat-shell-page .aat-entity-hero{align-items:start;display:grid;gap:clamp(16px,2vw,24px);grid-template-columns:minmax(150px,210px) minmax(0,1fr)}
 body.aat-shell-page .aat-ceremony-dossier{display:grid;gap:clamp(20px,3vw,34px)}
 body.aat-shell-page .aat-ceremony-dossier-hero{align-items:stretch;display:grid;gap:clamp(18px,3vw,32px);grid-template-columns:minmax(0,1.08fr) minmax(300px,.92fr)}
 @media (max-width:980px){
@@ -263,8 +271,8 @@ body.aat-shell-page .aat-ceremony-dossier-hero{grid-template-columns:minmax(0,1f
 @media (max-width:900px){
 body.aat-shell-page .aat-entity-hero{grid-template-columns:minmax(0,1fr)}
 }
-@media (max-width:768px){
-body.aat-shell-page .aat-container{padding:15px}
+@media (max-width:560px){
+body.aat-shell-page .aat-container{padding:16px}
 }
 CSS;
 

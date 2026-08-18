@@ -10,7 +10,8 @@
  *                                         (no read accessors)
  *   LUNARA_OSCARS_PORTAL_MODE=noplugin  — no plugin class at all
  * Both degraded lanes must resolve every migrated data helper to
- * hidden/empty output with zero SQL anywhere on the path.
+ * hidden/empty output — except linked-reviews, which degrades to its
+ * SQL-free IMDb meta_query fallback — with zero SQL anywhere on the path.
  *
  * Fast path for the static contract's byte measurements (no assertions):
  *   php tests/oscars-portal-studio-runtime.php --emit-portal-critical
@@ -53,14 +54,26 @@ function is_wp_error( $value ) { return $value instanceof WP_Error; }
 class Lunara_Test_WP_Die extends RuntimeException {}
 
 class WP_Query {
-	public $query_args = array();
-	public $posts      = array();
-	public $is_main    = true;
-	public $page_slug  = '';
+	public $query_args     = array();
+	public $posts          = array();
+	public $is_main        = true;
+	public $page_slug      = '';
+	public $query_vars     = array();
+	public $queried_object = null;
 	public function __construct( $args = array() ) { $this->query_args = is_array( $args ) ? $args : array(); }
 	public function have_posts() { return ! empty( $this->posts ); }
 	public function is_main_query() { return $this->is_main; }
-	public function is_page( $page = '' ) { return '' !== $this->page_slug && $this->page_slug === $page; }
+	public function get( $key, $default = '' ) { return array_key_exists( $key, $this->query_vars ) ? $this->query_vars[ $key ] : $default; }
+	// Faithful to real WordPress: WP_Query::is_page( 'slug' ) compares against
+	// the QUERIED OBJECT, which is only determined after posts are fetched —
+	// so at pre_get_posts (queried_object unset) it is ALWAYS false. The old
+	// stub resolved the slug pre-query and hid a dead preflight layer.
+	public function is_page( $page = '' ) {
+		if ( null === $this->queried_object ) {
+			return false;
+		}
+		return '' !== $this->page_slug && $this->page_slug === $page;
+	}
 }
 
 function add_action() {}
@@ -607,6 +620,14 @@ if ( 'accessors' === $lunara_test_mode ) {
 	lunara_test_assert( 'https://example.test/oscars/title/tt0000031/' === $story['url'], 'The title story must keep building its URL through the plugin URL helper.' );
 	lunara_test_assert( array() === lunara_build_home_title_story( 'tt0000404' ), 'An unknown title context must degrade the story card to empty.' );
 
+	// Pipe-joined co-production film_id values (the awards table's multi-value
+	// column shape) normalize to their FIRST tt token instead of being
+	// silently rejected by the accessor's ^tt\d+$ gate.
+	$pipe_story = lunara_build_home_title_story( 'tt0000031|tt0000032', array( 'max_categories' => 2 ) );
+	lunara_test_assert( is_array( $pipe_story ) && ! empty( $pipe_story ) && 'tt0000031' === $pipe_story['imdb_id'], 'A pipe-joined film_id must normalize to its first tt token and keep its card.' );
+	lunara_test_assert( 'https://example.test/oscars/title/tt0000031/' === $pipe_story['url'], 'The pipe-joined card must build its URL from the normalized single token.' );
+	lunara_test_assert( array() === lunara_build_home_title_story( 'no-token-here' ), 'A film_id with no tt token must still degrade the story card to empty.' );
+
 	lunara_test_assert( true === lunara_home_category_debuts_in_ceremony( 'CASTING', 97 ), 'A category whose accessor debut matches the ceremony must report a debut.' );
 	lunara_test_assert( false === lunara_home_category_debuts_in_ceremony( 'CASTING', 96 ), 'A non-matching ceremony must not report a debut.' );
 	lunara_test_assert( false === lunara_home_category_debuts_in_ceremony( '', 97 ), 'An empty category must never report a debut.' );
@@ -619,9 +640,11 @@ if ( 'accessors' === $lunara_test_mode ) {
 	$GLOBALS['lunara_test_empty_pool'] = false;
 } else {
 	// Degraded (accessor-less plugin) and noplugin modes behave identically:
-	// hidden/empty, with zero SQL anywhere on the path.
+	// the ledger-joined priority is skipped and linked-reviews degrades to
+	// the SQL-FREE IMDb meta_query fallback (a plain WP_Query on
+	// _lunara_imdb_title_id) — never to an empty section, and never to SQL.
 	$query = lunara_oscars_linked_reviews_query( 4 );
-	lunara_test_assert( $query instanceof WP_Query && array() === $query->query_args && false === $query->have_posts(), 'Without the accessor the linked-reviews helper must return an empty WP_Query so the portal hides the section.' );
+	lunara_test_assert( $query instanceof WP_Query && ! isset( $query->query_args['post__in'] ) && isset( $query->query_args['meta_query'] ), 'Without the accessor the linked-reviews helper must degrade to the SQL-free IMDb meta_query fallback.' );
 	lunara_test_assert( array() === lunara_build_home_title_story( 'tt0000031' ), 'Without the accessor the title story must degrade to empty.' );
 	lunara_test_assert( false === lunara_home_category_debuts_in_ceremony( 'CASTING', 97 ), 'Without the accessor the debut check must degrade to false.' );
 }
@@ -712,22 +735,36 @@ $off_family     = lunara_oscars_portal_studio_prepare_preview_response( false );
 lunara_test_assert( empty( $off_family['handled'] ) && $lunara_test_nocache_calls === $nocache_before, 'A preview token outside the portal family must be ignored: no preview, no denial, no cache poisoning.' );
 
 // Pre-query preflight: bad tokens die 403 on the portal main query only.
+// The candidate queries model pre_get_posts truthfully: no queried object
+// exists yet, so is_page() is false and the preflight must fire from the
+// pagename/page_id query vars — the only signals real WP has at that hook.
 $_GET['lunara_oscars_preview'] = 'guessed-token';
 $lunara_test_status_headers    = array();
 $portal_query                  = new WP_Query();
-$portal_query->page_slug       = 'oscars';
+$portal_query->query_vars['pagename'] = 'oscars';
+lunara_test_assert( false === $portal_query->is_page( 'oscars' ), 'Truthful WP model: is_page() must be false while the queried object is unset (pre-query).' );
 try {
 	lunara_oscars_portal_studio_preflight_preview_query( $portal_query );
-	lunara_test_assert( false, 'A bad preview token on the portal main query must die before Studio config.' );
+	lunara_test_assert( false, 'A bad preview token on the portal main query must die before Studio config (via the pagename path).' );
 } catch ( Lunara_Test_WP_Die $died ) {
 	lunara_test_assert( in_array( 403, $lunara_test_status_headers, true ), 'The pre-query denial must be an explicit 403.' );
 }
-$other_query            = new WP_Query();
-$other_query->page_slug = 'about';
+// The page_id spelling of the portal query is detected too (the stubbed
+// get_page_by_path('oscars') resolves to ID 700).
+$page_id_query = new WP_Query();
+$page_id_query->query_vars['page_id'] = 700;
+try {
+	lunara_oscars_portal_studio_preflight_preview_query( $page_id_query );
+	lunara_test_assert( false, 'A bad preview token on the page_id portal query must die before Studio config.' );
+} catch ( Lunara_Test_WP_Die $died ) {
+	lunara_test_assert( true, 'page_id path denied.' );
+}
+$other_query = new WP_Query();
+$other_query->query_vars['pagename'] = 'about';
 lunara_oscars_portal_studio_preflight_preview_query( $other_query );
 $_GET['lunara_oscars_preview'] = $fresh_token;
-$authorized_query              = new WP_Query();
-$authorized_query->page_slug   = 'oscars';
+$authorized_query = new WP_Query();
+$authorized_query->query_vars['pagename'] = 'oscars';
 lunara_oscars_portal_studio_preflight_preview_query( $authorized_query );
 unset( $_GET['lunara_oscars_preview'] );
 

@@ -189,7 +189,8 @@ Assert-True ($pageTemplate -match 'id="primary" class="site-main lunara-oscars-p
 # Zero direct SQL in the migrated route family.
 foreach ($sqlFreeFile in @('page-oscars.php', 'inc/oscars-family.php', 'inc/oscars-portal-studio.php', 'inc/oscars-portal-critical.php', 'inc/oscars-ledger-critical.php')) {
     $content = Read-ThemeFile $sqlFreeFile
-    Assert-True ($content -notmatch '\$wpdb') "$sqlFreeFile must carry zero direct `$wpdb references; the plugin reader is the only data door."
+    # Catches both the global variable and its $GLOBALS['wpdb'] alias spelling.
+    Assert-True ($content -notmatch '\$wpdb|GLOBALS\[\s*[''"]wpdb') "$sqlFreeFile must carry zero direct `$wpdb references (including the `$GLOBALS['wpdb'] alias); the plugin reader is the only data door."
 }
 
 # Publication and cache authority stay bounded.
