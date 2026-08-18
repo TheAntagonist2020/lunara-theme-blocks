@@ -191,7 +191,7 @@ const missingBinding = analyzeOscarsCanonicalCoherency({
 	url: CANONICAL_OSCARS_URL,
 	finalUrl: CANONICAL_OSCARS_URL,
 	statusCode: 200,
-	html: candidateHtml().replace(new RegExp(' ' + VERSION_ATTRIBUTE + '="' + FIXTURE_VERSION.replace(/\./g, '\\.') + '"'), ''),
+	html: candidateHtml().replace(' ' + VERSION_ATTRIBUTE + '="' + FIXTURE_VERSION + '"', ''),
 	expectedVersion: FIXTURE_VERSION,
 });
 assert.equal(missingBinding.coherent, false, 'HTML without the version attribute predates the deployed theme and must fail.');
