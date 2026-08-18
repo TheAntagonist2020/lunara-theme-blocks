@@ -27,6 +27,8 @@ require_once $lunara_inc . 'journal-cpt.php';    // Journal CPT + journal_type t
 require_once $lunara_inc . 'journal-family.php'; // Canonical fields, taxonomy routes, and legacy presentation adapters
 require_once $lunara_inc . 'journal-archive-studio.php'; // Focused revisionable Journal archive curation + preview.
 require_once $lunara_inc . 'reviews-archive-studio.php'; // Focused revisionable Reviews archive curation + preview.
+require_once $lunara_inc . 'oscars-family.php';         // Oscars route-family detectors + the plugin read-path boundary.
+require_once $lunara_inc . 'oscars-portal-studio.php';  // Focused revisionable Oscars portal composition + preview.
 require_once $lunara_inc . 'editorial-meta.php';
 require_once $lunara_inc . 'trailers.php';
 require_once $lunara_inc . 'publish-guards.php';
@@ -63,6 +65,8 @@ require_once $lunara_inc . 'blocks.php';
 require_once $lunara_inc . 'block-migration.php';
 require_once $lunara_inc . 'review-archive-critical.php';
 require_once $lunara_inc . 'journal-archive-critical.php';
+require_once $lunara_inc . 'oscars-portal-critical.php';
+require_once $lunara_inc . 'oscars-ledger-critical.php'; // Ledger route seed + Dossier variable assembly + label-face marker.
 require_once $lunara_inc . 'frontend.php';
 require_once $lunara_inc . 'cinematic-home.php';
 

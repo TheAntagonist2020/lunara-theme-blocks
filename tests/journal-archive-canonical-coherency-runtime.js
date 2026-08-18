@@ -57,7 +57,7 @@ function retentionMarkup() {
 }
 
 function candidateHtml({
-	version = '3.2.50',
+	version = '3.2.51',
 	marker = true,
 	preload = true,
 	cards = EXPECTED_CARD_COUNT,
@@ -125,7 +125,7 @@ function analyze(overrides = {}, htmlOptions = {}) {
 		finalUrl: CANONICAL_JOURNAL_URL,
 		statusCode: 200,
 		html: candidateHtml(htmlOptions),
-		expectedVersion: '3.2.50',
+		expectedVersion: '3.2.51',
 		expectedLabelToken: APPROVED_DEFAULT_LABEL_TOKEN,
 		...overrides,
 	});
@@ -176,6 +176,7 @@ assert.equal(mixed.contracts['journal-zero-legacy-roots'], false);
 assert.equal(analyze({}, { legacyStudioStyle: true }).coherent, false, 'Legacy route assets must fail the no-mixed-assets contract.');
 
 // Version binding: stale candidate HTML with the prior version must fail.
+assert.notEqual('3.2.48', '3.2.51', 'A version sweep must never collapse the stale fixture onto the expected version.');
 const staleVersion = analyze({}, { version: '3.2.48' });
 assert.equal(staleVersion.coherent, false);
 assert.equal(staleVersion.contracts['theme-version-binding'], false);
@@ -183,8 +184,8 @@ const missingBinding = analyzeJournalCanonicalCoherency({
 	url: CANONICAL_JOURNAL_URL,
 	finalUrl: CANONICAL_JOURNAL_URL,
 	statusCode: 200,
-	html: candidateHtml().replace(/ data-lunara-theme-version="3\.2\.50"/, ''),
-	expectedVersion: '3.2.50',
+	html: candidateHtml().replace(/ data-lunara-theme-version="3\.2\.51"/, ''),
+	expectedVersion: '3.2.51',
 });
 assert.equal(missingBinding.coherent, false, 'HTML without the version attribute predates the deployed theme and must fail.');
 
@@ -253,9 +254,24 @@ assert.equal(analyze({ expectedCardCount: 8.5 }).coherent, false, 'A non-integer
 assert.equal(analyze({ expectedCardCount: '8' }).coherent, false, 'A string expectation must fail closed.');
 
 // Unparseable input fails closed.
-assert.equal(analyzeJournalCanonicalCoherency({ url: CANONICAL_JOURNAL_URL, finalUrl: CANONICAL_JOURNAL_URL, statusCode: 200, html: '', expectedVersion: '3.2.50' }).coherent, false, 'An empty response must fail closed.');
-assert.equal(analyzeJournalCanonicalCoherency({ url: CANONICAL_JOURNAL_URL, finalUrl: CANONICAL_JOURNAL_URL, statusCode: 200, html: '<html><head></head>no body tag', expectedVersion: '3.2.50' }).coherent, false, 'A response with no <body> must fail closed.');
-assert.equal(analyzeJournalCanonicalCoherency({ url: CANONICAL_JOURNAL_URL, finalUrl: CANONICAL_JOURNAL_URL, statusCode: 200, html: null, expectedVersion: '3.2.50' }).coherent, false, 'A null body must fail closed.');
+assert.equal(analyzeJournalCanonicalCoherency({ url: CANONICAL_JOURNAL_URL, finalUrl: CANONICAL_JOURNAL_URL, statusCode: 200, html: '', expectedVersion: '3.2.51' }).coherent, false, 'An empty response must fail closed.');
+assert.equal(analyzeJournalCanonicalCoherency({ url: CANONICAL_JOURNAL_URL, finalUrl: CANONICAL_JOURNAL_URL, statusCode: 200, html: '<html><head></head>no body tag', expectedVersion: '3.2.51' }).coherent, false, 'A response with no <body> must fail closed.');
+assert.equal(analyzeJournalCanonicalCoherency({ url: CANONICAL_JOURNAL_URL, finalUrl: CANONICAL_JOURNAL_URL, statusCode: 200, html: null, expectedVersion: '3.2.51' }).coherent, false, 'A null body must fail closed.');
+
+// Isolate the missing-body early return itself: a FULLY coherent candidate
+// whose opening <body> tag is swapped for <div> carries every other passing
+// signal, so only the missing-body guard can fail it. A mutation replacing
+// that guard with if(false) would let this candidate pass.
+const bodilessCoherent = analyzeJournalCanonicalCoherency({
+	url: CANONICAL_JOURNAL_URL,
+	finalUrl: CANONICAL_JOURNAL_URL,
+	statusCode: 200,
+	html: candidateHtml().replace('<body', '<div'),
+	expectedVersion: '3.2.51',
+	expectedLabelToken: APPROVED_DEFAULT_LABEL_TOKEN,
+});
+assert.equal(bodilessCoherent.coherent, false, 'An otherwise-coherent candidate with no <body> must fail closed.');
+assert.equal(bodilessCoherent.failures.join('; ').includes('failing closed'), true, 'The missing-body guard must report its fail-closed reason.');
 
 // CLI enforcement layer: exit-code wiring, replay provenance, and usage
 // discipline are exercised end-to-end via child processes, offline.
@@ -279,33 +295,33 @@ function runCli(cliArgs) {
 
 assert.equal(REPLAY_COHERENT_EXIT !== LIVE_COHERENT_EXIT, true, 'Replay success must never share the live-proof exit code.');
 
-const cliCoherentReplay = runCli(['--expected-version', '3.2.50', '--replay-html-file', coherentFixture, '--replay-status', '200', '--replay-final-url', CANONICAL_JOURNAL_URL]);
+const cliCoherentReplay = runCli(['--expected-version', '3.2.51', '--replay-html-file', coherentFixture, '--replay-status', '200', '--replay-final-url', CANONICAL_JOURNAL_URL]);
 assert.equal(cliCoherentReplay.status, REPLAY_COHERENT_EXIT, 'A coherent replay must exit ' + REPLAY_COHERENT_EXIT + ' (diagnostic), got ' + cliCoherentReplay.status + ': ' + cliCoherentReplay.stderr);
 assert.equal(cliCoherentReplay.json.mode, 'replay');
 assert.equal(cliCoherentReplay.json.proof, false, 'A replay must never be labeled as deployment proof.');
 assert.equal(cliCoherentReplay.json.coherent, true);
 
-const cliLegacyReplay = runCli(['--expected-version', '3.2.50', '--replay-html-file', legacyFixture, '--replay-status', '200', '--replay-final-url', CANONICAL_JOURNAL_URL]);
+const cliLegacyReplay = runCli(['--expected-version', '3.2.51', '--replay-html-file', legacyFixture, '--replay-status', '200', '--replay-final-url', CANONICAL_JOURNAL_URL]);
 assert.equal(cliLegacyReplay.status, INCOHERENT_EXIT, 'The legacy canary shape must exit ' + INCOHERENT_EXIT + ' from the CLI.');
 assert.equal(cliLegacyReplay.json.detail.legacyRootCount, 1);
 assert.equal(cliLegacyReplay.json.detail.modernRootCount, 0);
 
-const cliAuthReplay = runCli(['--expected-version', '3.2.50', '--replay-html-file', coherentFixture, '--replay-status', '200', '--replay-final-url', 'https://admin@lunarafilm.com/journal/']);
+const cliAuthReplay = runCli(['--expected-version', '3.2.51', '--replay-html-file', coherentFixture, '--replay-status', '200', '--replay-final-url', 'https://admin@lunarafilm.com/journal/']);
 assert.equal(cliAuthReplay.status, INCOHERENT_EXIT, 'An authenticated-variant final URL must fail the CLI even with coherent HTML.');
 
-const cliQueryReplay = runCli(['--expected-version', '3.2.50', '--replay-html-file', coherentFixture, '--replay-status', '200', '--replay-final-url', 'https://lunarafilm.com/journal/?nocache=1']);
+const cliQueryReplay = runCli(['--expected-version', '3.2.51', '--replay-html-file', coherentFixture, '--replay-status', '200', '--replay-final-url', 'https://lunarafilm.com/journal/?nocache=1']);
 assert.equal(cliQueryReplay.status, INCOHERENT_EXIT, 'A cache-busted final URL must fail the CLI even with coherent HTML.');
 
-const cliStatusReplay = runCli(['--expected-version', '3.2.50', '--replay-html-file', coherentFixture, '--replay-status', '503', '--replay-final-url', CANONICAL_JOURNAL_URL]);
+const cliStatusReplay = runCli(['--expected-version', '3.2.51', '--replay-html-file', coherentFixture, '--replay-status', '503', '--replay-final-url', CANONICAL_JOURNAL_URL]);
 assert.equal(cliStatusReplay.status, INCOHERENT_EXIT, 'A non-200 replay status must fail the CLI.');
 
-const cliCards = runCli(['--expected-version', '3.2.50', '--expected-cards', '12', '--replay-html-file', coherentFixture, '--replay-status', '200', '--replay-final-url', CANONICAL_JOURNAL_URL]);
+const cliCards = runCli(['--expected-version', '3.2.51', '--expected-cards', '12', '--replay-html-file', coherentFixture, '--replay-status', '200', '--replay-final-url', CANONICAL_JOURNAL_URL]);
 assert.equal(cliCards.status, INCOHERENT_EXIT, 'An --expected-cards override must reach the analyzer and fail an 8-card capture.');
 
 assert.equal(runCli([]).status, USAGE_ERROR_EXIT, 'Missing --expected-version must be a usage error.');
-assert.equal(runCli(['--expected-version', '3.2.50', '--bogus-flag', 'x']).status, USAGE_ERROR_EXIT, 'An unknown flag must be a usage error.');
-assert.equal(runCli(['--expected-version', '3.2.50', '--replay-html-file', coherentFixture, '--replay-status', '200']).status, USAGE_ERROR_EXIT, 'Replay without an explicit --replay-final-url must be refused, never defaulted.');
-assert.equal(runCli(['--expected-version', '3.2.50', '--replay-html-file', coherentFixture, '--replay-final-url', CANONICAL_JOURNAL_URL]).status, USAGE_ERROR_EXIT, 'Replay without an explicit --replay-status must be refused, never defaulted.');
+assert.equal(runCli(['--expected-version', '3.2.51', '--bogus-flag', 'x']).status, USAGE_ERROR_EXIT, 'An unknown flag must be a usage error.');
+assert.equal(runCli(['--expected-version', '3.2.51', '--replay-html-file', coherentFixture, '--replay-status', '200']).status, USAGE_ERROR_EXIT, 'Replay without an explicit --replay-final-url must be refused, never defaulted.');
+assert.equal(runCli(['--expected-version', '3.2.51', '--replay-html-file', coherentFixture, '--replay-final-url', CANONICAL_JOURNAL_URL]).status, USAGE_ERROR_EXIT, 'Replay without an explicit --replay-status must be refused, never defaulted.');
 
 fs.rmSync(cliDir, { recursive: true, force: true });
 

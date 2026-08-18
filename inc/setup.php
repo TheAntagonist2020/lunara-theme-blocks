@@ -80,21 +80,9 @@ function lunara_enqueue_styles() {
         }
     }
 
-    if ( is_page( 'oscars' ) || is_page_template( 'page-oscars.php' ) ) {
-        $oscars_css = lunara_resolve_theme_asset(
-            'assets/css/oscars.css',
-            array( 'oscars/oscars.css' )
-        );
-
-        if ( ! empty( $oscars_css['uri'] ) ) {
-            wp_enqueue_style(
-                'lunara-oscars-shell',
-                $oscars_css['uri'],
-                array( 'lunara-style' ),
-                lunara_theme_asset_version( $oscars_css['path'] )
-            );
-        }
-    }
+    // The Oscars portal's route stylesheet is assets/css/lunara-oscars-portal.css
+    // (inc/frontend.php, wp_enqueue_scripts 111). assets/css/oscars.css remains
+    // shipped for the plugin-owned ledger routes, which enqueue it themselves.
 }
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
 

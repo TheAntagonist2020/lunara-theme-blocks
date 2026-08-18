@@ -11,6 +11,45 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-17 — Theme 3.2.51 Oscars Route-Family Design Pass
+
+- Gave the Oscars route family its first route-owned system, mirroring the
+  Reviews 3.2.40 and Journal 3.2.44 pattern. A new family boundary
+  (`inc/oscars-family.php`) provides route detectors and a single reader
+  around the plugin's 2.7.82 read-path API; the theme's three direct-SQL
+  Oscars call sites now consume plugin accessors and degrade to hidden or
+  empty — never back to SQL — with a ratchet contract pinning remaining
+  direct table references at 22, decrease only.
+- The `/oscars/` portal renders through an eleven-slot Oscars Portal Studio
+  composer (visibility backed by the existing `lunara_oscars_show_*` theme
+  mods as canonical owners, order and geometry in a validated option with
+  twelve-snapshot history, restore, and admin-only preview tokens), proven
+  byte-identical to the previous template across five visibility states,
+  with every `#oscars-*` anchor preserved and the root stamped with
+  `data-lunara-theme-version`.
+- Site Studio gains an Oscars group: the Portal Studio and the existing
+  Oscars Dossier Studio (now context-aware with bounded returns), with
+  surface groups derived from the registry.
+- Portal CSS consolidated from five owners into one route asset inside a
+  45KB budget — the inline priority-1001 emitter is gone, the portal no
+  longer loads the 42KB cross-route `oscars.css`, and the head follows the
+  proven order: resolver-gated licensed Tiempos Bold preload at 4,
+  provenance-gated Studio variables at 6, structural seed with slot order
+  neutralization at 7, unaggregated synchronous stylesheet at 8, with full
+  Boost/Rocket protections.
+- The plugin's ceremony, category, title, and person routes gain a
+  conservative theme overlay through the 2.7.82 composer seam: Dossier
+  variables at head 6 (value-identical to the preserved legacy emitter), a
+  structural seed reserving the plugin's own geometry, and licensed Tiempos
+  label/control faces behind a fail-closed Design-Tokens marker — no plugin
+  CSS or template changes, zero session state on the anonymous-cacheable
+  routes.
+- Coverage: a 147-assertion Portal Studio runtime, the Prediction Board's
+  first executed contract, an eleven-case ledger overlay contract with
+  emitter value-identity proof, the read-path ratchet, and an `/oscars/`
+  canonical cache-coherency sentinel cloned from the Journal gate family
+  (exact-URL discipline, version binding, live/replay exit separation).
+
 ## 2026-08-16 — Theme 3.2.50 Reviews Archive Studio Parity
 
 - Brought the Reviews Archive Studio to full capability parity with the
