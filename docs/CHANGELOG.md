@@ -11,17 +11,66 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-19 — Theme 3.2.53 Oscars Latest Ceremony Winners Transport
+
+- **The Latest Ceremony Winners section on `/oscars/` had never rendered, on
+  any deploy, since it was written.** `lunara_get_home_oscars_snapshot()`
+  built a `$winner_map` from the ceremony rollup and then omitted it from the
+  array it returned. `page-oscars.php` read `$snapshot['winner_map']`, got
+  nothing, passed an empty map to `lunara_build_oscars_ceremony_winner_cards()`,
+  which returns early on empty input — so the portal produced zero winner
+  cards and the section's render condition was never satisfied. One missing
+  array key stood between 12,138 rows of ledger data and the section built to
+  display them.
+- The defect survived because the *other* consumer looked healthy. The
+  homepage rotating showcase rebuilds the map from the rollup itself rather
+  than reading the snapshot, so the winner cards visibly worked on `/` while
+  the portal's copy was dead. A shared surface with two implementations only
+  needs one of them to be right to look right.
+- Fixes:
+  - Extracted `lunara_build_oscars_winner_map()` — the one reducer both
+    surfaces (and now the portal) call, so tie resolution cannot diverge.
+    First row per canonical category wins; blank and non-array rows are
+    skipped rather than keyed.
+  - The snapshot now returns `winner_map`, and its cache version moves
+    `v6 → v7`. Adding a key to a cached payload without moving the version
+    would have served shape-old snapshots to shape-new readers for the life
+    of the TTL — the 3.2.48 failure class, in miniature.
+  - `lunara_flush_oscars_home_transients()` clears both `v7` and the retired
+    `v6`, so an upgraded site does not leave a dead row to expire on its own.
+  - The portal rebuilds the map from `$snapshot['rollup']` when the key is
+    absent, so a pre-v7 payload surviving in an object cache across a deploy
+    degrades to a rebuild instead of a dark section.
+  - The winners lane now reads `_visual` defensively, matching the hardened
+    read the rotating lane already used. That path had never executed.
+- New contract `tests/oscars-winner-map-runtime.php` pins the transport, not
+  the presentation: the reducer's tie and skip rules, the presence and
+  contents of `winner_map` on both a cold build and a cache hit, the `v7`
+  cache identity, the flush covering both keys, and the portal's pre-v7
+  fallback. Verified by mutation — seven separate breakages, each confirmed
+  to fail the suite before the fix was restored.
+- No CSS shipped: every class in the section is already covered by
+  `lunara-oscars-portal.css`, `lunara-shell.css`, and the portal critical CSS.
+  The section was fully built and fully styled the whole time; it was starved
+  of data, not of design.
+
+---
+
 ## 2026-08-19 — Theme 3.2.52 Oscars Navigator Link Integrity
 
 - Fixed a dead in-page anchor on `/oscars/`: the portal navigator emitted a
   "Winners" link gated only on the `lunara_oscars_show_latest_winners`
   visibility dial, while the section itself additionally required ceremony
-  winner data. A ceremony with nominees recorded but no winners yet — the
-  live state when 3.2.51 deployed — correctly rendered no section and left
-  the link pointing at nothing. The defect was **pre-existing, not a 3.2.51
-  regression**: the same asymmetry is present in the 3.2.43 tree at the
-  corresponding lines. It went unseen until the new Oscars coherency
+  winner data, which was resolving empty. The defect was **pre-existing, not
+  a 3.2.51 regression**: the same asymmetry is present in the 3.2.43 tree at
+  the corresponding lines. It went unseen until the new Oscars coherency
   sentinel looked at the route for the first time.
+- **Correction (3.2.53).** This entry originally explained the empty data as
+  "a ceremony with nominees recorded but no winners yet." That was wrong.
+  Ceremony 97 carries 518 winner rows and always did; the data never reached
+  the template. See 3.2.53 for the actual cause. The 3.2.52 fix itself stands
+  — an in-page link must not outlive the section it points at, whatever the
+  reason that section is absent — but it hardened the symptom, not the cause.
 - The winner-card data is now resolved in the template's data-prep block
   rather than at the point of render, because the navigator is emitted well
   above the section and must know whether that section will exist before it

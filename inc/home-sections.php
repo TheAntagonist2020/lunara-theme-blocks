@@ -500,6 +500,10 @@ function lunara_get_oscars_entry_visual( $entry, $aat_instance = null, $args = a
  * the oscars plugin's own post-import action; a no-op when absent.
  */
 function lunara_flush_oscars_home_transients() {
+    delete_transient( 'lunara_home_oscars_snapshot_v7' );
+    // v6 stays in the flush list: a site upgrading mid-TTL still has the old
+    // payload sitting in storage, and leaving it to expire on its own wastes
+    // a row for 15 minutes after the key that reads it is gone.
     delete_transient( 'lunara_home_oscars_snapshot_v6' );
     delete_transient( 'lunara_home_database_spotlight_v1' );
     delete_transient( 'lunara_home_ledger_story_cards_v2' );
@@ -523,10 +527,46 @@ function lunara_flush_oscars_home_transients() {
 add_action( 'aat_after_data_import', 'lunara_flush_oscars_home_transients' );
 
 /**
+ * Reduce a ceremony rollup's winner rows to one entry per canonical category.
+ *
+ * First row wins: the rollup is already ordered, and ties (two winners in one
+ * category) would otherwise overwrite each other. Extracted because three
+ * separate callers — the snapshot, the rotating homepage showcase, and the
+ * Oscars portal — built this identical map by hand, and the portal's copy of
+ * the data silently went missing in transit.
+ *
+ * @param array $winner_rows Raw winner rows from a ceremony rollup.
+ * @return array<string,array> Canonical category => winner row.
+ */
+function lunara_build_oscars_winner_map( $winner_rows ) {
+    $winner_map = array();
+
+    if ( empty( $winner_rows ) || ! is_array( $winner_rows ) ) {
+        return $winner_map;
+    }
+
+    foreach ( $winner_rows as $winner_entry ) {
+        if ( ! is_array( $winner_entry ) ) {
+            continue;
+        }
+
+        $canonical = trim( (string) ( $winner_entry['canonical_category'] ?? '' ) );
+        if ( $canonical !== '' && ! isset( $winner_map[ $canonical ] ) ) {
+            $winner_map[ $canonical ] = $winner_entry;
+        }
+    }
+
+    return $winner_map;
+}
+
+/**
  * Build a dynamic Oscars snapshot for the homepage from the active database plugin.
  */
 function lunara_get_home_oscars_snapshot() {
-    $cache_key = 'lunara_home_oscars_snapshot_v6'; // v6: enrich spotlight entries with category, person, and film links
+    // v7: carries winner_map. v6 built the map but never returned it, so the
+    // Oscars portal's Latest Ceremony Winners section read an absent key,
+    // resolved to zero cards, and never rendered.
+    $cache_key = 'lunara_home_oscars_snapshot_v7';
     $cached    = get_transient( $cache_key );
 
     if ( is_array( $cached ) && ! empty( $cached ) ) {
@@ -549,13 +589,7 @@ function lunara_get_home_oscars_snapshot() {
     }
 
     $winner_rows = ! empty( $rollup['winner_rows'] ) && is_array( $rollup['winner_rows'] ) ? $rollup['winner_rows'] : array();
-    $winner_map  = array();
-    foreach ( $winner_rows as $winner_entry ) {
-        $canonical = trim( (string) ( $winner_entry['canonical_category'] ?? '' ) );
-        if ( $canonical !== '' && ! isset( $winner_map[ $canonical ] ) ) {
-            $winner_map[ $canonical ] = $winner_entry;
-        }
-    }
+    $winner_map  = lunara_build_oscars_winner_map( $winner_rows );
 
     $spotlight_categories = array(
         'BEST PICTURE',
@@ -636,6 +670,10 @@ function lunara_get_home_oscars_snapshot() {
         'database_url'      => method_exists( $aat, 'get_database_url' ) ? $aat->get_database_url() : home_url( '/oscars/' ),
         'categories_url'    => method_exists( $aat, 'get_categories_index_url' ) ? $aat->get_categories_index_url() : home_url( '/oscars/categories/' ),
         'rollup'            => $rollup,
+        // Consumed by the Oscars portal's Latest Ceremony Winners section.
+        // The map is derived here so the portal does not re-walk the rollup
+        // on every request, and so both surfaces agree on tie resolution.
+        'winner_map'        => $winner_map,
         'best_picture'      => $best_picture,
         'spotlights'        => $spotlights,
         'top_titles'        => $top_titles,
@@ -807,14 +845,7 @@ function lunara_get_rotating_oscars_ceremony_showcase( $card_limit = 10 ) {
     }
 
     $winner_rows = ! empty( $rollup['winner_rows'] ) && is_array( $rollup['winner_rows'] ) ? $rollup['winner_rows'] : array();
-    $winner_map  = array();
-
-    foreach ( $winner_rows as $winner_entry ) {
-        $canonical = trim( (string) ( $winner_entry['canonical_category'] ?? '' ) );
-        if ( $canonical !== '' && ! isset( $winner_map[ $canonical ] ) ) {
-            $winner_map[ $canonical ] = $winner_entry;
-        }
-    }
+    $winner_map  = lunara_build_oscars_winner_map( $winner_rows );
 
     $winner_cards = lunara_build_oscars_ceremony_winner_cards(
         $winner_map,

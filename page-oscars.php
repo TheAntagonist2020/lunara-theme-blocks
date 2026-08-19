@@ -117,9 +117,21 @@ $ceremony_label_str = ! empty( $snapshot['ceremony_label'] ) ? $snapshot['ceremo
 $ceremony_url_str   = ! empty( $snapshot['ceremony_url'] ) ? $snapshot['ceremony_url'] : home_url( '/oscars/' );
 $winner_cards       = array();
 
+/*
+ * The snapshot carries winner_map from v7 on. Older cached payloads (v6 and
+ * any object cache that outlives a deploy) do not, so the map is rebuilt from
+ * the rollup those payloads DO carry rather than letting the section go dark
+ * for the life of the stale entry — which is exactly how this section spent
+ * its entire existence unrendered.
+ */
+$winner_map = (array) ( $snapshot['winner_map'] ?? array() );
+if ( empty( $winner_map ) && function_exists( 'lunara_build_oscars_winner_map' ) ) {
+    $winner_map = lunara_build_oscars_winner_map( $snapshot['rollup']['winner_rows'] ?? array() );
+}
+
 if ( function_exists( 'lunara_build_oscars_ceremony_winner_cards' ) ) {
     $winner_cards = lunara_build_oscars_ceremony_winner_cards(
-        (array) ( $snapshot['winner_map'] ?? array() ),
+        $winner_map,
         $aat_instance,
         12,
         array(
@@ -691,7 +703,7 @@ $command_cards = array(
                 </div>
                 <div class="lunara-ceremony-winners-grid">
                     <?php foreach ( $winner_cards as $wcard ) :
-                        $w_vis = $wcard['_visual'];
+                        $w_vis = is_array( $wcard['_visual'] ?? null ) ? $wcard['_visual'] : array();
                         $winner_poster_url = trim( (string) ( $w_vis['poster_url'] ?? '' ) );
                     ?>
                     <article class="lunara-ceremony-winner-card<?php echo ! empty( $w_vis['poster_url'] ) || ! empty( $w_vis['poster_html'] ) ? ' has-poster' : ''; ?>">
