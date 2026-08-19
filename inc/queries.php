@@ -517,25 +517,29 @@ function lunara_latest_reviews_query( $count = 9 ) {
 function lunara_oscars_linked_reviews_query( $count = 4 ) {
     $count = max( 1, intval( $count ) );
 
-    // First priority: published reviews whose IMDb ID appears in the Academy
-    // Awards ledger. The postmeta-to-awards join this function used to run
-    // directly now lives behind the plugin's public
-    // get_reviewed_award_title_post_ids() accessor; when the reader (or the
-    // accessor) is unavailable the ledger-joined priority is skipped and the
-    // section degrades to the SQL-FREE meta_query fallback below (a plain
-    // WP_Query on _lunara_imdb_title_id) — never to theme-side awards SQL.
-    $reader = function_exists( 'lunara_oscars_reader' ) ? lunara_oscars_reader() : null;
+    // First priority: published reviews whose IMDb ID appears in the Academy Awards table.
+    global $wpdb;
+    $awards_table = $wpdb->prefix . 'academy_awards';
+    $oscar_ids    = array();
 
-    $oscar_ids = array();
-
-    if ( $reader && method_exists( $reader, 'get_reviewed_award_title_post_ids' ) ) {
-        // Rotate daily through the reviewed-title pool (same fetch-extra window
-        // the direct query used, expressed as the accessor's limit/offset).
+    if ( $wpdb->get_var( "SHOW TABLES LIKE '{$awards_table}'" ) === $awards_table ) {
+        // Get IMDb IDs of reviewed Oscar-nominated films (rotate daily via OFFSET).
         $day_offset = intval( date( 'z' ) ) % 20; // rotate through the pool
-        $oscar_pool = $reader->get_reviewed_award_title_post_ids( $count * 3, $day_offset );
+        $oscar_imdb = $wpdb->get_col( $wpdb->prepare(
+            "SELECT DISTINCT pm.post_id
+             FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id AND p.post_type = 'review' AND p.post_status = 'publish'
+             INNER JOIN {$awards_table} aa ON aa.film_id = pm.meta_value AND aa.film_id != ''
+             WHERE pm.meta_key = '_lunara_imdb_title_id' AND pm.meta_value != ''
+             GROUP BY pm.post_id
+             ORDER BY p.post_date DESC
+             LIMIT %d OFFSET %d",
+            $count * 3, // fetch extra so rotation works
+            $day_offset
+        ) );
 
-        if ( is_array( $oscar_pool ) && ! empty( $oscar_pool ) ) {
-            $oscar_ids = array_map( 'intval', array_slice( $oscar_pool, 0, $count ) );
+        if ( ! empty( $oscar_imdb ) ) {
+            $oscar_ids = array_map( 'intval', array_slice( $oscar_imdb, 0, $count ) );
         }
     }
 
