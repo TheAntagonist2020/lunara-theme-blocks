@@ -56,9 +56,21 @@ const REQUIRED_ANCHOR_IDS = [
 	'oscars-spotlights',
 	'oscars-titles',
 	'oscars-research',
-	'oscars-winners',
 	'oscars-deep-cuts',
 ];
+
+// Sections whose presence is bound to ceremony data rather than to a visibility
+// dial. The Winners grid renders only when the latest ceremony actually has
+// recorded winners, so a nominees-announced-but-not-yet-awarded ceremony
+// legitimately produces no section. Demanding it unconditionally would fail a
+// correctly rendered page; these ids are still held to the no-duplicate rule,
+// and navigator-link integrity below is what proves the page stays coherent.
+const DATA_CONDITIONAL_ANCHOR_IDS = [
+	'oscars-winners',
+];
+
+// Every in-page navigator target on the portal, whatever its visibility rule.
+const IN_PAGE_ANCHOR_HREF_PATTERN = /href\s*=\s*("#(oscars-[a-z0-9-]+)"|'#(oscars-[a-z0-9-]+)')/gi;
 
 function attributeValue(tag, name) {
 	// Lookbehind instead of \b: a word boundary would let `data-id` satisfy a
@@ -138,6 +150,7 @@ function analyzeOscarsCanonicalCoherency({
 		'portal-structural-css-before-body': false,
 		'portal-no-legacy-route-assets': false,
 		'portal-anchor-census': false,
+		'portal-navigator-link-integrity': false,
 		'tiempos-label-ownership': false,
 	};
 	const failures = [];
@@ -151,6 +164,7 @@ function analyzeOscarsCanonicalCoherency({
 		anchorCounts: {},
 		missingAnchors: [],
 		duplicateAnchors: [],
+		danglingAnchorLinks: [],
 		varsPresent: false,
 		varsInHead: false,
 		tiemposMarker: false,
@@ -247,7 +261,8 @@ function analyzeOscarsCanonicalCoherency({
 		fail('portal-no-legacy-route-assets', 'legacy #' + LEGACY_SHELL_STYLE_LINK_ID + ' cross-route stylesheet present — the unsplit fallback bundle is serving the portal');
 	}
 
-	// Anchor census: each default-visible section id appears exactly once.
+	// Anchor census: each default-visible section id appears exactly once, and
+	// each data-conditional section id appears at most once.
 	let anchorsCoherent = true;
 	for (const anchorId of REQUIRED_ANCHOR_IDS) {
 		const count = countElementId(document, anchorId);
@@ -260,12 +275,45 @@ function analyzeOscarsCanonicalCoherency({
 			anchorsCoherent = false;
 		}
 	}
+	for (const anchorId of DATA_CONDITIONAL_ANCHOR_IDS) {
+		const count = countElementId(document, anchorId);
+		detail.anchorCounts[anchorId] = count;
+		if (count > 1) {
+			detail.duplicateAnchors.push(anchorId);
+			anchorsCoherent = false;
+		}
+	}
 	contracts['portal-anchor-census'] = anchorsCoherent;
 	if (detail.missingAnchors.length > 0) {
 		fail('portal-anchor-census', 'missing default-visible section anchor(s): ' + detail.missingAnchors.join(', '));
 	}
 	if (detail.duplicateAnchors.length > 0) {
 		fail('portal-anchor-census', 'duplicated section anchor(s): ' + detail.duplicateAnchors.join(', '));
+	}
+
+	// Navigator link integrity: every in-page #oscars-* target the page links to
+	// must resolve to a section that actually exists. A conditional section that
+	// declines to render has to take its navigator link with it — the dead
+	// "Winners" link that survived a winner-less ceremony is exactly this class.
+	const linkedAnchorIds = new Set();
+	IN_PAGE_ANCHOR_HREF_PATTERN.lastIndex = 0;
+	let anchorHrefMatch = IN_PAGE_ANCHOR_HREF_PATTERN.exec(document);
+	while (anchorHrefMatch !== null) {
+		linkedAnchorIds.add(anchorHrefMatch[2] || anchorHrefMatch[3]);
+		anchorHrefMatch = IN_PAGE_ANCHOR_HREF_PATTERN.exec(document);
+	}
+	for (const anchorId of Array.from(linkedAnchorIds).sort()) {
+		if (countElementId(document, anchorId) === 0) {
+			detail.danglingAnchorLinks.push(anchorId);
+		}
+	}
+	contracts['portal-navigator-link-integrity'] = detail.danglingAnchorLinks.length === 0;
+	if (!contracts['portal-navigator-link-integrity']) {
+		fail(
+			'portal-navigator-link-integrity',
+			'in-page link(s) point at section(s) that do not exist on the page: '
+				+ detail.danglingAnchorLinks.map((id) => '#' + id).join(', ')
+		);
 	}
 
 	detail.tiemposMarker = modernRoot !== null && classTokens(modernRoot).includes(TIEMPOS_MARKER_CLASS);
@@ -436,6 +484,7 @@ module.exports = {
 	ROUTE_STYLESHEET_LINK_ID,
 	LEGACY_SHELL_STYLE_LINK_ID,
 	REQUIRED_ANCHOR_IDS,
+	DATA_CONDITIONAL_ANCHOR_IDS,
 	isCanonicalOscarsUrl,
 	analyzeOscarsCanonicalCoherency,
 };

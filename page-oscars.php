@@ -104,6 +104,34 @@ $best_visual       = is_array( $best_picture['visual'] ?? null ) ? $best_picture
 $spotlights        = array_slice( (array) ( $snapshot['spotlights'] ?? array() ), 0, 6 );
 $title_cards       = array_slice( (array) ( $database_spotlight['cards'] ?? array() ), 0, 5 );
 
+/**
+ * Latest Ceremony Winners data.
+ * Uses the shared Oscars winner-card builder so the section stays aligned
+ * with the Academy Awards plugin data layer. Resolved here rather than at the
+ * point of render because the navigator — emitted well above the section —
+ * must know whether the section will actually exist before it links to it.
+ * @since 2026-04-20
+ */
+$aat_instance       = function_exists( 'lunara_oscars_reader' ) ? lunara_oscars_reader() : null;
+$ceremony_label_str = ! empty( $snapshot['ceremony_label'] ) ? $snapshot['ceremony_label'] : '';
+$ceremony_url_str   = ! empty( $snapshot['ceremony_url'] ) ? $snapshot['ceremony_url'] : home_url( '/oscars/' );
+$winner_cards       = array();
+
+if ( function_exists( 'lunara_build_oscars_ceremony_winner_cards' ) ) {
+    $winner_cards = lunara_build_oscars_ceremony_winner_cards(
+        (array) ( $snapshot['winner_map'] ?? array() ),
+        $aat_instance,
+        12,
+        array(
+            'use_curated_photos'   => false,
+            'prefer_backdrop'      => false,
+            'prefer_person_visuals' => true,
+            'title_visual_size'    => 'medium_large',
+            'person_visual_size'   => 'medium_large',
+        )
+    );
+}
+
 if ( function_exists( 'lunara_normalize_visual_package_image_sizes' ) ) {
     $best_visual = lunara_normalize_visual_package_image_sizes( $best_visual, 'w500', 'w780' );
 
@@ -124,7 +152,18 @@ if ( function_exists( 'lunara_normalize_visual_package_image_sizes' ) ) {
             $rotating_cards[ $card_index ]['_visual'] = lunara_normalize_visual_package_image_sizes( $card['_visual'], 'w500', 'w780' );
         }
     }
+
+    foreach ( $winner_cards as $card_index => $winner_card ) {
+        if ( ! empty( $winner_card['_visual'] ) && is_array( $winner_card['_visual'] ) ) {
+            $winner_cards[ $card_index ]['_visual'] = lunara_normalize_visual_package_image_sizes( $winner_card['_visual'], 'w500', 'w780' );
+        }
+    }
 }
+
+// The Winners section renders only when there is ceremony data to show, so the
+// navigator link is bound to the same condition — a link is never emitted for a
+// section that will not exist.
+$has_latest_winners = ( $show_latest_winners && ! empty( $winner_cards ) );
 
 $database_url      = trim( (string) ( $snapshot['database_url'] ?? ( $database_spotlight['database_url'] ?? home_url( '/oscars/' ) ) ) );
 $categories_url    = trim( (string) ( $snapshot['categories_url'] ?? ( $database_spotlight['categories_url'] ?? home_url( '/oscars/categories/' ) ) ) );
@@ -430,7 +469,7 @@ $command_cards = array(
             <?php if ( $show_title_cards ) : ?><a href="#oscars-titles"><?php esc_html_e( 'Titles', 'lunara-film' ); ?></a><?php endif; ?>
             <?php if ( $show_research ) : ?><a href="#oscars-research"><?php esc_html_e( 'Research', 'lunara-film' ); ?></a><?php endif; ?>
             <?php if ( $show_linked_reviews ) : ?><a href="#oscars-reviews"><?php esc_html_e( 'Reviews', 'lunara-film' ); ?></a><?php endif; ?>
-            <?php if ( $show_latest_winners ) : ?><a href="#oscars-winners"><?php esc_html_e( 'Winners', 'lunara-film' ); ?></a><?php endif; ?>
+            <?php if ( $has_latest_winners ) : ?><a href="#oscars-winners"><?php esc_html_e( 'Winners', 'lunara-film' ); ?></a><?php endif; ?>
             <?php if ( $show_deep_cuts ) : ?><a href="#oscars-deep-cuts"><?php esc_html_e( 'Deep Cuts', 'lunara-film' ); ?></a><?php endif; ?>
         </nav>
         <?php endif; ?>
@@ -640,42 +679,8 @@ $command_cards = array(
         <?php endif; ?>
 <?php $oscars_slot_markup['linked-reviews'] = ob_get_clean(); ob_start(); ?>
 
-        <?php
-        /**
-         * Latest Ceremony Winners grid.
-         * Uses the shared Oscars winner-card builder so the section
-         * stays aligned with the Academy Awards plugin data layer.
-         * @since 2026-04-20
-         */
-        $aat_instance       = function_exists( 'lunara_oscars_reader' ) ? lunara_oscars_reader() : null;
-        $ceremony_label_str = ! empty( $snapshot['ceremony_label'] ) ? $snapshot['ceremony_label'] : '';
-        $ceremony_url_str   = ! empty( $snapshot['ceremony_url'] ) ? $snapshot['ceremony_url'] : home_url( '/oscars/' );
-        $winner_cards       = array();
-
-        if ( function_exists( 'lunara_build_oscars_ceremony_winner_cards' ) ) {
-            $winner_cards = lunara_build_oscars_ceremony_winner_cards(
-                (array) ( $snapshot['winner_map'] ?? array() ),
-                $aat_instance,
-                12,
-                array(
-                    'use_curated_photos'   => false,
-                    'prefer_backdrop'      => false,
-                    'prefer_person_visuals' => true,
-                    'title_visual_size'    => 'medium_large',
-                    'person_visual_size'   => 'medium_large',
-                )
-            );
-        }
-
-        if ( function_exists( 'lunara_normalize_visual_package_image_sizes' ) ) {
-            foreach ( $winner_cards as $card_index => $winner_card ) {
-                if ( ! empty( $winner_card['_visual'] ) && is_array( $winner_card['_visual'] ) ) {
-                    $winner_cards[ $card_index ]['_visual'] = lunara_normalize_visual_package_image_sizes( $winner_card['_visual'], 'w500', 'w780' );
-                }
-            }
-        }
-        ?>
-        <?php if ( $show_latest_winners && ! empty( $winner_cards ) ) : ?>
+        <?php // Latest Ceremony Winners grid. Its data — and the $has_latest_winners gate the navigator shares — is resolved in the data-prep block above. ?>
+        <?php if ( $has_latest_winners ) : ?>
             <section id="oscars-winners" class="lunara-home-section lunara-oscars-portal-winners lunara-ceremony-winners-section lunara-oscars-portal-slot-latest-winners" aria-label="Ceremony Winners">
                 <div class="lunara-home-section-header">
                     <div>
