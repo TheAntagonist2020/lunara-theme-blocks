@@ -182,6 +182,20 @@ foreach ($anchorId in @('oscars-doors', 'oscars-spotlights', 'oscars-titles', 'o
 Assert-True ($pageTemplate -match '#oscars-board') 'page-oscars.php must keep the #oscars-board navigator anchor.'
 Assert-True ($portalRenderer -match 'id="oscars-board"') 'The Prediction Board renderer must keep the stable #oscars-board id.'
 
+# Navigator link integrity at the source. The Winners grid is bound to ceremony
+# data, not to a visibility dial, so its navigator link must share the section's
+# gate rather than the dial alone — the asymmetry that left a dead #oscars-winners
+# link on the live portal whenever the latest ceremony had no recorded winners.
+Assert-True ($pageTemplate -match '\$has_latest_winners\s*=\s*\(\s*\$show_latest_winners\s*&&\s*!\s*empty\(\s*\$winner_cards\s*\)\s*\)') 'page-oscars.php must derive $has_latest_winners from both the visibility dial and the presence of winner cards.'
+Assert-True ($pageTemplate -match '<\?php if \( \$has_latest_winners \) : \?><a href="#oscars-winners">') 'The Winners navigator link must be gated on $has_latest_winners, never on the visibility dial alone.'
+Assert-True ($pageTemplate -notmatch '<\?php if \( \$show_latest_winners \) : \?><a href="#oscars-winners">') 'The dial-only Winners navigator gate must not return; it emits a link to a section that may not render.'
+Assert-True ($pageTemplate -match '(?s)\$has_latest_winners.*<section id="oscars-winners"') 'The Winners gate must be resolved before the section it guards.'
+# The gate has to be resolved before the navigator is emitted, not merely before
+# the section — the navigator is what links to it.
+$navigatorOffset = $pageTemplate.IndexOf('<a href="#oscars-winners">')
+$gateOffset      = $pageTemplate.IndexOf('$has_latest_winners =')
+Assert-True ($gateOffset -ge 0 -and $navigatorOffset -gt $gateOffset) 'The $has_latest_winners gate must be computed above the navigator that consumes it.'
+
 # The portal root stamps the deployed theme version for the coherency sentinel.
 Assert-True ($pageTemplate -match 'data-lunara-theme-version="<\?php echo esc_attr\( \(string\) wp_get_theme\(\)->get\( ''Version'' \) \); \?>"') 'The portal root must stamp data-lunara-theme-version.'
 Assert-True ($pageTemplate -match 'id="primary" class="site-main lunara-oscars-portal') 'The portal root identity (#primary + lunara-oscars-portal) must be preserved.'
@@ -237,8 +251,8 @@ Assert-True ($controlDesk -match "'Oscars Portal Studio'") 'The Theme Studio com
 Assert-True ($controlDesk -match "'#lunara-oscars-portal-studio'") 'The command index entry must anchor to the Portal Studio surface.'
 
 # Version lock: this intentionally asserts the NEXT reissue identity. It is
-# EXPECTED to fail until the 3.2.51 version migration lands as its own step;
+# EXPECTED to fail until the 3.2.52 version migration lands as its own step;
 # every assertion above it must already pass on the pre-migration tree.
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.51\s*$') 'Theme version must be 3.2.51.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.52\s*$') 'Theme version must be 3.2.52.'
 
 Write-Host 'oscars-portal-studio: all assertions passed.'

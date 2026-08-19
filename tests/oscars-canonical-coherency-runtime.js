@@ -29,6 +29,7 @@ const {
 	ROUTE_STYLESHEET_LINK_ID,
 	LEGACY_SHELL_STYLE_LINK_ID,
 	REQUIRED_ANCHOR_IDS,
+	DATA_CONDITIONAL_ANCHOR_IDS,
 	isCanonicalOscarsUrl,
 	analyzeOscarsCanonicalCoherency,
 } = require('./tools/lunara-oscars-canonical-coherency-gate');
@@ -37,11 +38,20 @@ assert.equal(CANONICAL_OSCARS_URL, 'https://lunarafilm.com/oscars/', 'The sentin
 assert.equal(APPROVED_DEFAULT_LABEL_TOKEN, 'tiempos-text', 'The approved default label token is tiempos-text.');
 assert.deepEqual(
 	REQUIRED_ANCHOR_IDS,
-	['oscars-doors', 'oscars-spotlights', 'oscars-titles', 'oscars-research', 'oscars-winners', 'oscars-deep-cuts'],
-	'The anchor census must demand exactly the default-visible id-bearing sections — never the content-driven board, the default-hidden reviews, or the id-less rotating section.'
+	['oscars-doors', 'oscars-spotlights', 'oscars-titles', 'oscars-research', 'oscars-deep-cuts'],
+	'The anchor census must demand exactly the default-visible id-bearing sections — never the content-driven board, the default-hidden reviews, the data-conditional winners grid, or the id-less rotating section.'
+);
+assert.deepEqual(
+	DATA_CONDITIONAL_ANCHOR_IDS,
+	['oscars-winners'],
+	'The winners grid is bound to ceremony data, not to a visibility dial, so it must be censused as data-conditional rather than demanded outright.'
+);
+assert.ok(
+	!REQUIRED_ANCHOR_IDS.includes('oscars-winners'),
+	'Demanding the winners anchor unconditionally would fail a correctly rendered portal for a ceremony that has no recorded winners yet.'
 );
 
-const FIXTURE_VERSION = '3.2.51';
+const FIXTURE_VERSION = '3.2.52';
 
 function anchorSection(anchorId) {
 	return '<section id="' + anchorId + '" class="lunara-home-section">' + anchorId + '</section>';
@@ -65,6 +75,8 @@ function candidateHtml({
 	preloadAs = 'font',
 	legacyRootDataIdSpoof = false,
 	tokenDecoyRoots = false,
+	navigatorLinks = [], // in-page #oscars-* targets the navigator advertises
+	winnersSection = false, // the data-conditional winners grid actually rendered
 } = {}) {
 	const markerClass = marker ? ' is-label-font-tiempos' : '';
 	const preloadTag = preload
@@ -94,6 +106,17 @@ function candidateHtml({
 	// #oscars-board (off-season), no #oscars-reviews (ships hidden), and the
 	// rotating-winners section carries no id at all.
 	sections += '<section class="lunara-home-section lunara-oscars-rotating-winners-section" aria-label="Oscars Deep Dive">rotating</section>';
+	if (winnersSection) {
+		sections += anchorSection('oscars-winners');
+	}
+	// The navigator sits above the sections it points at, exactly as the route
+	// template emits it, so a link can outlive the section it targets.
+	const navigator = navigatorLinks.length > 0
+		? '<nav class="lunara-oscars-navigator" aria-label="Ledger navigator">'
+			+ navigatorLinks.map((id) => '<a href="#' + id + '">' + id + '</a>').join('')
+			+ '</nav>'
+		: '';
+	sections = navigator + sections;
 
 	const modernMainTag = '<main id="primary" class="site-main lunara-oscars-portal' + markerClass + '" ' + VERSION_ATTRIBUTE + '="' + version + '">';
 	const modernMain = modernRoot
@@ -246,6 +269,59 @@ for (const anchorId of REQUIRED_ANCHOR_IDS) {
 const doubled = analyze({}, { duplicateAnchor: 'oscars-research' });
 assert.equal(doubled.coherent, false, 'A duplicated section anchor must fail the census.');
 assert.deepEqual(doubled.detail.duplicateAnchors, ['oscars-research']);
+
+// Data-conditional winners grid: absent is legitimate, duplicated is not.
+const winnersAbsent = analyze({}, { winnersSection: false });
+assert.equal(
+	winnersAbsent.coherent,
+	true,
+	'A ceremony with no recorded winners renders no winners grid; that is a correct page, not an incoherent one: ' + winnersAbsent.failures.join('; ')
+);
+assert.equal(winnersAbsent.detail.anchorCounts['oscars-winners'], 0, 'The census must still report the data-conditional anchor count.');
+assert.deepEqual(winnersAbsent.detail.missingAnchors, [], 'A data-conditional anchor must never be reported as missing.');
+const winnersPresent = analyze({}, { winnersSection: true });
+assert.equal(winnersPresent.coherent, true, 'A rendered winners grid must pass: ' + winnersPresent.failures.join('; '));
+assert.equal(winnersPresent.detail.anchorCounts['oscars-winners'], 1);
+
+// Navigator link integrity — the 3.2.51 live defect, in both directions.
+const liveDefect = analyze({}, { navigatorLinks: ['oscars-winners'], winnersSection: false });
+assert.equal(
+	liveDefect.coherent,
+	false,
+	'A navigator link pointing at a section that declined to render is a dead anchor and must fail.'
+);
+assert.equal(liveDefect.contracts['portal-navigator-link-integrity'], false);
+assert.deepEqual(liveDefect.detail.danglingAnchorLinks, ['oscars-winners']);
+assert.equal(
+	liveDefect.contracts['portal-anchor-census'],
+	true,
+	'The dead link must be attributed to link integrity, not blamed on the anchor census.'
+);
+const linkedAndRendered = analyze({}, { navigatorLinks: ['oscars-winners'], winnersSection: true });
+assert.equal(
+	linkedAndRendered.coherent,
+	true,
+	'A navigator link whose section exists is coherent: ' + linkedAndRendered.failures.join('; ')
+);
+assert.deepEqual(linkedAndRendered.detail.danglingAnchorLinks, []);
+// The invariant is general: it holds for every slot, not just the winners grid.
+const danglingResearch = analyze({}, { navigatorLinks: ['oscars-research'], omitAnchor: 'oscars-research' });
+assert.equal(danglingResearch.contracts['portal-navigator-link-integrity'], false, 'Link integrity must cover every in-page target, not a winners special case.');
+assert.deepEqual(danglingResearch.detail.danglingAnchorLinks, ['oscars-research']);
+// A page whose links all resolve stays coherent no matter how many it carries.
+const allLinksResolve = analyze({}, { navigatorLinks: REQUIRED_ANCHOR_IDS.slice() });
+assert.equal(allLinksResolve.coherent, true, 'Every default-visible link resolves on a healthy portal: ' + allLinksResolve.failures.join('; '));
+assert.deepEqual(allLinksResolve.detail.danglingAnchorLinks, []);
+// Single-quoted hrefs are the same contract — the regex must not be quote-blind.
+const singleQuoted = analyzeOscarsCanonicalCoherency({
+	url: CANONICAL_OSCARS_URL,
+	finalUrl: CANONICAL_OSCARS_URL,
+	statusCode: 200,
+	expectedVersion: FIXTURE_VERSION,
+	html: candidateHtml({}) + "<a href='#oscars-nowhere'>ghost</a>",
+});
+assert.equal(singleQuoted.contracts['portal-navigator-link-integrity'], false, 'A single-quoted href must be censused exactly like a double-quoted one.');
+assert.deepEqual(singleQuoted.detail.danglingAnchorLinks, ['oscars-nowhere']);
 
 // Request/response identity discipline.
 assert.equal(analyze({ url: 'https://lunarafilm.com/oscars/?view=table' }).coherent, false, 'A query-bearing request can never be accepted as canonical proof.');

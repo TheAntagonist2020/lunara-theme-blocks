@@ -11,6 +11,33 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-19 — Theme 3.2.52 Oscars Navigator Link Integrity
+
+- Fixed a dead in-page anchor on `/oscars/`: the portal navigator emitted a
+  "Winners" link gated only on the `lunara_oscars_show_latest_winners`
+  visibility dial, while the section itself additionally required ceremony
+  winner data. A ceremony with nominees recorded but no winners yet — the
+  live state when 3.2.51 deployed — correctly rendered no section and left
+  the link pointing at nothing. The defect was **pre-existing, not a 3.2.51
+  regression**: the same asymmetry is present in the 3.2.43 tree at the
+  corresponding lines. It went unseen until the new Oscars coherency
+  sentinel looked at the route for the first time.
+- The winner-card data is now resolved in the template's data-prep block
+  rather than at the point of render, because the navigator is emitted well
+  above the section and must know whether that section will exist before it
+  links to it. Both the link and the section now share one `$has_latest_winners`
+  gate, matching the pattern `#oscars-board` already used correctly.
+- The Oscars sentinel's anchor census no longer demands `oscars-winners`
+  unconditionally — a data-conditional section that correctly declines to
+  render is not an incoherent page, and the old expectation would have
+  failed a healthy portal. Data-conditional anchors are still held to the
+  no-duplicate rule, and a new `portal-navigator-link-integrity` contract
+  replaces the lost coverage with a stronger, general invariant: every
+  in-page `#oscars-*` link on the route must resolve to a section that
+  exists. That catches this entire class on any slot, not just this one.
+
+---
+
 ## 2026-08-17 — Theme 3.2.51 Oscars Route-Family Design Pass
 
 - Gave the Oscars route family its first route-owned system, mirroring the
