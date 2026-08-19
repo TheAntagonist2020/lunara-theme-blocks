@@ -43,7 +43,7 @@ foreach ($relative in $sqlFreeFiles) {
 }
 
 # --- (b) The pinned academy_awards reference count. -------------------------
-# Pinned on 2026-08-17 at theme 3.2.52 + the three Oscars route-family
+# Pinned on 2026-08-17 at theme 3.2.53 + the three Oscars route-family
 # commits (fc3742a, 07ff9c3, 9d568eb). Breakdown at pin time:
 #   functions.php        12  (unsplit legacy fallback bundle)
 #   inc/frontend.php      2
