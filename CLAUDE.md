@@ -60,10 +60,18 @@ it. A log that has been tidied into correctness is worth nothing.
   the TTL. Clear the retired key in the flush routine too. This is the 3.2.48
   failure class in miniature and it has already happened twice.
 - **Read-only probes against production only.** No staging writes.
-- **Rebuild the exact-rollback hatch after every merge to `main`** and verify
-  tree-exactness before trusting it:
-  `git rev-parse <rollback-head>^{tree}` must equal the known-good tree
-  (3.2.43 = `c55bf394594149db2888295c5d51f85f47b2b520`).
+- **Rebuild the exact-rollback hatch after every merge to `main`** — docs-only
+  merges included — and verify tree-exactness before trusting it:
+
+  ```bash
+  git rev-parse origin/claude/rollback-exact-theme-3.2.43^{tree}
+  # must equal c55bf394594149db2888295c5d51f85f47b2b520   (the 3.2.43 tree)
+  ```
+
+  Refer to the hatch by **branch name or PR #159, never by SHA.** The head moves
+  at every merge, so a SHA written into a document goes stale immediately — and
+  a stale one is worse than none: merging a rollback commit parented on the
+  wrong tip does not restore the exact tree.
 - **Licensed Klim Tiempos font files are never committed.** They live only in
   `/wp-content/uploads/lunara-fonts/v1/` and are not restored by a redeploy.
 - **Deploy plugins before the theme.** Plugin read-path APIs are additive and

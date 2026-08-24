@@ -77,18 +77,30 @@ Full engineering detail is in `docs/CHANGELOG.md` under
 
 | Repo | SHA | Meaning |
 | --- | --- | --- |
-| theme | `191113a` | `main` tip — merge of PR #164, this log and the workflow change |
+| theme | `ee1fe58` | `main` tip at the close of this session — merge of PR #165 |
+| theme | `191113a` | merge of PR #164 — this log and the workflow change |
 | theme | `7ba712a` | the session-log implementation commit |
-| theme | `676bbed` | merge of PR #163, Theme 3.2.53 — the release that is live |
+| theme | `676bbed` | merge of PR #163, Theme 3.2.53 — **the release that is live** |
 | theme | `06df5a4` | the 3.2.53 implementation commit |
-| theme | `11dabf0` | standing exact-rollback head, rebuilt on `191113a`; tree `c55bf39…` = 3.2.43 bit-for-bit |
 | oscars-ledger | `2ebc990` | plugin 2.7.82 — unchanged this cycle |
 
-The rollback head was `f3ad4c2` when this entry was first written, parented on
-`676bbed`. It was rebuilt onto the new tip after PR #164 merged, which is the
-standing rule: the hatch is always exactly one merge away from restoring the
-good tree, so it is rebuilt after *every* merge to `main`, docs-only ones
-included.
+**The rollback hatch is deliberately not given a SHA here.** It is rebuilt onto
+a new tip after *every* merge to `main`, docs-only ones included, so any SHA
+written down goes stale at the next merge — and a stale rollback SHA is worse
+than none, because someone reaching for it in an emergency would merge a commit
+parented on the wrong tip and not get the exact tree back.
+
+Reach for it by name, which does not move:
+
+- Branch `claude/rollback-exact-theme-3.2.43`, tracked by **PR #159**.
+- Verify before trusting it, every time:
+  `git rev-parse origin/claude/rollback-exact-theme-3.2.43^{tree}` must equal
+  `c55bf394594149db2888295c5d51f85f47b2b520`.
+
+At the close of this session that branch was `7740af6`, parented on `ee1fe58`,
+tree verified exact. Two heads preceded it within this session alone — `f3ad4c2`
+and `11dabf0` — which is the whole argument for naming the branch instead of
+the commit.
 
 PR #163: `+396 / −83` across 36 files, CI `lint` green, merged.
 PR #159: the standing rollback PR. **Open and unfired.** Its `−20,610` diff is a
