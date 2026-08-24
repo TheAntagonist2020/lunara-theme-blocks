@@ -27,7 +27,7 @@ Hosting → Deployments feature.
 Every page carries the live identity in its head:
 
 ```html
-<meta name="lunara-build" content="3.2.52+20260819-185926" />
+<meta name="lunara-build" content="3.2.53+20260819-224806" />
 ```
 
 That is `version` + `deploy moment`. It is the fastest way to answer "what is
@@ -48,7 +48,7 @@ Immediately after the deploy lands:
 
 ```bash
 tests/tools/lunara-canary-verify.sh <expected-version>
-# e.g. tests/tools/lunara-canary-verify.sh 3.2.52
+# e.g. tests/tools/lunara-canary-verify.sh 3.2.53
 ```
 
 This runs the whole protocol: three cache-separated anonymous reads of the live
@@ -90,18 +90,43 @@ merge away from restoring the good tree.
 To roll back: merge that PR, redeploy from the Control Desk, then re-run the
 verifier against the restored version.
 
-## 5. Standing constraints
+## 5. Record it — the step that makes the next session cheap
+
+A deploy is not finished when it is verified. It is finished when it is
+**written down.**
+
+Before the session ends, append an entry to **`docs/SESSION-LOG.md`** — commit
+it and push it. That file is the answer to "where does this project stand and
+whose move is it," and it is deliberately redundant with everything else:
+conversations get summarized, tabs get closed, agent containers are reclaimed.
+The repo is the only thing that reliably survives all three.
+
+Record it whichever way the deploy went. A rollback is worth logging in more
+detail than a clean release, not less.
+
+The required shape of an entry — and the standing rules a fresh session needs
+before it touches anything — live in **`CLAUDE.md`** at the repo root.
+
+Three documents, three questions, no overlap:
+
+| Document | Answers |
+| --- | --- |
+| `docs/CHANGELOG.md` | *What changed in the code, and why.* |
+| `docs/GO-LIVE-RUNBOOK.md` | *How it ships and how it is proven.* |
+| `docs/SESSION-LOG.md` | *Where things stand, and whose move it is.* |
+
+## 6. Standing constraints
 
 - No cache clearing as a fix. If a release needs a cache flush to look correct,
   the release is wrong — that is precisely the 3.2.48 failure.
 - Read-only probes against production only. No staging writes.
 - Licensed Klim Tiempos faces are served from `/wp-content/uploads/lunara-fonts/v1/`
   and are **never** committed to the public repo. They are not restored by a
-  redeploy — see §6.
+  redeploy — see §7.
 - Re-enabling auto-deploy should wait until canaries have been clean for
   several consecutive releases, and is a deliberate decision, not a default.
 
-## 6. What is durable, and what is not
+## 7. What is durable, and what is not
 
 Safe without any action:
 
@@ -121,7 +146,7 @@ Needs deliberate care:
   deploys by `.deployignore`, so it stays in the repo without shipping to the
   live theme.
 
-## 7. Reference: the 3.2.48 failure class
+## 8. Reference: the 3.2.48 failure class
 
 The sentinels exist to catch one specific shape of failure. Anonymous visitors
 were served a *mix* of old and new markup for the same canonical URL: some
