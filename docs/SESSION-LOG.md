@@ -77,10 +77,18 @@ Full engineering detail is in `docs/CHANGELOG.md` under
 
 | Repo | SHA | Meaning |
 | --- | --- | --- |
-| theme | `676bbed` | `main` tip — merge of PR #163, Theme 3.2.53 |
+| theme | `191113a` | `main` tip — merge of PR #164, this log and the workflow change |
+| theme | `7ba712a` | the session-log implementation commit |
+| theme | `676bbed` | merge of PR #163, Theme 3.2.53 — the release that is live |
 | theme | `06df5a4` | the 3.2.53 implementation commit |
-| theme | `f3ad4c2` | standing exact-rollback head, tree `c55bf39…` = 3.2.43 bit-for-bit |
+| theme | `11dabf0` | standing exact-rollback head, rebuilt on `191113a`; tree `c55bf39…` = 3.2.43 bit-for-bit |
 | oscars-ledger | `2ebc990` | plugin 2.7.82 — unchanged this cycle |
+
+The rollback head was `f3ad4c2` when this entry was first written, parented on
+`676bbed`. It was rebuilt onto the new tip after PR #164 merged, which is the
+standing rule: the hatch is always exactly one merge away from restoring the
+good tree, so it is rebuilt after *every* merge to `main`, docs-only ones
+included.
 
 PR #163: `+396 / −83` across 36 files, CI `lint` green, merged.
 PR #159: the standing rollback PR. **Open and unfired.** Its `−20,610` diff is a
