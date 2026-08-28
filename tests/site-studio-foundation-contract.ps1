@@ -10,6 +10,21 @@ function Assert-True {
 $runtime = & php (Join-Path $PSScriptRoot 'site-studio-foundation-runtime.php') 2>&1
 Assert-True ($LASTEXITCODE -eq 0) ("Site Studio foundation runtime failed:`n" + ($runtime -join [Environment]::NewLine))
 
+foreach ($reviewCase in @(
+    'sticky-ownership',
+    'adapter-only',
+    'throwing-callbacks',
+    'preview-capability',
+    'preview-disabled',
+    'state-projection',
+    'revision-durability',
+    'authorization-order',
+    'design-token-inheritance'
+)) {
+    $reviewRuntime = & php (Join-Path $PSScriptRoot 'site-studio-foundation-runtime.php') $reviewCase 2>&1
+    Assert-True ($LASTEXITCODE -eq 0) ("Site Studio review case $reviewCase failed:`n" + ($reviewRuntime -join [Environment]::NewLine))
+}
+
 $loader = Get-Content -LiteralPath (Join-Path $themeRoot 'functions-loader.php') -Raw
 $customizer = Get-Content -LiteralPath (Join-Path $themeRoot 'inc/customizer.php') -Raw
 $siteStudio = Get-Content -LiteralPath (Join-Path $themeRoot 'inc/site-studio.php') -Raw

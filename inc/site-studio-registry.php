@@ -108,6 +108,7 @@ if ( ! function_exists( 'lunara_site_studio_default_surfaces' ) ) {
 				'preview_route'       => '/reviews/',
 				'preview_query_arg'   => 'lunara_reviews_preview',
 				'adapter_factory'     => 'lunara_site_studio_reviews_archive_adapter',
+				'state_schema_callback' => 'lunara_site_studio_reviews_archive_state_schema',
 				'admin_url'           => 'admin.php?page=lunara-site-studio&surface=reviews-archive',
 				'dependency_callback' => 'lunara_site_studio_reviews_archive_dependency',
 				'status_callback'     => 'lunara_site_studio_status_ready',
@@ -129,6 +130,7 @@ if ( ! function_exists( 'lunara_site_studio_default_surfaces' ) ) {
 				'preview_route'       => '/journal/',
 				'preview_query_arg'   => 'lunara_journal_preview',
 				'adapter_factory'     => 'lunara_site_studio_journal_archive_adapter',
+				'state_schema_callback' => 'lunara_site_studio_journal_archive_state_schema',
 				'admin_url'           => 'admin.php?page=lunara-site-studio&surface=journal-archive',
 				'dependency_callback' => 'lunara_site_studio_journal_archive_dependency',
 				'status_callback'     => 'lunara_site_studio_status_ready',
@@ -150,6 +152,7 @@ if ( ! function_exists( 'lunara_site_studio_default_surfaces' ) ) {
 				'preview_route'       => '/oscars/',
 				'preview_query_arg'   => 'lunara_oscars_preview',
 				'adapter_factory'     => 'lunara_site_studio_oscars_portal_adapter',
+				'state_schema_callback' => 'lunara_site_studio_oscars_portal_state_schema',
 				'admin_url'           => 'admin.php?page=lunara-site-studio&surface=oscars-portal',
 				'dependency_callback' => 'lunara_site_studio_oscars_portal_dependency',
 				'status_callback'     => 'lunara_site_studio_status_ready',
@@ -237,6 +240,7 @@ if ( ! function_exists( 'lunara_site_studio_normalize_surface' ) ) {
 		$dependency = isset( $raw['dependency_callback'] ) ? $raw['dependency_callback'] : '';
 		$status     = isset( $raw['status_callback'] ) ? $raw['status_callback'] : '';
 		$adapter    = isset( $raw['adapter_factory'] ) ? $raw['adapter_factory'] : '';
+		$state_schema = isset( $raw['state_schema_callback'] ) ? $raw['state_schema_callback'] : '';
 		$renderer   = isset( $raw['renderer'] ) ? $raw['renderer'] : '';
 		$admin_path = lunara_site_studio_sanitize_admin_path( isset( $raw['admin_url'] ) ? $raw['admin_url'] : '' );
 		$classic    = lunara_site_studio_sanitize_admin_path( isset( $raw['classic_url'] ) ? $raw['classic_url'] : '' );
@@ -256,6 +260,7 @@ if ( ! function_exists( 'lunara_site_studio_normalize_surface' ) ) {
 			'preview_route'       => $preview,
 			'preview_query_arg'   => $query_arg,
 			'adapter_factory'     => $adapter,
+			'state_schema_callback' => $state_schema,
 			'admin_url'           => $admin_path,
 			'dependency_callback' => $dependency,
 			'status_callback'     => $status,
@@ -267,7 +272,7 @@ if ( ! function_exists( 'lunara_site_studio_normalize_surface' ) ) {
 			'unavailable_reason'  => '',
 		);
 
-		$required_strings = array( 'id', 'group', 'label', 'description', 'owner', 'kind', 'capability', 'admin_url', 'dependency_callback', 'status_callback', 'danger_level', 'classic_url' );
+		$required_strings = array( 'id', 'group', 'label', 'description', 'owner', 'kind', 'capability', 'dependency_callback', 'status_callback', 'danger_level', 'classic_url' );
 		foreach ( $required_strings as $field ) {
 			if ( '' === $normalized[ $field ] ) {
 				$normalized['available']          = false;
@@ -280,7 +285,7 @@ if ( ! function_exists( 'lunara_site_studio_normalize_surface' ) ) {
 				$normalized['unavailable_reason'] = 'invalid_callback';
 			}
 		}
-		foreach ( array( 'adapter_factory', 'renderer' ) as $optional_callback ) {
+		foreach ( array( 'adapter_factory', 'state_schema_callback', 'renderer' ) as $optional_callback ) {
 			if ( '' !== $normalized[ $optional_callback ] && ! is_callable( $normalized[ $optional_callback ] ) ) {
 				$normalized['available']          = false;
 				$normalized['unavailable_reason'] = 'invalid_callback';
@@ -293,6 +298,10 @@ if ( ! function_exists( 'lunara_site_studio_normalize_surface' ) ) {
 		if ( '' === $adapter && '' === $admin_path ) {
 			$normalized['available']          = false;
 			$normalized['unavailable_reason'] = 'missing_destination';
+		}
+		if ( '' !== $adapter && '' === $state_schema ) {
+			$normalized['available']          = false;
+			$normalized['unavailable_reason'] = 'missing_state_schema';
 		}
 
 		return $normalized;
@@ -310,12 +319,19 @@ if ( ! function_exists( 'lunara_site_studio_surfaces' ) ) {
 	 */
 	function lunara_site_studio_surfaces() {
 		$defaults = lunara_site_studio_default_surfaces();
-		$filtered = apply_filters( 'lunara_site_studio_surfaces', $defaults );
+		try {
+			$filtered = apply_filters( 'lunara_site_studio_surfaces', $defaults );
+		} catch ( Throwable $error ) {
+			$filtered = $defaults;
+		}
 		$filtered = is_array( $filtered ) ? $filtered : array();
 		$result   = array();
+		$owners   = array();
+		$conflicts = array();
 
 		foreach ( $defaults as $id => $raw ) {
 			$result[ $id ] = lunara_site_studio_normalize_surface( $id, $raw );
+			$owners[ $id ] = array( (string) $result[ $id ]['owner'] => true );
 		}
 
 		foreach ( $filtered as $key => $raw ) {
@@ -328,13 +344,21 @@ if ( ! function_exists( 'lunara_site_studio_surfaces' ) ) {
 			}
 			$candidate = lunara_site_studio_normalize_surface( $id, $raw );
 			if ( isset( $result[ $id ] ) ) {
-				if ( ! hash_equals( (string) $result[ $id ]['owner'], (string) $candidate['owner'] ) ) {
+				$candidate_owner = (string) $candidate['owner'];
+				if ( ! isset( $owners[ $id ][ $candidate_owner ] ) ) {
+					$owners[ $id ][ $candidate_owner ] = true;
+					$conflicts[ $id ] = true;
+				}
+				if ( ! empty( $conflicts[ $id ] ) ) {
 					$result[ $id ]['available']          = false;
 					$result[ $id ]['unavailable_reason'] = 'ownership_conflict';
 					continue;
 				}
 			}
 			$result[ $id ] = $candidate;
+			if ( ! isset( $owners[ $id ] ) ) {
+				$owners[ $id ] = array( (string) $candidate['owner'] => true );
+			}
 		}
 
 		return $result;
@@ -365,7 +389,11 @@ if ( ! function_exists( 'lunara_site_studio_surface_availability' ) ) {
 		if ( ! is_callable( $callback ) ) {
 			return array( 'available' => false, 'reason' => 'invalid_callback', 'message' => __( 'This destination is unavailable because its dependency check is invalid.', 'lunara-film' ) );
 		}
-		$result = call_user_func( $callback, $surface );
+		try {
+			$result = call_user_func( $callback, $surface );
+		} catch ( Throwable $error ) {
+			return array( 'available' => false, 'reason' => 'dependency_unavailable', 'message' => __( 'The required owner is not currently available.', 'lunara-film' ) );
+		}
 		if ( is_wp_error( $result ) ) {
 			return array( 'available' => false, 'reason' => sanitize_key( $result->get_error_code() ), 'message' => __( 'The required owner is not currently available.', 'lunara-film' ) );
 		}
@@ -423,7 +451,7 @@ if ( ! function_exists( 'lunara_site_studio_public_surface' ) ) {
 		$public['available']          = ! empty( $availability['available'] );
 		$public['unavailable_reason'] = $public['available'] ? '' : sanitize_key( isset( $availability['reason'] ) ? $availability['reason'] : 'unavailable' );
 		$public['unavailable_message'] = sanitize_text_field( isset( $availability['message'] ) ? $availability['message'] : '' );
-		$public['admin_url']          = admin_url( $surface['admin_url'] );
+		$public['admin_url']          = '' === $surface['admin_url'] ? '' : admin_url( $surface['admin_url'] );
 		$public['classic_url']        = admin_url( $surface['classic_url'] );
 		$public['status']             = lunara_site_studio_safe_status( $status );
 		return $public;
@@ -445,7 +473,15 @@ if ( ! function_exists( 'lunara_site_studio_public_surfaces' ) ) {
 			$availability = lunara_site_studio_surface_availability( $surface );
 			$status       = array();
 			if ( ! empty( $availability['available'] ) && is_callable( $surface['status_callback'] ) ) {
-				$status = call_user_func( $surface['status_callback'], $surface );
+				try {
+					$status = call_user_func( $surface['status_callback'], $surface );
+				} catch ( Throwable $error ) {
+					$status = array(
+						'state'   => 'unavailable',
+						'label'   => __( 'Status unavailable', 'lunara-film' ),
+						'message' => __( 'Status could not be loaded from the canonical owner.', 'lunara-film' ),
+					);
+				}
 				if ( is_wp_error( $status ) ) {
 					$status = array();
 				}
