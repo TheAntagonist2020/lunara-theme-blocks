@@ -25,6 +25,43 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-08-28 (re-review round 2) — Semantic and subtree guards closed
+
+### Headline
+
+The Theme 3.2.54 stabilization tests are hardened locally against the second
+review's false-green mutations. Production behavior is unchanged from
+`ece3634`; no deployment or live operation occurred.
+
+### What changed
+
+- The visible Control Desk census now includes contextual and plural WordPress
+  translation helpers, including both `_n`/`_nx` message branches, without
+  scanning non-visible technical literals.
+- Cache guidance is evaluated clause by clause. Genuinely negative forms such
+  as `Caches must never be cleared as a deployment fix` are allowed, while an
+  affirmative clear/flush/purge clause fails even when another clause in the
+  same message is negative.
+- The box-sizing sentinel now lives inside `.site > #canonical-main`, alongside
+  the measured route subtree, so both universal and `.site *` fixture repairs
+  are observable. Scoped fixture-owned declarations remain valid.
+
+### Evidence
+
+- Contextual `_x` affirmative guidance: RED.
+- Contextual-plural `_nx` affirmative branch: RED.
+- Alternate canonical negative guidance: GREEN.
+- Mixed negative plus affirmative guidance: RED.
+- `.site *` and universal border-box repairs: 20-case RED each.
+- Journal production border-box removal: 22px overflow RED at 390 and 430.
+- Restored focused contract and affected regression set: GREEN, 7/7.
+
+### Live state
+
+No live check, deploy, cache operation, production write, push, merge, or PR
+occurred. The public site remains at the previously measured Theme 3.2.53
+state.
+
 ## 2026-08-28 (review fix) — Public stabilization contracts hardened
 
 ### Headline

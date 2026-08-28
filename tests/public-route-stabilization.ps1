@@ -13,6 +13,25 @@ function Add-ContractFailure([bool] $Condition, [string] $Message) {
     }
 }
 
+function ConvertFrom-PhpSingleQuotedLiteral([string] $Literal) {
+    $inner = $Literal.Substring(1, $Literal.Length - 2)
+    return $inner.Replace("\'", "'").Replace('\\', '\')
+}
+
+function Get-VisibleTranslationStrings([string] $PhpSource) {
+    $literal = "'(?:\\.|[^'\\])*'"
+    $strings = [Collections.Generic.List[string]]::new()
+    $singleMessageHelpers = '(?:__|_e|_x|_ex|esc_html__|esc_html_e|esc_html_x|esc_attr__|esc_attr_e|esc_attr_x)'
+    foreach ($match in [regex]::Matches($PhpSource, "(?s)(?<![A-Za-z0-9_])$singleMessageHelpers\s*\(\s*(?<message>$literal)")) {
+        $strings.Add((ConvertFrom-PhpSingleQuotedLiteral $match.Groups['message'].Value))
+    }
+    foreach ($match in [regex]::Matches($PhpSource, "(?s)(?<![A-Za-z0-9_])(?:_n|_nx)\s*\(\s*(?<singular>$literal)\s*,\s*(?<plural>$literal)")) {
+        $strings.Add((ConvertFrom-PhpSingleQuotedLiteral $match.Groups['singular'].Value))
+        $strings.Add((ConvertFrom-PhpSingleQuotedLiteral $match.Groups['plural'].Value))
+    }
+    return $strings
+}
+
 $header = Read-ThemeFile 'header.php'
 $frontPage = Read-ThemeFile 'front-page.php'
 $reviews = Read-ThemeFile 'inc/review-rendering.php'
@@ -39,18 +58,26 @@ foreach ($route in @(
 Add-ContractFailure (([regex]::Matches($oscars, 'lunara_render_oscars_winner_media_link\s*\(')).Count -eq 2) 'Both Oscars winner lanes must use the shared conditional media renderer.'
 Add-ContractFailure ($oscars -notmatch '<a class="lunara-ceremony-winner-media-link"') 'Oscars winner lanes must not emit unconditional media anchors.'
 Add-ContractFailure ($designTokens -notmatch 'rocket_clean_domain') 'Design Tokens saves must never clear the WP Rocket domain cache.'
-$visibleControlDeskStrings = [regex]::Matches(
-    $controlDesk,
-    "(?s)\b(?:__|_e|esc_html__|esc_html_e|esc_attr__|esc_attr_e)\(\s*'((?:\\'|[^'])*)'"
-) | ForEach-Object { $_.Groups[1].Value }
+$visibleControlDeskStrings = @(Get-VisibleTranslationStrings $controlDesk)
 $cacheClearingVerb = '(?:flush(?:es|ed|ing)?|clear(?:s|ed|ing)?|purg(?:e|es|ed|ing))'
 $cacheClearingAction = "(?i)(?:\b$cacheClearingVerb\b.{0,80}\bcaches?\b|\bcaches?\b.{0,80}\b$cacheClearingVerb\b)"
-$cacheClearingNegation = "(?i)(?:\bnever\s+$cacheClearingVerb|\bno\s+caches?\s+$cacheClearingVerb|\bwithout\s+$cacheClearingVerb|\bnot\s+$cacheClearingVerb)"
-$staleVisibleCacheGuidance = @($visibleControlDeskStrings | Where-Object {
-    $_ -match $cacheClearingAction -and $_ -notmatch $cacheClearingNegation
-})
+$cacheClearingNegation = "(?i)(?:\bnever\b.{0,50}\b$cacheClearingVerb\b|\bno\s+caches?\b.{0,50}\b$cacheClearingVerb\b|\bwithout\b.{0,50}\b$cacheClearingVerb\b|\b(?:do|does|did|should|must|can|could|would|will|may)\s+not\b.{0,50}\b$cacheClearingVerb\b|\bnot\b.{0,50}\b$cacheClearingVerb\b)"
+$staleVisibleCacheGuidance = [Collections.Generic.List[string]]::new()
+$canonicalNoCacheGuidance = [Collections.Generic.List[string]]::new()
+foreach ($visibleString in $visibleControlDeskStrings) {
+    foreach ($clause in [regex]::Split($visibleString, '(?i)\s*(?:[;.!?]+|,\s+|\bbut\b|\band\b)\s*')) {
+        if ($clause -notmatch $cacheClearingAction) {
+            continue
+        }
+        if ($clause -match $cacheClearingNegation) {
+            $canonicalNoCacheGuidance.Add($clause)
+        } else {
+            $staleVisibleCacheGuidance.Add($clause)
+        }
+    }
+}
 Add-ContractFailure ($staleVisibleCacheGuidance.Count -eq 0) ("Visible Control Desk guidance must contain no affirmative cache-clearing instruction: " + ($staleVisibleCacheGuidance -join ' | '))
-Add-ContractFailure (([regex]::Matches($controlDesk, 'Never clear caches? as a fix', 'IgnoreCase')).Count -ge 1) 'Visible Control Desk guidance must state the canonical no-cache-clearing rule.'
+Add-ContractFailure ($canonicalNoCacheGuidance.Count -ge 1) 'Visible Control Desk guidance must state a genuinely negative no-cache-clearing rule.'
 
 $phpOutput = & php (Join-Path $PSScriptRoot 'oscars-winner-map-runtime.php') 2>&1
 if ($LASTEXITCODE -ne 0) {
