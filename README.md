@@ -2,6 +2,15 @@
 
 Active source for the Lunara Film WordPress theme.
 
+> **The Paths section below is a stale historical snapshot.** It names a local
+> Windows working copy and a live theme directory that are no longer how this
+> project is built or shipped. Deployment is a push-button *Deployer for Git
+> (Pro)* action from the Lunara Control Desk, driven from `main`.
+>
+> For anything operational, read **`AGENTS.md`** (the working agreement),
+> **`docs/SESSION-LOG.md`** (current state), and
+> **`docs/GO-LIVE-RUNBOOK.md`** (how it ships and how it is proven).
+
 ## Paths
 
 - Local source: `G:\lunara-backups\work\lunara-theme-blocks-20260513-2300`
