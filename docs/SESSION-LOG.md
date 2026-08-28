@@ -25,6 +25,74 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-08-28 — Theme 3.2.54 public stabilization prepared locally
+
+### Headline
+
+Theme 3.2.54 is committed on
+`codex/site-studio-public-stabilization-3.2.54`, but it is **not deployed**.
+Home, Reviews, Journal, and Oscars now keep the header-owned canonical
+`<main>` as the document's only main landmark. Their existing `#primary`
+route roots remain intact as neutral wrappers, including route classes,
+ordering hooks, and version markers.
+
+### What changed
+
+- Replaced viewport-derived mobile route/grid sizing with parent-relative,
+  border-box containment and removed route-wide clipping that hid defects.
+  Intentional Review rails, Journal filter/sort scrollers, Oscars carousels,
+  media crops, and line clamps remain local and intact.
+- Consolidated both Oscars winner lanes on a conditional media-link renderer.
+  Visual anchors are named from canonical winner context; posterless cards
+  emit no empty media anchor and retain their named text destination.
+- Removed `rocket_clean_domain()` from Design Tokens and replaced four visible
+  cache-flush instructions with the standing no-cache-clearing rule.
+- Added the portable four-route browser contract at 390, 430, 768, 782, and
+  1440, extended the Oscars runtime branches, and updated current release
+  expectations to 3.2.54 without rewriting historical documentation facts.
+
+### Verified live state
+
+Read-only 390px probes returned HTTP 200 and Theme 3.2.53 for all four public
+routes, so this session makes no deployment or canary claim. Each probe used
+one live A/A pair and was classified `BASELINE_NOISY`: Home TTFB/LCP was
+1630/2168 ms then 72.2/708 ms; Reviews 1670.4/2284 then 110.3/860 ms; Journal
+1146.5/1904 then 77.3/868 ms; Oscars 1994.7/2840 then 76.9/936 ms. All routes
+reported zero broken requests and zero document overflow. Oscars transferred
+about 1.50 MB and used text LCP; that payload is logged, not attributed to a
+verified media bottleneck or changed from this noisy cohort.
+
+### Commit ledger
+
+- `40fc456` — `Stabilize public routes for Theme 3.2.54`
+- Documentation close commit follows this entry.
+
+### Gate ledger
+
+- New contract RED: 18 known 3.2.53 defect groups, including nested route
+  mains, masking overflow, unconditional Oscars media anchors, the Design
+  Tokens cache call, and stale visible cache-flush guidance.
+- Target GREEN: four routes × five responsive baselines passed.
+- Full PowerShell suite: 83/83 passed.
+- Syntax/balance: PHP 100/100, JavaScript 40/40, CSS 22/22.
+- Deliberate landmark, overflow-mask, and posterless-anchor mutations: all
+  three failed for their intended assertion and passed after restoration.
+- `git diff --check`: passed; only normal LF/CRLF working-copy warnings were
+  emitted for existing PowerShell files.
+
+### Logged, not fixed
+
+- Live remains Theme 3.2.53 until a separate authorized deployment.
+- The one-pair live A/A performance cohort is too noisy for release comparison
+  or bottleneck attribution. Oscars' roughly 1.50 MB route payload deserves a
+  larger controlled cohort before optimization work is authorized.
+
+### Next step
+
+Review and integrate the branch through the normal workflow. Deployment,
+cache operations, production writes, and live canary proof were intentionally
+outside this task.
+
 ## 2026-08-24 (later) — Agent handoff made portable; two stale docs defused
 
 ### Headline
