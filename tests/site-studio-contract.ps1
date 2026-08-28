@@ -27,6 +27,7 @@ $compositionRuntime = & php (Join-Path $PSScriptRoot 'home-block-composition-run
 Assert-True ($LASTEXITCODE -eq 0) ("Homepage composition runtime failed: " + ($compositionRuntime -join [Environment]::NewLine))
 
 $studio    = Read-ThemeFile 'inc/site-studio.php'
+$registry  = Read-ThemeFile 'inc/site-studio-registry.php'
 $control   = Read-ThemeFile 'inc/control-desk.php'
 $blocks    = Read-ThemeFile 'inc/blocks.php'
 $blockHub  = Read-ThemeFile 'inc/blocks-hub.php'
@@ -46,7 +47,7 @@ Assert-True ($loader -match 'require_once\s+\$lunara_inc\s*\.\s*''site-studio\.p
 Assert-True ($studio -match "add_submenu_page\([\s\S]*?'lunara-control-desk'[\s\S]*?'edit_theme_options'[\s\S]*?'lunara-site-studio'") 'Site Studio must be a discoverable Lunara submenu gated by edit_theme_options.'
 Assert-True ($studio -match "current_user_can\(\s*'edit_theme_options'\s*\)") 'Site Studio must enforce capability inside its renderer.'
 Assert-True ($control -match 'lunara_page_lunara-site-studio') 'Site Studio must receive the existing admin styles, media picker, and script.'
-Assert-True ($studio -match "'lunara-method'[\s\S]*?'homepage-structure'[\s\S]*?'reviews-archive'[\s\S]*?'journal-archive'") 'Site Studio must expose the focused Homepage and Archive surfaces.'
+Assert-True ($registry -match "'lunara-method'[\s\S]*?'homepage-structure'[\s\S]*?'reviews-archive'[\s\S]*?'journal-archive'") 'The unconditional Site Studio registry must expose the focused Homepage and Archive surfaces.'
 
 # One Method form and one secure storage path.
 Assert-True ($control -match 'function\s+lunara_control_desk_render_pairing_desk_form\s*\(') 'The Lunara Method form must be a shared Control Desk renderer.'

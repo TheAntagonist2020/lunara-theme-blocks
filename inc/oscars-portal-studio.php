@@ -983,9 +983,14 @@ function lunara_oscars_portal_studio_is_portal_family_request() {
  * Mark a response private before touching or validating a preview token.
  */
 function lunara_oscars_portal_studio_send_private_no_store() {
-	nocache_headers();
-	if ( ! headers_sent() ) {
-		header( 'Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0', true );
+	if ( function_exists( 'lunara_site_studio_send_private_no_store' ) ) {
+		lunara_site_studio_send_private_no_store();
+	} else {
+		nocache_headers();
+		if ( ! headers_sent() ) {
+			header( 'Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0', true );
+			header( 'X-Robots-Tag: noindex, nofollow', true );
+		}
 	}
 	do_action( 'lunara_oscars_portal_preview_no_store_sent' );
 }

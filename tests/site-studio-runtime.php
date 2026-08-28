@@ -10,6 +10,17 @@ define( 'ABSPATH', __DIR__ . '/' );
 $lunara_test_actions  = array();
 $lunara_test_submenus = array();
 $lunara_test_can_edit = true;
+$lunara_test_filters  = array();
+
+class WP_Error {
+	private $code;
+	public function __construct( $code = '' ) { $this->code = $code; }
+	public function get_error_code() { return $this->code; }
+}
+
+function is_wp_error( $value ) {
+	return $value instanceof WP_Error;
+}
 
 function lunara_test_assert( $condition, $message ) {
 	if ( ! $condition ) {
@@ -21,6 +32,19 @@ function lunara_test_assert( $condition, $message ) {
 function add_action( $hook, $callback, $priority = 10 ) {
 	global $lunara_test_actions;
 	$lunara_test_actions[] = compact( 'hook', 'callback', 'priority' );
+}
+
+function add_filter( $hook, $callback, $priority = 10 ) {
+	global $lunara_test_filters;
+	$lunara_test_filters[ $hook ][] = compact( 'callback', 'priority' );
+}
+
+function apply_filters( $hook, $value ) {
+	global $lunara_test_filters;
+	foreach ( isset( $lunara_test_filters[ $hook ] ) ? $lunara_test_filters[ $hook ] : array() as $filter ) {
+		$value = call_user_func( $filter['callback'], $value );
+	}
+	return $value;
 }
 
 function add_submenu_page( $parent, $page_title, $menu_title, $capability, $slug, $callback, $position = null ) {
@@ -78,6 +102,18 @@ function sanitize_key( $value ) {
 	return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $value ) );
 }
 
+function sanitize_text_field( $value ) {
+	return trim( strip_tags( is_scalar( $value ) ? (string) $value : '' ) );
+}
+
+function wp_parse_url( $url, $component = -1 ) {
+	return parse_url( $url, $component );
+}
+
+function __return_true() {
+	return true;
+}
+
 function wp_unslash( $value ) {
 	return $value;
 }
@@ -102,6 +138,18 @@ function lunara_control_desk_render_journal_archive_studio( $context = 'control-
 	echo '<div data-test="journal-archive" data-context="' . esc_attr( $context ) . '"></div>';
 }
 
+require dirname( __DIR__ ) . '/inc/site-studio-registry.php';
+require dirname( __DIR__ ) . '/inc/site-studio-adapters.php';
+add_filter(
+	'lunara_site_studio_surfaces',
+	static function ( $surfaces ) {
+		foreach ( $surfaces as &$surface ) {
+			$surface['dependency_callback'] = '__return_true';
+		}
+		unset( $surface );
+		return $surfaces;
+	}
+);
 require dirname( __DIR__ ) . '/inc/site-studio.php';
 
 lunara_test_assert(

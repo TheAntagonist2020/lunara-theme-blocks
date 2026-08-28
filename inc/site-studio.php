@@ -13,90 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! function_exists( 'lunara_site_studio_surfaces' ) ) {
-	/**
-	 * Focused Site Studio destinations.
-	 *
-	 * @return array<string,array<string,string>>
-	 */
-	function lunara_site_studio_surfaces() {
-		return array(
-			'lunara-method'      => array(
-				'group'       => __( 'Homepage', 'lunara-film' ),
-				'label'       => __( 'Lunara Method', 'lunara-film' ),
-				'description' => __( 'Edit the words, featured Review, and backdrop for the signature three-film showcase.', 'lunara-film' ),
-				'renderer'    => 'lunara_control_desk_render_pairing_desk_form',
-			),
-			'homepage-structure' => array(
-				'group'       => __( 'Homepage', 'lunara-film' ),
-				'label'       => __( 'Homepage Structure', 'lunara-film' ),
-				'description' => __( 'See the six live lanes, choose their presence, and set desktop and mobile order.', 'lunara-film' ),
-				'renderer'    => 'lunara_control_desk_render_homepage_studio',
-			),
-			'reviews-archive'    => array(
-				'group'       => __( 'Archives', 'lunara-film' ),
-				'label'       => __( 'Reviews Archive', 'lunara-film' ),
-				'description' => __( 'Control the Reviews desk density, lead chamber, cards, and companion rail.', 'lunara-film' ),
-				'renderer'    => 'lunara_control_desk_render_reviews_archive_studio',
-			),
-			'journal-archive'    => array(
-				'group'       => __( 'Archives', 'lunara-film' ),
-				'label'       => __( 'Journal Archive', 'lunara-film' ),
-				'description' => __( 'Control the live-desk rhythm, lead file, filters, cards, and retention lane.', 'lunara-film' ),
-				'renderer'    => 'lunara_control_desk_render_journal_archive_studio',
-			),
-			'oscars-portal'      => array(
-				'group'       => __( 'Oscars', 'lunara-film' ),
-				'label'       => __( 'Oscars Portal', 'lunara-film' ),
-				'description' => __( 'Compose the /oscars/ portal copy, eleven-slot order and visibility, and bounded geometry.', 'lunara-film' ),
-				'renderer'    => 'lunara_control_desk_render_oscars_portal_studio',
-			),
-			'oscars-ledger'      => array(
-				'group'       => __( 'Oscars', 'lunara-film' ),
-				'label'       => __( 'Oscars Ledger Routes', 'lunara-film' ),
-				'description' => __( 'Tune ceremony, category, title, and person dossiers while the Academy plugin owns the data.', 'lunara-film' ),
-				'renderer'    => 'lunara_control_desk_render_oscars_dossier_studio',
-			),
-		);
-	}
-}
-
-if ( ! function_exists( 'lunara_site_studio_admin_url' ) ) {
-	/**
-	 * Build a bounded direct link into Site Studio.
-	 *
-	 * @param string $surface Surface key.
-	 * @return string
-	 */
-	function lunara_site_studio_admin_url( $surface = 'lunara-method' ) {
-		$surfaces = lunara_site_studio_surfaces();
-		$surface  = sanitize_key( (string) $surface );
-		if ( ! isset( $surfaces[ $surface ] ) ) {
-			$surface = 'lunara-method';
-		}
-
-		return add_query_arg(
-			array(
-				'page'    => 'lunara-site-studio',
-				'surface' => $surface,
-			),
-			admin_url( 'admin.php' )
-		);
-	}
-}
-
-if ( ! function_exists( 'lunara_site_studio_current_surface' ) ) {
-	/**
-	 * Resolve the requested surface against the allowlist.
-	 *
-	 * @return string
-	 */
-	function lunara_site_studio_current_surface() {
-		$surface = isset( $_GET['surface'] ) ? sanitize_key( wp_unslash( $_GET['surface'] ) ) : 'lunara-method';
-		return isset( lunara_site_studio_surfaces()[ $surface ] ) ? $surface : 'lunara-method';
-	}
-}
-
 if ( ! function_exists( 'lunara_register_site_studio_page' ) ) {
 	/**
 	 * Register Site Studio directly beneath the Lunara menu.
@@ -131,6 +47,15 @@ if ( ! function_exists( 'lunara_render_site_studio_page' ) ) {
 		$surfaces       = lunara_site_studio_surfaces();
 		$active_surface = lunara_site_studio_current_surface();
 		$active         = $surfaces[ $active_surface ];
+		if ( ! current_user_can( $active['capability'] ) ) {
+			wp_die( esc_html__( 'You do not have permission to open this Site Studio destination.', 'lunara-film' ) );
+		}
+		foreach ( $surfaces as $surface_id => $surface ) {
+			if ( ! current_user_can( $surface['capability'] ) ) {
+				unset( $surfaces[ $surface_id ] );
+			}
+		}
+		$availability   = lunara_site_studio_surface_availability( $active );
 		// Navigation groups derive from the surface registry (first-appearance
 		// order), so registering a surface never needs a second hardcoded list.
 		$groups         = array_values( array_unique( array_column( $surfaces, 'group' ) ) );
@@ -168,8 +93,22 @@ if ( ! function_exists( 'lunara_render_site_studio_page' ) ) {
 
 			<div class="lunara-site-studio-workspace" data-lunara-site-studio-surface="<?php echo esc_attr( $active_surface ); ?>">
 				<?php
-				if ( function_exists( $active['renderer'] ) ) {
+				if ( empty( $availability['available'] ) ) {
+					?>
+					<div class="notice notice-warning lunara-site-studio-unavailable">
+						<p><strong><?php esc_html_e( 'This Site Studio destination is unavailable.', 'lunara-film' ); ?></strong></p>
+						<p><?php echo esc_html( $availability['message'] ); ?></p>
+						<?php if ( ! empty( $active['classic_url'] ) ) : ?>
+							<p><a class="button" href="<?php echo esc_url( admin_url( $active['classic_url'] ) ); ?>"><?php esc_html_e( 'Open Classic controls', 'lunara-film' ); ?></a></p>
+						<?php endif; ?>
+					</div>
+					<?php
+				} elseif ( is_callable( $active['renderer'] ) ) {
 					call_user_func( $active['renderer'], 'site-studio' );
+				} else {
+					?>
+					<div class="notice notice-warning lunara-site-studio-unavailable"><p><?php esc_html_e( 'This destination has no available editor. Use its Classic controls instead.', 'lunara-film' ); ?></p></div>
+					<?php
 				}
 				?>
 			</div>

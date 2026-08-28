@@ -2,14 +2,13 @@
 /**
  * Design Tokens — dial-level control over the house palette and voice.
  *
- * The :root tokens in style.css remain the shipped defaults; this panel
- * writes an override layer (option: lunara_design_tokens) printed in
- * wp_head, so Dalton can turn the golds, navies, text tones, and the
- * face assigned to each typographic role from the Control Desk — no
- * code, no deploy. Only values that differ from the defaults are
- * emitted; Reset deletes the option and the site reads pure style.css
- * again. The override block carries a marker and is excluded from WP
- * Rocket's unused-CSS pass (the lesson this codebase keeps re-learning).
+ * The :root tokens in style.css remain the shipped defaults. This module is
+ * the single runtime emitter for the six shared palette variables: explicit
+ * lunara_design_tokens values win, missing keys inherit compatible Customizer
+ * theme mods, and absent/invalid values use the shipped defaults. Non-default
+ * font-role selections share the same wp_head layer. Reset deletes the option
+ * so compatible Customizer values or shipped defaults resume. The override
+ * block carries a marker and is excluded from WP Rocket's unused-CSS pass.
  *
  * @package Lunara_Film
  */
@@ -73,36 +72,54 @@ if ( ! function_exists( 'lunara_get_design_tokens' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lunara_design_token_customizer_color_mods' ) ) {
+	/**
+	 * Compatibility map for the six historical Customizer settings.
+	 *
+	 * Customizer continues to save these theme mods. Design Tokens is their one
+	 * runtime CSS emitter, so an unset token key can inherit the existing value
+	 * without two competing :root blocks.
+	 *
+	 * @return array<string,string>
+	 */
+	function lunara_design_token_customizer_color_mods() {
+		return array(
+			'bg_primary'   => 'lunara_bg_primary',
+			'bg_secondary' => 'lunara_bg_secondary',
+			'gold'         => 'lunara_accent_color',
+			'gold_light'   => 'lunara_accent_soft_color',
+			'text'         => 'lunara_text_color',
+			'text_muted'   => 'lunara_muted_text_color',
+		);
+	}
+}
+
 if ( ! function_exists( 'lunara_design_tokens_output_css' ) ) {
 	/**
-	 * Print the override layer — only the dials that were actually turned.
+	 * Print the sole runtime layer for the six shared palette variables.
+	 *
+	 * A present Design Tokens key wins even when it stores the shipped default;
+	 * only a missing key falls back to its compatible Customizer theme mod.
 	 */
 	function lunara_design_tokens_output_css() {
 		if ( is_admin() ) {
 			return;
 		}
 
-		$tokens = lunara_get_design_tokens();
-		if ( empty( $tokens ) ) {
-			return;
-		}
-
 		$lines   = array();
+		$tokens  = lunara_get_design_tokens();
 		$colors  = isset( $tokens['colors'] ) && is_array( $tokens['colors'] ) ? $tokens['colors'] : array();
 		$fonts   = isset( $tokens['fonts'] ) && is_array( $tokens['fonts'] ) ? $tokens['fonts'] : array();
 		$choices = lunara_design_token_font_choices();
+		$mods    = lunara_design_token_customizer_color_mods();
 
 		foreach ( lunara_design_token_color_specs() as $key => $spec ) {
-			if ( empty( $colors[ $key ] ) ) {
-				continue;
-			}
-			$hex = sanitize_hex_color( $colors[ $key ] );
-			if ( ! $hex || strtolower( $hex ) === strtolower( $spec['default'] ) ) {
-				continue;
-			}
+			$candidate = array_key_exists( $key, $colors )
+				? $colors[ $key ]
+				: get_theme_mod( $mods[ $key ], $spec['default'] );
+			$hex = is_scalar( $candidate ) ? sanitize_hex_color( (string) $candidate ) : false;
+			$hex = $hex ? $hex : $spec['default'];
 			$lines[] = $spec['var'] . ':' . $hex . ';';
-			// The heading/body aliases follow their parents automatically via
-			// var() chains; nothing else to emit.
 		}
 
 		foreach ( lunara_design_token_font_role_specs() as $role => $spec ) {
@@ -188,7 +205,7 @@ if ( ! function_exists( 'lunara_design_tokens_render_panel' ) ) {
 			<div class="lunara-control-desk-panel-header">
 				<p class="lunara-control-desk-kicker"><?php esc_html_e( 'Design Tokens', 'lunara-film' ); ?></p>
 				<h2><?php esc_html_e( 'Dial-level control over the palette and the voice', 'lunara-film' ); ?></h2>
-				<p class="lunara-control-desk-intro"><?php esc_html_e( 'These dials override the shipped tokens site-wide — every gold hairline, navy surface, and typographic role reads from them. Only turned dials are output; Reset returns the site to the pure stylesheet.', 'lunara-film' ); ?></p>
+				<p class="lunara-control-desk-intro"><?php esc_html_e( 'These dials are the primary palette and type controls site-wide. The six shared colors are emitted once from here; Reset returns each missing color to its compatible Classic control or shipped default.', 'lunara-film' ); ?></p>
 			</div>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="lunara_design_tokens_save" />

@@ -2879,14 +2879,8 @@ function lunara_output_runtime_customizer_css() {
     $css               = '';
 
     $css .= ':root{';
-    $css .= '--lunara-bg-primary:' . $bg_primary . ';';
     $css .= '--lunara-bg-deep:#0a1520;';
-    $css .= '--lunara-bg-secondary:' . $bg_secondary . ';';
     $css .= '--lunara-bg-card:' . $bg_card . ';';
-    $css .= '--lunara-gold:' . $accent . ';';
-    $css .= '--lunara-gold-light:' . $accent_soft . ';';
-    $css .= '--lunara-text:' . $text_color . ';';
-    $css .= '--lunara-text-muted:' . $muted_text . ';';
     $css .= '--lunara-border:' . $border_alpha . ';';
     $css .= '--lunara-border-solid:' . $border_color . ';';
     $css .= '--lunara-glow-gold:rgba(201,169,97,0.16);';

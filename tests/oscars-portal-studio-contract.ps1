@@ -41,6 +41,7 @@ $ledgerCritical = Read-ThemeFile 'inc/oscars-ledger-critical.php'
 $portalRenderer = Read-ThemeFile 'inc/oscars-portal.php'
 $frontend       = Read-ThemeFile 'inc/frontend.php'
 $siteStudio     = Read-ThemeFile 'inc/site-studio.php'
+$siteRegistry   = Read-ThemeFile 'inc/site-studio-registry.php'
 $controlDesk    = Read-ThemeFile 'inc/control-desk.php'
 $pageTemplate   = Read-ThemeFile 'page-oscars.php'
 $style          = Read-ThemeFile 'style.css'
@@ -250,8 +251,8 @@ Assert-True ($emittedLines[0].StartsWith('#primary.lunara-oscars-portal{--lunara
 
 # Site Studio registers both Oscars surfaces and the command index lists the
 # Portal Studio.
-Assert-True ($siteStudio -match "'oscars-portal'\s*=>\s*array\([\s\S]{0,400}'renderer'\s*=>\s*'lunara_control_desk_render_oscars_portal_studio'") 'Site Studio must register the oscars-portal surface with the Portal Studio renderer.'
-Assert-True ($siteStudio -match "'oscars-ledger'\s*=>\s*array\([\s\S]{0,400}'renderer'\s*=>\s*'lunara_control_desk_render_oscars_dossier_studio'") 'Site Studio must register the oscars-ledger surface with the Dossier Studio renderer.'
+Assert-True ($siteRegistry -match "'oscars-portal'\s*=>\s*array\([\s\S]{0,1800}'renderer'\s*=>\s*'lunara_control_desk_render_oscars_portal_studio'") 'The unconditional Site Studio registry must register the oscars-portal surface with the Portal Studio renderer.'
+Assert-True ($siteRegistry -match "'oscars-ledger'\s*=>\s*array\([\s\S]{0,1800}'renderer'\s*=>\s*'lunara_control_desk_render_oscars_dossier_studio'") 'The unconditional Site Studio registry must register the oscars-ledger surface with the Dossier Studio renderer.'
 Assert-True ($controlDesk -match "'Oscars Portal Studio'") 'The Theme Studio command index must list the Oscars Portal Studio.'
 Assert-True ($controlDesk -match "'#lunara-oscars-portal-studio'") 'The command index entry must anchor to the Portal Studio surface.'
 
