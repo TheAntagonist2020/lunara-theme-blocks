@@ -34,6 +34,8 @@ $lunara_test_user_id       = 41;
 $lunara_test_now           = 1900000000;
 $lunara_test_uuid          = 0;
 $lunara_test_filter_sequence = 0;
+$lunara_test_registry_hook_events = array();
+$wp_current_filter = array();
 $lunara_test_reentry_calls = array();
 $lunara_test_aggregate_reentry_calls = array();
 $lunara_test_provider_operation_revision_id = '';
@@ -160,6 +162,79 @@ class WP_REST_Response {
 
 class WP_Hook {
 	public $callbacks = array();
+	private $priorities = array();
+	private $iterations = array();
+	private $current_priority = array();
+	private $nesting_level = 0;
+
+	public function add_filter( $hook, $callback, $priority, $accepted_args ) {
+		$callback_id = lunara_test_filter_id( $callback );
+		$this->callbacks[ $priority ][ $callback_id ] = array( 'function' => $callback, 'accepted_args' => $accepted_args );
+		ksort( $this->callbacks, SORT_NUMERIC );
+		$this->priorities = array_keys( $this->callbacks );
+		$this->refresh_active_iterations();
+	}
+
+	public function remove_filter( $hook, $callback, $priority ) {
+		$callback_id = lunara_test_filter_id( $callback );
+		if ( ! isset( $this->callbacks[ $priority ][ $callback_id ] ) ) { return false; }
+		unset( $this->callbacks[ $priority ][ $callback_id ] );
+		if ( empty( $this->callbacks[ $priority ] ) ) { unset( $this->callbacks[ $priority ] ); }
+		$this->priorities = array_keys( $this->callbacks );
+		$this->refresh_active_iterations();
+		return true;
+	}
+
+	private function refresh_active_iterations() {
+		foreach ( array_keys( $this->iterations ) as $level ) {
+			$current = isset( $this->current_priority[ $level ] ) ? $this->current_priority[ $level ] : null;
+			$this->iterations[ $level ] = $this->priorities;
+			if ( null !== $current ) {
+				while ( false !== current( $this->iterations[ $level ] ) && current( $this->iterations[ $level ] ) < $current ) { next( $this->iterations[ $level ] ); }
+			}
+		}
+	}
+
+	public function apply_filters( $value, $args ) {
+		if ( empty( $this->callbacks ) ) { return $value; }
+		$level = $this->nesting_level++;
+		$this->iterations[ $level ] = $this->priorities;
+		$num_args = count( $args );
+		do {
+			$priority = current( $this->iterations[ $level ] );
+			if ( false === $priority ) { break; }
+			$this->current_priority[ $level ] = $priority;
+			$callback_ids = array_keys( isset( $this->callbacks[ $priority ] ) ? $this->callbacks[ $priority ] : array() );
+			foreach ( $callback_ids as $callback_id ) {
+				if ( ! isset( $this->callbacks[ $priority ][ $callback_id ] ) ) { continue; }
+				$filter = $this->callbacks[ $priority ][ $callback_id ];
+				$args[0] = $value;
+				if ( 0 === $filter['accepted_args'] ) {
+					$value = call_user_func( $filter['function'] );
+				} elseif ( $filter['accepted_args'] >= $num_args ) {
+					$value = call_user_func_array( $filter['function'], $args );
+				} else {
+					$value = call_user_func_array( $filter['function'], array_slice( $args, 0, $filter['accepted_args'] ) );
+				}
+			}
+		} while ( false !== next( $this->iterations[ $level ] ) );
+		unset( $this->iterations[ $level ], $this->current_priority[ $level ] );
+		$this->nesting_level--;
+		return $value;
+	}
+
+	public function current_priority() {
+		return empty( $this->current_priority ) ? false : end( $this->current_priority );
+	}
+}
+
+function lunara_test_filter_id( $callback ) {
+	if ( is_string( $callback ) ) { return $callback; }
+	if ( $callback instanceof Closure ) { return spl_object_hash( $callback ); }
+	if ( is_array( $callback ) && isset( $callback[0], $callback[1] ) ) {
+		return ( is_object( $callback[0] ) ? spl_object_hash( $callback[0] ) : (string) $callback[0] ) . '::' . $callback[1];
+	}
+	return is_object( $callback ) ? spl_object_hash( $callback ) : md5( serialize( $callback ) );
 }
 
 function add_action( $hook, $callback, $priority = 10 ) {
@@ -175,8 +250,7 @@ function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
 	$lunara_test_filter_sequence++;
 	$sequence = $lunara_test_filter_sequence;
 	$lunara_test_filters[ $hook ][] = compact( 'callback', 'priority', 'accepted_args', 'sequence' );
-	if ( ! isset( $wp_filter[ $hook ]->callbacks[ $priority ] ) ) { $wp_filter[ $hook ]->callbacks[ $priority ] = array(); }
-	$wp_filter[ $hook ]->callbacks[ $priority ][] = array( 'function' => $callback, 'accepted_args' => $accepted_args, 'sequence' => $sequence );
+	$wp_filter[ $hook ]->add_filter( $hook, $callback, $priority, $accepted_args );
 	return true;
 }
 function remove_filter( $hook, $callback, $priority = 10 ) {
@@ -184,24 +258,21 @@ function remove_filter( $hook, $callback, $priority = 10 ) {
 	if ( isset( $lunara_test_filters[ $hook ] ) ) {
 		$lunara_test_filters[ $hook ] = array_values( array_filter( $lunara_test_filters[ $hook ], static function ( $entry ) use ( $callback, $priority ) { return ! ( $priority === $entry['priority'] && $callback === $entry['callback'] ); } ) );
 	}
-	if ( isset( $wp_filter[ $hook ]->callbacks[ $priority ] ) ) {
-		$wp_filter[ $hook ]->callbacks[ $priority ] = array_values( array_filter( $wp_filter[ $hook ]->callbacks[ $priority ], static function ( $entry ) use ( $callback ) { return $callback !== $entry['function']; } ) );
-		if ( empty( $wp_filter[ $hook ]->callbacks[ $priority ] ) ) { unset( $wp_filter[ $hook ]->callbacks[ $priority ] ); }
-	}
-	return true;
+	return isset( $wp_filter[ $hook ] ) ? $wp_filter[ $hook ]->remove_filter( $hook, $callback, $priority ) : false;
 }
 function apply_filters( $hook, $value ) {
-	global $lunara_test_filters, $wp_filter;
+	global $lunara_test_filters, $wp_filter, $wp_current_filter;
 	if ( empty( $lunara_test_filters[ $hook ] ) || empty( $wp_filter[ $hook ]->callbacks ) ) { return $value; }
-	$priorities = array_keys( $wp_filter[ $hook ]->callbacks );
-	sort( $priorities, SORT_NUMERIC );
-	foreach ( $priorities as $priority ) {
-		foreach ( $wp_filter[ $hook ]->callbacks[ $priority ] as $filter ) {
-			$value = call_user_func_array( $filter['function'], array( $value ) );
-		}
-	}
-	return $value;
+	$wp_current_filter[] = $hook;
+	$args = func_get_args();
+	array_shift( $args );
+	$result = $wp_filter[ $hook ]->apply_filters( $value, $args );
+	array_pop( $wp_current_filter );
+	return $result;
 }
+function current_filter() { global $wp_current_filter; return empty( $wp_current_filter ) ? '' : end( $wp_current_filter ); }
+function doing_filter( $hook = null ) { global $wp_current_filter; return null === $hook ? ! empty( $wp_current_filter ) : in_array( $hook, $wp_current_filter, true ); }
+function current_priority() { global $wp_filter; $hook = current_filter(); return '' !== $hook && isset( $wp_filter[ $hook ] ) ? $wp_filter[ $hook ]->current_priority() : false; }
 function do_action( $hook ) {
 	global $lunara_test_actions, $lunara_test_events;
 	$lunara_test_events[] = 'action:' . $hook;
@@ -398,6 +469,24 @@ function lunara_journal_archive_studio_defaults() { global $lunara_test_provider
 function lunara_oscars_portal_studio_defaults() { global $lunara_test_provider_defaults; return $lunara_test_provider_defaults['oscars']; }
 
 function lunara_test_throwing_filter() { throw new RuntimeException( 'secret filter exception' ); }
+function lunara_test_poisoning_registry_filter( $items ) {
+	global $lunara_test_registry_hook_events;
+	$lunara_test_registry_hook_events[] = array( 'callback' => 'throwing', 'filter' => current_filter(), 'doing' => doing_filter( 'lunara_site_studio_surfaces' ), 'priority' => current_priority() );
+	add_filter( 'lunara_site_studio_surfaces', 'lunara_test_dynamic_registry_filter', 20 );
+	throw new RuntimeException( 'secret registry poison' );
+}
+function lunara_test_dynamic_registry_filter( $items ) {
+	global $lunara_test_registry_hook_events;
+	$lunara_test_registry_hook_events[] = array( 'callback' => 'dynamic', 'filter' => current_filter(), 'doing' => doing_filter( 'lunara_site_studio_surfaces' ), 'priority' => current_priority() );
+	$items['post-failure-dynamic'] = lunara_review_surface( 'post-failure-dynamic', 'plugin:dynamic' );
+	return $items;
+}
+function lunara_test_later_registry_filter( $items ) {
+	global $lunara_test_registry_hook_events;
+	$lunara_test_registry_hook_events[] = array( 'callback' => 'later', 'filter' => current_filter(), 'doing' => doing_filter( 'lunara_site_studio_surfaces' ), 'priority' => current_priority() );
+	$items['must-be-skipped'] = lunara_review_surface( 'must-be-skipped', 'plugin:later' );
+	return $items;
+}
 function lunara_test_throwing_dependency() { throw new RuntimeException( 'secret dependency exception' ); }
 function lunara_test_throwing_status() { throw new RuntimeException( 'secret status exception' ); }
 function lunara_test_throwing_factory() { throw new RuntimeException( 'secret factory exception' ); }
@@ -993,6 +1082,29 @@ function lunara_review_case_throwing_callbacks() {
 	lunara_review_finish( 'throwing-callbacks', $failures );
 }
 
+function lunara_review_case_registry_hook_unwind() {
+	global $lunara_test_filters, $lunara_test_registry_hook_events;
+	$failures = array();
+	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
+	$lunara_test_registry_hook_events = array();
+	add_filter( 'lunara_site_studio_surfaces', 'lunara_test_poisoning_registry_filter', 10 );
+	add_filter( 'lunara_site_studio_surfaces', 'lunara_test_later_registry_filter', 30 );
+	$failed_pass = lunara_site_studio_surfaces();
+	$canonical_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger' );
+	if ( $canonical_ids !== array_keys( $failed_pass ) ) { $failures[] = 'A throwing registry pass must discard all contributions and return canonical defaults.'; }
+	if ( array( 'throwing' ) !== array_column( $lunara_test_registry_hook_events, 'callback' ) ) { $failures[] = 'Later and dynamically added callbacks must be skipped after a registry pass fails.'; }
+	if ( '' !== current_filter() || doing_filter( 'lunara_site_studio_surfaces' ) || false !== current_priority() ) { $failures[] = 'A throwing registry callback must leave official current-filter and priority state clean.'; }
+	if ( 'lunara_site_studio_surfaces' !== $lunara_test_registry_hook_events[0]['filter'] || true !== $lunara_test_registry_hook_events[0]['doing'] || 10 !== $lunara_test_registry_hook_events[0]['priority'] ) { $failures[] = 'Registry callbacks must retain official WordPress current-filter semantics while they run.'; }
+	remove_filter( 'lunara_site_studio_surfaces', 'lunara_test_poisoning_registry_filter', 10 );
+	remove_filter( 'lunara_site_studio_surfaces', 'lunara_test_later_registry_filter', 30 );
+	$lunara_test_registry_hook_events = array();
+	$clean_pass = lunara_site_studio_surfaces();
+	if ( empty( $clean_pass['post-failure-dynamic']['available'] ) || array( 'dynamic' ) !== array_column( $lunara_test_registry_hook_events, 'callback' ) ) { $failures[] = 'A dynamically added callback must run normally on the clean dispatch after failure.'; }
+	if ( 'lunara_site_studio_surfaces' !== $lunara_test_registry_hook_events[0]['filter'] || true !== $lunara_test_registry_hook_events[0]['doing'] || 20 !== $lunara_test_registry_hook_events[0]['priority'] ) { $failures[] = 'Subsequent dispatch must retain clean WordPress filter and priority semantics.'; }
+	if ( '' !== current_filter() || doing_filter() || false !== current_priority() ) { $failures[] = 'Subsequent dispatch must fully unwind wrapper, boundary, and WordPress hook state.'; }
+	lunara_review_finish( 'registry-hook-unwind', $failures );
+}
+
 function lunara_review_case_preview_capability() {
 	global $lunara_test_filters, $lunara_test_can_edit, $lunara_test_events, $lunara_test_transients;
 	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
@@ -1306,6 +1418,7 @@ $lunara_review_cases = array(
 	'sticky-ownership' => 'lunara_review_case_sticky_ownership',
 	'adapter-only' => 'lunara_review_case_adapter_only',
 	'throwing-callbacks' => 'lunara_review_case_throwing_callbacks',
+	'registry-hook-unwind' => 'lunara_review_case_registry_hook_unwind',
 	'preview-capability' => 'lunara_review_case_preview_capability',
 	'preview-disabled' => 'lunara_review_case_preview_disabled',
 	'state-projection' => 'lunara_review_case_state_projection',

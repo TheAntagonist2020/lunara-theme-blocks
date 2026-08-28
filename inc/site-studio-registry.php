@@ -360,9 +360,10 @@ if ( ! function_exists( 'lunara_site_studio_surfaces' ) ) {
 		$filtered = $defaults;
 		$history  = array();
 		if ( lunara_site_studio_boundary_guard( 'registry_filter' ) ) {
+			$failed = false;
 			$wrapped_callbacks = array();
 			$wrap_callbacks = null;
-			$wrap_callbacks = static function () use ( &$history, &$wrapped_callbacks, &$wrap_callbacks ) {
+			$wrap_callbacks = static function () use ( &$failed, &$history, &$wrapped_callbacks, &$wrap_callbacks ) {
 				global $wp_filter;
 				if ( ! isset( $wp_filter['lunara_site_studio_surfaces'] ) || ! is_object( $wp_filter['lunara_site_studio_surfaces'] ) || ! isset( $wp_filter['lunara_site_studio_surfaces']->callbacks ) || ! is_array( $wp_filter['lunara_site_studio_surfaces']->callbacks ) ) {
 					return;
@@ -376,11 +377,22 @@ if ( ! function_exists( 'lunara_site_studio_surfaces' ) ) {
 							continue;
 						}
 						$original = $entry['function'];
-						$wrapper = static function () use ( $original, &$history, &$wrap_callbacks ) {
-							$result = call_user_func_array( $original, func_get_args() );
-							$history[] = is_array( $result ) ? $result : array();
-							$wrap_callbacks();
-							return $result;
+						$wrapper = static function () use ( $original, &$failed, &$history, &$wrap_callbacks ) {
+							$args = func_get_args();
+							if ( $failed ) {
+								return isset( $args[0] ) ? $args[0] : array();
+							}
+							try {
+								$result = call_user_func_array( $original, $args );
+								$history[] = is_array( $result ) ? $result : array();
+								$wrap_callbacks();
+								return $result;
+							} catch ( Throwable $error ) {
+								$failed = true;
+								$history = array();
+								$wrap_callbacks();
+								return isset( $args[0] ) ? $args[0] : array();
+							}
 						};
 						$wrapped_callbacks[ $priority ][ $callback_id ] = array(
 							'original' => $original,
@@ -395,7 +407,10 @@ if ( ! function_exists( 'lunara_site_studio_surfaces' ) ) {
 			try {
 				$wrap_callbacks();
 				$filtered = apply_filters( 'lunara_site_studio_surfaces', $defaults );
-				if ( empty( $history ) && is_array( $filtered ) ) {
+				if ( $failed ) {
+					$filtered = $defaults;
+					$history  = array();
+				} elseif ( empty( $history ) && is_array( $filtered ) ) {
 					$history[] = $filtered;
 				}
 			} catch ( Throwable $error ) {

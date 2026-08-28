@@ -14,6 +14,7 @@ foreach ($reviewCase in @(
     'sticky-ownership',
     'adapter-only',
     'throwing-callbacks',
+    'registry-hook-unwind',
     'preview-capability',
     'preview-disabled',
     'state-projection',
