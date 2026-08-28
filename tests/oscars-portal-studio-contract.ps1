@@ -22,6 +22,11 @@ function Read-ThemeFile {
     return Get-Content -LiteralPath $path -Raw
 }
 
+$runtimeSource = Read-ThemeFile 'tests/oscars-portal-studio-runtime.php'
+Assert-True ($runtimeSource -match 'proc_open\s*\(') 'Reader-degradation lanes must use proc_open for shell-free cross-platform child launches.'
+Assert-True ($runtimeSource -match 'LUNARA_OSCARS_PORTAL_MODE.*\]') 'Reader-degradation lanes must pass LUNARA_OSCARS_PORTAL_MODE through the child environment array.'
+Assert-True ($runtimeSource -notmatch '''LUNARA_OSCARS_PORTAL_MODE=''\s*\.\s*\$child_mode') 'Reader-degradation lanes must not interpolate environment assignments into a shell command.'
+
 # The behavioral runtime executes first: accessors mode plus the two spawned
 # reader-degradation lanes (degraded plugin, no plugin).
 $runtime = & php (Join-Path $testsRoot 'oscars-portal-studio-runtime.php') 2>&1

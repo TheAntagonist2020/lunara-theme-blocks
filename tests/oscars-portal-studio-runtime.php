@@ -808,13 +808,25 @@ lunara_test_assert( array( 48, 420, 320 ) === array( $reorder_validated['present
 // ---------------------------------------------------------------------------
 if ( 'accessors' === $lunara_test_mode ) {
 	foreach ( array( 'degraded', 'noplugin' ) as $child_mode ) {
-		$output = array();
-		$code   = 1;
-		exec(
-			'LUNARA_OSCARS_PORTAL_MODE=' . $child_mode . ' ' . escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( __FILE__ ) . ' 2>&1',
-			$output,
-			$code
+		$child_environment = getenv();
+		$child_environment = is_array( $child_environment ) ? $child_environment : array();
+		$child_environment['LUNARA_OSCARS_PORTAL_MODE'] = $child_mode;
+		$child_process = proc_open(
+			array( PHP_BINARY, __FILE__ ),
+			array(
+				1 => array( 'pipe', 'w' ),
+				2 => array( 'pipe', 'w' ),
+			),
+			$child_pipes,
+			null,
+			$child_environment
 		);
+		lunara_test_assert( is_resource( $child_process ), 'The ' . $child_mode . ' reader-degradation lane must start.' );
+		$child_output = stream_get_contents( $child_pipes[1] ) . stream_get_contents( $child_pipes[2] );
+		fclose( $child_pipes[1] );
+		fclose( $child_pipes[2] );
+		$code   = proc_close( $child_process );
+		$output = preg_split( '/\R/', trim( $child_output ) );
 		lunara_test_assert( 0 === $code, 'The ' . $child_mode . ' reader-degradation lane must pass: ' . implode( "\n", $output ) );
 		lunara_test_assert( false !== strpos( implode( "\n", $output ), 'oscars-portal-studio-runtime: all assertions passed (' . $child_mode . ' mode)' ), 'The ' . $child_mode . ' lane must report success.' );
 	}
