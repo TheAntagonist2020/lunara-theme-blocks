@@ -35,6 +35,8 @@ $lunara_test_now           = 1900000000;
 $lunara_test_uuid          = 0;
 $lunara_test_filter_sequence = 0;
 $lunara_test_reentry_calls = array();
+$lunara_test_aggregate_reentry_calls = array();
+$lunara_test_provider_operation_revision_id = '';
 $lunara_test_dependency_calls = 0;
 $lunara_test_status_calls     = 0;
 $lunara_test_factory_calls    = 0;
@@ -189,11 +191,15 @@ function remove_filter( $hook, $callback, $priority = 10 ) {
 	return true;
 }
 function apply_filters( $hook, $value ) {
-	global $lunara_test_filters;
-	if ( empty( $lunara_test_filters[ $hook ] ) ) { return $value; }
-	$filters = $lunara_test_filters[ $hook ];
-	usort( $filters, static function ( $a, $b ) { return $a['priority'] === $b['priority'] ? $a['sequence'] - $b['sequence'] : $a['priority'] - $b['priority']; } );
-	foreach ( $filters as $filter ) { $value = call_user_func( $filter['callback'], $value ); }
+	global $lunara_test_filters, $wp_filter;
+	if ( empty( $lunara_test_filters[ $hook ] ) || empty( $wp_filter[ $hook ]->callbacks ) ) { return $value; }
+	$priorities = array_keys( $wp_filter[ $hook ]->callbacks );
+	sort( $priorities, SORT_NUMERIC );
+	foreach ( $priorities as $priority ) {
+		foreach ( $wp_filter[ $hook ]->callbacks[ $priority ] as $filter ) {
+			$value = call_user_func_array( $filter['function'], array( $value ) );
+		}
+	}
 	return $value;
 }
 function do_action( $hook ) {
@@ -307,7 +313,7 @@ function lunara_test_provider_validate( $provider, $state ) {
 	if ( ! is_array( $state ) || isset( $state['bad'] ) ) { return new WP_Error( $provider . '_invalid', 'Invalid', array( 'fields' => array( 'title' => 'Title is invalid.', 'secret_field' => 'No.' ) ) ); }
 	return $state;
 }
-function lunara_test_provider_promote( $provider, $state ) {
+function lunara_test_provider_promote_transaction( $provider, $state ) {
 	global $lunara_test_provider_calls, $lunara_test_provider_state;
 	$validated = lunara_test_provider_validate( $provider, $state );
 	if ( is_wp_error( $validated ) ) { return $validated; }
@@ -315,7 +321,11 @@ function lunara_test_provider_promote( $provider, $state ) {
 	$revision_id = lunara_test_provider_push_revision( $provider, $lunara_test_provider_state[ $provider ], 'save' );
 	if ( is_wp_error( $revision_id ) ) { return $revision_id; }
 	$lunara_test_provider_state[ $provider ] = $validated;
-	return $validated;
+	return array( 'state' => $validated, 'revision_id' => $revision_id );
+}
+function lunara_test_provider_promote( $provider, $state ) {
+	$transaction = lunara_test_provider_promote_transaction( $provider, $state );
+	return is_wp_error( $transaction ) ? $transaction : $transaction['state'];
 }
 function lunara_test_provider_preview( $provider, $state ) {
 	global $lunara_test_provider_calls;
@@ -326,16 +336,21 @@ function lunara_test_provider_preview( $provider, $state ) {
 }
 function lunara_test_provider_revisions( $provider ) { global $lunara_test_provider_calls, $lunara_test_provider_revisions; $lunara_test_provider_calls[] = $provider . ':revisions'; return $lunara_test_provider_revisions[ $provider ]; }
 function lunara_test_provider_push_revision( $provider, $state, $action ) {
-	global $lunara_test_provider_revisions, $lunara_test_provider_revision_mode;
+	global $lunara_test_provider_revisions, $lunara_test_provider_revision_mode, $lunara_test_provider_operation_revision_id;
 	$id = wp_generate_uuid4();
+	$lunara_test_provider_operation_revision_id = $id;
 	$next = $lunara_test_provider_revisions[ $provider ];
 	array_unshift( $next, array( 'id' => $id, 'saved_at' => current_time( 'mysql' ), 'saved_by' => get_current_user_id(), 'action' => $action, 'validator_result' => 'passed', 'prior_public' => true, 'config' => $state ) );
 	if ( 'fail' === $lunara_test_provider_revision_mode ) { return new WP_Error( $provider . '_revision_write_failed' ); }
 	$lunara_test_provider_revisions[ $provider ] = 'mismatch' === $lunara_test_provider_revision_mode ? array_slice( $next, 1 ) : array_slice( $next, 0, 12 );
 	if ( empty( $lunara_test_provider_revisions[ $provider ][0]['id'] ) || $id !== $lunara_test_provider_revisions[ $provider ][0]['id'] ) { return new WP_Error( $provider . '_revision_readback_failed' ); }
+	if ( 'concurrent' === $lunara_test_provider_revision_mode ) {
+		array_unshift( $lunara_test_provider_revisions[ $provider ], array( 'id' => wp_generate_uuid4(), 'saved_at' => current_time( 'mysql' ), 'saved_by' => get_current_user_id(), 'action' => 'concurrent', 'validator_result' => 'passed', 'prior_public' => true, 'config' => $state ) );
+		$lunara_test_provider_revisions[ $provider ] = array_slice( $lunara_test_provider_revisions[ $provider ], 0, 12 );
+	}
 	return $id;
 }
-function lunara_test_provider_restore( $provider, $revision_id ) {
+function lunara_test_provider_restore_transaction( $provider, $revision_id ) {
 	global $lunara_test_provider_calls, $lunara_test_provider_revisions, $lunara_test_provider_state;
 	$lunara_test_provider_calls[] = $provider . ':restore';
 	foreach ( $lunara_test_provider_revisions[ $provider ] as $revision ) {
@@ -343,30 +358,40 @@ function lunara_test_provider_restore( $provider, $revision_id ) {
 			$safety_id = lunara_test_provider_push_revision( $provider, $lunara_test_provider_state[ $provider ], 'restore' );
 			if ( is_wp_error( $safety_id ) ) { return $safety_id; }
 			$lunara_test_provider_state[ $provider ] = $revision['config'];
-			return $lunara_test_provider_state[ $provider ];
+			return array( 'state' => $lunara_test_provider_state[ $provider ], 'safety_revision_id' => $safety_id );
 		}
 	}
 	return new WP_Error( $provider . '_revision_not_found', 'Not found' );
+}
+function lunara_test_provider_restore( $provider, $revision_id ) {
+	$transaction = lunara_test_provider_restore_transaction( $provider, $revision_id );
+	return is_wp_error( $transaction ) ? $transaction : $transaction['state'];
 }
 
 function lunara_reviews_archive_studio_get_public_config( $allow_preview = true ) { return lunara_test_provider_get( 'reviews' ); }
 function lunara_reviews_archive_studio_validate_config( $state ) { return lunara_test_provider_validate( 'reviews', $state ); }
 function lunara_reviews_archive_studio_promote_config( $state, $action = 'save' ) { return lunara_test_provider_promote( 'reviews', $state ); }
+function lunara_reviews_archive_studio_promote_config_transaction( $state, $action = 'save' ) { return lunara_test_provider_promote_transaction( 'reviews', $state ); }
 function lunara_reviews_archive_studio_store_preview( $state ) { return lunara_test_provider_preview( 'reviews', $state ); }
 function lunara_reviews_archive_studio_get_revisions() { return lunara_test_provider_revisions( 'reviews' ); }
 function lunara_reviews_archive_studio_restore_revision( $id ) { return lunara_test_provider_restore( 'reviews', $id ); }
+function lunara_reviews_archive_studio_restore_revision_transaction( $id ) { return lunara_test_provider_restore_transaction( 'reviews', $id ); }
 function lunara_journal_archive_studio_get_public_config( $allow_preview = true ) { return lunara_test_provider_get( 'journal' ); }
 function lunara_journal_archive_studio_validate_config( $state ) { return lunara_test_provider_validate( 'journal', $state ); }
 function lunara_journal_archive_studio_promote_config( $state, $action = 'save' ) { return lunara_test_provider_promote( 'journal', $state ); }
+function lunara_journal_archive_studio_promote_config_transaction( $state, $action = 'save' ) { return lunara_test_provider_promote_transaction( 'journal', $state ); }
 function lunara_journal_archive_studio_store_preview( $state ) { return lunara_test_provider_preview( 'journal', $state ); }
 function lunara_journal_archive_studio_get_revisions() { return lunara_test_provider_revisions( 'journal' ); }
 function lunara_journal_archive_studio_restore_revision( $id ) { return lunara_test_provider_restore( 'journal', $id ); }
+function lunara_journal_archive_studio_restore_revision_transaction( $id ) { return lunara_test_provider_restore_transaction( 'journal', $id ); }
 function lunara_oscars_portal_studio_get_public_config( $allow_preview = true ) { return lunara_test_provider_get( 'oscars' ); }
 function lunara_oscars_portal_studio_validate_config( $state ) { return lunara_test_provider_validate( 'oscars', $state ); }
 function lunara_oscars_portal_studio_promote_config( $state, $action = 'save' ) { return lunara_test_provider_promote( 'oscars', $state ); }
+function lunara_oscars_portal_studio_promote_config_transaction( $state, $action = 'save' ) { return lunara_test_provider_promote_transaction( 'oscars', $state ); }
 function lunara_oscars_portal_studio_store_preview( $state ) { return lunara_test_provider_preview( 'oscars', $state ); }
 function lunara_oscars_portal_studio_get_revisions() { return lunara_test_provider_revisions( 'oscars' ); }
 function lunara_oscars_portal_studio_restore_revision( $id ) { return lunara_test_provider_restore( 'oscars', $id ); }
+function lunara_oscars_portal_studio_restore_revision_transaction( $id ) { return lunara_test_provider_restore_transaction( 'oscars', $id ); }
 
 function lunara_reviews_archive_studio_defaults() { global $lunara_test_provider_defaults; return $lunara_test_provider_defaults['reviews']; }
 function lunara_journal_archive_studio_defaults() { global $lunara_test_provider_defaults; return $lunara_test_provider_defaults['journal']; }
@@ -419,6 +444,26 @@ function lunara_test_reentrant_lookup() {
 	$lunara_test_reentry_calls['lookup'] = isset( $lunara_test_reentry_calls['lookup'] ) ? $lunara_test_reentry_calls['lookup'] + 1 : 1;
 	if ( 1 === $lunara_test_reentry_calls['lookup'] ) { $lunara_test_reentry_calls['lookup_nested'] = lunara_site_studio_prepare_private_preview_response( 'lunara_test_reentrant_lookup' ); }
 	return array( 'safe' => true );
+}
+function lunara_test_fresh_lookup_callback() {
+	return static function () {
+		global $lunara_test_aggregate_reentry_calls;
+		$lunara_test_aggregate_reentry_calls['lookup']++;
+		if ( $lunara_test_aggregate_reentry_calls['lookup'] >= 64 ) {
+			return array( 'escaped' => true );
+		}
+		return lunara_site_studio_prepare_private_preview_response( lunara_test_fresh_lookup_callback() );
+	};
+}
+function lunara_test_changing_key_dependency( $surface ) {
+	global $lunara_test_aggregate_reentry_calls;
+	$lunara_test_aggregate_reentry_calls['dependency']++;
+	if ( $lunara_test_aggregate_reentry_calls['dependency'] >= 64 ) {
+		return true;
+	}
+	$next = $surface;
+	$next['id'] = 'changing-key-' . $lunara_test_aggregate_reentry_calls['dependency'];
+	return lunara_site_studio_surface_availability( $next );
 }
 function lunara_test_reentrant_restore_read() { global $lunara_test_reentry_calls; $lunara_test_reentry_calls['restore_read'] = isset( $lunara_test_reentry_calls['restore_read'] ) ? $lunara_test_reentry_calls['restore_read'] + 1 : 1; return array( 'value' => 99 ); }
 function lunara_test_reentrant_restore_validate( $state ) {
@@ -474,6 +519,17 @@ class Lunara_Test_Reentrant_Adapter extends Lunara_Test_Contributed_Adapter {
 		$lunara_test_reentry_calls['adapter_method'] = isset( $lunara_test_reentry_calls['adapter_method'] ) ? $lunara_test_reentry_calls['adapter_method'] + 1 : 1;
 		if ( 1 === $lunara_test_reentry_calls['adapter_method'] ) { return lunara_site_studio_call_adapter( $this, 'read_state' ); }
 		return array( 'public_name' => 'Recursive read escaped guard' );
+	}
+}
+
+class Lunara_Test_Fresh_Adapter extends Lunara_Test_Contributed_Adapter {
+	public function read_state() {
+		global $lunara_test_aggregate_reentry_calls;
+		$lunara_test_aggregate_reentry_calls['adapter_method']++;
+		if ( $lunara_test_aggregate_reentry_calls['adapter_method'] >= 64 ) {
+			return array( 'escaped' => true );
+		}
+		return lunara_site_studio_call_adapter( new self(), 'read_state' );
 	}
 }
 
@@ -837,6 +893,9 @@ function lunara_review_case_sticky_ownership() {
 	add_filter( 'lunara_site_studio_surfaces', static function ( $items ) { $items['priority-sticky-tool'] = lunara_review_surface( 'priority-sticky-tool', 'plugin:alpha', array( 'label' => 'Priority alpha first' ) ); $items['priority-same-owner'] = lunara_review_surface( 'priority-same-owner', 'plugin:alpha', array( 'label' => 'Same owner first' ) ); return $items; }, 10 );
 	add_filter( 'lunara_site_studio_surfaces', static function ( $items ) { $items['priority-sticky-tool'] = lunara_review_surface( 'priority-sticky-tool', 'plugin:beta', array( 'label' => 'Priority beta conflict' ) ); $items['priority-same-owner'] = lunara_review_surface( 'priority-same-owner', 'plugin:alpha', array( 'label' => 'Same owner replacement' ) ); return $items; }, 20 );
 	add_filter( 'lunara_site_studio_surfaces', static function ( $items ) { $items['priority-sticky-tool'] = lunara_review_surface( 'priority-sticky-tool', 'plugin:alpha', array( 'label' => 'Priority alpha last' ) ); return $items; }, 30 );
+	add_filter( 'lunara_site_studio_surfaces', static function ( $items ) { $items['same-priority-ab'] = lunara_review_surface( 'same-priority-ab', 'plugin:alpha' ); $items['same-priority-aba'] = lunara_review_surface( 'same-priority-aba', 'plugin:alpha' ); $items['same-priority-aa'] = lunara_review_surface( 'same-priority-aa', 'plugin:alpha', array( 'label' => 'Same-priority first' ) ); return $items; }, 25 );
+	add_filter( 'lunara_site_studio_surfaces', static function ( $items ) { $items['same-priority-ab'] = lunara_review_surface( 'same-priority-ab', 'plugin:beta' ); $items['same-priority-aba'] = lunara_review_surface( 'same-priority-aba', 'plugin:beta' ); $items['same-priority-aa'] = lunara_review_surface( 'same-priority-aa', 'plugin:alpha', array( 'label' => 'Same-priority replacement' ) ); return $items; }, 25 );
+	add_filter( 'lunara_site_studio_surfaces', static function ( $items ) { $items['same-priority-aba'] = lunara_review_surface( 'same-priority-aba', 'plugin:alpha' ); return $items; }, 25 );
 	$surfaces = lunara_site_studio_surfaces();
 	$failures = array();
 	if ( ! isset( $surfaces['sticky-tool'] ) || ! empty( $surfaces['sticky-tool']['available'] ) || 'ownership_conflict' !== $surfaces['sticky-tool']['unavailable_reason'] ) { $failures[] = 'A→B→A ownership conflict must remain unavailable.'; }
@@ -844,6 +903,9 @@ function lunara_review_case_sticky_ownership() {
 	if ( empty( $surfaces['same-owner-tool']['available'] ) || 'Replacement label' !== $surfaces['same-owner-tool']['label'] ) { $failures[] = 'Same-owner replacement alone must remain valid.'; }
 	if ( ! isset( $surfaces['priority-sticky-tool'] ) || ! empty( $surfaces['priority-sticky-tool']['available'] ) || 'ownership_conflict' !== $surfaces['priority-sticky-tool']['unavailable_reason'] ) { $failures[] = 'Separate priority 10 A, priority 20 B, priority 30 A associative claims must remain unavailable.'; }
 	if ( empty( $surfaces['priority-same-owner']['available'] ) || 'Same owner replacement' !== $surfaces['priority-same-owner']['label'] ) { $failures[] = 'Separate prioritized same-owner replacement must remain valid.'; }
+	if ( ! isset( $surfaces['same-priority-ab'] ) || ! empty( $surfaces['same-priority-ab']['available'] ) || 'ownership_conflict' !== $surfaces['same-priority-ab']['unavailable_reason'] ) { $failures[] = 'Same-priority associative A→B claims must remain unavailable.'; }
+	if ( ! isset( $surfaces['same-priority-aba'] ) || ! empty( $surfaces['same-priority-aba']['available'] ) || 'ownership_conflict' !== $surfaces['same-priority-aba']['unavailable_reason'] ) { $failures[] = 'Same-priority associative A→B→A claims must remain unavailable.'; }
+	if ( empty( $surfaces['same-priority-aa']['available'] ) || 'Same-priority replacement' !== $surfaces['same-priority-aa']['label'] ) { $failures[] = 'Same-priority same-owner replacement must remain valid.'; }
 	lunara_review_finish( 'sticky-ownership', $failures );
 }
 
@@ -1050,12 +1112,17 @@ function lunara_review_case_state_projection() {
 	$wide_accepted = false;
 	$wide_result = lunara_site_studio_project_state_value( range( 1, 5000 ), array( '*' => true ), $wide_accepted );
 	if ( ! is_wp_error( $wide_result ) || $wide_accepted ) { $failures[] = 'Projection must reject input beyond its bounded node count.'; }
+	$preliminary_value = range( 1, 4097 );
+	$preliminary_value['access_token'] = 'must-never-be-scanned-past-the-bound';
+	$preliminary_accepted = false;
+	$preliminary_result = lunara_site_studio_project_state_value( $preliminary_value, array( '*' => true ), $preliminary_accepted );
+	if ( ! is_wp_error( $preliminary_result ) || $preliminary_accepted ) { $failures[] = 'Wildcard validation must stop at the work bound before reaching a later named key.'; }
 	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
 	lunara_review_finish( 'state-projection', $failures );
 }
 
 function lunara_review_case_reentrancy_guards() {
-	global $lunara_test_filters, $lunara_test_actions, $lunara_test_reentry_calls;
+	global $lunara_test_filters, $lunara_test_actions, $lunara_test_reentry_calls, $lunara_test_aggregate_reentry_calls;
 	$failures = array();
 	$lunara_test_reentry_calls = array();
 	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
@@ -1113,12 +1180,23 @@ function lunara_review_case_reentrancy_guards() {
 	$restore = lunara_site_studio_restore_revision( 'reentry-restore', $lunara_test_reentry_calls['restore_target'], 'lunara_test_reentrant_restore_read', 'lunara_test_reentrant_restore_validate', 'lunara_test_reentrant_restore_save' );
 	if ( is_wp_error( $restore ) || 1 !== $lunara_test_reentry_calls['restore_validate'] || 1 !== $lunara_test_reentry_calls['restore_read'] || 1 !== $lunara_test_reentry_calls['restore_save'] || ! is_wp_error( $lunara_test_reentry_calls['restore_nested'] ) ) { $failures[] = 'Recursive restore callbacks must stop per surface before a second safety snapshot or live save.'; }
 
+	$lunara_test_aggregate_reentry_calls = array( 'lookup' => 0, 'adapter_method' => 0, 'dependency' => 0 );
+	$fresh_lookup = lunara_site_studio_prepare_private_preview_response( lunara_test_fresh_lookup_callback() );
+	if ( false !== $fresh_lookup || $lunara_test_aggregate_reentry_calls['lookup'] > 32 ) { $failures[] = 'Fresh-closure preview recursion must stop at the aggregate boundary ceiling.'; }
+	$fresh_adapter = lunara_site_studio_call_adapter( new Lunara_Test_Fresh_Adapter(), 'read_state' );
+	if ( ! is_wp_error( $fresh_adapter ) || $lunara_test_aggregate_reentry_calls['adapter_method'] > 32 ) { $failures[] = 'Fresh-object adapter recursion must stop at the aggregate boundary ceiling.'; }
+	$changing_surface = lunara_site_studio_normalize_surface( 'changing-key-0', lunara_review_surface( 'changing-key-0', 'plugin:changing-key', array( 'dependency_callback' => 'lunara_test_changing_key_dependency' ) ) );
+	$changing_result = lunara_site_studio_surface_availability( $changing_surface );
+	if ( ! empty( $changing_result['available'] ) || $lunara_test_aggregate_reentry_calls['dependency'] > 32 ) { $failures[] = 'Changing-surface dependency recursion must stop at the aggregate boundary ceiling.'; }
+	$clean_result = lunara_site_studio_surface_availability( lunara_site_studio_normalize_surface( 'post-recursion-clean', lunara_review_surface( 'post-recursion-clean', 'plugin:clean' ) ) );
+	if ( empty( $clean_result['available'] ) ) { $failures[] = 'Aggregate guard state must unwind fully after recursive failure.'; }
+
 	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
 	lunara_review_finish( 'reentrancy-guards', $failures );
 }
 
 function lunara_review_case_revision_durability() {
-	global $lunara_test_update_mode, $lunara_test_provider_revision_mode, $lunara_test_provider_state, $lunara_test_provider_revisions;
+	global $lunara_test_update_mode, $lunara_test_provider_revision_mode, $lunara_test_provider_state, $lunara_test_provider_revisions, $lunara_test_provider_operation_revision_id;
 	$failures = array();
 	$lunara_test_update_mode = 'fail';
 	$failed_write = lunara_site_studio_push_revision( 'durability-write-fail', array( 'value' => 1 ), 'save' );
@@ -1162,6 +1240,14 @@ function lunara_review_case_revision_durability() {
 	$provider_target = ! empty( $lunara_test_provider_revisions['reviews'][0]['id'] ) ? $lunara_test_provider_revisions['reviews'][0]['id'] : '';
 	$provider_restore_failure = lunara_site_studio_rest_restore( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'revision_id' => $provider_target, 'confirm' => true ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
 	if ( $provider_restore_failure->get_status() < 400 || $provider_before !== $lunara_test_provider_state['reviews'] ) { $failures[] = 'REST restore must surface provider safety-readback failure with zero live state mutation.'; }
+	$lunara_test_provider_revision_mode = 'concurrent';
+	$adapter = lunara_site_studio_get_adapter( 'reviews-archive' );
+	$concurrent_save = lunara_site_studio_call_adapter( $adapter, 'save_state', array( array( 'title' => 'Concurrent attribution' ) ) );
+	$save_operation_id = $lunara_test_provider_operation_revision_id;
+	if ( is_wp_error( $concurrent_save ) || $save_operation_id !== $concurrent_save['revision_id'] || 'concurrent' === $lunara_test_provider_revisions['reviews'][0]['action'] && $concurrent_save['revision_id'] === $lunara_test_provider_revisions['reviews'][0]['id'] ) { $failures[] = 'Provider save must return its in-band verified UUID rather than a concurrent insertion.'; }
+	$concurrent_restore = lunara_site_studio_call_adapter( $adapter, 'restore_revision', array( $save_operation_id ) );
+	$restore_operation_id = $lunara_test_provider_operation_revision_id;
+	if ( is_wp_error( $concurrent_restore ) || $restore_operation_id !== $concurrent_restore['safety_revision_id'] || 'concurrent' === $lunara_test_provider_revisions['reviews'][0]['action'] && $concurrent_restore['safety_revision_id'] === $lunara_test_provider_revisions['reviews'][0]['id'] ) { $failures[] = 'Provider restore must return its in-band verified safety UUID rather than a concurrent insertion.'; }
 	$lunara_test_provider_revision_mode = 'normal';
 	lunara_review_finish( 'revision-durability', $failures );
 }

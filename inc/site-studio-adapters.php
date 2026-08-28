@@ -109,22 +109,21 @@ if ( ! class_exists( 'Lunara_Site_Studio_Provider_Adapter' ) ) {
 			if ( is_wp_error( $before ) ) {
 				return $before;
 			}
-			$before_revisions = $this->list_revisions();
-			if ( is_wp_error( $before_revisions ) ) {
-				return $before_revisions;
-			}
 			$result = $this->invoke( $this->save_callback, array( $candidate, 'site-studio-save' ) );
 			if ( is_wp_error( $result ) ) {
 				return $result;
 			}
+			if ( ! is_array( $result ) || ! isset( $result['state'], $result['revision_id'] ) || ! is_array( $result['state'] ) ) {
+				return new WP_Error( 'site_studio_revision_unverified', __( 'The provider revision could not be verified.', 'lunara-film' ) );
+			}
 			$revisions = $this->list_revisions();
-			$revision_id = lunara_site_studio_new_revision_id( $before_revisions, $revisions );
+			$revision_id = lunara_site_studio_verify_operation_revision( $result['revision_id'], $revisions );
 			if ( is_wp_error( $revision_id ) ) {
 				return $revision_id;
 			}
 			return array(
-				'state'            => $result,
-				'changed_sections' => lunara_site_studio_changed_sections( $this->surface, $before, $result ),
+				'state'            => $result['state'],
+				'changed_sections' => lunara_site_studio_changed_sections( $this->surface, $before, $result['state'] ),
 				'revision_id'      => $revision_id,
 				'timestamp'        => current_time( 'mysql' ),
 			);
@@ -162,21 +161,20 @@ if ( ! class_exists( 'Lunara_Site_Studio_Provider_Adapter' ) ) {
 			if ( $error ) {
 				return $error;
 			}
-			$before_revisions = $this->list_revisions();
-			if ( is_wp_error( $before_revisions ) ) {
-				return $before_revisions;
-			}
 			$result = $this->invoke( $this->restore_callback, array( sanitize_text_field( $revision_id ) ) );
 			if ( is_wp_error( $result ) ) {
 				return $result;
 			}
+			if ( ! is_array( $result ) || ! isset( $result['state'], $result['safety_revision_id'] ) || ! is_array( $result['state'] ) ) {
+				return new WP_Error( 'site_studio_revision_unverified', __( 'The provider revision could not be verified.', 'lunara-film' ) );
+			}
 			$revisions = $this->list_revisions();
-			$safety_id = lunara_site_studio_new_revision_id( $before_revisions, $revisions );
+			$safety_id = lunara_site_studio_verify_operation_revision( $result['safety_revision_id'], $revisions );
 			if ( is_wp_error( $safety_id ) ) {
 				return $safety_id;
 			}
 			return array(
-				'state'              => $result,
+				'state'              => $result['state'],
 				'safety_revision_id' => $safety_id,
 				'timestamp'          => current_time( 'mysql' ),
 			);
@@ -184,21 +182,16 @@ if ( ! class_exists( 'Lunara_Site_Studio_Provider_Adapter' ) ) {
 	}
 }
 
-if ( ! function_exists( 'lunara_site_studio_new_revision_id' ) ) {
-	/** Return the one new verified UUID introduced by a provider operation. */
-	function lunara_site_studio_new_revision_id( $before, $after ) {
-		if ( ! is_array( $before ) || ! is_array( $after ) ) {
+if ( ! function_exists( 'lunara_site_studio_verify_operation_revision' ) ) {
+	/** Verify the exact in-band UUID returned by a provider transaction. */
+	function lunara_site_studio_verify_operation_revision( $revision_id, $revisions ) {
+		$revision_id = sanitize_text_field( $revision_id );
+		if ( '' === $revision_id || ! is_array( $revisions ) ) {
 			return new WP_Error( 'site_studio_revision_unverified', __( 'The provider revision could not be verified.', 'lunara-film' ) );
 		}
-		$prior = array();
-		foreach ( $before as $revision ) {
-			if ( is_array( $revision ) && ! empty( $revision['id'] ) ) {
-				$prior[ (string) $revision['id'] ] = true;
-			}
-		}
-		foreach ( $after as $revision ) {
-			if ( is_array( $revision ) && ! empty( $revision['id'] ) && ! isset( $prior[ (string) $revision['id'] ] ) ) {
-				return sanitize_text_field( $revision['id'] );
+		foreach ( $revisions as $revision ) {
+			if ( is_array( $revision ) && ! empty( $revision['id'] ) && hash_equals( $revision_id, (string) $revision['id'] ) ) {
+				return $revision_id;
 			}
 		}
 		return new WP_Error( 'site_studio_revision_unverified', __( 'The provider revision could not be verified.', 'lunara-film' ) );
@@ -207,17 +200,17 @@ if ( ! function_exists( 'lunara_site_studio_new_revision_id' ) ) {
 
 if ( ! function_exists( 'lunara_site_studio_reviews_archive_dependency' ) ) {
 	function lunara_site_studio_reviews_archive_dependency() {
-		return function_exists( 'lunara_reviews_archive_studio_get_public_config' ) && function_exists( 'lunara_reviews_archive_studio_validate_config' ) && function_exists( 'lunara_reviews_archive_studio_promote_config' ) && function_exists( 'lunara_reviews_archive_studio_store_preview' ) && function_exists( 'lunara_reviews_archive_studio_get_revisions' ) && function_exists( 'lunara_reviews_archive_studio_restore_revision' );
+		return function_exists( 'lunara_reviews_archive_studio_get_public_config' ) && function_exists( 'lunara_reviews_archive_studio_validate_config' ) && function_exists( 'lunara_reviews_archive_studio_promote_config_transaction' ) && function_exists( 'lunara_reviews_archive_studio_store_preview' ) && function_exists( 'lunara_reviews_archive_studio_get_revisions' ) && function_exists( 'lunara_reviews_archive_studio_restore_revision_transaction' );
 	}
 }
 if ( ! function_exists( 'lunara_site_studio_journal_archive_dependency' ) ) {
 	function lunara_site_studio_journal_archive_dependency() {
-		return function_exists( 'lunara_journal_archive_studio_get_public_config' ) && function_exists( 'lunara_journal_archive_studio_validate_config' ) && function_exists( 'lunara_journal_archive_studio_promote_config' ) && function_exists( 'lunara_journal_archive_studio_store_preview' ) && function_exists( 'lunara_journal_archive_studio_get_revisions' ) && function_exists( 'lunara_journal_archive_studio_restore_revision' );
+		return function_exists( 'lunara_journal_archive_studio_get_public_config' ) && function_exists( 'lunara_journal_archive_studio_validate_config' ) && function_exists( 'lunara_journal_archive_studio_promote_config_transaction' ) && function_exists( 'lunara_journal_archive_studio_store_preview' ) && function_exists( 'lunara_journal_archive_studio_get_revisions' ) && function_exists( 'lunara_journal_archive_studio_restore_revision_transaction' );
 	}
 }
 if ( ! function_exists( 'lunara_site_studio_oscars_portal_dependency' ) ) {
 	function lunara_site_studio_oscars_portal_dependency() {
-		return function_exists( 'lunara_oscars_portal_studio_get_public_config' ) && function_exists( 'lunara_oscars_portal_studio_validate_config' ) && function_exists( 'lunara_oscars_portal_studio_promote_config' ) && function_exists( 'lunara_oscars_portal_studio_store_preview' ) && function_exists( 'lunara_oscars_portal_studio_get_revisions' ) && function_exists( 'lunara_oscars_portal_studio_restore_revision' );
+		return function_exists( 'lunara_oscars_portal_studio_get_public_config' ) && function_exists( 'lunara_oscars_portal_studio_validate_config' ) && function_exists( 'lunara_oscars_portal_studio_promote_config_transaction' ) && function_exists( 'lunara_oscars_portal_studio_store_preview' ) && function_exists( 'lunara_oscars_portal_studio_get_revisions' ) && function_exists( 'lunara_oscars_portal_studio_restore_revision_transaction' );
 	}
 }
 if ( ! function_exists( 'lunara_site_studio_oscars_ledger_dependency' ) ) {
@@ -304,12 +297,10 @@ if ( ! function_exists( 'lunara_site_studio_project_state_value' ) ) {
 		}
 		$projected = array();
 		if ( array_key_exists( '*', $schema ) ) {
-			foreach ( array_keys( $value ) as $key ) {
+			foreach ( $value as $key => $item ) {
 				if ( ! is_int( $key ) ) {
 					return null;
 				}
-			}
-			foreach ( $value as $item ) {
 				$item_accepted = false;
 				$safe_item = lunara_site_studio_project_state_value( $item, $schema['*'], $item_accepted, $depth + 1, $budget );
 				if ( is_wp_error( $safe_item ) ) {
@@ -386,8 +377,8 @@ if ( ! function_exists( 'lunara_site_studio_reviews_archive_adapter' ) ) {
 			'reviews-archive',
 			array(
 				'read' => 'lunara_reviews_archive_studio_get_public_config', 'validate' => 'lunara_reviews_archive_studio_validate_config',
-				'save' => 'lunara_reviews_archive_studio_promote_config', 'preview' => 'lunara_reviews_archive_studio_store_preview',
-				'revisions' => 'lunara_reviews_archive_studio_get_revisions', 'restore' => 'lunara_reviews_archive_studio_restore_revision',
+				'save' => 'lunara_reviews_archive_studio_promote_config_transaction', 'preview' => 'lunara_reviews_archive_studio_store_preview',
+				'revisions' => 'lunara_reviews_archive_studio_get_revisions', 'restore' => 'lunara_reviews_archive_studio_restore_revision_transaction',
 			)
 		);
 	}
@@ -398,8 +389,8 @@ if ( ! function_exists( 'lunara_site_studio_journal_archive_adapter' ) ) {
 			'journal-archive',
 			array(
 				'read' => 'lunara_journal_archive_studio_get_public_config', 'validate' => 'lunara_journal_archive_studio_validate_config',
-				'save' => 'lunara_journal_archive_studio_promote_config', 'preview' => 'lunara_journal_archive_studio_store_preview',
-				'revisions' => 'lunara_journal_archive_studio_get_revisions', 'restore' => 'lunara_journal_archive_studio_restore_revision',
+				'save' => 'lunara_journal_archive_studio_promote_config_transaction', 'preview' => 'lunara_journal_archive_studio_store_preview',
+				'revisions' => 'lunara_journal_archive_studio_get_revisions', 'restore' => 'lunara_journal_archive_studio_restore_revision_transaction',
 			)
 		);
 	}
@@ -410,8 +401,8 @@ if ( ! function_exists( 'lunara_site_studio_oscars_portal_adapter' ) ) {
 			'oscars-portal',
 			array(
 				'read' => 'lunara_oscars_portal_studio_get_public_config', 'validate' => 'lunara_oscars_portal_studio_validate_config',
-				'save' => 'lunara_oscars_portal_studio_promote_config', 'preview' => 'lunara_oscars_portal_studio_store_preview',
-				'revisions' => 'lunara_oscars_portal_studio_get_revisions', 'restore' => 'lunara_oscars_portal_studio_restore_revision',
+				'save' => 'lunara_oscars_portal_studio_promote_config_transaction', 'preview' => 'lunara_oscars_portal_studio_store_preview',
+				'revisions' => 'lunara_oscars_portal_studio_get_revisions', 'restore' => 'lunara_oscars_portal_studio_restore_revision_transaction',
 			)
 		);
 	}

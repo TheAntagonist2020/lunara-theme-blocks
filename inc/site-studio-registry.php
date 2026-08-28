@@ -13,6 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! defined( 'LUNARA_SITE_STUDIO_BOUNDARY_MAX_DEPTH' ) ) {
+	define( 'LUNARA_SITE_STUDIO_BOUNDARY_MAX_DEPTH', 16 );
+}
+
 if ( ! function_exists( 'lunara_site_studio_boundary_guard' ) ) {
 	/**
 	 * Enter or leave one internal extension boundary without exposing guard state.
@@ -24,17 +28,25 @@ if ( ! function_exists( 'lunara_site_studio_boundary_guard' ) ) {
 	 */
 	function lunara_site_studio_boundary_guard( $boundary, $surface = '', $enter = true ) {
 		static $active = array();
+		static $depths = array();
 		$boundary = sanitize_key( is_scalar( $boundary ) ? (string) $boundary : '' );
 		$surface  = sanitize_key( is_scalar( $surface ) ? (string) $surface : '' );
 		$key      = $boundary . '|' . $surface;
 		if ( ! $enter ) {
-			unset( $active[ $key ] );
+			if ( isset( $active[ $key ] ) ) {
+				unset( $active[ $key ] );
+				$depths[ $boundary ] = max( 0, isset( $depths[ $boundary ] ) ? $depths[ $boundary ] - 1 : 0 );
+			}
 			return true;
 		}
 		if ( isset( $active[ $key ] ) ) {
 			return false;
 		}
+		if ( isset( $depths[ $boundary ] ) && $depths[ $boundary ] >= LUNARA_SITE_STUDIO_BOUNDARY_MAX_DEPTH ) {
+			return false;
+		}
 		$active[ $key ] = true;
+		$depths[ $boundary ] = isset( $depths[ $boundary ] ) ? $depths[ $boundary ] + 1 : 1;
 		return true;
 	}
 }
@@ -348,19 +360,40 @@ if ( ! function_exists( 'lunara_site_studio_surfaces' ) ) {
 		$filtered = $defaults;
 		$history  = array();
 		if ( lunara_site_studio_boundary_guard( 'registry_filter' ) ) {
-			$trackers = array();
-			try {
+			$wrapped_callbacks = array();
+			$wrap_callbacks = null;
+			$wrap_callbacks = static function () use ( &$history, &$wrapped_callbacks, &$wrap_callbacks ) {
 				global $wp_filter;
-				if ( isset( $wp_filter['lunara_site_studio_surfaces'] ) && is_object( $wp_filter['lunara_site_studio_surfaces'] ) && isset( $wp_filter['lunara_site_studio_surfaces']->callbacks ) && is_array( $wp_filter['lunara_site_studio_surfaces']->callbacks ) ) {
-					foreach ( array_keys( $wp_filter['lunara_site_studio_surfaces']->callbacks ) as $priority ) {
-						$tracker = static function ( $items ) use ( &$history ) {
-							$history[] = is_array( $items ) ? $items : array();
-							return $items;
-						};
-						$trackers[] = array( 'callback' => $tracker, 'priority' => (int) $priority );
-						add_filter( 'lunara_site_studio_surfaces', $tracker, (int) $priority, 1 );
-					}
+				if ( ! isset( $wp_filter['lunara_site_studio_surfaces'] ) || ! is_object( $wp_filter['lunara_site_studio_surfaces'] ) || ! isset( $wp_filter['lunara_site_studio_surfaces']->callbacks ) || ! is_array( $wp_filter['lunara_site_studio_surfaces']->callbacks ) ) {
+					return;
 				}
+				foreach ( $wp_filter['lunara_site_studio_surfaces']->callbacks as $priority => &$callbacks ) {
+					foreach ( $callbacks as $callback_id => &$entry ) {
+						if ( ! is_array( $entry ) || ! isset( $entry['function'] ) || ! is_callable( $entry['function'] ) ) {
+							continue;
+						}
+						if ( isset( $wrapped_callbacks[ $priority ][ $callback_id ] ) && $entry['function'] === $wrapped_callbacks[ $priority ][ $callback_id ]['wrapper'] ) {
+							continue;
+						}
+						$original = $entry['function'];
+						$wrapper = static function () use ( $original, &$history, &$wrap_callbacks ) {
+							$result = call_user_func_array( $original, func_get_args() );
+							$history[] = is_array( $result ) ? $result : array();
+							$wrap_callbacks();
+							return $result;
+						};
+						$wrapped_callbacks[ $priority ][ $callback_id ] = array(
+							'original' => $original,
+							'wrapper'  => $wrapper,
+						);
+						$entry['function'] = $wrapper;
+					}
+					unset( $entry );
+				}
+				unset( $callbacks );
+			};
+			try {
+				$wrap_callbacks();
 				$filtered = apply_filters( 'lunara_site_studio_surfaces', $defaults );
 				if ( empty( $history ) && is_array( $filtered ) ) {
 					$history[] = $filtered;
@@ -369,8 +402,13 @@ if ( ! function_exists( 'lunara_site_studio_surfaces' ) ) {
 				$filtered = $defaults;
 				$history  = array();
 			} finally {
-				foreach ( $trackers as $tracker ) {
-					remove_filter( 'lunara_site_studio_surfaces', $tracker['callback'], $tracker['priority'] );
+				global $wp_filter;
+				foreach ( $wrapped_callbacks as $priority => $callbacks ) {
+					foreach ( $callbacks as $callback_id => $wrapped ) {
+						if ( isset( $wp_filter['lunara_site_studio_surfaces']->callbacks[ $priority ][ $callback_id ]['function'] ) && $wp_filter['lunara_site_studio_surfaces']->callbacks[ $priority ][ $callback_id ]['function'] === $wrapped['wrapper'] ) {
+							$wp_filter['lunara_site_studio_surfaces']->callbacks[ $priority ][ $callback_id ]['function'] = $wrapped['original'];
+						}
+					}
 				}
 				lunara_site_studio_boundary_guard( 'registry_filter', '', false );
 			}

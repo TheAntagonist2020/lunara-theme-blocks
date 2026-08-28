@@ -1364,13 +1364,13 @@ function lunara_journal_archive_studio_push_revision( $config, $action = 'save',
 }
 
 /**
- * Validate first, then promote without any post/content mutation.
+ * Validate, durably snapshot, and promote while returning transaction metadata.
  *
  * @param mixed  $raw Candidate configuration.
  * @param string $action Audit action.
- * @return array<string,mixed>|WP_Error
+ * @return array{state:array<string,mixed>,revision_id:string}|WP_Error
  */
-function lunara_journal_archive_studio_promote_config( $raw, $action = 'save' ) {
+function lunara_journal_archive_studio_promote_config_transaction( $raw, $action = 'save' ) {
 	$validated = lunara_journal_archive_studio_validate_config( $raw );
 	if ( is_wp_error( $validated ) ) {
 		return $validated;
@@ -1382,16 +1382,22 @@ function lunara_journal_archive_studio_promote_config( $raw, $action = 'save' ) 
 	}
 	lunara_journal_archive_studio_apply_config( $validated );
 	lunara_journal_archive_studio_flush_route_cache();
-	return $validated;
+	return array( 'state' => $validated, 'revision_id' => $revision_id );
+}
+
+/** Preserve the public state-shaped promotion contract. */
+function lunara_journal_archive_studio_promote_config( $raw, $action = 'save' ) {
+	$transaction = lunara_journal_archive_studio_promote_config_transaction( $raw, $action );
+	return is_wp_error( $transaction ) ? $transaction : $transaction['state'];
 }
 
 /**
- * Restore a prior valid public snapshot.
+ * Restore a prior valid public snapshot and return transaction metadata.
  *
  * @param string $revision_id Revision UUID.
- * @return array<string,mixed>|WP_Error
+ * @return array{state:array<string,mixed>,safety_revision_id:string}|WP_Error
  */
-function lunara_journal_archive_studio_restore_revision( $revision_id ) {
+function lunara_journal_archive_studio_restore_revision_transaction( $revision_id ) {
 	$revision_id = sanitize_text_field( $revision_id );
 	foreach ( lunara_journal_archive_studio_get_revisions() as $revision ) {
 		if ( empty( $revision['id'] ) || ! hash_equals( (string) $revision['id'], $revision_id ) || empty( $revision['prior_public'] ) ) {
@@ -1408,9 +1414,15 @@ function lunara_journal_archive_studio_restore_revision( $revision_id ) {
 		}
 		lunara_journal_archive_studio_apply_config( $validated );
 		lunara_journal_archive_studio_flush_route_cache();
-		return $validated;
+		return array( 'state' => $validated, 'safety_revision_id' => $safety_id );
 	}
 	return new WP_Error( 'journal_archive_revision_not_found' );
+}
+
+/** Preserve the public state-shaped restore contract. */
+function lunara_journal_archive_studio_restore_revision( $revision_id ) {
+	$transaction = lunara_journal_archive_studio_restore_revision_transaction( $revision_id );
+	return is_wp_error( $transaction ) ? $transaction : $transaction['state'];
 }
 
 /**
