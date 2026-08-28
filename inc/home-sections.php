@@ -809,6 +809,68 @@ function lunara_build_oscars_ceremony_winner_cards( $winner_map, $aat_instance =
 }
 
 /**
+ * Render a winner-card visual destination only when a real visual exists.
+ *
+ * The separately rendered primary text link remains the canonical destination
+ * for posterless cards. An aria-label derived from canonical winner context
+ * keeps plugin-supplied decorative/empty-alt artwork named at the anchor.
+ *
+ * @param array<string,mixed> $winner_card Winner card payload.
+ * @param string              $fallback_url Route fallback when card URLs are absent.
+ * @return string
+ */
+function lunara_render_oscars_winner_media_link( $winner_card, $fallback_url = '' ) {
+    if ( ! is_array( $winner_card ) ) {
+        return '';
+    }
+
+    $visual      = is_array( $winner_card['_visual'] ?? null ) ? $winner_card['_visual'] : array();
+    $poster_html = isset( $visual['poster_html'] ) && is_scalar( $visual['poster_html'] ) ? trim( (string) $visual['poster_html'] ) : '';
+    $poster_url  = isset( $visual['poster_url'] ) && is_scalar( $visual['poster_url'] ) ? trim( (string) $visual['poster_url'] ) : '';
+
+    if ( '' === $poster_html && '' === $poster_url ) {
+        return '';
+    }
+
+    $label = '';
+    foreach ( array( 'primary_label', 'film', 'name', 'category_label', 'canonical_category' ) as $label_key ) {
+        if ( isset( $winner_card[ $label_key ] ) && is_scalar( $winner_card[ $label_key ] ) ) {
+            $label = trim( (string) $winner_card[ $label_key ] );
+        }
+        if ( '' !== $label ) {
+            break;
+        }
+    }
+    if ( '' === $label ) {
+        $label = __( 'Oscar winner', 'lunara-film' );
+    }
+
+    $url = '';
+    foreach ( array( 'film_url', 'primary_url' ) as $url_key ) {
+        if ( isset( $winner_card[ $url_key ] ) && is_scalar( $winner_card[ $url_key ] ) ) {
+            $url = trim( (string) $winner_card[ $url_key ] );
+        }
+        if ( '' !== $url ) {
+            break;
+        }
+    }
+    if ( '' === $url ) {
+        $url = trim( (string) $fallback_url );
+    }
+
+    $poster_classes = 'lunara-ceremony-winner-poster' . ( '' !== $poster_url ? ' has-poster-bg' : '' );
+    $poster_style   = '' !== $poster_url ? ' style="background-image: url(\'' . esc_url( $poster_url ) . '\');"' : '';
+    $visual_markup  = $poster_html;
+    if ( '' === $visual_markup ) {
+        $visual_markup = '<img src="' . esc_url( $poster_url ) . '" alt="' . esc_attr( $label . ' poster' ) . '" loading="lazy" decoding="async" />';
+    }
+
+    return '<a class="lunara-ceremony-winner-media-link" href="' . esc_url( $url ) . '" aria-label="'
+        . esc_attr( sprintf( __( 'View %s Oscar winner details', 'lunara-film' ), $label ) ) . '"><div class="'
+        . esc_attr( $poster_classes ) . '"' . $poster_style . '>' . $visual_markup . '</div></a>';
+}
+
+/**
  * Daily rotating Oscars ceremony showcase for the /oscars/ deep-dive lane.
  */
 function lunara_get_rotating_oscars_ceremony_showcase( $card_limit = 10 ) {

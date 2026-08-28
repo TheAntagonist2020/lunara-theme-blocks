@@ -162,10 +162,6 @@ if ( ! function_exists( 'lunara_design_tokens_save_handler' ) ) {
 			update_option( 'lunara_design_tokens', array( 'colors' => $colors, 'fonts' => $fonts ), true );
 		}
 
-		if ( function_exists( 'rocket_clean_domain' ) ) {
-			rocket_clean_domain();
-		}
-
 		$target = function_exists( 'lunara_control_desk_admin_url' )
 			? lunara_control_desk_admin_url( array( 'tab' => 'system-status' ) )
 			: admin_url( 'admin.php?page=lunara-control-desk' );

@@ -6191,7 +6191,7 @@ function lunara_control_desk_render_operating_plan_tab() {
         array(
             'label' => __( 'Always', 'lunara-film' ),
             'title' => __( 'Verify, cache, document, repeat', 'lunara-film' ),
-            'body'  => __( 'Keep 390px and 768px first-class, flush cache after deploys, block unsafe source images, and update session notes after meaningful changes.', 'lunara-film' ),
+            'body'  => __( 'Keep 390px and 768px first-class, never clear caches as a fix, block unsafe source images, and update session notes after meaningful changes.', 'lunara-film' ),
             'links' => array(
                 array( __( 'Speed & Stability', 'lunara-film' ), lunara_control_desk_url( array( 'tab' => 'speed-stability' ) ) ),
                 array( __( 'Visual QA', 'lunara-film' ), lunara_control_desk_url( array( 'tab' => 'visual-qa' ) ) ),
@@ -6301,7 +6301,7 @@ function lunara_control_desk_render_operating_plan_tab() {
 
     $rules = array(
         __( 'AI is suggest-first and cannot silently mutate public copy, metadata, homepage flags, or Ledger data.', 'lunara-film' ),
-        __( 'Back up before deployment, lint changed PHP, flush cache, and verify public routes after deploy.', 'lunara-film' ),
+        __( 'Back up before deployment, lint changed PHP, never clear caches as a fix, and verify public routes after deploy.', 'lunara-film' ),
         __( 'Mobile 390px and 768px are first-class acceptance lanes, not afterthoughts.', 'lunara-film' ),
         __( 'World of Reel images stay blocked for featured-image use; external exclusive images need visible provenance and credit.', 'lunara-film' ),
         __( 'Update session logs and the long-term changelog after meaningful product changes.', 'lunara-film' ),
@@ -6309,7 +6309,7 @@ function lunara_control_desk_render_operating_plan_tab() {
 
     $tools = array(
         array( __( 'Control Desk', 'lunara-film' ), __( 'Private operating surface for readiness, QA, curation, and next actions.', 'lunara-film' ) ),
-        array( __( 'WordPress.com + SSH', 'lunara-film' ), __( 'Live checks, backups, deploys, cache flushes, and remote linting.', 'lunara-film' ) ),
+        array( __( 'WordPress.com + SSH', 'lunara-film' ), __( 'Read-only live checks, backups, deploys, no cache clearing as a fix, and remote linting.', 'lunara-film' ) ),
         array( __( 'Browser QA', 'lunara-film' ), __( 'Screenshots and interaction checks at mobile, tablet, and desktop widths.', 'lunara-film' ) ),
         array( __( 'OpenAI / Anthropic / Gemini', 'lunara-film' ), __( 'Private snapshots for structure, taste, long context, and Ledger checks.', 'lunara-film' ) ),
         array( __( 'Dispatch', 'lunara-film' ), __( 'Draft-first Journal source pipeline with a hard originality gate.', 'lunara-film' ) ),
@@ -13816,7 +13816,7 @@ function lunara_control_desk_speed_route_notes() {
         'home'            => array(
             'image'  => __( 'First-lane media must avoid original-size requests.', 'lunara-film' ),
             'mobile' => __( '390px stack should keep the first viewport clean and readable.', 'lunara-film' ),
-            'next'   => __( 'Check newest review, Journal, and Ledger lanes after cache flush.', 'lunara-film' ),
+            'next'   => __( 'Check newest review, Journal, and Ledger lanes after deploy without clearing caches.', 'lunara-film' ),
         ),
         'reviews'         => array(
             'image'  => __( 'Archive cards should use bounded card/featured images.', 'lunara-film' ),

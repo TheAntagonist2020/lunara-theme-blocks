@@ -11,6 +11,33 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-28 — Theme 3.2.54 Public Route Stabilization
+
+- Restored one valid document landmark on Home, Reviews, Journal, and Oscars:
+  `header.php` remains the sole canonical `<main>`, while each route retains
+  its existing `#primary`, classes, Studio ordering hooks, and theme-version
+  marker on a neutral inner wrapper.
+- Replaced mobile viewport-derived route/grid widths with parent-relative,
+  border-box containment. Removed page, shell, and section overflow masking
+  that concealed layout defects while preserving explicit Review rails,
+  Journal filter/sort scrollers, Oscars carousels, media crops, and line clamps.
+- Both Oscars winner lanes now share a conditional media-link renderer. Visual
+  anchors receive an accessible name from canonical winner title/context;
+  posterless cards emit no empty media anchor and keep their named text link.
+- Design Tokens no longer calls `rocket_clean_domain()`. Current Control Desk
+  guidance now states the standing rule: never clear caches as a fix.
+- Added `tests/public-route-stabilization.ps1` plus its portable Playwright
+  runtime: four canonical route fixtures at 390, 430, 768, 782, and 1440,
+  asserting one main, no document overflow, no action-masking ancestor, local
+  scroller containment, and the Oscars anchor contract. The existing Oscars
+  winner runtime now executes poster, plugin-markup, and posterless branches.
+- Read-only 390px A/A probes confirmed the public site still serves Theme
+  3.2.53; no deployment occurred. All four one-pair probes were deliberately
+  recorded as `BASELINE_NOISY`, so they are measurements rather than release
+  comparisons. Home and Journal used image LCPs (35,374 B and 40,716 B
+  transferred); Reviews and Oscars used text LCPs. No live bottleneck change
+  was justified from this noisy cohort.
+
 ## 2026-08-19 — Theme 3.2.53 Oscars Latest Ceremony Winners Transport
 
 - **The Latest Ceremony Winners section on `/oscars/` had never rendered, on

@@ -3794,7 +3794,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
 
         ob_start();
         ?>
-        <main id="primary" class="<?php echo esc_attr( $classes . $label_font_class ); ?>" data-lunara-theme-version="<?php echo esc_attr( (string) wp_get_theme()->get( 'Version' ) ); ?>">
+        <div id="primary" class="<?php echo esc_attr( $classes . $label_font_class ); ?>" data-lunara-theme-version="<?php echo esc_attr( (string) wp_get_theme()->get( 'Version' ) ); ?>">
             <?php if ( ! $show_hero ) : ?>
                 <h1 class="screen-reader-text lunara-review-archive-fallback-title"><?php echo esc_html( $args['title'] ); ?></h1>
             <?php endif; ?>
@@ -4031,7 +4031,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                     <?php echo lunara_render_home_pairing_desk(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- module renderer escapes internally. ?>
                 </div>
             <?php endif; ?>
-        </main>
+        </div>
         <?php
 
         return ob_get_clean();

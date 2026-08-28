@@ -273,8 +273,8 @@ $journal_label_font_class   = function_exists( 'lunara_journal_archive_uses_tiem
 	? ' is-label-font-tiempos'
 	: '';
 ?>
-<main id="primary" class="lunara-archive-page lunara-journal-archive-page<?php echo esc_attr( $journal_label_font_class ); ?>" data-lunara-theme-version="<?php echo esc_attr( (string) wp_get_theme()->get( 'Version' ) ); ?>">
+<div id="primary" class="lunara-archive-page lunara-journal-archive-page<?php echo esc_attr( $journal_label_font_class ); ?>" data-lunara-theme-version="<?php echo esc_attr( (string) wp_get_theme()->get( 'Version' ) ); ?>">
 	<?php echo lunara_journal_archive_studio_render_sections( $journal_section_markup, $journal_section_order, $journal_section_visibility ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-</main>
+</div>
 <?php
 get_footer();
