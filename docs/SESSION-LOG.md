@@ -25,6 +25,43 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-08-28 (re-review round 3) — Cache negation bound to its action
+
+### Headline
+
+The Theme 3.2.54 visible-guidance guard now distinguishes negation that
+directly governs a cache-clearing action from unrelated earlier negation.
+Production behavior is unchanged from `e153cda`; no deployment or live
+operation occurred.
+
+### What changed
+
+- Each visible clear/flush/purge action is classified independently. Direct
+  forms such as `Do not clear caches` and `Caches must never be cleared` remain
+  allowed, while `Do not hesitate to clear caches` is correctly affirmative.
+- Colons, en dashes, and em dashes are clause boundaries, preventing a distant
+  `not` from excusing a later affirmative cache-clearing instruction.
+- The implementation remains semantic rather than an exact-string allowlist,
+  and the prior contextual/plural helper and overflow-fixture protections are
+  unchanged.
+
+### Evidence
+
+- Colon-separated, em-dash-separated, and negative-auxiliary affirmative
+  guidance: RED.
+- Direct active and passive canonical negatives: GREEN.
+- Prior `_x`, `_nx`, semicolon-mixed, `.site *`, universal `*`, and Journal
+  22px overflow mutations: RED as required.
+- Restored focused contract and affected regression set: GREEN, 7/7.
+- PHP 100/100, JavaScript 40/40, PowerShell parse, CSS 22/22, and diff checks:
+  PASS.
+
+### Live state
+
+No live check, deploy, cache operation, production write, push, merge, or PR
+occurred. The public site remains at the previously measured Theme 3.2.53
+state.
+
 ## 2026-08-28 (re-review round 2) — Semantic and subtree guards closed
 
 ### Headline

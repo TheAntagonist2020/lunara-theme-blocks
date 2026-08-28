@@ -60,19 +60,24 @@ Add-ContractFailure ($oscars -notmatch '<a class="lunara-ceremony-winner-media-l
 Add-ContractFailure ($designTokens -notmatch 'rocket_clean_domain') 'Design Tokens saves must never clear the WP Rocket domain cache.'
 $visibleControlDeskStrings = @(Get-VisibleTranslationStrings $controlDesk)
 $cacheClearingVerb = '(?:flush(?:es|ed|ing)?|clear(?:s|ed|ing)?|purg(?:e|es|ed|ing))'
-$cacheClearingAction = "(?i)(?:\b$cacheClearingVerb\b.{0,80}\bcaches?\b|\bcaches?\b.{0,80}\b$cacheClearingVerb\b)"
-$cacheClearingNegation = "(?i)(?:\bnever\b.{0,50}\b$cacheClearingVerb\b|\bno\s+caches?\b.{0,50}\b$cacheClearingVerb\b|\bwithout\b.{0,50}\b$cacheClearingVerb\b|\b(?:do|does|did|should|must|can|could|would|will|may)\s+not\b.{0,50}\b$cacheClearingVerb\b|\bnot\b.{0,50}\b$cacheClearingVerb\b)"
+$cacheClearingAction = "(?i)\b$cacheClearingVerb\b"
+$cacheClearingDirectNegation = '(?i)(?:\bnever\s+(?:be\s+)?|\bwithout\s+|\b(?:do|does|did|should|must|can|could|would|will|may)\s+not\s+(?:be\s+)?|\bno\s+caches?\s+(?:(?:should|must|can|could|would|will|may)\s+)?(?:be\s+)?)$'
 $staleVisibleCacheGuidance = [Collections.Generic.List[string]]::new()
 $canonicalNoCacheGuidance = [Collections.Generic.List[string]]::new()
 foreach ($visibleString in $visibleControlDeskStrings) {
-    foreach ($clause in [regex]::Split($visibleString, '(?i)\s*(?:[;.!?]+|,\s+|\bbut\b|\band\b)\s*')) {
-        if ($clause -notmatch $cacheClearingAction) {
-            continue
-        }
-        if ($clause -match $cacheClearingNegation) {
-            $canonicalNoCacheGuidance.Add($clause)
-        } else {
-            $staleVisibleCacheGuidance.Add($clause)
+    foreach ($clause in [regex]::Split($visibleString, '(?i)\s*(?:[;:.!?\u2013\u2014]+|,\s+|\bbut\b|\band\b)\s*')) {
+        foreach ($actionMatch in [regex]::Matches($clause, $cacheClearingAction)) {
+            $windowStart = [Math]::Max(0, $actionMatch.Index - 80)
+            $windowLength = [Math]::Min($clause.Length - $windowStart, $actionMatch.Length + 160)
+            if ($clause.Substring($windowStart, $windowLength) -notmatch '(?i)\bcaches?\b') {
+                continue
+            }
+            $prefix = $clause.Substring(0, $actionMatch.Index)
+            if ($prefix -match $cacheClearingDirectNegation) {
+                $canonicalNoCacheGuidance.Add($clause)
+            } else {
+                $staleVisibleCacheGuidance.Add($clause)
+            }
         }
     }
 }
