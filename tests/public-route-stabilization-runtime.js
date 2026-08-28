@@ -87,13 +87,13 @@ const routes = {
 function htmlFor(route) {
     const tag = routeRootTag(route.source, route.marker || '');
     return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>
-        *{box-sizing:border-box}html,body{margin:0;max-width:none}body{background:#07101b;color:#fff}
-        #canonical-main{display:block;width:min(1180px,calc(100% - 32px));margin-inline:auto;padding-inline:16px;min-width:0}
-        .test-important-action{display:inline-flex;min-width:0;max-width:100%;padding:8px}
+        html,body{margin:0;max-width:none}body{background:#07101b;color:#fff}
+        #canonical-main{box-sizing:border-box;display:block;width:100%;margin:0;padding:0;min-width:0}
+        .test-important-action{box-sizing:border-box;display:inline-flex;min-width:0;max-width:100%;padding:8px}
         ${css}
         body.lunara-public-stabilization-fixture .lunara-review-archive-rail-item{flex:0 0 280px!important}
         body.lunara-public-stabilization-fixture.lunara-oscars-portal-page .lunara-oscars-winner-carousel-track{display:grid!important;grid-template-columns:none!important;grid-auto-flow:column!important;grid-auto-columns:260px!important}
-    </style></head><body class="lunara-public-stabilization-fixture ${route.bodyClass}"><div class="site"><main id="canonical-main" class="site-main"><${tag} id="primary" class="${route.rootClass}" data-lunara-theme-version="3.2.54">${route.content}</${tag}></main></div></body></html>`;
+    </style></head><body class="lunara-public-stabilization-fixture ${route.bodyClass}"><i class="test-box-sizing-sentinel" aria-hidden="true"></i><div class="site"><main id="canonical-main" class="site-main"><${tag} id="primary" class="${route.rootClass}" data-lunara-theme-version="3.2.54">${route.content}</${tag}></main></div></body></html>`;
 }
 
 async function inspect(page, routeName, route, width) {
@@ -102,6 +102,7 @@ async function inspect(page, routeName, route, width) {
     const snapshot = await page.evaluate(({ routeName, scroller }) => {
         const mainCount = document.querySelectorAll('main').length;
         const documentOverflow = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth;
+        const sentinelBoxSizing = getComputedStyle(document.querySelector('.test-box-sizing-sentinel')).boxSizing;
         const action = document.querySelector('.test-important-action');
         const masking = [];
         for (let node = action; node && node !== document.documentElement; node = node.parentElement) {
@@ -117,6 +118,7 @@ async function inspect(page, routeName, route, width) {
             width: window.innerWidth,
             mainCount,
             documentOverflow,
+            sentinelBoxSizing,
             masking,
             rail: rail ? {
                 selector: scroller.selector,
@@ -128,6 +130,7 @@ async function inspect(page, routeName, route, width) {
     }, { routeName, scroller: route.scroller || null });
 
     if (snapshot.mainCount !== 1) failures.push(`${routeName}@${width}: expected one main landmark, measured ${snapshot.mainCount}.`);
+    if (snapshot.sentinelBoxSizing !== 'content-box') failures.push(`${routeName}@${width}: fixture globally rewrites box sizing to ${snapshot.sentinelBoxSizing}.`);
     if (snapshot.documentOverflow > 1) failures.push(`${routeName}@${width}: document overflows by ${snapshot.documentOverflow}px.`);
     if (snapshot.masking.length) failures.push(`${routeName}@${width}: important action is masked by ${snapshot.masking.join(', ')}.`);
     if (snapshot.rail && (!['auto', 'scroll'].includes(snapshot.rail.overflowX) || snapshot.rail.scrollWidth <= snapshot.rail.clientWidth)) {

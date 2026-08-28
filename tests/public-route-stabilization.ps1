@@ -39,9 +39,17 @@ foreach ($route in @(
 Add-ContractFailure (([regex]::Matches($oscars, 'lunara_render_oscars_winner_media_link\s*\(')).Count -eq 2) 'Both Oscars winner lanes must use the shared conditional media renderer.'
 Add-ContractFailure ($oscars -notmatch '<a class="lunara-ceremony-winner-media-link"') 'Oscars winner lanes must not emit unconditional media anchors.'
 Add-ContractFailure ($designTokens -notmatch 'rocket_clean_domain') 'Design Tokens saves must never clear the WP Rocket domain cache.'
-foreach ($staleGuidance in @('flush cache after deploys', 'flush cache, and verify public routes', 'cache flushes, and remote linting', 'after cache flush')) {
-    Add-ContractFailure ($controlDesk -notmatch [regex]::Escape($staleGuidance)) "Visible Control Desk guidance must remove stale cache-flush instruction: $staleGuidance"
-}
+$visibleControlDeskStrings = [regex]::Matches(
+    $controlDesk,
+    "(?s)\b(?:__|_e|esc_html__|esc_html_e|esc_attr__|esc_attr_e)\(\s*'((?:\\'|[^'])*)'"
+) | ForEach-Object { $_.Groups[1].Value }
+$cacheClearingVerb = '(?:flush(?:es|ed|ing)?|clear(?:s|ed|ing)?|purg(?:e|es|ed|ing))'
+$cacheClearingAction = "(?i)(?:\b$cacheClearingVerb\b.{0,80}\bcaches?\b|\bcaches?\b.{0,80}\b$cacheClearingVerb\b)"
+$cacheClearingNegation = "(?i)(?:\bnever\s+$cacheClearingVerb|\bno\s+caches?\s+$cacheClearingVerb|\bwithout\s+$cacheClearingVerb|\bnot\s+$cacheClearingVerb)"
+$staleVisibleCacheGuidance = @($visibleControlDeskStrings | Where-Object {
+    $_ -match $cacheClearingAction -and $_ -notmatch $cacheClearingNegation
+})
+Add-ContractFailure ($staleVisibleCacheGuidance.Count -eq 0) ("Visible Control Desk guidance must contain no affirmative cache-clearing instruction: " + ($staleVisibleCacheGuidance -join ' | '))
 Add-ContractFailure (([regex]::Matches($controlDesk, 'Never clear caches? as a fix', 'IgnoreCase')).Count -ge 1) 'Visible Control Desk guidance must state the canonical no-cache-clearing rule.'
 
 $phpOutput = & php (Join-Path $PSScriptRoot 'oscars-winner-map-runtime.php') 2>&1

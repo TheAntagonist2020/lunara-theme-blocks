@@ -24,8 +24,9 @@ directly from each repo's `git log`, not reconstructed from memory.
 - Both Oscars winner lanes now share a conditional media-link renderer. Visual
   anchors receive an accessible name from canonical winner title/context;
   posterless cards emit no empty media anchor and keep their named text link.
-- Design Tokens no longer calls `rocket_clean_domain()`. Current Control Desk
-  guidance now states the standing rule: never clear caches as a fix.
+- Design Tokens no longer calls `rocket_clean_domain()`. All visible Control
+  Desk cache guidance and save notices now follow the standing rule: never
+  clear caches as a fix.
 - Added `tests/public-route-stabilization.ps1` plus its portable Playwright
   runtime: four canonical route fixtures at 390, 430, 768, 782, and 1440,
   asserting one main, no document overflow, no action-masking ancestor, local

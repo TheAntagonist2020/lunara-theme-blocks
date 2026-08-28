@@ -3930,7 +3930,7 @@ function lunara_control_desk_get_system_status() {
             'label' => __( 'Object cache', 'lunara-film' ),
             'value' => wp_using_ext_object_cache() ? __( 'External cache active', 'lunara-film' ) : __( 'Default WordPress cache', 'lunara-film' ),
             'state' => 'ready',
-            'note'  => __( 'Flush cache after every deployment.', 'lunara-film' ),
+            'note'  => __( 'Never clear caches as a deployment fix; verify public routes against normal cache behavior.', 'lunara-film' ),
         ),
         array(
             'label' => __( 'Last deploy backup', 'lunara-film' ),
@@ -15435,7 +15435,7 @@ function lunara_control_desk_render_notice() {
         ),
         'hero_command_saved' => array(
             'class'   => 'notice-success',
-            'message' => __( 'Hero Command saved. The hero now reads the deck and overlay settings; the homepage cache was purged so it screens immediately.', 'lunara-film' ),
+            'message' => __( 'Hero Command saved. The hero now reads the deck and overlay settings through normal cache-versioned delivery.', 'lunara-film' ),
         ),
         'hero_command_forbidden' => array(
             'class'   => 'notice-error',

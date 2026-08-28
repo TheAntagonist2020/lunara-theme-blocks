@@ -25,6 +25,46 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-08-28 (review fix) — Public stabilization contracts hardened
+
+### Headline
+
+Two Task 2 review findings are fixed locally and remain undeployed. The
+Control Desk no longer contains affirmative visible cache-clearing guidance,
+and the public-route browser fixture no longer supplies universal border-box
+geometry before measuring production overflow.
+
+### What changed
+
+- The Object Cache status note now states the canonical rule to never clear
+  caches as a deployment fix. The stale Hero Command notice no longer claims
+  that the homepage cache was purged.
+- The cache guidance gate now scans visible translated strings for affirmative
+  clear/flush/purge instructions in verb-first, passive, and noun-style forms,
+  while allowing explicit `never`, `no`, `without`, and `not` guidance.
+- The browser fixture applies box sizing only to its outer-main and action
+  scaffolding. A sentinel must retain the browser-default `content-box`, and
+  the outer main is edge-to-edge so route overflow cannot hide inside fixture
+  gutters.
+
+### TDD and verification
+
+- Initial strengthened RED: the contract found both stale Control Desk
+  strings and 20 universal-box-sizing failures across four routes × five
+  widths.
+- Journal mutation RED: removing the production filter scroller border-box
+  declaration produced 22px document overflow at 390 and 430.
+- Cache noun mutation RED: `Cache flushes are required after every
+  deployment.` was rejected by the inflection-aware guard.
+- Final focused contract and affected Control Desk/Journal regressions passed;
+  PHP, JavaScript, and PowerShell syntax plus `git diff --check` passed.
+
+### Live state and next step
+
+No live probe, deploy, cache operation, production write, push, merge, or PR
+occurred. The public site remains at the previously measured Theme 3.2.53
+state; review and integration of this local branch are the next steps.
+
 ## 2026-08-28 — Theme 3.2.54 public stabilization prepared locally
 
 ### Headline
