@@ -8,6 +8,7 @@
 .playwright-cli/**
 
 # Documentation and planning artifacts
+AGENTS.md
 ARCHITECTURE.md
 CLAUDE.md
 README.md

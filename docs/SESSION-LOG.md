@@ -19,8 +19,109 @@ and pointing at the entry that supersedes it. The value of this file is that it
 is honest about what was believed at the time.
 
 **Every session that changes code, ships a release, or changes what is live
-must append an entry here before it ends.** See `CLAUDE.md` at the repo root
-for the required shape and the standing workflow rules.
+must append an entry here before it ends.** See `AGENTS.md` at the repo root
+for the required shape and the standing workflow rules. (`CLAUDE.md` points
+there; `AGENTS.md` is the single canonical copy.)
+
+---
+
+## 2026-08-24 (later) — Agent handoff made portable; two stale docs defused
+
+### Headline
+
+The working agreement is now **`AGENTS.md`**, the file Codex reads by
+convention, and `CLAUDE.md` is a thin pointer to it. Any agent — Codex, Claude,
+or a person — cold-starting on this repo now lands on the same four-step
+handoff. In the course of writing it, a live hazard surfaced: the reading list
+established earlier today pointed at `ARCHITECTURE.md`, which instructs the
+reader to do the one thing the standing rules forbid.
+
+### The hazard, and why it mattered
+
+`ARCHITECTURE.md` is a historical snapshot of the retired
+`lunara-film-premium-20260503-living-pulse` theme. It carries a banner saying
+so. But two of its TL;DR items are not merely outdated — they are the inverse
+of current practice:
+
+| `ARCHITECTURE.md` says | Current standing rule |
+| --- | --- |
+| §TL;DR 3 — "All deploys are scp from a Windows machine" | Deployment is the push-button *Deployer for Git (Pro)* action in the Lunara Control Desk |
+| §TL;DR 4 — **"Always Clear Cache after a deploy"** | **Never clear cache as a fix.** A release needing a flush to look correct is a broken release — the 3.2.48 incident |
+
+A general "this is historical" banner was not enough protection. An agent
+skimming for deploy instructions would find a numbered, confident TL;DR and act
+on it. The earlier entry today made this worse by listing the file as required
+reading without qualification.
+
+Both files now carry a banner naming the specific contradictions, and
+`AGENTS.md` has a **"Do not trust these two files"** section immediately after
+the cold-start list. `README.md` got its first banner — its Paths section still
+describes a Windows working copy and a live theme directory that no longer
+apply.
+
+### What shipped and why
+
+- **`AGENTS.md`** (new, 181 lines) — canonical. Cold-start order, the
+  stale-doc warning, the mandatory session-log close, the standing rules, the
+  engineering discipline, the seven-repo map, the branch/PR convention, and the
+  gate commands.
+- **`CLAUDE.md`** (rewritten, 124 → 24 lines) — now a pointer, plus a five-line
+  irreducible summary so nothing critical is lost if a reader stops there.
+  Two full copies would have drifted, and this project has already been bitten
+  by exactly that shape of bug: `functions.php` carries `function_exists()`
+  copies of functions `inc/` defines first, and the dead copy looks perfectly
+  editable. A second working agreement would fail the same way.
+- **`.deployignore`** — `AGENTS.md` added; nothing here reaches the live theme.
+
+### Verified live state
+
+Not re-probed. No code shipped and no deploy occurred in this pass, so the
+3.2.53 verification in the entry below still stands unchanged. Listing
+unmeasured facts in this table is exactly what the format forbids.
+
+### Commit ledger
+
+See the entry below for the release ledger; this pass is docs-only on top of
+it. Per the rule established in that entry, **the rollback hatch is named by
+branch — `claude/rollback-exact-theme-3.2.43`, tracked by PR #159 — never by
+SHA**, and is rebuilt after this merge like any other.
+
+### Gate ledger
+
+- `tests/journal-archive-studio-contract.ps1` — exit 0
+- `tests/performance-measurement-gate.ps1` — exit 0
+
+Those are the two contracts that assert on `.deployignore`, the only file in
+this change that any gate reads. **Not run:** the remaining 80 PowerShell
+contracts, the PHP runtime suite, and the canary — no PHP, JS, CSS, or live
+surface is touched by a documentation diff.
+
+### Corrections
+
+The entry below listed `ARCHITECTURE.md` as item 4 of the required reading
+without qualification. That was wrong, and this entry supersedes it. The
+earlier entry is left as written, per the standing rule.
+
+### Logged, not fixed
+
+- **The six plugin repos carry no agent file.** An agent starting cold in
+  `lunara-plugin-oscars-ledger` or any sibling gets no working agreement at
+  all. A one-screen `AGENTS.md` in each, pointing at this repo, would close it.
+  Not done here — six repos, six PRs, and it is Dalton's call whether that
+  churn is worth it now.
+- Carried forward unchanged from the entry below: the empty media anchors on
+  posterless winner cards, and the five older P2s.
+
+### Punch-list carried forward
+
+Unchanged from the entry below — Oscars Portal Studio presentation controls
+(#16, awaiting go-ahead) and the Show Linked Reviews toggle, both Dalton's
+call.
+
+### Whose move it is next
+
+**Dalton's.** Nothing is blocked. Optional: say the word and the six plugin
+repos each get a pointer `AGENTS.md`.
 
 ---
 
