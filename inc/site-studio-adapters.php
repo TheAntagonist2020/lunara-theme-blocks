@@ -15,6 +15,12 @@ if ( ! defined( 'LUNARA_SITE_STUDIO_PREVIEW_TTL' ) ) {
 if ( ! defined( 'LUNARA_SITE_STUDIO_REVISION_LIMIT' ) ) {
 	define( 'LUNARA_SITE_STUDIO_REVISION_LIMIT', 12 );
 }
+if ( ! defined( 'LUNARA_SITE_STUDIO_PROJECTION_MAX_DEPTH' ) ) {
+	define( 'LUNARA_SITE_STUDIO_PROJECTION_MAX_DEPTH', 32 );
+}
+if ( ! defined( 'LUNARA_SITE_STUDIO_PROJECTION_MAX_NODES' ) ) {
+	define( 'LUNARA_SITE_STUDIO_PROJECTION_MAX_NODES', 4096 );
+}
 
 if ( ! interface_exists( 'Lunara_Site_Studio_Surface_Adapter' ) ) {
 	/**
@@ -72,10 +78,17 @@ if ( ! class_exists( 'Lunara_Site_Studio_Provider_Adapter' ) ) {
 			if ( $error ) {
 				return $error;
 			}
+			$callback_key = is_string( $callback ) ? $callback : 'provider-callback';
+			$guard_key = $this->surface . '-' . $callback_key;
+			if ( ! lunara_site_studio_boundary_guard( 'provider_callback', $guard_key ) ) {
+				return new WP_Error( 'site_studio_adapter_unavailable', __( 'The canonical surface provider is unavailable.', 'lunara-film' ) );
+			}
 			try {
 				return call_user_func_array( $callback, $arguments );
 			} catch ( Throwable $error ) {
 				return new WP_Error( 'site_studio_adapter_unavailable', __( 'The canonical surface provider is unavailable.', 'lunara-film' ) );
+			} finally {
+				lunara_site_studio_boundary_guard( 'provider_callback', $guard_key, false );
 			}
 		}
 
@@ -96,15 +109,23 @@ if ( ! class_exists( 'Lunara_Site_Studio_Provider_Adapter' ) ) {
 			if ( is_wp_error( $before ) ) {
 				return $before;
 			}
+			$before_revisions = $this->list_revisions();
+			if ( is_wp_error( $before_revisions ) ) {
+				return $before_revisions;
+			}
 			$result = $this->invoke( $this->save_callback, array( $candidate, 'site-studio-save' ) );
 			if ( is_wp_error( $result ) ) {
 				return $result;
 			}
 			$revisions = $this->list_revisions();
+			$revision_id = lunara_site_studio_new_revision_id( $before_revisions, $revisions );
+			if ( is_wp_error( $revision_id ) ) {
+				return $revision_id;
+			}
 			return array(
 				'state'            => $result,
 				'changed_sections' => lunara_site_studio_changed_sections( $this->surface, $before, $result ),
-				'revision_id'      => is_array( $revisions ) && ! empty( $revisions[0]['id'] ) ? sanitize_text_field( $revisions[0]['id'] ) : '',
+				'revision_id'      => $revision_id,
 				'timestamp'        => current_time( 'mysql' ),
 			);
 		}
@@ -141,17 +162,46 @@ if ( ! class_exists( 'Lunara_Site_Studio_Provider_Adapter' ) ) {
 			if ( $error ) {
 				return $error;
 			}
+			$before_revisions = $this->list_revisions();
+			if ( is_wp_error( $before_revisions ) ) {
+				return $before_revisions;
+			}
 			$result = $this->invoke( $this->restore_callback, array( sanitize_text_field( $revision_id ) ) );
 			if ( is_wp_error( $result ) ) {
 				return $result;
 			}
 			$revisions = $this->list_revisions();
+			$safety_id = lunara_site_studio_new_revision_id( $before_revisions, $revisions );
+			if ( is_wp_error( $safety_id ) ) {
+				return $safety_id;
+			}
 			return array(
 				'state'              => $result,
-				'safety_revision_id' => is_array( $revisions ) && ! empty( $revisions[0]['id'] ) ? sanitize_text_field( $revisions[0]['id'] ) : '',
+				'safety_revision_id' => $safety_id,
 				'timestamp'          => current_time( 'mysql' ),
 			);
 		}
+	}
+}
+
+if ( ! function_exists( 'lunara_site_studio_new_revision_id' ) ) {
+	/** Return the one new verified UUID introduced by a provider operation. */
+	function lunara_site_studio_new_revision_id( $before, $after ) {
+		if ( ! is_array( $before ) || ! is_array( $after ) ) {
+			return new WP_Error( 'site_studio_revision_unverified', __( 'The provider revision could not be verified.', 'lunara-film' ) );
+		}
+		$prior = array();
+		foreach ( $before as $revision ) {
+			if ( is_array( $revision ) && ! empty( $revision['id'] ) ) {
+				$prior[ (string) $revision['id'] ] = true;
+			}
+		}
+		foreach ( $after as $revision ) {
+			if ( is_array( $revision ) && ! empty( $revision['id'] ) && ! isset( $prior[ (string) $revision['id'] ] ) ) {
+				return sanitize_text_field( $revision['id'] );
+			}
+		}
+		return new WP_Error( 'site_studio_revision_unverified', __( 'The provider revision could not be verified.', 'lunara-film' ) );
 	}
 }
 
@@ -233,8 +283,15 @@ if ( ! function_exists( 'lunara_site_studio_oscars_portal_state_schema' ) ) {
 
 if ( ! function_exists( 'lunara_site_studio_project_state_value' ) ) {
 	/** Project one value through a private schema; $accepted distinguishes omission from null. */
-	function lunara_site_studio_project_state_value( $value, $schema, &$accepted ) {
+	function lunara_site_studio_project_state_value( $value, $schema, &$accepted, $depth = 0, &$budget = null ) {
 		$accepted = false;
+		if ( null === $budget ) {
+			$budget = array( 'nodes' => 0 );
+		}
+		$budget['nodes']++;
+		if ( $depth > LUNARA_SITE_STUDIO_PROJECTION_MAX_DEPTH || $budget['nodes'] > LUNARA_SITE_STUDIO_PROJECTION_MAX_NODES ) {
+			return new WP_Error( 'site_studio_state_too_complex', __( 'The destination state is too complex to project safely.', 'lunara-film' ) );
+		}
 		if ( true === $schema ) {
 			if ( is_scalar( $value ) || null === $value ) {
 				$accepted = true;
@@ -247,9 +304,17 @@ if ( ! function_exists( 'lunara_site_studio_project_state_value' ) ) {
 		}
 		$projected = array();
 		if ( array_key_exists( '*', $schema ) ) {
-			foreach ( array_values( $value ) as $item ) {
+			foreach ( array_keys( $value ) as $key ) {
+				if ( ! is_int( $key ) ) {
+					return null;
+				}
+			}
+			foreach ( $value as $item ) {
 				$item_accepted = false;
-				$safe_item = lunara_site_studio_project_state_value( $item, $schema['*'], $item_accepted );
+				$safe_item = lunara_site_studio_project_state_value( $item, $schema['*'], $item_accepted, $depth + 1, $budget );
+				if ( is_wp_error( $safe_item ) ) {
+					return $safe_item;
+				}
 				if ( $item_accepted ) {
 					$projected[] = $safe_item;
 				}
@@ -262,7 +327,10 @@ if ( ! function_exists( 'lunara_site_studio_project_state_value' ) ) {
 				continue;
 			}
 			$child_accepted = false;
-			$safe_child = lunara_site_studio_project_state_value( $value[ $key ], $child_schema, $child_accepted );
+			$safe_child = lunara_site_studio_project_state_value( $value[ $key ], $child_schema, $child_accepted, $depth + 1, $budget );
+			if ( is_wp_error( $safe_child ) ) {
+				return $safe_child;
+			}
 			if ( $child_accepted ) {
 				$projected[ $key ] = $safe_child;
 			}
@@ -283,16 +351,31 @@ if ( ! function_exists( 'lunara_site_studio_project_state' ) ) {
 		if ( ! is_callable( $callback ) ) {
 			return new WP_Error( 'site_studio_state_unavailable', __( 'The destination state is unavailable.', 'lunara-film' ) );
 		}
+		if ( ! lunara_site_studio_boundary_guard( 'schema', $surface_id ) ) {
+			return new WP_Error( 'site_studio_state_unavailable', __( 'The destination state is unavailable.', 'lunara-film' ) );
+		}
 		try {
 			$schema = call_user_func( $callback, $surface );
 		} catch ( Throwable $error ) {
 			return new WP_Error( 'site_studio_state_unavailable', __( 'The destination state is unavailable.', 'lunara-film' ) );
+		} finally {
+			lunara_site_studio_boundary_guard( 'schema', $surface_id, false );
 		}
 		if ( ! is_array( $schema ) ) {
 			return new WP_Error( 'site_studio_state_unavailable', __( 'The destination state is unavailable.', 'lunara-film' ) );
 		}
 		$accepted = false;
-		$projected = lunara_site_studio_project_state_value( $state, $schema, $accepted );
+		if ( ! lunara_site_studio_boundary_guard( 'projector', $surface_id ) ) {
+			return new WP_Error( 'site_studio_state_unavailable', __( 'The destination state is unavailable.', 'lunara-film' ) );
+		}
+		try {
+			$projected = lunara_site_studio_project_state_value( $state, $schema, $accepted );
+		} finally {
+			lunara_site_studio_boundary_guard( 'projector', $surface_id, false );
+		}
+		if ( is_wp_error( $projected ) ) {
+			return $projected;
+		}
 		return $accepted && is_array( $projected ) ? $projected : new WP_Error( 'site_studio_state_unavailable', __( 'The destination state is unavailable.', 'lunara-film' ) );
 	}
 }
@@ -352,10 +435,15 @@ if ( ! function_exists( 'lunara_site_studio_get_adapter' ) ) {
 		if ( ! is_callable( $factory ) ) {
 			return new WP_Error( 'site_studio_adapter_unavailable', __( 'This destination does not expose editable state yet.', 'lunara-film' ) );
 		}
+		if ( ! lunara_site_studio_boundary_guard( 'adapter_factory', $surface_id ) ) {
+			return new WP_Error( 'site_studio_adapter_unavailable', __( 'The destination adapter is unavailable.', 'lunara-film' ) );
+		}
 		try {
 			$adapter = call_user_func( $factory, $surface );
 		} catch ( Throwable $error ) {
 			return new WP_Error( 'site_studio_adapter_unavailable', __( 'The destination adapter is unavailable.', 'lunara-film' ) );
+		} finally {
+			lunara_site_studio_boundary_guard( 'adapter_factory', $surface_id, false );
 		}
 		return $adapter instanceof Lunara_Site_Studio_Surface_Adapter ? $adapter : new WP_Error( 'site_studio_adapter_invalid', __( 'The destination adapter is invalid.', 'lunara-film' ) );
 	}
@@ -367,10 +455,16 @@ if ( ! function_exists( 'lunara_site_studio_call_adapter' ) ) {
 		if ( ! ( $adapter instanceof Lunara_Site_Studio_Surface_Adapter ) || ! is_callable( array( $adapter, $method ) ) ) {
 			return new WP_Error( 'site_studio_adapter_unavailable', __( 'The destination adapter is unavailable.', 'lunara-film' ) );
 		}
+		$guard_key = spl_object_hash( $adapter ) . '-' . sanitize_key( $method );
+		if ( ! lunara_site_studio_boundary_guard( 'adapter_method', $guard_key ) ) {
+			return new WP_Error( 'site_studio_adapter_unavailable', __( 'The destination adapter is unavailable.', 'lunara-film' ) );
+		}
 		try {
 			return call_user_func_array( array( $adapter, $method ), is_array( $arguments ) ? $arguments : array() );
 		} catch ( Throwable $error ) {
 			return new WP_Error( 'site_studio_adapter_unavailable', __( 'The destination adapter is unavailable.', 'lunara-film' ) );
+		} finally {
+			lunara_site_studio_boundary_guard( 'adapter_method', $guard_key, false );
 		}
 	}
 }
@@ -491,10 +585,14 @@ if ( ! function_exists( 'lunara_site_studio_send_private_no_store' ) ) {
 				header( $header_value, true );
 			}
 		}
-		try {
-			do_action( 'lunara_site_studio_private_no_store_sent' );
-		} catch ( Throwable $error ) {
-			// No extension callback may turn a private no-store response into a fatal.
+		if ( lunara_site_studio_boundary_guard( 'preview_notification' ) ) {
+			try {
+				do_action( 'lunara_site_studio_private_no_store_sent' );
+			} catch ( Throwable $error ) {
+				// No extension callback may turn a private no-store response into a fatal.
+			} finally {
+				lunara_site_studio_boundary_guard( 'preview_notification', '', false );
+			}
 		}
 	}
 }
@@ -506,10 +604,16 @@ if ( ! function_exists( 'lunara_site_studio_prepare_private_preview_response' ) 
 		if ( ! is_callable( $lookup_callback ) ) {
 			return false;
 		}
+		$lookup_key = is_string( $lookup_callback ) ? $lookup_callback : ( is_object( $lookup_callback ) ? spl_object_hash( $lookup_callback ) : 'lookup' );
+		if ( ! lunara_site_studio_boundary_guard( 'preview_lookup', $lookup_key ) ) {
+			return false;
+		}
 		try {
 			return call_user_func( $lookup_callback );
 		} catch ( Throwable $error ) {
 			return false;
+		} finally {
+			lunara_site_studio_boundary_guard( 'preview_lookup', $lookup_key, false );
 		}
 	}
 }
@@ -590,44 +694,52 @@ if ( ! function_exists( 'lunara_site_studio_restore_revision' ) ) {
 		if ( ! is_callable( $read_callback ) || ! is_callable( $validate_callback ) || ! is_callable( $save_callback ) ) {
 			return new WP_Error( 'site_studio_restore_unavailable', __( 'The restore service is unavailable.', 'lunara-film' ) );
 		}
-		$target = null;
-		foreach ( lunara_site_studio_list_revisions( $surface, true ) as $revision ) {
-			if ( ! empty( $revision['id'] ) && hash_equals( (string) $revision['id'], sanitize_text_field( $revision_id ) ) && isset( $revision['config'] ) && is_array( $revision['config'] ) ) {
-				$target = $revision['config'];
-				break;
+		$surface = sanitize_key( $surface );
+		if ( ! lunara_site_studio_boundary_guard( 'restore', $surface ) ) {
+			return new WP_Error( 'site_studio_restore_unavailable', __( 'The restore service is unavailable.', 'lunara-film' ) );
+		}
+		try {
+			$target = null;
+			foreach ( lunara_site_studio_list_revisions( $surface, true ) as $revision ) {
+				if ( ! empty( $revision['id'] ) && hash_equals( (string) $revision['id'], sanitize_text_field( $revision_id ) ) && isset( $revision['config'] ) && is_array( $revision['config'] ) ) {
+					$target = $revision['config'];
+					break;
+				}
 			}
+			if ( null === $target ) {
+				return new WP_Error( 'site_studio_revision_not_found', __( 'The selected revision was not found.', 'lunara-film' ) );
+			}
+			try {
+				$validated = call_user_func( $validate_callback, $target );
+			} catch ( Throwable $error ) {
+				return new WP_Error( 'site_studio_restore_unavailable', __( 'The restore service is unavailable.', 'lunara-film' ) );
+			}
+			if ( is_wp_error( $validated ) ) {
+				return $validated;
+			}
+			try {
+				$current = call_user_func( $read_callback );
+			} catch ( Throwable $error ) {
+				return new WP_Error( 'site_studio_restore_unavailable', __( 'The restore service is unavailable.', 'lunara-film' ) );
+			}
+			if ( is_wp_error( $current ) || ! is_array( $current ) ) {
+				return is_wp_error( $current ) ? $current : new WP_Error( 'site_studio_restore_snapshot_failed' );
+			}
+			$safety_id = lunara_site_studio_push_revision( $surface, $current, 'restore-safety' );
+			if ( is_wp_error( $safety_id ) ) {
+				return $safety_id;
+			}
+			try {
+				$saved = call_user_func( $save_callback, $validated );
+			} catch ( Throwable $error ) {
+				return new WP_Error( 'site_studio_restore_unavailable', __( 'The restore service is unavailable.', 'lunara-film' ) );
+			}
+			if ( is_wp_error( $saved ) ) {
+				return $saved;
+			}
+			return array( 'state' => $saved, 'safety_revision_id' => $safety_id, 'timestamp' => current_time( 'mysql' ) );
+		} finally {
+			lunara_site_studio_boundary_guard( 'restore', $surface, false );
 		}
-		if ( null === $target ) {
-			return new WP_Error( 'site_studio_revision_not_found', __( 'The selected revision was not found.', 'lunara-film' ) );
-		}
-		try {
-			$validated = call_user_func( $validate_callback, $target );
-		} catch ( Throwable $error ) {
-			return new WP_Error( 'site_studio_restore_unavailable', __( 'The restore service is unavailable.', 'lunara-film' ) );
-		}
-		if ( is_wp_error( $validated ) ) {
-			return $validated;
-		}
-		try {
-			$current = call_user_func( $read_callback );
-		} catch ( Throwable $error ) {
-			return new WP_Error( 'site_studio_restore_unavailable', __( 'The restore service is unavailable.', 'lunara-film' ) );
-		}
-		if ( is_wp_error( $current ) || ! is_array( $current ) ) {
-			return is_wp_error( $current ) ? $current : new WP_Error( 'site_studio_restore_snapshot_failed' );
-		}
-		$safety_id = lunara_site_studio_push_revision( $surface, $current, 'restore-safety' );
-		if ( is_wp_error( $safety_id ) ) {
-			return $safety_id;
-		}
-		try {
-			$saved = call_user_func( $save_callback, $validated );
-		} catch ( Throwable $error ) {
-			return new WP_Error( 'site_studio_restore_unavailable', __( 'The restore service is unavailable.', 'lunara-film' ) );
-		}
-		if ( is_wp_error( $saved ) ) {
-			return $saved;
-		}
-		return array( 'state' => $saved, 'safety_revision_id' => $safety_id, 'timestamp' => current_time( 'mysql' ) );
 	}
 }

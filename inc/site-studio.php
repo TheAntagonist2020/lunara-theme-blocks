@@ -104,12 +104,20 @@ if ( ! function_exists( 'lunara_render_site_studio_page' ) ) {
 					</div>
 					<?php
 				} elseif ( is_callable( $active['renderer'] ) ) {
-					try {
-						call_user_func( $active['renderer'], 'site-studio' );
-					} catch ( Throwable $error ) {
+					if ( ! lunara_site_studio_boundary_guard( 'renderer', $active_surface ) ) {
 						?>
 						<div class="notice notice-warning lunara-site-studio-unavailable"><p><?php esc_html_e( 'This destination is temporarily unavailable. Use its Classic controls instead.', 'lunara-film' ); ?></p></div>
 						<?php
+					} else {
+						try {
+							call_user_func( $active['renderer'], 'site-studio' );
+						} catch ( Throwable $error ) {
+							?>
+							<div class="notice notice-warning lunara-site-studio-unavailable"><p><?php esc_html_e( 'This destination is temporarily unavailable. Use its Classic controls instead.', 'lunara-film' ); ?></p></div>
+							<?php
+						} finally {
+							lunara_site_studio_boundary_guard( 'renderer', $active_surface, false );
+						}
 					}
 				} else {
 					?>

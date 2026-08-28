@@ -1329,7 +1329,7 @@ function lunara_journal_archive_studio_get_revisions() {
  * @param string              $action Audit action.
  * @param string              $validator_result Validation result for replacement.
  * @param bool                $prior_public Whether snapshot was public.
- * @return string Revision ID.
+ * @return string|WP_Error Verified revision ID or persistence failure.
  */
 function lunara_journal_archive_studio_push_revision( $config, $action = 'save', $validator_result = 'passed', $prior_public = true ) {
 	$revisions = lunara_journal_archive_studio_get_revisions();
@@ -1346,7 +1346,20 @@ function lunara_journal_archive_studio_push_revision( $config, $action = 'save',
 			'config'           => $config,
 		)
 	);
-	update_option( LUNARA_JOURNAL_ARCHIVE_STUDIO_REVISIONS_OPTION, array_slice( $revisions, 0, LUNARA_JOURNAL_ARCHIVE_STUDIO_REVISION_LIMIT ), false );
+	if ( ! update_option( LUNARA_JOURNAL_ARCHIVE_STUDIO_REVISIONS_OPTION, array_slice( $revisions, 0, LUNARA_JOURNAL_ARCHIVE_STUDIO_REVISION_LIMIT ), false ) ) {
+		return new WP_Error( 'journal_archive_revision_write_failed', __( 'The Journal safety revision could not be stored.', 'lunara-film' ) );
+	}
+	$stored = lunara_journal_archive_studio_get_revisions();
+	$verified = false;
+	foreach ( $stored as $revision ) {
+		if ( is_array( $revision ) && ! empty( $revision['id'] ) && hash_equals( $id, (string) $revision['id'] ) ) {
+			$verified = true;
+			break;
+		}
+	}
+	if ( ! $verified ) {
+		return new WP_Error( 'journal_archive_revision_readback_failed', __( 'The Journal safety revision could not be verified.', 'lunara-film' ) );
+	}
 	return $id;
 }
 
@@ -1363,7 +1376,10 @@ function lunara_journal_archive_studio_promote_config( $raw, $action = 'save' ) 
 		return $validated;
 	}
 	$prior = lunara_journal_archive_studio_get_public_config( false );
-	lunara_journal_archive_studio_push_revision( $prior, $action, 'passed', true );
+	$revision_id = lunara_journal_archive_studio_push_revision( $prior, $action, 'passed', true );
+	if ( is_wp_error( $revision_id ) ) {
+		return $revision_id;
+	}
 	lunara_journal_archive_studio_apply_config( $validated );
 	lunara_journal_archive_studio_flush_route_cache();
 	return $validated;
@@ -1386,7 +1402,10 @@ function lunara_journal_archive_studio_restore_revision( $revision_id ) {
 			return $validated;
 		}
 		$current = lunara_journal_archive_studio_get_public_config( false );
-		lunara_journal_archive_studio_push_revision( $current, 'restore', 'passed', true );
+		$safety_id = lunara_journal_archive_studio_push_revision( $current, 'restore', 'passed', true );
+		if ( is_wp_error( $safety_id ) ) {
+			return $safety_id;
+		}
 		lunara_journal_archive_studio_apply_config( $validated );
 		lunara_journal_archive_studio_flush_route_cache();
 		return $validated;

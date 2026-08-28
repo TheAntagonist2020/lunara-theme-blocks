@@ -33,11 +33,14 @@ $lunara_test_nonce_valid   = true;
 $lunara_test_user_id       = 41;
 $lunara_test_now           = 1900000000;
 $lunara_test_uuid          = 0;
+$lunara_test_filter_sequence = 0;
+$lunara_test_reentry_calls = array();
 $lunara_test_dependency_calls = 0;
 $lunara_test_status_calls     = 0;
 $lunara_test_factory_calls    = 0;
 $lunara_test_preview_delegate_calls = 0;
 $lunara_test_update_mode      = 'normal';
+$lunara_test_provider_revision_mode = 'normal';
 $lunara_test_renderer_calls   = array();
 $lunara_test_provider_calls   = array();
 $lunara_test_provider_defaults = array(
@@ -46,7 +49,12 @@ $lunara_test_provider_defaults = array(
 		'lead_mode' => 'automatic', 'lead_id' => 0, 'lane_mode' => 'query', 'curated_ids' => array( 10, 11 ), 'item_count' => 9,
 		'section_order' => array( 'hero', 'grid', 'pagination', 'pairing-desk' ),
 		'section_visibility' => array( 'hero' => true, 'grid' => true, 'pagination' => true, 'pairing-desk' => true ),
-		'labels' => array( 'toolbar_title' => 'Release timeline', 'sort_label' => 'Sort by', 'pagination_next' => 'Next' ),
+		'labels' => array(
+			'debrief_kicker' => 'Reviews Command', 'debrief_depth' => 'Archive Depth', 'debrief_visible' => 'Visible File', 'debrief_latest' => 'Latest Update', 'debrief_order' => 'Current Order',
+			'hero_action_run' => 'Browse The Run', 'hero_action_oscars' => 'Oscar Ledger', 'hero_action_journal' => 'Journal Desk', 'toolbar_kicker' => 'Review Order', 'toolbar_title' => 'Release timeline',
+			'sort_label' => 'Sort by', 'sort_release_desc' => 'Newest Release', 'sort_release_asc' => 'Oldest Release', 'sort_modified_desc' => 'Recently Updated', 'year_label' => 'Release year', 'year_all' => 'All years', 'year_filter' => 'Filter',
+			'support_kicker' => 'On The Desk', 'support_title' => 'Current companion files.', 'run_kicker' => 'Criticism Run', 'run_title' => 'The archive keeps moving.', 'retention_kicker' => 'Keep Moving', 'retention_title' => 'More routes', 'retention_copy' => 'Follow the latest updates.', 'pagination_prev' => 'Previous', 'pagination_next' => 'Next',
+		),
 		'gallery' => array(
 			'kicker' => 'Visual File', 'title' => 'Review images', 'copy' => 'Gallery copy',
 			'items' => array( array( 'order' => 1, 'attachment_id' => 51, 'alt' => 'Alt', 'caption' => 'Caption', 'link_url' => '/review/', 'credit' => 'Credit', 'source' => 'Studio', 'source_url' => 'https://example.test/source', 'focal_x' => 50, 'focal_y' => 45 ) ),
@@ -60,7 +68,11 @@ $lunara_test_provider_defaults = array(
 		'filter_caps' => array( 'journal_section' => 8, 'journal_topic' => 10, 'journal_type' => 8 ),
 		'section_order' => array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ),
 		'section_visibility' => array( 'hero' => true, 'deskbar' => true, 'filters' => true, 'toolbar' => true, 'grid' => true, 'retention' => true, 'pagination' => true ),
-		'labels' => array( 'toolbar_title' => 'Latest files', 'card_cta' => 'Read file', 'pagination_next' => 'Older' ),
+		'labels' => array(
+			'desk_count' => 'On the desk:', 'desk_latest' => 'Latest file:', 'desk_mix' => 'Desk mix:', 'file_singular' => 'file', 'file_plural' => 'files', 'lane_singular' => 'lane', 'lane_plural' => 'lanes',
+			'filter_sections' => 'Sections', 'filter_types' => 'Types', 'filter_topics' => 'Topics', 'filter_archive_types' => 'Archive Types', 'taxonomy_section_kicker' => 'Journal Section', 'taxonomy_topic_kicker' => 'Journal Topic', 'taxonomy_type_kicker' => 'Journal Type', 'filter_all' => 'All',
+			'toolbar_kicker' => 'Desk Order', 'toolbar_title' => 'Latest files', 'sort_newest' => 'Newest Filed', 'sort_oldest' => 'Oldest Filed', 'sort_updated' => 'Recently Updated', 'lead_kicker' => 'Lead file', 'card_kicker' => 'From the desk', 'card_cta' => 'Read file', 'retention_kicker' => 'Desk Channels', 'retention_title' => 'Keep the file moving', 'pagination_prev' => 'Newer', 'pagination_next' => 'Older', 'empty_copy' => 'No journal entries yet.',
+		),
 		'gallery' => array(
 			'kicker' => 'Visual File', 'title' => 'Journal images', 'copy' => 'Gallery copy',
 			'items' => array( array( 'order' => 1, 'attachment_id' => 61, 'alt' => 'Alt', 'caption' => 'Caption', 'link_url' => '/journal/file/', 'credit' => 'Credit', 'source' => 'Studio', 'source_url' => 'https://example.test/source', 'focal_x' => 50, 'focal_y' => 45 ) ),
@@ -89,6 +101,8 @@ $lunara_test_contributed_state = array(
 		'deeper' => array( 'visible' => 'Safe nested value', 'authorization' => 'nested bearer', 'preview_hash' => 'nested hash' ),
 	),
 	'items' => array( array( 'label' => 'Safe row', 'raw_option_key' => 'private_row_option', 'access_token' => 'row-secret' ) ),
+	'scalar_items' => array( 2 => 'First scalar', 7 => 'Second scalar' ),
+	'named_items' => array( 'access_token' => 'named-list-secret' ),
 );
 $lunara_test_provider_revisions = array(
 	'reviews' => array(),
@@ -142,20 +156,43 @@ class WP_REST_Response {
 	public function get_status() { return $this->status; }
 }
 
+class WP_Hook {
+	public $callbacks = array();
+}
+
 function add_action( $hook, $callback, $priority = 10 ) {
 	global $lunara_test_actions;
 	$lunara_test_actions[] = compact( 'hook', 'callback', 'priority' );
 }
-function add_filter( $hook, $callback, $priority = 10 ) {
-	global $lunara_test_filters;
+function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
+	global $lunara_test_filters, $lunara_test_filter_sequence, $wp_filter;
 	if ( ! isset( $lunara_test_filters[ $hook ] ) ) { $lunara_test_filters[ $hook ] = array(); }
-	$lunara_test_filters[ $hook ][] = compact( 'callback', 'priority' );
+	if ( empty( $lunara_test_filters[ $hook ] ) || ! isset( $wp_filter[ $hook ] ) || ! ( $wp_filter[ $hook ] instanceof WP_Hook ) ) {
+		$wp_filter[ $hook ] = new WP_Hook();
+	}
+	$lunara_test_filter_sequence++;
+	$sequence = $lunara_test_filter_sequence;
+	$lunara_test_filters[ $hook ][] = compact( 'callback', 'priority', 'accepted_args', 'sequence' );
+	if ( ! isset( $wp_filter[ $hook ]->callbacks[ $priority ] ) ) { $wp_filter[ $hook ]->callbacks[ $priority ] = array(); }
+	$wp_filter[ $hook ]->callbacks[ $priority ][] = array( 'function' => $callback, 'accepted_args' => $accepted_args, 'sequence' => $sequence );
+	return true;
+}
+function remove_filter( $hook, $callback, $priority = 10 ) {
+	global $lunara_test_filters, $wp_filter;
+	if ( isset( $lunara_test_filters[ $hook ] ) ) {
+		$lunara_test_filters[ $hook ] = array_values( array_filter( $lunara_test_filters[ $hook ], static function ( $entry ) use ( $callback, $priority ) { return ! ( $priority === $entry['priority'] && $callback === $entry['callback'] ); } ) );
+	}
+	if ( isset( $wp_filter[ $hook ]->callbacks[ $priority ] ) ) {
+		$wp_filter[ $hook ]->callbacks[ $priority ] = array_values( array_filter( $wp_filter[ $hook ]->callbacks[ $priority ], static function ( $entry ) use ( $callback ) { return $callback !== $entry['function']; } ) );
+		if ( empty( $wp_filter[ $hook ]->callbacks[ $priority ] ) ) { unset( $wp_filter[ $hook ]->callbacks[ $priority ] ); }
+	}
+	return true;
 }
 function apply_filters( $hook, $value ) {
 	global $lunara_test_filters;
 	if ( empty( $lunara_test_filters[ $hook ] ) ) { return $value; }
 	$filters = $lunara_test_filters[ $hook ];
-	usort( $filters, static function ( $a, $b ) { return $a['priority'] - $b['priority']; } );
+	usort( $filters, static function ( $a, $b ) { return $a['priority'] === $b['priority'] ? $a['sequence'] - $b['sequence'] : $a['priority'] - $b['priority']; } );
 	foreach ( $filters as $filter ) { $value = call_user_func( $filter['callback'], $value ); }
 	return $value;
 }
@@ -271,11 +308,12 @@ function lunara_test_provider_validate( $provider, $state ) {
 	return $state;
 }
 function lunara_test_provider_promote( $provider, $state ) {
-	global $lunara_test_provider_calls, $lunara_test_provider_state, $lunara_test_provider_revisions;
+	global $lunara_test_provider_calls, $lunara_test_provider_state;
 	$validated = lunara_test_provider_validate( $provider, $state );
 	if ( is_wp_error( $validated ) ) { return $validated; }
 	$lunara_test_provider_calls[] = $provider . ':save';
-	array_unshift( $lunara_test_provider_revisions[ $provider ], array( 'id' => wp_generate_uuid4(), 'saved_at' => current_time( 'mysql' ), 'saved_by' => get_current_user_id(), 'action' => 'save', 'validator_result' => 'passed', 'prior_public' => true, 'config' => $lunara_test_provider_state[ $provider ] ) );
+	$revision_id = lunara_test_provider_push_revision( $provider, $lunara_test_provider_state[ $provider ], 'save' );
+	if ( is_wp_error( $revision_id ) ) { return $revision_id; }
 	$lunara_test_provider_state[ $provider ] = $validated;
 	return $validated;
 }
@@ -287,12 +325,23 @@ function lunara_test_provider_preview( $provider, $state ) {
 	return $provider . '-private-token';
 }
 function lunara_test_provider_revisions( $provider ) { global $lunara_test_provider_calls, $lunara_test_provider_revisions; $lunara_test_provider_calls[] = $provider . ':revisions'; return $lunara_test_provider_revisions[ $provider ]; }
+function lunara_test_provider_push_revision( $provider, $state, $action ) {
+	global $lunara_test_provider_revisions, $lunara_test_provider_revision_mode;
+	$id = wp_generate_uuid4();
+	$next = $lunara_test_provider_revisions[ $provider ];
+	array_unshift( $next, array( 'id' => $id, 'saved_at' => current_time( 'mysql' ), 'saved_by' => get_current_user_id(), 'action' => $action, 'validator_result' => 'passed', 'prior_public' => true, 'config' => $state ) );
+	if ( 'fail' === $lunara_test_provider_revision_mode ) { return new WP_Error( $provider . '_revision_write_failed' ); }
+	$lunara_test_provider_revisions[ $provider ] = 'mismatch' === $lunara_test_provider_revision_mode ? array_slice( $next, 1 ) : array_slice( $next, 0, 12 );
+	if ( empty( $lunara_test_provider_revisions[ $provider ][0]['id'] ) || $id !== $lunara_test_provider_revisions[ $provider ][0]['id'] ) { return new WP_Error( $provider . '_revision_readback_failed' ); }
+	return $id;
+}
 function lunara_test_provider_restore( $provider, $revision_id ) {
 	global $lunara_test_provider_calls, $lunara_test_provider_revisions, $lunara_test_provider_state;
 	$lunara_test_provider_calls[] = $provider . ':restore';
 	foreach ( $lunara_test_provider_revisions[ $provider ] as $revision ) {
 		if ( $revision['id'] === $revision_id ) {
-			array_unshift( $lunara_test_provider_revisions[ $provider ], array( 'id' => wp_generate_uuid4(), 'saved_at' => current_time( 'mysql' ), 'saved_by' => get_current_user_id(), 'action' => 'restore', 'validator_result' => 'passed', 'prior_public' => true, 'config' => $lunara_test_provider_state[ $provider ] ) );
+			$safety_id = lunara_test_provider_push_revision( $provider, $lunara_test_provider_state[ $provider ], 'restore' );
+			if ( is_wp_error( $safety_id ) ) { return $safety_id; }
 			$lunara_test_provider_state[ $provider ] = $revision['config'];
 			return $lunara_test_provider_state[ $provider ];
 		}
@@ -330,12 +379,63 @@ function lunara_test_throwing_factory() { throw new RuntimeException( 'secret fa
 function lunara_test_throwing_renderer() { throw new RuntimeException( 'secret renderer exception' ); }
 function lunara_test_throwing_state_schema() { throw new RuntimeException( 'secret state schema exception' ); }
 function lunara_test_throwing_no_store_action() { throw new RuntimeException( 'secret no-store action exception' ); }
+function lunara_test_reentrant_filter( $items ) {
+	global $lunara_test_reentry_calls;
+	$lunara_test_reentry_calls['filter'] = isset( $lunara_test_reentry_calls['filter'] ) ? $lunara_test_reentry_calls['filter'] + 1 : 1;
+	if ( 1 === $lunara_test_reentry_calls['filter'] ) { $lunara_test_reentry_calls['filter_nested'] = lunara_site_studio_surfaces(); }
+	return $items;
+}
+function lunara_test_reentrant_dependency( $surface ) {
+	global $lunara_test_reentry_calls;
+	$lunara_test_reentry_calls['dependency'] = isset( $lunara_test_reentry_calls['dependency'] ) ? $lunara_test_reentry_calls['dependency'] + 1 : 1;
+	if ( 1 === $lunara_test_reentry_calls['dependency'] ) { $lunara_test_reentry_calls['dependency_nested'] = lunara_site_studio_surface_availability( $surface ); }
+	return true;
+}
+function lunara_test_reentrant_status( $surface ) {
+	global $lunara_test_reentry_calls;
+	$lunara_test_reentry_calls['status'] = isset( $lunara_test_reentry_calls['status'] ) ? $lunara_test_reentry_calls['status'] + 1 : 1;
+	if ( 1 === $lunara_test_reentry_calls['status'] ) { $lunara_test_reentry_calls['status_nested'] = lunara_site_studio_public_surfaces(); }
+	return array( 'state' => 'ready', 'label' => 'Ready' );
+}
+function lunara_test_reentrant_schema( $surface ) {
+	global $lunara_test_reentry_calls;
+	$lunara_test_reentry_calls['schema'] = isset( $lunara_test_reentry_calls['schema'] ) ? $lunara_test_reentry_calls['schema'] + 1 : 1;
+	if ( 1 === $lunara_test_reentry_calls['schema'] ) { $lunara_test_reentry_calls['schema_nested'] = lunara_site_studio_project_state( $surface['id'], array( 'public_name' => 'Nested' ) ); }
+	return array( 'public_name' => true );
+}
+function lunara_test_reentrant_renderer() {
+	global $lunara_test_reentry_calls;
+	$lunara_test_reentry_calls['renderer'] = isset( $lunara_test_reentry_calls['renderer'] ) ? $lunara_test_reentry_calls['renderer'] + 1 : 1;
+	if ( 1 === $lunara_test_reentry_calls['renderer'] ) { lunara_render_site_studio_page(); }
+	echo '<div>outer renderer</div>';
+}
+function lunara_test_reentrant_notification() {
+	global $lunara_test_reentry_calls;
+	$lunara_test_reentry_calls['notification'] = isset( $lunara_test_reentry_calls['notification'] ) ? $lunara_test_reentry_calls['notification'] + 1 : 1;
+	if ( 1 === $lunara_test_reentry_calls['notification'] ) { lunara_site_studio_send_private_no_store(); }
+}
+function lunara_test_reentrant_lookup() {
+	global $lunara_test_reentry_calls;
+	$lunara_test_reentry_calls['lookup'] = isset( $lunara_test_reentry_calls['lookup'] ) ? $lunara_test_reentry_calls['lookup'] + 1 : 1;
+	if ( 1 === $lunara_test_reentry_calls['lookup'] ) { $lunara_test_reentry_calls['lookup_nested'] = lunara_site_studio_prepare_private_preview_response( 'lunara_test_reentrant_lookup' ); }
+	return array( 'safe' => true );
+}
+function lunara_test_reentrant_restore_read() { global $lunara_test_reentry_calls; $lunara_test_reentry_calls['restore_read'] = isset( $lunara_test_reentry_calls['restore_read'] ) ? $lunara_test_reentry_calls['restore_read'] + 1 : 1; return array( 'value' => 99 ); }
+function lunara_test_reentrant_restore_validate( $state ) {
+	global $lunara_test_reentry_calls;
+	$lunara_test_reentry_calls['restore_validate'] = isset( $lunara_test_reentry_calls['restore_validate'] ) ? $lunara_test_reentry_calls['restore_validate'] + 1 : 1;
+	if ( 1 === $lunara_test_reentry_calls['restore_validate'] ) { $lunara_test_reentry_calls['restore_nested'] = lunara_site_studio_restore_revision( 'reentry-restore', $lunara_test_reentry_calls['restore_target'], 'lunara_test_reentrant_restore_read', 'lunara_test_reentrant_restore_validate', 'lunara_test_reentrant_restore_save' ); }
+	return $state;
+}
+function lunara_test_reentrant_restore_save( $state ) { global $lunara_test_reentry_calls; $lunara_test_reentry_calls['restore_save'] = isset( $lunara_test_reentry_calls['restore_save'] ) ? $lunara_test_reentry_calls['restore_save'] + 1 : 1; return $state; }
 function lunara_test_counting_factory() { global $lunara_test_factory_calls; $lunara_test_factory_calls++; return new Lunara_Test_Contributed_Adapter(); }
 function lunara_test_contributed_state_schema() {
 	return array(
 		'public_name' => true,
 		'nested' => array( 'headline' => true, 'deeper' => array( 'visible' => true ) ),
 		'items' => array( '*' => array( 'label' => true ) ),
+		'scalar_items' => array( '*' => true ),
+		'named_items' => array( '*' => true ),
 	);
 }
 
@@ -368,7 +468,22 @@ class Lunara_Test_Throwing_Adapter extends Lunara_Test_Contributed_Adapter {
 	public function read_state() { throw new RuntimeException( 'secret adapter read exception' ); }
 }
 
+class Lunara_Test_Reentrant_Adapter extends Lunara_Test_Contributed_Adapter {
+	public function read_state() {
+		global $lunara_test_reentry_calls;
+		$lunara_test_reentry_calls['adapter_method'] = isset( $lunara_test_reentry_calls['adapter_method'] ) ? $lunara_test_reentry_calls['adapter_method'] + 1 : 1;
+		if ( 1 === $lunara_test_reentry_calls['adapter_method'] ) { return lunara_site_studio_call_adapter( $this, 'read_state' ); }
+		return array( 'public_name' => 'Recursive read escaped guard' );
+	}
+}
+
 function lunara_test_throwing_adapter_factory() { return new Lunara_Test_Throwing_Adapter(); }
+function lunara_test_reentrant_adapter_factory( $surface ) {
+	global $lunara_test_reentry_calls;
+	$lunara_test_reentry_calls['factory'] = isset( $lunara_test_reentry_calls['factory'] ) ? $lunara_test_reentry_calls['factory'] + 1 : 1;
+	if ( 1 === $lunara_test_reentry_calls['factory'] ) { $lunara_test_reentry_calls['factory_nested'] = lunara_site_studio_get_adapter( $surface['id'] ); }
+	return new Lunara_Test_Reentrant_Adapter();
+}
 
 // Registry schema, stable bookmarks, and no eager callback execution.
 $lunara_test_dependency_calls = 0;
@@ -521,6 +636,7 @@ lunara_test_assert( 'Reviews' === $adapter->read_state()['title'], 'Adapter read
 lunara_test_assert( is_wp_error( $adapter->validate_state( array( 'bad' => true ) ) ), 'Adapter validation must preserve provider WP_Error failures.' );
 $save = $adapter->save_state( array( 'title' => 'New Reviews', 'section_order' => array( 'hero', 'grid' ) ) );
 lunara_test_assert( 'New Reviews' === $save['state']['title'] && ! empty( $save['revision_id'] ), 'Adapter save must return canonical normalized state and provider revision ID.' );
+lunara_test_assert( $lunara_test_provider_revisions['reviews'][0]['id'] === $save['revision_id'], 'Adapter save must return the exact newly verified provider revision UUID.' );
 $preview = $adapter->create_preview( array( 'title' => 'Preview Reviews' ) );
 lunara_test_assert( 'reviews-private-token' === $preview['token'], 'Adapter preview must reuse the provider token contract.' );
 lunara_test_assert( in_array( 'reviews:read', $lunara_test_provider_calls, true ) && in_array( 'reviews:save', $lunara_test_provider_calls, true ) && in_array( 'reviews:preview', $lunara_test_provider_calls, true ), 'Adapter must delegate read/save/preview to the hardened provider.' );
@@ -649,6 +765,7 @@ $unconfirmed = lunara_site_studio_rest_restore( new WP_REST_Request( array( 'sur
 lunara_test_assert( 400 === $unconfirmed->get_status(), 'REST restore must require explicit confirm=true.' );
 $confirmed = lunara_site_studio_rest_restore( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'revision_id' => $revision_id, 'confirm' => true ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
 lunara_test_assert( 200 === $confirmed->get_status() && ! empty( $confirmed->get_data()['safety_revision_id'] ), 'Confirmed restore must return the safety revision created first.' );
+lunara_test_assert( $lunara_test_provider_revisions['reviews'][0]['id'] === $confirmed->get_data()['safety_revision_id'], 'Adapter restore must return the exact newly verified provider safety UUID.' );
 
 // Design Tokens are the sole emitter for the six shared colors. Saved key
 // presence wins even when it equals the shipped default; missing keys fall
@@ -717,11 +834,16 @@ function lunara_review_case_sticky_ownership() {
 		$items[] = lunara_review_surface( 'same-owner-tool', 'plugin:alpha', array( 'label' => 'Replacement label' ) );
 		return $items;
 	} );
+	add_filter( 'lunara_site_studio_surfaces', static function ( $items ) { $items['priority-sticky-tool'] = lunara_review_surface( 'priority-sticky-tool', 'plugin:alpha', array( 'label' => 'Priority alpha first' ) ); $items['priority-same-owner'] = lunara_review_surface( 'priority-same-owner', 'plugin:alpha', array( 'label' => 'Same owner first' ) ); return $items; }, 10 );
+	add_filter( 'lunara_site_studio_surfaces', static function ( $items ) { $items['priority-sticky-tool'] = lunara_review_surface( 'priority-sticky-tool', 'plugin:beta', array( 'label' => 'Priority beta conflict' ) ); $items['priority-same-owner'] = lunara_review_surface( 'priority-same-owner', 'plugin:alpha', array( 'label' => 'Same owner replacement' ) ); return $items; }, 20 );
+	add_filter( 'lunara_site_studio_surfaces', static function ( $items ) { $items['priority-sticky-tool'] = lunara_review_surface( 'priority-sticky-tool', 'plugin:alpha', array( 'label' => 'Priority alpha last' ) ); return $items; }, 30 );
 	$surfaces = lunara_site_studio_surfaces();
 	$failures = array();
 	if ( ! isset( $surfaces['sticky-tool'] ) || ! empty( $surfaces['sticky-tool']['available'] ) || 'ownership_conflict' !== $surfaces['sticky-tool']['unavailable_reason'] ) { $failures[] = 'A→B→A ownership conflict must remain unavailable.'; }
 	if ( ! isset( $surfaces['long-sticky-tool'] ) || ! empty( $surfaces['long-sticky-tool']['available'] ) || 'ownership_conflict' !== $surfaces['long-sticky-tool']['unavailable_reason'] ) { $failures[] = 'Longer distinct-owner sequences must remain unavailable.'; }
 	if ( empty( $surfaces['same-owner-tool']['available'] ) || 'Replacement label' !== $surfaces['same-owner-tool']['label'] ) { $failures[] = 'Same-owner replacement alone must remain valid.'; }
+	if ( ! isset( $surfaces['priority-sticky-tool'] ) || ! empty( $surfaces['priority-sticky-tool']['available'] ) || 'ownership_conflict' !== $surfaces['priority-sticky-tool']['unavailable_reason'] ) { $failures[] = 'Separate priority 10 A, priority 20 B, priority 30 A associative claims must remain unavailable.'; }
+	if ( empty( $surfaces['priority-same-owner']['available'] ) || 'Same owner replacement' !== $surfaces['priority-same-owner']['label'] ) { $failures[] = 'Separate prioritized same-owner replacement must remain valid.'; }
 	lunara_review_finish( 'sticky-ownership', $failures );
 }
 
@@ -859,6 +981,43 @@ function lunara_review_case_state_projection() {
 	global $lunara_test_filters, $lunara_test_provider_defaults, $lunara_test_provider_state, $lunara_test_contributed_state;
 	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
 	$failures = array();
+	$inventories = array(
+		'reviews' => array(
+			'top' => array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ),
+			'section_visibility' => array( 'hero', 'grid', 'pagination', 'pairing-desk' ),
+			'labels' => array( 'debrief_kicker', 'debrief_depth', 'debrief_visible', 'debrief_latest', 'debrief_order', 'hero_action_run', 'hero_action_oscars', 'hero_action_journal', 'toolbar_kicker', 'toolbar_title', 'sort_label', 'sort_release_desc', 'sort_release_asc', 'sort_modified_desc', 'year_label', 'year_all', 'year_filter', 'support_kicker', 'support_title', 'run_kicker', 'run_title', 'retention_kicker', 'retention_title', 'retention_copy', 'pagination_prev', 'pagination_next' ),
+			'gallery' => array( 'kicker', 'title', 'copy', 'items' ),
+			'gallery_item' => array( 'order', 'attachment_id', 'alt', 'caption', 'link_url', 'credit', 'source', 'source_url', 'focal_x', 'focal_y' ),
+			'retention_item' => array( 'visible', 'order', 'label', 'destination', 'url', 'image_id', 'image_alt', 'image_credit', 'image_source', 'image_source_url', 'focal_x', 'focal_y' ),
+			'presentation' => array( 'density', 'lead_prominence', 'rail_density', 'section_gap', 'lead_min_height', 'card_min_height', 'compact_media_width' ),
+		),
+		'journal' => array(
+			'top' => array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'filter_caps', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ),
+			'filter_caps' => array( 'journal_section', 'journal_topic', 'journal_type' ),
+			'section_visibility' => array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ),
+			'labels' => array( 'desk_count', 'desk_latest', 'desk_mix', 'file_singular', 'file_plural', 'lane_singular', 'lane_plural', 'filter_sections', 'filter_types', 'filter_topics', 'filter_archive_types', 'taxonomy_section_kicker', 'taxonomy_topic_kicker', 'taxonomy_type_kicker', 'filter_all', 'toolbar_kicker', 'toolbar_title', 'sort_newest', 'sort_oldest', 'sort_updated', 'lead_kicker', 'card_kicker', 'card_cta', 'retention_kicker', 'retention_title', 'pagination_prev', 'pagination_next', 'empty_copy' ),
+			'gallery' => array( 'kicker', 'title', 'copy', 'items' ),
+			'gallery_item' => array( 'order', 'attachment_id', 'alt', 'caption', 'link_url', 'credit', 'source', 'source_url', 'focal_x', 'focal_y' ),
+			'retention_item' => array( 'visible', 'order', 'label', 'title', 'copy', 'destination', 'url', 'image_id', 'image_alt', 'image_credit', 'image_source', 'image_source_url', 'focal_x', 'focal_y' ),
+			'presentation' => array( 'density', 'lead_prominence', 'desk_rhythm', 'section_gap', 'hero_min_height', 'card_min_height', 'media_min_height' ),
+		),
+		'oscars' => array(
+			'top' => array( 'schema_version', 'identity', 'section_order', 'section_visibility', 'presentation' ),
+			'identity' => array( 'kicker', 'title', 'explore_kicker', 'explore_heading', 'spotlights_heading', 'titles_kicker', 'titles_heading', 'research_kicker', 'research_heading', 'reviews_heading', 'deep_cuts_heading' ),
+			'section_visibility' => array( 'hero', 'navigator', 'board', 'doors', 'spotlights', 'titles', 'research', 'linked-reviews', 'winners', 'deep-cuts', 'rotating-winners' ),
+			'presentation' => array( 'section_gap', 'hero_min_height', 'card_min_height' ),
+		),
+	);
+	foreach ( $inventories as $provider => $inventory ) {
+		$shape = $lunara_test_provider_defaults[ $provider ];
+		foreach ( $inventory as $branch => $keys ) {
+			if ( 'top' === $branch ) { $actual_keys = array_keys( $shape ); }
+			elseif ( 'gallery_item' === $branch ) { $actual_keys = array_keys( $shape['gallery']['items'][0] ); }
+			elseif ( 'retention_item' === $branch ) { $actual_keys = array_keys( $shape['retention'][0] ); }
+			else { $actual_keys = array_keys( $shape[ $branch ] ); }
+			if ( $keys !== $actual_keys ) { $failures[] = "{$provider} authoritative {$branch} key inventory must remain complete and ordered."; }
+		}
+	}
 	foreach ( array( 'reviews-archive' => 'reviews', 'journal-archive' => 'journal', 'oscars-portal' => 'oscars' ) as $surface => $provider ) {
 		$lunara_test_provider_state[ $provider ] = $lunara_test_provider_defaults[ $provider ];
 		$request = new WP_REST_Request( array( 'surface' => $surface ), array( 'x-wp-nonce' => 'good-rest-nonce' ) );
@@ -875,18 +1034,91 @@ function lunara_review_case_state_projection() {
 	} );
 	$request = new WP_REST_Request( array( 'surface' => 'projected-adapter' ), array( 'x-wp-nonce' => 'good-rest-nonce' ) );
 	$get = lunara_site_studio_rest_get_state( $request );
-	$expected = array( 'public_name' => 'Visible', 'nested' => array( 'headline' => 'Safe headline', 'deeper' => array( 'visible' => 'Safe nested value' ) ), 'items' => array( array( 'label' => 'Safe row' ) ) );
+	$expected = array( 'public_name' => 'Visible', 'nested' => array( 'headline' => 'Safe headline', 'deeper' => array( 'visible' => 'Safe nested value' ) ), 'items' => array( array( 'label' => 'Safe row' ) ), 'scalar_items' => array( 'First scalar', 'Second scalar' ) );
 	if ( 200 !== $get->get_status() || $expected !== $get->get_data()['state'] ) { $failures[] = 'Contributed state must be projected by its private allowlist, including nested/list fields.'; }
 	$save = lunara_site_studio_rest_save( new WP_REST_Request( array( 'surface' => 'projected-adapter', 'state' => $lunara_test_contributed_state ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
 	if ( 200 !== $save->get_status() || $expected !== $save->get_data()['state'] ) { $failures[] = 'Contributed save output must remove access_token, authorization, preview_hash, raw_option_key, and nested variants.'; }
 	$public = lunara_site_studio_public_surfaces();
 	if ( isset( $public['projected-adapter']['state_schema_callback'] ) ) { $failures[] = 'The private state schema callback must never appear in public registry output.'; }
+	if ( isset( $get->get_data()['state']['named_items'] ) || false !== strpos( wp_json_encode( $get->get_data()['state'] ), 'named-list-secret' ) ) { $failures[] = 'Wildcard projection must omit named-key arrays instead of reindexing secret values.'; }
+	$deep_schema = true;
+	$deep_value = 'leaf';
+	for ( $depth = 0; $depth < 40; $depth++ ) { $deep_schema = array( 'child' => $deep_schema ); $deep_value = array( 'child' => $deep_value ); }
+	$deep_accepted = false;
+	$deep_result = lunara_site_studio_project_state_value( $deep_value, $deep_schema, $deep_accepted );
+	if ( ! is_wp_error( $deep_result ) || $deep_accepted ) { $failures[] = 'Projection must reject state/schema nesting beyond its bounded depth.'; }
+	$wide_accepted = false;
+	$wide_result = lunara_site_studio_project_state_value( range( 1, 5000 ), array( '*' => true ), $wide_accepted );
+	if ( ! is_wp_error( $wide_result ) || $wide_accepted ) { $failures[] = 'Projection must reject input beyond its bounded node count.'; }
 	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
 	lunara_review_finish( 'state-projection', $failures );
 }
 
+function lunara_review_case_reentrancy_guards() {
+	global $lunara_test_filters, $lunara_test_actions, $lunara_test_reentry_calls;
+	$failures = array();
+	$lunara_test_reentry_calls = array();
+	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
+	add_filter( 'lunara_site_studio_surfaces', 'lunara_test_reentrant_filter', 15 );
+	$registry = lunara_site_studio_surfaces();
+	if ( 1 !== $lunara_test_reentry_calls['filter'] || ! isset( $registry['lunara-method'] ) || ! isset( $lunara_test_reentry_calls['filter_nested']['lunara-method'] ) ) { $failures[] = 'Recursive registry filters must terminate at one callback and return a generic canonical fallback.'; }
+
+	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
+	add_filter( 'lunara_site_studio_surfaces', static function ( $items ) {
+		$items['reentry-tool'] = lunara_review_surface( 'reentry-tool', 'plugin:reentry', array( 'dependency_callback' => 'lunara_test_reentrant_dependency', 'status_callback' => 'lunara_test_reentrant_status', 'adapter_factory' => 'lunara_test_reentrant_adapter_factory', 'state_schema_callback' => 'lunara_test_reentrant_schema', 'renderer' => 'lunara_test_reentrant_renderer' ) );
+		return $items;
+	}, 20 );
+	$surface = lunara_site_studio_get_surface( 'reentry-tool' );
+	$lunara_test_reentry_calls['dependency'] = 0;
+	$availability = lunara_site_studio_surface_availability( $surface );
+	if ( 1 !== $lunara_test_reentry_calls['dependency'] || empty( $availability['available'] ) || empty( $lunara_test_reentry_calls['dependency_nested'] ) || ! empty( $lunara_test_reentry_calls['dependency_nested']['available'] ) ) { $failures[] = 'Recursive dependency callbacks must stop per surface with a generic unavailable nested result.'; }
+
+	$lunara_test_reentry_calls['dependency'] = 0;
+	$lunara_test_reentry_calls['status'] = 0;
+	$public = lunara_site_studio_public_surfaces();
+	if ( 1 !== $lunara_test_reentry_calls['status'] || ! isset( $public['reentry-tool'] ) ) { $failures[] = 'Recursive status callbacks must stop per surface without losing the public destination.'; }
+
+	$lunara_test_reentry_calls['dependency'] = 0;
+	$lunara_test_reentry_calls['factory'] = 0;
+	$adapter = lunara_site_studio_get_adapter( 'reentry-tool' );
+	if ( 1 !== $lunara_test_reentry_calls['factory'] || ! ( $adapter instanceof Lunara_Site_Studio_Surface_Adapter ) || ! is_wp_error( $lunara_test_reentry_calls['factory_nested'] ) ) { $failures[] = 'Recursive adapter factories must stop per surface with a generic nested error.'; }
+	$lunara_test_reentry_calls['adapter_method'] = 0;
+	$method_result = lunara_site_studio_call_adapter( $adapter, 'read_state' );
+	if ( 1 !== $lunara_test_reentry_calls['adapter_method'] || ! is_wp_error( $method_result ) ) { $failures[] = 'Recursive adapter methods must stop per surface/method with a generic error.'; }
+
+	$lunara_test_reentry_calls['schema'] = 0;
+	$projected = lunara_site_studio_project_state( 'reentry-tool', array( 'public_name' => 'Safe' ) );
+	if ( 1 !== $lunara_test_reentry_calls['schema'] || array( 'public_name' => 'Safe' ) !== $projected || ! is_wp_error( $lunara_test_reentry_calls['schema_nested'] ) ) { $failures[] = 'Recursive schema callbacks must stop per surface while the outer projection remains valid.'; }
+
+	$_GET['surface'] = 'reentry-tool';
+	$lunara_test_reentry_calls['renderer'] = 0;
+	ob_start();
+	lunara_render_site_studio_page();
+	$renderer_html = ob_get_clean();
+	if ( 1 !== $lunara_test_reentry_calls['renderer'] || false === strpos( $renderer_html, 'outer renderer' ) || false === stripos( $renderer_html, 'unavailable' ) ) { $failures[] = 'Recursive selected renderers must stop per surface and render a generic nested unavailable state.'; }
+
+	$lunara_test_actions = array();
+	$lunara_test_reentry_calls['notification'] = 0;
+	add_action( 'lunara_site_studio_private_no_store_sent', 'lunara_test_reentrant_notification' );
+	lunara_site_studio_send_private_no_store();
+	if ( 1 !== $lunara_test_reentry_calls['notification'] ) { $failures[] = 'Recursive private-preview notification callbacks must stop at one invocation.'; }
+	$lunara_test_reentry_calls['lookup'] = 0;
+	$lookup = lunara_site_studio_prepare_private_preview_response( 'lunara_test_reentrant_lookup' );
+	if ( 1 !== $lunara_test_reentry_calls['lookup'] || array( 'safe' => true ) !== $lookup || false !== $lunara_test_reentry_calls['lookup_nested'] ) { $failures[] = 'Recursive preview lookup callbacks must stop at one invocation with a false nested result.'; }
+
+	$lunara_test_reentry_calls['restore_target'] = lunara_site_studio_push_revision( 'reentry-restore', array( 'value' => 1 ), 'save' );
+	$lunara_test_reentry_calls['restore_validate'] = 0;
+	$lunara_test_reentry_calls['restore_read'] = 0;
+	$lunara_test_reentry_calls['restore_save'] = 0;
+	$restore = lunara_site_studio_restore_revision( 'reentry-restore', $lunara_test_reentry_calls['restore_target'], 'lunara_test_reentrant_restore_read', 'lunara_test_reentrant_restore_validate', 'lunara_test_reentrant_restore_save' );
+	if ( is_wp_error( $restore ) || 1 !== $lunara_test_reentry_calls['restore_validate'] || 1 !== $lunara_test_reentry_calls['restore_read'] || 1 !== $lunara_test_reentry_calls['restore_save'] || ! is_wp_error( $lunara_test_reentry_calls['restore_nested'] ) ) { $failures[] = 'Recursive restore callbacks must stop per surface before a second safety snapshot or live save.'; }
+
+	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
+	lunara_review_finish( 'reentrancy-guards', $failures );
+}
+
 function lunara_review_case_revision_durability() {
-	global $lunara_test_update_mode;
+	global $lunara_test_update_mode, $lunara_test_provider_revision_mode, $lunara_test_provider_state, $lunara_test_provider_revisions;
 	$failures = array();
 	$lunara_test_update_mode = 'fail';
 	$failed_write = lunara_site_studio_push_revision( 'durability-write-fail', array( 'value' => 1 ), 'save' );
@@ -919,6 +1151,18 @@ function lunara_review_case_revision_durability() {
 	);
 	if ( ! is_wp_error( $restore_mismatch ) || 0 !== $save_calls || 99 !== $current['value'] ) { $failures[] = 'Restore must abort before live save when the safety snapshot readback mismatches.'; }
 	$lunara_test_update_mode = 'normal';
+
+	$provider_before = $lunara_test_provider_state['reviews'];
+	$lunara_test_provider_revision_mode = 'fail';
+	$provider_write_failure = lunara_site_studio_rest_save( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => array( 'title' => 'Must not publish after provider write failure' ) ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
+	if ( $provider_write_failure->get_status() < 400 || $provider_before !== $lunara_test_provider_state['reviews'] ) { $failures[] = 'REST save must surface provider revision-write failure with zero live state mutation.'; }
+	$lunara_test_provider_revision_mode = 'mismatch';
+	$provider_readback_failure = lunara_site_studio_rest_save( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => array( 'title' => 'Must not publish after provider readback mismatch' ) ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
+	if ( $provider_readback_failure->get_status() < 400 || $provider_before !== $lunara_test_provider_state['reviews'] ) { $failures[] = 'REST save must surface provider revision-readback mismatch with zero live state mutation.'; }
+	$provider_target = ! empty( $lunara_test_provider_revisions['reviews'][0]['id'] ) ? $lunara_test_provider_revisions['reviews'][0]['id'] : '';
+	$provider_restore_failure = lunara_site_studio_rest_restore( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'revision_id' => $provider_target, 'confirm' => true ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
+	if ( $provider_restore_failure->get_status() < 400 || $provider_before !== $lunara_test_provider_state['reviews'] ) { $failures[] = 'REST restore must surface provider safety-readback failure with zero live state mutation.'; }
+	$lunara_test_provider_revision_mode = 'normal';
 	lunara_review_finish( 'revision-durability', $failures );
 }
 
@@ -979,6 +1223,7 @@ $lunara_review_cases = array(
 	'preview-capability' => 'lunara_review_case_preview_capability',
 	'preview-disabled' => 'lunara_review_case_preview_disabled',
 	'state-projection' => 'lunara_review_case_state_projection',
+	'reentrancy-guards' => 'lunara_review_case_reentrancy_guards',
 	'revision-durability' => 'lunara_review_case_revision_durability',
 	'authorization-order' => 'lunara_review_case_authorization_order',
 	'design-token-inheritance' => 'lunara_review_case_design_token_inheritance',

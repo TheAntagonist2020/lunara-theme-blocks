@@ -17,6 +17,7 @@ foreach ($reviewCase in @(
     'preview-capability',
     'preview-disabled',
     'state-projection',
+    'reentrancy-guards',
     'revision-durability',
     'authorization-order',
     'design-token-inheritance'

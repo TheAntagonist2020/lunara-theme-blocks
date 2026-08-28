@@ -29,6 +29,7 @@ $lunara_test_options       = array();
 $lunara_test_transients    = array();
 $lunara_test_actions_fired = array();
 $lunara_test_rocket_urls   = null;
+$lunara_test_revision_write_mode = 'normal';
 $lunara_test_user_id       = 7;
 $lunara_test_can_edit      = true;
 $lunara_test_now           = 2000000000;
@@ -103,7 +104,12 @@ function get_theme_mod( $key, $default = '' ) { global $lunara_test_theme_mods; 
 function set_theme_mod( $key, $value ) { global $lunara_test_theme_mods; $lunara_test_theme_mods[ $key ] = $value; }
 function remove_theme_mod( $key ) { global $lunara_test_theme_mods; unset( $lunara_test_theme_mods[ $key ] ); }
 function get_option( $key, $default = false ) { global $lunara_test_options; return array_key_exists( $key, $lunara_test_options ) ? $lunara_test_options[ $key ] : $default; }
-function update_option( $key, $value ) { global $lunara_test_options; $lunara_test_options[ $key ] = $value; return true; }
+function update_option( $key, $value ) {
+	global $lunara_test_options, $lunara_test_revision_write_mode;
+	if ( 'lunara_oscars_portal_studio_revisions' === $key && 'fail' === $lunara_test_revision_write_mode ) { return false; }
+	$lunara_test_options[ $key ] = 'lunara_oscars_portal_studio_revisions' === $key && 'mismatch' === $lunara_test_revision_write_mode && is_array( $value ) ? array_slice( $value, 1 ) : $value;
+	return true;
+}
 function delete_option( $key ) { global $lunara_test_options; unset( $lunara_test_options[ $key ] ); return true; }
 // The public config resolver is deliberately uncached: no wp_cache_get or
 // wp_cache_set stub exists, so any reintroduced object-cache read/write in
@@ -208,6 +214,17 @@ if ( 'accessors' === $lunara_test_mode ) {
 // ---------------------------------------------------------------------------
 require dirname( __DIR__ ) . '/inc/oscars-family.php';
 require dirname( __DIR__ ) . '/inc/oscars-portal-studio.php';
+require dirname( __DIR__ ) . '/inc/site-studio-registry.php';
+require dirname( __DIR__ ) . '/inc/site-studio-adapters.php';
+
+$oscars_projection_schema = lunara_site_studio_oscars_portal_state_schema();
+lunara_test_assert( array( 'schema_version', 'identity', 'section_order', 'section_visibility', 'presentation' ) === array_keys( $oscars_projection_schema ), 'Oscars projection schema must inventory every authoritative top-level provider key.' );
+lunara_test_assert( array( 'kicker', 'title', 'explore_kicker', 'explore_heading', 'spotlights_heading', 'titles_kicker', 'titles_heading', 'research_kicker', 'research_heading', 'reviews_heading', 'deep_cuts_heading' ) === array_keys( $oscars_projection_schema['identity'] ), 'Oscars projection schema must inventory every authoritative identity key.' );
+lunara_test_assert( array( 'hero', 'navigator', 'board', 'doors', 'spotlights', 'titles', 'research', 'linked-reviews', 'winners', 'deep-cuts', 'rotating-winners' ) === array_keys( $oscars_projection_schema['section_visibility'] ), 'Oscars projection schema must inventory every authoritative visibility key.' );
+lunara_test_assert( array( 'section_gap', 'hero_min_height', 'card_min_height' ) === array_keys( $oscars_projection_schema['presentation'] ), 'Oscars projection schema must inventory every authoritative geometry key.' );
+$oscars_projection_accepted = false;
+$oscars_projection_roundtrip = lunara_site_studio_project_state_value( lunara_oscars_portal_studio_defaults(), $oscars_projection_schema, $oscars_projection_accepted );
+lunara_test_assert( $oscars_projection_accepted && lunara_oscars_portal_studio_defaults() === $oscars_projection_roundtrip, 'Oscars projection must preserve the complete authoritative default shape.' );
 require dirname( __DIR__ ) . '/inc/oscars-portal-critical.php';
 require dirname( __DIR__ ) . '/inc/queries.php';
 require dirname( __DIR__ ) . '/inc/home-sections.php';
@@ -578,6 +595,22 @@ for ( $i = 0; $i < 20; $i++ ) {
 	lunara_oscars_portal_studio_push_revision( $defaults, 'save', 'passed', true );
 }
 lunara_test_assert( LUNARA_OSCARS_PORTAL_STUDIO_REVISION_LIMIT === count( lunara_oscars_portal_studio_get_revisions() ), 'Revision history must stay bounded at twelve snapshots.' );
+$verified_oscars_revision = lunara_oscars_portal_studio_push_revision( $defaults, 'save' );
+lunara_test_assert( is_string( $verified_oscars_revision ) && $verified_oscars_revision === lunara_oscars_portal_studio_get_revisions()[0]['id'], 'Revision writes must return the exact UUID verified on readback.' );
+$oscars_public_before_failure = lunara_oscars_portal_studio_get_public_config( false );
+$oscars_cache_actions_before_failure = count( $lunara_test_actions_fired );
+$oscars_candidate_after_failure = $oscars_public_before_failure;
+$oscars_candidate_after_failure['identity']['title'] = 'Must never publish without durable history';
+$lunara_test_revision_write_mode = 'fail';
+$oscars_write_failure = lunara_oscars_portal_studio_promote_config( $oscars_candidate_after_failure, 'save' );
+lunara_test_assert( is_wp_error( $oscars_write_failure ) && $oscars_public_before_failure === lunara_oscars_portal_studio_get_public_config( false ) && $oscars_cache_actions_before_failure === count( $lunara_test_actions_fired ), 'Oscars save must abort before live mutation/invalidation when revision update_option fails.' );
+$lunara_test_revision_write_mode = 'mismatch';
+$oscars_readback_failure = lunara_oscars_portal_studio_promote_config( $oscars_candidate_after_failure, 'save' );
+lunara_test_assert( is_wp_error( $oscars_readback_failure ) && $oscars_public_before_failure === lunara_oscars_portal_studio_get_public_config( false ) && $oscars_cache_actions_before_failure === count( $lunara_test_actions_fired ), 'Oscars save must abort before live mutation/invalidation when revision UUID readback fails.' );
+$oscars_restore_target = lunara_oscars_portal_studio_get_revisions()[0]['id'];
+$oscars_restore_failure = lunara_oscars_portal_studio_restore_revision( $oscars_restore_target );
+lunara_test_assert( is_wp_error( $oscars_restore_failure ) && $oscars_public_before_failure === lunara_oscars_portal_studio_get_public_config( false ) && $oscars_cache_actions_before_failure === count( $lunara_test_actions_fired ), 'Oscars restore must abort before live mutation/invalidation when its safety revision readback fails.' );
+$lunara_test_revision_write_mode = 'normal';
 $lunara_test_options    = array();
 $lunara_test_theme_mods = array();
 
