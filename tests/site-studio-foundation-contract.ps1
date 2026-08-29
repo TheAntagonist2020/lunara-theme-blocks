@@ -22,7 +22,8 @@ foreach ($reviewCase in @(
     'reentrancy-guards',
     'revision-durability',
     'authorization-order',
-    'design-token-inheritance'
+    'design-token-inheritance',
+    'mutation-envelopes'
 )) {
     $reviewRuntime = & php (Join-Path $PSScriptRoot 'site-studio-foundation-runtime.php') $reviewCase 2>&1
     Assert-True ($LASTEXITCODE -eq 0) ("Site Studio review case $reviewCase failed:`n" + ($reviewRuntime -join [Environment]::NewLine))

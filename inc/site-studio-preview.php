@@ -130,10 +130,10 @@ if ( ! function_exists( 'lunara_site_studio_handle_private_preview' ) ) {
 		global $lunara_site_studio_preview_context;
 		$raw_query = isset( $_SERVER['QUERY_STRING'] ) ? (string) $_SERVER['QUERY_STRING'] : ''; if ( ! lunara_site_studio_preview_key_shape( $raw_query ) ) { return; }
 		$context = lunara_site_studio_prepare_private_preview_response( 'lunara_site_studio_resolve_private_preview' ); if ( ! is_array( $context ) ) { status_header( 403 ); wp_die( __( 'This private preview is unavailable.', 'lunara-film' ), '', array( 'response' => 403 ) ); }
-		$lunara_site_studio_preview_context = $context; add_filter( 'redirect_canonical', static function () { return false; }, PHP_INT_MAX ); add_action( 'wp_enqueue_scripts', 'lunara_site_studio_enqueue_preview_bridge', 0 );
+		$lunara_site_studio_preview_context = $context; show_admin_bar( false ); add_filter( 'redirect_canonical', static function () { return false; }, PHP_INT_MAX ); add_action( 'wp_enqueue_scripts', 'lunara_site_studio_enqueue_preview_bridge', 0 );
 	}
 	$deferred = array();
 	foreach ( array( 'lunara_handle_festival_qr_redirect', 'lunara_journal_archive_studio_guard_preview_request', 'lunara_reviews_archive_studio_guard_preview_request', 'lunara_oscars_portal_studio_guard_preview_request', 'lunara_send_home_cinematic_hero_preload_header', 'lunara_search_command_template_redirect' ) as $callback ) { if ( 0 === has_action( 'template_redirect', $callback ) && remove_action( 'template_redirect', $callback, 0 ) ) { $deferred[] = $callback; } }
-	add_action( 'template_redirect', 'lunara_site_studio_handle_private_preview', 0 );
+	add_action( 'template_redirect', 'lunara_site_studio_handle_private_preview', -1 );
 	foreach ( $deferred as $callback ) { add_action( 'template_redirect', $callback, 0 ); }
 }

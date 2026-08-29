@@ -662,6 +662,11 @@ class Lunara_Test_Contributed_Adapter implements Lunara_Site_Studio_Surface_Adap
 	public function restore_revision( $revision_id ) { return array( 'state' => $this->read_state(), 'safety_revision_id' => 'safety', 'timestamp' => '2026-08-28 15:00:00' ); }
 }
 
+class Lunara_Test_Mutation_Envelope_Adapter extends Lunara_Test_Contributed_Adapter {
+	public function save_state( $candidate ) { global $lunara_test_mutation_envelope; return $lunara_test_mutation_envelope; }
+	public function restore_revision( $revision_id ) { global $lunara_test_mutation_envelope; return $lunara_test_mutation_envelope; }
+}
+
 class Lunara_Test_Throwing_Adapter extends Lunara_Test_Contributed_Adapter {
 	public function read_state() { throw new RuntimeException( 'secret adapter read exception' ); }
 }
@@ -687,6 +692,7 @@ class Lunara_Test_Fresh_Adapter extends Lunara_Test_Contributed_Adapter {
 }
 
 function lunara_test_throwing_adapter_factory() { return new Lunara_Test_Throwing_Adapter(); }
+function lunara_test_mutation_envelope_adapter_factory() { return new Lunara_Test_Mutation_Envelope_Adapter(); }
 function lunara_test_reentrant_adapter_factory( $surface ) {
 	global $lunara_test_reentry_calls;
 	$lunara_test_reentry_calls['factory'] = isset( $lunara_test_reentry_calls['factory'] ) ? $lunara_test_reentry_calls['factory'] + 1 : 1;
@@ -1506,6 +1512,62 @@ function lunara_review_case_design_token_inheritance() {
 	lunara_review_finish( 'design-token-inheritance', $failures );
 }
 
+function lunara_review_case_mutation_envelopes() {
+	global $lunara_test_filters, $lunara_test_mutation_envelope, $lunara_test_contributed_state;
+	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
+	add_filter( 'lunara_site_studio_surfaces', static function ( $items ) {
+		$items['mutation-envelope'] = lunara_review_surface( 'mutation-envelope', 'plugin:mutation-envelope', array( 'adapter_factory' => 'lunara_test_mutation_envelope_adapter_factory' ) );
+		return $items;
+	} );
+	$state = $lunara_test_contributed_state;
+	$save_request = new WP_REST_Request( array( 'surface' => 'mutation-envelope', 'state' => $state ), array( 'x-wp-nonce' => 'good-rest-nonce' ) );
+	$restore_request = new WP_REST_Request( array( 'surface' => 'mutation-envelope', 'revision_id' => 'target-revision', 'confirm' => true ), array( 'x-wp-nonce' => 'good-rest-nonce' ) );
+	$valid_save = array( 'state' => $state, 'changed_sections' => array( 'panel', 'private-section' ), 'revision_id' => 'revision-safe', 'timestamp' => '2026-08-28 15:00:00' );
+	$valid_restore = array( 'state' => $state, 'safety_revision_id' => 'safety-safe', 'timestamp' => '2026-08-28 15:00:00' );
+	$failures = array();
+	$lunara_test_mutation_envelope = $valid_save;
+	$save_control = lunara_site_studio_rest_save( $save_request );
+	if ( 200 !== $save_control->get_status() || 'revision-safe' !== $save_control->get_data()['revision_id'] || '2026-08-28 15:00:00' !== $save_control->get_data()['timestamp'] ) { $failures[] = 'A complete save envelope must retain its projected state and revision metadata.'; }
+	$lunara_test_mutation_envelope = $valid_restore;
+	$restore_control = lunara_site_studio_rest_restore( $restore_request );
+	if ( 200 !== $restore_control->get_status() || 'safety-safe' !== $restore_control->get_data()['safety_revision_id'] || '2026-08-28 15:00:00' !== $restore_control->get_data()['timestamp'] ) { $failures[] = 'A complete restore envelope must retain its projected state and safety metadata.'; }
+
+	$save_cases = array(
+		'missing revision ID' => static function ( $value ) { unset( $value['revision_id'] ); return $value; },
+		'blank revision ID' => static function ( $value ) { $value['revision_id'] = ' '; return $value; },
+		'non-scalar revision ID' => static function ( $value ) { $value['revision_id'] = array( 'invalid' ); return $value; },
+		'missing timestamp' => static function ( $value ) { unset( $value['timestamp'] ); return $value; },
+		'blank timestamp' => static function ( $value ) { $value['timestamp'] = ''; return $value; },
+		'non-scalar timestamp' => static function ( $value ) { $value['timestamp'] = array( 'invalid' ); return $value; },
+		'missing changed sections' => static function ( $value ) { unset( $value['changed_sections'] ); return $value; },
+		'non-array changed sections' => static function ( $value ) { $value['changed_sections'] = 'panel'; return $value; },
+		'object changed section' => static function ( $value ) { $value['changed_sections'] = array( (object) array( 'section' => 'panel' ) ); return $value; },
+		'array changed section' => static function ( $value ) { $value['changed_sections'] = array( array( 'panel' ) ); return $value; },
+	);
+	$restore_cases = array(
+		'missing safety revision ID' => static function ( $value ) { unset( $value['safety_revision_id'] ); return $value; },
+		'blank safety revision ID' => static function ( $value ) { $value['safety_revision_id'] = ' '; return $value; },
+		'non-scalar safety revision ID' => static function ( $value ) { $value['safety_revision_id'] = array( 'invalid' ); return $value; },
+		'missing timestamp' => static function ( $value ) { unset( $value['timestamp'] ); return $value; },
+		'blank timestamp' => static function ( $value ) { $value['timestamp'] = ''; return $value; },
+		'non-scalar timestamp' => static function ( $value ) { $value['timestamp'] = array( 'invalid' ); return $value; },
+	);
+	foreach ( $save_cases as $label => $mutate ) {
+		$lunara_test_mutation_envelope = $mutate( $valid_save );
+		try { $response = lunara_site_studio_rest_save( $save_request ); } catch ( Throwable $error ) { $failures[] = "Malformed save {$label} must not emit a warning or exception."; continue; }
+		$data = $response->get_data();
+		if ( 503 !== $response->get_status() || 'site_studio_adapter_invalid' !== ( isset( $data['code'] ) ? $data['code'] : '' ) || array() !== ( isset( $data['fields'] ) ? $data['fields'] : null ) || 3 !== count( $data ) ) { $failures[] = "Malformed save {$label} must return only generic adapter_invalid at 503."; }
+	}
+	foreach ( $restore_cases as $label => $mutate ) {
+		$lunara_test_mutation_envelope = $mutate( $valid_restore );
+		try { $response = lunara_site_studio_rest_restore( $restore_request ); } catch ( Throwable $error ) { $failures[] = "Malformed restore {$label} must not emit a warning or exception."; continue; }
+		$data = $response->get_data();
+		if ( 503 !== $response->get_status() || 'site_studio_adapter_invalid' !== ( isset( $data['code'] ) ? $data['code'] : '' ) || array() !== ( isset( $data['fields'] ) ? $data['fields'] : null ) || 3 !== count( $data ) ) { $failures[] = "Malformed restore {$label} must return only generic adapter_invalid at 503."; }
+	}
+	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
+	lunara_review_finish( 'mutation-envelopes', $failures );
+}
+
 $lunara_review_cases = array(
 	'sticky-ownership' => 'lunara_review_case_sticky_ownership',
 	'adapter-only' => 'lunara_review_case_adapter_only',
@@ -1519,6 +1581,7 @@ $lunara_review_cases = array(
 	'revision-durability' => 'lunara_review_case_revision_durability',
 	'authorization-order' => 'lunara_review_case_authorization_order',
 	'design-token-inheritance' => 'lunara_review_case_design_token_inheritance',
+	'mutation-envelopes' => 'lunara_review_case_mutation_envelopes',
 );
 $lunara_review_case = isset( $argv[1] ) ? sanitize_key( $argv[1] ) : '';
 if ( '' !== $lunara_review_case ) {

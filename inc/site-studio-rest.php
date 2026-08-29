@@ -165,6 +165,35 @@ if ( ! function_exists( 'lunara_site_studio_rest_candidate' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lunara_site_studio_rest_nonempty_scalar' ) ) {
+	/** @return bool */
+	function lunara_site_studio_rest_nonempty_scalar( $value ) {
+		return is_scalar( $value ) && '' !== sanitize_text_field( (string) $value );
+	}
+}
+
+if ( ! function_exists( 'lunara_site_studio_rest_valid_save_envelope' ) ) {
+	/** @return bool */
+	function lunara_site_studio_rest_valid_save_envelope( $result ) {
+		if ( ! is_array( $result ) || ! array_key_exists( 'state', $result ) || ! is_array( $result['state'] ) || ! array_key_exists( 'changed_sections', $result ) || ! is_array( $result['changed_sections'] ) || ! array_key_exists( 'revision_id', $result ) || ! lunara_site_studio_rest_nonempty_scalar( $result['revision_id'] ) || ! array_key_exists( 'timestamp', $result ) || ! lunara_site_studio_rest_nonempty_scalar( $result['timestamp'] ) ) {
+			return false;
+		}
+		foreach ( $result['changed_sections'] as $section ) {
+			if ( ! is_string( $section ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+}
+
+if ( ! function_exists( 'lunara_site_studio_rest_valid_restore_envelope' ) ) {
+	/** @return bool */
+	function lunara_site_studio_rest_valid_restore_envelope( $result ) {
+		return is_array( $result ) && array_key_exists( 'state', $result ) && is_array( $result['state'] ) && array_key_exists( 'safety_revision_id', $result ) && lunara_site_studio_rest_nonempty_scalar( $result['safety_revision_id'] ) && array_key_exists( 'timestamp', $result ) && lunara_site_studio_rest_nonempty_scalar( $result['timestamp'] );
+	}
+}
+
 if ( ! function_exists( 'lunara_site_studio_preview_url' ) ) {
 	/** @return string|WP_Error */
 	function lunara_site_studio_preview_url( $surface, $token ) {
@@ -227,7 +256,7 @@ if ( ! function_exists( 'lunara_site_studio_rest_save' ) ) {
 		if ( is_wp_error( $result ) ) {
 			return lunara_site_studio_rest_adapter_error_response( $result );
 		}
-		if ( ! is_array( $result ) || ! isset( $result['state'] ) || ! is_array( $result['state'] ) ) {
+		if ( ! lunara_site_studio_rest_valid_save_envelope( $result ) ) {
 			return lunara_site_studio_rest_adapter_error_response( new WP_Error( 'site_studio_adapter_invalid' ), 503 );
 		}
 		$projected = lunara_site_studio_project_state( $surface_id, $result['state'] );
@@ -302,7 +331,7 @@ if ( ! function_exists( 'lunara_site_studio_rest_restore' ) ) {
 		if ( is_wp_error( $result ) ) {
 			return lunara_site_studio_rest_adapter_error_response( $result );
 		}
-		if ( ! is_array( $result ) || ! isset( $result['state'] ) || ! is_array( $result['state'] ) ) {
+		if ( ! lunara_site_studio_rest_valid_restore_envelope( $result ) ) {
 			return lunara_site_studio_rest_adapter_error_response( new WP_Error( 'site_studio_adapter_invalid' ), 503 );
 		}
 		$projected = lunara_site_studio_project_state( $surface_id, $result['state'] );
