@@ -3799,7 +3799,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                 <h1 class="screen-reader-text lunara-review-archive-fallback-title"><?php echo esc_html( $args['title'] ); ?></h1>
             <?php endif; ?>
             <?php if ( $show_hero ) : ?>
-            <section class="lunara-home-section lunara-archive-hero lunara-review-archive-hero lunara-review-archive-slot-hero" data-lunara-section="hero" style="order:<?php echo esc_attr( (string) $lane_orders['hero'] ); ?> !important;">
+            <section class="lunara-home-section lunara-archive-hero lunara-review-archive-hero lunara-review-archive-slot-hero" data-lunara-section="hero" data-lunara-site-studio-section="hero" style="order:<?php echo esc_attr( (string) $lane_orders['hero'] ); ?> !important;">
                 <div class="lunara-review-archive-hero-shell">
                     <div class="lunara-review-archive-hero-copy-wrap">
                         <p class="lunara-archive-hero-kicker"><?php echo esc_html( $args['kicker'] ); ?></p>
@@ -3841,7 +3841,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
             <?php endif; ?>
 
             <?php if ( $show_grid && ! empty( $sort_options ) ) : ?>
-            <section class="lunara-home-section lunara-review-archive-utility lunara-review-archive-slot-utility" data-lunara-section="utility" style="order:<?php echo esc_attr( (string) $lane_orders['utility'] ); ?> !important;">
+            <section class="lunara-home-section lunara-review-archive-utility lunara-review-archive-slot-utility" data-lunara-section="utility" data-lunara-site-studio-section="grid" style="order:<?php echo esc_attr( (string) $lane_orders['utility'] ); ?> !important;">
                 <div class="lunara-review-archive-toolbar">
                     <div class="lunara-home-section-head lunara-review-archive-toolbar-head">
                         <div>
@@ -3886,7 +3886,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
             <?php endif; ?>
 
             <?php if ( $show_grid ) : ?>
-            <section class="lunara-home-section lunara-review-archive-shell lunara-review-archive-slot-grid" data-lunara-section="grid" style="order:<?php echo esc_attr( (string) $lane_orders['grid'] ); ?> !important;">
+            <section class="lunara-home-section lunara-review-archive-shell lunara-review-archive-slot-grid" data-lunara-section="grid" data-lunara-site-studio-section="grid" style="order:<?php echo esc_attr( (string) $lane_orders['grid'] ); ?> !important;">
                 <?php if ( $lead_post instanceof WP_Post ) : ?>
                     <div class="lunara-review-archive-spotlight" data-lunara-section="spotlight">
                         <?php
@@ -4015,11 +4015,11 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
             <?php endif; ?>
 
             <?php if ( $show_grid && $show_pagination && $has_posts && ! empty( $args['pagination'] ) ) : ?>
-                    <div class="lunara-archive-pagination lunara-review-archive-slot-pagination" data-lunara-section="pagination" style="order:<?php echo esc_attr( (string) $lane_orders['pagination'] ); ?> !important;">
+                    <div class="lunara-archive-pagination lunara-review-archive-slot-pagination" data-lunara-section="pagination" data-lunara-site-studio-section="pagination" style="order:<?php echo esc_attr( (string) $lane_orders['pagination'] ); ?> !important;">
                         <?php echo wp_kses_post( $args['pagination'] ); ?>
                     </div>
             <?php elseif ( ! $show_grid && $show_pagination && ! empty( $args['pagination'] ) ) : ?>
-                    <div class="lunara-archive-pagination lunara-review-archive-slot-pagination" data-lunara-section="pagination" style="order:<?php echo esc_attr( (string) $lane_orders['pagination'] ); ?> !important;">
+                    <div class="lunara-archive-pagination lunara-review-archive-slot-pagination" data-lunara-section="pagination" data-lunara-site-studio-section="pagination" style="order:<?php echo esc_attr( (string) $lane_orders['pagination'] ); ?> !important;">
                         <div class="lunara-archive-pagination">
                             <?php echo wp_kses_post( $args['pagination'] ); ?>
                         </div>
@@ -4027,7 +4027,7 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
             <?php endif; ?>
 
             <?php if ( $show_pairing_desk ) : ?>
-                <div class="lunara-review-archive-slot-pairing-desk" data-lunara-section="pairing-desk" style="order:<?php echo esc_attr( (string) $lane_orders['pairing-desk'] ); ?> !important;">
+                <div class="lunara-review-archive-slot-pairing-desk" data-lunara-section="pairing-desk" data-lunara-site-studio-section="pairing-desk" style="order:<?php echo esc_attr( (string) $lane_orders['pairing-desk'] ); ?> !important;">
                     <?php echo lunara_render_home_pairing_desk(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- module renderer escapes internally. ?>
                 </div>
             <?php endif; ?>

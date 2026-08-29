@@ -1472,7 +1472,7 @@ function lunara_render_custom_footer() {
     $col3_head  = get_theme_mod( 'lunara_footer_col3_heading', 'Utility' );
     $copyright  = get_theme_mod( 'lunara_footer_copyright', 'Lunara Film' );
     ?>
-    <footer class="lunara-site-footer" role="contentinfo">
+    <footer class="lunara-site-footer" data-lunara-site-studio-section="footer" role="contentinfo">
         <div class="lunara-footer-inner">
             <!-- Zone 1: Branded close -->
             <div class="lunara-footer-brand">

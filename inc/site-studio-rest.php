@@ -89,7 +89,14 @@ if ( ! function_exists( 'lunara_site_studio_rest_preview_permission' ) ) {
 if ( ! function_exists( 'lunara_site_studio_safe_validation_fields' ) ) {
 	/** @return array<string,string> */
 	function lunara_site_studio_safe_validation_fields( $error ) {
-		$allowed = array( 'title', 'kicker', 'colors', 'color_gold', 'color_gold_light', 'color_bg_primary', 'color_bg_secondary', 'color_text', 'color_text_muted', 'fonts', 'font_body', 'font_display', 'font_signature', 'font_glamour', 'font_label', 'copy', 'review_id', 'backdrop_id', 'preset', 'desktop_order', 'mobile_order', 'visibility', 'front_page', 'deck', 'supporting_copy', 'section_order', 'section_visibility', 'presentation', 'identity', 'geometry', 'labels', 'gallery', 'retention', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count' );
+		$allowed = array(
+			'title', 'kicker', 'colors', 'color_gold', 'color_gold_light', 'color_bg_primary', 'color_bg_secondary', 'color_text', 'color_text_muted', 'fonts', 'font_body', 'font_display', 'font_signature', 'font_glamour', 'font_label', 'copy', 'review_id', 'backdrop_id', 'preset', 'desktop_order', 'mobile_order', 'visibility', 'front_page', 'deck', 'supporting_copy', 'section_order', 'section_visibility', 'presentation', 'identity', 'geometry', 'labels', 'gallery', 'retention', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count',
+			'presentation.density', 'presentation.lead_prominence', 'presentation.rail_density', 'presentation.desk_rhythm', 'presentation.section_gap', 'presentation.lead_min_height', 'presentation.hero_min_height', 'presentation.card_min_height', 'presentation.compact_media_width', 'presentation.media_min_height', 'presentation.result_treatment', 'presentation.result_media', 'presentation.recovery_prominence',
+			'review.density', 'review.hero_scale', 'review.rail_mode', 'review.debrief_prominence', 'review.pairing_density', 'review.spoiler_treatment', 'review.trailer_prominence', 'review.section_gap', 'review.debrief_poster_width', 'review.related_count',
+			'pairing.layout', 'pairing.text_depth', 'pairing.mobile_stack', 'pairing.image_focus', 'pairing.columns', 'pairing.thumb_width',
+			'focus.lead', 'focus.spotlight', 'geometry.section_gap', 'geometry.result_min_height', 'geometry.card_grid_min',
+			'brand.show_logo', 'brand.tagline', 'columns.editorial', 'columns.oscars', 'columns.utility', 'copyright.name',
+		);
 		$data    = is_wp_error( $error ) ? $error->get_error_data() : array();
 		$fields  = is_array( $data ) && isset( $data['fields'] ) && is_array( $data['fields'] ) ? $data['fields'] : array();
 		$safe    = array();
@@ -102,6 +109,20 @@ if ( ! function_exists( 'lunara_site_studio_safe_validation_fields' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lunara_site_studio_rest_adapter_error_message' ) ) {
+	/** Return only fixed, user-actionable messages for allowlisted operational failures. */
+	function lunara_site_studio_rest_adapter_error_message( $code ) {
+		$messages = array(
+			'reviews_archive_preview_write_failed'    => __( 'The private preview could not be stored. Try Preview Changes again.', 'lunara-film' ),
+			'journal_archive_preview_write_failed'    => __( 'The private preview could not be stored. Try Preview Changes again.', 'lunara-film' ),
+			'reviews_archive_preview_readback_failed' => __( 'The private preview could not be verified. Try Preview Changes again.', 'lunara-film' ),
+			'journal_archive_preview_readback_failed' => __( 'The private preview could not be verified. Try Preview Changes again.', 'lunara-film' ),
+		);
+		$code = sanitize_key( $code );
+		return isset( $messages[ $code ] ) ? $messages[ $code ] : __( 'The requested state was not accepted. Review the highlighted fields and try again.', 'lunara-film' );
+	}
+}
+
 if ( ! function_exists( 'lunara_site_studio_rest_adapter_error_response' ) ) {
 	/** @return WP_REST_Response */
 	function lunara_site_studio_rest_adapter_error_response( $error, $status = 422 ) {
@@ -109,7 +130,7 @@ if ( ! function_exists( 'lunara_site_studio_rest_adapter_error_response' ) ) {
 		return new WP_REST_Response(
 			array(
 				'code'    => $code,
-				'message' => __( 'The requested state was not accepted. Review the highlighted fields and try again.', 'lunara-film' ),
+				'message' => lunara_site_studio_rest_adapter_error_message( $code ),
 				'fields'  => lunara_site_studio_safe_validation_fields( $error ),
 			),
 			absint( $status )
@@ -202,7 +223,9 @@ if ( ! function_exists( 'lunara_site_studio_preview_url' ) ) {
 		if ( '' === $route || '' === $arg || empty( $surface['supports_preview'] ) ) {
 			return new WP_Error( 'site_studio_preview_unavailable' );
 		}
-		$url       = add_query_arg( array( $arg => sanitize_text_field( $token ) ), home_url( $route ) );
+		$params    = isset( $surface['preview_params'] ) && is_array( $surface['preview_params'] ) ? $surface['preview_params'] : array();
+		$params[ $arg ] = sanitize_text_field( $token );
+		$url       = add_query_arg( $params, home_url( $route ) );
 		$home_host = strtolower( (string) wp_parse_url( home_url( '/' ), PHP_URL_HOST ) );
 		$url_host  = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
 		if ( '' === $url_host || ! hash_equals( $home_host, $url_host ) ) {

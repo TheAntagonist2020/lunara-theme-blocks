@@ -18,6 +18,7 @@ $lunara_preview_warnings = array();
 $lunara_preview_admin_bar_calls = array();
 $lunara_preview_admin_bar_enabled = true;
 $lunara_preview_core_admin_bar_events = array();
+$lunara_preview_surface_mutation_target = 'global-design';
 
 function lunara_test_extract_named_function( $source, $function_name ) { $tokens = token_get_all( $source ); for ( $index = 0; $index < count( $tokens ); $index++ ) { if ( ! is_array( $tokens[ $index ] ) || T_FUNCTION !== $tokens[ $index ][0] ) { continue; } $name_index = $index + 1; while ( isset( $tokens[ $name_index ] ) && ( ! is_array( $tokens[ $name_index ] ) || T_STRING !== $tokens[ $name_index ][0] ) ) { ++$name_index; } if ( ! isset( $tokens[ $name_index ][1] ) || $function_name !== $tokens[ $name_index ][1] ) { continue; } $code = ''; $depth = 0; $opened = false; for ( $cursor = $index; $cursor < count( $tokens ); $cursor++ ) { $text = is_array( $tokens[ $cursor ] ) ? $tokens[ $cursor ][1] : $tokens[ $cursor ]; $code .= $text; if ( '{' === $text ) { ++$depth; $opened = true; } elseif ( '}' === $text ) { --$depth; if ( $opened && 0 === $depth ) { return $code; } } } } return ''; }
 $lunara_round2_registry_source = file_get_contents( dirname( __DIR__ ) . '/inc/site-studio-registry.php' );
@@ -96,6 +97,68 @@ function lunara_preview_core_admin_bar_init() { global $lunara_preview_admin_bar
 
 require __DIR__ . '/site-studio-runtime.php';
 require dirname( __DIR__ ) . '/inc/home-blocks.php';
+
+/**
+ * Literal preview contracts. These values intentionally do not derive from
+ * the production allowlist so route, owner, query, parameter, or marker drift
+ * causes this runtime to fail.
+ *
+ * @return array<string,array<string,mixed>>
+ */
+function lunara_preview_surface_specs() {
+	return array(
+		'global-design'      => array( 'owner' => 'theme:global-design', 'route' => '/', 'query' => 'lunara_global_design_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array() ),
+		'homepage-structure' => array( 'owner' => 'theme:homepage-structure', 'route' => '/', 'query' => 'lunara_homepage_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'latest-reviews', 'pairing-desk', 'dispatch', 'oscar-picks', 'oscar-facts' ) ),
+		'lunara-method'      => array( 'owner' => 'theme:lunara-method', 'route' => '/', 'query' => 'lunara_method_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'pairing-desk' ) ),
+		'reviews-archive'    => array( 'owner' => 'theme:reviews-archive', 'route' => '/reviews/', 'query' => 'lunara_reviews_preview', 'params' => array(), 'storage' => 'provider', 'markers' => array( 'hero', 'grid', 'pagination', 'pairing-desk' ) ),
+		'journal-archive'    => array( 'owner' => 'theme:journal-archive', 'route' => '/journal/', 'query' => 'lunara_journal_preview', 'params' => array(), 'storage' => 'provider', 'markers' => array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ) ),
+		'review-single'      => array( 'owner' => 'theme:review-single', 'route' => '/reviews/sinners-2025/', 'query' => 'lunara_review_single_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'criticism', 'debrief', 'pair-it-with' ) ),
+		'utility-search'     => array( 'owner' => 'theme:utility-search', 'route' => '/search/', 'query' => 'lunara_utility_search_preview', 'params' => array( 'q' => 'Lunara' ), 'storage' => 'site-studio', 'markers' => array( 'search-command', 'direct-matches', 'result-run', 'recovery' ) ),
+		'site-footer'        => array( 'owner' => 'theme:site-footer', 'route' => '/', 'query' => 'lunara_footer_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'footer' ) ),
+	);
+}
+
+/** Return a recognizable candidate whose preview-only values can be observed. */
+function lunara_preview_candidate( $surface ) {
+	$state = lunara_preview_state( $surface );
+	if ( 'reviews-archive' === $surface ) { $state['kicker'] = 'Private Reviews Preview'; }
+	if ( 'journal-archive' === $surface ) { $state['kicker'] = 'Private Journal Preview'; }
+	if ( 'review-single' === $surface ) { $state['review']['density'] = 'compact'; $state['pairing']['columns'] = 2; }
+	if ( 'utility-search' === $surface ) { $state['presentation']['density'] = 'compact'; $state['focus']['lead'] = 'journal'; $state['geometry']['section_gap'] = 34; }
+	if ( 'site-footer' === $surface ) { $state['brand']['show_logo'] = false; $state['brand']['tagline'] = 'Private footer preview'; }
+	return $state;
+}
+
+/** Provider-owned preview storage seam, shaped like the real archive stores. */
+function lunara_preview_provider_config( $surface, $token ) {
+	$prefixes = array( 'reviews-archive' => 'lunara_reviews_archive_preview_', 'journal-archive' => 'lunara_journal_archive_preview_' );
+	if ( ! isset( $prefixes[ $surface ] ) ) { return false; }
+	$record = get_transient( $prefixes[ $surface ] . hash( 'sha256', $token ) );
+	$user = get_current_user_id();
+	if ( ! is_array( $record ) || ! isset( $record['user_id'], $record['token_hash'], $record['expires'], $record['config'] ) || absint( $record['user_id'] ) !== absint( $user ) || ! hash_equals( wp_hash( $token . '|' . absint( $user ) ), (string) $record['token_hash'] ) || absint( $record['expires'] ) <= current_time( 'timestamp', true ) || ! is_array( $record['config'] ) ) { return false; }
+	return $record['config'];
+}
+function lunara_reviews_archive_studio_get_preview_config( $token ) { return lunara_preview_provider_config( 'reviews-archive', $token ); }
+function lunara_journal_archive_studio_get_preview_config( $token ) { return lunara_preview_provider_config( 'journal-archive', $token ); }
+
+/** Trace every real projection callback, including the five 3.2.56 surfaces. */
+function lunara_preview_trace_schema( $surface ) {
+	global $lunara_test_trace_callbacks, $lunara_preview_events;
+	if ( $lunara_test_trace_callbacks ) { $lunara_preview_events[] = 'projection'; }
+	$callbacks = array(
+		'global-design'      => 'lunara_site_studio_global_design_state_schema',
+		'homepage-structure' => 'lunara_site_studio_homepage_structure_state_schema',
+		'lunara-method'      => 'lunara_site_studio_lunara_method_state_schema',
+		'reviews-archive'    => 'lunara_site_studio_reviews_archive_state_schema',
+		'journal-archive'    => 'lunara_site_studio_journal_archive_state_schema',
+		'review-single'      => 'lunara_site_studio_review_single_state_schema',
+		'utility-search'     => 'lunara_site_studio_utility_search_state_schema',
+		'site-footer'        => 'lunara_site_studio_footer_state_schema',
+	);
+	return isset( $callbacks[ $surface['id'] ] ) ? call_user_func( $callbacks[ $surface['id'] ] ) : array();
+}
+add_filter( 'lunara_site_studio_surfaces', static function ( $surfaces ) { foreach ( array( 'reviews-archive', 'journal-archive', 'review-single', 'utility-search', 'site-footer' ) as $surface_id ) { if ( isset( $surfaces[ $surface_id ] ) ) { $surfaces[ $surface_id ]['state_schema_callback'] = 'lunara_preview_trace_schema'; } } return $surfaces; }, 30 );
+
 function lunara_preview_callback_event( $name ) { global $lunara_preview_callback_events, $lunara_preview_collision; $lunara_preview_callback_events[] = $name; if ( $name === $lunara_preview_collision ) { throw new RuntimeException( 'Earlier callback escaped private guard: ' . $name ); } }
 function lunara_handle_festival_qr_redirect() { lunara_preview_callback_event( 'festival-qr' ); }
 function lunara_journal_archive_studio_guard_preview_request() { lunara_preview_callback_event( 'journal-guard' ); }
@@ -113,7 +176,7 @@ add_action( 'template_redirect', 'lunara_search_command_template_redirect', 0 );
 require dirname( __DIR__ ) . '/inc/site-studio-preview.php';
 
 $lunara_preview_surface_mutation = '';
-add_filter( 'lunara_site_studio_surfaces', static function ( $surfaces ) { global $lunara_preview_surface_mutation; if ( $lunara_preview_surface_mutation && isset( $surfaces['global-design'] ) ) { if ( 'owner' === $lunara_preview_surface_mutation ) { $surfaces['global-design']['owner'] = 'theme:foreign'; } if ( 'query' === $lunara_preview_surface_mutation ) { $surfaces['global-design']['preview_query_arg'] = 'other_preview'; } if ( 'route' === $lunara_preview_surface_mutation ) { $surfaces['global-design']['preview_route'] = '/journal/'; } } return $surfaces; }, 40 );
+add_filter( 'lunara_site_studio_surfaces', static function ( $surfaces ) { global $lunara_preview_surface_mutation, $lunara_preview_surface_mutation_target; $target = $lunara_preview_surface_mutation_target; if ( $lunara_preview_surface_mutation && isset( $surfaces[ $target ] ) ) { if ( 'owner' === $lunara_preview_surface_mutation ) { $surfaces[ $target ]['owner'] = 'theme:foreign'; } if ( 'query' === $lunara_preview_surface_mutation ) { $surfaces[ $target ]['preview_query_arg'] = 'other_preview'; } if ( 'route' === $lunara_preview_surface_mutation ) { $surfaces[ $target ]['preview_route'] = '/wrong-preview-route/'; } if ( 'params' === $lunara_preview_surface_mutation ) { $surfaces[ $target ]['preview_params'] = array( 'q' => 'Changed' ); } } return $surfaces; }, 40 );
 $lunara_preview_base_filters = $lunara_test_filters;
 $lunara_preview_base_actions = $lunara_test_actions;
 add_action( 'lunara_site_studio_private_no_store_sent', static function () { global $lunara_preview_events; $lunara_preview_events[] = 'private'; } );
@@ -124,19 +187,27 @@ function lunara_preview_state( $surface ) {
 	return lunara_site_studio_call_adapter( $adapter, 'read_state' );
 }
 function lunara_preview_record( $surface, $token, $state = null ) {
-	$map = array( 'global-design' => 'theme:global-design', 'homepage-structure' => 'theme:homepage-structure', 'lunara-method' => 'theme:lunara-method' );
-	$user = get_current_user_id(); $owner = $map[ $surface ];
-	return array( 'user_id' => $user, 'surface' => $surface, 'owner' => $owner, 'route' => '/', 'token_hash' => wp_hash( $token . '|' . $user . '|' . $surface . '|' . $owner . '|/' ), 'expires' => current_time( 'timestamp', true ) + 600, 'state' => null === $state ? lunara_preview_state( $surface ) : $state );
+	$specs = lunara_preview_surface_specs(); $spec = $specs[ $surface ];
+	$user = get_current_user_id(); $owner = $spec['owner']; $route = $spec['route'];
+	return array( 'user_id' => $user, 'surface' => $surface, 'owner' => $owner, 'route' => $route, 'token_hash' => wp_hash( $token . '|' . $user . '|' . $surface . '|' . $owner . '|' . $route ), 'expires' => current_time( 'timestamp', true ) + 600, 'state' => null === $state ? lunara_preview_state( $surface ) : $state );
 }
-function lunara_preview_reset( $surface, $token, $instance, $query = null, $get = null ) {
-	global $lunara_test_filters, $lunara_test_actions, $lunara_preview_base_filters, $lunara_preview_base_actions, $lunara_preview_transients, $lunara_preview_events, $lunara_preview_status, $lunara_preview_user_id, $lunara_test_can_edit, $lunara_test_dependency_ready, $lunara_test_adapter_failure, $lunara_test_enqueued_scripts, $lunara_test_localized, $lunara_preview_is_front, $lunara_preview_front_id, $lunara_preview_surface_mutation, $lunara_test_trace_callbacks, $lunara_test_wp_die_args, $lunara_preview_callback_events, $lunara_preview_collision, $lunara_preview_consumer_mutation, $lunara_preview_warnings, $lunara_preview_admin_bar_calls, $lunara_preview_admin_bar_enabled, $lunara_preview_core_admin_bar_events;
-	$args = array( 'global-design' => 'lunara_global_design_preview', 'homepage-structure' => 'lunara_homepage_preview', 'lunara-method' => 'lunara_method_preview' );
+function lunara_preview_reset( $surface, $token, $instance, $query = null, $get = null, $state = null ) {
+	global $lunara_test_filters, $lunara_test_actions, $lunara_preview_base_filters, $lunara_preview_base_actions, $lunara_preview_transients, $lunara_preview_events, $lunara_preview_status, $lunara_preview_user_id, $lunara_test_can_edit, $lunara_test_dependency_ready, $lunara_test_adapter_failure, $lunara_test_enqueued_scripts, $lunara_test_localized, $lunara_preview_is_front, $lunara_preview_front_id, $lunara_preview_surface_mutation, $lunara_preview_surface_mutation_target, $lunara_test_trace_callbacks, $lunara_test_wp_die_args, $lunara_preview_callback_events, $lunara_preview_collision, $lunara_preview_consumer_mutation, $lunara_preview_warnings, $lunara_preview_admin_bar_calls, $lunara_preview_admin_bar_enabled, $lunara_preview_core_admin_bar_events;
+	$specs = lunara_preview_surface_specs(); $spec = $specs[ $surface ];
 	$lunara_test_filters = $lunara_preview_base_filters; $lunara_test_actions = $lunara_preview_base_actions;
-	$lunara_preview_events = array(); $lunara_preview_status = 200; $lunara_preview_user_id = 7; $lunara_test_can_edit = true; $lunara_test_dependency_ready = true; $lunara_test_adapter_failure = ''; $lunara_test_enqueued_scripts = array(); $lunara_test_localized = array(); $lunara_preview_is_front = true; $lunara_preview_front_id = 42; $lunara_preview_surface_mutation = ''; $lunara_test_trace_callbacks = false; $lunara_test_wp_die_args = array(); $lunara_preview_callback_events = array(); $lunara_preview_collision = ''; $lunara_preview_consumer_mutation = ''; $lunara_preview_warnings = array(); $lunara_preview_admin_bar_calls = array(); $lunara_preview_admin_bar_enabled = true; $lunara_preview_core_admin_bar_events = array();
-	$query = null === $query ? rawurlencode( $args[ $surface ] ) . '=' . rawurlencode( $token ) . '&lunara_site_studio_instance=' . rawurlencode( $instance ) : $query;
-	$_GET = null === $get ? array( $args[ $surface ] => $token, 'lunara_site_studio_instance' => $instance ) : $get;
-	$_SERVER['QUERY_STRING'] = $query; $_SERVER['REQUEST_METHOD'] = 'GET'; $_SERVER['HTTP_HOST'] = 'example.test'; $_SERVER['REQUEST_URI'] = '/?' . $query; $_SERVER['HTTPS'] = 'on'; $_SERVER['SERVER_PORT'] = '443';
-	$lunara_preview_transients = array( 'lunara_site_studio_preview_' . hash( 'sha256', $token ) => lunara_preview_record( $surface, $token ) );
+	$lunara_preview_events = array(); $lunara_preview_status = 200; $lunara_preview_user_id = 7; $lunara_test_can_edit = true; $lunara_test_dependency_ready = true; $lunara_test_adapter_failure = ''; $lunara_test_enqueued_scripts = array(); $lunara_test_localized = array(); $lunara_preview_is_front = '/' === $spec['route']; $lunara_preview_front_id = 42; $lunara_preview_surface_mutation = ''; $lunara_preview_surface_mutation_target = 'global-design'; $lunara_test_trace_callbacks = false; $lunara_test_wp_die_args = array(); $lunara_preview_callback_events = array(); $lunara_preview_collision = ''; $lunara_preview_consumer_mutation = ''; $lunara_preview_warnings = array(); $lunara_preview_admin_bar_calls = array(); $lunara_preview_admin_bar_enabled = true; $lunara_preview_core_admin_bar_events = array();
+	$state = null === $state ? lunara_preview_state( $surface ) : $state;
+	$values = $spec['params']; $values[ $spec['query'] ] = $token; $values['lunara_site_studio_instance'] = $instance;
+	if ( null === $query ) { $segments = array(); foreach ( $values as $key => $value ) { $segments[] = rawurlencode( $key ) . '=' . rawurlencode( $value ); } $query = implode( '&', $segments ); }
+	$_GET = null === $get ? $values : $get;
+	$home_path = (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH ); if ( '' === $home_path ) { $home_path = '/'; } $request_path = '/' === $spec['route'] ? $home_path : rtrim( $home_path, '/' ) . '/' . ltrim( $spec['route'], '/' );
+	$_SERVER['QUERY_STRING'] = $query; $_SERVER['REQUEST_METHOD'] = 'GET'; $_SERVER['HTTP_HOST'] = 'example.test'; $_SERVER['REQUEST_URI'] = $request_path . '?' . $query; $_SERVER['HTTPS'] = 'on'; $_SERVER['SERVER_PORT'] = '443';
+	if ( 'provider' === $spec['storage'] ) {
+		$prefix = 'reviews-archive' === $surface ? 'lunara_reviews_archive_preview_' : 'lunara_journal_archive_preview_';
+		$lunara_preview_transients = array( $prefix . hash( 'sha256', $token ) => array( 'user_id' => get_current_user_id(), 'token_hash' => wp_hash( $token . '|' . get_current_user_id() ), 'expires' => current_time( 'timestamp', true ) + 600, 'config' => $state ) );
+	} else {
+		$lunara_preview_transients = array( 'lunara_site_studio_preview_' . hash( 'sha256', $token ) => lunara_preview_record( $surface, $token, $state ) );
+	}
 }
 function lunara_preview_run() {
 	global $lunara_preview_status, $lunara_test_wp_die_args;
@@ -206,8 +277,9 @@ foreach ( array( 'dependency-throw', 'factory-throw', 'adapter-absent', 'adapter
 	lunara_test_assert( ! $result['ok'] && 403 === $result['status'] && array( 'response' => 403 ) === $result['die_args'] && $generic === $result['message'] && array_slice( $lunara_preview_events, 0, 2 ) === array( 'headers', 'private' ) && $denied_order && array() === $lunara_preview_callback_events && array() === $lunara_test_enqueued_scripts && array() === $lunara_test_localized && array() === $lunara_preview_admin_bar_calls, $kind . ' dependency/adapter denial must be indistinguishable, private-first, live-inert, child-inert, and admin-bar-inert.' );
 }
 
-foreach ( array( 'global-design', 'homepage-structure', 'lunara-method' ) as $surface ) {
-	lunara_preview_reset( $surface, $token, $instance ); $canonical_before = serialize( array( $lunara_preview_options, $lunara_preview_mods, $lunara_preview_posts, $lunara_preview_transients ) ); $lunara_test_trace_callbacks = true; $accepted = lunara_preview_dispatch();
+foreach ( array( 'global-design', 'homepage-structure', 'lunara-method', 'reviews-archive', 'journal-archive', 'review-single', 'utility-search', 'site-footer' ) as $surface ) {
+	$surface_specs = lunara_preview_surface_specs(); $surface_spec = $surface_specs[ $surface ]; lunara_preview_reset( $surface, $token, $instance ); $candidate = lunara_preview_candidate( $surface );
+	lunara_preview_reset( $surface, $token, $instance, null, null, $candidate ); $canonical_before = serialize( array( $lunara_preview_options, $lunara_preview_mods, $lunara_preview_posts, $lunara_preview_transients ) ); $lunara_test_trace_callbacks = true; $accepted = lunara_preview_dispatch();
 	lunara_test_assert( array( false ) === $lunara_preview_admin_bar_calls && array() === $lunara_preview_core_admin_bar_events, $surface . ' must suppress the admin bar before Core initialization can install or emit its bump.' );
 	$private_index = array_search( 'private', $lunara_preview_events, true ); $work_events = array( 'dependency', 'factory', 'transient', 'validate', 'projection' ); $work_after_private = true; foreach ( $work_events as $work_event ) { $work_index = array_search( $work_event, $lunara_preview_events, true ); $work_after_private = $work_after_private && false !== $work_index && $work_index > $private_index; }
 	lunara_test_assert( $accepted['ok'] && 200 === $accepted['status'] && array_slice( $lunara_preview_events, 0, 2 ) === array( 'headers', 'private' ) && $work_after_private, $surface . ' must authorize only after private headers and before every dependency/factory/transient/validation/projection callback.' );
@@ -216,10 +288,47 @@ foreach ( array( 'global-design', 'homepage-structure', 'lunara-method' ) as $su
 	lunara_test_assert( false === apply_filters( 'redirect_canonical', 'https://example.test/canonical' ), $surface . ' authorized preview must suppress redirect_canonical only for this request.' );
 	lunara_test_assert( isset( $lunara_test_enqueued_scripts['lunara-site-studio-preview'] ) && isset( $lunara_test_localized['LunaraSiteStudioPreviewConfig'] ), $surface . ' must enqueue the dedicated child bridge only after authorization.' );
 	$child = $lunara_test_localized['LunaraSiteStudioPreviewConfig']; $keys = array_keys( $child ); sort( $keys );
-	lunara_test_assert( $keys === array( 'instance', 'markers', 'protocol', 'surface', 'type', 'version' ) && 'lunara-site-studio/v1' === $child['protocol'] && 1 === $child['version'] && 'select-section' === $child['type'] && $surface === $child['surface'] && $instance === $child['instance'] && false === strpos( wp_json_encode( $child ), $token ) && false === strpos( wp_json_encode( $child ), 'state' ), $surface . ' child config must expose only the exact six safe keys.' );
+	lunara_test_assert( $keys === array( 'instance', 'markers', 'protocol', 'surface', 'type', 'version' ) && 'lunara-site-studio/v1' === $child['protocol'] && 1 === $child['version'] && 'select-section' === $child['type'] && $surface === $child['surface'] && $instance === $child['instance'] && $surface_spec['markers'] === $child['markers'] && false === strpos( wp_json_encode( $child ), $token ) && false === strpos( wp_json_encode( $child ), 'state' ), $surface . ' child config must expose only the exact six safe keys and literal marker contract.' );
 	if ( 'global-design' === $surface ) { $tokens = get_option( 'lunara_design_tokens', array() ); lunara_test_assert( isset( $tokens['colors']['gold_light'] ) && ! isset( $tokens['colors']['gold'] ) && isset( $tokens['fonts']) && false === strpos( wp_json_encode( $tokens ), 'effective' ), 'Global preview must substitute only non-null canonical overrides in memory.' ); }
 	if ( 'homepage-structure' === $surface ) { lunara_test_assert( '' === get_theme_mod( 'lunara_home_section_order_preset', 'missing' ), 'Homepage preview must supply its exact request-local theme mod, including the canonical empty preset.' ); $content = lunara_home_front_page_content( 42 ); lunara_test_assert( false !== strpos( $content, 'wp:lunara/cinematic-hero' ) && false !== strpos( $content, 'Keep me') && false !== strpos( $content, 'wp:lunara/pairing-desk' ), 'Block-mode Homepage preview must compose request-only content while preserving unknown content.' ); lunara_test_assert( is_string( $content ) && $lunara_preview_posts[42] !== $content && '<!-- wp:lunara/cinematic-hero /--><!-- wp:core/paragraph --><p>Keep me.</p><!-- /wp:core/paragraph --><!-- wp:lunara/pairing-desk /-->' === $lunara_preview_posts[42], 'Homepage preview seam must return a distinct request-only composition while preserving exact canonical post bytes.' ); }
 	if ( 'lunara-method' === $surface ) { lunara_test_assert( 0 === get_theme_mod( 'lunara_home_pairing_desk_review_id', 99 ) && 44 === get_theme_mod( 'lunara_home_pairing_desk_backdrop_id', 0 ) && '' === get_theme_mod( 'lunara_home_pairing_desk_kicker', 'fallback' ), 'Method preview must preserve exact zero/empty candidate values in memory.' ); }
+	if ( 'reviews-archive' === $surface ) { lunara_test_assert( $candidate === lunara_reviews_archive_studio_get_preview_config( $token ) && 'Private Reviews Preview' === lunara_reviews_archive_studio_get_preview_config( $token )['kicker'], 'Reviews preview must remain available through its provider-owned request-local read seam.' ); }
+	if ( 'journal-archive' === $surface ) { lunara_test_assert( $candidate === lunara_journal_archive_studio_get_preview_config( $token ) && 'Private Journal Preview' === lunara_journal_archive_studio_get_preview_config( $token )['kicker'], 'Journal preview must remain available through its provider-owned request-local read seam.' ); }
+	if ( 'review-single' === $surface ) { lunara_test_assert( 'compact' === get_theme_mod( 'lunara_review_single_density', 'editorial' ) && 2 === get_theme_mod( 'lunara_review_pair_with_columns', 1 ), 'Review Single must install its candidate mods only for the authorized request.' ); }
+	if ( 'utility-search' === $surface ) { lunara_test_assert( 'compact' === get_theme_mod( 'lunara_utility_search_density', 'editorial' ) && 'journal' === get_theme_mod( 'lunara_utility_search_lead_focus', 'balanced' ) && 34 === get_theme_mod( 'lunara_utility_section_gap', 42 ), 'Utility Search must install its candidate mods only for the authorized exact Search request.' ); }
+	if ( 'site-footer' === $surface ) { lunara_test_assert( false === get_theme_mod( 'lunara_footer_show_logo', true ) && 'Private footer preview' === get_theme_mod( 'lunara_footer_tagline', '' ), 'Footer must install its candidate mods only for the authorized front-page request.' ); }
+}
+
+// Every hardcoded preview owner must agree with the normalized registry owner.
+foreach ( array_keys( lunara_preview_surface_specs() ) as $surface ) {
+	lunara_preview_reset( $surface, $token, $instance ); $canonical_before = serialize( array( $lunara_preview_options, $lunara_preview_mods, $lunara_preview_posts, $lunara_preview_transients ) ); $lunara_preview_surface_mutation_target = $surface; $lunara_preview_surface_mutation = 'owner'; $owner_denial = lunara_preview_run();
+	lunara_test_assert( ! $owner_denial['ok'] && 403 === $owner_denial['status'] && $generic === $owner_denial['message'] && array() === $lunara_preview_admin_bar_calls && array() === $lunara_test_enqueued_scripts && array() === $lunara_test_localized && $canonical_before === serialize( array( $lunara_preview_options, $lunara_preview_mods, $lunara_preview_posts, $lunara_preview_transients ) ), $surface . ' must deny registry-owner drift before exposing state, bridge config, or canonical mutation.' );
+}
+
+// Site-Studio-owned records must also remain bound to their stored owner.
+foreach ( array( 'global-design', 'homepage-structure', 'lunara-method', 'review-single', 'utility-search', 'site-footer' ) as $surface ) {
+	lunara_preview_reset( $surface, $token, $instance ); $specs = lunara_preview_surface_specs(); $spec = $specs[ $surface ]; $key = 'lunara_site_studio_preview_' . hash( 'sha256', $token ); $lunara_preview_transients[ $key ]['owner'] = 'theme:foreign'; $lunara_preview_transients[ $key ]['token_hash'] = wp_hash( $token . '|' . get_current_user_id() . '|' . $surface . '|theme:foreign|' . $spec['route'] ); $stored_owner_denial = lunara_preview_run();
+	lunara_test_assert( ! $stored_owner_denial['ok'] && 403 === $stored_owner_denial['status'] && $generic === $stored_owner_denial['message'] && array() === $lunara_preview_admin_bar_calls && array() === $lunara_test_localized, $surface . ' must deny a self-consistent token record owned by another canonical owner.' );
+}
+
+// Utility Search has the only fixed preview parameter; every byte and registry
+// contract must remain exact before dependency, adapter, or transient work.
+$utility_query = 'q=Lunara&lunara_utility_search_preview=' . $token . '&lunara_site_studio_instance=' . rawurlencode( $instance );
+$utility_get = array( 'q' => 'Lunara', 'lunara_utility_search_preview' => $token, 'lunara_site_studio_instance' => $instance );
+$utility_query_denials = array(
+	'changed fixed query value' => array( 'q=lunara&lunara_utility_search_preview=' . $token . '&lunara_site_studio_instance=' . rawurlencode( $instance ), array( 'q' => 'lunara', 'lunara_utility_search_preview' => $token, 'lunara_site_studio_instance' => $instance ) ),
+	'missing fixed query value' => array( 'lunara_utility_search_preview=' . $token . '&lunara_site_studio_instance=' . rawurlencode( $instance ), array( 'lunara_utility_search_preview' => $token, 'lunara_site_studio_instance' => $instance ) ),
+	'extra query value' => array( $utility_query . '&extra=1', $utility_get + array( 'extra' => '1' ) ),
+);
+foreach ( $utility_query_denials as $label => $case ) {
+	lunara_preview_reset( 'utility-search', $token, $instance, $case[0], $case[1] ); $utility_denial = lunara_preview_run();
+	lunara_test_assert( ! $utility_denial['ok'] && 403 === $utility_denial['status'] && $generic === $utility_denial['message'] && array() === array_values( array_intersect( $lunara_preview_events, array( 'dependency', 'factory', 'transient', 'validate', 'projection' ) ) ) && array() === $lunara_preview_admin_bar_calls && array() === $lunara_test_localized, 'Utility Search must deny ' . $label . ' before any owner state or bridge work.' );
+}
+lunara_preview_reset( 'utility-search', $token, $instance ); $_SERVER['REQUEST_URI'] = '/journal/?' . $_SERVER['QUERY_STRING']; $utility_wrong_route = lunara_preview_run();
+lunara_test_assert( ! $utility_wrong_route['ok'] && 403 === $utility_wrong_route['status'] && $generic === $utility_wrong_route['message'] && array() === array_values( array_intersect( $lunara_preview_events, array( 'dependency', 'factory', 'transient', 'validate', 'projection' ) ) ) && array() === $lunara_preview_admin_bar_calls && array() === $lunara_test_localized, 'Utility Search must deny the exact candidate on any route other than /search/.' );
+foreach ( array( 'query', 'route', 'params' ) as $drift ) {
+	lunara_preview_reset( 'utility-search', $token, $instance ); $lunara_preview_surface_mutation_target = 'utility-search'; $lunara_preview_surface_mutation = $drift; $utility_registry_denial = lunara_preview_run();
+	lunara_test_assert( ! $utility_registry_denial['ok'] && 403 === $utility_registry_denial['status'] && $generic === $utility_registry_denial['message'] && array() === array_values( array_intersect( $lunara_preview_events, array( 'dependency', 'factory', 'transient', 'validate', 'projection' ) ) ) && array() === $lunara_preview_admin_bar_calls && array() === $lunara_test_localized, 'Utility Search must deny normalized registry ' . $drift . ' drift before any owner state or bridge work.' );
 }
 
 $strict_states = array(); foreach ( array( 'global-design', 'homepage-structure', 'lunara-method' ) as $surface ) { $state = lunara_preview_state( $surface ); $extra = $state; $extra['extra'] = true; $missing = $state; unset( $missing[ array_keys( $missing )[0] ] ); $wrong = $state; $first = array_keys( $wrong )[0]; $wrong[ $first ] = new stdClass(); $strict_states[] = array( $surface, $extra ); $strict_states[] = array( $surface, $missing ); $strict_states[] = array( $surface, $wrong ); } $provenance = lunara_preview_state( 'global-design' ); $provenance['colors']['gold_light']['source'] = 'shipped-default'; $strict_states[] = array( 'global-design', $provenance );

@@ -1,6 +1,6 @@
 <?php
 /**
- * Behavioral contract for the Site Studio 3.2.55 foundation.
+ * Behavioral contract for the Site Studio 3.2.56 foundation.
  *
  * This deliberately boots the production registry, adapter/service, REST, and
  * Design Token modules against a small WordPress stub. It exercises behavior;
@@ -49,6 +49,8 @@ $lunara_test_update_mode      = 'normal';
 $lunara_test_provider_revision_mode = 'normal';
 $lunara_test_renderer_calls   = array();
 $lunara_test_provider_calls   = array();
+$lunara_test_provider_preview_state = array();
+$lunara_test_provider_forced_error = '';
 $lunara_test_provider_defaults = array(
 	'reviews' => array(
 		'schema_version' => 1, 'kicker' => 'Criticism Desk', 'title' => 'Reviews', 'deck' => 'Review deck', 'supporting_copy' => 'Support',
@@ -415,30 +417,32 @@ function lunara_control_desk_render_oscars_dossier_studio( $context = '' ) { glo
 
 function lunara_test_provider_get( $provider ) { global $lunara_test_provider_calls, $lunara_test_provider_state; $lunara_test_provider_calls[] = $provider . ':read'; return $lunara_test_provider_state[ $provider ]; }
 function lunara_test_provider_validate( $provider, $state ) {
-	global $lunara_test_provider_calls;
+	global $lunara_test_provider_calls, $lunara_test_provider_forced_error;
 	$lunara_test_provider_calls[] = $provider . ':validate';
-	if ( ! is_array( $state ) || isset( $state['bad'] ) ) { return new WP_Error( $provider . '_invalid', 'Invalid', array( 'fields' => array( 'title' => 'Title is invalid.', 'secret_field' => 'No.' ) ) ); }
+	if ( $lunara_test_provider_forced_error ) { return new WP_Error( $lunara_test_provider_forced_error, 'Provider rejected the candidate.' ); }
+	if ( ! is_array( $state ) || isset( $state['bad'] ) || isset( $state['title'] ) && '__invalid_provider_title__' === $state['title'] ) { return new WP_Error( $provider . '_invalid', 'Invalid', array( 'fields' => array( 'title' => 'Title is invalid.', 'secret_field' => 'No.' ) ) ); }
 	return $state;
 }
-function lunara_test_provider_promote_transaction( $provider, $state ) {
+function lunara_test_provider_promote_transaction( $provider, $state, $action = 'save' ) {
 	global $lunara_test_provider_calls, $lunara_test_provider_state;
 	$validated = lunara_test_provider_validate( $provider, $state );
 	if ( is_wp_error( $validated ) ) { return $validated; }
 	$lunara_test_provider_calls[] = $provider . ':save';
-	$revision_id = lunara_test_provider_push_revision( $provider, $lunara_test_provider_state[ $provider ], 'save' );
+	$revision_id = lunara_test_provider_push_revision( $provider, $lunara_test_provider_state[ $provider ], $action );
 	if ( is_wp_error( $revision_id ) ) { return $revision_id; }
 	$lunara_test_provider_state[ $provider ] = $validated;
 	return array( 'state' => $validated, 'revision_id' => $revision_id );
 }
-function lunara_test_provider_promote( $provider, $state ) {
-	$transaction = lunara_test_provider_promote_transaction( $provider, $state );
+function lunara_test_provider_promote( $provider, $state, $action = 'save' ) {
+	$transaction = lunara_test_provider_promote_transaction( $provider, $state, $action );
 	return is_wp_error( $transaction ) ? $transaction : $transaction['state'];
 }
 function lunara_test_provider_preview( $provider, $state ) {
-	global $lunara_test_provider_calls;
+	global $lunara_test_provider_calls, $lunara_test_provider_preview_state;
 	$validated = lunara_test_provider_validate( $provider, $state );
 	if ( is_wp_error( $validated ) ) { return $validated; }
 	$lunara_test_provider_calls[] = $provider . ':preview';
+	$lunara_test_provider_preview_state[ $provider ] = $validated;
 	return $provider . '-private-token';
 }
 function lunara_test_provider_revisions( $provider ) { global $lunara_test_provider_calls, $lunara_test_provider_revisions; $lunara_test_provider_calls[] = $provider . ':revisions'; return $lunara_test_provider_revisions[ $provider ]; }
@@ -477,24 +481,24 @@ function lunara_test_provider_restore( $provider, $revision_id ) {
 
 function lunara_reviews_archive_studio_get_public_config( $allow_preview = true ) { return lunara_test_provider_get( 'reviews' ); }
 function lunara_reviews_archive_studio_validate_config( $state ) { return lunara_test_provider_validate( 'reviews', $state ); }
-function lunara_reviews_archive_studio_promote_config( $state, $action = 'save' ) { return lunara_test_provider_promote( 'reviews', $state ); }
-function lunara_reviews_archive_studio_promote_config_transaction( $state, $action = 'save' ) { return lunara_test_provider_promote_transaction( 'reviews', $state ); }
+function lunara_reviews_archive_studio_promote_config( $state, $action = 'save' ) { return lunara_test_provider_promote( 'reviews', $state, $action ); }
+function lunara_reviews_archive_studio_promote_config_transaction( $state, $action = 'save' ) { return lunara_test_provider_promote_transaction( 'reviews', $state, $action ); }
 function lunara_reviews_archive_studio_store_preview( $state ) { return lunara_test_provider_preview( 'reviews', $state ); }
 function lunara_reviews_archive_studio_get_revisions() { return lunara_test_provider_revisions( 'reviews' ); }
 function lunara_reviews_archive_studio_restore_revision( $id ) { return lunara_test_provider_restore( 'reviews', $id ); }
 function lunara_reviews_archive_studio_restore_revision_transaction( $id ) { return lunara_test_provider_restore_transaction( 'reviews', $id ); }
 function lunara_journal_archive_studio_get_public_config( $allow_preview = true ) { return lunara_test_provider_get( 'journal' ); }
 function lunara_journal_archive_studio_validate_config( $state ) { return lunara_test_provider_validate( 'journal', $state ); }
-function lunara_journal_archive_studio_promote_config( $state, $action = 'save' ) { return lunara_test_provider_promote( 'journal', $state ); }
-function lunara_journal_archive_studio_promote_config_transaction( $state, $action = 'save' ) { return lunara_test_provider_promote_transaction( 'journal', $state ); }
+function lunara_journal_archive_studio_promote_config( $state, $action = 'save' ) { return lunara_test_provider_promote( 'journal', $state, $action ); }
+function lunara_journal_archive_studio_promote_config_transaction( $state, $action = 'save' ) { return lunara_test_provider_promote_transaction( 'journal', $state, $action ); }
 function lunara_journal_archive_studio_store_preview( $state ) { return lunara_test_provider_preview( 'journal', $state ); }
 function lunara_journal_archive_studio_get_revisions() { return lunara_test_provider_revisions( 'journal' ); }
 function lunara_journal_archive_studio_restore_revision( $id ) { return lunara_test_provider_restore( 'journal', $id ); }
 function lunara_journal_archive_studio_restore_revision_transaction( $id ) { return lunara_test_provider_restore_transaction( 'journal', $id ); }
 function lunara_oscars_portal_studio_get_public_config( $allow_preview = true ) { return lunara_test_provider_get( 'oscars' ); }
 function lunara_oscars_portal_studio_validate_config( $state ) { return lunara_test_provider_validate( 'oscars', $state ); }
-function lunara_oscars_portal_studio_promote_config( $state, $action = 'save' ) { return lunara_test_provider_promote( 'oscars', $state ); }
-function lunara_oscars_portal_studio_promote_config_transaction( $state, $action = 'save' ) { return lunara_test_provider_promote_transaction( 'oscars', $state ); }
+function lunara_oscars_portal_studio_promote_config( $state, $action = 'save' ) { return lunara_test_provider_promote( 'oscars', $state, $action ); }
+function lunara_oscars_portal_studio_promote_config_transaction( $state, $action = 'save' ) { return lunara_test_provider_promote_transaction( 'oscars', $state, $action ); }
 function lunara_oscars_portal_studio_store_preview( $state ) { return lunara_test_provider_preview( 'oscars', $state ); }
 function lunara_oscars_portal_studio_get_revisions() { return lunara_test_provider_revisions( 'oscars' ); }
 function lunara_oscars_portal_studio_restore_revision( $id ) { return lunara_test_provider_restore( 'oscars', $id ); }
@@ -704,8 +708,8 @@ function lunara_test_reentrant_adapter_factory( $surface ) {
 $lunara_test_dependency_calls = 0;
 $lunara_test_status_calls = 0;
 $surfaces = lunara_site_studio_surfaces();
-$expected_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger', 'global-design' );
-lunara_test_assert( $expected_ids === array_keys( $surfaces ), 'The six stable Site Studio IDs must retain canonical order with Global Design added after them.' );
+$expected_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger', 'global-design', 'review-single', 'utility-search', 'site-footer' );
+lunara_test_assert( $expected_ids === array_keys( $surfaces ), 'The stable foundation Site Studio prefix and appended editorial surfaces must retain canonical order.' );
 $required_fields = array( 'id', 'group', 'label', 'description', 'aliases', 'owner', 'kind', 'capability', 'supports_preview', 'preview_route', 'admin_url', 'dependency_callback', 'status_callback', 'danger_level', 'sections', 'classic_url', 'available', 'unavailable_reason' );
 foreach ( $surfaces as $id => $surface ) {
 	foreach ( $required_fields as $field ) { lunara_test_assert( array_key_exists( $field, $surface ), "{$id} must normalize {$field}." ); }
@@ -805,13 +809,13 @@ $unavailable_html = ob_get_clean();
 lunara_test_assert( false !== strpos( $unavailable_html, 'lunara-site-studio-handoff' ) && false === strpos( $unavailable_html, 'purpose-built Classic controls while' ) && false === strpos( $unavailable_html, '<iframe ' ) && array() === $lunara_test_renderer_calls, 'Unavailable selection must render its truthful bounded handoff and execute no renderer.' );
 $lunara_test_filters['lunara_site_studio_surfaces'] = array();
 
-// Commit 2 selected-surface isolation: non-pilots hand off without a legacy renderer.
-$_GET['surface'] = 'reviews-archive';
+// Selected-surface isolation: an unmigrated surface hands off without a legacy renderer.
+$_GET['surface'] = 'oscars-portal';
 $lunara_test_renderer_calls = array();
 ob_start();
 lunara_render_site_studio_page();
 $handoff_html = ob_get_clean();
-lunara_test_assert( array() === $lunara_test_renderer_calls && false !== strpos( $handoff_html, 'Open Classic controls' ) && false === strpos( $handoff_html, '<iframe ' ), 'Selected non-pilots must execute no legacy renderer and render only the bounded handoff.' );
+lunara_test_assert( array() === $lunara_test_renderer_calls && false !== strpos( $handoff_html, 'Open Classic controls' ) && false === strpos( $handoff_html, '<iframe ' ), 'Selected unmigrated surfaces must execute no legacy renderer and render only the bounded handoff.' );
 
 // Direct admin selection must enforce the declared capability before touching dependencies.
 add_filter( 'lunara_site_studio_surfaces', static function ( $items ) {
@@ -849,10 +853,14 @@ lunara_test_assert( lunara_site_studio_get_adapter( 'oscars-portal' ) instanceof
 $lunara_test_provider_calls = array();
 lunara_test_assert( 'Reviews' === $adapter->read_state()['title'], 'Adapter read must delegate to the canonical provider.' );
 lunara_test_assert( is_wp_error( $adapter->validate_state( array( 'bad' => true ) ) ), 'Adapter validation must preserve provider WP_Error failures.' );
-$save = $adapter->save_state( array( 'title' => 'New Reviews', 'section_order' => array( 'hero', 'grid' ) ) );
+$adapter_save_candidate = $adapter->read_state();
+$adapter_save_candidate['title'] = 'New Reviews';
+$save = $adapter->save_state( $adapter_save_candidate );
 lunara_test_assert( 'New Reviews' === $save['state']['title'] && ! empty( $save['revision_id'] ), 'Adapter save must return canonical normalized state and provider revision ID.' );
 lunara_test_assert( $lunara_test_provider_revisions['reviews'][0]['id'] === $save['revision_id'], 'Adapter save must return the exact newly verified provider revision UUID.' );
-$preview = $adapter->create_preview( array( 'title' => 'Preview Reviews' ) );
+$adapter_preview_candidate = $adapter->read_state();
+$adapter_preview_candidate['title'] = 'Preview Reviews';
+$preview = $adapter->create_preview( $adapter_preview_candidate );
 lunara_test_assert( 'reviews-private-token' === $preview['token'], 'Adapter preview must reuse the provider token contract.' );
 lunara_test_assert( in_array( 'reviews:read', $lunara_test_provider_calls, true ) && in_array( 'reviews:save', $lunara_test_provider_calls, true ) && in_array( 'reviews:preview', $lunara_test_provider_calls, true ), 'Adapter must delegate read/save/preview to the hardened provider.' );
 
@@ -959,15 +967,21 @@ $state_response = lunara_site_studio_rest_get_state( $good_request );
 lunara_test_assert( 200 === $state_response->get_status() && 'New Reviews' === $state_response->get_data()['state']['title'], 'State endpoint must return canonical adapter state.' );
 lunara_test_assert( ! isset( $state_response->get_data()['state']['api_key'] ), 'State responses must redact secret-shaped canonical fields.' );
 unset( $lunara_test_provider_state['reviews']['api_key'] );
-$preview_response = lunara_site_studio_rest_preview( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => array( 'title' => 'REST Preview' ) ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
+$rest_preview_candidate = $adapter->read_state();
+$rest_preview_candidate['title'] = 'REST Preview';
+$preview_response = lunara_site_studio_rest_preview( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => $rest_preview_candidate ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
 $preview_data = $preview_response->get_data();
 lunara_test_assert( 200 === $preview_response->get_status() && false !== strpos( $preview_data['url'], 'https://example.test/reviews/' ) && false !== strpos( $preview_data['url'], 'lunara_reviews_preview=' ), 'Preview endpoint must construct the URL from the allowlisted registry route and provider query key.' );
 lunara_test_assert( $lunara_test_now + 1800 === $preview_data['expires_at'], 'Preview response must expose the bounded 30-minute expiry.' );
 
-$bad_save = lunara_site_studio_rest_save( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => array( 'bad' => true ) ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
+$bad_rest_candidate = $adapter->read_state();
+$bad_rest_candidate['title'] = '__invalid_provider_title__';
+$bad_save = lunara_site_studio_rest_save( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => $bad_rest_candidate ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
 $bad_save_data = $bad_save->get_data();
 lunara_test_assert( 422 === $bad_save->get_status() && isset( $bad_save_data['fields']['title'] ) && ! isset( $bad_save_data['fields']['secret_field'] ), 'Validation errors must preserve allowlisted fields without exposing arbitrary internals.' );
-$save_response = lunara_site_studio_rest_save( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => array( 'title' => 'REST Save', 'section_order' => array( 'hero', 'grid' ) ) ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
+$rest_save_candidate = $adapter->read_state();
+$rest_save_candidate['title'] = 'REST Save';
+$save_response = lunara_site_studio_rest_save( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => $rest_save_candidate ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
 $save_data = $save_response->get_data();
 lunara_test_assert( 200 === $save_response->get_status() && 'REST Save' === $save_data['state']['title'] && ! empty( $save_data['revision_id'] ), 'Save endpoint must return normalized state and revision metadata.' );
 
@@ -1160,7 +1174,7 @@ function lunara_review_case_registry_hook_unwind() {
 	add_filter( 'lunara_site_studio_surfaces', 'lunara_test_poisoning_registry_filter', 10 );
 	add_filter( 'lunara_site_studio_surfaces', 'lunara_test_later_registry_filter', 30 );
 	$failed_pass = lunara_site_studio_surfaces();
-	$canonical_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger', 'global-design' );
+	$canonical_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger', 'global-design', 'review-single', 'utility-search', 'site-footer' );
 	if ( $canonical_ids !== array_keys( $failed_pass ) ) { $failures[] = 'A throwing registry pass must discard all contributions and return canonical defaults.'; }
 	if ( array( 'throwing' ) !== array_column( $lunara_test_registry_hook_events, 'callback' ) ) { $failures[] = 'Later and dynamically added callbacks must be skipped after a registry pass fails.'; }
 	if ( false !== current_filter() || doing_filter( 'lunara_site_studio_surfaces' ) || false !== current_priority() ) { $failures[] = 'A throwing registry callback must leave official current-filter and priority state clean.'; }
@@ -1185,7 +1199,7 @@ function lunara_review_case_registry_all_hook_unwind() {
 	add_filter( 'all', 'lunara_test_all_registers_late_target', PHP_INT_MAX );
 	add_filter( 'lunara_site_studio_surfaces', 'lunara_test_all_later_target', 30 );
 	$failed_pass = lunara_site_studio_surfaces();
-	$canonical_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger', 'global-design' );
+	$canonical_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger', 'global-design', 'review-single', 'utility-search', 'site-footer' );
 	if ( $canonical_ids !== array_keys( $failed_pass ) ) { $failures[] = 'A late all-hook target failure must return only canonical defaults.'; }
 	if ( array( 'all', 'late-throwing' ) !== array_column( $lunara_test_all_hook_events, 'callback' ) ) { $failures[] = 'A late all-hook failure must skip later and dynamically added target callbacks.'; }
 	if ( 'lunara_site_studio_surfaces' !== $lunara_test_all_hook_events[0]['filter'] || true !== $lunara_test_all_hook_events[0]['doing'] || false !== $lunara_test_all_hook_events[0]['priority'] ) { $failures[] = 'The all hook must run in the official target-filter context before target priority begins.'; }
@@ -1441,18 +1455,24 @@ function lunara_review_case_revision_durability() {
 	$lunara_test_update_mode = 'normal';
 
 	$provider_before = $lunara_test_provider_state['reviews'];
+	$provider_write_candidate = $provider_before;
+	$provider_write_candidate['title'] = 'Must not publish after provider write failure';
 	$lunara_test_provider_revision_mode = 'fail';
-	$provider_write_failure = lunara_site_studio_rest_save( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => array( 'title' => 'Must not publish after provider write failure' ) ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
+	$provider_write_failure = lunara_site_studio_rest_save( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => $provider_write_candidate ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
 	if ( $provider_write_failure->get_status() < 400 || $provider_before !== $lunara_test_provider_state['reviews'] ) { $failures[] = 'REST save must surface provider revision-write failure with zero live state mutation.'; }
+	$provider_readback_candidate = $provider_before;
+	$provider_readback_candidate['title'] = 'Must not publish after provider readback mismatch';
 	$lunara_test_provider_revision_mode = 'mismatch';
-	$provider_readback_failure = lunara_site_studio_rest_save( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => array( 'title' => 'Must not publish after provider readback mismatch' ) ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
+	$provider_readback_failure = lunara_site_studio_rest_save( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => $provider_readback_candidate ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
 	if ( $provider_readback_failure->get_status() < 400 || $provider_before !== $lunara_test_provider_state['reviews'] ) { $failures[] = 'REST save must surface provider revision-readback mismatch with zero live state mutation.'; }
 	$provider_target = ! empty( $lunara_test_provider_revisions['reviews'][0]['id'] ) ? $lunara_test_provider_revisions['reviews'][0]['id'] : '';
 	$provider_restore_failure = lunara_site_studio_rest_restore( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'revision_id' => $provider_target, 'confirm' => true ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
 	if ( $provider_restore_failure->get_status() < 400 || $provider_before !== $lunara_test_provider_state['reviews'] ) { $failures[] = 'REST restore must surface provider safety-readback failure with zero live state mutation.'; }
 	$lunara_test_provider_revision_mode = 'concurrent';
 	$adapter = lunara_site_studio_get_adapter( 'reviews-archive' );
-	$concurrent_save = lunara_site_studio_call_adapter( $adapter, 'save_state', array( array( 'title' => 'Concurrent attribution' ) ) );
+	$concurrent_candidate = $adapter->read_state();
+	$concurrent_candidate['title'] = 'Concurrent attribution';
+	$concurrent_save = lunara_site_studio_call_adapter( $adapter, 'save_state', array( $concurrent_candidate ) );
 	$save_operation_id = $lunara_test_provider_operation_revision_id;
 	if ( is_wp_error( $concurrent_save ) || $save_operation_id !== $concurrent_save['revision_id'] || 'concurrent' === $lunara_test_provider_revisions['reviews'][0]['action'] && $concurrent_save['revision_id'] === $lunara_test_provider_revisions['reviews'][0]['id'] ) { $failures[] = 'Provider save must return its in-band verified UUID rather than a concurrent insertion.'; }
 	$concurrent_restore = lunara_site_studio_call_adapter( $adapter, 'restore_revision', array( $save_operation_id ) );
@@ -1510,6 +1530,130 @@ function lunara_review_case_design_token_inheritance() {
 		if ( false === strpos( $css, '--lunara-bg-secondary:#234567;' ) || false !== strpos( $css, '--lunara-bg-secondary:#0f1d2e;' ) ) { $failures[] = 'Saving another dial must not visually replace an inherited color with the shipped default.'; }
 	}
 	lunara_review_finish( 'design-token-inheritance', $failures );
+}
+
+function lunara_review_case_provider_managed_merge() {
+	global $lunara_test_provider_defaults, $lunara_test_provider_state, $lunara_test_provider_revisions, $lunara_test_provider_preview_state, $lunara_test_provider_calls, $lunara_test_provider_forced_error;
+	$failures = array();
+
+	$lunara_test_provider_state['reviews'] = $lunara_test_provider_defaults['reviews'];
+	$lunara_test_provider_revisions['reviews'] = array();
+	$reviews_adapter = lunara_site_studio_reviews_archive_adapter();
+	$stale_reviews = $reviews_adapter->read_state();
+	$fresh_reviews = $lunara_test_provider_defaults['reviews'];
+	$fresh_reviews['lead_mode'] = 'manual';
+	$fresh_reviews['lead_id'] = 44;
+	$fresh_reviews['labels']['run_title'] = 'Advanced Reviews command';
+	$fresh_reviews['gallery']['copy'] = 'Advanced Reviews gallery';
+	$lunara_test_provider_state['reviews'] = $fresh_reviews;
+
+	$incomplete_reviews = $stale_reviews;
+	unset( $incomplete_reviews['title'] );
+	$incomplete_before_state = $lunara_test_provider_state['reviews'];
+	$incomplete_before_revisions = $lunara_test_provider_revisions['reviews'];
+	$incomplete_call_start = count( $lunara_test_provider_calls );
+	$incomplete_save = $reviews_adapter->save_state( $incomplete_reviews );
+	$incomplete_calls = array_slice( $lunara_test_provider_calls, $incomplete_call_start );
+	$incomplete_fields = is_wp_error( $incomplete_save ) ? lunara_site_studio_safe_validation_fields( $incomplete_save ) : array();
+	if ( ! is_wp_error( $incomplete_save ) || ! isset( $incomplete_fields['title'] ) || $incomplete_before_state !== $lunara_test_provider_state['reviews'] || $incomplete_before_revisions !== $lunara_test_provider_revisions['reviews'] || in_array( 'reviews:validate', $incomplete_calls, true ) || in_array( 'reviews:save', $incomplete_calls, true ) ) { $failures[] = 'Reviews save must reject a missing raw managed path before validation or provider mutation.'; }
+
+	$incomplete_preview = $stale_reviews;
+	unset( $incomplete_preview['kicker'] );
+	$preview_before = $lunara_test_provider_preview_state;
+	$preview_call_start = count( $lunara_test_provider_calls );
+	$incomplete_preview_result = $reviews_adapter->create_preview( $incomplete_preview );
+	$incomplete_preview_calls = array_slice( $lunara_test_provider_calls, $preview_call_start );
+	$incomplete_preview_fields = is_wp_error( $incomplete_preview_result ) ? lunara_site_studio_safe_validation_fields( $incomplete_preview_result ) : array();
+	if ( ! is_wp_error( $incomplete_preview_result ) || ! isset( $incomplete_preview_fields['kicker'] ) || $preview_before !== $lunara_test_provider_preview_state || in_array( 'reviews:validate', $incomplete_preview_calls, true ) || in_array( 'reviews:preview', $incomplete_preview_calls, true ) ) { $failures[] = 'Reviews preview must reject a missing raw managed path before validation or preview storage.'; }
+
+	$validation_cases = array(
+		'reviews_archive_identity_required' => array( 'kicker', 'title' ),
+		'reviews_archive_item_count_invalid' => array( 'item_count' ),
+		'reviews_archive_section_order_invalid' => array( 'section_order' ),
+		'reviews_archive_primary_sections_hidden' => array( 'section_visibility' ),
+		'reviews_archive_presentation_invalid' => array( 'presentation.density', 'presentation.lead_prominence', 'presentation.rail_density' ),
+	);
+	foreach ( $validation_cases as $error_code => $expected_fields ) {
+		$lunara_test_provider_forced_error = $error_code;
+		$mapped_error = $reviews_adapter->validate_state( $stale_reviews );
+		$mapped_fields = array_keys( lunara_site_studio_safe_validation_fields( $mapped_error ) );
+		sort( $mapped_fields ); sort( $expected_fields );
+		if ( ! is_wp_error( $mapped_error ) || $expected_fields !== $mapped_fields ) { $failures[] = 'Reviews provider error ' . $error_code . ' must map to its exact safe inspector fields.'; }
+	}
+	$lunara_test_provider_forced_error = 'journal_archive_geometry_invalid';
+	$journal_mapping_adapter = lunara_site_studio_journal_archive_adapter();
+	$journal_geometry_error = $journal_mapping_adapter->validate_state( $lunara_test_provider_defaults['journal'] );
+	$journal_geometry_fields = array_keys( lunara_site_studio_safe_validation_fields( $journal_geometry_error ) );
+	sort( $journal_geometry_fields );
+	$expected_journal_geometry = array( 'presentation.card_min_height', 'presentation.hero_min_height', 'presentation.media_min_height', 'presentation.section_gap' );
+	if ( ! is_wp_error( $journal_geometry_error ) || $expected_journal_geometry !== $journal_geometry_fields ) { $failures[] = 'Journal provider geometry errors must map to exact dotted inspector fields.'; }
+
+	$lunara_test_provider_forced_error = 'reviews_archive_item_count_invalid';
+	$rest_validation = lunara_site_studio_rest_save( new WP_REST_Request( array( 'surface' => 'reviews-archive', 'state' => $stale_reviews ), array( 'x-wp-nonce' => 'good-rest-nonce' ) ) );
+	$rest_validation_data = $rest_validation->get_data();
+	if ( 422 !== $rest_validation->get_status() || array( 'item_count' ) !== array_keys( isset( $rest_validation_data['fields'] ) ? $rest_validation_data['fields'] : array() ) ) { $failures[] = 'Archive REST validation must preserve mapped safe provider field metadata.'; }
+	$lunara_test_provider_forced_error = '';
+	$lunara_test_provider_state['reviews'] = $fresh_reviews;
+	$lunara_test_provider_revisions['reviews'] = array();
+
+	$reviews_candidate = $stale_reviews;
+	$reviews_candidate['title'] = 'Managed Reviews title';
+	$reviews_candidate['section_order'] = array( 'pairing-desk', 'hero', 'grid', 'pagination' );
+	$reviews_candidate['section_visibility']['pagination'] = false;
+	$reviews_candidate['presentation']['density'] = 'compact';
+	$reviews_save = $reviews_adapter->save_state( $reviews_candidate );
+	if ( is_wp_error( $reviews_save ) ) { $failures[] = 'Reviews managed save must succeed.'; }
+	else {
+		$reviews_state = $reviews_save['state'];
+		if ( 'Managed Reviews title' !== $reviews_state['title'] || array( 'pairing-desk', 'hero', 'grid', 'pagination' ) !== $reviews_state['section_order'] || false !== $reviews_state['section_visibility']['pagination'] || 'compact' !== $reviews_state['presentation']['density'] ) { $failures[] = 'Reviews must publish every managed candidate value in exact requested section order.'; }
+		if ( 'manual' !== $reviews_state['lead_mode'] || 44 !== $reviews_state['lead_id'] || 'Advanced Reviews command' !== $reviews_state['labels']['run_title'] || 'Advanced Reviews gallery' !== $reviews_state['gallery']['copy'] ) { $failures[] = 'Reviews must preserve fresh provider-owned fields that were absent from the Site Studio inspector.'; }
+		if ( array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) !== array_keys( $reviews_state ) || array( 'hero', 'grid', 'pagination', 'pairing-desk' ) !== array_keys( $reviews_state['section_visibility'] ) ) { $failures[] = 'Reviews managed merge must retain canonical top-level and visibility key order.'; }
+		$reviews_revision = isset( $lunara_test_provider_revisions['reviews'][0] ) ? $lunara_test_provider_revisions['reviews'][0] : array();
+		if ( $fresh_reviews !== ( isset( $reviews_revision['config'] ) ? $reviews_revision['config'] : null ) || 'site-studio-save' !== ( isset( $reviews_revision['action'] ) ? $reviews_revision['action'] : '' ) || $reviews_save['revision_id'] !== ( isset( $reviews_revision['id'] ) ? $reviews_revision['id'] : '' ) ) { $failures[] = 'Reviews provider transaction must snapshot the exact fresh state with its verified Site Studio revision ID.'; }
+	}
+
+	$preview_reviews_current = $lunara_test_provider_state['reviews'];
+	$preview_reviews_current['labels']['run_title'] = 'Newest Reviews command';
+	$lunara_test_provider_state['reviews'] = $preview_reviews_current;
+	$reviews_preview_candidate = $stale_reviews;
+	$reviews_preview_candidate['title'] = 'Preview Reviews title';
+	$reviews_preview = $reviews_adapter->create_preview( $reviews_preview_candidate );
+	$reviews_preview_state = isset( $lunara_test_provider_preview_state['reviews'] ) ? $lunara_test_provider_preview_state['reviews'] : array();
+	if ( is_wp_error( $reviews_preview ) || 'Preview Reviews title' !== ( isset( $reviews_preview_state['title'] ) ? $reviews_preview_state['title'] : '' ) || 'Newest Reviews command' !== ( isset( $reviews_preview_state['labels']['run_title'] ) ? $reviews_preview_state['labels']['run_title'] : '' ) ) { $failures[] = 'Reviews preview must merge managed edits over the newest provider-owned state.'; }
+
+	if ( ! is_wp_error( $reviews_save ) ) {
+		$reviews_restore = $reviews_adapter->restore_revision( $reviews_save['revision_id'] );
+		$mapped_reviews = $reviews_adapter->list_revisions();
+		if ( is_wp_error( $reviews_restore ) || 'restore-safety' !== ( isset( $mapped_reviews[0]['action'] ) ? $mapped_reviews[0]['action'] : '' ) || 'restore' !== $lunara_test_provider_revisions['reviews'][0]['action'] ) { $failures[] = 'Provider restore history must expose a Safety snapshot label without rewriting canonical provider audit data.'; }
+	}
+
+	$lunara_test_provider_state['journal'] = $lunara_test_provider_defaults['journal'];
+	$lunara_test_provider_revisions['journal'] = array();
+	$journal_adapter = lunara_site_studio_journal_archive_adapter();
+	$stale_journal = $journal_adapter->read_state();
+	$fresh_journal = $lunara_test_provider_defaults['journal'];
+	$fresh_journal['filter_caps']['journal_topic'] = 17;
+	$fresh_journal['labels']['toolbar_title'] = 'Advanced Journal command';
+	$fresh_journal['retention'][0]['copy'] = 'Advanced Journal route';
+	$lunara_test_provider_state['journal'] = $fresh_journal;
+
+	$journal_candidate = $stale_journal;
+	$journal_candidate['title'] = 'Managed Journal title';
+	$journal_candidate['section_order'] = array( 'retention', 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'pagination' );
+	$journal_candidate['section_visibility']['pagination'] = false;
+	$journal_candidate['presentation']['density'] = 'showcase';
+	$journal_save = $journal_adapter->save_state( $journal_candidate );
+	if ( is_wp_error( $journal_save ) ) { $failures[] = 'Journal managed save must succeed.'; }
+	else {
+		$journal_state = $journal_save['state'];
+		if ( 'Managed Journal title' !== $journal_state['title'] || array( 'retention', 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'pagination' ) !== $journal_state['section_order'] || false !== $journal_state['section_visibility']['pagination'] || 'showcase' !== $journal_state['presentation']['density'] ) { $failures[] = 'Journal must publish every managed candidate value in exact requested section order.'; }
+		if ( 17 !== $journal_state['filter_caps']['journal_topic'] || 'Advanced Journal command' !== $journal_state['labels']['toolbar_title'] || 'Advanced Journal route' !== $journal_state['retention'][0]['copy'] ) { $failures[] = 'Journal must preserve fresh provider-owned workflow fields that were absent from the Site Studio inspector.'; }
+		if ( array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'filter_caps', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) !== array_keys( $journal_state ) || array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ) !== array_keys( $journal_state['section_visibility'] ) ) { $failures[] = 'Journal managed merge must retain canonical top-level and visibility key order.'; }
+		$journal_revision = isset( $lunara_test_provider_revisions['journal'][0] ) ? $lunara_test_provider_revisions['journal'][0] : array();
+		if ( $fresh_journal !== ( isset( $journal_revision['config'] ) ? $journal_revision['config'] : null ) || 'site-studio-save' !== ( isset( $journal_revision['action'] ) ? $journal_revision['action'] : '' ) || $journal_save['revision_id'] !== ( isset( $journal_revision['id'] ) ? $journal_revision['id'] : '' ) ) { $failures[] = 'Journal provider transaction must snapshot the exact fresh state with its verified Site Studio revision ID.'; }
+	}
+
+	lunara_review_finish( 'provider-managed-merge', $failures );
 }
 
 function lunara_review_case_mutation_envelopes() {
@@ -1581,6 +1725,7 @@ $lunara_review_cases = array(
 	'revision-durability' => 'lunara_review_case_revision_durability',
 	'authorization-order' => 'lunara_review_case_authorization_order',
 	'design-token-inheritance' => 'lunara_review_case_design_token_inheritance',
+	'provider-managed-merge' => 'lunara_review_case_provider_managed_merge',
 	'mutation-envelopes' => 'lunara_review_case_mutation_envelopes',
 );
 $lunara_review_case = isset( $argv[1] ) ? sanitize_key( $argv[1] ) : '';

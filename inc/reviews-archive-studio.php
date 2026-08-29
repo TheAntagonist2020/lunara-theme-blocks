@@ -1374,16 +1374,38 @@ function lunara_reviews_archive_studio_store_preview( $raw ) {
 	$token   = wp_generate_uuid4();
 	$user_id = absint( get_current_user_id() );
 	$key     = 'lunara_reviews_archive_preview_' . hash( 'sha256', $token );
-	set_transient(
-		$key,
-		array(
-			'user_id'    => $user_id,
-			'token_hash' => wp_hash( $token . '|' . $user_id ),
-			'expires'    => lunara_reviews_archive_studio_timestamp() + 1800,
-			'config'     => $validated,
-		),
-		1800
+	$record  = array(
+		'user_id'    => $user_id,
+		'token_hash' => wp_hash( $token . '|' . $user_id ),
+		'expires'    => lunara_reviews_archive_studio_timestamp() + 1800,
+		'config'     => $validated,
 	);
+	try {
+		$written = set_transient( $key, $record, 1800 );
+	} catch ( Throwable $error ) {
+		$written = false;
+	}
+	if ( true !== $written ) {
+		try {
+			delete_transient( $key );
+		} catch ( Throwable $cleanup_error ) {
+			// A failed cleanup must not turn an unverified record into a token.
+		}
+		return new WP_Error( 'reviews_archive_preview_write_failed', __( 'The private preview could not be stored.', 'lunara-film' ) );
+	}
+	try {
+		$stored = get_transient( $key );
+	} catch ( Throwable $error ) {
+		$stored = false;
+	}
+	if ( $record !== $stored ) {
+		try {
+			delete_transient( $key );
+		} catch ( Throwable $cleanup_error ) {
+			// A failed cleanup must not turn an unverified record into a token.
+		}
+		return new WP_Error( 'reviews_archive_preview_readback_failed', __( 'The private preview could not be verified.', 'lunara-film' ) );
+	}
 	return $token;
 }
 
@@ -1655,6 +1677,8 @@ function lunara_reviews_archive_studio_validation_messages() {
 		'reviews_archive_geometry_invalid'              => __( 'One geometry value is outside its displayed bounds.', 'lunara-film' ),
 		'reviews_archive_revision_not_found'            => __( 'That revision is no longer available to restore.', 'lunara-film' ),
 		'reviews_archive_preview_forbidden'             => __( 'Theme editing permission is required to preview.', 'lunara-film' ),
+		'reviews_archive_preview_write_failed'          => __( 'The private preview could not be stored.', 'lunara-film' ),
+		'reviews_archive_preview_readback_failed'       => __( 'The private preview could not be verified.', 'lunara-film' ),
 	);
 }
 

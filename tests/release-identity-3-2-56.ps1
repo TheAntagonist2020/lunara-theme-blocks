@@ -69,28 +69,21 @@ function Get-TopEntry {
 $stylePath = Join-Path $root 'style.css'
 $styleLines = @(Get-Content -LiteralPath $stylePath)
 $versionHeaderLines = @($styleLines | Where-Object { $_ -match '^Version:' })
-$exactVersionHeaders = @($styleLines | Where-Object { $_ -ceq 'Version: 3.2.55' })
+$exactVersionHeaders = @($styleLines | Where-Object { $_ -ceq 'Version: 3.2.56' })
 Assert-Contract ($versionHeaderLines.Count -eq 1 -and $exactVersionHeaders.Count -eq 1) `
-    'style.css must contain exactly one exact Version: 3.2.55 header.'
+    'style.css must contain exactly one exact Version: 3.2.56 header.'
 
-$priorVersion = @('3', '2', '54') -join '.'
+$priorVersion = @('3', '2', '55') -join '.'
 $escapedPriorVersion = $priorVersion.Replace('.', '\.')
-$trackedSources = @(& git -C $root ls-files -- 'tests/*.ps1' 'tests/*.php' 'tests/*.js')
-if ($LASTEXITCODE -ne 0) {
-    throw 'Unable to enumerate tracked test sources with git ls-files.'
-}
-Assert-Contract ($trackedSources.Count -gt 0) 'Tracked test-source discovery must return at least one file.'
+$trackedSources = @(Get-ChildItem -LiteralPath (Join-Path $root 'tests') -File | Where-Object { $_.Extension -in @('.ps1', '.php', '.js') })
+Assert-Contract ($trackedSources.Count -gt 0) 'Test-source discovery must return at least one file.'
 
 $plainCount = 0
 $escapedCount = 0
-$pinCount = 0
 $unexpectedHits = [System.Collections.Generic.List[string]]::new()
-$pinPath = 'tests/oscars-read-path-ratchet.ps1'
-$expectedPinLine = "# Pinned on 2026-08-17 at theme $priorVersion + the three Oscars route-family"
 
-foreach ($relativePath in $trackedSources) {
-    $normalizedPath = $relativePath.Replace('\', '/')
-    $sourceLines = [IO.File]::ReadAllLines((Join-Path $root $relativePath))
+foreach ($source in $trackedSources) {
+    $sourceLines = [IO.File]::ReadAllLines($source.FullName)
 
     for ($index = 0; $index -lt $sourceLines.Count; $index++) {
         $line = $sourceLines[$index]
@@ -99,29 +92,48 @@ foreach ($relativePath in $trackedSources) {
         $plainCount += $linePlainCount
         $escapedCount += $lineEscapedCount
 
-        if ($linePlainCount -eq 1 -and $lineEscapedCount -eq 0 -and
-            $normalizedPath -ceq $pinPath -and $line -ceq $expectedPinLine) {
-            $pinCount++
-            continue
-        }
-
         if ($linePlainCount -gt 0 -or $lineEscapedCount -gt 0) {
             $unexpectedHits.Add(('{0}:{1} plain={2} escaped={3}' -f `
-                $normalizedPath, ($index + 1), $linePlainCount, $lineEscapedCount))
+                $source.Name, ($index + 1), $linePlainCount, $lineEscapedCount))
         }
     }
 }
 
-Assert-Contract ($plainCount -eq 1) `
-    "Tracked test sources must retain exactly one plain prior identity, the dated Oscars pin; found $plainCount."
+Assert-Contract ($plainCount -eq 0) `
+    "Current test sources must retain no stale plain prior identity; found $plainCount."
 Assert-Contract ($escapedCount -eq 0) `
-    "Tracked test sources must retain no regex-escaped prior identity; found $escapedCount."
-Assert-Contract ($pinCount -eq 1) `
-    'The sole prior identity must be the exact 2026-08-17 Oscars read-path provenance pin.'
+    "Current test sources must retain no regex-escaped prior identity; found $escapedCount."
 if ($unexpectedHits.Count -gt 0) {
     $sample = @($unexpectedHits | Select-Object -First 12) -join '; '
     Add-ContractFailure "Unexpected prior identity hits remain ($($unexpectedHits.Count)): $sample"
 }
+
+$historicalVersion = @('3', '2', '54') -join '.'
+$historicalHits = [System.Collections.Generic.List[object]]::new()
+foreach ($source in $trackedSources) {
+    $sourceLines = [IO.File]::ReadAllLines($source.FullName)
+    for ($index = 0; $index -lt $sourceLines.Count; $index++) {
+        if ($sourceLines[$index].Contains($historicalVersion)) {
+            $historicalHits.Add([pscustomobject]@{
+                FileName = $source.Name
+                LineNumber = [int]($index + 1)
+                LineText = $sourceLines[$index].Trim()
+            })
+        }
+    }
+}
+$expectedHistoricalLine = "# Pinned on 2026-08-17 at theme $historicalVersion + the three Oscars route-family"
+$historicalHitDetails = @($historicalHits | ForEach-Object {
+    '{0}:{1}:{2}' -f $_.FileName, $_.LineNumber, $_.LineText
+}) -join '; '
+Assert-Contract (
+    $historicalHits.Count -eq 1 -and
+    $historicalHits[0].FileName -ceq 'oscars-read-path-ratchet.ps1' -and
+    $historicalHits[0].LineNumber -is [int] -and
+    $historicalHits[0].LineNumber -gt 0 -and
+    $historicalHits[0].LineText -ceq $expectedHistoricalLine
+) `
+    ("Current tests must preserve exactly the dated Oscars $historicalVersion provenance pin; found: " + $historicalHitDetails)
 
 $deployIgnoreLines = @(Get-Content -LiteralPath (Join-Path $root '.deployignore'))
 foreach ($requiredDeployIgnore in @('docs', 'docs/**', 'tests', 'tests/**')) {
@@ -130,36 +142,38 @@ foreach ($requiredDeployIgnore in @('docs', 'docs/**', 'tests', 'tests/**')) {
         ".deployignore must contain exactly one $requiredDeployIgnore repository-only lock."
 }
 
-$changelogHeading = '## 2026-08-29 — Theme 3.2.55 Site Studio Foundation and Visual Site Map Pilot'
+$releaseSeparator = [char]0x2014
+$changelogHeading = "## 2026-08-29 $releaseSeparator Theme 3.2.56 Site Studio Editorial and Utility Workspaces"
 $changelog = [IO.File]::ReadAllText((Join-Path $root 'docs/CHANGELOG.md'))
 $changelogHeadings = @($changelog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $changelogHeadingCount = @($changelogHeadings | Where-Object { $_ -ceq $changelogHeading }).Count
-Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.55 changelog heading must exist exactly once.'
+Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.56 changelog heading must exist exactly once.'
 Assert-Contract ($changelogHeadings.Count -gt 0 -and $changelogHeadings[0] -ceq $changelogHeading) `
-    'The 3.2.55 changelog entry must be the newest release entry.'
+    'The 3.2.56 changelog entry must be the newest release entry.'
 $changelogEntry = Get-TopEntry -Text $changelog -Heading $changelogHeading
 foreach ($coverage in @(
-    @{ Pattern = '(?is)normalized.+registry.+REST API'; Label = 'normalized registry and REST API' },
-    @{ Pattern = '(?is)Global Design.+Homepage Structure.+Lunara Method'; Label = 'all three pilot surfaces' },
-    @{ Pattern = '(?is)atomic.+theme mods.+post_content'; Label = 'atomic Homepage state' },
-    @{ Pattern = '(?is)private preview.+section bridge'; Label = 'private preview and section bridge' },
-    @{ Pattern = '(?is)dedicated.+responsive.+workspace.+1440.+768.+390'; Label = 'dedicated responsive workspace' },
-    @{ Pattern = '(?is)twelve.+revision.+safety snapshot'; Label = 'twelve revisions and restore safety' },
-    @{ Pattern = '(?is)Revision History.+refresh.+Save.+Restore'; Label = 'live Revision History refresh' },
-    @{ Pattern = '(?is)Authorized private previews.+admin chrome.+Core'; Label = 'public-geometry admin chrome suppression' },
-    @{ Pattern = '(?is)Save and Restore.+complete canonical mutation envelopes'; Label = 'strict Save and Restore mutation envelopes' }
+    @{ Pattern = '(?is)Reviews Archive.+Journal Archive.+Review Single.+Utility Search.+Site Footer'; Label = 'all five editorial and utility surfaces' },
+    @{ Pattern = '(?is)canonical.+no second settings'; Label = 'canonical ownership without duplicate storage' },
+    @{ Pattern = '(?is)section order.+visibility.+canonical'; Label = 'canonical archive ordering and visibility' },
+    @{ Pattern = '(?is)private preview.+q=Lunara.+section bridge'; Label = 'fixed-query private preview and section bridge' },
+    @{ Pattern = '(?is)twelve.+revision.+safety\s+snapshot'; Label = 'twelve revisions and restore safety' },
+    @{ Pattern = '(?is)plain-language.+1440.+768.+390'; Label = 'responsive plain-language workspace' },
+    @{ Pattern = '(?is)Core 0\.8\.9.+Journal\s+Foundation 1\.2\.13.+Dispatch 3\.2\.7'; Label = 'plugin-first compatibility releases' },
+    @{ Pattern = '(?is)same-origin admin anchors.+fail closed'; Label = 'safe guided handoff anchors' },
+    @{ Pattern = '(?is)404-only.+Classic controls'; Label = '404-only Classic controls ownership boundary' },
+    @{ Pattern = '(?is)Removed.+version-change.+Header.+Hero.+purge'; Label = 'version-change, Header, and Hero purge removal' }
 )) {
     Assert-Contract ($changelogEntry -match $coverage.Pattern) `
-        "The 3.2.55 changelog entry must cover $($coverage.Label)."
+        "The 3.2.56 changelog entry must cover $($coverage.Label)."
 }
 
-$sessionHeading = '## 2026-08-29 — Theme 3.2.55 final hardening and local candidate close'
+$sessionHeading = "## 2026-08-29 $releaseSeparator Theme 3.2.56 final hardening and local candidate close"
 $sessionLog = [IO.File]::ReadAllText((Join-Path $root 'docs/SESSION-LOG.md'))
 $sessionHeadings = @($sessionLog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $sessionHeadingCount = @($sessionHeadings | Where-Object { $_ -ceq $sessionHeading }).Count
-Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.55 local-candidate session heading must exist exactly once.'
+Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.56 local-candidate session heading must exist exactly once.'
 Assert-Contract ($sessionHeadings.Count -gt 0 -and $sessionHeadings[0] -ceq $sessionHeading) `
-    'The final 3.2.55 local-candidate close must be the newest session entry.'
+    'The final 3.2.56 local-candidate close must be the newest session entry.'
 $sessionEntry = Get-TopEntry -Text $sessionLog -Heading $sessionHeading
 Assert-Contract ($sessionEntry.Contains('docs/CHANGELOG.md')) `
     'The newest session entry must point to docs/CHANGELOG.md for release detail.'
@@ -172,7 +186,7 @@ Assert-Contract ($sessionEntry -notmatch '(?im)^\s*(Deployment completed|Deploye
 
 if ($script:Failures.Count -gt 0) {
     $details = $script:Failures | ForEach-Object { " - $_" }
-    throw "Theme 3.2.55 release identity contract failed:`n$($details -join "`n")"
+    throw "Theme 3.2.56 release identity contract failed:`n$($details -join "`n")"
 }
 
-Write-Host 'Theme 3.2.55 release identity contract passed: exact stylesheet identity, dual-form prior census, deploy exclusions, and newest local-only release records.'
+Write-Host 'Theme 3.2.56 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and newest local-only release records.'

@@ -166,7 +166,7 @@ repo, read this one first.
 ## Gates available locally
 
 ```bash
-# PowerShell contract suite — 82 files
+# PowerShell contract suite — 89 top-level files in Theme 3.2.56
 pwsh tests/<name>.ps1
 
 # PHP runtime contracts

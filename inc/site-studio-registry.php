@@ -175,7 +175,7 @@ if ( ! function_exists( 'lunara_site_studio_default_surfaces' ) ) {
 				'dependency_callback' => 'lunara_site_studio_journal_archive_dependency',
 				'status_callback'     => 'lunara_site_studio_status_ready',
 				'danger_level'        => 'none',
-				'sections'            => array( 'hero', 'filters', 'stream', 'gallery', 'retention' ),
+				'sections'            => array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ),
 				'classic_url'         => 'customize.php?autofocus[panel]=lunara_editorial_panel',
 				'renderer'            => 'lunara_control_desk_render_journal_archive_studio',
 			),
@@ -244,6 +244,75 @@ if ( ! function_exists( 'lunara_site_studio_default_surfaces' ) ) {
 				'classic_url'         => 'customize.php?autofocus[section]=lunara_global_design_options',
 				'renderer'            => 'lunara_design_tokens_render_panel',
 			),
+			'review-single' => array(
+				'id'                    => 'review-single',
+				'group'                 => __( 'Editorial', 'lunara-film' ),
+				'label'                 => __( 'Review Single', 'lunara-film' ),
+				'description'           => __( 'Tune the Review reading experience, Debrief, companion rail, spoilers, trailer, and Pair It With presentation.', 'lunara-film' ),
+				'aliases'               => array( 'review page', 'single review', 'debrief', 'pair it with', 'spoilers', 'trailer' ),
+				'owner'                 => 'theme:review-single',
+				'kind'                  => 'presentation',
+				'capability'            => 'edit_theme_options',
+				'supports_preview'      => true,
+				'preview_route'         => '/reviews/sinners-2025/',
+				'preview_query_arg'     => 'lunara_review_single_preview',
+				'preview_params'        => array(),
+				'adapter_factory'       => 'lunara_site_studio_review_single_adapter',
+				'state_schema_callback' => 'lunara_site_studio_review_single_state_schema',
+				'admin_url'             => 'admin.php?page=lunara-site-studio&surface=review-single',
+				'dependency_callback'   => 'lunara_site_studio_review_single_dependency',
+				'status_callback'       => 'lunara_site_studio_status_ready',
+				'danger_level'          => 'none',
+				'sections'              => array( 'hero', 'criticism', 'debrief', 'pair-it-with' ),
+				'classic_url'           => 'admin.php?page=lunara-control-desk&tab=theme-studio#lunara-theme-studio-review-single',
+				'renderer'              => '',
+			),
+			'utility-search' => array(
+				'id'                    => 'utility-search',
+				'group'                 => __( 'Utility', 'lunara-film' ),
+				'label'                 => __( 'Search & Recovery', 'lunara-film' ),
+				'description'           => __( 'Control Search results, direct matches, no-result presentation, and mobile-safe geometry. The 404 return destination stays in Classic controls.', 'lunara-film' ),
+				'aliases'               => array( 'search', '404', 'not found', 'results', 'recovery', 'utility' ),
+				'owner'                 => 'theme:utility-search',
+				'kind'                  => 'presentation',
+				'capability'            => 'edit_theme_options',
+				'supports_preview'      => true,
+				'preview_route'         => '/search/',
+				'preview_query_arg'     => 'lunara_utility_search_preview',
+				'preview_params'        => array( 'q' => 'Lunara' ),
+				'adapter_factory'       => 'lunara_site_studio_utility_search_adapter',
+				'state_schema_callback' => 'lunara_site_studio_utility_search_state_schema',
+				'admin_url'             => 'admin.php?page=lunara-site-studio&surface=utility-search',
+				'dependency_callback'   => 'lunara_site_studio_dependency_available',
+				'status_callback'       => 'lunara_site_studio_status_ready',
+				'danger_level'          => 'none',
+				'sections'              => array( 'search-command', 'direct-matches', 'result-run', 'recovery' ),
+				'classic_url'           => 'admin.php?page=lunara-control-desk&tab=theme-studio#lunara-theme-studio-utility-search-studio',
+				'renderer'              => '',
+			),
+			'site-footer' => array(
+				'id'                    => 'site-footer',
+				'group'                 => __( 'Global', 'lunara-film' ),
+				'label'                 => __( 'Site Footer', 'lunara-film' ),
+				'description'           => __( 'Control the live footer logo, closing line, column headings, and copyright name.', 'lunara-film' ),
+				'aliases'               => array( 'footer', 'closing', 'copyright', 'navigation columns', 'tagline' ),
+				'owner'                 => 'theme:site-footer',
+				'kind'                  => 'presentation',
+				'capability'            => 'edit_theme_options',
+				'supports_preview'      => true,
+				'preview_route'         => '/',
+				'preview_query_arg'     => 'lunara_footer_preview',
+				'preview_params'        => array(),
+				'adapter_factory'       => 'lunara_site_studio_footer_adapter',
+				'state_schema_callback' => 'lunara_site_studio_footer_state_schema',
+				'admin_url'             => 'admin.php?page=lunara-site-studio&surface=site-footer',
+				'dependency_callback'   => 'lunara_site_studio_dependency_available',
+				'status_callback'       => 'lunara_site_studio_status_ready',
+				'danger_level'          => 'none',
+				'sections'              => array( 'footer' ),
+				'classic_url'           => 'admin.php?page=lunara-control-desk&tab=theme-studio#lunara-theme-studio-footer',
+				'renderer'              => '',
+			),
 		);
 	}
 }
@@ -278,6 +347,28 @@ if ( ! function_exists( 'lunara_site_studio_normalize_preview_route' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lunara_site_studio_normalize_preview_params' ) ) {
+	/** Normalize the fixed public vocabulary that may accompany a preview token. */
+	function lunara_site_studio_normalize_preview_params( $value ) {
+		if ( ! is_array( $value ) || count( $value ) > 1 ) {
+			return array();
+		}
+		$params = array();
+		foreach ( $value as $key => $raw ) {
+			$key = lunara_site_studio_registry_key( $key );
+			if ( ! in_array( $key, array( 'q', 's' ), true ) || ! is_scalar( $raw ) ) {
+				return array();
+			}
+			$text = trim( sanitize_text_field( (string) $raw ) );
+			if ( '' === $text || strlen( $text ) > 80 || preg_match( '/[\r\n]/', $text ) ) {
+				return array();
+			}
+			$params[ $key ] = $text;
+		}
+		return $params;
+	}
+}
+
 if ( ! function_exists( 'lunara_site_studio_normalize_surface' ) ) {
 	/**
 	 * Normalize without executing callbacks or factories.
@@ -308,6 +399,7 @@ if ( ! function_exists( 'lunara_site_studio_normalize_surface' ) ) {
 		$classic    = lunara_site_studio_sanitize_admin_path( isset( $raw['classic_url'] ) ? $raw['classic_url'] : '' );
 		$preview    = lunara_site_studio_normalize_preview_route( isset( $raw['preview_route'] ) ? $raw['preview_route'] : '' );
 		$query_arg  = isset( $raw['preview_query_arg'] ) ? lunara_site_studio_registry_key( $raw['preview_query_arg'] ) : '';
+		$preview_params = lunara_site_studio_normalize_preview_params( isset( $raw['preview_params'] ) ? $raw['preview_params'] : array() );
 
 		$normalized = array(
 			'id'                  => $id,
@@ -321,6 +413,7 @@ if ( ! function_exists( 'lunara_site_studio_normalize_surface' ) ) {
 			'supports_preview'    => ! empty( $raw['supports_preview'] ),
 			'preview_route'       => $preview,
 			'preview_query_arg'   => $query_arg,
+			'preview_params'      => $preview_params,
 			'adapter_factory'     => $adapter,
 			'state_schema_callback' => $state_schema,
 			'admin_url'           => $admin_path,

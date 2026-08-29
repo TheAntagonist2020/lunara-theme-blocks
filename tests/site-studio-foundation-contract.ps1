@@ -23,6 +23,7 @@ foreach ($reviewCase in @(
     'revision-durability',
     'authorization-order',
     'design-token-inheritance',
+    'provider-managed-merge',
     'mutation-envelopes'
 )) {
     $reviewRuntime = & php (Join-Path $PSScriptRoot 'site-studio-foundation-runtime.php') $reviewCase 2>&1

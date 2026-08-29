@@ -1,6 +1,6 @@
 # Lunara Film — Engineering Changelog & Handoff
 
-**Scope:** all six `theantagonist2020` repositories behind lunarafilm.com.
+**Scope:** all seven `theantagonist2020` repositories behind lunarafilm.com.
 **Period covered:** 2026-07-01 → 2026-07-05 (the "Design Spec 2.0" era).
 **Audience:** any engineer or AI session picking this project up cold.
 
@@ -10,6 +10,60 @@ decisions from commit messages. Version numbers and dates below are pulled
 directly from each repo's `git log`, not reconstructed from memory.
 
 ---
+
+## 2026-08-29 — Theme 3.2.56 Site Studio Editorial and Utility Workspaces
+
+- Migrated Reviews Archive, Journal Archive, Review Single, Utility Search &
+  Recovery, and Site Footer into the common Site Studio workspace. Each adapter
+  reads, validates, previews, saves, snapshots, and restores its existing
+  canonical theme or provider state; no second settings database was added.
+- Derived archive section order and visibility from the existing canonical
+  Reviews and Journal registries. The recognizable left rail now edits the same
+  public order, while advanced handoffs retain the full archive tools and Core
+  Review Studio remains the owner of individual Review records.
+- Extended private preview to the exact Reviews, Journal, Review, Search, and
+  Footer routes. Utility Search retains the fixed `q=Lunara` preview query, all
+  candidate tokens remain user/owner/route bound, and stable public section
+  markers drive the strict same-origin section bridge without wrapping or
+  restructuring live page content.
+- Added strict state specifications for Review Single, Utility Search, and Site
+  Footer plus hardened provider projections for the two archives. Each migrated
+  surface retains twelve private revisions, and restore still creates a safety
+  snapshot before replacing canonical state.
+- Kept the 404-only Primary Return Route in Utility Search's Classic controls;
+  the fixed `/search/?q=Lunara` iframe cannot truthfully preview that separate
+  route. Search-result and no-result presentation remain previewable in Studio.
+- Hardened archive saves and previews to merge only the inspector-owned fields
+  into a fresh provider read, so concurrent advanced-tool changes cannot be
+  overwritten by a stale browser candidate. Dotted validation errors now focus
+  their exact plain-language controls, and invalid legacy theme mods normalize
+  to safe defaults before the workspace opens.
+- Archive private-preview providers now require a successful transient write
+  and exact readback before returning a token. Failed or mismatched records are
+  deleted and surface a bounded human error instead of sending the iframe to a
+  token that cannot be authorized.
+- Added familiar, plain-language controls for density, prominence, spacing,
+  mobile geometry, footer language, archive order, and visibility. The same
+  workspace now proves real 1440, 768, and 390 preview widths; normal Save Live
+  remains confirmation-free while removals and restores require confirmation.
+- Prepared plugin-first compatibility releases for Core 0.8.9, Journal
+  Foundation 1.2.13, and Dispatch 3.2.7. They contribute inert guided
+  destinations and redacted status, make Foundation the authoritative workflow
+  owner, and replace Journal's raw source JSON with labeled source rows. Deploy
+  all plugins before the theme, with Foundation before Dispatch and Theme.
+- Allowed normalized same-origin admin anchors to retain their precise guided
+  handoff destination while external, credentialed, control-character, and
+  out-of-admin URLs continue to fail closed.
+- Removed the legacy version-change whole-domain Rocket purge plus Header and
+  Hero Command administration purges and the remaining affirmative purge
+  instruction. Public correctness and ordinary administration no longer depend
+  on a cache-clearing side effect.
+- Added focused PHP/static contracts and a real-Chrome editorial workspace gate
+  covering local dirty state, responsive layouts, archive reordering, cancelled
+  removals, fixed preview URLs, region-to-inspector focus, ordinary saves, and
+  the five new surfaces at representative breakpoints.
+- This entry records a local release candidate only. No integration,
+  deployment, cache operation, production write, or live canary occurred.
 
 ## 2026-08-29 — Theme 3.2.55 Site Studio Foundation and Visual Site Map Pilot
 

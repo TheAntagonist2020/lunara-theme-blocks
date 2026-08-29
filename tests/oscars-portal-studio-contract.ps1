@@ -257,8 +257,8 @@ Assert-True ($controlDesk -match "'Oscars Portal Studio'") 'The Theme Studio com
 Assert-True ($controlDesk -match "'#lunara-oscars-portal-studio'") 'The command index entry must anchor to the Portal Studio surface.'
 
 # Version lock: this intentionally asserts the NEXT reissue identity. It is
-# EXPECTED to fail until the 3.2.55 version migration lands as its own step;
+# EXPECTED to fail until the 3.2.56 version migration lands as its own step;
 # every assertion above it must already pass on the pre-migration tree.
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.55\s*$') 'Theme version must be 3.2.55.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.56\s*$') 'Theme version must be 3.2.56.'
 
 Write-Host 'oscars-portal-studio: all assertions passed.'

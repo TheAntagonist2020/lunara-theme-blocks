@@ -42,6 +42,9 @@ $journal = Read-ThemeFile 'archive-journal.php'
 $oscars = Read-ThemeFile 'page-oscars.php'
 $designTokens = Read-ThemeFile 'inc/design-tokens.php'
 $controlDesk = Read-ThemeFile 'inc/control-desk.php'
+$functions = Read-ThemeFile 'functions.php'
+$headerCommand = Read-ThemeFile 'inc/header-command.php'
+$heroCommand = Read-ThemeFile 'inc/hero-command.php'
 
 Add-ContractFailure (([regex]::Matches($header, '<main\b')).Count -eq 1) 'header.php must remain the sole canonical main opener.'
 foreach ($route in @(
@@ -57,14 +60,18 @@ foreach ($route in @(
 
 Add-ContractFailure (([regex]::Matches($oscars, 'lunara_render_oscars_winner_media_link\s*\(')).Count -eq 2) 'Both Oscars winner lanes must use the shared conditional media renderer.'
 Add-ContractFailure ($oscars -notmatch '<a class="lunara-ceremony-winner-media-link"') 'Oscars winner lanes must not emit unconditional media anchors.'
-Add-ContractFailure ($designTokens -notmatch 'rocket_clean_domain') 'Design Tokens saves must never clear the WP Rocket domain cache.'
-$visibleControlDeskStrings = @(Get-VisibleTranslationStrings $controlDesk)
+$globalCachePurge = '(?m)\b(?:rocket_clean_[A-Za-z0-9_]+|wp_cache_flush)\s*\('
+Add-ContractFailure ($designTokens -notmatch $globalCachePurge) 'Design Tokens saves must never invoke a cache-purge primitive.'
+Add-ContractFailure ($functions -notmatch 'lunara_purge_rocket_on_deploy' -and $functions -notmatch $globalCachePurge) 'Theme boot must never purge caches on a version change.'
+Add-ContractFailure ($headerCommand -notmatch $globalCachePurge) 'Header Command administration must never invoke a cache-purge primitive.'
+Add-ContractFailure ($heroCommand -notmatch $globalCachePurge) 'Hero Command administration must never invoke a cache-purge primitive.'
+$visibleAdminStrings = @((Get-VisibleTranslationStrings $controlDesk) + (Get-VisibleTranslationStrings $headerCommand) + (Get-VisibleTranslationStrings $heroCommand))
 $cacheClearingVerb = '(?:flush(?:es|ed|ing)?|clear(?:s|ed|ing)?|purg(?:e|es|ed|ing))'
 $cacheClearingAction = "(?i)\b$cacheClearingVerb\b"
 $cacheClearingDirectNegation = '(?i)(?:\bnever\s+(?:be\s+)?|\bwithout\s+|\b(?:do|does|did|should|must|can|could|would|will|may)\s+not\s+(?:be\s+)?|\bno\s+caches?\s+(?:(?:should|must|can|could|would|will|may)\s+)?(?:be\s+)?)$'
 $staleVisibleCacheGuidance = [Collections.Generic.List[string]]::new()
 $canonicalNoCacheGuidance = [Collections.Generic.List[string]]::new()
-foreach ($visibleString in $visibleControlDeskStrings) {
+foreach ($visibleString in $visibleAdminStrings) {
     foreach ($clause in [regex]::Split($visibleString, '(?i)\s*(?:[;:.!?\u2013\u2014]+|,\s+|\bbut\b|\band\b)\s*')) {
         foreach ($actionMatch in [regex]::Matches($clause, $cacheClearingAction)) {
             $windowStart = [Math]::Max(0, $actionMatch.Index - 80)
@@ -81,7 +88,7 @@ foreach ($visibleString in $visibleControlDeskStrings) {
         }
     }
 }
-Add-ContractFailure ($staleVisibleCacheGuidance.Count -eq 0) ("Visible Control Desk guidance must contain no affirmative cache-clearing instruction: " + ($staleVisibleCacheGuidance -join ' | '))
+Add-ContractFailure ($staleVisibleCacheGuidance.Count -eq 0) ("Visible theme administration must contain no affirmative cache-clearing instruction: " + ($staleVisibleCacheGuidance -join ' | '))
 Add-ContractFailure ($canonicalNoCacheGuidance.Count -ge 1) 'Visible Control Desk guidance must state a genuinely negative no-cache-clearing rule.'
 
 $phpOutput = & php (Join-Path $PSScriptRoot 'oscars-winner-map-runtime.php') 2>&1
@@ -91,11 +98,16 @@ if ($LASTEXITCODE -ne 0) {
 
 $runningOnWindows = [Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([Runtime.InteropServices.OSPlatform]::Windows)
 $node = (Get-Command node -ErrorAction Stop).Source
-$nodeModules = Join-Path $themeRoot 'node_modules'
+$runtimeHome = @($env:USERPROFILE, [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)) | Where-Object { $_ } | Select-Object -First 1
+$runtimeModules = if ($runtimeHome) { Join-Path (Join-Path (Join-Path (Join-Path (Join-Path (Join-Path $runtimeHome '.cache') 'codex-runtimes') 'codex-primary-runtime') 'dependencies') 'node') 'node_modules' } else { '' }
+$moduleCandidates = @($runtimeModules, (Join-Path $themeRoot 'node_modules'))
+if ($env:NODE_PATH) { $moduleCandidates += ($env:NODE_PATH -split [IO.Path]::PathSeparator) }
+$nodeModules = $moduleCandidates | Where-Object { $_ -and ((Test-Path -LiteralPath (Join-Path $_ 'playwright')) -or (Test-Path -LiteralPath (Join-Path $_ 'playwright-core'))) } | Select-Object -Unique | Select-Object -First 1
+if (-not $nodeModules) { throw 'Pinned Playwright or Playwright Core could not be resolved.' }
 $priorNodePath = $env:NODE_PATH
 $priorBrowser = $env:LUNARA_BROWSER_EXECUTABLE
 try {
-    $env:NODE_PATH = @($nodeModules, $priorNodePath) | Where-Object { $_ } | Select-Object -Unique | Join-String -Separator ([IO.Path]::PathSeparator)
+    $env:NODE_PATH = (@($nodeModules, $priorNodePath) | Where-Object { $_ } | Select-Object -Unique) -join ([IO.Path]::PathSeparator)
     if (-not $env:LUNARA_BROWSER_EXECUTABLE -or -not (Test-Path -LiteralPath $env:LUNARA_BROWSER_EXECUTABLE)) {
         $browserCandidates = if ($runningOnWindows) {
             @(
@@ -125,4 +137,4 @@ if ($failures.Count -gt 0) {
     throw ("Public route stabilization contract failed with $($failures.Count) defect group(s):`n - " + ($failures -join "`n - "))
 }
 
-Write-Host 'Theme 3.2.55 public route stabilization contract passed: 4 routes x 5 responsive baselines, one main, contained documents, local scrollers, and named conditional Oscars media.'
+Write-Host 'Theme 3.2.56 public route stabilization contract passed: 4 routes x 5 responsive baselines, one main, contained documents, local scrollers, and named conditional Oscars media.'

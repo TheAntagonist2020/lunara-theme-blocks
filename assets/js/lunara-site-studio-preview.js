@@ -4,7 +4,12 @@
 	var markerMap = {
 		'global-design': [],
 		'homepage-structure': ['hero', 'latest-reviews', 'pairing-desk', 'dispatch', 'oscar-picks', 'oscar-facts'],
-		'lunara-method': ['pairing-desk']
+		'lunara-method': ['pairing-desk'],
+		'reviews-archive': ['hero', 'grid', 'pagination', 'pairing-desk'],
+		'journal-archive': ['hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination'],
+		'review-single': ['hero', 'criticism', 'debrief', 'pair-it-with'],
+		'utility-search': ['search-command', 'direct-matches', 'result-run', 'recovery'],
+		'site-footer': ['footer']
 	};
 	function ownDataObject(value, keys) {
 		var names, symbols, index, descriptor;

@@ -143,7 +143,7 @@ $journal_section_markup = array();
 
 ob_start();
 ?>
-<header class="lunara-archive-hero lunara-journal-archive-hero lunara-journal-archive-slot-hero">
+<header class="lunara-archive-hero lunara-journal-archive-hero lunara-journal-archive-slot-hero" data-lunara-site-studio-section="hero">
 	<p class="lunara-archive-hero-kicker"><?php echo esc_html( $kicker ); ?></p>
 	<h1 class="lunara-archive-hero-title"><?php echo esc_html( $title ); ?></h1>
 	<?php if ( '' !== trim( (string) $copy ) ) : ?><p class="lunara-archive-hero-copy"><?php echo esc_html( $copy ); ?></p><?php endif; ?>
@@ -154,7 +154,7 @@ $journal_section_markup['fallback-h1'] = '<h1 class="screen-reader-text">' . esc
 
 ob_start();
 ?>
-<div class="lunara-journal-archive-deskbar lunara-journal-archive-slot-deskbar" aria-label="<?php esc_attr_e( 'Journal desk status', 'lunara-film' ); ?>">
+<div class="lunara-journal-archive-deskbar lunara-journal-archive-slot-deskbar" data-lunara-site-studio-section="deskbar" aria-label="<?php esc_attr_e( 'Journal desk status', 'lunara-film' ); ?>">
 	<span><strong><?php echo esc_html( $journal_labels['desk_count'] ); ?></strong> <?php echo esc_html( $journal_total . ' ' . ( 1 === $journal_total ? $journal_labels['file_singular'] : $journal_labels['file_plural'] ) ); ?></span>
 	<?php if ( '' !== $latest_label ) : ?><span><strong><?php echo esc_html( $journal_labels['desk_latest'] ); ?></strong> <?php echo esc_html( $latest_label ); ?></span><?php endif; ?>
 	<?php if ( $journal_lane_count > 0 ) : ?><span><strong><?php echo esc_html( $journal_labels['desk_mix'] ); ?></strong> <?php echo esc_html( $journal_lane_count . ' ' . ( 1 === $journal_lane_count ? $journal_labels['lane_singular'] : $journal_labels['lane_plural'] ) ); ?></span><?php endif; ?>
@@ -165,7 +165,7 @@ $journal_section_markup['deskbar'] = ob_get_clean();
 ob_start();
 if ( ! empty( $journal_filter_groups ) ) :
 	?>
-	<div class="lunara-journal-filter-groups lunara-journal-archive-slot-filters">
+	<div class="lunara-journal-filter-groups lunara-journal-archive-slot-filters" data-lunara-site-studio-section="filters">
 		<?php foreach ( $journal_filter_groups as $group_index => $filter_group ) : ?>
 			<nav class="lunara-journal-archive-filters" aria-label="<?php echo esc_attr( sprintf( __( 'Filter Journal by %s', 'lunara-film' ), $filter_group['label'] ) ); ?>">
 				<span class="lunara-journal-filter-label"><?php echo esc_html( $filter_group['label'] ); ?></span>
@@ -181,7 +181,7 @@ $journal_section_markup['filters'] = ob_get_clean();
 ob_start();
 if ( ! empty( $journal_archive_posts ) && ! empty( $sort_options ) ) :
 	?>
-	<div class="lunara-editorial-archive-toolbar lunara-journal-archive-toolbar lunara-journal-archive-slot-toolbar">
+	<div class="lunara-editorial-archive-toolbar lunara-journal-archive-toolbar lunara-journal-archive-slot-toolbar" data-lunara-site-studio-section="toolbar">
 		<div class="lunara-home-section-head lunara-editorial-archive-toolbar-head"><div><p class="lunara-home-section-kicker"><?php echo esc_html( $journal_labels['toolbar_kicker'] ); ?></p><h2 class="lunara-section-title"><?php echo esc_html( $journal_labels['toolbar_title'] ); ?></h2><?php if ( '' !== trim( (string) $journal_config['supporting_copy'] ) ) : ?><p class="lunara-home-section-summary"><?php echo esc_html( $journal_config['supporting_copy'] ); ?></p><?php endif; ?></div></div>
 		<div class="lunara-archive-sort" aria-label="<?php esc_attr_e( 'Sort journal archive', 'lunara-film' ); ?>"><?php foreach ( $sort_options as $sort_key => $sort_label ) : ?><?php $is_active = $sort_key === $current_sort; $sort_url = 'date_desc' === $sort_key ? $sort_base_url : add_query_arg( 'sort', rawurlencode( $sort_key ), $sort_base_url ); ?><a class="lunara-archive-sort-link <?php echo $is_active ? 'is-active' : ''; ?>" href="<?php echo esc_url( $sort_url ); ?>"<?php echo $is_active ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $sort_label ); ?></a><?php endforeach; ?></div>
 	</div>
@@ -192,7 +192,7 @@ $journal_section_markup['toolbar'] = ob_get_clean();
 ob_start();
 if ( ! empty( $journal_archive_posts ) ) :
 	?>
-	<section class="lunara-journal-archive-grid lunara-review-grid lunara-review-archive-uniform lunara-journal-archive-slot-grid">
+	<section class="lunara-journal-archive-grid lunara-review-grid lunara-review-archive-uniform lunara-journal-archive-slot-grid" data-lunara-site-studio-section="grid">
 		<?php
 		$journal_card_index = 0;
 		foreach ( $journal_archive_posts as $journal_archive_post ) :
@@ -233,7 +233,7 @@ if ( ! empty( $journal_archive_posts ) ) :
 	</section>
 	<?php
 else :
-	?><div class="lunara-archive-empty lunara-journal-archive-slot-grid"><p><?php echo esc_html( $journal_labels['empty_copy'] ); ?></p></div><?php
+	?><div class="lunara-archive-empty lunara-journal-archive-slot-grid" data-lunara-site-studio-section="grid"><p><?php echo esc_html( $journal_labels['empty_copy'] ); ?></p></div><?php
 endif;
 $journal_section_markup['grid'] = ob_get_clean();
 
@@ -263,7 +263,7 @@ $journal_section_markup['retention'] = lunara_journal_archive_studio_compose_ret
 
 ob_start();
 if ( ! empty( $journal_archive_posts ) ) :
-	?><nav class="lunara-archive-pagination lunara-journal-archive-slot-pagination" aria-label="<?php esc_attr_e( 'Journal pagination', 'lunara-film' ); ?>"><?php the_posts_pagination( array( 'mid_size' => 1, 'add_args' => 'date_desc' === $current_sort ? false : array( 'sort' => $current_sort ), 'prev_text' => $journal_labels['pagination_prev'], 'next_text' => $journal_labels['pagination_next'] ) ); ?></nav><?php
+	?><nav class="lunara-archive-pagination lunara-journal-archive-slot-pagination" data-lunara-site-studio-section="pagination" aria-label="<?php esc_attr_e( 'Journal pagination', 'lunara-film' ); ?>"><?php the_posts_pagination( array( 'mid_size' => 1, 'add_args' => 'date_desc' === $current_sort ? false : array( 'sort' => $current_sort ), 'prev_text' => $journal_labels['pagination_prev'], 'next_text' => $journal_labels['pagination_next'] ) ); ?></nav><?php
 endif;
 $journal_section_markup['pagination'] = ob_get_clean();
 

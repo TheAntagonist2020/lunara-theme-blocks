@@ -44,12 +44,13 @@ $control = Read-ThemeFile 'inc/control-desk.php'
 $studioCss = Read-ThemeFile 'assets/css/lunara-site-studio.css'
 $studioJs = Read-ThemeFile 'assets/js/lunara-site-studio.js'
 $previewJs = Read-ThemeFile 'assets/js/lunara-site-studio-preview.js'
+$previewPhp = Read-ThemeFile 'inc/site-studio-preview.php'
 $controlCss = Read-ThemeFile 'assets/css/lunara-control-desk.css'
 
 Assert-True ($control -notmatch "(?s)function\s+lunara_enqueue_control_desk_assets\s*\([^)]*\)\s*\{.{0,500}lunara_page_lunara-site-studio") 'Control Desk must not enqueue its bundle on Site Studio.'
 Assert-True ($studio -match "function\s+lunara_enqueue_site_studio_assets" -and $studio -match "'lunara_page_lunara-site-studio'") 'Site Studio must own an exact-hook enqueue.'
 Assert-True ($studio -match "LunaraSiteStudioWorkspaceConfig" -and $studio -match "'protocol'\s*=>\s*'lunara-site-studio/v1'" -and $studio -match "'clientVersion'\s*=>\s*1") 'The workspace must localize its locked protocol.'
-Assert-True ($studio -match "'global-design'\s*=>\s*array\(\s*\)" -and $studio -match "'homepage-structure'\s*=>\s*array\(\s*'hero'.*'latest-reviews'.*'pairing-desk'.*'dispatch'.*'oscar-picks'.*'oscar-facts'" -and $studio -match "'lunara-method'\s*=>\s*array\(\s*'pairing-desk'\s*\)") 'Marker compatibility lists must be explicit per pilot.'
+Assert-True ($previewPhp -match "'global-design'[\s\S]+?'markers'\s*=>\s*array\(\s*\)" -and $previewPhp -match "'homepage-structure'[\s\S]+?'markers'\s*=>\s*array\(\s*'hero'.*'latest-reviews'.*'pairing-desk'.*'dispatch'.*'oscar-picks'.*'oscar-facts'" -and $previewPhp -match "'lunara-method'[\s\S]+?'markers'\s*=>\s*array\(\s*'pairing-desk'\s*\)" -and $previewPhp -match "'reviews-archive'[\s\S]+?'markers'\s*=>\s*array\(\s*'hero'.*'grid'.*'pagination'.*'pairing-desk'" -and $previewPhp -match "'journal-archive'[\s\S]+?'markers'\s*=>\s*array\(\s*'hero'.*'deskbar'.*'filters'.*'toolbar'.*'grid'.*'retention'.*'pagination'" -and $previewPhp -match "'review-single'[\s\S]+?'markers'\s*=>\s*array\(\s*'hero'.*'criticism'.*'debrief'.*'pair-it-with'" -and $previewPhp -match "'utility-search'[\s\S]+?'markers'\s*=>\s*array\(\s*'search-command'.*'direct-matches'.*'result-run'.*'recovery'" -and $previewPhp -match "'site-footer'[\s\S]+?'markers'\s*=>\s*array\(\s*'footer'\s*\)") 'Marker compatibility lists must be explicit for every migrated workspace.'
 Assert-True ($studio -match 'data-lunara-surface-card' -and $studio -match 'data-surface=' -and $studio -match 'data-search-index=') 'Surface cards must expose stable local-search attributes.'
 Assert-True ($studio -match 'sandbox="allow-scripts allow-same-origin"' -and $studio -notmatch 'allow-forms|allow-popups|allow-downloads|allow-top-navigation') 'The preview must use the strict exact sandbox.'
 Assert-True ($studio -notmatch 'call_user_func\(\s*\$active\[''renderer''\]' -and $studio -notmatch "boundary_guard\(\s*'renderer'") 'The new workspace must not call legacy renderers.'
@@ -100,5 +101,7 @@ try {
     Assert-True ($LASTEXITCODE -eq 0) ("Site Studio PHP runtime failed: " + ($phpOutput -join [Environment]::NewLine))
     $nodeOutput = & $node (Join-Path $PSScriptRoot 'site-studio-workspace-runtime.js') 2>&1
     Assert-True ($LASTEXITCODE -eq 0) ("Site Studio browser runtime failed: " + ($nodeOutput -join [Environment]::NewLine))
+    $editorialNodeOutput = & $node (Join-Path $PSScriptRoot 'site-studio-editorial-workspace-runtime.js') 2>&1
+    Assert-True ($LASTEXITCODE -eq 0) ("Site Studio editorial browser runtime failed: " + ($editorialNodeOutput -join [Environment]::NewLine))
 } finally { $env:LUNARA_BROWSER_EXECUTABLE = $priorBrowser; $env:NODE_PATH = $priorNodePath }
 Write-Host 'site-studio-workspace: all assertions passed.'

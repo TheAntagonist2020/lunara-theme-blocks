@@ -18,7 +18,7 @@ $guardrails = Get-Content -LiteralPath (Join-Path $root 'assets\css\lunara-publi
 $route = Get-Content -LiteralPath (Join-Path $root 'assets\css\lunara-journal-archive.css') -Raw
 $tokens = Get-Content -LiteralPath (Join-Path $root 'inc\design-tokens.php') -Raw
 
-Assert-True ($style -match 'Version:\s*3\.2\.55') 'Journal typography contract must remain intact in Theme 3.2.55.'
+Assert-True ($style -match 'Version:\s*3\.2\.56') 'Journal typography contract must remain intact in Theme 3.2.56.'
 Assert-True ($style -match '--lunara-font-body:\s*"Tiempos Text"') 'The shipped body token must remain Tiempos Text.'
 Assert-True ($tokens -match "'body'\s*=>\s*array\([\s\S]{0,300}?'default'\s*=>\s*'tiempos-text'") 'The editable body role must default to Tiempos Text.'
 Assert-True ($route -match '#primary\.lunara-journal-archive-page\s*\{[\s\S]{0,420}?font-family:\s*var\(--lunara-font-body') 'The route-owned Journal page must retain the editable body token.'
