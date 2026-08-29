@@ -11,6 +11,54 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-08-29 — Theme 3.2.55 Site Studio Foundation and Visual Site Map Pilot
+
+- Added a normalized Site Studio registry and authenticated, nonce-checked,
+  capability-aware REST API for registry, state, preview, save, revisions, and
+  confirmed restore operations. Contributed surfaces remain redacted,
+  dependency-aware, recursion-bounded, and unavailable rather than fatal when
+  their owner is missing or invalid.
+- Piloted Global Design, Homepage Structure, and Lunara Method through their
+  canonical theme storage rather than adding a second settings system. Global
+  Design owns the shared palette and font roles; Homepage Structure owns its
+  existing order, visibility, preset, and block-composition state; Lunara
+  Method owns only its established copy, Review, and backdrop controls.
+- Made Homepage saves atomic across managed theme mods and exact front-page
+  `post_content`. Validation completes before mutation, failed writes and
+  readbacks restore exact prior presence/value/content, unknown blocks remain
+  in place, and registry-mode pages are never silently converted to block
+  composition.
+- Added owner-, route-, surface-, user-, and expiry-bound private preview plus
+  a same-origin section bridge. Private responses establish no-store/noindex
+  protections before lookup, preview substitutions stay request-local, and
+  parent/child messages require the active frame, exact origin, instance, and
+  allowlisted surface/section without exposing the preview token.
+- Authorized private previews suppress WordPress admin chrome before Core's
+  priority-zero initializer can install its toolbar bump, so the 390, 768, and
+  1440 preview canvases measure the public page rather than an admin-shifted
+  document. Normal and denied requests leave the admin bar untouched.
+- Replaced the Control Desk renderer path with a dedicated responsive Site
+  Studio workspace: searchable Visual Site Map, candidate-ordered section
+  rail, one selected same-origin iframe, contextual inspector, progressive
+  disclosures, accessible status/focus/error handling, and true 1440, 768,
+  and 390 internal preview widths.
+- Kept twelve-entry revision histories with durable readback and a verified
+  pre-restore safety snapshot. Homepage revisions preserve the combined mod
+  and content transaction, and every restore revalidates current capability,
+  dependency, schema, and front-page identity before replacement.
+- Revision History now refreshes in place after successful Save and Restore
+  adoption. The independent authenticated read is sequence-guarded against
+  stale overlap, strictly validates its bounded response, preserves disclosure
+  and focus behavior, and leaves the accepted canonical result untouched when
+  the refresh itself fails.
+- Save and Restore now require complete canonical mutation envelopes at both
+  the REST and browser boundaries. Missing or malformed revision identifiers,
+  timestamps, changed-section lists, or safety-snapshot metadata fail closed
+  without adopting state, navigating the preview, clearing unsaved work, or
+  starting a revision refresh.
+- This entry records a local release candidate only. No integration,
+  deployment, cache operation, production write, or live canary occurred.
+
 ## 2026-08-28 — Theme 3.2.54 Public Route Stabilization
 
 - Restored one valid document landmark on Home, Reviews, Journal, and Oscars:

@@ -25,6 +25,200 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-08-29 — Theme 3.2.55 final hardening and local candidate close
+
+### Headline
+
+Theme 3.2.55 is review-clean and closed as a local release candidate on
+`codex/site-studio-registry-3.2.55`. Final review hardening prevents WordPress
+admin chrome from shifting private-preview geometry and rejects incomplete
+Save/Restore success payloads before the workspace adopts them. The candidate
+is not integrated, deployed, or live.
+
+### Verified live state
+
+Not applicable. No production probe, canary, deployment, cache operation, or
+production write was run, so this entry makes no new live-version claim.
+
+### What changed and why
+
+- Authorized private previews now run at `template_redirect` priority `-1`
+  and call `show_admin_bar( false )` only after the complete owner, route,
+  surface, user, token, expiry, dependency, and state checks succeed. This
+  beats Core's priority-zero admin-bar initializer without changing normal or
+  denied requests.
+- REST Save and Restore responses now require complete state, revision/safety
+  identifiers, timestamps, and changed-section metadata. The browser applies
+  the same exact-envelope boundary before state adoption, live-frame
+  navigation, candidate clearing, or Revision History refresh.
+- The top-level foundation runner now executes the mutation-envelope case.
+  Private-preview denial coverage includes malformed queries, dependency and
+  consumer failures, recovered-state rejection, collisions, the full denial
+  matrix, and noncanonical subdirectory routes; every denied path proves it
+  leaves admin-bar state untouched.
+
+See the top 3.2.55 entry in `docs/CHANGELOG.md` for the complete code-level
+release detail and canonical ownership boundaries.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | `7c4f553` | Final review hardening for private-preview geometry and strict mutation results. |
+| `lunara-theme-blocks` | this local release-close commit | Theme 3.2.55 identity, current test expectations, and durable local-only release records. |
+
+The earlier 3.2.55 dependency commits remain recorded in the immediately
+following session entry.
+
+### Gate ledger
+
+- Review RED proved the original priority-zero preview handler ran too late to
+  prevent Core's admin-bar bump. The corrected runtime models Core at exact
+  priority zero and locks Site Studio at exact priority `-1`.
+- Mutation checks caught priority `-1` changing to zero, preview-handler
+  removal, path-specific premature admin-bar suppression, REST envelope-guard
+  bypass, and malformed browser Save/Restore success payloads.
+- Two independent final reviews returned PASS with no Critical or Important
+  finding; the final test-only denial-matrix follow-up also returned PASS.
+- Post-hardening focused gates passed for foundation, private preview,
+  real-Chrome workspace, and the 3.2.55 release identity.
+- Fresh full regression: 88 live-discovered top-level PowerShell contracts,
+  88 passed, 0 failed, each in a fresh process; elapsed time 209.8 seconds.
+- Static/structure: PHP lint 107/107, JavaScript syntax 44/44, PowerShell parse
+  89/89, and CSS braces 7,113/7,113 across 23 files.
+- `git show --check 7c4f553`, staged/working diff checks, exact commit scope,
+  and final release-scope checks passed before the local close.
+- Not run by design: integration, push, PR, merge, deployment, canary,
+  production/live probe, cache action, or production write.
+
+### Ruling
+
+The preview handler stays at `template_redirect` priority `-1` rather than
+moving authorization to an earlier lifecycle hook. That preserves the full
+front-page/query/user/dependency authorization context while executing before
+Core's priority-zero admin-bar initialization. If this ruling is wrong, the
+cost is a preview-only geometry regression contained by the private-preview
+module and its Core-order runtime contract; normal public requests remain
+untouched.
+
+### Punch-list carried forward
+
+- Keep this 3.2.55 candidate local until the approved integration boundary.
+- Continue with Theme 3.2.56 Editorial/Utility surfaces and its plugin-first
+  compatibility work.
+- Dalton retains every eventual production deployment through Deployer for
+  Git, followed by the approved canary and route/device smoke tests.
+
+### Whose move it is next
+
+Codex owns continued local 3.2.56 implementation and verification. Dalton owns
+the later manual Deployer for Git deployment boundary after separate
+integration approval.
+
+No deployment, cache operation, production write, live verification, push, merge, or PR occurred.
+
+## 2026-08-29 — Theme 3.2.55 local release-candidate closure
+
+### Headline
+
+Theme 3.2.55 is assembled locally on
+`codex/site-studio-registry-3.2.55` through the reviewed Revision History
+refresh dependency at `4cfe2b9`. The release identity, mutation campaign,
+fresh regression suite, and static/scope gates are complete; the uncommitted
+bytes are frozen for independent review. It is not integrated or live.
+
+### Verified live state
+
+Not applicable in this local release-close session. No production probe or
+canary was run, so there is no new measured live-state table and no live
+version claim.
+
+### What shipped and why
+
+Nothing shipped from this session. The local candidate combines the hardened
+registry/adapter/REST foundation, canonical Global/Home/Method pilots, atomic
+Homepage mod/content transactions, the dedicated responsive Visual Site Map
+workspace, private preview and section bridge, twelve-entry restore safety,
+and in-place history refresh. See the top 3.2.55 entry in
+`docs/CHANGELOG.md` for code-level detail and ownership boundaries.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | `4d72367` | Review-clean registry, adapter, REST, preview, revision, and provider foundation. |
+| `lunara-theme-blocks` | `d617dd0` | Review-clean Global/Home/Method pilot transactions. |
+| `lunara-theme-blocks` | `d7a4426` | Dedicated Site Studio workspace shell and local state machine. |
+| `lunara-theme-blocks` | `f266ea2` | Private preview substitution, public markers, and section bridge. |
+| `lunara-theme-blocks` | `4cfe2b9` | Review-clean in-place Revision History refresh and adversarial browser closure. |
+| `lunara-theme-blocks` | uncommitted review diff | 3.2.55 identity, current test expectations, and local release records; intentionally not staged or committed. |
+
+### Gate ledger
+
+- RED-first release contract: PASS as a RED; it exited 1 against the untouched
+  dependency tree for the intended 3.2.54 stylesheet/current-test identity and
+  missing 3.2.55 changelog/session records, not for syntax or harness failure.
+- Corrected pre-edit census: 80 current-candidate occurrences across 32 test
+  files (52 plain plus 28 regex-escaped), with only the dated 2026-08-17
+  Oscars 3.2.54 provenance pin excluded and preserved.
+- External backup: 37/37 existing authorized and deliberate-mutation files
+  matched SHA-256 under
+  `C:\lunara-external-backups\task4-commit4-4cfe2b9-20260829-01`.
+- Release mutation campaign: 10/10 intended nonzero REDs, including both
+  prior-identity source forms, all three coherency/public fixtures, the dated
+  provenance pin, both deploy exclusions, and false live/deployment claims.
+  The 38-file post-migration green snapshot matched SHA-256 38/38 after the
+  campaign.
+- Focused release group: 8/8 passed, covering release identity, foundation,
+  general Site Studio, pilot, real-Chrome workspace, private preview,
+  responsive assets, and public-route stabilization.
+- Fresh full regression: 88 live-discovered top-level PowerShell contracts,
+  88 passed, 0 failed, each in a fresh process; elapsed time 197.4 seconds.
+- Static/structure: PHP lint 107/107, JavaScript syntax 44/44, PowerShell
+  parse 89/89, CSS braces 7,113/7,113 across 23 files, and the workspace ES5
+  source gate plus all 18 representative syntax mutations passed.
+- Release/scope audit: exact 36-file intended status, 80/80 migrated source
+  occurrences, sole dated prior pin, one production added line (the version
+  header), zero cache/purge or licensed-font additions, zero package/plugin/
+  deploy drift, zero mutation sentinels, empty staged diff, `git diff --check`,
+  and dependency `git show --check` all passed.
+- Not run by design: canary, production/live probe, deployment, cache action,
+  production write, integration, push, merge, or PR.
+
+### Corrections
+
+No count or durable-fact correction was required. The dual-form byte census
+matched the corrected release brief exactly; no expected count was forced.
+
+One byte-restoration ruling was required: `apply_patch` logically restored the
+two `.deployignore` mutations but normalized the three touched CRLF hunk lines.
+The controller authorized one deterministic exception limited to that file.
+The exact external source and destination paths plus original SHA-256
+`FD6E99BC6784A513FB5975FB398086D9BB46503B9AE3C670C8AFBF25F9C731F0`
+were verified before native `Copy-Item` restored the repository-only config;
+raw hashes then matched and its Git diff was empty. If that ruling is wrong,
+the cost is restoring this one config file again from the same verified copy.
+
+### Logged, not fixed
+
+The candidate remains undeployed and therefore has no live 3.2.55 canary or
+public-route verification. That is a release boundary, not evidence of a live
+defect.
+
+### Punch-list carried forward
+
+- Freeze the verified uncommitted release-close diff and obtain independent
+  review of both that diff and the whole 3.2.55 slice.
+- Create the local release-close commit only after review is clean and the
+  controller explicitly authorizes that later step.
+- Any later integration and deployment remain outside this session.
+
+### Whose move it is next
+
+The independent reviewer/controller owns review of the frozen local diff.
+Dalton retains the later manual Deployer for Git deployment boundary after
+separate integration approval. No deployment, cache operation, production write, live verification, push, merge, or PR occurred.
+
 ## 2026-08-28 (re-review round 3) — Cache negation bound to its action
 
 ### Headline

@@ -54,8 +54,8 @@ if (($labelRule + $selectRule) -match 'overflow(?:-x)?\s*:\s*hidden') {
 }
 
 $style = Get-Content -Raw (Join-Path $themeRoot 'style.css')
-if ($style -notmatch '(?m)^Version:\s*3\.2\.54\s*$') {
-    throw 'Theme version must preserve the Site Studio Reviews lead mobile repair in 3.2.54.'
+if ($style -notmatch '(?m)^Version:\s*3\.2\.55\s*$') {
+    throw 'Theme version must preserve the Site Studio Reviews lead mobile repair in 3.2.55.'
 }
 
 if ($adminCss -match [regex]::Escape('.lunara-site-studio #lunara-theme-studio-reviews-archive-studio')) {
