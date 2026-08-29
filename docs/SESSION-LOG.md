@@ -25,6 +25,120 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-08-29 — Theme 3.2.56 final hardening and local candidate close
+
+### Headline
+
+Theme 3.2.56 is assembled locally on
+`codex/site-studio-editorial-3.2.56`. Reviews Archive, Journal Archive, Review
+Single, Utility Search, and Site Footer now use the shared plain-language
+Site Studio workspace, backed by their canonical owners. The companion Core,
+Journal Foundation, and Dispatch compatibility releases are also committed in
+local topic worktrees. Nothing in this slice is integrated, deployed, or live.
+
+### Verified live state
+
+Not applicable. No production probe, canary, deployment, cache operation, or
+production write was run, so this entry makes no new live-version claim.
+
+### What changed and why
+
+- Added the five 3.2.56 presentation workspaces, strict candidate schemas,
+  canonical adapters, exact-route private previews, stable public markers,
+  contextual section focus, archive order/visibility controls, and guided
+  handoffs to the tools that retain record or workflow ownership.
+- Kept unsaved work in browser memory until explicit Preview Changes or Save
+  Live. Ordinary saves remain immediate; removals and restores retain explicit
+  confirmation and revision safety.
+- Kept Utility Search's 404-only Primary Return Route in Classic controls; the
+  fixed `/search/?q=Lunara` preview cannot truthfully represent that separate
+  route, while search-result and no-result presentation remain in Site Studio.
+- Hardened both archive providers against stale or incomplete candidates,
+  mapped their real validation codes to exact inspector controls, and required
+  every private-preview transient to pass write and strict readback before a
+  token is returned. Known storage failures now give a safe retry instruction
+  instead of incorrectly telling the editor to review nonexistent field errors.
+- Removed the legacy version-change whole-domain purge, the Header and Hero
+  administration purges, and the remaining visible claim that a save purges
+  cache. Site Studio and ordinary theme administration trigger no domain purge.
+- A new real-browser gate caught that anchored Control Desk handoffs were being
+  rejected by the safe admin validator. The validator now permits only
+  normalized same-origin anchors inside wp-admin and still rejects external,
+  credentialed, control-character, and out-of-admin destinations.
+
+See the top 3.2.56 entry in `docs/CHANGELOG.md` for the complete code-level
+release detail and ownership boundaries.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-plugin-core` | `bb30860b2ac680dac33c76e30e3728a9cf85c88b` | Core 0.8.9 Review Studio handoff and redacted Site Studio status. |
+| `lunara-plugin-journal-foundation` | `2cf29cc7e72c6790dea939267f9a013b7e14e3fb` | Foundation 1.2.13 labeled source rows, authoritative workflow handoff, and redacted status. |
+| `lunara-plugin-dispatch` | `74127e1010a181d15c24ad3fc8347ebb2dc4db4d` | Dispatch 3.2.7 Foundation-aware read-only legacy status and guided automation handoff. |
+| `lunara-theme-blocks` | `a4a342e0930863265b4487552e5c2badd6cb9502` | Theme 3.2.56 editorial/utility workspaces, release identity, tests, changelog, and runbook. |
+
+### Gate ledger
+
+- Mutation REDs caught missing raw archive paths, unmapped real provider
+  errors, failed/mismatched transient storage, the Utility preview-bridge map
+  removal, invalid legacy control state, and all four removed purge behavior or
+  instruction groups. Every mutation was restored before the final run.
+- Independent final review returned READY with no Critical or Important
+  blocker after separate adapter/REST and preview/cache spot checks. Both prior
+  P1s, the preview-durability P2, and the Utility wording P3 are resolved.
+- Fresh final regression on the committed implementation bytes: 89 discovered
+  top-level PowerShell contracts, 89 passed, 0 failed, each in a fresh process;
+  elapsed time 255.2 seconds. An earlier pass before the final operational-
+  message polish was also 89/89 in 241.0 seconds.
+- One intermediate Journal browser run and one independent workspace run hit
+  the unchanged iframe-navigation timing race; each passed immediately when
+  rerun, and both passed inside the definitive 89/89 run.
+- Static/structure: PHP lint 108/108, JavaScript syntax 45/45, PowerShell parse
+  90/90, and CSS braces 7,113/7,113 across 23 files. Working and staged diff
+  checks passed; no licensed font, archive, credential, or secret-like path is
+  part of the candidate.
+- Not run by design: integration, push, PR, merge, deployment, canary,
+  production/live probe, cache action, or production write.
+
+### Corrections
+
+The 2026-08-28 review-fix entry said the stale Hero Command purge claim had
+been removed, but that local change had not actually entered the integrated
+tree. This 3.2.56 entry records the slice where the Hero notice and its
+administration purge are truly removed.
+
+### Logged, not fixed
+
+- Journal Foundation's option transaction cannot fully serialize two human
+  administrators who submit the same workflow at the exact same instant. Its
+  strict validation, readback, rollback, and revision safeguards remain in
+  place; this low-probability coordination race is carried forward rather than
+  hidden.
+- Production behavior is unverified because this candidate is intentionally
+  local and undeployed.
+- The real-browser harness can very rarely observe iframe navigation during an
+  assertion. The immediate retries and definitive full run passed; this is
+  logged as test-timing noise rather than represented as a product defect.
+
+### Punch-list carried forward
+
+- Start Theme 3.2.57 Oscars, plugin coordination, IMDb title-map migration, and
+  System Health only after the 3.2.56 integration boundary is approved.
+- Integrate and deploy Core 0.8.9, Journal Foundation 1.2.13, and Dispatch 3.2.7
+  before Theme 3.2.56. Foundation must precede Dispatch and the theme consumer.
+- Dalton retains the later manual deployment through Deployer for Git, followed
+  by the approved versioned canary and route/device smoke tests.
+
+### Whose move it is next
+
+The integration decision is next. Dalton owns every later manual Deployer for
+Git production deployment: the three compatibility plugins first, then Theme
+3.2.56, followed by the versioned canary and route/device smoke tests. Codex
+starts 3.2.57 only after that 3.2.56 boundary is approved.
+
+No deployment, cache operation, production write, live verification, push, merge, or PR occurred.
+
 ## 2026-08-29 — Theme 3.2.55 final hardening and local candidate close
 
 ### Headline
@@ -314,6 +428,10 @@ geometry before measuring production overflow.
   scaffolding. A sentinel must retain the browser-default `content-box`, and
   the outer main is edge-to-edge so route overflow cannot hide inside fixture
   gutters.
+
+**Correction (2026-08-29):** The stale Hero claim above had not actually
+entered the integrated tree. See the 2026-08-29 Theme 3.2.56 entry, where the
+Hero notice and its administration purge are truly removed.
 
 ### TDD and verification
 
