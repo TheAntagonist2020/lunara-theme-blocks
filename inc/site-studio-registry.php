@@ -363,6 +363,7 @@ if ( ! function_exists( 'lunara_site_studio_surfaces' ) ) {
 			$failed = false;
 			$wrapped_callbacks = array();
 			$wrap_callbacks = null;
+			$late_rescan = null;
 			$wrap_callbacks = static function () use ( &$failed, &$history, &$wrapped_callbacks, &$wrap_callbacks ) {
 				global $wp_filter;
 				if ( ! isset( $wp_filter['lunara_site_studio_surfaces'] ) || ! is_object( $wp_filter['lunara_site_studio_surfaces'] ) || ! isset( $wp_filter['lunara_site_studio_surfaces']->callbacks ) || ! is_array( $wp_filter['lunara_site_studio_surfaces']->callbacks ) ) {
@@ -404,8 +405,21 @@ if ( ! function_exists( 'lunara_site_studio_surfaces' ) ) {
 				}
 				unset( $callbacks );
 			};
+			$late_rescan = static function () use ( &$failed, &$history, &$wrap_callbacks ) {
+				$args = func_get_args();
+				if ( empty( $args ) || 'lunara_site_studio_surfaces' !== $args[0] ) {
+					return;
+				}
+				try {
+					$wrap_callbacks();
+				} catch ( Throwable $error ) {
+					$failed = true;
+					$history = array();
+				}
+			};
 			try {
 				$wrap_callbacks();
+				add_filter( 'all', $late_rescan, PHP_INT_MAX, 1 );
 				$filtered = apply_filters( 'lunara_site_studio_surfaces', $defaults );
 				if ( $failed ) {
 					$filtered = $defaults;
@@ -418,6 +432,11 @@ if ( ! function_exists( 'lunara_site_studio_surfaces' ) ) {
 				$history  = array();
 			} finally {
 				global $wp_filter;
+				try {
+					remove_filter( 'all', $late_rescan, PHP_INT_MAX );
+				} catch ( Throwable $error ) {
+					$failed = true;
+				}
 				foreach ( $wrapped_callbacks as $priority => $callbacks ) {
 					foreach ( $callbacks as $callback_id => $wrapped ) {
 						if ( isset( $wp_filter['lunara_site_studio_surfaces']->callbacks[ $priority ][ $callback_id ]['function'] ) && $wp_filter['lunara_site_studio_surfaces']->callbacks[ $priority ][ $callback_id ]['function'] === $wrapped['wrapper'] ) {
