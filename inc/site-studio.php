@@ -55,6 +55,7 @@ if ( ! function_exists( 'lunara_site_studio_workspace_config' ) ) {
 			'strings' => array(
 				'live' => __( 'Live settings loaded.', 'lunara-film' ), 'dirty' => __( 'Unsaved changes.', 'lunara-film' ), 'previewCurrent' => __( 'Preview is current.', 'lunara-film' ), 'previewStale' => __( 'Preview is out of date.', 'lunara-film' ), 'saving' => __( 'Saving live settings…', 'lunara-film' ), 'saved' => __( 'Live settings saved.', 'lunara-film' ), 'restored' => __( 'Revision restored.', 'lunara-film' ), 'failed' => __( 'The request could not be completed. Your changes are still here.', 'lunara-film' ),
 				'discardConfirm' => __( 'Discard your unsaved changes?', 'lunara-film' ), 'navigateConfirm' => __( 'Discard unsaved changes and open another surface?', 'lunara-film' ), 'hideConfirm' => __( 'Hide this Homepage section?', 'lunara-film' ), 'clearOverrideConfirm' => __( 'Clear this override and use the current inherited fallback?', 'lunara-film' ), 'resetOverridesConfirm' => __( 'Reset all Global overrides?', 'lunara-film' ), 'resetConfirm' => __( 'Reset this candidate?', 'lunara-film' ), 'reviewAutomaticConfirm' => __( 'Switch this Review selection back to Automatic?', 'lunara-film' ), 'clearMediaConfirm' => __( 'Clear this backdrop?', 'lunara-film' ), 'restoreConfirm' => __( 'Restore this revision to the live site?', 'lunara-film' ),
+				'revisionEmpty' => __( 'No revisions yet.', 'lunara-film' ), 'revisionRestore' => __( 'Restore', 'lunara-film' ), 'revisionSaved' => __( 'Saved live', 'lunara-film' ), 'revisionSafety' => __( 'Safety snapshot', 'lunara-film' ), 'revisionRestored' => __( 'Restored revision', 'lunara-film' ), 'revisionOther' => __( 'Revision', 'lunara-film' ),
 				'desktop' => __( 'Desktop', 'lunara-film' ), 'tablet' => __( 'Tablet', 'lunara-film' ), 'mobile' => __( 'Mobile', 'lunara-film' ), 'searchCount' => __( '%d destinations', 'lunara-film' ), 'moved' => __( 'Section order updated.', 'lunara-film' ), 'chooseBackdrop' => __( 'Choose backdrop', 'lunara-film' ),
 			),
 		);
@@ -89,7 +90,7 @@ if ( ! function_exists( 'lunara_site_studio_origin_key' ) ) {
 		$expected_route = (string) wp_parse_url( $urls['preview'], PHP_URL_PATH ); if ( '' === $expected_route ) { $expected_route = '/'; }
 		$marker_map = array( 'global-design' => array(), 'homepage-structure' => array( 'hero', 'latest-reviews', 'pairing-desk', 'dispatch', 'oscar-picks', 'oscar-facts' ), 'lunara-method' => array( 'pairing-desk' ) );
 		if ( $expected_origin !== $config['previewOrigin'] || $expected_route !== $config['previewRoute'] || ! isset( $marker_map[ $config['surface'] ] ) || $marker_map[ $config['surface'] ] !== $config['markers'] || ! lunara_site_studio_same_origin( $config['previewOrigin'] . $config['previewRoute'], admin_url( '/' ) ) ) { return false; }
-		$string_keys = array( 'live', 'dirty', 'previewCurrent', 'previewStale', 'saving', 'saved', 'restored', 'failed', 'discardConfirm', 'navigateConfirm', 'hideConfirm', 'clearOverrideConfirm', 'resetOverridesConfirm', 'resetConfirm', 'reviewAutomaticConfirm', 'clearMediaConfirm', 'restoreConfirm', 'desktop', 'tablet', 'mobile', 'searchCount', 'moved', 'chooseBackdrop' ); $actual_string_keys = array_keys( $config['strings'] ); sort( $actual_string_keys ); $expected_string_keys = $string_keys; sort( $expected_string_keys ); if ( $actual_string_keys !== $expected_string_keys ) { return false; } foreach ( $config['strings'] as $message ) { if ( ! is_string( $message ) || '' === $message ) { return false; } }
+		$string_keys = array( 'live', 'dirty', 'previewCurrent', 'previewStale', 'saving', 'saved', 'restored', 'failed', 'discardConfirm', 'navigateConfirm', 'hideConfirm', 'clearOverrideConfirm', 'resetOverridesConfirm', 'resetConfirm', 'reviewAutomaticConfirm', 'clearMediaConfirm', 'restoreConfirm', 'revisionEmpty', 'revisionRestore', 'revisionSaved', 'revisionSafety', 'revisionRestored', 'revisionOther', 'desktop', 'tablet', 'mobile', 'searchCount', 'moved', 'chooseBackdrop' ); $actual_string_keys = array_keys( $config['strings'] ); sort( $actual_string_keys ); $expected_string_keys = $string_keys; sort( $expected_string_keys ); if ( $actual_string_keys !== $expected_string_keys ) { return false; } foreach ( $config['strings'] as $message ) { if ( ! is_string( $message ) || '' === $message ) { return false; } }
 		$base = 'lunara-site-studio/v1/surfaces/' . rawurlencode( $config['surface'] );
 		foreach ( array( 'state', 'preview', 'save', 'revisions', 'restore' ) as $key ) {
 			$expected = esc_url_raw( rest_url( $base . '/' . $key ) );
@@ -175,7 +176,18 @@ if ( ! function_exists( 'lunara_site_studio_render_method_inspector' ) ) {
 }
 
 if ( ! function_exists( 'lunara_site_studio_render_revisions' ) ) {
-	function lunara_site_studio_render_revisions( $revisions ) { lunara_site_studio_render_details_open( 'revision-history', __( 'Revision History', 'lunara-film' ) ); if ( ! $revisions ) { echo '<p>' . esc_html__( 'No revisions yet.', 'lunara-film' ) . '</p>'; } foreach ( $revisions as $revision ) { echo '<div class="lunara-site-studio-revision"><span>' . esc_html( $revision['timestamp'] . ' · ' . $revision['action'] ) . '</span><button type="button" data-action="restore" data-revision-id="' . esc_attr( $revision['id'] ) . '" disabled>' . esc_html__( 'Restore', 'lunara-film' ) . '</button></div>'; } lunara_site_studio_render_details_close(); }
+	function lunara_site_studio_revision_action_label( $action ) {
+		if ( 'save' === $action ) { return __( 'Saved live', 'lunara-film' ); }
+		if ( 'restore-safety' === $action ) { return __( 'Safety snapshot', 'lunara-film' ); }
+		if ( 'restore' === $action ) { return __( 'Restored revision', 'lunara-film' ); }
+		return __( 'Revision', 'lunara-film' );
+	}
+	function lunara_site_studio_render_revisions( $revisions ) {
+		echo '<details class="lunara-site-studio-details" data-section="revision-history" data-revision-history><summary data-revision-summary>' . esc_html__( 'Revision History', 'lunara-film' ) . '</summary><div class="lunara-site-studio-details-body"><div data-revision-list>';
+		if ( ! $revisions ) { echo '<p data-revision-empty>' . esc_html__( 'No revisions yet.', 'lunara-film' ) . '</p>'; }
+		foreach ( $revisions as $revision ) { echo '<div class="lunara-site-studio-revision" data-revision-row><span data-revision-label>' . esc_html( $revision['timestamp'] . ' · ' . lunara_site_studio_revision_action_label( $revision['action'] ) ) . '</span><button type="button" data-action="restore" data-revision-id="' . esc_attr( $revision['id'] ) . '" disabled>' . esc_html__( 'Restore', 'lunara-film' ) . '</button></div>'; }
+		echo '</div></div></details>';
+	}
 }
 
 if ( ! function_exists( 'lunara_render_site_studio_page' ) ) {
