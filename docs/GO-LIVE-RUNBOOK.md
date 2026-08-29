@@ -105,7 +105,8 @@ Record it whichever way the deploy went. A rollback is worth logging in more
 detail than a clean release, not less.
 
 The required shape of an entry — and the standing rules a fresh session needs
-before it touches anything — live in **`CLAUDE.md`** at the repo root.
+before it touches anything — live in **`AGENTS.md`** at the repo root.
+`CLAUDE.md` is only a pointer to that canonical agreement.
 
 Three documents, three questions, no overlap:
 

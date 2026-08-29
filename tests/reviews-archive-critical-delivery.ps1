@@ -243,7 +243,7 @@ Assert-True ($pageTemplate -match "'classes'\s*=>\s*'lunara-review-archive-page'
 Assert-True ($directorTemplate -match "'classes'\s*=>\s*'lunara-review-archive-page\s+lunara-director-archive-page'") 'The director archive must emit the route-owned Reviews wrapper.'
 Assert-True ($frontend -match "wp_enqueue_style\([\s\S]{0,180}'lunara-review-archive'[\s\S]{0,180}array\(\s*'lunara-review-components',\s*'lunara-shell'\s*\)") 'The Reviews route asset must keep its explicit component and shell dependencies.'
 Assert-True ($frontend -notmatch '<style id="lunara-review-archive-authority-css">') 'The legacy 43 KB inline archive cascade must not return.'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.53\s*$') 'Theme version must preserve the Reviews critical-delivery repair in 3.2.53.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.56\s*$') 'Theme version must preserve the Reviews critical-delivery repair in 3.2.56.'
 Assert-True ($stagingGate -match 'real iPhone[\s\S]{0,80}Safari' -and $stagingGate -match 'native\s+CSS nesting') 'The staging gate must require a real-iPhone Safari smoke for the nested critical guard.'
 
-Write-Host "Theme 3.2.53 Reviews critical delivery contract passed: universal seed ${seedByteCount}B ($seedSha256); route CSS ${routeCssBytes}B; Boost fixture ${fixtureBytes}B."
+Write-Host "Theme 3.2.56 Reviews critical delivery contract passed: universal seed ${seedByteCount}B ($seedSha256); route CSS ${routeCssBytes}B; Boost fixture ${fixtureBytes}B."

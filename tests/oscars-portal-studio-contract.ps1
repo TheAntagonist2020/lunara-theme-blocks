@@ -22,6 +22,11 @@ function Read-ThemeFile {
     return Get-Content -LiteralPath $path -Raw
 }
 
+$runtimeSource = Read-ThemeFile 'tests/oscars-portal-studio-runtime.php'
+Assert-True ($runtimeSource -match 'proc_open\s*\(') 'Reader-degradation lanes must use proc_open for shell-free cross-platform child launches.'
+Assert-True ($runtimeSource -match 'LUNARA_OSCARS_PORTAL_MODE.*\]') 'Reader-degradation lanes must pass LUNARA_OSCARS_PORTAL_MODE through the child environment array.'
+Assert-True ($runtimeSource -notmatch '''LUNARA_OSCARS_PORTAL_MODE=''\s*\.\s*\$child_mode') 'Reader-degradation lanes must not interpolate environment assignments into a shell command.'
+
 # The behavioral runtime executes first: accessors mode plus the two spawned
 # reader-degradation lanes (degraded plugin, no plugin).
 $runtime = & php (Join-Path $testsRoot 'oscars-portal-studio-runtime.php') 2>&1
@@ -36,6 +41,7 @@ $ledgerCritical = Read-ThemeFile 'inc/oscars-ledger-critical.php'
 $portalRenderer = Read-ThemeFile 'inc/oscars-portal.php'
 $frontend       = Read-ThemeFile 'inc/frontend.php'
 $siteStudio     = Read-ThemeFile 'inc/site-studio.php'
+$siteRegistry   = Read-ThemeFile 'inc/site-studio-registry.php'
 $controlDesk    = Read-ThemeFile 'inc/control-desk.php'
 $pageTemplate   = Read-ThemeFile 'page-oscars.php'
 $style          = Read-ThemeFile 'style.css'
@@ -245,14 +251,14 @@ Assert-True ($emittedLines[0].StartsWith('#primary.lunara-oscars-portal{--lunara
 
 # Site Studio registers both Oscars surfaces and the command index lists the
 # Portal Studio.
-Assert-True ($siteStudio -match "'oscars-portal'\s*=>\s*array\([\s\S]{0,400}'renderer'\s*=>\s*'lunara_control_desk_render_oscars_portal_studio'") 'Site Studio must register the oscars-portal surface with the Portal Studio renderer.'
-Assert-True ($siteStudio -match "'oscars-ledger'\s*=>\s*array\([\s\S]{0,400}'renderer'\s*=>\s*'lunara_control_desk_render_oscars_dossier_studio'") 'Site Studio must register the oscars-ledger surface with the Dossier Studio renderer.'
+Assert-True ($siteRegistry -match "'oscars-portal'\s*=>\s*array\([\s\S]{0,1800}'renderer'\s*=>\s*'lunara_control_desk_render_oscars_portal_studio'") 'The unconditional Site Studio registry must register the oscars-portal surface with the Portal Studio renderer.'
+Assert-True ($siteRegistry -match "'oscars-ledger'\s*=>\s*array\([\s\S]{0,1800}'renderer'\s*=>\s*'lunara_control_desk_render_oscars_dossier_studio'") 'The unconditional Site Studio registry must register the oscars-ledger surface with the Dossier Studio renderer.'
 Assert-True ($controlDesk -match "'Oscars Portal Studio'") 'The Theme Studio command index must list the Oscars Portal Studio.'
 Assert-True ($controlDesk -match "'#lunara-oscars-portal-studio'") 'The command index entry must anchor to the Portal Studio surface.'
 
 # Version lock: this intentionally asserts the NEXT reissue identity. It is
-# EXPECTED to fail until the 3.2.53 version migration lands as its own step;
+# EXPECTED to fail until the 3.2.56 version migration lands as its own step;
 # every assertion above it must already pass on the pre-migration tree.
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.53\s*$') 'Theme version must be 3.2.53.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.56\s*$') 'Theme version must be 3.2.56.'
 
 Write-Host 'oscars-portal-studio: all assertions passed.'

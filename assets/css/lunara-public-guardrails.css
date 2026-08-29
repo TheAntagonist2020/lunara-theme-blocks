@@ -148,7 +148,6 @@ body.home .lunara-front-page,
     body.home main.lunara-front-page,
     .aat-container {
         max-width: 100% !important;
-        overflow-x: clip !important;
         width: 100% !important;
     }
 
@@ -222,7 +221,6 @@ body.home .lunara-front-page,
         .entry-content {
             max-width: 100% !important;
             min-width: 0 !important;
-            overflow-x: clip !important;
         }
 
         body.home .lunara-front-page,
@@ -233,7 +231,6 @@ body.home .lunara-front-page,
         .lunara-oscars-portal {
             max-width: 100% !important;
             min-width: 0 !important;
-            overflow-x: clip !important;
             padding-left: 18px !important;
             padding-right: 18px !important;
             width: 100% !important;
@@ -929,8 +926,10 @@ body.home .lunara-latest-reviews-section .lunara-review-grid {
         @media (max-width: 820px) {
             body.home .lunara-latest-reviews-section .lunara-review-grid,
             body.home .lunara-journal-home-grid {
-                width: min(100%, calc(100vw - 32px)) !important;
-                max-width: calc(100vw - 32px) !important;
+                box-sizing: border-box !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
                 margin-inline: auto !important;
                 justify-items: stretch !important;
                 overflow: visible !important;

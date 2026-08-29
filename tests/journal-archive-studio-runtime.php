@@ -12,6 +12,9 @@ $lunara_test_options      = array();
 $lunara_test_cache_deletes = array();
 $lunara_test_actions_fired = array();
 $lunara_test_rocket_urls   = array();
+$lunara_test_revision_write_mode = 'normal';
+$lunara_test_preview_write_mode = 'normal';
+$lunara_test_last_preview_transient_key = '';
 $lunara_test_transients    = array();
 $lunara_test_user_id       = 7;
 $lunara_test_can_edit      = true;
@@ -48,8 +51,10 @@ function lunara_test_assert( $condition, $message ) {
 
 class WP_Error {
 	private $code;
-	public function __construct( $code ) { $this->code = $code; }
+	private $message;
+	public function __construct( $code, $message = '' ) { $this->code = $code; $this->message = $message; }
 	public function get_error_code() { return $this->code; }
+	public function get_error_message() { return $this->message; }
 }
 
 class WP_Post {
@@ -115,7 +120,12 @@ function get_theme_mod( $key, $default = '' ) { global $lunara_test_theme_mods; 
 function set_theme_mod( $key, $value ) { global $lunara_test_theme_mods; $lunara_test_theme_mods[ $key ] = $value; }
 function remove_theme_mod( $key ) { global $lunara_test_theme_mods; unset( $lunara_test_theme_mods[ $key ] ); }
 function get_option( $key, $default = false ) { global $lunara_test_options; return array_key_exists( $key, $lunara_test_options ) ? $lunara_test_options[ $key ] : $default; }
-function update_option( $key, $value ) { global $lunara_test_options; $lunara_test_options[ $key ] = $value; return true; }
+function update_option( $key, $value ) {
+	global $lunara_test_options, $lunara_test_revision_write_mode;
+	if ( 'lunara_journal_archive_studio_revisions' === $key && 'fail' === $lunara_test_revision_write_mode ) { return false; }
+	$lunara_test_options[ $key ] = 'lunara_journal_archive_studio_revisions' === $key && 'mismatch' === $lunara_test_revision_write_mode && is_array( $value ) ? array_slice( $value, 1 ) : $value;
+	return true;
+}
 function delete_option( $key ) { global $lunara_test_options; unset( $lunara_test_options[ $key ] ); return true; }
 function get_post( $id ) { global $lunara_test_posts; return isset( $lunara_test_posts[ $id ] ) ? $lunara_test_posts[ $id ] : null; }
 function get_posts( $args ) {
@@ -168,9 +178,20 @@ function wp_send_json_success( $data = null, $status = 200 ) { throw new Lunara_
 function wp_send_json_error( $data = null, $status = 400 ) { throw new Lunara_Test_JSON_Response( false, $data, $status ); }
 function current_time() { return '2026-08-15 12:00:00'; }
 function wp_json_encode( $value ) { return json_encode( $value ); }
-function wp_generate_uuid4() { return '11111111-2222-4333-8444-555555555555'; }
+function wp_generate_uuid4() { static $uuid_counter = 0; return '11111111-2222-4333-8444-' . str_pad( (string) ++$uuid_counter, 12, '0', STR_PAD_LEFT ); }
 function wp_hash( $value ) { return hash( 'sha256', 'test-salt|' . $value ); }
-function set_transient( $key, $value, $ttl ) { global $lunara_test_transients, $lunara_test_now; $lunara_test_transients[ $key ] = array( 'value' => $value, 'expires' => $lunara_test_now + $ttl ); return true; }
+function set_transient( $key, $value, $ttl ) {
+	global $lunara_test_transients, $lunara_test_now, $lunara_test_preview_write_mode, $lunara_test_last_preview_transient_key;
+	$is_preview = 0 === strpos( (string) $key, 'lunara_journal_archive_preview_' );
+	if ( $is_preview ) {
+		$lunara_test_last_preview_transient_key = $key;
+		if ( 'mismatch' === $lunara_test_preview_write_mode ) {
+			$value['token_hash'] = 'readback-mismatch';
+		}
+	}
+	$lunara_test_transients[ $key ] = array( 'value' => $value, 'expires' => $lunara_test_now + $ttl );
+	return ! ( $is_preview && 'fail' === $lunara_test_preview_write_mode );
+}
 function get_transient( $key ) { global $lunara_test_transients, $lunara_test_now; return isset( $lunara_test_transients[ $key ] ) && $lunara_test_transients[ $key ]['expires'] > $lunara_test_now ? $lunara_test_transients[ $key ]['value'] : false; }
 function delete_transient( $key ) { global $lunara_test_transients; unset( $lunara_test_transients[ $key ] ); return true; }
 function lunara_get_curated_journal_lead_id() { global $lunara_test_shared_lead_id; return $lunara_test_shared_lead_id; }
@@ -186,6 +207,21 @@ function is_paged() { global $lunara_test_is_paged; return $lunara_test_is_paged
 function nocache_headers() { global $lunara_test_nocache_calls; $lunara_test_nocache_calls++; }
 
 require dirname( __DIR__ ) . '/inc/journal-archive-studio.php';
+require dirname( __DIR__ ) . '/inc/site-studio-registry.php';
+require dirname( __DIR__ ) . '/inc/site-studio-adapters.php';
+
+$journal_projection_schema = lunara_site_studio_journal_archive_state_schema();
+lunara_test_assert( array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'filter_caps', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) === array_keys( $journal_projection_schema ), 'Journal projection schema must inventory every authoritative top-level provider key.' );
+lunara_test_assert( array( 'desk_count', 'desk_latest', 'desk_mix', 'file_singular', 'file_plural', 'lane_singular', 'lane_plural', 'filter_sections', 'filter_types', 'filter_topics', 'filter_archive_types', 'taxonomy_section_kicker', 'taxonomy_topic_kicker', 'taxonomy_type_kicker', 'filter_all', 'toolbar_kicker', 'toolbar_title', 'sort_newest', 'sort_oldest', 'sort_updated', 'lead_kicker', 'card_kicker', 'card_cta', 'retention_kicker', 'retention_title', 'pagination_prev', 'pagination_next', 'empty_copy' ) === array_keys( $journal_projection_schema['labels'] ), 'Journal projection schema must inventory every authoritative label key.' );
+lunara_test_assert( array( 'journal_section', 'journal_topic', 'journal_type' ) === array_keys( $journal_projection_schema['filter_caps'] ), 'Journal projection schema must inventory every authoritative filter-cap key.' );
+lunara_test_assert( array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ) === array_keys( $journal_projection_schema['section_visibility'] ), 'Journal projection schema must inventory every authoritative visibility key.' );
+lunara_test_assert( array( 'kicker', 'title', 'copy', 'items' ) === array_keys( $journal_projection_schema['gallery'] ), 'Journal projection schema must inventory the exact gallery container.' );
+lunara_test_assert( array( 'order', 'attachment_id', 'alt', 'caption', 'link_url', 'credit', 'source', 'source_url', 'focal_x', 'focal_y' ) === array_keys( $journal_projection_schema['gallery']['items']['*'] ), 'Journal projection schema must inventory the full gallery-item shape.' );
+lunara_test_assert( array( 'visible', 'order', 'label', 'title', 'copy', 'destination', 'url', 'image_id', 'image_alt', 'image_credit', 'image_source', 'image_source_url', 'focal_x', 'focal_y' ) === array_keys( $journal_projection_schema['retention']['*'] ), 'Journal projection schema must inventory the full retention-item shape.' );
+lunara_test_assert( array( 'density', 'lead_prominence', 'desk_rhythm', 'section_gap', 'hero_min_height', 'card_min_height', 'media_min_height' ) === array_keys( $journal_projection_schema['presentation'] ), 'Journal projection schema must inventory the exact presentation shape.' );
+$journal_projection_accepted = false;
+$journal_projection_roundtrip = lunara_site_studio_project_state_value( lunara_journal_archive_studio_defaults(), $journal_projection_schema, $journal_projection_accepted );
+lunara_test_assert( $journal_projection_accepted && lunara_journal_archive_studio_defaults() === $journal_projection_roundtrip, 'Journal projection must preserve the complete authoritative default shape.' );
 require dirname( __DIR__ ) . '/inc/helpers.php';
 require dirname( __DIR__ ) . '/inc/journal-archive-critical.php';
 
@@ -778,6 +814,24 @@ for ( $i = 0; $i < 20; $i++ ) {
 	lunara_journal_archive_studio_push_revision( $defaults, 'save' );
 }
 lunara_test_assert( 12 === count( lunara_journal_archive_studio_get_revisions() ), 'Revision history must remain bounded to twelve snapshots.' );
+$verified_journal_revision = lunara_journal_archive_studio_push_revision( $defaults, 'save' );
+lunara_test_assert( is_string( $verified_journal_revision ) && $verified_journal_revision === lunara_journal_archive_studio_get_revisions()[0]['id'], 'Revision writes must return the exact UUID verified on readback.' );
+$journal_public_before_failure = lunara_journal_archive_studio_get_public_config( false );
+$journal_cache_before_failure = count( $lunara_test_cache_deletes );
+$journal_candidate_after_failure = $journal_public_before_failure;
+$journal_candidate_after_failure['title'] = 'Must never publish without durable history';
+$lunara_test_revision_write_mode = 'fail';
+$journal_write_failure = lunara_journal_archive_studio_promote_config( $journal_candidate_after_failure, 'save' );
+lunara_test_assert( is_wp_error( $journal_write_failure ) && $journal_public_before_failure === lunara_journal_archive_studio_get_public_config( false ) && $journal_cache_before_failure === count( $lunara_test_cache_deletes ), 'Journal save must abort before live mutation/invalidation when revision update_option fails.' );
+$lunara_test_revision_write_mode = 'mismatch';
+$journal_readback_failure = lunara_journal_archive_studio_promote_config( $journal_candidate_after_failure, 'save' );
+lunara_test_assert( is_wp_error( $journal_readback_failure ), 'Journal save must return the revision UUID readback failure.' );
+lunara_test_assert( $journal_public_before_failure === lunara_journal_archive_studio_get_public_config( false ), 'Journal save must not mutate live state when revision UUID readback fails.' );
+lunara_test_assert( $journal_cache_before_failure === count( $lunara_test_cache_deletes ), 'Journal save must not invalidate live routes when revision UUID readback fails.' );
+$journal_restore_target = lunara_journal_archive_studio_get_revisions()[0]['id'];
+$journal_restore_failure = lunara_journal_archive_studio_restore_revision( $journal_restore_target );
+lunara_test_assert( is_wp_error( $journal_restore_failure ) && $journal_public_before_failure === lunara_journal_archive_studio_get_public_config( false ) && $journal_cache_before_failure === count( $lunara_test_cache_deletes ), 'Journal restore must abort before live mutation/invalidation when its safety revision readback fails.' );
+$lunara_test_revision_write_mode = 'normal';
 
 lunara_journal_archive_studio_flush_route_cache();
 lunara_test_assert( array( 'journal_archive_studio_public', 'lunara' ) === $lunara_test_cache_deletes[0], 'Only the Journal Studio cache key should be invalidated.' );
@@ -787,6 +841,19 @@ lunara_test_assert( array( '/journal/', '/journal_section/', '/journal_topic/', 
 lunara_test_assert( 4 === count( $lunara_test_rocket_urls ), 'Bounded cache cleaner must receive the archive plus three actual taxonomy URLs.' );
 lunara_test_assert( 'https://example.test/journal/' === $lunara_test_rocket_urls[0], 'Bounded cache cleaner must include the canonical archive URL.' );
 
+$lunara_test_preview_write_mode = 'fail';
+$preview_write_failure = lunara_journal_archive_studio_store_preview( $validated );
+lunara_test_assert( is_wp_error( $preview_write_failure ) && 'journal_archive_preview_write_failed' === $preview_write_failure->get_error_code(), 'A failed Journal preview transient write must return the bounded storage error.' );
+lunara_test_assert( 'The private preview could not be stored.' === $preview_write_failure->get_error_message(), 'The Journal preview storage error must carry its bounded human message for Site Studio REST.' );
+lunara_test_assert( ! isset( $lunara_test_transients[ $lunara_test_last_preview_transient_key ] ), 'A partially written Journal preview transient must be deleted before returning the storage error.' );
+lunara_test_assert( 'The private preview could not be stored.' === lunara_journal_archive_studio_validation_message( 'journal_archive_preview_write_failed' ), 'The Journal preview storage error must resolve through a bounded human message.' );
+$lunara_test_preview_write_mode = 'mismatch';
+$preview_readback_failure = lunara_journal_archive_studio_store_preview( $validated );
+lunara_test_assert( is_wp_error( $preview_readback_failure ) && 'journal_archive_preview_readback_failed' === $preview_readback_failure->get_error_code(), 'A mismatched Journal preview readback must return the bounded verification error.' );
+lunara_test_assert( 'The private preview could not be verified.' === $preview_readback_failure->get_error_message(), 'The Journal preview verification error must carry its bounded human message for Site Studio REST.' );
+lunara_test_assert( ! isset( $lunara_test_transients[ $lunara_test_last_preview_transient_key ] ), 'A mismatched Journal preview transient must be deleted before returning the verification error.' );
+lunara_test_assert( 'The private preview could not be verified.' === lunara_journal_archive_studio_validation_message( 'journal_archive_preview_readback_failed' ), 'The Journal preview verification error must resolve through a bounded human message.' );
+$lunara_test_preview_write_mode = 'normal';
 $preview_token = lunara_journal_archive_studio_store_preview( $validated );
 lunara_test_assert( is_string( $preview_token ) && '' !== $preview_token, 'Valid unsaved configuration must receive a private preview token.' );
 lunara_test_assert( 'A sharper Journal' === lunara_journal_archive_studio_get_preview_config( $preview_token )['title'], 'Authorized owner must retrieve the unsaved preview.' );

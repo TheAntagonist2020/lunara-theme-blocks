@@ -25,6 +25,500 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-08-29 — Theme 3.2.56 final hardening and local candidate close
+
+### Headline
+
+Theme 3.2.56 is assembled locally on
+`codex/site-studio-editorial-3.2.56`. Reviews Archive, Journal Archive, Review
+Single, Utility Search, and Site Footer now use the shared plain-language
+Site Studio workspace, backed by their canonical owners. The companion Core,
+Journal Foundation, and Dispatch compatibility releases are also committed in
+local topic worktrees. Nothing in this slice is integrated, deployed, or live.
+
+### Verified live state
+
+Not applicable. No production probe, canary, deployment, cache operation, or
+production write was run, so this entry makes no new live-version claim.
+
+### What changed and why
+
+- Added the five 3.2.56 presentation workspaces, strict candidate schemas,
+  canonical adapters, exact-route private previews, stable public markers,
+  contextual section focus, archive order/visibility controls, and guided
+  handoffs to the tools that retain record or workflow ownership.
+- Kept unsaved work in browser memory until explicit Preview Changes or Save
+  Live. Ordinary saves remain immediate; removals and restores retain explicit
+  confirmation and revision safety.
+- Kept Utility Search's 404-only Primary Return Route in Classic controls; the
+  fixed `/search/?q=Lunara` preview cannot truthfully represent that separate
+  route, while search-result and no-result presentation remain in Site Studio.
+- Hardened both archive providers against stale or incomplete candidates,
+  mapped their real validation codes to exact inspector controls, and required
+  every private-preview transient to pass write and strict readback before a
+  token is returned. Known storage failures now give a safe retry instruction
+  instead of incorrectly telling the editor to review nonexistent field errors.
+- Removed the legacy version-change whole-domain purge, the Header and Hero
+  administration purges, and the remaining visible claim that a save purges
+  cache. Site Studio and ordinary theme administration trigger no domain purge.
+- A new real-browser gate caught that anchored Control Desk handoffs were being
+  rejected by the safe admin validator. The validator now permits only
+  normalized same-origin anchors inside wp-admin and still rejects external,
+  credentialed, control-character, and out-of-admin destinations.
+
+See the top 3.2.56 entry in `docs/CHANGELOG.md` for the complete code-level
+release detail and ownership boundaries.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-plugin-core` | `bb30860b2ac680dac33c76e30e3728a9cf85c88b` | Core 0.8.9 Review Studio handoff and redacted Site Studio status. |
+| `lunara-plugin-journal-foundation` | `2cf29cc7e72c6790dea939267f9a013b7e14e3fb` | Foundation 1.2.13 labeled source rows, authoritative workflow handoff, and redacted status. |
+| `lunara-plugin-dispatch` | `74127e1010a181d15c24ad3fc8347ebb2dc4db4d` | Dispatch 3.2.7 Foundation-aware read-only legacy status and guided automation handoff. |
+| `lunara-theme-blocks` | `a4a342e0930863265b4487552e5c2badd6cb9502` | Theme 3.2.56 editorial/utility workspaces, release identity, tests, changelog, and runbook. |
+
+### Gate ledger
+
+- Mutation REDs caught missing raw archive paths, unmapped real provider
+  errors, failed/mismatched transient storage, the Utility preview-bridge map
+  removal, invalid legacy control state, and all four removed purge behavior or
+  instruction groups. Every mutation was restored before the final run.
+- Independent final review returned READY with no Critical or Important
+  blocker after separate adapter/REST and preview/cache spot checks. Both prior
+  P1s, the preview-durability P2, and the Utility wording P3 are resolved.
+- Fresh final regression on the committed implementation bytes: 89 discovered
+  top-level PowerShell contracts, 89 passed, 0 failed, each in a fresh process;
+  elapsed time 255.2 seconds. An earlier pass before the final operational-
+  message polish was also 89/89 in 241.0 seconds.
+- One intermediate Journal browser run and one independent workspace run hit
+  the unchanged iframe-navigation timing race; each passed immediately when
+  rerun, and both passed inside the definitive 89/89 run.
+- Static/structure: PHP lint 108/108, JavaScript syntax 45/45, PowerShell parse
+  90/90, and CSS braces 7,113/7,113 across 23 files. Working and staged diff
+  checks passed; no licensed font, archive, credential, or secret-like path is
+  part of the candidate.
+- Not run by design: integration, push, PR, merge, deployment, canary,
+  production/live probe, cache action, or production write.
+
+### Corrections
+
+The 2026-08-28 review-fix entry said the stale Hero Command purge claim had
+been removed, but that local change had not actually entered the integrated
+tree. This 3.2.56 entry records the slice where the Hero notice and its
+administration purge are truly removed.
+
+### Logged, not fixed
+
+- Journal Foundation's option transaction cannot fully serialize two human
+  administrators who submit the same workflow at the exact same instant. Its
+  strict validation, readback, rollback, and revision safeguards remain in
+  place; this low-probability coordination race is carried forward rather than
+  hidden.
+- Production behavior is unverified because this candidate is intentionally
+  local and undeployed.
+- The real-browser harness can very rarely observe iframe navigation during an
+  assertion. The immediate retries and definitive full run passed; this is
+  logged as test-timing noise rather than represented as a product defect.
+
+### Punch-list carried forward
+
+- Start Theme 3.2.57 Oscars, plugin coordination, IMDb title-map migration, and
+  System Health only after the 3.2.56 integration boundary is approved.
+- Integrate and deploy Core 0.8.9, Journal Foundation 1.2.13, and Dispatch 3.2.7
+  before Theme 3.2.56. Foundation must precede Dispatch and the theme consumer.
+- Dalton retains the later manual deployment through Deployer for Git, followed
+  by the approved versioned canary and route/device smoke tests.
+
+### Whose move it is next
+
+The integration decision is next. Dalton owns every later manual Deployer for
+Git production deployment: the three compatibility plugins first, then Theme
+3.2.56, followed by the versioned canary and route/device smoke tests. Codex
+starts 3.2.57 only after that 3.2.56 boundary is approved.
+
+No deployment, cache operation, production write, live verification, push, merge, or PR occurred.
+
+## 2026-08-29 — Theme 3.2.55 final hardening and local candidate close
+
+### Headline
+
+Theme 3.2.55 is review-clean and closed as a local release candidate on
+`codex/site-studio-registry-3.2.55`. Final review hardening prevents WordPress
+admin chrome from shifting private-preview geometry and rejects incomplete
+Save/Restore success payloads before the workspace adopts them. The candidate
+is not integrated, deployed, or live.
+
+### Verified live state
+
+Not applicable. No production probe, canary, deployment, cache operation, or
+production write was run, so this entry makes no new live-version claim.
+
+### What changed and why
+
+- Authorized private previews now run at `template_redirect` priority `-1`
+  and call `show_admin_bar( false )` only after the complete owner, route,
+  surface, user, token, expiry, dependency, and state checks succeed. This
+  beats Core's priority-zero admin-bar initializer without changing normal or
+  denied requests.
+- REST Save and Restore responses now require complete state, revision/safety
+  identifiers, timestamps, and changed-section metadata. The browser applies
+  the same exact-envelope boundary before state adoption, live-frame
+  navigation, candidate clearing, or Revision History refresh.
+- The top-level foundation runner now executes the mutation-envelope case.
+  Private-preview denial coverage includes malformed queries, dependency and
+  consumer failures, recovered-state rejection, collisions, the full denial
+  matrix, and noncanonical subdirectory routes; every denied path proves it
+  leaves admin-bar state untouched.
+
+See the top 3.2.55 entry in `docs/CHANGELOG.md` for the complete code-level
+release detail and canonical ownership boundaries.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | `7c4f553` | Final review hardening for private-preview geometry and strict mutation results. |
+| `lunara-theme-blocks` | this local release-close commit | Theme 3.2.55 identity, current test expectations, and durable local-only release records. |
+
+The earlier 3.2.55 dependency commits remain recorded in the immediately
+following session entry.
+
+### Gate ledger
+
+- Review RED proved the original priority-zero preview handler ran too late to
+  prevent Core's admin-bar bump. The corrected runtime models Core at exact
+  priority zero and locks Site Studio at exact priority `-1`.
+- Mutation checks caught priority `-1` changing to zero, preview-handler
+  removal, path-specific premature admin-bar suppression, REST envelope-guard
+  bypass, and malformed browser Save/Restore success payloads.
+- Two independent final reviews returned PASS with no Critical or Important
+  finding; the final test-only denial-matrix follow-up also returned PASS.
+- Post-hardening focused gates passed for foundation, private preview,
+  real-Chrome workspace, and the 3.2.55 release identity.
+- Fresh full regression: 88 live-discovered top-level PowerShell contracts,
+  88 passed, 0 failed, each in a fresh process; elapsed time 209.8 seconds.
+- Static/structure: PHP lint 107/107, JavaScript syntax 44/44, PowerShell parse
+  89/89, and CSS braces 7,113/7,113 across 23 files.
+- `git show --check 7c4f553`, staged/working diff checks, exact commit scope,
+  and final release-scope checks passed before the local close.
+- Not run by design: integration, push, PR, merge, deployment, canary,
+  production/live probe, cache action, or production write.
+
+### Ruling
+
+The preview handler stays at `template_redirect` priority `-1` rather than
+moving authorization to an earlier lifecycle hook. That preserves the full
+front-page/query/user/dependency authorization context while executing before
+Core's priority-zero admin-bar initialization. If this ruling is wrong, the
+cost is a preview-only geometry regression contained by the private-preview
+module and its Core-order runtime contract; normal public requests remain
+untouched.
+
+### Punch-list carried forward
+
+- Keep this 3.2.55 candidate local until the approved integration boundary.
+- Continue with Theme 3.2.56 Editorial/Utility surfaces and its plugin-first
+  compatibility work.
+- Dalton retains every eventual production deployment through Deployer for
+  Git, followed by the approved canary and route/device smoke tests.
+
+### Whose move it is next
+
+Codex owns continued local 3.2.56 implementation and verification. Dalton owns
+the later manual Deployer for Git deployment boundary after separate
+integration approval.
+
+No deployment, cache operation, production write, live verification, push, merge, or PR occurred.
+
+## 2026-08-29 — Theme 3.2.55 local release-candidate closure
+
+### Headline
+
+Theme 3.2.55 is assembled locally on
+`codex/site-studio-registry-3.2.55` through the reviewed Revision History
+refresh dependency at `4cfe2b9`. The release identity, mutation campaign,
+fresh regression suite, and static/scope gates are complete; the uncommitted
+bytes are frozen for independent review. It is not integrated or live.
+
+### Verified live state
+
+Not applicable in this local release-close session. No production probe or
+canary was run, so there is no new measured live-state table and no live
+version claim.
+
+### What shipped and why
+
+Nothing shipped from this session. The local candidate combines the hardened
+registry/adapter/REST foundation, canonical Global/Home/Method pilots, atomic
+Homepage mod/content transactions, the dedicated responsive Visual Site Map
+workspace, private preview and section bridge, twelve-entry restore safety,
+and in-place history refresh. See the top 3.2.55 entry in
+`docs/CHANGELOG.md` for code-level detail and ownership boundaries.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | `4d72367` | Review-clean registry, adapter, REST, preview, revision, and provider foundation. |
+| `lunara-theme-blocks` | `d617dd0` | Review-clean Global/Home/Method pilot transactions. |
+| `lunara-theme-blocks` | `d7a4426` | Dedicated Site Studio workspace shell and local state machine. |
+| `lunara-theme-blocks` | `f266ea2` | Private preview substitution, public markers, and section bridge. |
+| `lunara-theme-blocks` | `4cfe2b9` | Review-clean in-place Revision History refresh and adversarial browser closure. |
+| `lunara-theme-blocks` | uncommitted review diff | 3.2.55 identity, current test expectations, and local release records; intentionally not staged or committed. |
+
+### Gate ledger
+
+- RED-first release contract: PASS as a RED; it exited 1 against the untouched
+  dependency tree for the intended 3.2.54 stylesheet/current-test identity and
+  missing 3.2.55 changelog/session records, not for syntax or harness failure.
+- Corrected pre-edit census: 80 current-candidate occurrences across 32 test
+  files (52 plain plus 28 regex-escaped), with only the dated 2026-08-17
+  Oscars 3.2.54 provenance pin excluded and preserved.
+- External backup: 37/37 existing authorized and deliberate-mutation files
+  matched SHA-256 under
+  `C:\lunara-external-backups\task4-commit4-4cfe2b9-20260829-01`.
+- Release mutation campaign: 10/10 intended nonzero REDs, including both
+  prior-identity source forms, all three coherency/public fixtures, the dated
+  provenance pin, both deploy exclusions, and false live/deployment claims.
+  The 38-file post-migration green snapshot matched SHA-256 38/38 after the
+  campaign.
+- Focused release group: 8/8 passed, covering release identity, foundation,
+  general Site Studio, pilot, real-Chrome workspace, private preview,
+  responsive assets, and public-route stabilization.
+- Fresh full regression: 88 live-discovered top-level PowerShell contracts,
+  88 passed, 0 failed, each in a fresh process; elapsed time 197.4 seconds.
+- Static/structure: PHP lint 107/107, JavaScript syntax 44/44, PowerShell
+  parse 89/89, CSS braces 7,113/7,113 across 23 files, and the workspace ES5
+  source gate plus all 18 representative syntax mutations passed.
+- Release/scope audit: exact 36-file intended status, 80/80 migrated source
+  occurrences, sole dated prior pin, one production added line (the version
+  header), zero cache/purge or licensed-font additions, zero package/plugin/
+  deploy drift, zero mutation sentinels, empty staged diff, `git diff --check`,
+  and dependency `git show --check` all passed.
+- Not run by design: canary, production/live probe, deployment, cache action,
+  production write, integration, push, merge, or PR.
+
+### Corrections
+
+No count or durable-fact correction was required. The dual-form byte census
+matched the corrected release brief exactly; no expected count was forced.
+
+One byte-restoration ruling was required: `apply_patch` logically restored the
+two `.deployignore` mutations but normalized the three touched CRLF hunk lines.
+The controller authorized one deterministic exception limited to that file.
+The exact external source and destination paths plus original SHA-256
+`FD6E99BC6784A513FB5975FB398086D9BB46503B9AE3C670C8AFBF25F9C731F0`
+were verified before native `Copy-Item` restored the repository-only config;
+raw hashes then matched and its Git diff was empty. If that ruling is wrong,
+the cost is restoring this one config file again from the same verified copy.
+
+### Logged, not fixed
+
+The candidate remains undeployed and therefore has no live 3.2.55 canary or
+public-route verification. That is a release boundary, not evidence of a live
+defect.
+
+### Punch-list carried forward
+
+- Freeze the verified uncommitted release-close diff and obtain independent
+  review of both that diff and the whole 3.2.55 slice.
+- Create the local release-close commit only after review is clean and the
+  controller explicitly authorizes that later step.
+- Any later integration and deployment remain outside this session.
+
+### Whose move it is next
+
+The independent reviewer/controller owns review of the frozen local diff.
+Dalton retains the later manual Deployer for Git deployment boundary after
+separate integration approval. No deployment, cache operation, production write, live verification, push, merge, or PR occurred.
+
+## 2026-08-28 (re-review round 3) — Cache negation bound to its action
+
+### Headline
+
+The Theme 3.2.54 visible-guidance guard now distinguishes negation that
+directly governs a cache-clearing action from unrelated earlier negation.
+Production behavior is unchanged from `e153cda`; no deployment or live
+operation occurred.
+
+### What changed
+
+- Each visible clear/flush/purge action is classified independently. Direct
+  forms such as `Do not clear caches` and `Caches must never be cleared` remain
+  allowed, while `Do not hesitate to clear caches` is correctly affirmative.
+- Colons, en dashes, and em dashes are clause boundaries, preventing a distant
+  `not` from excusing a later affirmative cache-clearing instruction.
+- The implementation remains semantic rather than an exact-string allowlist,
+  and the prior contextual/plural helper and overflow-fixture protections are
+  unchanged.
+
+### Evidence
+
+- Colon-separated, em-dash-separated, and negative-auxiliary affirmative
+  guidance: RED.
+- Direct active and passive canonical negatives: GREEN.
+- Prior `_x`, `_nx`, semicolon-mixed, `.site *`, universal `*`, and Journal
+  22px overflow mutations: RED as required.
+- Restored focused contract and affected regression set: GREEN, 7/7.
+- PHP 100/100, JavaScript 40/40, PowerShell parse, CSS 22/22, and diff checks:
+  PASS.
+
+### Live state
+
+No live check, deploy, cache operation, production write, push, merge, or PR
+occurred. The public site remains at the previously measured Theme 3.2.53
+state.
+
+## 2026-08-28 (re-review round 2) — Semantic and subtree guards closed
+
+### Headline
+
+The Theme 3.2.54 stabilization tests are hardened locally against the second
+review's false-green mutations. Production behavior is unchanged from
+`ece3634`; no deployment or live operation occurred.
+
+### What changed
+
+- The visible Control Desk census now includes contextual and plural WordPress
+  translation helpers, including both `_n`/`_nx` message branches, without
+  scanning non-visible technical literals.
+- Cache guidance is evaluated clause by clause. Genuinely negative forms such
+  as `Caches must never be cleared as a deployment fix` are allowed, while an
+  affirmative clear/flush/purge clause fails even when another clause in the
+  same message is negative.
+- The box-sizing sentinel now lives inside `.site > #canonical-main`, alongside
+  the measured route subtree, so both universal and `.site *` fixture repairs
+  are observable. Scoped fixture-owned declarations remain valid.
+
+### Evidence
+
+- Contextual `_x` affirmative guidance: RED.
+- Contextual-plural `_nx` affirmative branch: RED.
+- Alternate canonical negative guidance: GREEN.
+- Mixed negative plus affirmative guidance: RED.
+- `.site *` and universal border-box repairs: 20-case RED each.
+- Journal production border-box removal: 22px overflow RED at 390 and 430.
+- Restored focused contract and affected regression set: GREEN, 7/7.
+
+### Live state
+
+No live check, deploy, cache operation, production write, push, merge, or PR
+occurred. The public site remains at the previously measured Theme 3.2.53
+state.
+
+## 2026-08-28 (review fix) — Public stabilization contracts hardened
+
+### Headline
+
+Two Task 2 review findings are fixed locally and remain undeployed. The
+Control Desk no longer contains affirmative visible cache-clearing guidance,
+and the public-route browser fixture no longer supplies universal border-box
+geometry before measuring production overflow.
+
+### What changed
+
+- The Object Cache status note now states the canonical rule to never clear
+  caches as a deployment fix. The stale Hero Command notice no longer claims
+  that the homepage cache was purged.
+- The cache guidance gate now scans visible translated strings for affirmative
+  clear/flush/purge instructions in verb-first, passive, and noun-style forms,
+  while allowing explicit `never`, `no`, `without`, and `not` guidance.
+- The browser fixture applies box sizing only to its outer-main and action
+  scaffolding. A sentinel must retain the browser-default `content-box`, and
+  the outer main is edge-to-edge so route overflow cannot hide inside fixture
+  gutters.
+
+**Correction (2026-08-29):** The stale Hero claim above had not actually
+entered the integrated tree. See the 2026-08-29 Theme 3.2.56 entry, where the
+Hero notice and its administration purge are truly removed.
+
+### TDD and verification
+
+- Initial strengthened RED: the contract found both stale Control Desk
+  strings and 20 universal-box-sizing failures across four routes × five
+  widths.
+- Journal mutation RED: removing the production filter scroller border-box
+  declaration produced 22px document overflow at 390 and 430.
+- Cache noun mutation RED: `Cache flushes are required after every
+  deployment.` was rejected by the inflection-aware guard.
+- Final focused contract and affected Control Desk/Journal regressions passed;
+  PHP, JavaScript, and PowerShell syntax plus `git diff --check` passed.
+
+### Live state and next step
+
+No live probe, deploy, cache operation, production write, push, merge, or PR
+occurred. The public site remains at the previously measured Theme 3.2.53
+state; review and integration of this local branch are the next steps.
+
+## 2026-08-28 — Theme 3.2.54 public stabilization prepared locally
+
+### Headline
+
+Theme 3.2.54 is committed on
+`codex/site-studio-public-stabilization-3.2.54`, but it is **not deployed**.
+Home, Reviews, Journal, and Oscars now keep the header-owned canonical
+`<main>` as the document's only main landmark. Their existing `#primary`
+route roots remain intact as neutral wrappers, including route classes,
+ordering hooks, and version markers.
+
+### What changed
+
+- Replaced viewport-derived mobile route/grid sizing with parent-relative,
+  border-box containment and removed route-wide clipping that hid defects.
+  Intentional Review rails, Journal filter/sort scrollers, Oscars carousels,
+  media crops, and line clamps remain local and intact.
+- Consolidated both Oscars winner lanes on a conditional media-link renderer.
+  Visual anchors are named from canonical winner context; posterless cards
+  emit no empty media anchor and retain their named text destination.
+- Removed `rocket_clean_domain()` from Design Tokens and replaced four visible
+  cache-flush instructions with the standing no-cache-clearing rule.
+- Added the portable four-route browser contract at 390, 430, 768, 782, and
+  1440, extended the Oscars runtime branches, and updated current release
+  expectations to 3.2.54 without rewriting historical documentation facts.
+
+### Verified live state
+
+Read-only 390px probes returned HTTP 200 and Theme 3.2.53 for all four public
+routes, so this session makes no deployment or canary claim. Each probe used
+one live A/A pair and was classified `BASELINE_NOISY`: Home TTFB/LCP was
+1630/2168 ms then 72.2/708 ms; Reviews 1670.4/2284 then 110.3/860 ms; Journal
+1146.5/1904 then 77.3/868 ms; Oscars 1994.7/2840 then 76.9/936 ms. All routes
+reported zero broken requests and zero document overflow. Oscars transferred
+about 1.50 MB and used text LCP; that payload is logged, not attributed to a
+verified media bottleneck or changed from this noisy cohort.
+
+### Commit ledger
+
+- `40fc456` — `Stabilize public routes for Theme 3.2.54`
+- Documentation close commit follows this entry.
+
+### Gate ledger
+
+- New contract RED: 18 known 3.2.53 defect groups, including nested route
+  mains, masking overflow, unconditional Oscars media anchors, the Design
+  Tokens cache call, and stale visible cache-flush guidance.
+- Target GREEN: four routes × five responsive baselines passed.
+- Full PowerShell suite: 83/83 passed.
+- Syntax/balance: PHP 100/100, JavaScript 40/40, CSS 22/22.
+- Deliberate landmark, overflow-mask, and posterless-anchor mutations: all
+  three failed for their intended assertion and passed after restoration.
+- `git diff --check`: passed; only normal LF/CRLF working-copy warnings were
+  emitted for existing PowerShell files.
+
+### Logged, not fixed
+
+- Live remains Theme 3.2.53 until a separate authorized deployment.
+- The one-pair live A/A performance cohort is too noisy for release comparison
+  or bottleneck attribution. Oscars' roughly 1.50 MB route payload deserves a
+  larger controlled cohort before optimization work is authorized.
+
+### Next step
+
+Review and integrate the branch through the normal workflow. Deployment,
+cache operations, production writes, and live canary proof were intentionally
+outside this task.
+
 ## 2026-08-24 (later) — Agent handoff made portable; two stale docs defused
 
 ### Headline

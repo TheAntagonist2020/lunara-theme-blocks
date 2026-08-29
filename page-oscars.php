@@ -380,7 +380,7 @@ $command_cards = array(
     ),
 );
 ?>
-<main id="primary" class="site-main lunara-oscars-portal<?php echo esc_attr( $oscars_portal_label_font_class ); ?>" data-lunara-theme-version="<?php echo esc_attr( (string) wp_get_theme()->get( 'Version' ) ); ?>"<?php if ( '' !== $oscars_portal_geometry_style ) : ?> style="<?php echo esc_attr( $oscars_portal_geometry_style ); ?>"<?php endif; ?>>
+<div id="primary" class="site-main lunara-oscars-portal<?php echo esc_attr( $oscars_portal_label_font_class ); ?>" data-lunara-theme-version="<?php echo esc_attr( (string) wp_get_theme()->get( 'Version' ) ); ?>"<?php if ( '' !== $oscars_portal_geometry_style ) : ?> style="<?php echo esc_attr( $oscars_portal_geometry_style ); ?>"<?php endif; ?>>
     <?php if ( empty( $snapshot ) && empty( $database_spotlight ) ) : ?>
         <section class="lunara-home-section lunara-archive-hero">
             <p class="lunara-archive-hero-kicker"><?php echo esc_html( $hero_kicker ); ?></p>
@@ -704,18 +704,10 @@ $command_cards = array(
                 <div class="lunara-ceremony-winners-grid">
                     <?php foreach ( $winner_cards as $wcard ) :
                         $w_vis = is_array( $wcard['_visual'] ?? null ) ? $wcard['_visual'] : array();
-                        $winner_poster_url = trim( (string) ( $w_vis['poster_url'] ?? '' ) );
                     ?>
                     <article class="lunara-ceremony-winner-card<?php echo ! empty( $w_vis['poster_url'] ) || ! empty( $w_vis['poster_html'] ) ? ' has-poster' : ''; ?>">
                         <?php $winner_primary_url = ! empty( $wcard['primary_url'] ) ? $wcard['primary_url'] : ( ! empty( $wcard['film_url'] ) ? $wcard['film_url'] : $ceremony_url_str ); ?>
-                        <?php $winner_media_url   = ! empty( $wcard['film_url'] ) ? $wcard['film_url'] : $winner_primary_url; ?>
-                        <a class="lunara-ceremony-winner-media-link" href="<?php echo esc_url( $winner_media_url ); ?>">
-                            <?php if ( ! empty( $w_vis['poster_html'] ) ) : ?>
-                                <div class="lunara-ceremony-winner-poster<?php echo '' !== $winner_poster_url ? ' has-poster-bg' : ''; ?>"<?php if ( '' !== $winner_poster_url ) : ?> style="background-image: url('<?php echo esc_url( $winner_poster_url ); ?>');"<?php endif; ?>><?php echo $w_vis['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
-                            <?php elseif ( ! empty( $w_vis['poster_url'] ) ) : ?>
-                                <div class="lunara-ceremony-winner-poster has-poster-bg" style="background-image: url('<?php echo esc_url( $w_vis['poster_url'] ); ?>');"><img src="<?php echo esc_url( $w_vis['poster_url'] ); ?>" alt="<?php echo esc_attr( $wcard['film'] ?? '' ); ?> poster" loading="lazy" /></div>
-                            <?php endif; ?>
-                        </a>
+                        <?php echo lunara_render_oscars_winner_media_link( $wcard, $ceremony_url_str ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared renderer escapes attributes and preserves trusted visual markup. ?>
                         <div class="lunara-ceremony-winner-copy">
                             <?php if ( ! empty( $wcard['category_url'] ) ) : ?>
                                 <p class="lunara-ceremony-winner-category"><a class="lunara-oscars-text-link lunara-oscars-text-link--meta" href="<?php echo esc_url( $wcard['category_url'] ); ?>"><?php echo esc_html( $wcard['category_label'] ?? $wcard['canonical_category'] ?? '' ); ?></a></p>
@@ -801,18 +793,10 @@ $command_cards = array(
                     <div class="lunara-ledger-carousel-track lunara-oscars-winner-carousel-track" data-lunara-carousel-track>
                         <?php foreach ( $rotating_cards as $wcard ) :
                             $w_vis = is_array( $wcard['_visual'] ?? null ) ? $wcard['_visual'] : array();
-                            $rotating_poster_url = trim( (string) ( $w_vis['poster_url'] ?? '' ) );
                         ?>
                         <article class="lunara-ceremony-winner-card lunara-oscars-winner-carousel-card<?php echo ! empty( $w_vis['poster_url'] ) || ! empty( $w_vis['poster_html'] ) ? ' has-poster' : ''; ?>">
                             <?php $rotating_primary_url = ! empty( $wcard['primary_url'] ) ? $wcard['primary_url'] : ( ! empty( $wcard['film_url'] ) ? $wcard['film_url'] : $rotating_url ); ?>
-                            <?php $rotating_media_url   = ! empty( $wcard['film_url'] ) ? $wcard['film_url'] : $rotating_primary_url; ?>
-                            <a class="lunara-ceremony-winner-media-link" href="<?php echo esc_url( $rotating_media_url ); ?>">
-                                <?php if ( ! empty( $w_vis['poster_html'] ) ) : ?>
-                                    <div class="lunara-ceremony-winner-poster<?php echo '' !== $rotating_poster_url ? ' has-poster-bg' : ''; ?>"<?php if ( '' !== $rotating_poster_url ) : ?> style="background-image: url('<?php echo esc_url( $rotating_poster_url ); ?>');"<?php endif; ?>><?php echo $w_vis['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
-                                <?php elseif ( ! empty( $w_vis['poster_url'] ) ) : ?>
-                                    <div class="lunara-ceremony-winner-poster has-poster-bg" style="background-image: url('<?php echo esc_url( $w_vis['poster_url'] ); ?>');"><img src="<?php echo esc_url( $w_vis['poster_url'] ); ?>" alt="<?php echo esc_attr( $wcard['film'] ?? '' ); ?> poster" loading="lazy" decoding="async" /></div>
-                                <?php endif; ?>
-                            </a>
+                            <?php echo lunara_render_oscars_winner_media_link( $wcard, $rotating_url ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared renderer escapes attributes and preserves trusted visual markup. ?>
                             <div class="lunara-ceremony-winner-copy">
                                 <?php if ( ! empty( $wcard['category_url'] ) ) : ?>
                                     <p class="lunara-ceremony-winner-category"><a class="lunara-oscars-text-link lunara-oscars-text-link--meta" href="<?php echo esc_url( $wcard['category_url'] ); ?>"><?php echo esc_html( $wcard['category_label'] ?? $wcard['canonical_category'] ?? '' ); ?></a></p>
@@ -861,7 +845,7 @@ echo function_exists( 'lunara_oscars_portal_render_sections' )
     : implode( '', $oscars_slot_markup ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- slots are template-rendered markup captured above.
 ?>
     <?php endif; ?>
-</main>
+</div>
 <?php
 wp_reset_postdata();
 get_footer();

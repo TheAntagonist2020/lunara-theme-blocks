@@ -1,6 +1,6 @@
 <?php
 /**
- * Isolated behavioral contract for Theme 3.2.53 Reviews Archive Studio.
+ * Isolated behavioral contract for Theme 3.2.56 Reviews Archive Studio.
  *
  * Run: php tests/reviews-archive-studio-runtime.php
  */
@@ -12,6 +12,9 @@ $lunara_test_options       = array();
 $lunara_test_cache_deletes = array();
 $lunara_test_actions_fired = array();
 $lunara_test_rocket_urls   = array();
+$lunara_test_revision_write_mode = 'normal';
+$lunara_test_preview_write_mode = 'normal';
+$lunara_test_last_preview_transient_key = '';
 $lunara_test_transients    = array();
 $lunara_test_user_id       = 7;
 $lunara_test_can_edit      = true;
@@ -53,8 +56,10 @@ function lunara_test_assert( $condition, $message ) {
 
 class WP_Error {
 	private $code;
-	public function __construct( $code ) { $this->code = $code; }
+	private $message;
+	public function __construct( $code, $message = '' ) { $this->code = $code; $this->message = $message; }
 	public function get_error_code() { return $this->code; }
+	public function get_error_message() { return $this->message; }
 }
 
 class WP_Post {
@@ -130,7 +135,12 @@ function get_theme_mod( $key, $default = '' ) { global $lunara_test_theme_mods; 
 function set_theme_mod( $key, $value ) { global $lunara_test_theme_mods; $lunara_test_theme_mods[ $key ] = $value; }
 function remove_theme_mod( $key ) { global $lunara_test_theme_mods; unset( $lunara_test_theme_mods[ $key ] ); }
 function get_option( $key, $default = false ) { global $lunara_test_options; return array_key_exists( $key, $lunara_test_options ) ? $lunara_test_options[ $key ] : $default; }
-function update_option( $key, $value ) { global $lunara_test_options; $lunara_test_options[ $key ] = $value; return true; }
+function update_option( $key, $value ) {
+	global $lunara_test_options, $lunara_test_revision_write_mode;
+	if ( 'lunara_reviews_archive_studio_revisions' === $key && 'fail' === $lunara_test_revision_write_mode ) { return false; }
+	$lunara_test_options[ $key ] = 'lunara_reviews_archive_studio_revisions' === $key && 'mismatch' === $lunara_test_revision_write_mode && is_array( $value ) ? array_slice( $value, 1 ) : $value;
+	return true;
+}
 function delete_option( $key ) { global $lunara_test_options; unset( $lunara_test_options[ $key ] ); return true; }
 function get_post( $id ) { global $lunara_test_posts; $id = is_scalar( $id ) ? (int) $id : 0; return isset( $lunara_test_posts[ $id ] ) ? $lunara_test_posts[ $id ] : null; }
 function get_posts( $args ) {
@@ -201,7 +211,18 @@ function current_time() { return '2026-08-15 12:00:00'; }
 function wp_json_encode( $value ) { return json_encode( $value ); }
 function wp_generate_uuid4() { static $uuid_counter = 0; return 'uuid-4-test-' . ( ++$uuid_counter ); }
 function wp_hash( $value ) { return hash( 'sha256', 'test-salt|' . $value ); }
-function set_transient( $key, $value, $ttl ) { global $lunara_test_transients, $lunara_test_now; $lunara_test_transients[ $key ] = array( 'value' => $value, 'expires' => $lunara_test_now + $ttl ); return true; }
+function set_transient( $key, $value, $ttl ) {
+	global $lunara_test_transients, $lunara_test_now, $lunara_test_preview_write_mode, $lunara_test_last_preview_transient_key;
+	$is_preview = 0 === strpos( (string) $key, 'lunara_reviews_archive_preview_' );
+	if ( $is_preview ) {
+		$lunara_test_last_preview_transient_key = $key;
+		if ( 'mismatch' === $lunara_test_preview_write_mode ) {
+			$value['token_hash'] = 'readback-mismatch';
+		}
+	}
+	$lunara_test_transients[ $key ] = array( 'value' => $value, 'expires' => $lunara_test_now + $ttl );
+	return ! ( $is_preview && 'fail' === $lunara_test_preview_write_mode );
+}
 function get_transient( $key ) {
 	global $lunara_test_transients, $lunara_test_now, $lunara_test_actions_fired;
 	// Preview-token transient reads land in the same fired-actions array the
@@ -252,6 +273,20 @@ function lunara_set_pinned_review_id( $post_id = 0 ) {
 }
 
 require dirname( __DIR__ ) . '/inc/reviews-archive-studio.php';
+require dirname( __DIR__ ) . '/inc/site-studio-registry.php';
+require dirname( __DIR__ ) . '/inc/site-studio-adapters.php';
+
+$reviews_projection_schema = lunara_site_studio_reviews_archive_state_schema();
+lunara_test_assert( array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) === array_keys( $reviews_projection_schema ), 'Reviews projection schema must inventory every authoritative top-level provider key.' );
+lunara_test_assert( array( 'debrief_kicker', 'debrief_depth', 'debrief_visible', 'debrief_latest', 'debrief_order', 'hero_action_run', 'hero_action_oscars', 'hero_action_journal', 'toolbar_kicker', 'toolbar_title', 'sort_label', 'sort_release_desc', 'sort_release_asc', 'sort_modified_desc', 'year_label', 'year_all', 'year_filter', 'support_kicker', 'support_title', 'run_kicker', 'run_title', 'retention_kicker', 'retention_title', 'retention_copy', 'pagination_prev', 'pagination_next' ) === array_keys( $reviews_projection_schema['labels'] ), 'Reviews projection schema must inventory every authoritative label key.' );
+lunara_test_assert( array( 'hero', 'grid', 'pagination', 'pairing-desk' ) === array_keys( $reviews_projection_schema['section_visibility'] ), 'Reviews projection schema must inventory every authoritative visibility key.' );
+lunara_test_assert( array( 'kicker', 'title', 'copy', 'items' ) === array_keys( $reviews_projection_schema['gallery'] ), 'Reviews projection schema must inventory the exact gallery container.' );
+lunara_test_assert( array( 'order', 'attachment_id', 'alt', 'caption', 'link_url', 'credit', 'source', 'source_url', 'focal_x', 'focal_y' ) === array_keys( $reviews_projection_schema['gallery']['items']['*'] ), 'Reviews projection schema must inventory the full gallery-item shape.' );
+lunara_test_assert( array( 'visible', 'order', 'label', 'destination', 'url', 'image_id', 'image_alt', 'image_credit', 'image_source', 'image_source_url', 'focal_x', 'focal_y' ) === array_keys( $reviews_projection_schema['retention']['*'] ), 'Reviews projection schema must inventory the full retention-item shape.' );
+lunara_test_assert( array( 'density', 'lead_prominence', 'rail_density', 'section_gap', 'lead_min_height', 'card_min_height', 'compact_media_width' ) === array_keys( $reviews_projection_schema['presentation'] ), 'Reviews projection schema must inventory the exact presentation shape.' );
+$reviews_projection_accepted = false;
+$reviews_projection_roundtrip = lunara_site_studio_project_state_value( lunara_reviews_archive_studio_defaults(), $reviews_projection_schema, $reviews_projection_accepted );
+lunara_test_assert( $reviews_projection_accepted && lunara_reviews_archive_studio_defaults() === $reviews_projection_roundtrip, 'Reviews projection must preserve the complete authoritative default shape.' );
 require dirname( __DIR__ ) . '/inc/helpers.php';
 require dirname( __DIR__ ) . '/inc/review-archive-critical.php';
 require dirname( __DIR__ ) . '/inc/review-rendering.php';
@@ -455,6 +490,20 @@ $code_producers = array(
 		$lunara_test_can_edit = false;
 		$result = lunara_reviews_archive_studio_store_preview( $valid );
 		$lunara_test_can_edit = true;
+		return $result;
+	},
+	'reviews_archive_preview_write_failed'          => static function () use ( $valid ) {
+		global $lunara_test_preview_write_mode;
+		$lunara_test_preview_write_mode = 'fail';
+		$result = lunara_reviews_archive_studio_store_preview( $valid );
+		$lunara_test_preview_write_mode = 'normal';
+		return $result;
+	},
+	'reviews_archive_preview_readback_failed'       => static function () use ( $valid ) {
+		global $lunara_test_preview_write_mode;
+		$lunara_test_preview_write_mode = 'mismatch';
+		$result = lunara_reviews_archive_studio_store_preview( $valid );
+		$lunara_test_preview_write_mode = 'normal';
 		return $result;
 	},
 	'reviews_archive_config_repair_failed'          => static function () use ( $valid, $mutate ) {
@@ -869,6 +918,22 @@ for ( $i = 0; $i < 20; $i++ ) {
 	lunara_reviews_archive_studio_push_revision( $defaults, 'save' );
 }
 lunara_test_assert( 12 === count( lunara_reviews_archive_studio_get_revisions() ), 'Revision history must remain bounded to twelve snapshots.' );
+$verified_reviews_revision = lunara_reviews_archive_studio_push_revision( $defaults, 'save' );
+lunara_test_assert( is_string( $verified_reviews_revision ) && $verified_reviews_revision === lunara_reviews_archive_studio_get_revisions()[0]['id'], 'Revision writes must return the exact UUID verified on readback.' );
+$reviews_public_before_failure = lunara_reviews_archive_studio_get_public_config( false );
+$reviews_cache_before_failure = count( $lunara_test_cache_deletes );
+$reviews_candidate_after_failure = $reviews_public_before_failure;
+$reviews_candidate_after_failure['title'] = 'Must never publish without durable history';
+$lunara_test_revision_write_mode = 'fail';
+$reviews_write_failure = lunara_reviews_archive_studio_promote_config( $reviews_candidate_after_failure, 'save' );
+lunara_test_assert( is_wp_error( $reviews_write_failure ) && $reviews_public_before_failure === lunara_reviews_archive_studio_get_public_config( false ) && $reviews_cache_before_failure === count( $lunara_test_cache_deletes ), 'Reviews save must abort before live mutation/invalidation when revision update_option fails.' );
+$lunara_test_revision_write_mode = 'mismatch';
+$reviews_readback_failure = lunara_reviews_archive_studio_promote_config( $reviews_candidate_after_failure, 'save' );
+lunara_test_assert( is_wp_error( $reviews_readback_failure ) && $reviews_public_before_failure === lunara_reviews_archive_studio_get_public_config( false ) && $reviews_cache_before_failure === count( $lunara_test_cache_deletes ), 'Reviews save must abort before live mutation/invalidation when revision UUID readback fails.' );
+$reviews_restore_target = lunara_reviews_archive_studio_get_revisions()[0]['id'];
+$reviews_restore_failure = lunara_reviews_archive_studio_restore_revision( $reviews_restore_target );
+lunara_test_assert( is_wp_error( $reviews_restore_failure ) && $reviews_public_before_failure === lunara_reviews_archive_studio_get_public_config( false ) && $reviews_cache_before_failure === count( $lunara_test_cache_deletes ), 'Reviews restore must abort before live mutation/invalidation when its safety revision readback fails.' );
+$lunara_test_revision_write_mode = 'normal';
 
 // --- Targeted route-cache invalidation.
 $lunara_test_rocket_urls = array();
@@ -881,6 +946,17 @@ lunara_test_assert( array( 'https://example.test/reviews/', 'https://example.tes
 lunara_test_assert( array( 'https://example.test/reviews/', 'https://example.test/reviews-page/' ) === $lunara_test_rocket_urls, 'The bounded per-URL cache cleaner must receive only the two Reviews route URLs.' );
 
 // --- Preview token authorization and the no-store-before-validation discipline.
+$lunara_test_preview_write_mode = 'fail';
+$preview_write_failure = lunara_reviews_archive_studio_store_preview( $validated );
+lunara_test_assert( is_wp_error( $preview_write_failure ) && 'reviews_archive_preview_write_failed' === $preview_write_failure->get_error_code(), 'A failed Reviews preview transient write must return the bounded storage error.' );
+lunara_test_assert( 'The private preview could not be stored.' === $preview_write_failure->get_error_message(), 'The Reviews preview storage error must carry its bounded human message for Site Studio REST.' );
+lunara_test_assert( ! isset( $lunara_test_transients[ $lunara_test_last_preview_transient_key ] ), 'A partially written Reviews preview transient must be deleted before returning the storage error.' );
+$lunara_test_preview_write_mode = 'mismatch';
+$preview_readback_failure = lunara_reviews_archive_studio_store_preview( $validated );
+lunara_test_assert( is_wp_error( $preview_readback_failure ) && 'reviews_archive_preview_readback_failed' === $preview_readback_failure->get_error_code(), 'A mismatched Reviews preview readback must return the bounded verification error.' );
+lunara_test_assert( 'The private preview could not be verified.' === $preview_readback_failure->get_error_message(), 'The Reviews preview verification error must carry its bounded human message for Site Studio REST.' );
+lunara_test_assert( ! isset( $lunara_test_transients[ $lunara_test_last_preview_transient_key ] ), 'A mismatched Reviews preview transient must be deleted before returning the verification error.' );
+$lunara_test_preview_write_mode = 'normal';
 $preview_token = lunara_reviews_archive_studio_store_preview( $validated );
 lunara_test_assert( is_string( $preview_token ) && '' !== $preview_token, 'Valid unsaved configuration must receive a private preview token.' );
 lunara_test_assert( 'A sharper Reviews desk' === lunara_reviews_archive_studio_get_preview_config( $preview_token )['title'], 'The authorized owner must retrieve the unsaved preview.' );

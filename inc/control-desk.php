@@ -33,7 +33,7 @@ function lunara_register_control_desk_page() {
 add_action( 'admin_menu', 'lunara_register_control_desk_page' );
 
 function lunara_enqueue_control_desk_assets( $hook ) {
-    if ( ! in_array( $hook, array( 'toplevel_page_lunara-control-desk', 'appearance_page_lunara-control-desk', 'lunara_page_lunara-site-studio' ), true ) ) {
+    if ( ! in_array( $hook, array( 'toplevel_page_lunara-control-desk', 'appearance_page_lunara-control-desk' ), true ) ) {
         return;
     }
 
@@ -1177,7 +1177,11 @@ function lunara_control_desk_save_homepage_studio() {
         }
 
         if ( function_exists( 'lunara_sync_home_section_blocks_from_settings' ) ) {
-            lunara_sync_home_section_blocks_from_settings();
+            $sync_result = lunara_sync_home_section_blocks_from_settings();
+            if ( is_wp_error( $sync_result ) ) {
+                wp_safe_redirect( add_query_arg( 'lunara_notice', 'homepage_studio_write_failed', $redirect ) );
+                exit;
+            }
         }
 
         wp_safe_redirect( add_query_arg( 'lunara_notice', 'homepage_studio_saved', $redirect ) );
@@ -1325,7 +1329,11 @@ function lunara_control_desk_save_homepage_studio() {
     // the just-saved order + visibility recompose the Home page's blocks so
     // the Studio and the editor never disagree.
     if ( function_exists( 'lunara_sync_home_section_blocks_from_settings' ) ) {
-        lunara_sync_home_section_blocks_from_settings();
+        $sync_result = lunara_sync_home_section_blocks_from_settings();
+        if ( is_wp_error( $sync_result ) ) {
+            wp_safe_redirect( add_query_arg( 'lunara_notice', 'homepage_studio_write_failed', $redirect ) );
+            exit;
+        }
     }
 
     $notice = $apply_values ? 'homepage_preset_applied' : 'homepage_studio_saved';
@@ -3930,7 +3938,7 @@ function lunara_control_desk_get_system_status() {
             'label' => __( 'Object cache', 'lunara-film' ),
             'value' => wp_using_ext_object_cache() ? __( 'External cache active', 'lunara-film' ) : __( 'Default WordPress cache', 'lunara-film' ),
             'state' => 'ready',
-            'note'  => __( 'Flush cache after every deployment.', 'lunara-film' ),
+            'note'  => __( 'Never clear caches as a deployment fix; verify public routes against normal cache behavior.', 'lunara-film' ),
         ),
         array(
             'label' => __( 'Last deploy backup', 'lunara-film' ),
@@ -6191,7 +6199,7 @@ function lunara_control_desk_render_operating_plan_tab() {
         array(
             'label' => __( 'Always', 'lunara-film' ),
             'title' => __( 'Verify, cache, document, repeat', 'lunara-film' ),
-            'body'  => __( 'Keep 390px and 768px first-class, flush cache after deploys, block unsafe source images, and update session notes after meaningful changes.', 'lunara-film' ),
+            'body'  => __( 'Keep 390px and 768px first-class, never clear caches as a fix, block unsafe source images, and update session notes after meaningful changes.', 'lunara-film' ),
             'links' => array(
                 array( __( 'Speed & Stability', 'lunara-film' ), lunara_control_desk_url( array( 'tab' => 'speed-stability' ) ) ),
                 array( __( 'Visual QA', 'lunara-film' ), lunara_control_desk_url( array( 'tab' => 'visual-qa' ) ) ),
@@ -6301,7 +6309,7 @@ function lunara_control_desk_render_operating_plan_tab() {
 
     $rules = array(
         __( 'AI is suggest-first and cannot silently mutate public copy, metadata, homepage flags, or Ledger data.', 'lunara-film' ),
-        __( 'Back up before deployment, lint changed PHP, flush cache, and verify public routes after deploy.', 'lunara-film' ),
+        __( 'Back up before deployment, lint changed PHP, never clear caches as a fix, and verify public routes after deploy.', 'lunara-film' ),
         __( 'Mobile 390px and 768px are first-class acceptance lanes, not afterthoughts.', 'lunara-film' ),
         __( 'World of Reel images stay blocked for featured-image use; external exclusive images need visible provenance and credit.', 'lunara-film' ),
         __( 'Update session logs and the long-term changelog after meaningful product changes.', 'lunara-film' ),
@@ -6309,7 +6317,7 @@ function lunara_control_desk_render_operating_plan_tab() {
 
     $tools = array(
         array( __( 'Control Desk', 'lunara-film' ), __( 'Private operating surface for readiness, QA, curation, and next actions.', 'lunara-film' ) ),
-        array( __( 'WordPress.com + SSH', 'lunara-film' ), __( 'Live checks, backups, deploys, cache flushes, and remote linting.', 'lunara-film' ) ),
+        array( __( 'WordPress.com + SSH', 'lunara-film' ), __( 'Read-only live checks, backups, deploys, no cache clearing as a fix, and remote linting.', 'lunara-film' ) ),
         array( __( 'Browser QA', 'lunara-film' ), __( 'Screenshots and interaction checks at mobile, tablet, and desktop widths.', 'lunara-film' ) ),
         array( __( 'OpenAI / Anthropic / Gemini', 'lunara-film' ), __( 'Private snapshots for structure, taste, long context, and Ledger checks.', 'lunara-film' ) ),
         array( __( 'Dispatch', 'lunara-film' ), __( 'Draft-first Journal source pipeline with a hard originality gate.', 'lunara-film' ) ),
@@ -13816,7 +13824,7 @@ function lunara_control_desk_speed_route_notes() {
         'home'            => array(
             'image'  => __( 'First-lane media must avoid original-size requests.', 'lunara-film' ),
             'mobile' => __( '390px stack should keep the first viewport clean and readable.', 'lunara-film' ),
-            'next'   => __( 'Check newest review, Journal, and Ledger lanes after cache flush.', 'lunara-film' ),
+            'next'   => __( 'Check newest review, Journal, and Ledger lanes after deploy without clearing caches.', 'lunara-film' ),
         ),
         'reviews'         => array(
             'image'  => __( 'Archive cards should use bounded card/featured images.', 'lunara-film' ),
@@ -14982,7 +14990,7 @@ function lunara_control_desk_render_pairing_desk_form( $context = 'control-desk'
             <p class="lunara-control-desk-intro"><?php esc_html_e( 'These three lines introduce the Pair It With trio on the front page. A blank field deliberately uses its built-in line; the preview below always shows what readers see now.', 'lunara-film' ); ?></p>
         </div>
 
-        <div class="lunara-site-studio-effective-copy" aria-label="<?php echo esc_attr__( 'Current public Lunara Method copy', 'lunara-film' ); ?>">
+        <div class="lunara-control-desk-effective-copy" aria-label="<?php echo esc_attr__( 'Current public Lunara Method copy', 'lunara-film' ); ?>">
             <p class="lunara-control-desk-kicker"><?php esc_html_e( 'What readers see now', 'lunara-film' ); ?></p>
             <span><?php echo esc_html( '' !== trim( $values['kicker'] ) ? $values['kicker'] : $defaults['kicker'] ); ?></span>
             <strong><?php echo esc_html( '' !== trim( $values['title'] ) ? $values['title'] : $defaults['title'] ); ?></strong>
@@ -15425,6 +15433,10 @@ function lunara_control_desk_render_notice() {
             'class'   => 'notice-success',
             'message' => __( 'Homepage Studio saved. The front-door rhythm and section shortcuts now read the updated values.', 'lunara-film' ),
         ),
+        'homepage_studio_write_failed' => array(
+            'class'   => 'notice-error',
+            'message' => __( 'Homepage Studio settings were not announced as saved because the Home page blocks could not be updated.', 'lunara-film' ),
+        ),
         'homepage_preset_applied' => array(
             'class'   => 'notice-success',
             'message' => __( 'Homepage package applied. The existing front-door controls now match that publication package.', 'lunara-film' ),
@@ -15435,7 +15447,7 @@ function lunara_control_desk_render_notice() {
         ),
         'hero_command_saved' => array(
             'class'   => 'notice-success',
-            'message' => __( 'Hero Command saved. The hero now reads the deck and overlay settings; the homepage cache was purged so it screens immediately.', 'lunara-film' ),
+            'message' => __( 'Hero Command saved. The hero now reads the deck and overlay settings through normal cache-versioned delivery.', 'lunara-film' ),
         ),
         'hero_command_forbidden' => array(
             'class'   => 'notice-error',

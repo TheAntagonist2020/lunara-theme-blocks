@@ -349,12 +349,14 @@
         #primary.lra > .lunara-home-section,
         #primary.lra .lunara-review-archive-hero,
         #primary.lra .lunara-review-archive-shell {
+            box-sizing: border-box !important;
             margin-left: auto !important;
             margin-right: auto !important;
-            max-width: calc(100vw - 24px) !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
-            width: calc(100vw - 24px) !important;
+            width: 100% !important;
         }
 
         #primary.lra .lunara-review-archive-hero-shell {
@@ -771,7 +773,6 @@
         gap: var(--lunara-reviews-archive-rail-gap) !important;
         grid-template-columns: minmax(210px, 0.32fr) minmax(0, 1fr) !important;
         min-width: 0 !important;
-        overflow: hidden !important;
         padding: clamp(16px, 2.1vw, 24px) !important;
         border: 1px solid rgba(224, 196, 129, 0.14) !important;
         border-radius: 20px !important;
@@ -913,10 +914,6 @@
         .lunara-review-archive-page .lunara-review-archive-support-suite,
         .lunara-review-archive-page .lunara-review-archive-rail {
             grid-template-columns: minmax(0, 1fr) !important;
-        }
-
-        .lunara-review-archive-page .lunara-review-archive-support-suite {
-            overflow: hidden !important;
         }
 
         .lunara-review-archive-page .lunara-review-archive-rail-item {

@@ -631,7 +631,7 @@ function lunara_oscars_portal_studio_get_revisions() {
  * @param string              $action Audit action.
  * @param string              $validator_result Validation result for replacement.
  * @param bool                $prior_public Whether snapshot was public.
- * @return string Revision ID.
+ * @return string|WP_Error Verified revision ID or persistence failure.
  */
 function lunara_oscars_portal_studio_push_revision( $config, $action = 'save', $validator_result = 'passed', $prior_public = true ) {
 	$revisions = lunara_oscars_portal_studio_get_revisions();
@@ -648,36 +648,58 @@ function lunara_oscars_portal_studio_push_revision( $config, $action = 'save', $
 			'config'           => $config,
 		)
 	);
-	update_option( LUNARA_OSCARS_PORTAL_STUDIO_REVISIONS_OPTION, array_slice( $revisions, 0, LUNARA_OSCARS_PORTAL_STUDIO_REVISION_LIMIT ), false );
+	if ( ! update_option( LUNARA_OSCARS_PORTAL_STUDIO_REVISIONS_OPTION, array_slice( $revisions, 0, LUNARA_OSCARS_PORTAL_STUDIO_REVISION_LIMIT ), false ) ) {
+		return new WP_Error( 'oscars_portal_revision_write_failed', __( 'The Oscars safety revision could not be stored.', 'lunara-film' ) );
+	}
+	$stored = lunara_oscars_portal_studio_get_revisions();
+	$verified = false;
+	foreach ( $stored as $revision ) {
+		if ( is_array( $revision ) && ! empty( $revision['id'] ) && hash_equals( $id, (string) $revision['id'] ) ) {
+			$verified = true;
+			break;
+		}
+	}
+	if ( ! $verified ) {
+		return new WP_Error( 'oscars_portal_revision_readback_failed', __( 'The Oscars safety revision could not be verified.', 'lunara-film' ) );
+	}
 	return $id;
 }
 
 /**
- * Validate first, then promote without any post/content mutation.
+ * Validate, durably snapshot, and promote while returning transaction metadata.
  *
  * @param mixed  $raw Candidate configuration.
  * @param string $action Audit action.
- * @return array<string,mixed>|WP_Error
+ * @return array{state:array<string,mixed>,revision_id:string}|WP_Error
  */
-function lunara_oscars_portal_studio_promote_config( $raw, $action = 'save' ) {
+function lunara_oscars_portal_studio_promote_config_transaction( $raw, $action = 'save' ) {
 	$validated = lunara_oscars_portal_studio_validate_config( $raw );
 	if ( is_wp_error( $validated ) ) {
 		return $validated;
 	}
 	$prior = lunara_oscars_portal_studio_get_public_config( false );
-	lunara_oscars_portal_studio_push_revision( $prior, $action, 'passed', true );
+	$revision_id = lunara_oscars_portal_studio_push_revision( $prior, $action, 'passed', true );
+	if ( is_wp_error( $revision_id ) ) {
+		return $revision_id;
+	}
 	lunara_oscars_portal_studio_apply_config( $validated );
 	lunara_oscars_portal_studio_flush_route_cache();
-	return $validated;
+	return array( 'state' => $validated, 'revision_id' => $revision_id );
+}
+
+/** Preserve the public state-shaped promotion contract. */
+function lunara_oscars_portal_studio_promote_config( $raw, $action = 'save' ) {
+	$transaction = lunara_oscars_portal_studio_promote_config_transaction( $raw, $action );
+	return is_wp_error( $transaction ) ? $transaction : $transaction['state'];
 }
 
 /**
- * Restore a prior valid public snapshot.
+ * Restore a prior valid public snapshot and return transaction metadata.
  *
  * @param string $revision_id Revision UUID.
- * @return array<string,mixed>|WP_Error
+ * @return array{state:array<string,mixed>,safety_revision_id:string}|WP_Error
  */
-function lunara_oscars_portal_studio_restore_revision( $revision_id ) {
+function lunara_oscars_portal_studio_restore_revision_transaction( $revision_id ) {
 	$revision_id = sanitize_text_field( $revision_id );
 	foreach ( lunara_oscars_portal_studio_get_revisions() as $revision ) {
 		if ( empty( $revision['id'] ) || ! hash_equals( (string) $revision['id'], $revision_id ) || empty( $revision['prior_public'] ) ) {
@@ -688,12 +710,21 @@ function lunara_oscars_portal_studio_restore_revision( $revision_id ) {
 			return $validated;
 		}
 		$current = lunara_oscars_portal_studio_get_public_config( false );
-		lunara_oscars_portal_studio_push_revision( $current, 'restore', 'passed', true );
+		$safety_id = lunara_oscars_portal_studio_push_revision( $current, 'restore', 'passed', true );
+		if ( is_wp_error( $safety_id ) ) {
+			return $safety_id;
+		}
 		lunara_oscars_portal_studio_apply_config( $validated );
 		lunara_oscars_portal_studio_flush_route_cache();
-		return $validated;
+		return array( 'state' => $validated, 'safety_revision_id' => $safety_id );
 	}
 	return new WP_Error( 'oscars_portal_revision_not_found' );
+}
+
+/** Preserve the public state-shaped restore contract. */
+function lunara_oscars_portal_studio_restore_revision( $revision_id ) {
+	$transaction = lunara_oscars_portal_studio_restore_revision_transaction( $revision_id );
+	return is_wp_error( $transaction ) ? $transaction : $transaction['state'];
 }
 
 /**
@@ -983,9 +1014,14 @@ function lunara_oscars_portal_studio_is_portal_family_request() {
  * Mark a response private before touching or validating a preview token.
  */
 function lunara_oscars_portal_studio_send_private_no_store() {
-	nocache_headers();
-	if ( ! headers_sent() ) {
-		header( 'Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0', true );
+	if ( function_exists( 'lunara_site_studio_send_private_no_store' ) ) {
+		lunara_site_studio_send_private_no_store();
+	} else {
+		nocache_headers();
+		if ( ! headers_sent() ) {
+			header( 'Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0', true );
+			header( 'X-Robots-Tag: noindex, nofollow', true );
+		}
 	}
 	do_action( 'lunara_oscars_portal_preview_no_store_sent' );
 }

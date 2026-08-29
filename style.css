@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.53
+Version: 3.2.56
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -6228,7 +6228,7 @@ footer.site-footer .lunara-footer-copyright {
     font-size: .95rem;
 }
 .lunara-ledger-carousel-wrap {
-    overflow: hidden;
+    min-width: 0;
 }
 .lunara-ledger-carousel-track {
     display: grid;
@@ -16375,11 +16375,12 @@ body.lunara-oscars-portal-page .lunara-oscars-portal-title-card {
 @media (max-width: 620px) {
     body.post-type-archive-review .lunara-archive-page,
     body.lunara-oscars-portal-page .lunara-oscars-portal {
-        width: min(100%, calc(100vw - 28px)) !important;
-        max-width: calc(100vw - 28px) !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
         padding-inline: 0 !important;
         grid-template-columns: minmax(0, 1fr) !important;
-        overflow-x: hidden !important;
     }
 
     body.lunara-oscars-portal-page .lunara-oscars-portal > .lunara-home-section {
@@ -16394,7 +16395,6 @@ body.lunara-oscars-portal-page .lunara-oscars-portal-title-card {
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
-        overflow-x: hidden !important;
     }
 
     body.post-type-archive-review .lunara-review-archive-grid,
@@ -16424,7 +16424,6 @@ body.lunara-oscars-portal-page .lunara-oscars-portal-title-card {
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
-        overflow-x: hidden !important;
     }
 
     body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-filmography-grid,
@@ -16521,7 +16520,6 @@ body.home main.lunara-front-page,
 body.home .lunara-front-page,
 body.home main.lunara-front-page {
     max-width: 100% !important;
-    overflow-x: clip;
 }
 
 body.home .lunara-front-page > .lunara-home-section,

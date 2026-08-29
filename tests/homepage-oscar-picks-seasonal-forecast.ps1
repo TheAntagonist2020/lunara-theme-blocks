@@ -25,7 +25,7 @@ $functions = Read-ThemeFile 'functions.php'
 $controlDesk = Read-ThemeFile 'inc/control-desk.php'
 $style = Read-ThemeFile 'style.css'
 
-Assert-True ($style -match 'Version:\s*3\.2\.53') 'Seasonal Oscar forecast must remain intact in Theme 3.2.53.'
+Assert-True ($style -match 'Version:\s*3\.2\.56') 'Seasonal Oscar forecast must remain intact in Theme 3.2.56.'
 Assert-True ($functions -match "'best casting'\s*=>\s*'CASTING'") 'Oscar Picks must link the new Casting category into the Ledger.'
 Assert-True ($functions -match "'Best Makeup and Hairstyling'") 'Oscar Picks must expose the full craft forecast taxonomy.'
 Assert-True ($functions -match 'function\s+lunara_home_oscar_picks_default_ceremony_year') 'Oscar Picks must derive a season instead of hard-coding one ceremony.'

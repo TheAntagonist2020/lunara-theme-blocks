@@ -168,6 +168,41 @@ foreach ( $cards as $card ) {
 	lunara_test_assert( is_array( $card['_visual'] ?? null ), 'Every winner card must carry an array _visual package; the portal renders from it.' );
 }
 
+// Both portal winner lanes use one renderer for their visual destination.
+// A posterless card keeps its separately rendered named text destination, but
+// must not manufacture an empty media anchor. Visual links carry their own
+// accessible name because plugin poster markup may legitimately have alt="".
+lunara_test_assert( function_exists( 'lunara_render_oscars_winner_media_link' ), 'The shared winner media-link renderer must exist.' );
+
+$posterless_card = array(
+	'primary_label'      => 'Anora',
+	'canonical_category' => 'BEST PICTURE',
+	'film_url'           => 'https://example.test/oscars/title/tt28607951/',
+	'_visual'            => array(),
+);
+lunara_test_assert(
+	'' === lunara_render_oscars_winner_media_link( $posterless_card, 'https://example.test/oscars/ceremony/97/' ),
+	'A posterless winner must emit no empty media anchor; its named text destination remains authoritative.'
+);
+
+$poster_card             = $posterless_card;
+$poster_card['_visual']  = array( 'poster_url' => 'https://img.test/anora.jpg' );
+$poster_link             = lunara_render_oscars_winner_media_link( $poster_card, 'https://example.test/oscars/ceremony/97/' );
+lunara_test_assert( 1 === substr_count( $poster_link, 'class="lunara-ceremony-winner-media-link"' ), 'A visual winner must emit exactly one media destination.' );
+lunara_test_assert( false !== strpos( $poster_link, 'href="https://example.test/oscars/title/tt28607951/"' ), 'The winner visual must use the canonical film destination when available.' );
+lunara_test_assert( false !== strpos( $poster_link, 'aria-label="View Anora Oscar winner details"' ), 'The winner media destination must expose a name derived from the canonical winner title.' );
+lunara_test_assert( false !== strpos( $poster_link, 'alt="Anora poster"' ), 'A generated poster image must use the canonical winner title as its alternative text.' );
+
+$person_card = array(
+	'primary_label'      => 'Sean Baker',
+	'canonical_category' => 'DIRECTING',
+	'primary_url'        => 'https://example.test/oscars/name/nm0048918/',
+	'_visual'            => array( 'poster_html' => '<img src="https://img.test/sean.jpg" alt="" />' ),
+);
+$person_link = lunara_render_oscars_winner_media_link( $person_card, 'https://example.test/oscars/ceremony/97/' );
+lunara_test_assert( false !== strpos( $person_link, 'aria-label="View Sean Baker Oscar winner details"' ), 'Plugin-supplied visual markup must still receive an anchor name from canonical winner context.' );
+lunara_test_assert( false !== strpos( $person_link, 'alt=""' ), 'The shared renderer must preserve plugin-owned poster markup instead of rewriting its internals.' );
+
 // ---------------------------------------------------------------------------
 // 3. Cache identity. Adding a key to the payload without moving the cache
 //    version would serve shape-old snapshots to shape-new readers for the

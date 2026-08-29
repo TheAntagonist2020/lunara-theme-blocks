@@ -270,6 +270,6 @@ Assert-True ($studio -match "'/journal/'[\s\S]*?'/journal_section/'[\s\S]*?'/jou
 Assert-True ($studio -match 'get_terms\([\s\S]*?get_term_link\([\s\S]*?rocket_clean_files\(\s*\$urls\s*\)') 'The bounded cleaner must resolve actual term URLs and use a supported per-URL cache API when available.'
 Assert-True ($studio -notmatch 'rocket_clean_domain') 'Journal saves must never purge the full WP Rocket domain cache.'
 Assert-True ($studio -match "'validator_result'\s*=>[\s\S]*?'prior_public'\s*=>") 'Every revision must record validation and prior-public audit semantics.'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.53\s*$') 'Theme version must be 3.2.53.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.56\s*$') 'Theme version must be 3.2.56.'
 
 Write-Host 'journal-archive-studio: all assertions passed.'

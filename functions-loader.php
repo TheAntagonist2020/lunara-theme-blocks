@@ -35,7 +35,6 @@ require_once $lunara_inc . 'publish-guards.php';
 require_once $lunara_inc . 'carousel.php';
 require_once $lunara_inc . 'control-desk.php';
 if ( is_admin() ) {
-    require_once $lunara_inc . 'site-studio.php';
     require_once $lunara_inc . 'control-desk-automation.php';
 }
 // Legacy homepage shortcodes are intentionally not booted from inc/ anymore.
@@ -133,6 +132,17 @@ require_once $lunara_inc . 'header-command.php';
 // Layer 16 — Design Tokens: dial-level palette/voice overrides from the
 // Control Desk, printed as a :root layer over the shipped tokens.
 require_once $lunara_inc . 'design-tokens.php';
+
+// Layer 17 — Site Studio foundation. Registry, canonical adapters/services,
+// and REST routes must be available outside wp-admin so private front-end
+// previews and authenticated API requests do not depend on the admin router.
+require_once $lunara_inc . 'site-studio-registry.php';
+require_once $lunara_inc . 'site-studio-adapters.php';
+require_once $lunara_inc . 'site-studio-rest.php';
+require_once $lunara_inc . 'site-studio-preview.php';
+if ( is_admin() ) {
+    require_once $lunara_inc . 'site-studio.php';
+}
 
 // Signal that every modular include completed. The monolithic fallback uses
 // this theme-owned sentinel; LUNARA_CORE_VERSION remains owned by Lunara Core.

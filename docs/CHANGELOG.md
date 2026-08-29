@@ -1,6 +1,6 @@
 # Lunara Film — Engineering Changelog & Handoff
 
-**Scope:** all six `theantagonist2020` repositories behind lunarafilm.com.
+**Scope:** all seven `theantagonist2020` repositories behind lunarafilm.com.
 **Period covered:** 2026-07-01 → 2026-07-05 (the "Design Spec 2.0" era).
 **Audience:** any engineer or AI session picking this project up cold.
 
@@ -10,6 +10,136 @@ decisions from commit messages. Version numbers and dates below are pulled
 directly from each repo's `git log`, not reconstructed from memory.
 
 ---
+
+## 2026-08-29 — Theme 3.2.56 Site Studio Editorial and Utility Workspaces
+
+- Migrated Reviews Archive, Journal Archive, Review Single, Utility Search &
+  Recovery, and Site Footer into the common Site Studio workspace. Each adapter
+  reads, validates, previews, saves, snapshots, and restores its existing
+  canonical theme or provider state; no second settings database was added.
+- Derived archive section order and visibility from the existing canonical
+  Reviews and Journal registries. The recognizable left rail now edits the same
+  public order, while advanced handoffs retain the full archive tools and Core
+  Review Studio remains the owner of individual Review records.
+- Extended private preview to the exact Reviews, Journal, Review, Search, and
+  Footer routes. Utility Search retains the fixed `q=Lunara` preview query, all
+  candidate tokens remain user/owner/route bound, and stable public section
+  markers drive the strict same-origin section bridge without wrapping or
+  restructuring live page content.
+- Added strict state specifications for Review Single, Utility Search, and Site
+  Footer plus hardened provider projections for the two archives. Each migrated
+  surface retains twelve private revisions, and restore still creates a safety
+  snapshot before replacing canonical state.
+- Kept the 404-only Primary Return Route in Utility Search's Classic controls;
+  the fixed `/search/?q=Lunara` iframe cannot truthfully preview that separate
+  route. Search-result and no-result presentation remain previewable in Studio.
+- Hardened archive saves and previews to merge only the inspector-owned fields
+  into a fresh provider read, so concurrent advanced-tool changes cannot be
+  overwritten by a stale browser candidate. Dotted validation errors now focus
+  their exact plain-language controls, and invalid legacy theme mods normalize
+  to safe defaults before the workspace opens.
+- Archive private-preview providers now require a successful transient write
+  and exact readback before returning a token. Failed or mismatched records are
+  deleted and surface a bounded human error instead of sending the iframe to a
+  token that cannot be authorized.
+- Added familiar, plain-language controls for density, prominence, spacing,
+  mobile geometry, footer language, archive order, and visibility. The same
+  workspace now proves real 1440, 768, and 390 preview widths; normal Save Live
+  remains confirmation-free while removals and restores require confirmation.
+- Prepared plugin-first compatibility releases for Core 0.8.9, Journal
+  Foundation 1.2.13, and Dispatch 3.2.7. They contribute inert guided
+  destinations and redacted status, make Foundation the authoritative workflow
+  owner, and replace Journal's raw source JSON with labeled source rows. Deploy
+  all plugins before the theme, with Foundation before Dispatch and Theme.
+- Allowed normalized same-origin admin anchors to retain their precise guided
+  handoff destination while external, credentialed, control-character, and
+  out-of-admin URLs continue to fail closed.
+- Removed the legacy version-change whole-domain Rocket purge plus Header and
+  Hero Command administration purges and the remaining affirmative purge
+  instruction. Public correctness and ordinary administration no longer depend
+  on a cache-clearing side effect.
+- Added focused PHP/static contracts and a real-Chrome editorial workspace gate
+  covering local dirty state, responsive layouts, archive reordering, cancelled
+  removals, fixed preview URLs, region-to-inspector focus, ordinary saves, and
+  the five new surfaces at representative breakpoints.
+- This entry records a local release candidate only. No integration,
+  deployment, cache operation, production write, or live canary occurred.
+
+## 2026-08-29 — Theme 3.2.55 Site Studio Foundation and Visual Site Map Pilot
+
+- Added a normalized Site Studio registry and authenticated, nonce-checked,
+  capability-aware REST API for registry, state, preview, save, revisions, and
+  confirmed restore operations. Contributed surfaces remain redacted,
+  dependency-aware, recursion-bounded, and unavailable rather than fatal when
+  their owner is missing or invalid.
+- Piloted Global Design, Homepage Structure, and Lunara Method through their
+  canonical theme storage rather than adding a second settings system. Global
+  Design owns the shared palette and font roles; Homepage Structure owns its
+  existing order, visibility, preset, and block-composition state; Lunara
+  Method owns only its established copy, Review, and backdrop controls.
+- Made Homepage saves atomic across managed theme mods and exact front-page
+  `post_content`. Validation completes before mutation, failed writes and
+  readbacks restore exact prior presence/value/content, unknown blocks remain
+  in place, and registry-mode pages are never silently converted to block
+  composition.
+- Added owner-, route-, surface-, user-, and expiry-bound private preview plus
+  a same-origin section bridge. Private responses establish no-store/noindex
+  protections before lookup, preview substitutions stay request-local, and
+  parent/child messages require the active frame, exact origin, instance, and
+  allowlisted surface/section without exposing the preview token.
+- Authorized private previews suppress WordPress admin chrome before Core's
+  priority-zero initializer can install its toolbar bump, so the 390, 768, and
+  1440 preview canvases measure the public page rather than an admin-shifted
+  document. Normal and denied requests leave the admin bar untouched.
+- Replaced the Control Desk renderer path with a dedicated responsive Site
+  Studio workspace: searchable Visual Site Map, candidate-ordered section
+  rail, one selected same-origin iframe, contextual inspector, progressive
+  disclosures, accessible status/focus/error handling, and true 1440, 768,
+  and 390 internal preview widths.
+- Kept twelve-entry revision histories with durable readback and a verified
+  pre-restore safety snapshot. Homepage revisions preserve the combined mod
+  and content transaction, and every restore revalidates current capability,
+  dependency, schema, and front-page identity before replacement.
+- Revision History now refreshes in place after successful Save and Restore
+  adoption. The independent authenticated read is sequence-guarded against
+  stale overlap, strictly validates its bounded response, preserves disclosure
+  and focus behavior, and leaves the accepted canonical result untouched when
+  the refresh itself fails.
+- Save and Restore now require complete canonical mutation envelopes at both
+  the REST and browser boundaries. Missing or malformed revision identifiers,
+  timestamps, changed-section lists, or safety-snapshot metadata fail closed
+  without adopting state, navigating the preview, clearing unsaved work, or
+  starting a revision refresh.
+- This entry records a local release candidate only. No integration,
+  deployment, cache operation, production write, or live canary occurred.
+
+## 2026-08-28 — Theme 3.2.54 Public Route Stabilization
+
+- Restored one valid document landmark on Home, Reviews, Journal, and Oscars:
+  `header.php` remains the sole canonical `<main>`, while each route retains
+  its existing `#primary`, classes, Studio ordering hooks, and theme-version
+  marker on a neutral inner wrapper.
+- Replaced mobile viewport-derived route/grid widths with parent-relative,
+  border-box containment. Removed page, shell, and section overflow masking
+  that concealed layout defects while preserving explicit Review rails,
+  Journal filter/sort scrollers, Oscars carousels, media crops, and line clamps.
+- Both Oscars winner lanes now share a conditional media-link renderer. Visual
+  anchors receive an accessible name from canonical winner title/context;
+  posterless cards emit no empty media anchor and keep their named text link.
+- Design Tokens no longer calls `rocket_clean_domain()`. All visible Control
+  Desk cache guidance and save notices now follow the standing rule: never
+  clear caches as a fix.
+- Added `tests/public-route-stabilization.ps1` plus its portable Playwright
+  runtime: four canonical route fixtures at 390, 430, 768, 782, and 1440,
+  asserting one main, no document overflow, no action-masking ancestor, local
+  scroller containment, and the Oscars anchor contract. The existing Oscars
+  winner runtime now executes poster, plugin-markup, and posterless branches.
+- Read-only 390px A/A probes confirmed the public site still serves Theme
+  3.2.53; no deployment occurred. All four one-pair probes were deliberately
+  recorded as `BASELINE_NOISY`, so they are measurements rather than release
+  comparisons. Home and Journal used image LCPs (35,374 B and 40,716 B
+  transferred); Reviews and Oscars used text LCPs. No live bottleneck change
+  was justified from this noisy cohort.
 
 ## 2026-08-19 — Theme 3.2.53 Oscars Latest Ceremony Winners Transport
 

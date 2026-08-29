@@ -55,7 +55,7 @@
     max-width: 1180px !important;
     min-width: 0 !important;
     padding: 0 clamp(16px, 4vw, 40px) 80px !important;
-    width: min(1180px, calc(100vw - 40px)) !important;
+    width: 100% !important;
 }
 
 #primary.lunara-journal-archive-page > [class*="lunara-journal-archive-slot-"] {
@@ -168,6 +168,7 @@
     background: linear-gradient(135deg, rgba(8, 20, 33, 0.78), rgba(14, 29, 44, 0.58)) !important;
     border: 1px solid rgba(224, 196, 129, 0.14) !important;
     border-radius: 16px !important;
+    box-sizing: border-box !important;
     display: flex !important;
     flex-wrap: wrap !important;
     gap: 10px !important;
@@ -833,11 +834,12 @@
 @media (max-width: 620px) {
     #primary.lunara-journal-archive-page {
         align-items: stretch !important;
+        box-sizing: border-box !important;
         gap: calc(var(--lunara-journal-archive-section-gap, 38px) * 0.78) !important;
-        max-width: calc(100vw - 28px) !important;
-        overflow-x: hidden !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
         padding-inline: 0 !important;
-        width: calc(100vw - 28px) !important;
+        width: 100% !important;
     }
 
     #primary.lunara-journal-archive-page > .lunara-journal-archive-slot-hero {
