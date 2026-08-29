@@ -1177,7 +1177,11 @@ function lunara_control_desk_save_homepage_studio() {
         }
 
         if ( function_exists( 'lunara_sync_home_section_blocks_from_settings' ) ) {
-            lunara_sync_home_section_blocks_from_settings();
+            $sync_result = lunara_sync_home_section_blocks_from_settings();
+            if ( is_wp_error( $sync_result ) ) {
+                wp_safe_redirect( add_query_arg( 'lunara_notice', 'homepage_studio_write_failed', $redirect ) );
+                exit;
+            }
         }
 
         wp_safe_redirect( add_query_arg( 'lunara_notice', 'homepage_studio_saved', $redirect ) );
@@ -1325,7 +1329,11 @@ function lunara_control_desk_save_homepage_studio() {
     // the just-saved order + visibility recompose the Home page's blocks so
     // the Studio and the editor never disagree.
     if ( function_exists( 'lunara_sync_home_section_blocks_from_settings' ) ) {
-        lunara_sync_home_section_blocks_from_settings();
+        $sync_result = lunara_sync_home_section_blocks_from_settings();
+        if ( is_wp_error( $sync_result ) ) {
+            wp_safe_redirect( add_query_arg( 'lunara_notice', 'homepage_studio_write_failed', $redirect ) );
+            exit;
+        }
     }
 
     $notice = $apply_values ? 'homepage_preset_applied' : 'homepage_studio_saved';
@@ -15424,6 +15432,10 @@ function lunara_control_desk_render_notice() {
         'homepage_studio_saved' => array(
             'class'   => 'notice-success',
             'message' => __( 'Homepage Studio saved. The front-door rhythm and section shortcuts now read the updated values.', 'lunara-film' ),
+        ),
+        'homepage_studio_write_failed' => array(
+            'class'   => 'notice-error',
+            'message' => __( 'Homepage Studio settings were not announced as saved because the Home page blocks could not be updated.', 'lunara-film' ),
         ),
         'homepage_preset_applied' => array(
             'class'   => 'notice-success',

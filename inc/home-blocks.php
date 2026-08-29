@@ -224,7 +224,7 @@ if ( ! function_exists( 'lunara_sync_home_section_blocks_from_settings' ) ) {
 	 */
 	function lunara_sync_home_section_blocks_from_settings() {
 		if ( ! lunara_home_uses_block_composition() ) {
-			return;
+			return false;
 		}
 
 		$map   = lunara_home_section_block_map();
@@ -248,6 +248,6 @@ if ( ! function_exists( 'lunara_sync_home_section_blocks_from_settings' ) ) {
 			}
 		}
 
-		lunara_write_home_section_blocks( $enabled );
+		return lunara_write_home_section_blocks( $enabled );
 	}
 }

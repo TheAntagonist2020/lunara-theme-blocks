@@ -15,6 +15,7 @@ $lunara_home_test_content = '<!-- wp:core/heading -->Before<!-- /wp:core/heading
 $lunara_home_test_update = null;
 $lunara_home_test_update_error = false;
 $lunara_home_test_wp_error_flag = null;
+$lunara_home_test_has_blocks = false;
 
 function lunara_home_test_assert( $condition, $message ) {
 	if ( ! $condition ) {
@@ -78,8 +79,9 @@ function sanitize_text_field( $value ) {
 	return (string) $value;
 }
 
-function has_block() {
-	return false;
+function has_block( $name, $content ) {
+	global $lunara_home_test_has_blocks;
+	return $lunara_home_test_has_blocks && false !== strpos( (string) $name, 'lunara/' );
 }
 
 function do_blocks( $content ) {
@@ -113,5 +115,9 @@ lunara_home_test_assert( true === $byte_change && $expected === $lunara_home_tes
 $lunara_home_test_update_error = true;
 $failure = lunara_write_home_section_blocks( array( 'hero', 'latest-reviews' ) );
 lunara_home_test_assert( is_wp_error( $failure ) && 'injected_home_update_failure' === $failure->get_error_code(), 'Homepage Structure must propagate the exact wp_update_post failure.' );
+
+$lunara_home_test_has_blocks = true;
+$sync_failure = lunara_sync_home_section_blocks_from_settings();
+lunara_home_test_assert( is_wp_error( $sync_failure ) && 'injected_home_update_failure' === $sync_failure->get_error_code(), 'Legacy Homepage synchronization must propagate the exact writer error to its Control Desk callers.' );
 
 echo "home-block composition runtime: all assertions passed.\n";

@@ -97,17 +97,70 @@ if ( ! class_exists( 'Lunara_Site_Studio_Theme_Adapter' ) ) {
 }
 
 if ( ! function_exists( 'lunara_site_studio_raw_option_snapshot' ) ) {
-	function lunara_site_studio_raw_option_snapshot( $option ) {
+	function lunara_site_studio_raw_option_snapshot( $option, $include_autoload = false ) {
 		$missing = new stdClass();
 		$value = get_option( $option, $missing );
-		return array( 'present' => $missing !== $value, 'value' => $missing !== $value ? $value : null );
+		$snapshot = array( 'present' => $missing !== $value, 'value' => $missing !== $value ? $value : null );
+		if ( $include_autoload ) { $snapshot['autoload'] = $missing !== $value ? lunara_site_studio_option_autoload_state( $option ) : null; }
+		return $snapshot;
+	}
+}
+if ( ! function_exists( 'lunara_site_studio_option_autoload_state' ) ) {
+	/** Read persisted option autoload state; null means absent or unverifiable. */
+	function lunara_site_studio_option_autoload_state( $option ) {
+		global $wpdb;
+		if ( ! is_object( $wpdb ) || empty( $wpdb->options ) || ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) { return null; }
+		$stored = $wpdb->get_var( $wpdb->prepare( "SELECT autoload FROM {$wpdb->options} WHERE option_name = %s", $option ) );
+		if ( null === $stored ) { return null; }
+		$autoload_values = function_exists( 'wp_autoload_values_to_autoload' ) ? wp_autoload_values_to_autoload() : array( 'yes', 'on', 'auto-on', 'auto' );
+		return in_array( $stored, $autoload_values, true );
 	}
 }
 if ( ! function_exists( 'lunara_site_studio_apply_option_snapshot' ) ) {
 	function lunara_site_studio_apply_option_snapshot( $option, $snapshot ) {
 		$present = is_array( $snapshot ) && ! empty( $snapshot['present'] );
-		if ( $present ) { update_option( $option, isset( $snapshot['value'] ) ? $snapshot['value'] : null, false ); } else { delete_option( $option ); }
-		return lunara_site_studio_raw_option_snapshot( $option ) === array( 'present' => $present, 'value' => $present && array_key_exists( 'value', $snapshot ) ? $snapshot['value'] : null );
+		$include_autoload = is_array( $snapshot ) && array_key_exists( 'autoload', $snapshot );
+		try {
+			$before = lunara_site_studio_raw_option_snapshot( $option, $include_autoload );
+			if ( $present ) {
+				$value = array_key_exists( 'value', $snapshot ) ? $snapshot['value'] : null;
+				$autoload = $include_autoload ? $snapshot['autoload'] : false;
+				if ( $include_autoload && ! is_bool( $autoload ) ) { return false; }
+				update_option( $option, $value, $autoload );
+				if ( $include_autoload ) {
+					$current = lunara_site_studio_raw_option_snapshot( $option, true );
+					if ( $current['autoload'] !== $autoload ) {
+						if ( function_exists( 'wp_set_option_autoload_values' ) ) { wp_set_option_autoload_values( array( $option => $autoload ) ); }
+						elseif ( ! $current['present'] || $current['value'] !== $value || ! lunara_site_studio_legacy_replace_option( $option, $value, $autoload, $before ) ) { return false; }
+					}
+				}
+			} else { delete_option( $option ); }
+			$expected = array( 'present' => $present, 'value' => $present && array_key_exists( 'value', $snapshot ) ? $snapshot['value'] : null );
+			if ( $include_autoload ) { $expected['autoload'] = $present ? $snapshot['autoload'] : null; }
+			return lunara_site_studio_raw_option_snapshot( $option, $include_autoload ) === $expected;
+		} catch ( Throwable $error ) { return false; }
+	}
+}
+if ( ! function_exists( 'lunara_site_studio_legacy_replace_option' ) ) {
+	/** WordPress 6.0-compatible same-value autoload transition with exact local rollback. */
+	function lunara_site_studio_legacy_replace_option( $option, $value, $autoload, $rollback ) {
+		$verify = static function ( $expected_present, $expected_value, $expected_autoload ) use ( $option ) {
+			$missing = new stdClass();
+			$stored = get_option( $option, $missing );
+			$alloptions = function_exists( 'wp_load_alloptions' ) ? wp_load_alloptions() : array();
+			return ( $missing !== $stored ) === $expected_present && ( ! $expected_present || $stored === $expected_value ) && (bool) array_key_exists( $option, $alloptions ) === ( $expected_present && $expected_autoload );
+		};
+		$restore = static function () use ( $option, $rollback, $verify ) {
+			try {
+				delete_option( $option );
+				if ( ! empty( $rollback['present'] ) && ! add_option( $option, $rollback['value'], '', ! empty( $rollback['autoload'] ) ? 'yes' : 'no' ) ) { return false; }
+				return $verify( ! empty( $rollback['present'] ), ! empty( $rollback['present'] ) ? $rollback['value'] : null, ! empty( $rollback['autoload'] ) );
+			} catch ( Throwable $error ) { return false; }
+		};
+		try {
+			if ( ! delete_option( $option ) || ! add_option( $option, $value, '', $autoload ? 'yes' : 'no' ) || ! $verify( true, $value, $autoload ) ) { $restore(); return false; }
+			return true;
+		} catch ( Throwable $error ) { $restore(); return false; }
 	}
 }
 if ( ! function_exists( 'lunara_site_studio_raw_mod_snapshot' ) ) {
@@ -122,10 +175,24 @@ if ( ! function_exists( 'lunara_site_studio_raw_mod_snapshot' ) ) {
 	}
 }
 if ( ! function_exists( 'lunara_site_studio_apply_mod_snapshot' ) ) {
-	function lunara_site_studio_apply_mod_snapshot( $snapshot ) {
-		foreach ( is_array( $snapshot ) ? $snapshot : array() as $key => $entry ) {
-			if ( ! empty( $entry['present'] ) ) { set_theme_mod( $key, isset( $entry['value'] ) ? $entry['value'] : null ); } else { remove_theme_mod( $key ); }
-			if ( array( $key => $entry ) !== lunara_site_studio_raw_mod_snapshot( array( $key ) ) ) { return false; }
+	function lunara_site_studio_apply_mod_snapshot( $snapshot, $allowed_keys ) {
+		if ( ! lunara_site_studio_valid_mod_snapshot( $snapshot, $allowed_keys ) ) { return false; }
+		try {
+			foreach ( $allowed_keys as $key ) {
+				$entry = $snapshot[ $key ];
+				if ( $entry['present'] ) { set_theme_mod( $key, $entry['value'] ); } else { remove_theme_mod( $key ); }
+				if ( array( $key => $entry ) !== lunara_site_studio_raw_mod_snapshot( array( $key ) ) ) { return false; }
+			}
+		} catch ( Throwable $error ) { return false; }
+		return true;
+	}
+}
+if ( ! function_exists( 'lunara_site_studio_valid_mod_snapshot' ) ) {
+	function lunara_site_studio_valid_mod_snapshot( $snapshot, $allowed_keys ) {
+		if ( ! is_array( $snapshot ) || ! is_array( $allowed_keys ) || array_values( $allowed_keys ) !== array_keys( $snapshot ) ) { return false; }
+		foreach ( $allowed_keys as $key ) {
+			$entry = $snapshot[ $key ];
+			if ( ! is_array( $entry ) || array( 'present', 'value' ) !== array_keys( $entry ) || ! is_bool( $entry['present'] ) || ( ! $entry['present'] && null !== $entry['value'] ) || ( $entry['present'] && ! is_scalar( $entry['value'] ) && null !== $entry['value'] ) ) { return false; }
 		}
 		return true;
 	}
@@ -134,8 +201,10 @@ if ( ! function_exists( 'lunara_site_studio_private_revision' ) ) {
 	/** Store one private snapshot and restore the revision option if creation is not durable. */
 	function lunara_site_studio_private_revision( $surface, $snapshot, $action ) {
 		$option = lunara_site_studio_revision_option_name( $surface );
-		$before = lunara_site_studio_raw_option_snapshot( $option );
-		$id = lunara_site_studio_push_revision( $surface, $snapshot, $action );
+		try {
+			$before = lunara_site_studio_raw_option_snapshot( $option );
+			$id = lunara_site_studio_push_revision( $surface, $snapshot, $action );
+		} catch ( Throwable $error ) { return new WP_Error( 'site_studio_revision_write_failed', __( 'The safety revision could not be stored.', 'lunara-film' ) ); }
 		if ( is_wp_error( $id ) ) {
 			if ( ! lunara_site_studio_apply_option_snapshot( $option, $before ) ) {
 				return new WP_Error( 'site_studio_revision_rollback_failed', __( 'Revision history could not be restored safely.', 'lunara-film' ) );
@@ -456,12 +525,12 @@ if ( ! function_exists( 'lunara_site_studio_global_design_save_state' ) ) {
 	function lunara_site_studio_global_design_save_state( $candidate ) {
 		$validated = lunara_site_studio_global_design_validate_state( $candidate );
 		if ( is_wp_error( $validated ) ) { return $validated; }
-		$before = lunara_site_studio_raw_option_snapshot( 'lunara_design_tokens' );
+		$before = lunara_site_studio_raw_option_snapshot( 'lunara_design_tokens', true );
 		$colors = array(); $fonts = array();
 		foreach ( $validated['colors'] as $key => $item ) { if ( null !== $item['override'] ) { $colors[ $key ] = $item['override']; } }
 		foreach ( $validated['fonts'] as $key => $item ) { if ( null !== $item['override'] ) { $fonts[ $key ] = $item['override']; } }
 		$value = array( 'colors' => $colors, 'fonts' => $fonts );
-		$desired = empty( $colors ) && empty( $fonts ) ? array( 'present' => false, 'value' => null ) : array( 'present' => true, 'value' => $value );
+		$desired = empty( $colors ) && empty( $fonts ) ? array( 'present' => false, 'value' => null, 'autoload' => null ) : array( 'present' => true, 'value' => $value, 'autoload' => false );
 		if ( ! lunara_site_studio_apply_option_snapshot( 'lunara_design_tokens', $desired ) ) {
 			if ( ! lunara_site_studio_apply_option_snapshot( 'lunara_design_tokens', $before ) ) { return new WP_Error( 'site_studio_global_rollback_failed', __( 'Global Design could not be restored safely.', 'lunara-film' ) ); }
 			return new WP_Error( 'site_studio_global_write_failed', __( 'Global Design could not be saved.', 'lunara-film' ) );
@@ -474,11 +543,24 @@ if ( ! function_exists( 'lunara_site_studio_global_design_save_state' ) ) {
 		return array( 'state' => lunara_site_studio_global_design_read_state(), 'changed_sections' => array( 'colors', 'typography' ), 'revision_id' => $revision_id, 'timestamp' => current_time( 'mysql' ) );
 	}
 }
+if ( ! function_exists( 'lunara_site_studio_valid_global_revision_config' ) ) {
+	function lunara_site_studio_valid_global_revision_config( $config ) {
+		if ( ! is_array( $config ) || array( 'option' ) !== array_keys( $config ) || ! is_array( $config['option'] ) || array( 'present', 'value', 'autoload' ) !== array_keys( $config['option'] ) || ! is_bool( $config['option']['present'] ) ) { return false; }
+		$option = $config['option'];
+		if ( ! $option['present'] ) { return null === $option['value'] && null === $option['autoload']; }
+		if ( ! is_bool( $option['autoload'] ) || ! is_array( $option['value'] ) || array_diff( array_keys( $option['value'] ), array( 'colors', 'fonts' ) ) ) { return false; }
+		$colors = isset( $option['value']['colors'] ) ? $option['value']['colors'] : array();
+		$fonts = isset( $option['value']['fonts'] ) ? $option['value']['fonts'] : array();
+		if ( ! is_array( $colors ) || ! is_array( $fonts ) || array_diff( array_keys( $colors ), array_keys( lunara_design_token_color_specs() ) ) || array_diff( array_keys( $fonts ), array_keys( lunara_design_token_font_role_specs() ) ) ) { return false; }
+		foreach ( array_merge( $colors, $fonts ) as $value ) { if ( ! is_scalar( $value ) ) { return false; } }
+		return true;
+	}
+}
 if ( ! function_exists( 'lunara_site_studio_global_design_restore_revision' ) ) {
 	function lunara_site_studio_global_design_restore_revision( $revision_id ) {
 		$target = lunara_site_studio_private_revision_target( 'global-design', $revision_id );
-		if ( is_wp_error( $target ) || ! isset( $target['option'] ) ) { return is_wp_error( $target ) ? $target : new WP_Error( 'site_studio_revision_invalid' ); }
-		$current = lunara_site_studio_raw_option_snapshot( 'lunara_design_tokens' );
+		if ( is_wp_error( $target ) || ! lunara_site_studio_valid_global_revision_config( $target ) ) { return is_wp_error( $target ) ? $target : new WP_Error( 'site_studio_revision_invalid', __( 'The selected Global Design revision is invalid.', 'lunara-film' ) ); }
+		$current = lunara_site_studio_raw_option_snapshot( 'lunara_design_tokens', true );
 		$safety_id = lunara_site_studio_private_revision( 'global-design', array( 'option' => $current ), 'restore-safety' );
 		if ( is_wp_error( $safety_id ) ) { return $safety_id; }
 		if ( ! lunara_site_studio_apply_option_snapshot( 'lunara_design_tokens', $target['option'] ) ) {
@@ -500,11 +582,10 @@ if ( ! function_exists( 'lunara_site_studio_lunara_method_state_schema' ) ) {
 }
 if ( ! function_exists( 'lunara_site_studio_lunara_method_read_state' ) ) {
 	function lunara_site_studio_lunara_method_read_state() {
-		$defaults = lunara_home_pairing_desk_copy_defaults();
 		return array(
-			'kicker' => (string) get_theme_mod( 'lunara_home_pairing_desk_kicker', $defaults['kicker'] ),
-			'title' => (string) get_theme_mod( 'lunara_home_pairing_desk_title', $defaults['title'] ),
-			'copy' => (string) get_theme_mod( 'lunara_home_pairing_desk_copy', $defaults['copy'] ),
+			'kicker' => (string) get_theme_mod( 'lunara_home_pairing_desk_kicker', '' ),
+			'title' => (string) get_theme_mod( 'lunara_home_pairing_desk_title', '' ),
+			'copy' => (string) get_theme_mod( 'lunara_home_pairing_desk_copy', '' ),
 			'review_id' => absint( get_theme_mod( 'lunara_home_pairing_desk_review_id', 0 ) ),
 			'backdrop_id' => absint( get_theme_mod( 'lunara_home_pairing_desk_backdrop_id', 0 ) ),
 		);
@@ -538,20 +619,25 @@ if ( ! function_exists( 'lunara_site_studio_lunara_method_save_state' ) ) {
 	function lunara_site_studio_lunara_method_save_state( $candidate ) {
 		$validated = lunara_site_studio_lunara_method_validate_state( $candidate ); if ( is_wp_error( $validated ) ) { return $validated; }
 		$before = lunara_site_studio_raw_mod_snapshot( lunara_site_studio_lunara_method_keys() );
-		if ( ! lunara_site_studio_apply_mod_snapshot( lunara_site_studio_lunara_method_desired_mods( $validated ) ) ) { if ( ! lunara_site_studio_apply_mod_snapshot( $before ) ) { return new WP_Error( 'site_studio_method_rollback_failed', __( 'The Lunara Method could not be restored safely.', 'lunara-film' ) ); } return new WP_Error( 'site_studio_method_write_failed', __( 'The Lunara Method could not be saved.', 'lunara-film' ) ); }
+		$keys = lunara_site_studio_lunara_method_keys();
+		if ( ! lunara_site_studio_apply_mod_snapshot( lunara_site_studio_lunara_method_desired_mods( $validated ), $keys ) ) { if ( ! lunara_site_studio_apply_mod_snapshot( $before, $keys ) ) { return new WP_Error( 'site_studio_method_rollback_failed', __( 'The Lunara Method could not be restored safely.', 'lunara-film' ) ); } return new WP_Error( 'site_studio_method_write_failed', __( 'The Lunara Method could not be saved.', 'lunara-film' ) ); }
 		$revision_id = lunara_site_studio_private_revision( 'lunara-method', array( 'mods' => $before ), 'save' );
-		if ( is_wp_error( $revision_id ) ) { if ( ! lunara_site_studio_apply_mod_snapshot( $before ) ) { return new WP_Error( 'site_studio_method_rollback_failed' ); } return $revision_id; }
+		if ( is_wp_error( $revision_id ) ) { if ( ! lunara_site_studio_apply_mod_snapshot( $before, $keys ) ) { return new WP_Error( 'site_studio_method_rollback_failed' ); } return $revision_id; }
 		return array( 'state' => lunara_site_studio_lunara_method_read_state(), 'changed_sections' => array( 'language', 'featured-review', 'backdrop' ), 'revision_id' => $revision_id, 'timestamp' => current_time( 'mysql' ) );
 	}
 }
 if ( ! function_exists( 'lunara_site_studio_lunara_method_restore_revision' ) ) {
 	function lunara_site_studio_lunara_method_restore_revision( $revision_id ) {
-		$target = lunara_site_studio_private_revision_target( 'lunara-method', $revision_id ); if ( is_wp_error( $target ) || ! isset( $target['mods'] ) ) { return is_wp_error( $target ) ? $target : new WP_Error( 'site_studio_revision_invalid' ); }
+		$target = lunara_site_studio_private_revision_target( 'lunara-method', $revision_id ); if ( is_wp_error( $target ) || ! lunara_site_studio_valid_method_revision_config( $target ) ) { return is_wp_error( $target ) ? $target : new WP_Error( 'site_studio_revision_invalid', __( 'The selected Lunara Method revision is invalid.', 'lunara-film' ) ); }
 		$current = lunara_site_studio_raw_mod_snapshot( lunara_site_studio_lunara_method_keys() );
 		$safety_id = lunara_site_studio_private_revision( 'lunara-method', array( 'mods' => $current ), 'restore-safety' ); if ( is_wp_error( $safety_id ) ) { return $safety_id; }
-		if ( ! lunara_site_studio_apply_mod_snapshot( $target['mods'] ) ) { if ( ! lunara_site_studio_apply_mod_snapshot( $current ) ) { return new WP_Error( 'site_studio_method_rollback_failed', __( 'The Lunara Method could not be restored safely.', 'lunara-film' ) ); } return new WP_Error( 'site_studio_method_restore_failed', __( 'The selected Lunara Method revision could not be restored.', 'lunara-film' ) ); }
+		$keys = lunara_site_studio_lunara_method_keys();
+		if ( ! lunara_site_studio_apply_mod_snapshot( $target['mods'], $keys ) ) { if ( ! lunara_site_studio_apply_mod_snapshot( $current, $keys ) ) { return new WP_Error( 'site_studio_method_rollback_failed', __( 'The Lunara Method could not be restored safely.', 'lunara-film' ) ); } return new WP_Error( 'site_studio_method_restore_failed', __( 'The selected Lunara Method revision could not be restored.', 'lunara-film' ) ); }
 		return array( 'state' => lunara_site_studio_lunara_method_read_state(), 'safety_revision_id' => $safety_id, 'timestamp' => current_time( 'mysql' ) );
 	}
+}
+if ( ! function_exists( 'lunara_site_studio_valid_method_revision_config' ) ) {
+	function lunara_site_studio_valid_method_revision_config( $config ) { return is_array( $config ) && array( 'mods' ) === array_keys( $config ) && lunara_site_studio_valid_mod_snapshot( $config['mods'], lunara_site_studio_lunara_method_keys() ); }
 }
 if ( ! function_exists( 'lunara_site_studio_lunara_method_adapter' ) ) {
 	function lunara_site_studio_lunara_method_adapter() { return new Lunara_Site_Studio_Theme_Adapter( 'lunara-method', 'theme:lunara-method', array( 'read' => 'lunara_site_studio_lunara_method_read_state', 'validate' => 'lunara_site_studio_lunara_method_validate_state', 'save' => 'lunara_site_studio_lunara_method_save_state', 'restore' => 'lunara_site_studio_lunara_method_restore_revision' ) ); }
@@ -595,9 +681,13 @@ if ( ! function_exists( 'lunara_site_studio_homepage_snapshot' ) ) {
 		$page = get_option( 'page_on_front' );
 		$front_page_id = 'page' === $show ? absint( $page ) : 0;
 		$content = $front_page_id ? (string) get_post_field( 'post_content', $front_page_id ) : '';
-		$blocks = false;
-		foreach ( lunara_home_section_block_map() as $block_name ) { if ( $front_page_id && has_block( $block_name, $content ) ) { $blocks = true; break; } }
-		return array( 'show_on_front' => $show, 'page_on_front' => $page, 'front_page_id' => $front_page_id, 'composition_mode' => $blocks ? 'blocks' : 'registry', 'post_content' => $content, 'mods' => lunara_site_studio_raw_mod_snapshot( lunara_site_studio_homepage_mod_keys() ) );
+		return array( 'show_on_front' => $show, 'page_on_front' => $page, 'front_page_id' => $front_page_id, 'composition_mode' => lunara_site_studio_homepage_composition_mode( $content ), 'post_content' => $content, 'mods' => lunara_site_studio_raw_mod_snapshot( lunara_site_studio_homepage_mod_keys() ) );
+	}
+}
+if ( ! function_exists( 'lunara_site_studio_homepage_composition_mode' ) ) {
+	function lunara_site_studio_homepage_composition_mode( $content ) {
+		foreach ( lunara_home_section_block_map() as $block_name ) { if ( has_block( $block_name, (string) $content ) ) { return 'blocks'; } }
+		return 'registry';
 	}
 }
 if ( ! function_exists( 'lunara_site_studio_homepage_structure_state_schema' ) ) {
@@ -608,7 +698,7 @@ if ( ! function_exists( 'lunara_site_studio_homepage_structure_read_state' ) ) {
 }
 if ( ! function_exists( 'lunara_site_studio_homepage_valid_order' ) ) {
 	function lunara_site_studio_homepage_valid_order( $value ) {
-		if ( ! is_array( $value ) || count( $value ) !== count( lunara_site_studio_homepage_slugs() ) ) { return false; }
+		if ( ! is_array( $value ) || array_keys( $value ) !== range( 0, count( $value ) - 1 ) || count( $value ) !== count( lunara_site_studio_homepage_slugs() ) ) { return false; }
 		$actual = array_values( array_unique( array_map( 'sanitize_key', $value ) ) ); $expected = lunara_site_studio_homepage_slugs(); sort( $actual ); sort( $expected );
 		return $actual === $expected;
 	}
@@ -654,27 +744,43 @@ if ( ! function_exists( 'lunara_site_studio_homepage_identity_matches' ) ) {
 }
 if ( ! function_exists( 'lunara_site_studio_homepage_write_content' ) ) {
 	function lunara_site_studio_homepage_write_content( $page_id, $content ) {
-		if ( (string) get_post_field( 'post_content', $page_id ) === (string) $content ) { return true; }
-		$result = wp_update_post( array( 'ID' => absint( $page_id ), 'post_content' => wp_slash( (string) $content ) ), true );
-		if ( is_wp_error( $result ) ) { return $result; }
-		return (string) get_post_field( 'post_content', $page_id ) === (string) $content ? true : new WP_Error( 'site_studio_homepage_content_readback_failed', __( 'Homepage content could not be verified.', 'lunara-film' ) );
+		try {
+			if ( (string) get_post_field( 'post_content', $page_id ) === (string) $content ) { return true; }
+			$result = wp_update_post( array( 'ID' => absint( $page_id ), 'post_content' => wp_slash( (string) $content ) ), true );
+			if ( is_wp_error( $result ) ) { return $result; }
+			return (string) get_post_field( 'post_content', $page_id ) === (string) $content ? true : new WP_Error( 'site_studio_homepage_content_readback_failed', __( 'Homepage content could not be verified.', 'lunara-film' ) );
+		} catch ( Throwable $error ) { return new WP_Error( 'site_studio_homepage_content_readback_failed', __( 'Homepage content could not be verified.', 'lunara-film' ) ); }
+	}
+}
+if ( ! function_exists( 'lunara_site_studio_valid_homepage_revision_config' ) ) {
+	function lunara_site_studio_valid_homepage_revision_config( $snapshot ) {
+		$keys = array( 'show_on_front', 'page_on_front', 'front_page_id', 'composition_mode', 'post_content', 'mods' );
+		if ( ! is_array( $snapshot ) || $keys !== array_keys( $snapshot ) || ! is_scalar( $snapshot['show_on_front'] ) || ! is_scalar( $snapshot['page_on_front'] ) || ! is_int( $snapshot['front_page_id'] ) || ! in_array( $snapshot['composition_mode'], array( 'registry', 'blocks' ), true ) || ! is_string( $snapshot['post_content'] ) || ! lunara_site_studio_valid_mod_snapshot( $snapshot['mods'], lunara_site_studio_homepage_mod_keys() ) ) { return false; }
+		return lunara_site_studio_homepage_composition_mode( $snapshot['post_content'] ) === $snapshot['composition_mode'];
 	}
 }
 if ( ! function_exists( 'lunara_site_studio_homepage_restore_snapshot' ) ) {
 	function lunara_site_studio_homepage_restore_snapshot( $snapshot ) {
-		$mods_ok = lunara_site_studio_apply_mod_snapshot( $snapshot['mods'] );
-		$content_ok = true;
-		if ( 'blocks' === $snapshot['composition_mode'] ) { $content_ok = lunara_site_studio_homepage_write_content( $snapshot['front_page_id'], $snapshot['post_content'] ); }
-		return $mods_ok && ! is_wp_error( $content_ok ) && lunara_site_studio_homepage_identity_matches( $snapshot ) && $snapshot['mods'] === lunara_site_studio_raw_mod_snapshot( lunara_site_studio_homepage_mod_keys() ) && ( 'blocks' !== $snapshot['composition_mode'] || $snapshot['post_content'] === (string) get_post_field( 'post_content', $snapshot['front_page_id'] ) );
+		if ( ! lunara_site_studio_valid_homepage_revision_config( $snapshot ) ) { return false; }
+		try {
+			$keys = lunara_site_studio_homepage_mod_keys();
+			$mods_ok = lunara_site_studio_apply_mod_snapshot( $snapshot['mods'], $keys );
+			$content_ok = true;
+			if ( 'blocks' === $snapshot['composition_mode'] ) { $content_ok = lunara_site_studio_homepage_write_content( $snapshot['front_page_id'], $snapshot['post_content'] ); }
+			return $mods_ok && ! is_wp_error( $content_ok ) && lunara_site_studio_homepage_identity_matches( $snapshot ) && $snapshot['mods'] === lunara_site_studio_raw_mod_snapshot( lunara_site_studio_homepage_mod_keys() ) && ( 'blocks' !== $snapshot['composition_mode'] || $snapshot['post_content'] === (string) get_post_field( 'post_content', $snapshot['front_page_id'] ) );
+		} catch ( Throwable $error ) { return false; }
 	}
 }
 if ( ! function_exists( 'lunara_site_studio_homepage_apply_transaction' ) ) {
 	function lunara_site_studio_homepage_apply_transaction( $target, $rollback ) {
-		if ( ! lunara_site_studio_homepage_identity_matches( $target ) ) { return new WP_Error( 'site_studio_homepage_identity_changed', __( 'The front page changed. Reload before saving.', 'lunara-film' ), array( 'fields' => array( 'front_page' => __( 'Reload the front page and try again.', 'lunara-film' ) ) ) ); }
-		$failure = null;
-		if ( ! lunara_site_studio_apply_mod_snapshot( $target['mods'] ) ) { $failure = new WP_Error( 'site_studio_homepage_transaction_failed', __( 'Homepage settings could not be verified.', 'lunara-film' ) ); }
-		if ( ! $failure && 'blocks' === $target['composition_mode'] ) { $content_result = lunara_site_studio_homepage_write_content( $target['front_page_id'], $target['post_content'] ); if ( is_wp_error( $content_result ) ) { $failure = $content_result; } }
-		if ( ! $failure && ( ! lunara_site_studio_homepage_identity_matches( $target ) || $target['mods'] !== lunara_site_studio_raw_mod_snapshot( lunara_site_studio_homepage_mod_keys() ) || ( 'blocks' === $target['composition_mode'] && $target['post_content'] !== (string) get_post_field( 'post_content', $target['front_page_id'] ) ) ) ) { $failure = new WP_Error( 'site_studio_homepage_transaction_failed', __( 'Homepage state could not be verified.', 'lunara-film' ) ); }
+		if ( ! lunara_site_studio_valid_homepage_revision_config( $target ) || ! lunara_site_studio_valid_homepage_revision_config( $rollback ) || ( 'registry' === $rollback['composition_mode'] && 'blocks' === $target['composition_mode'] ) ) { return new WP_Error( 'site_studio_revision_invalid', __( 'The Homepage snapshot is invalid.', 'lunara-film' ) ); }
+		try {
+			if ( ! lunara_site_studio_homepage_identity_matches( $target ) ) { return new WP_Error( 'site_studio_homepage_identity_changed', __( 'The front page changed. Reload before saving.', 'lunara-film' ), array( 'fields' => array( 'front_page' => __( 'Reload the front page and try again.', 'lunara-film' ) ) ) ); }
+			$failure = null;
+			if ( ! lunara_site_studio_apply_mod_snapshot( $target['mods'], lunara_site_studio_homepage_mod_keys() ) ) { $failure = new WP_Error( 'site_studio_homepage_transaction_failed', __( 'Homepage settings could not be verified.', 'lunara-film' ) ); }
+			if ( ! $failure && $target['post_content'] !== (string) get_post_field( 'post_content', $target['front_page_id'] ) ) { $content_result = lunara_site_studio_homepage_write_content( $target['front_page_id'], $target['post_content'] ); if ( is_wp_error( $content_result ) ) { $failure = $content_result; } }
+			if ( ! $failure && ( ! lunara_site_studio_homepage_identity_matches( $target ) || $target['mods'] !== lunara_site_studio_raw_mod_snapshot( lunara_site_studio_homepage_mod_keys() ) || ( 'blocks' === $target['composition_mode'] && $target['post_content'] !== (string) get_post_field( 'post_content', $target['front_page_id'] ) ) ) ) { $failure = new WP_Error( 'site_studio_homepage_transaction_failed', __( 'Homepage state could not be verified.', 'lunara-film' ) ); }
+		} catch ( Throwable $error ) { $failure = new WP_Error( 'site_studio_homepage_transaction_failed', __( 'Homepage state could not be verified.', 'lunara-film' ) ); }
 		if ( $failure ) { return lunara_site_studio_homepage_restore_snapshot( $rollback ) ? $failure : new WP_Error( 'site_studio_homepage_rollback_failed', __( 'Homepage state could not be restored safely.', 'lunara-film' ) ); }
 		return true;
 	}
@@ -684,7 +790,7 @@ if ( ! function_exists( 'lunara_site_studio_homepage_structure_save_state' ) ) {
 		$validated = lunara_site_studio_homepage_structure_validate_state( $candidate ); if ( is_wp_error( $validated ) ) { return $validated; }
 		$before = lunara_site_studio_homepage_snapshot();
 		$target = $before; $target['mods'] = lunara_site_studio_homepage_desired_mods( $validated );
-		if ( 'blocks' === $before['composition_mode'] ) { $enabled = array(); foreach ( $validated['desktop_order'] as $slug ) { if ( $validated['visibility'][ $slug ] ) { $enabled[] = $slug; } } $content = lunara_compose_home_section_blocks( $before['post_content'], $enabled ); if ( is_wp_error( $content ) ) { return $content; } $target['post_content'] = $content; }
+		if ( 'blocks' === $before['composition_mode'] ) { $enabled = array(); foreach ( $validated['desktop_order'] as $slug ) { if ( $validated['visibility'][ $slug ] ) { $enabled[] = $slug; } } $content = lunara_compose_home_section_blocks( $before['post_content'], $enabled ); if ( is_wp_error( $content ) ) { return $content; } $target['post_content'] = $content; $target['composition_mode'] = lunara_site_studio_homepage_composition_mode( $content ); }
 		$transaction = lunara_site_studio_homepage_apply_transaction( $target, $before ); if ( is_wp_error( $transaction ) ) { return $transaction; }
 		$revision_id = lunara_site_studio_private_revision( 'homepage-structure', $before, 'save' );
 		if ( is_wp_error( $revision_id ) ) { if ( ! lunara_site_studio_homepage_restore_snapshot( $before ) ) { return new WP_Error( 'site_studio_homepage_rollback_failed', __( 'Homepage state could not be restored safely.', 'lunara-film' ) ); } return $revision_id; }
@@ -694,8 +800,10 @@ if ( ! function_exists( 'lunara_site_studio_homepage_structure_save_state' ) ) {
 if ( ! function_exists( 'lunara_site_studio_homepage_structure_restore_revision' ) ) {
 	function lunara_site_studio_homepage_structure_restore_revision( $revision_id ) {
 		$target = lunara_site_studio_private_revision_target( 'homepage-structure', $revision_id ); if ( is_wp_error( $target ) ) { return $target; }
-		if ( ! isset( $target['show_on_front'], $target['page_on_front'], $target['front_page_id'], $target['composition_mode'], $target['post_content'], $target['mods'] ) || ! lunara_site_studio_homepage_identity_matches( $target ) ) { return new WP_Error( 'site_studio_homepage_identity_changed', __( 'The front page changed. Reload before restoring.', 'lunara-film' ), array( 'fields' => array( 'front_page' => __( 'Reload the front page and try again.', 'lunara-film' ) ) ) ); }
 		$current = lunara_site_studio_homepage_snapshot();
+		if ( ! lunara_site_studio_valid_homepage_revision_config( $target ) ) { return new WP_Error( 'site_studio_revision_invalid', __( 'The selected Homepage revision is invalid.', 'lunara-film' ) ); }
+		if ( ! lunara_site_studio_homepage_identity_matches( $target ) ) { return new WP_Error( 'site_studio_homepage_identity_changed', __( 'The front page changed. Reload before restoring.', 'lunara-film' ), array( 'fields' => array( 'front_page' => __( 'Reload the front page and try again.', 'lunara-film' ) ) ) ); }
+		if ( ! lunara_site_studio_valid_homepage_revision_config( $current ) || $target['composition_mode'] !== $current['composition_mode'] ) { return new WP_Error( 'site_studio_revision_invalid', __( 'The selected Homepage revision is invalid.', 'lunara-film' ) ); }
 		$safety_id = lunara_site_studio_private_revision( 'homepage-structure', $current, 'restore-safety' ); if ( is_wp_error( $safety_id ) ) { return $safety_id; }
 		$result = lunara_site_studio_homepage_apply_transaction( $target, $current ); if ( is_wp_error( $result ) ) { return $result; }
 		return array( 'state' => lunara_site_studio_homepage_structure_read_state(), 'safety_revision_id' => $safety_id, 'timestamp' => current_time( 'mysql' ) );
@@ -935,19 +1043,26 @@ if ( ! function_exists( 'lunara_site_studio_store_private_preview' ) ) {
 		$token   = wp_generate_uuid4();
 		$user_id = absint( get_current_user_id() );
 		$key     = 'lunara_site_studio_preview_' . hash( 'sha256', $token );
-		set_transient(
-			$key,
-			array(
-				'user_id'    => $user_id,
-				'surface'    => $surface,
-				'owner'      => $owner,
-				'route'      => $route,
-				'token_hash' => wp_hash( $token . '|' . $user_id . '|' . $surface . '|' . $owner . '|' . $route ),
-				'expires'    => lunara_site_studio_timestamp() + LUNARA_SITE_STUDIO_PREVIEW_TTL,
-				'state'      => $state,
-			),
-			LUNARA_SITE_STUDIO_PREVIEW_TTL
+		$record = array(
+			'user_id'    => $user_id,
+			'surface'    => $surface,
+			'owner'      => $owner,
+			'route'      => $route,
+			'token_hash' => wp_hash( $token . '|' . $user_id . '|' . $surface . '|' . $owner . '|' . $route ),
+			'expires'    => lunara_site_studio_timestamp() + LUNARA_SITE_STUDIO_PREVIEW_TTL,
+			'state'      => $state,
 		);
+		try {
+			if ( ! set_transient( $key, $record, LUNARA_SITE_STUDIO_PREVIEW_TTL ) ) { return new WP_Error( 'site_studio_preview_write_failed', __( 'The private preview could not be stored.', 'lunara-film' ) ); }
+		} catch ( Throwable $error ) {
+			try { delete_transient( $key ); } catch ( Throwable $cleanup_error ) { /* A failed cleanup cannot produce a preview token. */ }
+			return new WP_Error( 'site_studio_preview_write_failed', __( 'The private preview could not be stored.', 'lunara-film' ) );
+		}
+		try { $stored = get_transient( $key ); } catch ( Throwable $error ) { $stored = false; }
+		if ( $record !== $stored ) {
+			try { delete_transient( $key ); } catch ( Throwable $cleanup_error ) { /* A failed cleanup cannot produce a preview token. */ }
+			return new WP_Error( 'site_studio_preview_readback_failed', __( 'The private preview could not be verified.', 'lunara-film' ) );
+		}
 		return $token;
 	}
 }
@@ -1055,6 +1170,7 @@ if ( ! function_exists( 'lunara_site_studio_push_revision' ) ) {
 			return new WP_Error( 'site_studio_revision_invalid', __( 'The revision could not be created.', 'lunara-film' ) );
 		}
 		$option    = lunara_site_studio_revision_option_name( $surface );
+		$before    = lunara_site_studio_raw_option_snapshot( $option );
 		$revisions = get_option( $option, array() );
 		$revisions = is_array( $revisions ) ? $revisions : array();
 		$id        = wp_generate_uuid4();
@@ -1069,19 +1185,14 @@ if ( ! function_exists( 'lunara_site_studio_push_revision' ) ) {
 			)
 		);
 		$bounded = array_slice( $revisions, 0, LUNARA_SITE_STUDIO_REVISION_LIMIT );
-		if ( ! update_option( $option, $bounded, false ) ) {
-			return new WP_Error( 'site_studio_revision_write_failed', __( 'The safety revision could not be stored.', 'lunara-film' ) );
-		}
-		$stored = get_option( $option, array() );
-		$durable = false;
-		foreach ( is_array( $stored ) ? $stored : array() as $revision ) {
-			if ( is_array( $revision ) && isset( $revision['id'] ) && hash_equals( $id, (string) $revision['id'] ) ) {
-				$durable = true;
-				break;
-			}
-		}
-		if ( ! $durable ) {
-			return new WP_Error( 'site_studio_revision_readback_failed', __( 'The safety revision could not be verified.', 'lunara-film' ) );
+		$error = null;
+		try {
+			if ( ! update_option( $option, $bounded, false ) ) { $error = new WP_Error( 'site_studio_revision_write_failed', __( 'The safety revision could not be stored.', 'lunara-film' ) ); }
+			elseif ( $bounded !== get_option( $option, array() ) ) { $error = new WP_Error( 'site_studio_revision_readback_failed', __( 'The safety revision could not be verified.', 'lunara-film' ) ); }
+		} catch ( Throwable $throwable ) { $error = new WP_Error( 'site_studio_revision_write_failed', __( 'The safety revision could not be stored.', 'lunara-film' ) ); }
+		if ( $error ) {
+			if ( ! lunara_site_studio_apply_option_snapshot( $option, $before ) ) { return new WP_Error( 'site_studio_revision_rollback_failed', __( 'Revision history could not be restored safely.', 'lunara-film' ) ); }
+			return $error;
 		}
 		return $id;
 	}

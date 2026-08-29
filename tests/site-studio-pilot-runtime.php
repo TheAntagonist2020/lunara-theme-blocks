@@ -2,6 +2,7 @@
 /** Behavioral runtime for Task 4 commit 1 pilot adapters. */
 
 define( 'ABSPATH', __DIR__ . '/' );
+$lunara_pilot_legacy_autoload_mode = in_array( '--legacy-autoload', isset( $argv ) && is_array( $argv ) ? $argv : array(), true );
 
 set_error_handler(
 	static function ( $severity, $message, $file, $line ) {
@@ -13,12 +14,19 @@ $lunara_pilot_options = array();
 $lunara_pilot_option_autoload = array();
 $lunara_pilot_option_writes = array();
 $lunara_pilot_option_fault = array();
+$lunara_pilot_option_read_fault = array();
+$lunara_pilot_add_option_fault = '';
+$lunara_pilot_autoload_fault = '';
+$lunara_pilot_autoload_read_fault = '';
 $lunara_pilot_theme_mods = array();
 $lunara_pilot_mod_fault = array();
+$lunara_pilot_mod_read_fault = array();
 $lunara_pilot_posts = array();
 $lunara_pilot_post_fault = '';
+$lunara_pilot_post_read_fault = '';
 $lunara_pilot_post_writes = array();
 $lunara_pilot_transients = array();
+$lunara_pilot_transient_fault = '';
 $lunara_pilot_uuid = 0;
 $lunara_pilot_now = 1900000000;
 $lunara_pilot_mimes = array();
@@ -51,6 +59,12 @@ class Lunara_Pilot_REST_Request {
 	public function get_param( $key ) { return isset( $this->params[ $key ] ) ? $this->params[ $key ] : null; }
 	public function get_header( $key ) { return 'pilot-nonce'; }
 }
+class Lunara_Pilot_WPDB {
+	public $options = 'wp_options';
+	public function prepare( $query, $option ) { return (string) $option; }
+	public function get_var( $option ) { global $lunara_pilot_option_autoload, $lunara_pilot_autoload_read_fault; if ( $option === $lunara_pilot_autoload_read_fault ) { $lunara_pilot_autoload_read_fault = ''; throw new RuntimeException( 'injected autoload read exception' ); } return array_key_exists( $option, $lunara_pilot_option_autoload ) ? ( $lunara_pilot_option_autoload[ $option ] ? 'on' : 'off' ) : null; }
+}
+$wpdb = new Lunara_Pilot_WPDB();
 
 function is_wp_error( $value ) { return $value instanceof WP_Error; }
 function __( $text ) { return $text; }
@@ -79,8 +93,28 @@ function get_current_user_id() { return 41; }
 function current_time( $type, $gmt = false ) { global $lunara_pilot_now; return 'timestamp' === $type ? $lunara_pilot_now : gmdate( 'Y-m-d H:i:s', $lunara_pilot_now ); }
 function wp_generate_uuid4() { global $lunara_pilot_uuid; $lunara_pilot_uuid++; return sprintf( '10000000-0000-4000-8000-%012d', $lunara_pilot_uuid ); }
 function wp_hash( $value ) { return hash_hmac( 'sha256', (string) $value, 'pilot-secret' ); }
-function set_transient( $key, $value, $ttl ) { global $lunara_pilot_transients; $lunara_pilot_transients[ $key ] = array( 'value' => $value, 'ttl' => $ttl ); return true; }
+function set_transient( $key, $value, $ttl ) {
+	global $lunara_pilot_transients, $lunara_pilot_transient_fault;
+	$mode = $lunara_pilot_transient_fault; $lunara_pilot_transient_fault = '';
+	if ( 'fail' === $mode ) { return false; }
+	$lunara_pilot_transients[ $key ] = array( 'value' => 'mismatch' === $mode ? array( 'corrupt' => true ) : $value, 'ttl' => $ttl );
+	if ( 'throw_after' === $mode ) { throw new RuntimeException( 'injected transient exception' ); }
+	return true;
+}
 function get_transient( $key ) { global $lunara_pilot_transients; return isset( $lunara_pilot_transients[ $key ] ) ? $lunara_pilot_transients[ $key ]['value'] : false; }
+function delete_transient( $key ) { global $lunara_pilot_transients; unset( $lunara_pilot_transients[ $key ] ); return true; }
+function wp_autoload_values_to_autoload() { return array( 'yes', 'on', 'auto-on', 'auto' ); }
+if ( ! $lunara_pilot_legacy_autoload_mode ) {
+	function wp_set_option_autoload_values( $options ) {
+		global $lunara_pilot_option_autoload, $lunara_pilot_autoload_fault;
+		foreach ( $options as $option => $autoload ) {
+			if ( 'fail' === $lunara_pilot_autoload_fault ) { $lunara_pilot_autoload_fault = ''; return array( $option => false ); }
+			$lunara_pilot_option_autoload[ $option ] = 'mismatch' === $lunara_pilot_autoload_fault ? true : (bool) $autoload;
+		}
+		$lunara_pilot_autoload_fault = '';
+		return array_fill_keys( array_keys( $options ), true );
+	}
+}
 
 function lunara_pilot_consume_fault( &$fault, $key ) {
 	if ( empty( $fault['key'] ) || $key !== $fault['key'] || empty( $fault['remaining'] ) ) { return '' ; }
@@ -88,16 +122,30 @@ function lunara_pilot_consume_fault( &$fault, $key ) {
 	if ( ! empty( $fault['modes'] ) && is_array( $fault['modes'] ) ) { return array_shift( $fault['modes'] ); }
 	return isset( $fault['mode'] ) ? $fault['mode'] : 'fail';
 }
-function get_option( $key, $default = false ) { global $lunara_pilot_options; return array_key_exists( $key, $lunara_pilot_options ) ? $lunara_pilot_options[ $key ] : $default; }
+function get_option( $key, $default = false ) { global $lunara_pilot_options, $lunara_pilot_option_read_fault; $mode = lunara_pilot_consume_fault( $lunara_pilot_option_read_fault, $key ); if ( 'throw' === $mode ) { throw new RuntimeException( 'injected option read exception' ); } return array_key_exists( $key, $lunara_pilot_options ) ? $lunara_pilot_options[ $key ] : $default; }
+function wp_load_alloptions() { global $lunara_pilot_options, $lunara_pilot_option_autoload; return array_filter( $lunara_pilot_options, static function ( $key ) use ( $lunara_pilot_option_autoload ) { return ! empty( $lunara_pilot_option_autoload[ $key ] ); }, ARRAY_FILTER_USE_KEY ); }
+function add_option( $key, $value = '', $deprecated = '', $autoload = 'yes' ) {
+	global $lunara_pilot_options, $lunara_pilot_option_autoload, $lunara_pilot_add_option_fault;
+	$mode = $lunara_pilot_add_option_fault; $lunara_pilot_add_option_fault = '';
+	if ( array_key_exists( $key, $lunara_pilot_options ) || 'fail' === $mode ) { return false; }
+	$lunara_pilot_options[ $key ] = 'mismatch' === $mode ? array( 'corrupt' => true ) : $value;
+	$lunara_pilot_option_autoload[ $key ] = ! in_array( $autoload, array( false, 'no', 'off' ), true );
+	if ( 'throw_after' === $mode ) { throw new RuntimeException( 'injected add_option exception' ); }
+	return true;
+}
 function update_option( $key, $value, $autoload = null ) {
 	global $lunara_pilot_options, $lunara_pilot_option_autoload, $lunara_pilot_option_writes, $lunara_pilot_option_fault;
 	$lunara_pilot_option_writes[] = array( 'key' => $key, 'value' => $value, 'autoload' => $autoload );
 	$mode = lunara_pilot_consume_fault( $lunara_pilot_option_fault, $key );
 	if ( 'fail' === $mode ) { return false; }
 	$requested_autoload = null === $autoload ? ( array_key_exists( $key, $lunara_pilot_option_autoload ) ? $lunara_pilot_option_autoload[ $key ] : true ) : (bool) $autoload;
-	if ( array_key_exists( $key, $lunara_pilot_options ) && $lunara_pilot_options[ $key ] === $value && isset( $lunara_pilot_option_autoload[ $key ] ) && $lunara_pilot_option_autoload[ $key ] === $requested_autoload ) { return false; }
-	$lunara_pilot_options[ $key ] = 'mismatch' === $mode ? array( 'corrupt' => true ) : $value;
+	if ( array_key_exists( $key, $lunara_pilot_options ) && $lunara_pilot_options[ $key ] === $value ) { return false; }
+	if ( 'retain_uuid_corrupt' === $mode && is_array( $value ) ) { $stored = $value; $stored[ count( $stored ) - 1 ]['config']['corrupt'] = true; $lunara_pilot_options[ $key ] = $stored; }
+	else { $lunara_pilot_options[ $key ] = 'mismatch' === $mode ? array( 'corrupt' => true ) : $value; }
 	$lunara_pilot_option_autoload[ $key ] = $requested_autoload;
+	if ( 'read_throw_after' === $mode ) { global $lunara_pilot_option_read_fault; $lunara_pilot_option_read_fault = array( 'key' => ! empty( $lunara_pilot_option_fault['read_key'] ) ? $lunara_pilot_option_fault['read_key'] : $key, 'mode' => 'throw', 'remaining' => 1 ); }
+	if ( 'autoload_read_throw_after' === $mode ) { global $lunara_pilot_autoload_read_fault; $lunara_pilot_autoload_read_fault = $key; }
+	if ( 'throw_after' === $mode ) { throw new RuntimeException( 'injected option exception' ); }
 	return true;
 }
 function delete_option( $key ) {
@@ -109,12 +157,15 @@ function delete_option( $key ) {
 	unset( $lunara_pilot_option_autoload[ $key ] );
 	return true;
 }
-function get_theme_mod( $key, $default = false ) { global $lunara_pilot_theme_mods; return array_key_exists( $key, $lunara_pilot_theme_mods ) ? $lunara_pilot_theme_mods[ $key ] : $default; }
+function get_theme_mod( $key, $default = false ) { global $lunara_pilot_theme_mods, $lunara_pilot_mod_read_fault; $mode = lunara_pilot_consume_fault( $lunara_pilot_mod_read_fault, $key ); if ( 'throw' === $mode ) { throw new RuntimeException( 'injected theme-mod read exception' ); } return array_key_exists( $key, $lunara_pilot_theme_mods ) ? $lunara_pilot_theme_mods[ $key ] : $default; }
 function set_theme_mod( $key, $value ) {
 	global $lunara_pilot_theme_mods, $lunara_pilot_mod_fault;
 	$mode = lunara_pilot_consume_fault( $lunara_pilot_mod_fault, $key );
 	if ( 'fail' === $mode ) { return; }
 	$lunara_pilot_theme_mods[ $key ] = 'mismatch' === $mode ? '__mismatch__' : $value;
+	if ( 'read_throw_after' === $mode ) { global $lunara_pilot_mod_read_fault; $lunara_pilot_mod_read_fault = array( 'key' => $key, 'mode' => 'throw', 'remaining' => 1 ); }
+	if ( 'identity_read_throw_after' === $mode ) { global $lunara_pilot_option_read_fault; $lunara_pilot_option_read_fault = array( 'key' => 'page_on_front', 'mode' => 'throw', 'remaining' => 1 ); }
+	if ( 'throw_after' === $mode ) { throw new RuntimeException( 'injected theme-mod exception' ); }
 }
 function remove_theme_mod( $key ) {
 	global $lunara_pilot_theme_mods, $lunara_pilot_mod_fault;
@@ -123,7 +174,7 @@ function remove_theme_mod( $key ) {
 	unset( $lunara_pilot_theme_mods[ $key ] );
 }
 function get_post( $id ) { global $lunara_pilot_posts; return isset( $lunara_pilot_posts[ absint( $id ) ] ) ? $lunara_pilot_posts[ absint( $id ) ] : null; }
-function get_post_field( $field, $id ) { $post = get_post( $id ); return $post && isset( $post->{$field} ) ? $post->{$field} : ''; }
+function get_post_field( $field, $id ) { global $lunara_pilot_post_read_fault; $mode = is_array( $lunara_pilot_post_read_fault ) ? lunara_pilot_consume_fault( $lunara_pilot_post_read_fault, 'post_content' ) : $lunara_pilot_post_read_fault; if ( ! is_array( $lunara_pilot_post_read_fault ) ) { $lunara_pilot_post_read_fault = ''; } if ( 'throw' === $mode ) { throw new RuntimeException( 'injected post read exception' ); } $post = get_post( $id ); return $post && isset( $post->{$field} ) ? $post->{$field} : ''; }
 function get_post_mime_type( $id ) { global $lunara_pilot_mimes; return isset( $lunara_pilot_mimes[ absint( $id ) ] ) ? $lunara_pilot_mimes[ absint( $id ) ] : ''; }
 function wp_update_post( $postarr, $wp_error = false ) {
 	global $lunara_pilot_posts, $lunara_pilot_post_fault, $lunara_pilot_post_writes;
@@ -138,6 +189,9 @@ function wp_update_post( $postarr, $wp_error = false ) {
 	$content = isset( $postarr['post_content'] ) ? (string) $postarr['post_content'] : $lunara_pilot_posts[ $id ]->post_content;
 	if ( 'mismatch' === $mode ) { $content .= '<!-- mismatch -->'; }
 	$lunara_pilot_posts[ $id ]->post_content = $content;
+	if ( 'read_throw_after' === $mode ) { global $lunara_pilot_post_read_fault; $lunara_pilot_post_read_fault = 'throw'; }
+	if ( 'late_read_throw_after' === $mode ) { global $lunara_pilot_post_read_fault; $lunara_pilot_post_read_fault = array( 'key' => 'post_content', 'modes' => array( 'pass', 'throw' ), 'remaining' => 2 ); }
+	if ( 'throw_after' === $mode ) { throw new RuntimeException( 'injected post exception' ); }
 	return $id;
 }
 function parse_blocks( $content ) {
@@ -167,13 +221,18 @@ function lunara_pilot_assert( $condition, $message ) {
 	if ( ! $condition ) { fwrite( STDERR, "FAIL: {$message}\n" ); exit( 1 ); }
 }
 function lunara_pilot_reset( $content = '' ) {
-	global $lunara_pilot_options, $lunara_pilot_option_autoload, $lunara_pilot_option_writes, $lunara_pilot_option_fault, $lunara_pilot_theme_mods, $lunara_pilot_mod_fault, $lunara_pilot_posts, $lunara_pilot_post_fault, $lunara_pilot_post_writes, $lunara_pilot_transients, $lunara_pilot_mimes;
+	global $lunara_pilot_options, $lunara_pilot_option_autoload, $lunara_pilot_option_writes, $lunara_pilot_option_fault, $lunara_pilot_option_read_fault, $lunara_pilot_add_option_fault, $lunara_pilot_autoload_fault, $lunara_pilot_autoload_read_fault, $lunara_pilot_theme_mods, $lunara_pilot_mod_fault, $lunara_pilot_mod_read_fault, $lunara_pilot_posts, $lunara_pilot_post_fault, $lunara_pilot_post_read_fault, $lunara_pilot_post_writes, $lunara_pilot_transients, $lunara_pilot_transient_fault, $lunara_pilot_mimes;
 	$lunara_pilot_options = array( 'show_on_front' => 'page', 'page_on_front' => 101 );
 	$lunara_pilot_option_autoload = array( 'show_on_front' => true, 'page_on_front' => true );
 	$lunara_pilot_option_writes = array();
 	$lunara_pilot_option_fault = array();
+	$lunara_pilot_option_read_fault = array();
+	$lunara_pilot_add_option_fault = '';
+	$lunara_pilot_autoload_fault = '';
+	$lunara_pilot_autoload_read_fault = '';
 	$lunara_pilot_theme_mods = array();
 	$lunara_pilot_mod_fault = array();
+	$lunara_pilot_mod_read_fault = array();
 	$lunara_pilot_posts = array(
 		101 => new WP_Post( 101, 'page', 'publish', $content ),
 		201 => new WP_Post( 201, 'review', 'publish', '' ),
@@ -181,8 +240,10 @@ function lunara_pilot_reset( $content = '' ) {
 		203 => new WP_Post( 203, 'post', 'publish', '' ),
 	);
 	$lunara_pilot_post_fault = '';
+	$lunara_pilot_post_read_fault = '';
 	$lunara_pilot_post_writes = array();
 	$lunara_pilot_transients = array();
+	$lunara_pilot_transient_fault = '';
 	$lunara_pilot_mimes = array( 301 => 'image/jpeg', 302 => 'application/pdf' );
 }
 function lunara_pilot_block_content() {
@@ -194,6 +255,13 @@ function lunara_pilot_block_content() {
 }
 function lunara_pilot_option_snapshot( $key ) { global $lunara_pilot_options; return array( 'present' => array_key_exists( $key, $lunara_pilot_options ), 'value' => array_key_exists( $key, $lunara_pilot_options ) ? $lunara_pilot_options[ $key ] : null ); }
 function lunara_pilot_error_fields( $error ) { $data = is_wp_error( $error ) ? $error->get_error_data() : array(); return is_array( $data ) && isset( $data['fields'] ) && is_array( $data['fields'] ) ? $data['fields'] : array(); }
+function lunara_pilot_seed_revision( $surface, $config, $id ) {
+	global $lunara_pilot_options, $lunara_pilot_option_autoload;
+	$option = lunara_site_studio_revision_option_name( $surface );
+	$lunara_pilot_options[ $option ] = array( array( 'id' => $id, 'saved_at' => '2030-03-17 17:46:40', 'saved_by' => 41, 'action' => 'save', 'config' => $config ) );
+	$lunara_pilot_option_autoload[ $option ] = false;
+	return $option;
+}
 
 $theme_root = dirname( __DIR__ );
 require $theme_root . '/inc/helpers.php';
@@ -210,6 +278,27 @@ $required = array(
 	'lunara_compose_home_section_blocks',
 );
 foreach ( $required as $function ) { lunara_pilot_assert( function_exists( $function ), "Required pilot interface {$function} must exist." ); }
+
+if ( $lunara_pilot_legacy_autoload_mode ) {
+	$run_legacy_autoload_save = static function ( $fault = '' ) {
+		global $lunara_pilot_options, $lunara_pilot_option_autoload, $lunara_pilot_add_option_fault;
+		lunara_pilot_reset();
+		$original = array( 'colors' => array( 'gold' => '#abcdef' ), 'fonts' => array( 'body' => 'georgia' ) );
+		$lunara_pilot_options['lunara_design_tokens'] = $original;
+		$lunara_pilot_option_autoload['lunara_design_tokens'] = true;
+		$lunara_pilot_add_option_fault = $fault;
+		$adapter = lunara_site_studio_global_design_adapter();
+		return array( $adapter->save_state( $adapter->read_state() ), $original );
+	};
+	list( $legacy_saved ) = $run_legacy_autoload_save();
+	lunara_pilot_assert( ! is_wp_error( $legacy_saved ) && false === $lunara_pilot_option_autoload['lunara_design_tokens'] && ! array_key_exists( 'lunara_design_tokens', wp_load_alloptions() ), 'Without the newer autoload API, a same-value Global save must transactionally persist the exact value as non-autoload on WordPress 6.0.' );
+	foreach ( array( 'fail', 'mismatch', 'throw_after' ) as $fault ) {
+		list( $legacy_failed, $legacy_original ) = $run_legacy_autoload_save( $fault );
+		lunara_pilot_assert( is_wp_error( $legacy_failed ) && $legacy_original === $lunara_pilot_options['lunara_design_tokens'] && true === $lunara_pilot_option_autoload['lunara_design_tokens'] && array_key_exists( 'lunara_design_tokens', wp_load_alloptions() ), "Legacy autoload {$fault} must fail and restore the exact original value plus autoload state." );
+	}
+	echo "site-studio pilot legacy autoload runtime: all assertions passed.\n";
+	exit( 0 );
+}
 
 // Registry wiring and adapter resolution.
 $surfaces = lunara_site_studio_surfaces();
@@ -275,15 +364,20 @@ $bad['fonts']['body']['override'] = 'unknown-face';
 $invalid_global_font = $global->validate_state( $bad );
 lunara_pilot_assert( is_wp_error( $invalid_global_font ) && 'site_studio_global_invalid' === $invalid_global_font->get_error_code() && array( 'font_body' ) === array_keys( lunara_pilot_error_fields( $invalid_global_font ) ), 'Global Design must return the exact safe field path for an invalid font choice.' );
 $lunara_pilot_option_autoload['lunara_design_tokens'] = true;
+$legacy_value = $lunara_pilot_options['lunara_design_tokens'];
 $legacy_autoload_save = $global->save_state( $state );
-lunara_pilot_assert( ! is_wp_error( $legacy_autoload_save ) && false === $lunara_pilot_option_autoload['lunara_design_tokens'], 'A same-value Global save must correct legacy autoload storage to non-autoloading even though Core returns false for an unchanged value.' );
+lunara_pilot_assert( ! is_wp_error( $legacy_autoload_save ) && $legacy_value === $lunara_pilot_options['lunara_design_tokens'] && false === $lunara_pilot_option_autoload['lunara_design_tokens'], 'A same-value Global save must use a Core-valid transition and verify the exact value plus persisted non-autoload state.' );
+$lunara_pilot_option_autoload['lunara_design_tokens'] = true;
+$lunara_pilot_autoload_fault = 'mismatch';
+$legacy_autoload_failed = $global->save_state( $state );
+lunara_pilot_assert( is_wp_error( $legacy_autoload_failed ) && $legacy_value === $lunara_pilot_options['lunara_design_tokens'] && true === $lunara_pilot_option_autoload['lunara_design_tokens'], 'A failed persisted autoload transition must return an error and preserve the exact legacy value/autoload state.' );
 $clear = $state;
 $clear['colors']['gold']['override'] = null;
 $clear['fonts']['body']['override'] = null;
 $saved = $global->save_state( $clear );
 lunara_pilot_assert( ! is_wp_error( $saved ) && ! array_key_exists( 'lunara_design_tokens', $lunara_pilot_options ), 'Clearing the final Global overrides must delete the canonical option.' );
 $design_token_writes = array_values( array_filter( $lunara_pilot_option_writes, static function ( $write ) { return 'lunara_design_tokens' === $write['key']; } ) );
-lunara_pilot_assert( $design_token_writes && false === $design_token_writes[ count( $design_token_writes ) - 1 ]['autoload'], 'Global writes to lunara_design_tokens itself must request non-autoloading storage.' );
+lunara_pilot_assert( array_filter( $design_token_writes, static function ( $write ) { return false === $write['autoload']; } ), 'Global forward writes to lunara_design_tokens itself must request non-autoloading storage; rollback writes may restore legacy autoload.' );
 lunara_pilot_assert( array( 'colors', 'typography' ) === $saved['changed_sections'], 'Global save must report the exact canonical changed sections.' );
 $restored = $global->restore_revision( $saved['revision_id'] );
 lunara_pilot_assert( ! is_wp_error( $restored ) && '#abcdef' === $lunara_pilot_options['lunara_design_tokens']['colors']['gold'] && ! empty( $restored['safety_revision_id'] ), 'Global restore must create safety history and restore exact prior option presence.' );
@@ -297,15 +391,48 @@ lunara_pilot_assert( is_wp_error( $global->save_state( $candidate ) ) && $before
 $lunara_pilot_option_fault = array( 'key' => 'lunara_design_tokens', 'modes' => array( 'mismatch', 'fail' ), 'remaining' => 2 );
 $rollback_failed = $global->save_state( $candidate );
 lunara_pilot_assert( is_wp_error( $rollback_failed ) && 'site_studio_global_rollback_failed' === $rollback_failed->get_error_code(), 'Global write/readback failure plus rollback failure must return the distinct rollback-failed code.' );
+lunara_pilot_reset();
+$lunara_pilot_options['lunara_design_tokens'] = array( 'colors' => array( 'gold' => '#abcdef' ), 'fonts' => array() );
+$lunara_pilot_option_autoload['lunara_design_tokens'] = false;
+$global = lunara_site_studio_global_design_adapter(); $candidate = $global->read_state(); $candidate['colors']['gold']['override'] = '#654321';
+$lunara_pilot_option_fault = array( 'key' => 'lunara_design_tokens', 'modes' => array( 'mismatch', 'throw_after' ), 'remaining' => 2 );
+$throwing_global_rollback = $global->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_global_rollback ) && 'site_studio_global_rollback_failed' === $throwing_global_rollback->get_error_code(), 'A Global option exception consumed only during rollback must return the distinct Global rollback-failed code.' );
+$before = lunara_pilot_option_snapshot( 'lunara_design_tokens' );
+$lunara_pilot_option_fault = array( 'key' => 'lunara_design_tokens', 'mode' => 'throw_after', 'remaining' => 1 );
+$throwing_global = $global->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_global ) && $before === lunara_pilot_option_snapshot( 'lunara_design_tokens' ), 'A throwing option hook after a partial Global write must enter exact verified rollback.' );
+$global_revision_option = lunara_site_studio_revision_option_name( 'global-design' );
+$history_before_throw = lunara_pilot_option_snapshot( $global_revision_option );
+$lunara_pilot_option_fault = array( 'key' => $global_revision_option, 'mode' => 'throw_after', 'remaining' => 1 );
+$throwing_revision = $global->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_revision ) && $before === lunara_pilot_option_snapshot( 'lunara_design_tokens' ) && $history_before_throw === lunara_pilot_option_snapshot( $global_revision_option ), 'A throwing revision hook after a partial write must restore exact live state and prior history.' );
+$before_read_throw = lunara_site_studio_raw_option_snapshot( 'lunara_design_tokens', true );
+$lunara_pilot_option_fault = array( 'key' => 'lunara_design_tokens', 'mode' => 'read_throw_after', 'remaining' => 1 );
+$throwing_option_readback = $global->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_option_readback ) && $before_read_throw === lunara_site_studio_raw_option_snapshot( 'lunara_design_tokens', true ), 'A throwing option value readback after a live Global write must enter exact verified rollback.' );
+$lunara_pilot_option_fault = array( 'key' => 'lunara_design_tokens', 'mode' => 'autoload_read_throw_after', 'remaining' => 1 );
+$throwing_autoload_readback = $global->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_autoload_readback ) && $before_read_throw === lunara_site_studio_raw_option_snapshot( 'lunara_design_tokens', true ), 'A throwing persisted-autoload readback after a live Global write must enter exact verified rollback.' );
+$history_before_read_throw = lunara_pilot_option_snapshot( $global_revision_option );
+$lunara_pilot_option_fault = array( 'key' => 'lunara_design_tokens', 'mode' => 'read_throw_after', 'read_key' => $global_revision_option, 'remaining' => 1 );
+$throwing_revision_snapshot = $global->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_revision_snapshot ) && $before_read_throw === lunara_site_studio_raw_option_snapshot( 'lunara_design_tokens', true ) && $history_before_read_throw === lunara_pilot_option_snapshot( $global_revision_option ), 'A throwing private revision-history snapshot after a live Global write must restore exact live state and history.' );
+$lunara_pilot_option_fault = array( 'key' => $global_revision_option, 'mode' => 'read_throw_after', 'remaining' => 1 );
+$throwing_revision_readback = $global->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_revision_readback ) && $before_read_throw === lunara_site_studio_raw_option_snapshot( 'lunara_design_tokens', true ) && $history_before_read_throw === lunara_pilot_option_snapshot( $global_revision_option ), 'A throwing revision-list readback after a live Global write must restore exact live state and history.' );
 echo "pilot case global-design: passed.\n";
 
 // Lunara Method: fallback/removal, content ownership validation, rollback.
 lunara_pilot_reset();
 $method = lunara_site_studio_lunara_method_adapter();
 $method_state = $method->read_state();
-$defaults = lunara_home_pairing_desk_copy_defaults();
 lunara_pilot_assert( array( 'kicker', 'title', 'copy', 'review_id', 'backdrop_id' ) === array_keys( $method_state ), 'Method public state must expose exactly its five canonical human fields.' );
-lunara_pilot_assert( $defaults['kicker'] === $method_state['kicker'] && 0 === $method_state['review_id'], 'Method absent text/IDs must read through canonical fallback state.' );
+lunara_pilot_assert( '' === $method_state['kicker'] && '' === $method_state['title'] && '' === $method_state['copy'] && 0 === $method_state['review_id'], 'Method public state must preserve raw absent text overrides; rendering owns shipped fallback copy.' );
+$review_only = $method_state; $review_only['review_id'] = 201; $review_only['backdrop_id'] = 301;
+$review_only_save = $method->save_state( $review_only );
+lunara_pilot_assert( ! is_wp_error( $review_only_save ) && array( 'lunara_home_pairing_desk_review_id', 'lunara_home_pairing_desk_backdrop_id' ) === array_keys( $lunara_pilot_theme_mods ), 'Saving only Method Review/backdrop must preserve absence for all three text mods.' );
+$lunara_pilot_theme_mods = array();
 $valid_method = array( 'kicker' => 'A kicker', 'title' => 'A title', 'copy' => 'A copy', 'review_id' => 201, 'backdrop_id' => 301 );
 lunara_pilot_assert( ! is_wp_error( $method->validate_state( $valid_method ) ), 'Method must accept a published Review and valid image.' );
 $bad_method = $valid_method; $bad_method['review_id'] = 202;
@@ -320,7 +447,7 @@ lunara_pilot_assert( ! is_wp_error( $method_save ) && 201 === get_theme_mod( 'lu
 lunara_pilot_assert( array( 'language', 'featured-review', 'backdrop' ) === $method_save['changed_sections'], 'Method save must report the exact canonical changed sections.' );
 $blank_method = array( 'kicker' => '', 'title' => '', 'copy' => '', 'review_id' => 0, 'backdrop_id' => 0 );
 $blank_save = $method->save_state( $blank_method );
-lunara_pilot_assert( ! is_wp_error( $blank_save ) && $defaults['title'] === $blank_save['state']['title'] && array() === $lunara_pilot_theme_mods, 'Blank Method values must remove overrides and restore public fallbacks.' );
+lunara_pilot_assert( ! is_wp_error( $blank_save ) && '' === $blank_save['state']['title'] && array() === $lunara_pilot_theme_mods, 'Blank Method values must remove overrides and keep public state raw/empty.' );
 $method_restore = $method->restore_revision( $blank_save['revision_id'] );
 lunara_pilot_assert( ! is_wp_error( $method_restore ) && $valid_method === $method_restore['state'] && ! empty( $method_restore['safety_revision_id'] ), 'Method restore must apply the selected private raw-mod snapshot and create verified safety history.' );
 $lunara_pilot_theme_mods = array( 'lunara_home_pairing_desk_kicker' => '', 'lunara_home_pairing_desk_review_id' => 0 );
@@ -329,6 +456,18 @@ $lunara_pilot_mod_fault = array( 'key' => 'lunara_home_pairing_desk_title', 'mod
 lunara_pilot_assert( is_wp_error( $method->save_state( $valid_method ) ) && $before_mods === $lunara_pilot_theme_mods, 'Method mod/readback failure must restore exact raw presence for every managed key.' );
 $lunara_pilot_option_fault = array( 'key' => lunara_site_studio_revision_option_name( 'lunara-method' ), 'mode' => 'fail', 'remaining' => 1 );
 lunara_pilot_assert( is_wp_error( $method->save_state( $valid_method ) ) && $before_mods === $lunara_pilot_theme_mods, 'Method revision failure must restore exact raw presence for every managed key.' );
+lunara_pilot_reset();
+$lunara_pilot_theme_mods['lunara_home_pairing_desk_title'] = 'Original title';
+$method = lunara_site_studio_lunara_method_adapter(); $before_mods = $lunara_pilot_theme_mods;
+$lunara_pilot_mod_fault = array( 'key' => 'lunara_home_pairing_desk_title', 'modes' => array( 'mismatch', 'throw_after' ), 'remaining' => 2 );
+$throwing_method_rollback = $method->save_state( $valid_method );
+lunara_pilot_assert( is_wp_error( $throwing_method_rollback ) && 'site_studio_method_rollback_failed' === $throwing_method_rollback->get_error_code(), 'A Method mod exception consumed only during rollback must return the distinct Method rollback-failed code.' );
+$lunara_pilot_mod_fault = array( 'key' => 'lunara_home_pairing_desk_title', 'mode' => 'throw_after', 'remaining' => 1 );
+$throwing_method = $method->save_state( $valid_method );
+lunara_pilot_assert( is_wp_error( $throwing_method ) && $before_mods === $lunara_pilot_theme_mods, 'A throwing theme-mod hook after a partial Method write must enter exact verified rollback.' );
+$lunara_pilot_mod_fault = array( 'key' => 'lunara_home_pairing_desk_title', 'mode' => 'read_throw_after', 'remaining' => 1 );
+$throwing_method_readback = $method->save_state( $valid_method );
+lunara_pilot_assert( is_wp_error( $throwing_method_readback ) && $before_mods === $lunara_pilot_theme_mods, 'A throwing theme-mod readback after a partial Method write must enter exact verified rollback.' );
 echo "pilot case lunara-method: passed.\n";
 
 // Homepage validation and registry-mode non-conversion.
@@ -346,6 +485,10 @@ $invalid_home = $homepage->validate_state( $bad_home );
 lunara_pilot_assert( is_wp_error( $invalid_home ) && 'site_studio_homepage_invalid' === $invalid_home->get_error_code() && array( 'desktop_order' ) === array_keys( lunara_pilot_error_fields( $invalid_home ) ), 'Homepage must return the exact desktop_order field for duplicate/missing inventory.' );
 $bad_home = $home_state; array_pop( $bad_home['mobile_order'] );
 lunara_pilot_assert( is_wp_error( $homepage->validate_state( $bad_home ) ), 'Homepage must reject incomplete mobile inventory.' );
+$bad_home = $home_state; $bad_home['desktop_order'] = array( 'first' => 'hero', 'second' => 'latest-reviews', 'third' => 'pairing-desk', 'fourth' => 'dispatch', 'fifth' => 'oscar-picks', 'sixth' => 'oscar-facts' );
+lunara_pilot_assert( is_wp_error( $homepage->validate_state( $bad_home ) ), 'Homepage must reject an associative JSON-object order candidate.' );
+$bad_home = $home_state; $bad_home['desktop_order'] = array( 0 => 'hero', 2 => 'latest-reviews', 3 => 'pairing-desk', 4 => 'dispatch', 5 => 'oscar-picks', 6 => 'oscar-facts' );
+lunara_pilot_assert( is_wp_error( $homepage->validate_state( $bad_home ) ), 'Homepage must reject a sparse numeric order candidate.' );
 $bad_home = $home_state; $bad_home['front_page_id'] = 999;
 lunara_pilot_assert( is_wp_error( $homepage->validate_state( $bad_home ) ), 'Homepage front-page ID must act as a concurrency assertion, not a writable setting.' );
 $bad_home = $home_state; $bad_home['mode'] = 'blocks';
@@ -366,6 +509,19 @@ $block_save = $homepage->save_state( $candidate );
 $written_content = get_post_field( 'post_content', 101 );
 lunara_pilot_assert( ! is_wp_error( $block_save ) && false !== strpos( $written_content, '<!-- wp:plugin/kept {"path":"C:\\\\Cinema","secret":"attribute"} /-->' ) && false !== strpos( $written_content, '{"overrideTitle":"Stored hero"}' ), 'Block-mode save must preserve unknown blocks, literal slashes, and first canonical attributes.' );
 lunara_pilot_assert( strpos( $written_content, 'lunara/latest-reviews' ) < strpos( $written_content, 'plugin/kept' ) && strpos( $written_content, 'plugin/kept' ) < strpos( $written_content, 'lunara/cinematic-hero' ), 'Block-mode save must preserve unknown stream position while reordering owned lanes.' );
+
+lunara_pilot_reset( lunara_pilot_block_content() );
+$homepage = lunara_site_studio_homepage_structure_adapter();
+$candidate = $homepage->read_state();
+foreach ( $candidate['visibility'] as $slug => $visible ) { $candidate['visibility'][ $slug ] = false; }
+$all_disabled = $homepage->save_state( $candidate );
+$registry_content = '<!-- wp:core/heading {"level":2} -->Before<!-- /wp:core/heading -->' . "\n\n" . '<!-- wp:plugin/kept {"path":"C:\\\\Cinema","secret":"attribute"} /-->' . "\n\n" . '<!-- wp:core/paragraph -->After<!-- /wp:core/paragraph -->';
+lunara_pilot_assert( ! is_wp_error( $all_disabled ) && 'registry' === $all_disabled['state']['mode'] && $registry_content === get_post_field( 'post_content', 101 ) && false === strpos( get_post_field( 'post_content', 101 ), '<!-- wp:lunara/' ), 'Disabling all six managed lanes must transition blocks to registry mode while preserving every unknown block byte-for-byte.' );
+$post_writes_after_transition = count( $lunara_pilot_post_writes );
+$registry_candidate = $homepage->read_state();
+$registry_candidate['preset'] = 'journal-first';
+$registry_resave = $homepage->save_state( $registry_candidate );
+lunara_pilot_assert( ! is_wp_error( $registry_resave ) && 'registry' === $registry_resave['state']['mode'] && $post_writes_after_transition === count( $lunara_pilot_post_writes ) && $registry_content === get_post_field( 'post_content', 101 ), 'A subsequent registry-mode save must never rewrite or convert the exact retained page content.' );
 
 $managed_mods = array(
 	'lunara_home_section_order_preset', 'lunara_home_section_order', 'lunara_home_section_mobile_order',
@@ -396,6 +552,30 @@ foreach ( array( 'fail', 'mismatch' ) as $post_fault ) {
 	lunara_pilot_assert( is_wp_error( $result ) && $before_mods === $lunara_pilot_theme_mods && $before_content === get_post_field( 'post_content', 101 ), "Homepage {$post_fault} page failure must roll back exactly." );
 }
 lunara_pilot_reset( lunara_pilot_block_content() );
+$before_mods = $lunara_pilot_theme_mods; $before_content = get_post_field( 'post_content', 101 );
+$homepage = lunara_site_studio_homepage_structure_adapter(); $candidate = $homepage->read_state(); $candidate['desktop_order'] = array_reverse( $candidate['desktop_order'] );
+$lunara_pilot_post_fault = 'throw_after';
+$throwing_post = $homepage->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_post ) && $before_mods === $lunara_pilot_theme_mods && $before_content === get_post_field( 'post_content', 101 ), 'A throwing post hook after a partial page write must enter exact combined rollback.' );
+lunara_pilot_reset( lunara_pilot_block_content() );
+$before_mods = $lunara_pilot_theme_mods; $before_content = get_post_field( 'post_content', 101 );
+$homepage = lunara_site_studio_homepage_structure_adapter(); $candidate = $homepage->read_state(); $candidate['desktop_order'] = array_reverse( $candidate['desktop_order'] );
+$lunara_pilot_post_fault = 'read_throw_after';
+$throwing_post_readback = $homepage->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_post_readback ) && $before_mods === $lunara_pilot_theme_mods && $before_content === get_post_field( 'post_content', 101 ), 'A throwing post-content readback after a partial page write must enter exact combined rollback.' );
+lunara_pilot_reset( lunara_pilot_block_content() );
+$before_mods = $lunara_pilot_theme_mods; $before_content = get_post_field( 'post_content', 101 );
+$homepage = lunara_site_studio_homepage_structure_adapter(); $candidate = $homepage->read_state(); $candidate['desktop_order'] = array_reverse( $candidate['desktop_order'] );
+$lunara_pilot_post_fault = 'late_read_throw_after';
+$throwing_late_post_readback = $homepage->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_late_post_readback ) && $before_mods === $lunara_pilot_theme_mods && $before_content === get_post_field( 'post_content', 101 ), 'A throwing late transaction post-content readback after the writer verified must enter exact combined rollback.' );
+lunara_pilot_reset( lunara_pilot_block_content() );
+$before_mods = $lunara_pilot_theme_mods; $before_content = get_post_field( 'post_content', 101 );
+$homepage = lunara_site_studio_homepage_structure_adapter(); $candidate = $homepage->read_state(); $candidate['visibility']['oscar-facts'] = false;
+$lunara_pilot_mod_fault = array( 'key' => 'lunara_home_show_oscar_facts', 'mode' => 'identity_read_throw_after', 'remaining' => 1 );
+$throwing_late_identity = $homepage->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_late_identity ) && $before_mods === $lunara_pilot_theme_mods && $before_content === get_post_field( 'post_content', 101 ), 'A throwing late option identity readback after partial Homepage mod writes must enter exact combined rollback.' );
+lunara_pilot_reset( lunara_pilot_block_content() );
 $before_mods = $lunara_pilot_theme_mods;
 $before_content = get_post_field( 'post_content', 101 );
 $homepage = lunara_site_studio_homepage_structure_adapter();
@@ -404,6 +584,10 @@ $candidate['visibility']['oscar-facts'] = false;
 $lunara_pilot_option_fault = array( 'key' => lunara_site_studio_revision_option_name( 'homepage-structure' ), 'mode' => 'fail', 'remaining' => 1 );
 $result = $homepage->save_state( $candidate );
 lunara_pilot_assert( is_wp_error( $result ) && $before_mods === $lunara_pilot_theme_mods && $before_content === get_post_field( 'post_content', 101 ), 'Homepage revision failure must roll back combined mods/content exactly.' );
+$history_before_throw = lunara_pilot_option_snapshot( lunara_site_studio_revision_option_name( 'homepage-structure' ) );
+$lunara_pilot_option_fault = array( 'key' => lunara_site_studio_revision_option_name( 'homepage-structure' ), 'mode' => 'throw_after', 'remaining' => 1 );
+$throwing_home_revision = $homepage->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_home_revision ) && $before_mods === $lunara_pilot_theme_mods && $before_content === get_post_field( 'post_content', 101 ) && $history_before_throw === lunara_pilot_option_snapshot( lunara_site_studio_revision_option_name( 'homepage-structure' ) ), 'A throwing Homepage revision hook must restore exact combined live state and history.' );
 lunara_pilot_reset( lunara_pilot_block_content() );
 $homepage = lunara_site_studio_homepage_structure_adapter();
 $candidate = $homepage->read_state();
@@ -411,6 +595,18 @@ $candidate['desktop_order'] = array_reverse( $candidate['desktop_order'] );
 $lunara_pilot_post_fault = array( 'modes' => array( 'mismatch', 'fail' ), 'remaining' => 2 );
 $rollback_failed = $homepage->save_state( $candidate );
 lunara_pilot_assert( is_wp_error( $rollback_failed ) && 'site_studio_homepage_rollback_failed' === $rollback_failed->get_error_code(), 'Homepage forward verification plus rollback write failure must return the distinct rollback-failed code.' );
+lunara_pilot_reset( lunara_pilot_block_content() );
+$lunara_pilot_theme_mods['lunara_home_show_oscar_facts'] = '1';
+$homepage = lunara_site_studio_homepage_structure_adapter(); $candidate = $homepage->read_state();
+$lunara_pilot_mod_fault = array( 'key' => 'lunara_home_show_oscar_facts', 'modes' => array( 'mismatch', 'throw_after' ), 'remaining' => 2 );
+$candidate['visibility']['oscar-facts'] = false;
+$throwing_home_mod_rollback = $homepage->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_home_mod_rollback ) && 'site_studio_homepage_rollback_failed' === $throwing_home_mod_rollback->get_error_code(), 'A Homepage mod exception consumed only during rollback must return the distinct Homepage rollback-failed code.' );
+lunara_pilot_reset( lunara_pilot_block_content() );
+$homepage = lunara_site_studio_homepage_structure_adapter(); $candidate = $homepage->read_state(); $candidate['desktop_order'] = array_reverse( $candidate['desktop_order'] );
+$lunara_pilot_post_fault = array( 'modes' => array( 'mismatch', 'throw_after' ), 'remaining' => 2 );
+$throwing_home_post_rollback = $homepage->save_state( $candidate );
+lunara_pilot_assert( is_wp_error( $throwing_home_post_rollback ) && 'site_studio_homepage_rollback_failed' === $throwing_home_post_rollback->get_error_code(), 'A Homepage post exception consumed only during rollback must return the distinct Homepage rollback-failed code.' );
 echo "pilot case homepage-atomic-rollback: passed.\n";
 
 // Durable cap, restore safety, changed front-page rejection.
@@ -437,9 +633,13 @@ $before_mods = $lunara_pilot_theme_mods;
 $before_content = get_post_field( 'post_content', 101 );
 $candidate = $homepage->read_state();
 $candidate['visibility']['oscar-picks'] = ! $candidate['visibility']['oscar-picks'];
-$lunara_pilot_option_fault = array( 'key' => $revision_option, 'mode' => 'mismatch', 'remaining' => 1 );
+$lunara_pilot_option_fault = array( 'key' => $revision_option, 'mode' => 'retain_uuid_corrupt', 'remaining' => 1 );
 $failed_push = $homepage->save_state( $candidate );
-lunara_pilot_assert( is_wp_error( $failed_push ) && 'site_studio_revision_readback_failed' === $failed_push->get_error_code() && $history_before_failed_push === $lunara_pilot_options[ $revision_option ] && $oldest_before_failed_push === $lunara_pilot_options[ $revision_option ][11] && $before_mods === $lunara_pilot_theme_mods && $before_content === get_post_field( 'post_content', 101 ), 'Failed capped revision readback must restore the exact full 12-entry history including the oldest entry and all live state.' );
+lunara_pilot_assert( is_wp_error( $failed_push ) && 'site_studio_revision_readback_failed' === $failed_push->get_error_code() && $history_before_failed_push === $lunara_pilot_options[ $revision_option ] && $oldest_before_failed_push === $lunara_pilot_options[ $revision_option ][11] && $before_mods === $lunara_pilot_theme_mods && $before_content === get_post_field( 'post_content', 101 ), 'A same-UUID but otherwise corrupt capped revision readback must restore the exact full 12-entry history including the oldest and all live state.' );
+// Keep later restore cases independent when a RED implementation leaves the injected corruption live.
+$lunara_pilot_options[ $revision_option ] = $history_before_failed_push;
+$lunara_pilot_theme_mods = $before_mods;
+$lunara_pilot_posts[101]->post_content = $before_content;
 
 $oldest_id = $revisions[11]['id'];
 $oldest_private = null;
@@ -476,7 +676,47 @@ $after_revision_writes = count( array_filter( $lunara_pilot_option_writes, stati
 lunara_pilot_assert( is_wp_error( $rejected ) && 'site_studio_homepage_identity_changed' === $rejected->get_error_code() && array( 'front_page' ) === array_keys( lunara_pilot_error_fields( $rejected ) ) && $before_mods === $lunara_pilot_theme_mods && $before_content === get_post_field( 'post_content', 101 ) && $before_writes === count( $lunara_pilot_post_writes ) && $before_revision_writes === $after_revision_writes, 'Homepage restore must reject changed page_on_front with the exact field error before any live or revision mutation.' );
 echo "pilot case homepage-revisions: passed.\n";
 
+// Private revision schemas and allowlists reject malformed targets before safety/live mutation.
+lunara_pilot_reset();
+$global = lunara_site_studio_global_design_adapter();
+$global_before = lunara_pilot_option_snapshot( 'lunara_design_tokens' );
+$malformed_global_id = '20000000-0000-4000-8000-000000000001';
+$malformed_global_option = lunara_pilot_seed_revision( 'global-design', array( 'option' => array( 'present' => false, 'value' => null ), 'unexpected' => true ), $malformed_global_id );
+$malformed_global = $global->restore_revision( $malformed_global_id );
+lunara_pilot_assert( is_wp_error( $malformed_global ) && 'site_studio_revision_invalid' === $malformed_global->get_error_code() && $global_before === lunara_pilot_option_snapshot( 'lunara_design_tokens' ) && array() === $lunara_pilot_option_writes, 'Malformed Global private revisions must be rejected before safety history or canonical option mutation.' );
+
+lunara_pilot_reset();
+$method = lunara_site_studio_lunara_method_adapter();
+$method_mods = lunara_site_studio_raw_mod_snapshot( lunara_site_studio_lunara_method_keys() );
+$method_mods['unrelated_secret_mod'] = array( 'present' => true, 'value' => 'secret' );
+$malformed_method_id = '20000000-0000-4000-8000-000000000002';
+lunara_pilot_seed_revision( 'lunara-method', array( 'mods' => $method_mods ), $malformed_method_id );
+$malformed_method = $method->restore_revision( $malformed_method_id );
+lunara_pilot_assert( is_wp_error( $malformed_method ) && 'site_studio_revision_invalid' === $malformed_method->get_error_code() && array() === $lunara_pilot_theme_mods && array() === $lunara_pilot_option_writes, 'Malformed Method private revisions must reject extra mod keys before safety or live mutation.' );
+$direct_apply = lunara_site_studio_apply_mod_snapshot( $method_mods, lunara_site_studio_lunara_method_keys() );
+lunara_pilot_assert( false === $direct_apply && ! array_key_exists( 'unrelated_secret_mod', $lunara_pilot_theme_mods ), 'Raw mod application must require an explicit exact allowlist and never write extra keys.' );
+
+lunara_pilot_reset( '<!-- wp:core/paragraph -->Current registry mode<!-- /wp:core/paragraph -->' );
+$homepage = lunara_site_studio_homepage_structure_adapter();
+$malformed_home_id = '20000000-0000-4000-8000-000000000003';
+$old_blocks_target = lunara_site_studio_homepage_snapshot();
+$old_blocks_target['composition_mode'] = 'blocks';
+$old_blocks_target['post_content'] = lunara_pilot_block_content();
+lunara_pilot_seed_revision( 'homepage-structure', $old_blocks_target, $malformed_home_id );
+$before_revision_writes = count( $lunara_pilot_option_writes );
+$malformed_home = $homepage->restore_revision( $malformed_home_id );
+lunara_pilot_assert( is_wp_error( $malformed_home ) && 'site_studio_revision_invalid' === $malformed_home->get_error_code() && array() === $lunara_pilot_post_writes && $before_revision_writes === count( $lunara_pilot_option_writes ) && 'registry' === $homepage->read_state()['mode'], 'A block-mode private revision must not convert a current registry-mode Homepage or create safety history.' );
+echo "pilot case private-revision-validation: passed.\n";
+
 // Preview and public projection stay human-only.
+lunara_pilot_reset();
+$global = lunara_site_studio_global_design_adapter();
+$preview_candidate = $global->read_state();
+foreach ( array( 'fail' => 'site_studio_preview_write_failed', 'mismatch' => 'site_studio_preview_readback_failed', 'throw_after' => 'site_studio_preview_write_failed' ) as $preview_fault => $expected_code ) {
+	$lunara_pilot_transient_fault = $preview_fault;
+	$failed_preview = $global->create_preview( $preview_candidate );
+	lunara_pilot_assert( is_wp_error( $failed_preview ) && $expected_code === $failed_preview->get_error_code(), "Private preview {$preview_fault} must return {$expected_code} instead of an unverifiable token." );
+}
 foreach ( array( 'global-design' => $global, 'homepage-structure' => $homepage, 'lunara-method' => $method ) as $surface_id => $adapter ) {
 	if ( 'global-design' === $surface_id ) { lunara_pilot_reset(); $candidate = $adapter->read_state(); }
 	if ( 'homepage-structure' === $surface_id ) { lunara_pilot_reset( lunara_pilot_block_content() ); $candidate = $adapter->read_state(); }
