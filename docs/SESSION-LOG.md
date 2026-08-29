@@ -25,6 +25,76 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-08-29 — Theme 3.2.56 topic branches published to GitHub
+
+### Headline
+
+The four clean, reviewed Theme 3.2.56 release-candidate branches are now
+published to their GitHub origin repositories with upstream tracking. This is
+source publication only: no PR, merge, deployment, cache operation, production
+write, or live probe occurred.
+
+### Verified live state
+
+Not applicable. No production route or version was probed, and publication of
+a topic branch does not change the live site.
+
+### What shipped and why
+
+Nothing shipped to lunarafilm.com. At Dalton's explicit request, Codex pushed
+the four named topic branches so the complete compatibility-first candidate is
+durable and available on GitHub for the integration decision.
+
+### Commit ledger
+
+| Repository | Published branch | Verified release tip |
+| --- | --- | --- |
+| `lunara-plugin-core` | `codex/site-studio-bridge-0.8.9` | `bb30860b2ac680dac33c76e30e3728a9cf85c88b` |
+| `lunara-plugin-journal-foundation` | `codex/site-studio-journal-foundation-1.2.13` | `2cf29cc7e72c6790dea939267f9a013b7e14e3fb` |
+| `lunara-plugin-dispatch` | `codex/site-studio-compat-3.2.7` | `74127e1010a181d15c24ad3fc8347ebb2dc4db4d` |
+| `lunara-theme-blocks` | `codex/site-studio-editorial-3.2.56` | `4bd7ab612aaa6b2dbafb2491b4356997f964a2da`, followed by this publication record on the same branch |
+
+### Gate ledger
+
+- All four `git push -u origin <topic-branch>` operations exited zero and
+  established the expected upstream.
+- Independent `git ls-remote --heads` readback matched each exact local release
+  tip byte-for-byte before this publication record was appended.
+- Every local worktree was clean and neither ahead nor behind its new upstream
+  after initial publication.
+- Inherited release proof remains the immediately following 3.2.56 close:
+  89/89 final contracts, complete static census, and independent READY review.
+- Not run by design: PR creation, integration, merge, deployment, canary,
+  production/live probe, cache action, or production write.
+
+### Corrections
+
+No earlier entry requires correction. The immediately following entry's
+no-push statement remains true for the earlier local-candidate close; this new
+entry records the later, explicitly authorized publication.
+
+### Logged, not fixed
+
+- GitHub publication does not make the candidate live. Integration and Dalton's
+  manual Deployer for Git sequence are still required.
+
+### Punch-list carried forward
+
+- Decide whether to open and merge the four topic branches.
+- Integrate/deploy the three compatibility plugins before Theme 3.2.56, with
+  Journal Foundation before Dispatch and the theme consumer.
+- After Dalton's manual deployment, run the required versioned canary and
+  route/device smoke tests before declaring the release live.
+- Begin Theme 3.2.57 only after the 3.2.56 integration boundary is approved.
+
+### Whose move it is next
+
+Dalton owns the integration decision and every later manual Deployer for Git
+production deployment. Codex can prepare PRs only when explicitly requested;
+none were created by this publication step.
+
+No deployment, cache operation, production write, live verification, merge, or PR occurred.
+
 ## 2026-08-29 — Theme 3.2.56 final hardening and local candidate close
 
 ### Headline

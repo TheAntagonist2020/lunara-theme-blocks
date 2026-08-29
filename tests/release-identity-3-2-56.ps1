@@ -170,17 +170,35 @@ foreach ($coverage in @(
 $sessionHeading = "## 2026-08-29 $releaseSeparator Theme 3.2.56 final hardening and local candidate close"
 $sessionLog = [IO.File]::ReadAllText((Join-Path $root 'docs/SESSION-LOG.md'))
 $sessionHeadings = @($sessionLog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
+$publicationHeading = "## 2026-08-29 $releaseSeparator Theme 3.2.56 topic branches published to GitHub"
+$publicationHeadingCount = @($sessionHeadings | Where-Object { $_ -ceq $publicationHeading }).Count
+Assert-Contract ($publicationHeadingCount -eq 1) 'The 3.2.56 GitHub-publication session heading must exist exactly once.'
+Assert-Contract ($sessionHeadings.Count -gt 0 -and $sessionHeadings[0] -ceq $publicationHeading) `
+    'The GitHub-publication record must be the newest session entry.'
+$publicationEntry = Get-TopEntry -Text $sessionLog -Heading $publicationHeading
+foreach ($publishedBranch in @(
+    'codex/site-studio-bridge-0.8.9',
+    'codex/site-studio-journal-foundation-1.2.13',
+    'codex/site-studio-compat-3.2.7',
+    'codex/site-studio-editorial-3.2.56'
+)) {
+    Assert-Contract ($publicationEntry.Contains($publishedBranch)) `
+        "The newest session entry must record published branch $publishedBranch."
+}
+Assert-Contract ($publicationEntry.Contains('No deployment, cache operation, production write, live verification, merge, or PR occurred.')) `
+    'The GitHub-publication entry must preserve the exact no-deployment/no-integration boundary.'
+Assert-Contract ($publicationEntry -match '(?is)Dalton.+Deployer for Git') `
+    'The GitHub-publication entry must retain Dalton and Deployer for Git as the deployment boundary.'
+
 $sessionHeadingCount = @($sessionHeadings | Where-Object { $_ -ceq $sessionHeading }).Count
 Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.56 local-candidate session heading must exist exactly once.'
-Assert-Contract ($sessionHeadings.Count -gt 0 -and $sessionHeadings[0] -ceq $sessionHeading) `
-    'The final 3.2.56 local-candidate close must be the newest session entry.'
 $sessionEntry = Get-TopEntry -Text $sessionLog -Heading $sessionHeading
 Assert-Contract ($sessionEntry.Contains('docs/CHANGELOG.md')) `
-    'The newest session entry must point to docs/CHANGELOG.md for release detail.'
+    'The local-candidate close must point to docs/CHANGELOG.md for release detail.'
 Assert-Contract ($sessionEntry.Contains('No deployment, cache operation, production write, live verification, push, merge, or PR occurred.')) `
-    'The newest session entry must explicitly record every release action that did not occur.'
+    'The local-candidate close must explicitly record every release action that had not occurred.'
 Assert-Contract ($sessionEntry -match '(?is)Dalton.+manual.+Deployer for Git') `
-    'The newest session entry must name Dalton and manual Deployer for Git as the later deployment boundary.'
+    'The local-candidate close must name Dalton and manual Deployer for Git as the later deployment boundary.'
 Assert-Contract ($sessionEntry -notmatch '(?im)^\s*(Deployment completed|Deployed to|Live canary passed|LIVE_COHERENT)\b') `
     'The local closure must not contain an affirmative deployment or live-canary claim.'
 
@@ -189,4 +207,4 @@ if ($script:Failures.Count -gt 0) {
     throw "Theme 3.2.56 release identity contract failed:`n$($details -join "`n")"
 }
 
-Write-Host 'Theme 3.2.56 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and newest local-only release records.'
+Write-Host 'Theme 3.2.56 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, local close, and GitHub-publication record.'
