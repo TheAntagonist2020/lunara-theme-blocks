@@ -36,6 +36,7 @@ $lunara_test_uuid          = 0;
 $lunara_test_filter_sequence = 0;
 $lunara_test_registry_hook_events = array();
 $lunara_test_all_hook_events = array();
+$lunara_test_all_register_target_once = false;
 $wp_current_filter = array();
 $lunara_test_reentry_calls = array();
 $lunara_test_aggregate_reentry_calls = array();
@@ -516,11 +517,14 @@ function lunara_test_later_registry_filter( $items ) {
 	return $items;
 }
 function lunara_test_all_registers_late_target() {
-	global $lunara_test_all_hook_events;
+	global $lunara_test_all_hook_events, $lunara_test_all_register_target_once;
 	$args = func_get_args();
 	if ( empty( $args ) || 'lunara_site_studio_surfaces' !== $args[0] ) { return; }
 	$lunara_test_all_hook_events[] = array( 'callback' => 'all', 'filter' => current_filter(), 'doing' => doing_filter( 'lunara_site_studio_surfaces' ), 'priority' => current_priority() );
-	add_filter( 'lunara_site_studio_surfaces', 'lunara_test_all_late_throwing_target', 5 );
+	if ( $lunara_test_all_register_target_once ) {
+		$lunara_test_all_register_target_once = false;
+		add_filter( 'lunara_site_studio_surfaces', 'lunara_test_all_late_throwing_target', 5 );
+	}
 }
 function lunara_test_all_late_throwing_target( $items ) {
 	global $lunara_test_all_hook_events;
@@ -1159,12 +1163,13 @@ function lunara_review_case_registry_hook_unwind() {
 }
 
 function lunara_review_case_registry_all_hook_unwind() {
-	global $lunara_test_filters, $lunara_test_all_hook_events;
+	global $lunara_test_filters, $lunara_test_all_hook_events, $lunara_test_all_register_target_once;
 	$failures = array();
 	$lunara_test_filters['all'] = array();
 	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
 	$lunara_test_all_hook_events = array();
-	add_filter( 'all', 'lunara_test_all_registers_late_target', 10 );
+	$lunara_test_all_register_target_once = true;
+	add_filter( 'all', 'lunara_test_all_registers_late_target', PHP_INT_MAX );
 	add_filter( 'lunara_site_studio_surfaces', 'lunara_test_all_later_target', 30 );
 	$failed_pass = lunara_site_studio_surfaces();
 	$canonical_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger' );
@@ -1173,14 +1178,15 @@ function lunara_review_case_registry_all_hook_unwind() {
 	if ( 'lunara_site_studio_surfaces' !== $lunara_test_all_hook_events[0]['filter'] || true !== $lunara_test_all_hook_events[0]['doing'] || false !== $lunara_test_all_hook_events[0]['priority'] ) { $failures[] = 'The all hook must run in the official target-filter context before target priority begins.'; }
 	if ( 'lunara_site_studio_surfaces' !== $lunara_test_all_hook_events[1]['filter'] || true !== $lunara_test_all_hook_events[1]['doing'] || 5 !== $lunara_test_all_hook_events[1]['priority'] ) { $failures[] = 'The late target callback must retain official target priority semantics.'; }
 	if ( false !== current_filter() || doing_filter() || false !== current_priority() ) { $failures[] = 'A late all-hook target failure must leave global and target hook state clean.'; }
-	remove_filter( 'all', 'lunara_test_all_registers_late_target', 10 );
 	remove_filter( 'lunara_site_studio_surfaces', 'lunara_test_all_late_throwing_target', 5 );
 	remove_filter( 'lunara_site_studio_surfaces', 'lunara_test_all_later_target', 30 );
 	$lunara_test_all_hook_events = array();
 	$clean_pass = lunara_site_studio_surfaces();
-	if ( empty( $clean_pass['post-all-failure-dynamic']['available'] ) || array( 'dynamic' ) !== array_column( $lunara_test_all_hook_events, 'callback' ) ) { $failures[] = 'A clean subsequent dispatch must run the dynamic target and prove scanner/wrapper cleanup.'; }
-	if ( 'lunara_site_studio_surfaces' !== $lunara_test_all_hook_events[0]['filter'] || true !== $lunara_test_all_hook_events[0]['doing'] || 20 !== $lunara_test_all_hook_events[0]['priority'] ) { $failures[] = 'The subsequent dynamic target must retain official filter and priority semantics.'; }
+	if ( empty( $clean_pass['post-all-failure-dynamic']['available'] ) || array( 'all', 'dynamic' ) !== array_column( $lunara_test_all_hook_events, 'callback' ) ) { $failures[] = 'A clean subsequent dispatch must retain the final-priority third-party all callback and run the dynamic target.'; }
+	if ( ! isset( $lunara_test_all_hook_events[0] ) || 'lunara_site_studio_surfaces' !== $lunara_test_all_hook_events[0]['filter'] || true !== $lunara_test_all_hook_events[0]['doing'] || false !== $lunara_test_all_hook_events[0]['priority'] ) { $failures[] = 'The retained all callback must preserve official pre-target filter context on a successful pass.'; }
+	if ( ! isset( $lunara_test_all_hook_events[1] ) || 'lunara_site_studio_surfaces' !== $lunara_test_all_hook_events[1]['filter'] || true !== $lunara_test_all_hook_events[1]['doing'] || 20 !== $lunara_test_all_hook_events[1]['priority'] ) { $failures[] = 'The subsequent dynamic target must retain official filter and priority semantics.'; }
 	if ( false !== current_filter() || doing_filter() || false !== current_priority() ) { $failures[] = 'The subsequent dispatch must fully unwind all, target, wrapper, and guard state.'; }
+	if ( true !== remove_filter( 'all', 'lunara_test_all_registers_late_target', PHP_INT_MAX ) ) { $failures[] = 'Identity-specific cleanup must leave the pre-existing final-priority all callback removable after both passes.'; }
 	lunara_review_finish( 'registry-all-hook-unwind', $failures );
 }
 
