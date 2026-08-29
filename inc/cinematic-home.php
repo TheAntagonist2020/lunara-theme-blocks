@@ -100,7 +100,7 @@ function lunara_render_plugin_backed_home_hero() {
 	) {
 		ob_start();
 		?>
-		<section class="lunara-home-cinematic-front-door lunara-home-plugin-hero is-plugin-backed" data-lunara-home-hero-source="plugin" aria-label="<?php esc_attr_e( 'Featured Lunara Film stories', 'lunara-film' ); ?>">
+		<section class="lunara-home-cinematic-front-door lunara-home-plugin-hero is-plugin-backed" data-lunara-site-studio-section="hero" data-lunara-home-hero-source="plugin" aria-label="<?php esc_attr_e( 'Featured Lunara Film stories', 'lunara-film' ); ?>">
 			<div class="lunara-home-plugin-hero-frame">
 				<?php echo do_shortcode( $shortcode ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- trusted theme setting gated by filter/theme mod. ?>
 			</div>

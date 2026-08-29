@@ -45,6 +45,15 @@ if ( ! function_exists( 'lunara_home_front_page_id' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lunara_home_front_page_content' ) ) {
+	/** Read public front-page content through the request-local preview seam. */
+	function lunara_home_front_page_content( $page_id ) {
+		$page_id = (int) $page_id;
+		$content = (string) get_post_field( 'post_content', $page_id );
+		return (string) apply_filters( 'lunara_home_front_page_content', $content, $page_id );
+	}
+}
+
 if ( ! function_exists( 'lunara_home_uses_block_composition' ) ) {
 	/**
 	 * True when the front page's content carries at least one Lunara section
@@ -56,7 +65,7 @@ if ( ! function_exists( 'lunara_home_uses_block_composition' ) ) {
 			return false;
 		}
 
-		$content = (string) get_post_field( 'post_content', $page_id );
+		$content = lunara_home_front_page_content( $page_id );
 		if ( '' === trim( $content ) ) {
 			return false;
 		}
@@ -83,7 +92,7 @@ if ( ! function_exists( 'lunara_render_home_block_composition' ) ) {
 			return '';
 		}
 
-		$content = (string) get_post_field( 'post_content', $page_id );
+		$content = lunara_home_front_page_content( $page_id );
 		if ( '' === trim( $content ) ) {
 			return '';
 		}

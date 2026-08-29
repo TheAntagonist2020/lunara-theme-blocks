@@ -139,6 +139,7 @@ require_once $lunara_inc . 'design-tokens.php';
 require_once $lunara_inc . 'site-studio-registry.php';
 require_once $lunara_inc . 'site-studio-adapters.php';
 require_once $lunara_inc . 'site-studio-rest.php';
+require_once $lunara_inc . 'site-studio-preview.php';
 if ( is_admin() ) {
     require_once $lunara_inc . 'site-studio.php';
 }

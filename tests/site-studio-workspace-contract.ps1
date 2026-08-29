@@ -43,6 +43,7 @@ $studio = Read-ThemeFile 'inc/site-studio.php'
 $control = Read-ThemeFile 'inc/control-desk.php'
 $studioCss = Read-ThemeFile 'assets/css/lunara-site-studio.css'
 $studioJs = Read-ThemeFile 'assets/js/lunara-site-studio.js'
+$previewJs = Read-ThemeFile 'assets/js/lunara-site-studio-preview.js'
 $controlCss = Read-ThemeFile 'assets/css/lunara-control-desk.css'
 
 Assert-True ($control -notmatch "(?s)function\s+lunara_enqueue_control_desk_assets\s*\([^)]*\)\s*\{.{0,500}lunara_page_lunara-site-studio") 'Control Desk must not enqueue its bundle on Site Studio.'
@@ -58,7 +59,11 @@ Assert-True ($studioCss -notmatch '(?s)\.lunara-site-studio-preview\s+iframe\s*\
 Assert-True ($studioCss -match 'min-height\s*:\s*44px' -and $studioCss -match ':focus-visible' -and $studioCss -notmatch 'outline\s*:\s*(?:0|none)') 'The workspace must lock target size and visible focus.'
 Assert-True ($studioJs -match 'beforeunload' -and $studioJs -match 'confirm:\s*true' -and $studioJs -match 'AbortController|operationSequence') 'The controller must guard dirty navigation, confirmed restores, and stale operations.'
 Assert-True ($studioJs.Contains('lastPreviewFingerprint=transaction.lastPreviewFingerprint;')) 'Cancelled Global edits must restore the exact pre-edit preview fingerprint.'
-Assert-True ($studioJs -notmatch 'localStorage|sessionStorage|postMessage|addEventListener\(\s*[''\"]message') 'Commit 2 must remain memory-only and must not add the preview bridge.'
+Assert-True ($studioJs -notmatch 'localStorage|sessionStorage' -and $studioJs -match 'addEventListener\(\s*[''\"]message' -and $studioJs -match 'contentWindow' -and $studioJs -match 'previewInstanceArg' -and $studioJs -notmatch 'postMessage\([^,]+,\s*[''\"]\*[''\"]') 'Commit 3 must add only the strict same-origin/source/instance parent bridge while remaining memory-only.'
+$messageStart=$studioJs.IndexOf('function onPreviewMessage(event)');$messageEnd=$studioJs.IndexOf('root.addEventListener',$messageStart);$messageBody=if($messageStart -ge 0 -and $messageEnd -gt $messageStart){$studioJs.Substring($messageStart,$messageEnd-$messageStart)}else{''}
+$activeCheck=$messageBody.IndexOf('!activePreviewInstance');$originCheck=$messageBody.IndexOf('event.origin!==config.previewOrigin');$sourceCheck=$messageBody.IndexOf('event.source!==activePreviewSource')
+Assert-True ($activeCheck -ge 0 -and $originCheck -gt $activeCheck -and $sourceCheck -gt $originCheck -and $messageBody -notmatch 'originKey\(\s*event\.origin|new URL\(\s*event\.origin') 'Parent message validation must check active binding, then exact canonical event origin, then active source without normalizing attacker-controlled origins.'
+Assert-True ($studioJs -match '9007199254740991' -and $studioJs -notmatch 'Number\.MAX_SAFE_INTEGER') 'Preview generation must use the ES5-safe numeric maximum and fail closed before unsafe reuse.'
 function Test-LunaraEs5Subset([string] $Source) {
     if ($Source.IndexOf([char]96) -ge 0) { return $false }
     $code = [regex]::Replace($Source, '(?s)/\*.*?\*/|//[^\r\n]*|"(?:\\.|[^"\\])*"|''(?:\\.|[^''\\])*''', ' ')
@@ -66,6 +71,7 @@ function Test-LunaraEs5Subset([string] $Source) {
     return $code -notmatch $forbidden
 }
 Assert-True (Test-LunaraEs5Subset $studioJs) 'The dedicated controller must preserve the promised ES5-compatible syntax subset.'
+Assert-True (Test-LunaraEs5Subset $previewJs) 'The dedicated child bridge must preserve the promised ES5-compatible syntax subset.'
 $forbiddenEs5Mutations = @(
     'const value = 1;', 'let value = 1;', 'var fn = (value) => value;', 'function fn(value = 1) {}',
     'function fn(...values) {}', 'var values = [...items];', 'var [first] = items;', 'var { first } = item;',
@@ -74,6 +80,7 @@ $forbiddenEs5Mutations = @(
     'var value = item?.value ?? fallback;', 'var value = `template`;'
 )
 foreach ($mutation in $forbiddenEs5Mutations) { Assert-True (-not (Test-LunaraEs5Subset $mutation)) "ES5 source gate missed representative mutation: $mutation" }
+Assert-True (-not (Test-LunaraEs5Subset ([regex]::Replace($previewJs,'\bvar\b','const',1)))) 'The child bridge ES5 gate must kill a representative var-to-const mutation in the real child source.'
 Assert-True (Test-LunaraEs5Subset 'var object = { first: first }; function fn(value) { return value; }') 'ES5 source gate must allow ordinary ES5 object/function syntax.'
 
 $node = Resolve-LunaraNode

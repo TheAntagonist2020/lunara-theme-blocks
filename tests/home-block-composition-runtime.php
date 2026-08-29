@@ -39,6 +39,10 @@ function get_post_field( $field, $post_id ) {
 	return 'post_content' === $field && 4055 === $post_id ? $lunara_home_test_content : '';
 }
 
+function apply_filters( $hook, $value ) {
+	return $value;
+}
+
 function parse_blocks( $content ) {
 	return array(
 		array( 'blockName' => 'core/heading', 'serialized' => '<!-- wp:core/heading -->Before<!-- /wp:core/heading -->' ),

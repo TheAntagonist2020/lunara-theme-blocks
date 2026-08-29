@@ -335,6 +335,7 @@ function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $compon
 function wp_json_encode( $value ) { return json_encode( $value ); }
 function wp_hash( $value ) { return hash_hmac( 'sha256', (string) $value, 'test-auth-salt' ); }
 function wp_generate_uuid4() { global $lunara_test_uuid; $lunara_test_uuid++; return sprintf( '00000000-0000-4000-8000-%012d', $lunara_test_uuid ); }
+function lunara_site_studio_preview_instance_query_arg() { return 'lunara_site_studio_instance'; }
 function current_time( $type, $gmt = 0 ) {
 	global $lunara_test_now;
 	if ( 'timestamp' === $type ) { return $lunara_test_now; }

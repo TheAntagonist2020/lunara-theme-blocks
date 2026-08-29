@@ -13451,7 +13451,7 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 		ob_start();
 		?>
 		<?php $pick_count = max( 0, (int) $query->post_count ); ?>
-		<section class="lunara-home-section lunara-home-slot-oscar-picks lunara-oscar-picks-section is-density-<?php echo esc_attr( $oscar_picks_density ); ?>" aria-label="<?php esc_attr_e( 'Lunara Oscar Forecast', 'lunara-film' ); ?>" data-lunara-carousel data-lunara-carousel-autoplay="<?php echo $pick_count > 1 ? (int) $args['autoplay'] : 0; ?>" data-lunara-oscar-ceremony-year="<?php echo esc_attr( (string) $args['ceremony_year'] ); ?>">
+		<section class="lunara-home-section lunara-home-slot-oscar-picks lunara-oscar-picks-section is-density-<?php echo esc_attr( $oscar_picks_density ); ?>" data-lunara-site-studio-section="oscar-picks" aria-label="<?php esc_attr_e( 'Lunara Oscar Forecast', 'lunara-film' ); ?>" data-lunara-carousel data-lunara-carousel-autoplay="<?php echo $pick_count > 1 ? (int) $args['autoplay'] : 0; ?>" data-lunara-oscar-ceremony-year="<?php echo esc_attr( (string) $args['ceremony_year'] ); ?>">
 			<div class="lunara-home-section-head is-with-summary">
 				<div>
 					<p class="lunara-home-section-kicker"><?php echo esc_html( $args['kicker'] ); ?></p>
@@ -13987,7 +13987,7 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 
 		ob_start();
 		?>
-		<section class="lunara-home-section lunara-home-slot-oscar-facts lunara-oscar-facts-section" aria-label="Oscar Facts">
+		<section class="lunara-home-section lunara-home-slot-oscar-facts lunara-oscar-facts-section" data-lunara-site-studio-section="oscar-facts" aria-label="Oscar Facts">
 			<div class="lunara-home-section-head is-with-summary">
 				<div>
 					<p class="lunara-home-section-kicker"><?php echo esc_html( $args['kicker'] ); ?></p>
@@ -15758,7 +15758,7 @@ if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 
 		ob_start();
 		?>
-		<section id="pairing-desk" class="lunara-home-section lunara-home-slot-pairing-desk lunara-pairing-desk-section<?php echo '' !== $backdrop ? ' has-desk-backdrop' : ''; ?>" aria-label="<?php esc_attr_e( 'Pair It With showcase', 'lunara-film' ); ?>">
+		<section id="pairing-desk" class="lunara-home-section lunara-home-slot-pairing-desk lunara-pairing-desk-section<?php echo '' !== $backdrop ? ' has-desk-backdrop' : ''; ?>" data-lunara-site-studio-section="pairing-desk" aria-label="<?php esc_attr_e( 'Pair It With showcase', 'lunara-film' ); ?>">
 			<?php if ( '' !== $backdrop ) : ?>
 				<div class="lunara-pairing-desk-backdrop" style="background-image:url('<?php echo esc_url( $backdrop ); ?>');" aria-hidden="true"></div>
 				<div class="lunara-pairing-desk-overlay" aria-hidden="true"></div>
@@ -15895,33 +15895,27 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 			&& count( lunara_hero_command_slides() ) > 0;
 
 		if ( count( $slides ) < 1 || ( count( $slides ) < 2 && ! $command_live ) ) {
-			return function_exists( 'lunara_render_cinematic_hero' )
+			$hero_html = function_exists( 'lunara_render_cinematic_hero' )
 				? lunara_render_cinematic_hero( $attrs )
 				: '';
+		} else {
+			$interval = (int) apply_filters( 'lunara_hero_autoplay_interval', 6500 );
+			$is_static = count( $slides ) < 2;
+			$hero_classes = 'lunara-home-hero lunara-home-slot-hero lunara-cinematic-hero lunara-cinematic-hero-carousel splide';
+			if ( $is_static ) { $hero_classes .= ' is-hero-static'; }
+			ob_start();
+			?>
+			<section class="<?php echo esc_attr( $hero_classes ); ?>" data-lunara-hero-autoplay="<?php echo esc_attr( (string) $interval ); ?>" aria-roledescription="carousel" aria-label="<?php esc_attr_e( 'Featured', 'lunara-film' ); ?>">
+				<div class="splide__track lunara-cinematic-hero-track"><ul class="splide__list">
+					<?php foreach ( $slides as $slide_index => $slide_data ) { echo lunara_render_cinematic_hero_slide( $slide_data, $slide_index, $first_image_is_lcp ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					} ?>
+				</ul></div>
+			</section>
+			<?php
+			$hero_html = (string) ob_get_clean();
 		}
-
-		$interval = (int) apply_filters( 'lunara_hero_autoplay_interval', 6500 );
-		$is_static = count( $slides ) < 2;
-		$hero_classes = 'lunara-home-hero lunara-home-slot-hero lunara-cinematic-hero lunara-cinematic-hero-carousel splide';
-		if ( $is_static ) {
-			$hero_classes .= ' is-hero-static';
-		}
-
-		ob_start();
-		?>
-		<section class="<?php echo esc_attr( $hero_classes ); ?>" data-lunara-hero-autoplay="<?php echo esc_attr( (string) $interval ); ?>" aria-roledescription="carousel" aria-label="<?php esc_attr_e( 'Featured', 'lunara-film' ); ?>">
-			<div class="splide__track lunara-cinematic-hero-track">
-				<ul class="splide__list">
-					<?php
-					foreach ( $slides as $slide_index => $slide_data ) {
-						echo lunara_render_cinematic_hero_slide( $slide_data, $slide_index, $first_image_is_lcp ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					}
-					?>
-				</ul>
-			</div>
-		</section>
-		<?php
-		return (string) ob_get_clean();
+		$hero_html = preg_replace( '/<section\b/', '<section data-lunara-site-studio-section="hero"', $hero_html, 1 );
+		return is_string( $hero_html ) ? $hero_html : '';
 	}
 }
 
@@ -16331,7 +16325,7 @@ if ( ! function_exists( 'lunara_render_homepage_journal_lane' ) ) {
 
 		ob_start();
 		?>
-		<section class="lunara-home-section lunara-home-slot-dispatch lunara-dispatches-section" aria-label="Journal">
+		<section class="lunara-home-section lunara-home-slot-dispatch lunara-dispatches-section" data-lunara-site-studio-section="dispatch" aria-label="Journal">
 			<div class="lunara-home-section-head is-with-summary">
 				<div>
 					<p class="lunara-home-section-kicker"><?php echo esc_html( $kicker ); ?></p>

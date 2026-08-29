@@ -57,6 +57,7 @@
 .lunara-site-studio-media img { display:block; height:auto; margin-top:10px; max-width:180px; }
 .lunara-site-studio-revision { align-items:center; display:flex; gap:8px; justify-content:space-between; }
 .lunara-site-studio-status { min-height:24px; }
+.lunara-site-studio [data-preview-selected="true"] { border-color:var(--studio-gold); box-shadow:0 0 0 3px rgba(155,116,29,.24); }
 .lunara-site-studio :focus-visible { outline:3px solid #005fcc; outline-offset:3px; }
 .lunara-site-studio [aria-invalid="true"] { border-color:#b32d2e; box-shadow:0 0 0 1px #b32d2e; }
 @media (max-width:1280px) and (min-width:783px) {

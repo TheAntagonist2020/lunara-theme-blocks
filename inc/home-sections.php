@@ -1971,7 +1971,7 @@ if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
 
         ob_start();
         ?>
-        <section class="lunara-home-section lunara-home-slot-latest-reviews lunara-latest-reviews-section" data-review-source="<?php echo esc_attr( $source ); ?>" data-lunara-carousel aria-label="<?php esc_attr_e( 'Latest Reviews', 'lunara-film' ); ?>">
+        <section class="lunara-home-section lunara-home-slot-latest-reviews lunara-latest-reviews-section" data-lunara-site-studio-section="latest-reviews" data-review-source="<?php echo esc_attr( $source ); ?>" data-lunara-carousel aria-label="<?php esc_attr_e( 'Latest Reviews', 'lunara-film' ); ?>">
             <div class="lunara-home-section-head">
                 <div>
                     <p class="lunara-home-section-kicker"><?php echo esc_html( $kicker ); ?></p>

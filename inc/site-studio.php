@@ -32,12 +32,14 @@ if ( ! function_exists( 'lunara_site_studio_workspace_surface' ) ) {
 
 if ( ! function_exists( 'lunara_site_studio_workspace_config' ) ) {
 	function lunara_site_studio_workspace_config( $surface_id, $surface ) {
+		static $page_uuid = null; if ( null === $page_uuid ) { $page_uuid = strtolower( wp_generate_uuid4() ); }
 		$urls = lunara_site_studio_workspace_urls( $surface );
 		if ( ! $urls ) { return array(); }
 		$base = 'lunara-site-studio/v1/surfaces/' . rawurlencode( $surface_id );
 		$home = $urls['home'];
-		$origin = (string) wp_parse_url( $home, PHP_URL_SCHEME ) . '://' . (string) wp_parse_url( $home, PHP_URL_HOST );
-		$port = wp_parse_url( $home, PHP_URL_PORT ); if ( $port ) { $origin .= ':' . absint( $port ); }
+		$origin_scheme = strtolower( (string) wp_parse_url( $home, PHP_URL_SCHEME ) ); $origin_host = strtolower( (string) wp_parse_url( $home, PHP_URL_HOST ) );
+		$origin = $origin_scheme . '://' . $origin_host;
+		$port = wp_parse_url( $home, PHP_URL_PORT ); if ( $port && ! ( 'https' === $origin_scheme && 443 === absint( $port ) ) && ! ( 'http' === $origin_scheme && 80 === absint( $port ) ) ) { $origin .= ':' . absint( $port ); }
 		$preview_path = (string) wp_parse_url( $urls['preview'], PHP_URL_PATH ); if ( '' === $preview_path ) { $preview_path = '/'; }
 		$markers = array(
 			'global-design' => array(),
@@ -46,6 +48,7 @@ if ( ! function_exists( 'lunara_site_studio_workspace_config' ) ) {
 		);
 		return array(
 			'protocol' => 'lunara-site-studio/v1', 'clientVersion' => 1, 'surface' => $surface_id,
+			'pageUuid' => $page_uuid, 'previewInstanceArg' => lunara_site_studio_preview_instance_query_arg(),
 			'endpoints' => array( 'state' => esc_url_raw( rest_url( $base . '/state' ) ), 'preview' => esc_url_raw( rest_url( $base . '/preview' ) ), 'save' => esc_url_raw( rest_url( $base . '/save' ) ), 'revisions' => esc_url_raw( rest_url( $base . '/revisions' ) ), 'restore' => esc_url_raw( rest_url( $base . '/restore' ) ) ),
 			'nonce' => wp_create_nonce( 'wp_rest' ), 'previewOrigin' => $origin, 'previewRoute' => $preview_path,
 			'widths' => array( 'desktop' => 1440, 'tablet' => 768, 'mobile' => 390 ), 'markers' => isset( $markers[ $surface_id ] ) ? $markers[ $surface_id ] : array(),
@@ -78,7 +81,15 @@ if ( ! function_exists( 'lunara_site_studio_origin_key' ) ) {
 	}
 	function lunara_site_studio_safe_local_thumbnail( $url ) { if ( ! is_string( $url ) || ! lunara_site_studio_same_origin( $url, home_url( '/' ) ) || wp_parse_url( $url, PHP_URL_USER ) || wp_parse_url( $url, PHP_URL_PASS ) ) { return ''; } return $url; }
 	function lunara_site_studio_workspace_config_is_safe( $config ) {
-		if ( ! is_array( $config ) || empty( $config['surface'] ) || ! is_string( $config['surface'] ) || ! isset( $config['previewOrigin'], $config['previewRoute'], $config['endpoints'] ) || ! is_array( $config['endpoints'] ) || ! lunara_site_studio_same_origin( $config['previewOrigin'] . $config['previewRoute'], admin_url( '/' ) ) ) { return false; }
+		$top_keys = array( 'protocol', 'clientVersion', 'surface', 'pageUuid', 'previewInstanceArg', 'endpoints', 'nonce', 'previewOrigin', 'previewRoute', 'widths', 'markers', 'strings' );
+		if ( ! is_array( $config ) ) { return false; } $actual_top_keys = array_keys( $config ); sort( $actual_top_keys ); $expected_top_keys = $top_keys; sort( $expected_top_keys );
+		if ( $actual_top_keys !== $expected_top_keys || 'lunara-site-studio/v1' !== $config['protocol'] || 1 !== $config['clientVersion'] || empty( $config['surface'] ) || ! is_string( $config['surface'] ) || ! is_string( $config['pageUuid'] ) || 1 !== preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/D', $config['pageUuid'] ) || lunara_site_studio_preview_instance_query_arg() !== $config['previewInstanceArg'] || ! is_array( $config['endpoints'] ) || ! is_string( $config['nonce'] ) || '' === $config['nonce'] || ! is_string( $config['previewOrigin'] ) || ! is_string( $config['previewRoute'] ) || ! is_array( $config['widths'] ) || array( 'desktop' => 1440, 'tablet' => 768, 'mobile' => 390 ) !== $config['widths'] || ! is_array( $config['markers'] ) || ! is_array( $config['strings'] ) ) { return false; }
+		$surface = lunara_site_studio_get_surface( $config['surface'] ); $urls = lunara_site_studio_workspace_urls( $surface ); if ( ! is_array( $surface ) || ! $urls ) { return false; }
+		$home = $urls['home']; $scheme = strtolower( (string) wp_parse_url( $home, PHP_URL_SCHEME ) ); $host = strtolower( (string) wp_parse_url( $home, PHP_URL_HOST ) ); $expected_origin = $scheme . '://' . $host; $port = wp_parse_url( $home, PHP_URL_PORT ); if ( $port && ! ( 'https' === $scheme && 443 === absint( $port ) ) && ! ( 'http' === $scheme && 80 === absint( $port ) ) ) { $expected_origin .= ':' . absint( $port ); }
+		$expected_route = (string) wp_parse_url( $urls['preview'], PHP_URL_PATH ); if ( '' === $expected_route ) { $expected_route = '/'; }
+		$marker_map = array( 'global-design' => array(), 'homepage-structure' => array( 'hero', 'latest-reviews', 'pairing-desk', 'dispatch', 'oscar-picks', 'oscar-facts' ), 'lunara-method' => array( 'pairing-desk' ) );
+		if ( $expected_origin !== $config['previewOrigin'] || $expected_route !== $config['previewRoute'] || ! isset( $marker_map[ $config['surface'] ] ) || $marker_map[ $config['surface'] ] !== $config['markers'] || ! lunara_site_studio_same_origin( $config['previewOrigin'] . $config['previewRoute'], admin_url( '/' ) ) ) { return false; }
+		$string_keys = array( 'live', 'dirty', 'previewCurrent', 'previewStale', 'saving', 'saved', 'restored', 'failed', 'discardConfirm', 'navigateConfirm', 'hideConfirm', 'clearOverrideConfirm', 'resetOverridesConfirm', 'resetConfirm', 'reviewAutomaticConfirm', 'clearMediaConfirm', 'restoreConfirm', 'desktop', 'tablet', 'mobile', 'searchCount', 'moved', 'chooseBackdrop' ); $actual_string_keys = array_keys( $config['strings'] ); sort( $actual_string_keys ); $expected_string_keys = $string_keys; sort( $expected_string_keys ); if ( $actual_string_keys !== $expected_string_keys ) { return false; } foreach ( $config['strings'] as $message ) { if ( ! is_string( $message ) || '' === $message ) { return false; } }
 		$base = 'lunara-site-studio/v1/surfaces/' . rawurlencode( $config['surface'] );
 		foreach ( array( 'state', 'preview', 'save', 'revisions', 'restore' ) as $key ) {
 			$expected = esc_url_raw( rest_url( $base . '/' . $key ) );
