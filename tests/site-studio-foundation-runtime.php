@@ -691,8 +691,8 @@ function lunara_test_reentrant_adapter_factory( $surface ) {
 $lunara_test_dependency_calls = 0;
 $lunara_test_status_calls = 0;
 $surfaces = lunara_site_studio_surfaces();
-$expected_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger' );
-lunara_test_assert( $expected_ids === array_keys( $surfaces ), 'The six stable Site Studio IDs must remain in canonical order.' );
+$expected_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger', 'global-design' );
+lunara_test_assert( $expected_ids === array_keys( $surfaces ), 'The six stable Site Studio IDs must retain canonical order with Global Design added after them.' );
 $required_fields = array( 'id', 'group', 'label', 'description', 'aliases', 'owner', 'kind', 'capability', 'supports_preview', 'preview_route', 'admin_url', 'dependency_callback', 'status_callback', 'danger_level', 'sections', 'classic_url', 'available', 'unavailable_reason' );
 foreach ( $surfaces as $id => $surface ) {
 	foreach ( $required_fields as $field ) { lunara_test_assert( array_key_exists( $field, $surface ), "{$id} must normalize {$field}." ); }
@@ -1147,7 +1147,7 @@ function lunara_review_case_registry_hook_unwind() {
 	add_filter( 'lunara_site_studio_surfaces', 'lunara_test_poisoning_registry_filter', 10 );
 	add_filter( 'lunara_site_studio_surfaces', 'lunara_test_later_registry_filter', 30 );
 	$failed_pass = lunara_site_studio_surfaces();
-	$canonical_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger' );
+	$canonical_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger', 'global-design' );
 	if ( $canonical_ids !== array_keys( $failed_pass ) ) { $failures[] = 'A throwing registry pass must discard all contributions and return canonical defaults.'; }
 	if ( array( 'throwing' ) !== array_column( $lunara_test_registry_hook_events, 'callback' ) ) { $failures[] = 'Later and dynamically added callbacks must be skipped after a registry pass fails.'; }
 	if ( false !== current_filter() || doing_filter( 'lunara_site_studio_surfaces' ) || false !== current_priority() ) { $failures[] = 'A throwing registry callback must leave official current-filter and priority state clean.'; }
@@ -1172,7 +1172,7 @@ function lunara_review_case_registry_all_hook_unwind() {
 	add_filter( 'all', 'lunara_test_all_registers_late_target', PHP_INT_MAX );
 	add_filter( 'lunara_site_studio_surfaces', 'lunara_test_all_later_target', 30 );
 	$failed_pass = lunara_site_studio_surfaces();
-	$canonical_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger' );
+	$canonical_ids = array( 'lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger', 'global-design' );
 	if ( $canonical_ids !== array_keys( $failed_pass ) ) { $failures[] = 'A late all-hook target failure must return only canonical defaults.'; }
 	if ( array( 'all', 'late-throwing' ) !== array_column( $lunara_test_all_hook_events, 'callback' ) ) { $failures[] = 'A late all-hook failure must skip later and dynamically added target callbacks.'; }
 	if ( 'lunara_site_studio_surfaces' !== $lunara_test_all_hook_events[0]['filter'] || true !== $lunara_test_all_hook_events[0]['doing'] || false !== $lunara_test_all_hook_events[0]['priority'] ) { $failures[] = 'The all hook must run in the official target-filter context before target priority begins.'; }

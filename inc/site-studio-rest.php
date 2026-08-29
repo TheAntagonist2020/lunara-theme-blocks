@@ -89,7 +89,7 @@ if ( ! function_exists( 'lunara_site_studio_rest_preview_permission' ) ) {
 if ( ! function_exists( 'lunara_site_studio_safe_validation_fields' ) ) {
 	/** @return array<string,string> */
 	function lunara_site_studio_safe_validation_fields( $error ) {
-		$allowed = array( 'title', 'kicker', 'deck', 'supporting_copy', 'section_order', 'section_visibility', 'presentation', 'identity', 'geometry', 'labels', 'gallery', 'retention', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count' );
+		$allowed = array( 'title', 'kicker', 'colors', 'color_gold', 'color_gold_light', 'color_bg_primary', 'color_bg_secondary', 'color_text', 'color_text_muted', 'fonts', 'font_body', 'font_display', 'font_signature', 'font_glamour', 'font_label', 'copy', 'review_id', 'backdrop_id', 'preset', 'desktop_order', 'mobile_order', 'visibility', 'front_page', 'deck', 'supporting_copy', 'section_order', 'section_visibility', 'presentation', 'identity', 'geometry', 'labels', 'gallery', 'retention', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count' );
 		$data    = is_wp_error( $error ) ? $error->get_error_data() : array();
 		$fields  = is_array( $data ) && isset( $data['fields'] ) && is_array( $data['fields'] ) ? $data['fields'] : array();
 		$safe    = array();
