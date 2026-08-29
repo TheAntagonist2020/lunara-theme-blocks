@@ -317,12 +317,15 @@ function rest_ensure_response( $value ) { return $value instanceof WP_REST_Respo
 
 function __( $text ) { return $text; }
 function esc_html__( $text ) { return $text; }
+function esc_attr__( $text ) { return $text; }
 function esc_html_e( $text ) { echo htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' ); }
 function esc_attr_e( $text ) { echo htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' ); }
 function esc_html( $text ) { return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' ); }
 function esc_attr( $text ) { return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' ); }
 function esc_url( $text ) { return (string) $text; }
 function esc_url_raw( $text ) { return filter_var( (string) $text, FILTER_SANITIZE_URL ); }
+function get_posts( $args ) { return array(); }
+function wp_get_attachment_image_url( $id, $size = 'thumbnail' ) { return false; }
 function sanitize_key( $value ) { return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $value ) ); }
 function sanitize_text_field( $value ) { return trim( strip_tags( is_scalar( $value ) ? (string) $value : '' ) ); }
 function sanitize_hex_color( $value ) { return is_string( $value ) && preg_match( '/^#[0-9a-fA-F]{6}$/', $value ) ? $value : null; }
@@ -352,6 +355,9 @@ function wp_verify_nonce( $nonce, $action ) {
 }
 function admin_url( $path = '' ) { return 'https://example.test/wp-admin/' . ltrim( (string) $path, '/' ); }
 function home_url( $path = '' ) { return 'https://example.test/' . ltrim( (string) $path, '/' ); }
+function rest_url( $path = '' ) { return 'https://example.test/wp-json/' . ltrim( (string) $path, '/' ); }
+function wp_create_nonce( $action = -1 ) { return 'foundation-rest-nonce'; }
+function sanitize_html_class( $value ) { return preg_replace( '/[^A-Za-z0-9_-]/', '', (string) $value ); }
 function add_query_arg( $args, $url = '' ) {
 	if ( ! is_array( $args ) ) { $args = array( $args => func_get_arg( 1 ) ); $url = func_get_arg( 2 ); }
 	$separator = false === strpos( $url, '?' ) ? '?' : '&';
@@ -789,16 +795,16 @@ $lunara_test_renderer_calls = array();
 ob_start();
 lunara_render_site_studio_page();
 $unavailable_html = ob_get_clean();
-lunara_test_assert( false !== strpos( $unavailable_html, 'unavailable' ) && array() === $lunara_test_renderer_calls, 'Unavailable selection must render a clear card and execute no renderer.' );
+lunara_test_assert( false !== strpos( $unavailable_html, 'lunara-site-studio-handoff' ) && false === strpos( $unavailable_html, 'purpose-built Classic controls while' ) && false === strpos( $unavailable_html, '<iframe ' ) && array() === $lunara_test_renderer_calls, 'Unavailable selection must render its truthful bounded handoff and execute no renderer.' );
 $lunara_test_filters['lunara_site_studio_surfaces'] = array();
 
-// Selected-surface isolation.
+// Commit 2 selected-surface isolation: non-pilots hand off without a legacy renderer.
 $_GET['surface'] = 'reviews-archive';
 $lunara_test_renderer_calls = array();
 ob_start();
 lunara_render_site_studio_page();
-ob_end_clean();
-lunara_test_assert( array( 'reviews-archive' ) === $lunara_test_renderer_calls, 'Only the selected renderer may execute.' );
+$handoff_html = ob_get_clean();
+lunara_test_assert( array() === $lunara_test_renderer_calls && false !== strpos( $handoff_html, 'Open Classic controls' ) && false === strpos( $handoff_html, '<iframe ' ), 'Selected non-pilots must execute no legacy renderer and render only the bounded handoff.' );
 
 // Direct admin selection must enforce the declared capability before touching dependencies.
 add_filter( 'lunara_site_studio_surfaces', static function ( $items ) {
@@ -1122,7 +1128,7 @@ function lunara_review_case_throwing_callbacks() {
 	ob_start();
 	try { lunara_render_site_studio_page(); } catch ( Throwable $error ) { $thrown = $error; }
 	$admin_html = ob_get_clean();
-	if ( null !== $thrown || false === stripos( $admin_html, 'unavailable' ) || preg_match( $secret_pattern, $admin_html ) ) { $failures[] = 'A throwing selected renderer must produce a non-secret unavailable admin response.'; }
+	if ( null !== $thrown || false === strpos( $admin_html, 'data-lunara-site-studio' ) || preg_match( $secret_pattern, $admin_html ) ) { $failures[] = 'A registered legacy renderer must be ignored while the pilot shell remains non-secret.'; }
 
 	$lunara_test_filters['lunara_site_studio_surfaces'] = array();
 	add_filter( 'lunara_site_studio_surfaces', static function ( $items ) {
@@ -1359,7 +1365,7 @@ function lunara_review_case_reentrancy_guards() {
 	ob_start();
 	lunara_render_site_studio_page();
 	$renderer_html = ob_get_clean();
-	if ( 1 !== $lunara_test_reentry_calls['renderer'] || false === strpos( $renderer_html, 'outer renderer' ) || false === stripos( $renderer_html, 'unavailable' ) ) { $failures[] = 'Recursive selected renderers must stop per surface and render a generic nested unavailable state.'; }
+	if ( 0 !== $lunara_test_reentry_calls['renderer'] || false !== strpos( $renderer_html, 'outer renderer' ) || false === stripos( $renderer_html, 'unavailable' ) || false === strpos( $renderer_html, 'Open Classic controls' ) ) { $failures[] = 'Selected non-pilots must bypass legacy renderers and render the bounded Classic handoff.'; }
 
 	$lunara_test_actions = array();
 	$lunara_test_reentry_calls['notification'] = 0;

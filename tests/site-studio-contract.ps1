@@ -40,13 +40,14 @@ $helpers   = Read-ThemeFile 'inc/helpers.php'
 $journalArchive = Read-ThemeFile 'inc/journal-archive-studio.php'
 $style     = Read-ThemeFile 'style.css'
 $controlCss = Read-ThemeFile 'assets/css/lunara-control-desk.css'
+$studioCss = Read-ThemeFile 'assets/css/lunara-site-studio.css'
 $editorCss = Read-ThemeFile 'assets/css/lunara-homepage-editor.css'
 
 # Dedicated, capability-gated, focused admin surface.
 Assert-True ($loader -match 'require_once\s+\$lunara_inc\s*\.\s*''site-studio\.php'';') 'The split loader must load the Site Studio module.'
 Assert-True ($studio -match "add_submenu_page\([\s\S]*?'lunara-control-desk'[\s\S]*?'edit_theme_options'[\s\S]*?'lunara-site-studio'") 'Site Studio must be a discoverable Lunara submenu gated by edit_theme_options.'
 Assert-True ($studio -match "current_user_can\(\s*'edit_theme_options'\s*\)") 'Site Studio must enforce capability inside its renderer.'
-Assert-True ($control -match 'lunara_page_lunara-site-studio') 'Site Studio must receive the existing admin styles, media picker, and script.'
+Assert-True ($control -notmatch "in_array\(\s*\$hook[\s\S]{0,180}lunara_page_lunara-site-studio") 'Site Studio must not receive the Control Desk bundle.'
 Assert-True ($registry -match "'lunara-method'[\s\S]*?'homepage-structure'[\s\S]*?'reviews-archive'[\s\S]*?'journal-archive'") 'The unconditional Site Studio registry must expose the focused Homepage and Archive surfaces.'
 
 # One Method form and one secure storage path.
@@ -138,7 +139,7 @@ $kit = $blockJs.Substring($kitStart, $kitEnd - $kitStart)
 Assert-True ($kit -notmatch 'ServerSideRender') 'Homepage section kit must not render full public sections through ServerSideRender.'
 Assert-True ($kit -notmatch '\bpreview\s*\(') 'Homepage section kit must use compact editor cards instead of the legacy preview helper.'
 Assert-True ($editorCss -match 'max-width:\s*min\(' -and $editorCss -match 'overflow-wrap:\s*anywhere') 'Compact homepage cards must stay bounded inside the editor canvas.'
-Assert-True ($controlCss -match '\.lunara-site-studio-nav') 'The focused Site Studio must have a concise admin navigation treatment.'
+Assert-True ($studioCss -match '\.lunara-site-studio-map') 'The focused Site Studio must have a dedicated visual map treatment.'
 Assert-True ($functions -notmatch 'lunara_enqueue_homepage_block_editor_assets') 'The duplicate inline homepage block registrar must remain retired.'
 Assert-True ($functions -match "register_block_type\(\s*'lunara/latest-reviews'[\s\S]*?'editor_script'\s*=>\s*'lunara-blocks'") 'Latest Reviews must use the one canonical editor bundle.'
 Assert-True ($functions -match "register_block_type\(\s*'lunara/latest-reviews'[\s\S]*?'category'\s*=>\s*'lunara'") 'Latest Reviews must live in the discoverable Lunara block category.'

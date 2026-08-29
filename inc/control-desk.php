@@ -33,7 +33,7 @@ function lunara_register_control_desk_page() {
 add_action( 'admin_menu', 'lunara_register_control_desk_page' );
 
 function lunara_enqueue_control_desk_assets( $hook ) {
-    if ( ! in_array( $hook, array( 'toplevel_page_lunara-control-desk', 'appearance_page_lunara-control-desk', 'lunara_page_lunara-site-studio' ), true ) ) {
+    if ( ! in_array( $hook, array( 'toplevel_page_lunara-control-desk', 'appearance_page_lunara-control-desk' ), true ) ) {
         return;
     }
 
@@ -14990,7 +14990,7 @@ function lunara_control_desk_render_pairing_desk_form( $context = 'control-desk'
             <p class="lunara-control-desk-intro"><?php esc_html_e( 'These three lines introduce the Pair It With trio on the front page. A blank field deliberately uses its built-in line; the preview below always shows what readers see now.', 'lunara-film' ); ?></p>
         </div>
 
-        <div class="lunara-site-studio-effective-copy" aria-label="<?php echo esc_attr__( 'Current public Lunara Method copy', 'lunara-film' ); ?>">
+        <div class="lunara-control-desk-effective-copy" aria-label="<?php echo esc_attr__( 'Current public Lunara Method copy', 'lunara-film' ); ?>">
             <p class="lunara-control-desk-kicker"><?php esc_html_e( 'What readers see now', 'lunara-film' ); ?></p>
             <span><?php echo esc_html( '' !== trim( $values['kicker'] ) ? $values['kicker'] : $defaults['kicker'] ); ?></span>
             <strong><?php echo esc_html( '' !== trim( $values['title'] ) ? $values['title'] : $defaults['title'] ); ?></strong>

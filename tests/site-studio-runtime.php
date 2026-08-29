@@ -1,211 +1,92 @@
 <?php
-/**
- * Behavioral contract for the focused Lunara Site Studio router.
- *
- * @package Lunara_Film
- */
-
+/** Behavioral contract and real-rendered browser fixture for Site Studio. */
 define( 'ABSPATH', __DIR__ . '/' );
+$lunara_test_actions = array(); $lunara_test_submenus = array(); $lunara_test_filters = array(); $lunara_test_can_edit = true; $lunara_test_dependency_ready = true;
+$lunara_test_enqueued_styles = array(); $lunara_test_enqueued_scripts = array(); $lunara_test_localized = array(); $lunara_test_media_enqueues = 0;
+$lunara_test_admin_base = 'https://example.test/wp-admin/'; $lunara_test_home_base = 'https://example.test/'; $lunara_test_rest_base = 'https://example.test/wp-json/'; $lunara_test_get_posts_args = array(); $lunara_test_adapter_failure = ''; $lunara_test_classic_urls = array(); $lunara_test_denied_surface = '';
+class WP_Error { private $code; public function __construct( $code = '' ) { $this->code = $code; } public function get_error_code() { return $this->code; } }
+function is_wp_error( $value ) { return $value instanceof WP_Error; }
+function lunara_test_assert( $condition, $message ) { if ( ! $condition ) { fwrite( STDERR, "FAIL: {$message}\n" ); exit( 1 ); } }
+function add_action( $hook, $callback, $priority = 10 ) { global $lunara_test_actions; $lunara_test_actions[] = compact( 'hook', 'callback', 'priority' ); }
+function add_filter( $hook, $callback, $priority = 10 ) { global $lunara_test_filters; $lunara_test_filters[ $hook ][] = compact( 'callback', 'priority' ); }
+function apply_filters( $hook, $value ) { global $lunara_test_filters; $items = isset( $lunara_test_filters[ $hook ] ) ? $lunara_test_filters[ $hook ] : array(); usort( $items, static function ( $a, $b ) { return $a['priority'] - $b['priority']; } ); foreach ( $items as $filter ) { $value = call_user_func( $filter['callback'], $value ); } return $value; }
+function add_submenu_page( $parent, $page_title, $menu_title, $capability, $slug, $callback, $position = null ) { global $lunara_test_submenus; $lunara_test_submenus[] = compact( 'parent', 'page_title', 'menu_title', 'capability', 'slug', 'callback', 'position' ); return 'lunara_page_' . $slug; }
+function current_user_can( $capability ) { global $lunara_test_can_edit; return $lunara_test_can_edit && 'edit_theme_options' === $capability; }
+function wp_die( $message ) { throw new RuntimeException( (string) $message ); }
+function __( $text ) { return $text; } function esc_html__( $text ) { return $text; } function esc_attr__( $text ) { return $text; }
+function esc_html_e( $text ) { echo esc_html( $text ); } function esc_html( $text ) { return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' ); }
+function esc_attr( $text ) { return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' ); } function esc_url( $url ) { return (string) $url; } function esc_url_raw( $url ) { return (string) $url; }
+function admin_url( $path = '' ) { global $lunara_test_admin_base; return $lunara_test_admin_base . ltrim( (string) $path, '/' ); } function home_url( $path = '' ) { global $lunara_test_home_base; return $lunara_test_home_base . ltrim( (string) $path, '/' ); }
+function rest_url( $path = '' ) { global $lunara_test_rest_base; return $lunara_test_rest_base . ltrim( (string) $path, '/' ); } function add_query_arg( $args, $url ) { return $url . ( false === strpos( $url, '?' ) ? '?' : '&' ) . http_build_query( $args ); }
+function sanitize_key( $value ) { return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $value ) ); } function sanitize_text_field( $value ) { return trim( strip_tags( is_scalar( $value ) ? (string) $value : '' ) ); }
+function sanitize_html_class( $value ) { return preg_replace( '/[^A-Za-z0-9_-]/', '', (string) $value ); }
+function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $component ); } function wp_unslash( $value ) { return $value; } function wp_json_encode( $value, $flags = 0 ) { return json_encode( $value, $flags ); }
+function wp_create_nonce() { return 'fixture-rest-nonce'; } function absint( $value ) { return abs( (int) $value ); } function __return_true() { global $lunara_test_dependency_ready; return $lunara_test_dependency_ready; }
+function wp_enqueue_style( $handle, $src = '', $deps = array(), $version = false ) { global $lunara_test_enqueued_styles; $lunara_test_enqueued_styles[ $handle ] = compact( 'src', 'deps', 'version' ); }
+function wp_enqueue_script( $handle, $src = '', $deps = array(), $version = false, $footer = false ) { global $lunara_test_enqueued_scripts; $lunara_test_enqueued_scripts[ $handle ] = compact( 'src', 'deps', 'version', 'footer' ); }
+function wp_localize_script( $handle, $name, $value ) { global $lunara_test_localized; $lunara_test_localized[ $name ] = $value; return true; }
+function wp_enqueue_media() { global $lunara_test_media_enqueues; ++$lunara_test_media_enqueues; }
+function lunara_resolve_theme_asset( $path ) { return array( 'uri' => 'https://example.test/theme/' . $path, 'path' => dirname( __DIR__ ) . '/' . $path ); }
+function lunara_theme_asset_version( $path ) { return 'fixture-' . basename( $path ); }
+function get_posts( $args ) { global $lunara_test_get_posts_args; $lunara_test_get_posts_args = $args; $posts = array(); for ( $id = 1; $id <= 100; $id++ ) { $posts[] = (object) array( 'ID' => $id, 'post_title' => 7 === $id ? 'Published Review' : 'Published Review ' . $id, 'post_date' => '2026-08-15 10:00:00', 'post_status' => 'publish' ); } $posts[] = (object) array( 'ID' => 107, 'post_title' => 'Oldest Published Review', 'post_date' => '2020-01-01 00:00:00', 'post_status' => 'publish' ); $posts[] = (object) array( 'ID' => 108, 'post_title' => 'Draft Review', 'post_date' => '2026-08-16 10:00:00', 'post_status' => 'draft' ); $posts = array_values( array_filter( $posts, static function ( $post ) use ( $args ) { return empty( $args['post_status'] ) || $post->post_status === $args['post_status']; } ) ); if ( isset( $args['posts_per_page'] ) && -1 !== (int) $args['posts_per_page'] ) { $posts = array_slice( $posts, 0, max( 0, (int) $args['posts_per_page'] ) ); } return $posts; }
+function get_the_title( $post ) { return is_object( $post ) ? $post->post_title : ''; } function get_the_date( $format, $post ) { return 'August 15, 2026'; }
+function wp_get_attachment_image_url( $id, $size = 'thumbnail' ) { return 44 === absint( $id ) ? 'https://example.test/uploads/backdrop-44.jpg' : false; }
+function lunara_control_desk_render_pairing_desk_form() {} function lunara_control_desk_render_homepage_studio() {} function lunara_control_desk_render_reviews_archive_studio() {}
+function lunara_control_desk_render_journal_archive_studio() {} function lunara_control_desk_render_oscars_portal_studio() {} function lunara_control_desk_render_oscars_dossier_studio() {}
+function lunara_design_tokens_render_panel() {}
+function lunara_design_token_color_specs() { return array_fill_keys( array( 'gold', 'gold_light', 'bg_primary', 'bg_secondary', 'text', 'text_muted' ), array() ); }
+function lunara_design_token_font_role_specs() { return array_fill_keys( array( 'body', 'display', 'signature', 'glamour', 'label' ), array() ); }
+function lunara_design_token_font_choices() { return array( 'tiempos-text' => array( 'label' => 'Tiempos Text' ), 'georgia' => array( 'label' => 'Georgia (system)' ) ); }
+function lunara_home_section_block_map() { return array( 'hero' => 'lunara/cinematic-hero', 'latest-reviews' => 'lunara/latest-reviews', 'pairing-desk' => 'lunara/pairing-desk', 'dispatch' => 'lunara/journal-lane', 'oscar-picks' => 'lunara/oscar-picks', 'oscar-facts' => 'lunara/oscar-facts' ); }
+function lunara_get_home_section_registry() { $items = array(); foreach ( array( 'hero' => 'Hero Premiere', 'latest-reviews' => 'Criticism Lane', 'pairing-desk' => 'Pairing Desk', 'dispatch' => 'Journal Dispatch', 'oscar-picks' => 'Oscar Picks', 'oscar-facts' => 'Oscar Facts' ) as $slug => $label ) { $items[ $slug ] = array( 'label' => $label, 'toggle_label' => 'Show ' . $label, 'description' => 'Canonical ' . $label . ' description.' ); } return $items; }
+function lunara_control_desk_homepage_order_preset_specs() { return array( 'editorial-default' => array( 'label' => 'Editorial default', 'desktop_order' => array('hero','latest-reviews','pairing-desk','dispatch','oscar-picks','oscar-facts','featured','oscar-spotlight','database','ledger','deep-cuts'), 'mobile_order' => array('hero','dispatch','latest-reviews','pairing-desk','oscar-picks','oscar-facts','featured','oscar-spotlight','database','ledger','deep-cuts') ), 'journal-first' => array( 'label' => 'Journal first', 'desktop_order' => array('hero','dispatch','latest-reviews','pairing-desk','oscar-picks','oscar-facts','featured','oscar-spotlight','database','ledger','deep-cuts'), 'mobile_order' => array('hero','dispatch','latest-reviews','pairing-desk','oscar-picks','oscar-facts','featured','oscar-spotlight','database','ledger','deep-cuts') ), 'oscars-forward' => array( 'label' => 'Oscars forward', 'desktop_order' => array('hero','oscar-facts','oscar-picks','latest-reviews','pairing-desk','dispatch','featured','oscar-spotlight','database','ledger','deep-cuts'), 'mobile_order' => array('hero','oscar-facts','oscar-picks','dispatch','latest-reviews','pairing-desk','featured','oscar-spotlight','database','ledger','deep-cuts') ) ); }
 
-$lunara_test_actions  = array();
-$lunara_test_submenus = array();
-$lunara_test_can_edit = true;
-$lunara_test_filters  = array();
-
-class WP_Error {
-	private $code;
-	public function __construct( $code = '' ) { $this->code = $code; }
-	public function get_error_code() { return $this->code; }
-}
-
-function is_wp_error( $value ) {
-	return $value instanceof WP_Error;
-}
-
-function lunara_test_assert( $condition, $message ) {
-	if ( ! $condition ) {
-		fwrite( STDERR, "FAIL: {$message}\n" );
-		exit( 1 );
+require dirname( __DIR__ ) . '/inc/site-studio-registry.php'; require dirname( __DIR__ ) . '/inc/site-studio-adapters.php';
+class Lunara_Test_Site_Studio_Adapter implements Lunara_Site_Studio_Surface_Adapter {
+	private $surface; public function __construct( $surface ) { $this->surface = $surface; }
+	public function read_state() { global $lunara_test_adapter_failure; if ( 'read-error' === $lunara_test_adapter_failure ) { return new WP_Error( 'fixture-read-secret' ); } if ( 'read-throw' === $lunara_test_adapter_failure ) { throw new RuntimeException( 'fixture read secret' ); }
+		if ( 'global-design' === $this->surface ) { $colors = array(); foreach ( array( 'gold', 'gold_light', 'bg_primary', 'bg_secondary', 'text', 'text_muted' ) as $key ) { $colors[ $key ] = array( 'override' => 'gold' === $key ? null : '#112233', 'effective' => 'gold' === $key ? '#caa24d' : '#112233', 'source' => 'gold' === $key ? 'shipped-default' : 'design-tokens' ); } $fonts = array(); foreach ( array( 'body', 'display', 'signature', 'glamour', 'label' ) as $key ) { $fonts[ $key ] = array( 'override' => null, 'effective' => 'georgia', 'source' => 'shipped-default' ); } return array( 'colors' => $colors, 'fonts' => $fonts ); }
+		if ( 'homepage-structure' === $this->surface ) { $slugs = array( 'hero', 'latest-reviews', 'pairing-desk', 'dispatch', 'oscar-picks', 'oscar-facts' ); return array( 'mode' => 'blocks', 'front_page_id' => 42, 'preset' => '', 'desktop_order' => $slugs, 'mobile_order' => array_reverse( $slugs ), 'visibility' => array_fill_keys( $slugs, true ) ); }
+		return array( 'kicker' => '', 'title' => '', 'copy' => '', 'review_id' => 0, 'backdrop_id' => 44 );
 	}
+	public function validate_state( $candidate ) { return $candidate; } public function save_state( $candidate ) { return array( 'state' => $candidate ); }
+	public function create_preview( $candidate ) { return array( 'token' => 'fixture', 'expires_at' => 2000000000 ); }
+	public function list_revisions() { global $lunara_test_adapter_failure; if ( 'list-error' === $lunara_test_adapter_failure ) { return new WP_Error( 'fixture-list-secret' ); } if ( 'list-throw' === $lunara_test_adapter_failure ) { throw new RuntimeException( 'fixture list secret' ); } if ( 'list-non-array' === $lunara_test_adapter_failure ) { return 'not-an-array'; } return array( array( 'id' => 'revision-safe', 'timestamp' => '2026-08-28 12:00:00', 'action' => 'save', 'config' => array( 'secret' => true ), 'post_content' => 'private' ) ); }
+	public function restore_revision( $revision_id ) { return array( 'state' => $this->read_state() ); }
 }
-
-function add_action( $hook, $callback, $priority = 10 ) {
-	global $lunara_test_actions;
-	$lunara_test_actions[] = compact( 'hook', 'callback', 'priority' );
-}
-
-function add_filter( $hook, $callback, $priority = 10 ) {
-	global $lunara_test_filters;
-	$lunara_test_filters[ $hook ][] = compact( 'callback', 'priority' );
-}
-
-function apply_filters( $hook, $value ) {
-	global $lunara_test_filters;
-	foreach ( isset( $lunara_test_filters[ $hook ] ) ? $lunara_test_filters[ $hook ] : array() as $filter ) {
-		$value = call_user_func( $filter['callback'], $value );
-	}
-	return $value;
-}
-
-function add_submenu_page( $parent, $page_title, $menu_title, $capability, $slug, $callback, $position = null ) {
-	global $lunara_test_submenus;
-	$lunara_test_submenus[] = compact( 'parent', 'page_title', 'menu_title', 'capability', 'slug', 'callback', 'position' );
-	return 'lunara_page_' . $slug;
-}
-
-function current_user_can( $capability ) {
-	global $lunara_test_can_edit;
-	return $lunara_test_can_edit && 'edit_theme_options' === $capability;
-}
-
-function wp_die( $message ) {
-	throw new RuntimeException( (string) $message );
-}
-
-function __( $text ) {
-	return $text;
-}
-
-function esc_html__( $text ) {
-	return $text;
-}
-
-function esc_html_e( $text ) {
-	echo htmlspecialchars( $text, ENT_QUOTES, 'UTF-8' );
-}
-
-function esc_html( $text ) {
-	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
-}
-
-function esc_attr( $text ) {
-	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
-}
-
-function esc_url( $url ) {
-	return (string) $url;
-}
-
-function admin_url( $path = '' ) {
-	return 'https://example.test/wp-admin/' . ltrim( (string) $path, '/' );
-}
-
-function home_url( $path = '' ) {
-	return 'https://example.test/' . ltrim( (string) $path, '/' );
-}
-
-function add_query_arg( $args, $url ) {
-	return $url . '?' . http_build_query( $args );
-}
-
-function sanitize_key( $value ) {
-	return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $value ) );
-}
-
-function sanitize_text_field( $value ) {
-	return trim( strip_tags( is_scalar( $value ) ? (string) $value : '' ) );
-}
-
-function wp_parse_url( $url, $component = -1 ) {
-	return parse_url( $url, $component );
-}
-
-function __return_true() {
-	return true;
-}
-
-function wp_unslash( $value ) {
-	return $value;
-}
-
-function lunara_control_desk_render_notice() {
-	echo '<div data-test="notice"></div>';
-}
-
-function lunara_control_desk_render_pairing_desk_form( $context = 'control-desk' ) {
-	echo '<div data-test="lunara-method" data-context="' . esc_attr( $context ) . '"></div>';
-}
-
-function lunara_control_desk_render_homepage_studio( $context = 'control-desk' ) {
-	echo '<div data-test="homepage-structure" data-context="' . esc_attr( $context ) . '"></div>';
-}
-
-function lunara_control_desk_render_reviews_archive_studio( $context = 'control-desk' ) {
-	echo '<div data-test="reviews-archive" data-context="' . esc_attr( $context ) . '"></div>';
-}
-
-function lunara_control_desk_render_journal_archive_studio( $context = 'control-desk' ) {
-	echo '<div data-test="journal-archive" data-context="' . esc_attr( $context ) . '"></div>';
-}
-
-require dirname( __DIR__ ) . '/inc/site-studio-registry.php';
-require dirname( __DIR__ ) . '/inc/site-studio-adapters.php';
-add_filter(
-	'lunara_site_studio_surfaces',
-	static function ( $surfaces ) {
-		foreach ( $surfaces as &$surface ) {
-			$surface['dependency_callback'] = '__return_true';
-		}
-		unset( $surface );
-		return $surfaces;
-	}
-);
+function lunara_test_site_studio_adapter_factory( $surface ) { global $lunara_test_adapter_failure; if ( 'factory-error' === $lunara_test_adapter_failure ) { return new WP_Error( 'fixture-factory-secret' ); } if ( 'factory-throw' === $lunara_test_adapter_failure ) { throw new RuntimeException( 'fixture factory secret' ); } return new Lunara_Test_Site_Studio_Adapter( $surface['id'] ); }
+function lunara_test_site_studio_throwing_schema() { throw new RuntimeException( 'fixture projection secret' ); }
+add_filter( 'lunara_site_studio_surfaces', static function ( $surfaces ) { global $lunara_test_adapter_failure, $lunara_test_classic_urls, $lunara_test_denied_surface; foreach ( $surfaces as &$surface ) { $surface['dependency_callback'] = '__return_true'; if ( in_array( $surface['id'], array( 'global-design', 'homepage-structure', 'lunara-method' ), true ) ) { $surface['adapter_factory'] = 'lunara_test_site_studio_adapter_factory'; } if ( isset( $lunara_test_classic_urls[ $surface['id'] ] ) ) { $surface['classic_url'] = $lunara_test_classic_urls[ $surface['id'] ]; } if ( $lunara_test_denied_surface === $surface['id'] ) { $surface['capability'] = 'manage_options'; } if ( 'projection-error' === $lunara_test_adapter_failure && 'global-design' === $surface['id'] ) { $surface['state_schema_callback'] = 'lunara_test_site_studio_throwing_schema'; } } unset( $surface ); return $surfaces; } );
 require dirname( __DIR__ ) . '/inc/site-studio.php';
 
-lunara_test_assert(
-	array_filter(
-		$lunara_test_actions,
-		static function ( $action ) {
-			return 'admin_menu' === $action['hook'] && 'lunara_register_site_studio_page' === $action['callback'];
-		}
-	),
-	'Site Studio must register itself on admin_menu.'
-);
+$fixture_surface = ''; foreach ( isset( $argv ) ? $argv : array() as $argument ) { if ( 0 === strpos( $argument, '--fixture=' ) ) { $fixture_surface = sanitize_key( substr( $argument, 10 ) ); } }
+if ( $fixture_surface ) { $_GET['surface'] = $fixture_surface; if ( function_exists( 'lunara_enqueue_site_studio_assets' ) ) { lunara_enqueue_site_studio_assets( 'lunara_page_lunara-site-studio' ); } ob_start(); lunara_render_site_studio_page(); $workspace = ob_get_clean(); $config = isset( $lunara_test_localized['LunaraSiteStudioWorkspaceConfig'] ) ? $lunara_test_localized['LunaraSiteStudioWorkspaceConfig'] : array(); echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script>window.LunaraSiteStudioWorkspaceConfig=' . wp_json_encode( $config ) . ';</script></head><body class="wp-admin">' . $workspace . '</body></html>'; exit( 0 ); }
 
-lunara_register_site_studio_page();
-lunara_test_assert( 1 === count( $lunara_test_submenus ), 'Site Studio must register exactly one submenu.' );
-$submenu = $lunara_test_submenus[0];
-lunara_test_assert( 'lunara-control-desk' === $submenu['parent'], 'Site Studio must live under the Lunara menu.' );
-lunara_test_assert( 'edit_theme_options' === $submenu['capability'], 'Site Studio must require theme-editing permission.' );
-lunara_test_assert( 'lunara-site-studio' === $submenu['slug'], 'Site Studio must have a stable direct URL.' );
-
-$expected = array(
-	'lunara-method'      => 'lunara-method',
-	'homepage-structure' => 'homepage-structure',
-	'reviews-archive'    => 'reviews-archive',
-	'journal-archive'    => 'journal-archive',
-);
-
-foreach ( $expected as $surface => $marker ) {
-	$_GET['surface'] = $surface;
-	ob_start();
-	lunara_render_site_studio_page();
-	$html = ob_get_clean();
-
-	lunara_test_assert( false !== strpos( $html, 'data-test="' . $marker . '"' ), "{$surface} must render its selected control surface." );
-	lunara_test_assert( false !== strpos( $html, 'data-context="site-studio"' ), "{$surface} must preserve the focused return context." );
-	foreach ( $expected as $other_surface => $other_marker ) {
-		if ( $other_surface === $surface ) {
-			continue;
-		}
-		lunara_test_assert( false === strpos( $html, 'data-test="' . $other_marker . '"' ), "{$surface} must not render {$other_surface}." );
-	}
-}
-
-unset( $_GET['surface'] );
-ob_start();
-lunara_render_site_studio_page();
-$default_html = ob_get_clean();
-lunara_test_assert( false !== strpos( $default_html, 'data-test="lunara-method"' ), 'Lunara Method must be the default first surface.' );
-lunara_test_assert( false !== strpos( $default_html, 'data-context="site-studio"' ), 'The direct Method editor must reuse the shared form in Site Studio context.' );
-lunara_test_assert( false !== strpos( $default_html, 'Homepage' ) && false !== strpos( $default_html, 'Archives' ), 'Site Studio must group Homepage and Archive navigation.' );
-
-$lunara_test_can_edit = false;
-try {
-	lunara_render_site_studio_page();
-	lunara_test_assert( false, 'Unauthorized users must not render Site Studio.' );
-} catch ( RuntimeException $error ) {
-	lunara_test_assert( false !== strpos( $error->getMessage(), 'permission' ), 'Unauthorized access must fail with a clear permission message.' );
-}
-
+lunara_test_assert( array_filter( $lunara_test_actions, static function ( $action ) { return 'admin_menu' === $action['hook'] && 'lunara_register_site_studio_page' === $action['callback']; } ), 'Site Studio must register on admin_menu.' );
+lunara_test_assert( array_filter( $lunara_test_actions, static function ( $action ) { return 'admin_enqueue_scripts' === $action['hook'] && 'lunara_enqueue_site_studio_assets' === $action['callback']; } ), 'Site Studio must own a dedicated admin enqueue.' );
+lunara_register_site_studio_page(); lunara_test_assert( 1 === count( $lunara_test_submenus ) && 'edit_theme_options' === $lunara_test_submenus[0]['capability'], 'The submenu must retain its capability contract.' );
+$lunara_test_surface = lunara_site_studio_get_surface( 'global-design' ); $lunara_test_adapter = lunara_site_studio_get_adapter( 'global-design' ); lunara_test_assert( ! is_wp_error( $lunara_test_adapter ), 'Fixture pilot adapter must be available: ' . ( is_wp_error( $lunara_test_adapter ) ? $lunara_test_adapter->get_error_code() . '/' . $lunara_test_surface['unavailable_reason'] : '' ) );
+foreach ( array( 'global-design', 'homepage-structure', 'lunara-method' ) as $project_surface ) { $project_adapter = lunara_site_studio_get_adapter( $project_surface ); $project_state = lunara_site_studio_call_adapter( $project_adapter, 'read_state' ); $projected_state = lunara_site_studio_project_state( $project_surface, $project_state ); lunara_test_assert( ! is_wp_error( $projected_state ), $project_surface . ' fixture state must satisfy its authoritative public schema: ' . ( is_wp_error( $projected_state ) ? $projected_state->get_error_code() : '' ) ); }
+foreach ( array( 'global-design', 'homepage-structure', 'lunara-method' ) as $surface ) { $_GET['surface'] = $surface; ob_start(); lunara_render_site_studio_page(); $html = ob_get_clean(); lunara_test_assert( false !== strpos( $html, 'class="wrap lunara-site-studio"' ), "$surface must use the independent root." ); lunara_test_assert( false !== strpos( $html, 'data-lunara-site-studio' ) && false !== strpos( $html, 'data-surface="' . $surface . '"' ) && false !== strpos( $html, 'data-workspace-state="recovery"' ) && false !== strpos( $html, 'data-dirty="false"' ), "$surface must expose a progressively safe recovery shell until the controller validates it." ); lunara_test_assert( false !== strpos( $html, 'data-action="preview" disabled' ) && false !== strpos( $html, 'data-action="save" disabled' ) && false !== strpos( $html, 'data-action="discard" disabled' ) && false !== strpos( $html, 'could not be loaded safely' ), "$surface server baseline must keep mutating actions inert with generic recovery copy." ); lunara_test_assert( 1 === substr_count( $html, '<iframe ' ), "$surface must render exactly one preview iframe." ); lunara_test_assert( false !== strpos( $html, 'sandbox="allow-scripts allow-same-origin"' ) && false !== strpos( $html, 'referrerpolicy="no-referrer"' ), "$surface must use the strict iframe sandbox." ); lunara_test_assert( 5 === substr_count( $html, '<details' ) && 1 === substr_count( $html, '<details open' ), "$surface must expose five native disclosures with Essentials alone open." ); lunara_test_assert( false !== strpos( $html, 'type="application/json"' ), "$surface must embed projected public state." ); lunara_test_assert( false === strpos( $html, 'post_content' ) && false === strpos( $html, '"config"' ), "$surface must redact private data." ); lunara_test_assert( false === strpos( $html, 'data-test=' ) && false === strpos( $html, 'lunara-control-desk"' ), "$surface must not delegate to the legacy renderer." ); }
+foreach ( array( 'global-design', 'homepage-structure', 'lunara-method' ) as $surface ) { $_GET['surface'] = $surface; ob_start(); lunara_render_site_studio_page(); $baseline_html = ob_get_clean(); preg_match_all( '/<button\b[^>]*\bdata-action="[^"]+"[^>]*>/', $baseline_html, $action_tags ); lunara_test_assert( ! empty( $action_tags[0] ) && count( $action_tags[0] ) === count( array_filter( $action_tags[0], static function ( $tag ) { return false !== strpos( $tag, ' disabled' ); } ) ), "$surface no-controller baseline must disable every data-action button, not only Save/Preview/Discard." ); if ( 'homepage-structure' === $surface ) { preg_match_all( '/<button\b[^>]*\bdata-move="[^"]+"[^>]*>/', $baseline_html, $move_tags ); lunara_test_assert( 12 === count( $move_tags[0] ) && 12 === count( array_filter( $move_tags[0], static function ( $tag ) { return false !== strpos( $tag, ' disabled' ); } ) ), 'Homepage no-controller baseline must disable all twelve reorder actions.' ); } }
+$lunara_test_classic_urls = array( 'global-design' => 'admin.php?page=fixture-global-classic', 'homepage-structure' => 'admin.php?page=fixture-home-classic', 'lunara-method' => 'admin.php?page=fixture-method-classic' ); foreach ( $lunara_test_classic_urls as $surface => $classic_path ) { $_GET['surface'] = $surface; ob_start(); lunara_render_site_studio_page(); $classic_html = ob_get_clean(); lunara_test_assert( false !== strpos( $classic_html, 'href="' . esc_url( admin_url( $classic_path ) ) . '"' ), $surface . ' pilot Classic action must be rendered from its normalized registry classic_url.' ); } $lunara_test_classic_urls = array();
+$_GET['surface'] = 'global-design'; ob_start(); lunara_render_site_studio_page(); $global_shell = ob_get_clean(); lunara_test_assert( preg_match( '/id="(lunara-effective-colors-gold)"[^>]*data-effective-for="colors.gold"/', $global_shell ) && false !== strpos( $global_shell, 'aria-describedby="lunara-site-studio-colors-gold-help lunara-effective-colors-gold lunara-site-studio-colors-gold-error"' ), 'Every Global field must describe its stable effective/provenance node as well as help and error.' );
+$_GET['surface'] = 'lunara-method'; ob_start(); lunara_render_site_studio_page(); $method = ob_get_clean(); lunara_test_assert( false !== strpos( $method, 'value="7"' ) && false !== strpos( $method, 'Published Review' ) && false !== strpos( $method, 'value="107"' ) && false !== strpos( $method, 'Oldest Published Review' ) && false === strpos( $method, 'Draft Review' ), 'Method chooser must contain every published Review, including choices beyond the first 100, and exclude drafts.' ); lunara_test_assert( 'publish' === $lunara_test_get_posts_args['post_status'] && -1 === $lunara_test_get_posts_args['posts_per_page'], 'Method chooser must query all published Reviews without a 100-item cap.' ); lunara_test_assert( false !== strpos( $method, 'src="https://example.test/uploads/backdrop-44.jpg"' ) && false !== strpos( $method, 'data-attachment-id="44"' ) && false !== strpos( $method, 'loading="lazy"' ) && false !== strpos( $method, 'decoding="async"' ), 'Method must render the real local attachment thumbnail with stable identity.' );
+foreach ( array( 'kicker', 'title', 'copy', 'review_id', 'backdrop_id' ) as $error_key ) { lunara_test_assert( false !== strpos( $method, 'data-error-key="' . $error_key . '"' ), 'Method must expose a persistent safe error anchor for ' . $error_key . '.' ); }
+$_GET['surface'] = 'homepage-structure'; ob_start(); lunara_render_site_studio_page(); $home_shell = ob_get_clean(); $rail_start = strpos( $home_shell, 'lunara-site-studio-section-rail' ); $rail_end = strpos( $home_shell, '</aside>', $rail_start ); $rail_html = substr( $home_shell, $rail_start, $rail_end - $rail_start ); lunara_test_assert( false !== strpos( $rail_html, 'data-home-order-list' ) && 6 === substr_count( $rail_html, 'data-home-row' ), 'Homepage rail itself must own all six candidate-ordered controls.' ); lunara_test_assert( false !== strpos( $rail_html, 'Hero Premiere' ) && false !== strpos( $rail_html, 'Show Hero Premiere' ) && false !== strpos( $rail_html, 'Canonical Hero Premiere description.' ), 'Homepage rail labels, toggle labels, and descriptions must come from the canonical registry.' ); lunara_test_assert( false !== strpos( $home_shell, 'type="radio"' ) && false === strpos( $home_shell, 'id="lunara-home-preset" data-field-path="preset"') && false !== strpos( $home_shell, 'data-desktop-order="hero,latest-reviews,pairing-desk,dispatch,oscar-picks,oscar-facts"' ) && false === strpos( $home_shell, 'data-desktop-order="hero,latest-reviews,pairing-desk,dispatch,oscar-picks,oscar-facts,featured"' ), 'Homepage presets must be canonical segmented choices with exactly the six managed projected slugs.' ); foreach ( array( 'preset', 'desktop_order', 'mobile_order', 'visibility', 'front_page' ) as $error_key ) { lunara_test_assert( false !== strpos( $home_shell, 'data-error-key="' . $error_key . '"' ), 'Homepage must expose a persistent safe error anchor for ' . $error_key . '.' ); }
+$_GET['surface'] = 'reviews-archive'; ob_start(); lunara_render_site_studio_page(); $handoff = ob_get_clean(); lunara_test_assert( 0 === substr_count( $handoff, '<iframe ' ) && false !== strpos( $handoff, 'Open Classic controls' ), 'A non-pilot must render a bounded handoff.' );
+$generic_failures = array(); foreach ( array( 'not-a-real-surface', '', '!!!', '!!global-design!!', 'GLOBAL-DESIGN', array( 'global-design' ) ) as $bad_surface ) { $_GET['surface'] = $bad_surface; try { ob_start(); lunara_render_site_studio_page(); ob_end_clean(); lunara_test_assert( false, 'Present malformed/unknown surface must reject.' ); } catch ( RuntimeException $error ) { if ( ob_get_level() ) { ob_end_clean(); } $generic_failures[] = $error->getMessage(); } } $lunara_test_denied_surface = 'global-design'; $_GET['surface'] = 'global-design'; try { ob_start(); lunara_render_site_studio_page(); ob_end_clean(); lunara_test_assert( false, 'Known unauthorized surface must reject.' ); } catch ( RuntimeException $error ) { if ( ob_get_level() ) { ob_end_clean(); } $generic_failures[] = $error->getMessage(); } $lunara_test_denied_surface = ''; lunara_test_assert( 1 === count( array_unique( $generic_failures ) ) && false === strpos( $generic_failures[0], 'not-a-real-surface' ), 'Unknown, malformed, raw-invalid/case-drift, and known-unauthorized selectors must fail identically without leaking input.' ); $_GET['surface'] = '__invalid__'; lunara_test_assert( '__invalid__' === lunara_site_studio_workspace_surface( array( '__invalid__' => array( 'id' => '__invalid__' ) ) ), 'A legal authorized ID that resembles an invalid sentinel must remain selectable; no magic sentinel may collide.' ); unset( $_GET['surface'] ); lunara_test_assert( '' !== lunara_site_studio_workspace_surface(), 'An absent surface selector alone may default to the first authorized destination.' );
+$lunara_test_media_enqueues = 0; $_GET['surface'] = 'global-design'; lunara_enqueue_site_studio_assets( 'lunara_page_lunara-site-studio' ); lunara_test_assert( isset( $lunara_test_enqueued_styles['lunara-site-studio'] ) && isset( $lunara_test_enqueued_scripts['lunara-site-studio'] ) && 0 === $lunara_test_media_enqueues, 'Global must receive dedicated assets only.' ); $_GET['surface'] = 'lunara-method'; lunara_enqueue_site_studio_assets( 'lunara_page_lunara-site-studio' ); lunara_test_assert( 1 === $lunara_test_media_enqueues, 'Core media must enqueue only for Method.' ); $config = $lunara_test_localized['LunaraSiteStudioWorkspaceConfig']; lunara_test_assert( 'lunara-site-studio/v1' === $config['protocol'] && 1 === $config['clientVersion'] && array( 'pairing-desk' ) === $config['markers'], 'Localized config must expose exact protocol and explicit Method marker allowlist.' ); lunara_test_assert( 'Clear this override and use the current inherited fallback?' === $config['strings']['clearOverrideConfirm'] && 'Reset all Global overrides?' === $config['strings']['resetOverridesConfirm'], 'Singular clear and reset-all confirmations must use distinct, accurate wording.' ); $config_keys = array_keys( $config ); sort( $config_keys ); $expected_config_keys = array( 'clientVersion', 'endpoints', 'markers', 'nonce', 'previewOrigin', 'previewRoute', 'protocol', 'strings', 'surface', 'widths' ); sort( $expected_config_keys ); lunara_test_assert( $expected_config_keys === $config_keys, 'Localized config must expose only the locked top-level inventory.' );
+$safe_revisions = lunara_site_studio_safe_revisions( array_merge( array( array( 'id' => array( 'nested' ), 'timestamp' => 'bad', 'action' => 'save' ), array( 'id' => ' ', 'timestamp' => 'bad', 'action' => 'save' ), array( 'id' => 'safe-one', 'timestamp' => array( 'nested' ), 'action' => 'save' ), array( 'id' => 'safe-two', 'timestamp' => '2026-08-28', 'action' => array( 'nested' ) ), array( 'id' => 'safe-three', 'timestamp' => '2026-08-28', 'action' => 'SAVE', 'config' => array( 'secret' => true ), 'post_content' => 'secret' ) ), array_fill( 0, 20, array( 'id' => 'late', 'timestamp' => 'later', 'action' => 'save' ) ) ) ); lunara_test_assert( count( $safe_revisions ) <= 12 && array( 'id' => 'safe-three', 'timestamp' => '2026-08-28', 'action' => 'save' ) === $safe_revisions[0] && false === strpos( wp_json_encode( $safe_revisions ), 'secret' ), 'Revision rows must be scalar-safe, redacted, skip empty IDs, and stay bounded before presentation.' );
+lunara_test_assert( 'https://example.test/uploads/backdrop.jpg' === lunara_site_studio_safe_local_thumbnail( 'https://example.test/uploads/backdrop.jpg' ), 'Same-origin local thumbnails must survive.' ); foreach ( array( 'https://evil.test/backdrop.jpg', 'http://example.test/backdrop.jpg', 'https://example.test:444/backdrop.jpg', 'https://user:pass@example.test/backdrop.jpg', 'https://example.test/uploads/backdrop.jpg#fragment' ) as $unsafe_thumb ) { lunara_test_assert( '' === lunara_site_studio_safe_local_thumbnail( $unsafe_thumb ), 'External, wrong-scheme/port, credentialed, and fragmented thumbnails must be omitted.' ); } lunara_test_assert( lunara_site_studio_same_origin( 'https://example.test:443/path', 'https://example.test/path' ) && lunara_site_studio_same_origin( 'http://example.test:80/path', 'http://example.test/path' ), 'Server origin comparison must normalize default effective ports.' ); foreach ( array( 'https://user@example.test/path', 'https://example.test/path#fragment' ) as $tainted_origin ) { lunara_test_assert( '' === lunara_site_studio_origin_key( $tainted_origin ), 'Credentialed and fragmented server origins must fail closed before comparison.' ); }
+$safe_config = $config; lunara_test_assert( lunara_site_studio_workspace_config_is_safe( $safe_config ), 'Canonical same-origin workspace config must be safe.' ); foreach ( array( array( 'previewOrigin', 'https://evil.test' ), array( 'previewOrigin', 'http://example.test' ) ) as $mutation ) { $unsafe_config = $safe_config; $unsafe_config[ $mutation[0] ] = $mutation[1]; lunara_test_assert( ! lunara_site_studio_workspace_config_is_safe( $unsafe_config ), 'Preview origin scheme/host/port changes must fail closed.' ); } foreach ( array_keys( $safe_config['endpoints'] ) as $endpoint_key ) { $unsafe_config = $safe_config; $unsafe_config['endpoints'][ $endpoint_key ] = 'https://evil.test/wp-json/lunara-site-studio/v1/surfaces/lunara-method/' . $endpoint_key; lunara_test_assert( ! lunara_site_studio_workspace_config_is_safe( $unsafe_config ), 'Every REST endpoint must be same-origin.' ); $unsafe_config = $safe_config; $unsafe_config['endpoints'][ $endpoint_key ] = 'https://example.test/wp-json/wrong-route'; lunara_test_assert( ! lunara_site_studio_workspace_config_is_safe( $unsafe_config ), 'Every REST endpoint must retain its exact configured route.' ); }
+$unsafe_config = $safe_config; $unsafe_config['previewOrigin'] = 'https://user@example.test'; lunara_test_assert( ! lunara_site_studio_workspace_config_is_safe( $unsafe_config ), 'Credentialed preview origins must fail closed.' ); $unsafe_config = $safe_config; $unsafe_config['previewRoute'] .= '#fragment'; lunara_test_assert( ! lunara_site_studio_workspace_config_is_safe( $unsafe_config ), 'Fragmented preview routes must fail closed.' ); foreach ( array_keys( $safe_config['endpoints'] ) as $endpoint_key ) { foreach ( array( 'https://user@example.test/wp-json/lunara-site-studio/v1/surfaces/lunara-method/' . $endpoint_key, $safe_config['endpoints'][ $endpoint_key ] . '#fragment' ) as $tainted_endpoint ) { $unsafe_config = $safe_config; $unsafe_config['endpoints'][ $endpoint_key ] = $tainted_endpoint; lunara_test_assert( ! lunara_site_studio_workspace_config_is_safe( $unsafe_config ), 'Credentialed and fragmented REST endpoints must fail closed.' ); } }
+$origin_defaults = array( $lunara_test_admin_base, $lunara_test_home_base, $lunara_test_rest_base ); foreach ( array( array( 'https://admin.example.test/wp-admin/', 'https://example.test/', 'https://example.test/wp-json/' ), array( 'https://example.test/wp-admin/', 'http://example.test/', 'https://example.test/wp-json/' ), array( 'https://example.test/wp-admin/', 'https://example.test/', 'https://evil.test/wp-json/' ), array( 'https://example.test:444/wp-admin/', 'https://example.test/', 'https://example.test/wp-json/' ) ) as $origin_case ) { list( $lunara_test_admin_base, $lunara_test_home_base, $lunara_test_rest_base ) = $origin_case; $_GET['surface'] = 'global-design'; ob_start(); lunara_render_site_studio_page(); $origin_failure = ob_get_clean(); lunara_test_assert( 0 === substr_count( $origin_failure, '<iframe ' ) && false !== strpos( $origin_failure, 'could not be loaded safely' ) && false !== strpos( $origin_failure, 'data-lunara-surface-search' ), 'Admin/home/REST scheme, host, and effective-port mismatches must fail to generic recovery while preserving the map.' ); } list( $lunara_test_admin_base, $lunara_test_home_base, $lunara_test_rest_base ) = $origin_defaults;
+foreach ( array( 'https://user@example.test/', 'https://example.test/#raw-home-fragment' ) as $raw_home ) { $lunara_test_home_base = $raw_home; $_GET['surface'] = 'global-design'; ob_start(); lunara_render_site_studio_page(); $raw_home_failure = ob_get_clean(); lunara_test_assert( 0 === substr_count( $raw_home_failure, '<iframe ' ) && false !== strpos( $raw_home_failure, 'could not be loaded safely' ) && false === strpos( $raw_home_failure, $raw_home ), 'Credentialed or fragmented raw home URLs must fail before any normalized preview URL is rendered.' ); } list( $lunara_test_admin_base, $lunara_test_home_base, $lunara_test_rest_base ) = $origin_defaults;
+foreach ( array( 'https://user@example.test/wp-admin/', 'https://example.test/wp-admin/#raw-admin-fragment' ) as $raw_admin ) { $lunara_test_admin_base = $raw_admin; $_GET['surface'] = 'global-design'; ob_start(); lunara_render_site_studio_page(); $raw_admin_failure = ob_get_clean(); lunara_test_assert( 0 === substr_count( $raw_admin_failure, '<iframe ' ) && false !== strpos( $raw_admin_failure, 'could not be loaded safely' ) && false === strpos( $raw_admin_failure, $raw_admin ), 'Credentialed or fragmented raw admin URLs must not survive into any rendered destination.' ); } list( $lunara_test_admin_base, $lunara_test_home_base, $lunara_test_rest_base ) = $origin_defaults;
+$lunara_test_admin_base = 'https://example.test/subsite/wp-admin/'; $lunara_test_home_base = 'https://example.test/subsite/'; $lunara_test_rest_base = 'https://example.test/subsite/wp-json/'; $subsite_surface = lunara_site_studio_get_surface( 'global-design' ); $subsite_config = lunara_site_studio_workspace_config( 'global-design', $subsite_surface ); lunara_test_assert( '/subsite/' === $subsite_config['previewRoute'] && lunara_site_studio_workspace_config_is_safe( $subsite_config ), 'Subdirectory installs must localize their real same-origin preview pathname and REST routes.' ); list( $lunara_test_admin_base, $lunara_test_home_base, $lunara_test_rest_base ) = $origin_defaults;
+$localized_before_malformed = $lunara_test_localized; foreach ( array( '', '!!!', array( 'lunara-method' ) ) as $bad_surface ) { $_GET['surface'] = $bad_surface; lunara_enqueue_site_studio_assets( 'lunara_page_lunara-site-studio' ); lunara_test_assert( $localized_before_malformed === $lunara_test_localized, 'Malformed present selectors must not enqueue an active workspace config.' ); }
+foreach ( array( 'factory-error', 'factory-throw', 'read-error', 'read-throw', 'projection-error', 'list-error', 'list-throw', 'list-non-array' ) as $failure_mode ) { $lunara_test_adapter_failure = $failure_mode; $_GET['surface'] = 'global-design'; ob_start(); lunara_render_site_studio_page(); $failure_html = ob_get_clean(); lunara_test_assert( 0 === substr_count( $failure_html, '<iframe ' ) && false !== strpos( $failure_html, 'could not be loaded safely' ) && false === strpos( $failure_html, 'fixture' ), 'Pilot ' . $failure_mode . ' failure must render identical bounded recovery without details.' ); lunara_test_assert( false !== strpos( $failure_html, 'data-lunara-surface-search' ), 'Map search markup must survive pilot recovery.' ); } $lunara_test_adapter_failure = '';
+$lunara_test_dependency_ready = false; $_GET['surface'] = 'reviews-archive'; ob_start(); lunara_render_site_studio_page(); $unavailable_handoff = ob_get_clean(); lunara_test_assert( 0 === substr_count( $unavailable_handoff, '<iframe ' ) && false === strpos( $unavailable_handoff, 'purpose-built Classic controls while' ), 'Dependency-unavailable handoff must not claim an available migration state.' ); $lunara_test_dependency_ready = true;
+$lunara_test_can_edit = false; try { lunara_render_site_studio_page(); lunara_test_assert( false, 'Unauthorized users must not render.' ); } catch ( RuntimeException $error ) { lunara_test_assert( false !== strpos( $error->getMessage(), 'permission' ), 'Unauthorized access must fail generically.' ); }
 echo "site-studio runtime: all assertions passed.\n";

@@ -5051,66 +5051,7 @@
         display: none !important;
     }
 }
-.lunara-site-studio-nav {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 16px;
-	margin: 22px 0;
-}
-
-.lunara-site-studio-nav-group {
-	padding: 16px;
-	border: 1px solid rgba(201, 169, 97, 0.28);
-	border-radius: 14px;
-	background: #fff;
-}
-
-.lunara-site-studio-nav-group > strong {
-	display: block;
-	margin-bottom: 9px;
-	color: #7a5d18;
-	font-size: 11px;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-}
-
-.lunara-site-studio-nav-group > div {
-	display: grid;
-	gap: 7px;
-}
-
-.lunara-site-studio-nav-group a {
-	display: grid;
-	gap: 3px;
-	padding: 11px 12px;
-	border: 1px solid #dcdcde;
-	border-radius: 9px;
-	background: #f6f7f7;
-	color: #1d2327;
-	text-decoration: none;
-}
-
-.lunara-site-studio-nav-group a:hover,
-.lunara-site-studio-nav-group a:focus,
-.lunara-site-studio-nav-group a.is-active {
-	border-color: #a9822c;
-	background: #07111f;
-	color: #fff;
-}
-
-.lunara-site-studio-nav-group a small {
-	color: inherit;
-	opacity: 0.72;
-	line-height: 1.4;
-}
-
-.lunara-site-studio-workspace,
-.lunara-site-studio-effective-copy {
-	min-width: 0;
-	overflow-wrap: anywhere;
-}
-
-.lunara-site-studio #lunara-theme-studio-reviews-archive-studio .lunara-control-desk-reviews-lead-field {
+.lunara-control-desk #lunara-theme-studio-reviews-archive-studio .lunara-control-desk-reviews-lead-field {
 	box-sizing: border-box;
 	display: grid;
 	gap: 6px;
@@ -5119,54 +5060,16 @@
 	width: 100%;
 }
 
-.lunara-site-studio #lunara-theme-studio-reviews-archive-studio .lunara-control-desk-reviews-lead-field select[name="lunara_reviews_archive_lead_id"] {
+.lunara-control-desk #lunara-theme-studio-reviews-archive-studio .lunara-control-desk-reviews-lead-field select[name="lunara_reviews_archive_lead_id"] {
 	box-sizing: border-box;
 	max-width: 100%;
 	min-width: 0;
 	width: 100%;
 }
 
-/*
- * Archive geometry controls sit inside a two-column workspace on desktop.
- * Let the inner grid respond to its card width—not only to the viewport—so
- * range, number, and reset controls cannot widen the WordPress document.
- */
-.lunara-site-studio .lunara-control-desk-homepage-number-grid {
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+.lunara-control-desk-effective-copy {
 	min-width: 0;
-}
-
-.lunara-site-studio .lunara-control-desk-homepage-number,
-.lunara-site-studio .lunara-control-desk-brand-number-value,
-.lunara-site-studio .lunara-control-desk-brand-reset {
-	min-width: 0;
-}
-
-.lunara-site-studio .lunara-control-desk-homepage-number {
-	grid-template-columns: minmax(0, 1fr) minmax(80px, 1fr) minmax(0, auto) minmax(0, auto);
-}
-
-.lunara-site-studio .lunara-control-desk-homepage-number > * {
-	min-width: 0;
-}
-
-.lunara-site-studio .lunara-control-desk-brand-number-value {
-	flex-wrap: wrap;
-}
-
-.lunara-site-studio .lunara-control-desk-brand-number-value input {
-	box-sizing: border-box;
-	max-width: 100%;
-	min-width: 0;
-	width: 82px;
-}
-
-.lunara-site-studio .lunara-control-desk-brand-reset label {
-	flex-wrap: wrap;
-	white-space: normal;
-}
-
-.lunara-site-studio-effective-copy {
+	overflow-wrap: anywhere;
 	margin: 0 0 20px;
 	padding: 18px;
 	border-left: 4px solid #c9a961;
@@ -5175,14 +5078,14 @@
 	color: #f8f4ea;
 }
 
-.lunara-site-studio-effective-copy > span,
-.lunara-site-studio-effective-copy > strong,
-.lunara-site-studio-effective-copy > p {
+.lunara-control-desk-effective-copy > span,
+.lunara-control-desk-effective-copy > strong,
+.lunara-control-desk-effective-copy > p {
 	display: block;
 	margin: 5px 0;
 }
 
-.lunara-site-studio-effective-copy > strong {
+.lunara-control-desk-effective-copy > strong {
 	font-size: clamp(22px, 3vw, 34px);
 	line-height: 1.08;
 }
@@ -5190,23 +5093,4 @@
 .lunara-control-desk-homepage-visibility-grid label.is-locked {
 	border-color: rgba(201, 169, 97, 0.52);
 	background: rgba(201, 169, 97, 0.08);
-}
-
-@media (max-width: 782px) {
-	.lunara-site-studio-nav {
-		grid-template-columns: 1fr;
-	}
-
-	.lunara-site-studio .lunara-control-desk-homepage-number {
-		grid-template-columns: 1fr;
-	}
-
-	.lunara-site-studio .lunara-control-desk-brand-number-value,
-	.lunara-site-studio .lunara-control-desk-brand-reset {
-		justify-self: stretch;
-	}
-
-	.lunara-site-studio .lunara-control-desk-brand-reset {
-		justify-items: start;
-	}
 }

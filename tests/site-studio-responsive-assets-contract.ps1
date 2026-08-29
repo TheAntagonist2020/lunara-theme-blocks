@@ -21,18 +21,17 @@ function Read-ThemeFile {
     return Get-Content -LiteralPath $path -Raw
 }
 
-$controlCss = Read-ThemeFile 'assets/css/lunara-control-desk.css'
+$controlCss = Read-ThemeFile 'assets/css/lunara-site-studio.css'
 $blocks     = Read-ThemeFile 'inc/blocks.php'
 $style      = Read-ThemeFile 'style.css'
 
-# The two-column archive shell must not force its nested numeric controls beyond
-# the Site Studio workspace at WordPress desktop or mobile widths.
-Assert-True ($controlCss -match '(?s)\.lunara-site-studio\s+\.lunara-control-desk-homepage-number-grid\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(100%,\s*26rem\),\s*1fr\)\)[^}]*min-width:\s*0') 'Site Studio archive number grids must collapse by available container width instead of overflowing at 1268px.'
-Assert-True ($controlCss -match '(?s)\.lunara-site-studio\s+\.lunara-control-desk-homepage-number[^\{]*,[^\{]*\.lunara-site-studio\s+\.lunara-control-desk-brand-number-value[^\{]*,[^\{]*\.lunara-site-studio\s+\.lunara-control-desk-brand-reset\s*\{[^}]*min-width:\s*0') 'Every nested numeric-control item must be allowed to shrink inside Site Studio.'
-Assert-True ($controlCss -match '(?s)\.lunara-site-studio\s+\.lunara-control-desk-brand-number-value\s*\{[^}]*flex-wrap:\s*wrap') 'The numeric value and unit must wrap rather than increase document width.'
-Assert-True ($controlCss -match '(?s)\.lunara-site-studio\s+\.lunara-control-desk-brand-number-value\s+input\s*\{[^}]*box-sizing:\s*border-box[^}]*max-width:\s*100%') 'Numeric inputs must stay bounded by their available Site Studio track.'
-Assert-True ($controlCss -match '(?s)\.lunara-site-studio\s+\.lunara-control-desk-brand-reset\s+label\s*\{[^}]*white-space:\s*normal') 'Reset labels must wrap on narrow Site Studio archive cards.'
-Assert-True ($controlCss -match '(?s)@media\s*\(max-width:\s*782px\)[^{]*\{[\s\S]*?\.lunara-site-studio\s+\.lunara-control-desk-homepage-number\s*\{[^}]*grid-template-columns:\s*1fr') 'Site Studio numeric controls must become a single column at WordPress mobile widths.'
+# The dedicated workspace owns its own responsive, shrink-safe geometry.
+Assert-True ($controlCss -match '(?s)\.lunara-site-studio-workspace\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:[^}]*minmax\(') 'Site Studio must use a shrink-safe grid workspace.'
+Assert-True ($controlCss -match '(?s)\.lunara-site-studio\s*>\s*\*[^}]*min-width:\s*0') 'Every top-level workspace child must be allowed to shrink.'
+Assert-True ($controlCss -match '(?s)\.lunara-site-studio-preview\s+iframe\s*\{[^}]*max-width:\s*none[^}]*width:\s*1440px') 'The preview iframe must retain an exact fixed desktop width for scaling.'
+Assert-True ($controlCss -match '(?s)@media\s*\(max-width:\s*1280px\)[\s\S]*?\.lunara-site-studio-inspector\s*\{[^}]*grid-column:\s*1\s*/\s*-1') 'The inspector must span the safer intermediate two-column layout under wp-admin chrome.'
+Assert-True ($controlCss -match '(?s)@media\s*\(max-width:\s*782px\)[\s\S]*?\.lunara-site-studio-workspace\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)') 'Site Studio must become one column at the WordPress mobile breakpoint.'
+Assert-True ($controlCss -notmatch '(?s)(html|body|\.lunara-site-studio[^,{]*)[^}]*overflow-x:\s*(hidden|clip)') 'Responsive geometry must not mask horizontal overflow.'
 
 # WordPress must discover iframe styles through the block-asset path. The
 # is_admin guard keeps this editor stylesheet entirely off anonymous requests.
