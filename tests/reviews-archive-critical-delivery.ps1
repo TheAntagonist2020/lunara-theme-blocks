@@ -93,8 +93,6 @@ $requiredSeedFragments = @(
     '&>:is(.lunara-review-archive-slot-utility,.lunara-review-archive-slot-grid)',
     '&>.lunara-review-archive-slot-pagination',
     '&>.lunara-review-archive-slot-pairing-desk',
-    '&>.lunara-review-archive-slot-retention{margin:0!important;order:var(--lunara-reviews-archive-order-grid,2)!important;width:100%!important}',
-    '& .lunara-review-archive-gallery{min-width:0!important;width:100%!important}',
     'margin:0 auto!important;width:100%!important',
     '.lunara-review-archive-hero-shell',
     '.lunara-review-archive-toolbar-head',
@@ -167,7 +165,6 @@ foreach ($property in @(
     Assert-True ($authority.Groups['css'].Value -match $propertyPattern) "Authority variable $property must beat stale optimizer values from first paint."
 }
 Assert-True ($frontend -match "add_action\(\s*'wp_head',\s*'lunara_output_review_archive_authority_css',\s*7\s*\)") 'Dynamic Reviews geometry variables must print in wp_head.'
-Assert-True ($frontend -match 'function\s+lunara_output_review_archive_authority_css[\s\S]{0,2600}lunara_reviews_archive_studio_get_public_config\(\s*!\s*\$is_director_archive\s*\)') 'Authority geometry must consume the last-valid Reviews Archive Studio config, with previews disabled on the Studio-exempt director routes.'
 Assert-True ($frontend -match 'lunara_get_reviews_archive_section_order_map[\s\S]{0,650}lunara_get_review_archive_lane_order') 'Head-phase lane variables must come from the canonical saved Archive Studio map.'
 Assert-True ($frontend -notmatch "add_action\(\s*'wp_footer',\s*'lunara_output_review_archive_authority_css'") 'Reviews geometry variables must never arrive from wp_footer.'
 
@@ -178,25 +175,7 @@ Assert-True (-not $boostResult.concat_archive_true -and -not $boostResult.concat
 Assert-True ($boostResult.concat_other_true -and -not $boostResult.concat_other_false) 'The concat filter must preserve unrelated handle state.'
 Assert-True (-not $boostResult.async_archive_true -and -not $boostResult.async_archive_false) 'The Reviews route handle must remain synchronous in Jetpack Boost.'
 Assert-True ($boostResult.async_other_true -and -not $boostResult.async_other_false) 'The async filter must preserve unrelated handle state.'
-Assert-True (-not $boostResult.concat_journal_true -and -not $boostResult.concat_journal_false) 'The Journal route handle must never enter Jetpack Boost concatenation.'
-Assert-True ($boostResult.concat_journal_other) 'The Journal concat filter must preserve unrelated handle state.'
-Assert-True (-not $boostResult.async_journal_true -and -not $boostResult.async_journal_false) 'The Journal route handle must remain synchronous in Jetpack Boost.'
-Assert-True ($boostResult.async_journal_other) 'The Journal async filter must preserve unrelated handle state.'
-Assert-True ($boostResult.registrations.Count -eq 8) 'Reviews, Journal, Oscars portal, and Oscars ledger must each register one concat and one async handle-scoped Boost filter.'
-$expectedBoostRegistrations = @(
-    @{ Hook = 'css_do_concat'; Callback = 'lunara_keep_review_archive_css_unaggregated' },
-    @{ Hook = 'jetpack_boost_async_style'; Callback = 'lunara_keep_review_archive_css_synchronous' },
-    @{ Hook = 'css_do_concat'; Callback = 'lunara_keep_journal_archive_css_unaggregated' },
-    @{ Hook = 'jetpack_boost_async_style'; Callback = 'lunara_keep_journal_archive_css_synchronous' },
-    @{ Hook = 'css_do_concat'; Callback = 'lunara_keep_oscars_portal_css_unaggregated' },
-    @{ Hook = 'jetpack_boost_async_style'; Callback = 'lunara_keep_oscars_portal_css_synchronous' },
-    @{ Hook = 'css_do_concat'; Callback = 'lunara_keep_oscars_ledger_css_unaggregated' },
-    @{ Hook = 'jetpack_boost_async_style'; Callback = 'lunara_keep_oscars_ledger_css_synchronous' }
-)
-foreach ($expectedRegistration in $expectedBoostRegistrations) {
-    $matches = @($boostResult.registrations | Where-Object { $_.hook -eq $expectedRegistration.Hook -and $_.callback -eq $expectedRegistration.Callback })
-    Assert-True ($matches.Count -eq 1) "Expected one $($expectedRegistration.Hook) registration for $($expectedRegistration.Callback)."
-}
+Assert-True ($boostResult.registrations.Count -eq 2) 'Exactly two handle-scoped Jetpack Boost delivery filters must register.'
 foreach ($registration in $boostResult.registrations) {
     Assert-True ($registration.priority -eq 10 -and $registration.accepted_args -eq 2) "Boost filter $($registration.hook) must receive the stylesheet handle."
 }
@@ -224,9 +203,6 @@ Assert-True ($browserRuntime -match "bodyClass:\s*'tax-lunara_director'") 'The b
 Assert-True ($browserRuntime -match "bodyClass:\s*'page page-template-page-reviews'") 'The browser regression must exercise an explicitly selected Reviews page template.'
 Assert-True ($browserRuntime -match "bodyClass:\s*'page page-template-default'") 'The browser regression must exercise the slug-selected Reviews page with the default body class.'
 Assert-True ($browserRuntime -match 'showPairing:\s*false' -and $browserRuntime -match 'showYearFilter:\s*false' -and $browserRuntime -match 'showHeroActions:\s*false') 'The director fixture must omit Pairing, Release Year, and archive-only hero actions.'
-Assert-True ($browserRuntime -match 'showRetention:\s*false') 'The director fixture must omit the Studio-owned retention/gallery lane.'
-Assert-True ($browserRuntime -match 'class="lunara-review-archive-retention lunara-review-archive-slot-retention"' -and $browserRuntime -match 'lunara-review-archive-gallery-media') 'The first-paint fixture must model the Studio retention slot and root archive gallery markup.'
-Assert-True ($browserRuntime -match 'lunara-review-archive-page lra is-label-font-tiempos') 'The first-paint fixture must exercise the resolver-emitted Tiempos label marker.'
 Assert-True ($browserRuntime -match 'structural seed must be inert when the renderer-owned lra class is absent') 'The browser regression must prove the seed is inert without the internal route marker.'
 Assert-True ($browserRuntime -match 'function\s+pairingCollisionSnapshot\s*\(' -and $browserRuntime -match 'function\s+assertPairingCollisionFree\s*\(') 'The first-paint Pairing fixture must detect numeral collisions geometrically.'
 Assert-True ($browserRuntime -match 'assertPairingCollisionFree\(afterPairingCollisions' -and $browserRuntime -match 'assertPairingCollisionFree\(canonicalPairingCollisions') 'Pairing numeral clearance must survive deferred delivery and settled current CSS.'
@@ -243,7 +219,7 @@ Assert-True ($pageTemplate -match "'classes'\s*=>\s*'lunara-review-archive-page'
 Assert-True ($directorTemplate -match "'classes'\s*=>\s*'lunara-review-archive-page\s+lunara-director-archive-page'") 'The director archive must emit the route-owned Reviews wrapper.'
 Assert-True ($frontend -match "wp_enqueue_style\([\s\S]{0,180}'lunara-review-archive'[\s\S]{0,180}array\(\s*'lunara-review-components',\s*'lunara-shell'\s*\)") 'The Reviews route asset must keep its explicit component and shell dependencies.'
 Assert-True ($frontend -notmatch '<style id="lunara-review-archive-authority-css">') 'The legacy 43 KB inline archive cascade must not return.'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.56\s*$') 'Theme version must preserve the Reviews critical-delivery repair in 3.2.56.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.43\s*$') 'Theme version must identify the 3.2.43 critical-delivery repair.'
 Assert-True ($stagingGate -match 'real iPhone[\s\S]{0,80}Safari' -and $stagingGate -match 'native\s+CSS nesting') 'The staging gate must require a real-iPhone Safari smoke for the nested critical guard.'
 
-Write-Host "Theme 3.2.56 Reviews critical delivery contract passed: universal seed ${seedByteCount}B ($seedSha256); route CSS ${routeCssBytes}B; Boost fixture ${fixtureBytes}B."
+Write-Host "Theme 3.2.43 Reviews critical delivery contract passed: universal seed ${seedByteCount}B ($seedSha256); route CSS ${routeCssBytes}B; Boost fixture ${fixtureBytes}B."

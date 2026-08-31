@@ -27,7 +27,6 @@ $compositionRuntime = & php (Join-Path $PSScriptRoot 'home-block-composition-run
 Assert-True ($LASTEXITCODE -eq 0) ("Homepage composition runtime failed: " + ($compositionRuntime -join [Environment]::NewLine))
 
 $studio    = Read-ThemeFile 'inc/site-studio.php'
-$registry  = Read-ThemeFile 'inc/site-studio-registry.php'
 $control   = Read-ThemeFile 'inc/control-desk.php'
 $blocks    = Read-ThemeFile 'inc/blocks.php'
 $blockHub  = Read-ThemeFile 'inc/blocks-hub.php'
@@ -37,18 +36,16 @@ $loader    = Read-ThemeFile 'functions-loader.php'
 $functions = Read-ThemeFile 'functions.php'
 $homeBlocks = Read-ThemeFile 'inc/home-blocks.php'
 $helpers   = Read-ThemeFile 'inc/helpers.php'
-$journalArchive = Read-ThemeFile 'inc/journal-archive-studio.php'
 $style     = Read-ThemeFile 'style.css'
 $controlCss = Read-ThemeFile 'assets/css/lunara-control-desk.css'
-$studioCss = Read-ThemeFile 'assets/css/lunara-site-studio.css'
 $editorCss = Read-ThemeFile 'assets/css/lunara-homepage-editor.css'
 
 # Dedicated, capability-gated, focused admin surface.
 Assert-True ($loader -match 'require_once\s+\$lunara_inc\s*\.\s*''site-studio\.php'';') 'The split loader must load the Site Studio module.'
 Assert-True ($studio -match "add_submenu_page\([\s\S]*?'lunara-control-desk'[\s\S]*?'edit_theme_options'[\s\S]*?'lunara-site-studio'") 'Site Studio must be a discoverable Lunara submenu gated by edit_theme_options.'
 Assert-True ($studio -match "current_user_can\(\s*'edit_theme_options'\s*\)") 'Site Studio must enforce capability inside its renderer.'
-Assert-True ($control -notmatch "in_array\(\s*\$hook[\s\S]{0,180}lunara_page_lunara-site-studio") 'Site Studio must not receive the Control Desk bundle.'
-Assert-True ($registry -match "'lunara-method'[\s\S]*?'homepage-structure'[\s\S]*?'reviews-archive'[\s\S]*?'journal-archive'") 'The unconditional Site Studio registry must expose the focused Homepage and Archive surfaces.'
+Assert-True ($control -match 'lunara_page_lunara-site-studio') 'Site Studio must receive the existing admin styles, media picker, and script.'
+Assert-True ($studio -match "'lunara-method'[\s\S]*?'homepage-structure'[\s\S]*?'reviews-archive'[\s\S]*?'journal-archive'") 'Site Studio must expose the focused Homepage and Archive surfaces.'
 
 # One Method form and one secure storage path.
 Assert-True ($control -match 'function\s+lunara_control_desk_render_pairing_desk_form\s*\(') 'The Lunara Method form must be a shared Control Desk renderer.'
@@ -71,15 +68,13 @@ foreach ($setting in @(
 Assert-True ($control -match "'lunara_pairing_desk_return'[\s\S]*?'site-studio'") 'The Method handler must use a bounded return context for the direct Site Studio form.'
 foreach ($returnContract in @(
     @{ Field = 'lunara_homepage_studio_return'; Surface = 'homepage-structure' },
-    @{ Field = 'lunara_reviews_archive_return'; Surface = 'reviews-archive' }
+    @{ Field = 'lunara_reviews_archive_return'; Surface = 'reviews-archive' },
+    @{ Field = 'lunara_journal_archive_return'; Surface = 'journal-archive' }
 )) {
     Assert-True ($control -match [regex]::Escape($returnContract.Field)) "$($returnContract.Surface) must post a bounded return context."
     $boundedCall = "lunara_control_desk_bounded_return_url\(\s*'" + [regex]::Escape($returnContract.Field) + "'\s*,\s*'" + [regex]::Escape($returnContract.Surface) + "'"
     Assert-True ($control -match $boundedCall) "$($returnContract.Surface) saves must return to the same focused Site Studio surface."
 }
-Assert-True ($journalArchive -match 'name="lunara_journal_archive_return"[\s\S]{0,120}?value="<\?php echo esc_attr\(\s*\$context\s*\)') 'The focused Journal Studio must post its bounded return context from its canonical owner.'
-Assert-True ($journalArchive -match "lunara_control_desk_bounded_return_url\(\s*'lunara_journal_archive_return'\s*,\s*'journal-archive'[\s\S]{0,180}?surface=journal-archive'") 'Journal Archive saves must return to the focused Site Studio surface through the shared bounded resolver.'
-Assert-True ($journalArchive -match "add_action\(\s*'admin_post_lunara_save_journal_archive_studio'\s*,\s*'lunara_control_desk_save_journal_archive_studio'\s*\)") 'The focused Journal owner must register its save handler exactly once.'
 Assert-True ($control -match 'lunara_get_home_section_registry\(\)[\s\S]*?lunara_home_section_block_map\(\)') 'Homepage Structure visibility must derive from the canonical registry and six-renderer map.'
 foreach ($setting in @(
     'lunara_home_show_hero',
@@ -139,7 +134,7 @@ $kit = $blockJs.Substring($kitStart, $kitEnd - $kitStart)
 Assert-True ($kit -notmatch 'ServerSideRender') 'Homepage section kit must not render full public sections through ServerSideRender.'
 Assert-True ($kit -notmatch '\bpreview\s*\(') 'Homepage section kit must use compact editor cards instead of the legacy preview helper.'
 Assert-True ($editorCss -match 'max-width:\s*min\(' -and $editorCss -match 'overflow-wrap:\s*anywhere') 'Compact homepage cards must stay bounded inside the editor canvas.'
-Assert-True ($studioCss -match '\.lunara-site-studio-map') 'The focused Site Studio must have a dedicated visual map treatment.'
+Assert-True ($controlCss -match '\.lunara-site-studio-nav') 'The focused Site Studio must have a concise admin navigation treatment.'
 Assert-True ($functions -notmatch 'lunara_enqueue_homepage_block_editor_assets') 'The duplicate inline homepage block registrar must remain retired.'
 Assert-True ($functions -match "register_block_type\(\s*'lunara/latest-reviews'[\s\S]*?'editor_script'\s*=>\s*'lunara-blocks'") 'Latest Reviews must use the one canonical editor bundle.'
 Assert-True ($functions -match "register_block_type\(\s*'lunara/latest-reviews'[\s\S]*?'category'\s*=>\s*'lunara'") 'Latest Reviews must live in the discoverable Lunara block category.'
@@ -157,6 +152,6 @@ foreach ($renderer in @(
     Assert-True ($functions -match [regex]::Escape($renderer)) "Public renderer ownership must retain $renderer."
 }
 Assert-True ($studio -notmatch "add_action\(\s*'wp_enqueue_scripts'") 'Site Studio must not add public assets.'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.56\s*$') 'Theme version must be 3.2.56.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.43\s*$') 'Theme version must be 3.2.43.'
 
 Write-Host 'site-studio: all assertions passed.'
