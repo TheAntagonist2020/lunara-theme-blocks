@@ -172,8 +172,18 @@ $sessionLog = [IO.File]::ReadAllText((Join-Path $root 'docs/SESSION-LOG.md'))
 $sessionHeadings = @($sessionLog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $sessionHeadingCount = @($sessionHeadings | Where-Object { $_ -ceq $sessionHeading }).Count
 Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.56 local-candidate session heading must exist exactly once.'
-Assert-Contract ($sessionHeadings.Count -gt 0 -and $sessionHeadings[0] -ceq $sessionHeading) `
-    'The final 3.2.56 local-candidate close must be the newest session entry.'
+# Deliberately NOT asserted: that this entry is the newest in the session log.
+# It was newest when written, but AGENTS.md requires every session to append a
+# new entry at the top of docs/SESSION-LOG.md, so pinning position froze the log
+# — the next compliant session could not pass CI. Position is a snapshot, not a
+# property, in the same way a rollback SHA is (see the 2026-08-24 entry).
+#
+# What actually protects this release record is retained in full below: the
+# heading exists exactly once, the entry still carries its CHANGELOG pointer,
+# its explicit did-not-occur list, and the Dalton/Deployer-for-Git deployment
+# boundary — and it still must not be rewritten to claim a deployment or a
+# passing live canary. Those are read by heading, so later entries cannot
+# weaken them.
 $sessionEntry = Get-TopEntry -Text $sessionLog -Heading $sessionHeading
 Assert-Contract ($sessionEntry.Contains('docs/CHANGELOG.md')) `
     'The newest session entry must point to docs/CHANGELOG.md for release detail.'
@@ -189,4 +199,4 @@ if ($script:Failures.Count -gt 0) {
     throw "Theme 3.2.56 release identity contract failed:`n$($details -join "`n")"
 }
 
-Write-Host 'Theme 3.2.56 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and newest local-only release records.'
+Write-Host 'Theme 3.2.56 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and intact local-only release records.'
