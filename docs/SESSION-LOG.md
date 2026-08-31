@@ -25,6 +25,127 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-08-31 — Canary was reporting a false ROLLBACK; deploy-order gap found and closed
+
+### Headline
+
+**The live canary had been telling an operator to roll back a healthy site
+since 2026-08-29.** Theme 3.2.56 moved the canonical route root from
+`<main id="primary">` to `<div id="primary">`; both canonical coherency
+sentinels scanned only `<main>` tags, found zero roots, and failed closed on
+every downstream contract. The release was fine the entire time. Separately,
+3.2.56 was deployed on 2026-08-29 **ahead of the plugin releases it depends
+on**, which were built but never merged.
+
+### Verified live state (probed this session, read-only)
+
+| Check | Result |
+| --- | --- |
+| Live build stamp | `3.2.56+20260829-203401` |
+| `lunara-canary-verify.sh 3.2.56` — **before** the fix | **exit 1 — ROLLBACK** (false) |
+| `lunara-canary-verify.sh 3.2.56` — **after** the fix | **exit 0 — GO** |
+| Journal / Oscars sentinels after fix | both `LIVE_COHERENT` |
+| `/`, `/journal/`, `/reviews/`, `/oscars/` | HTTP 200, zero PHP error markers |
+| `/oscars/` winner cards | 23 rendering |
+| Root element on both routes | `<div id="primary">`, version binding `3.2.56`, tiempos marker present, zero legacy roots |
+
+### The canary defect
+
+`document.match(/<main\b[^>]*>/gi)` in both sentinels restricted the root
+census to `<main>` elements. The live pages carried every marker the gate
+wanted — one `id="primary"` root, the route class, the version binding, the
+tiempos marker — on a `<div>`.
+
+**The move was deliberate and the repo already required it.**
+`tests/public-route-stabilization.ps1:56` asserts route templates
+`-notmatch '<main\s+id="primary"'` — *"must not reopen a nested main
+landmark."* The sentinels were pinned to a pattern the theme's own contract
+forbids. The fix aligns them with the contract that is actually enforced.
+
+Widened, not lowered: exactly one modern root, the version binding matching the
+deployed version, the tiempos marker, and zero legacy roots are all still
+required, and a legacy root is still "carries the route class, lacks the modern
+id" — the 3.2.48 mixed identity.
+
+### Deploy-order violation (already happened, now closed at the repo level)
+
+Theme 3.2.56 went live 2026-08-29 while `main` carried Core **0.8.8** and
+Journal Foundation **1.2.12**. The 3.2.56 slice depends on Core 0.8.9 and
+Foundation 1.2.13. Codex had built and pushed both (`bb30860`, `2cf29cc` —
+the exact SHAs named in the 2026-08-29 entry's own ledger) but no PR was ever
+opened for either, so Dispatch and the theme merged while those two sat on
+unmerged branches.
+
+Opened and merged this session: Core **PR #32** → 0.8.9, Journal Foundation
+**PR #19** → 1.2.13. All four repos now carry the intended versions on `main`.
+**Nothing has been deployed** — the plugin deploys remain Dalton's click.
+
+### Commit ledger
+
+| Repo | SHA | Meaning |
+| --- | --- | --- |
+| theme | `d936cbc` | `main` tip — merge of PR #169, the canary fix |
+| theme | `4dbe6f7` | merge of PR #168, Theme 3.2.56 — **live since 2026-08-29** |
+| core | `55edd85` | merge of PR #32 — Core 0.8.9 |
+| journal-foundation | `d640719` | merge of PR #19 — Foundation 1.2.13 |
+| dispatch | `ce81e1f` | Dispatch 3.2.7 |
+
+The rollback hatch is named by branch, never by SHA — see the 2026-08-24 entry
+for why. It was found **stale** at the start of this session (still parented on
+`aa0faf8` after PR #168 merged) and was rebuilt; it is rebuilt again after
+PR #169. Branch `claude/rollback-exact-theme-3.2.43`, PR #159; verify with
+`git rev-parse origin/claude/rollback-exact-theme-3.2.43^{tree}` against
+`c55bf394594149db2888295c5d51f85f47b2b520` every time.
+
+### Gate ledger
+
+- **Live canary against 3.2.56: exit 0, GO** after the fix.
+- **Mutation testing, 5/5 caught** (each exit 1): version binding stripped;
+  wrong version on the root; legacy root injected in the 3.2.48 shape;
+  duplicated modern root; tiempos marker removed. Unmutated live capture
+  replays at exit 3, as designed.
+- PowerShell contracts: **87 passed / 2 failed** — and the identical 87/2 on a
+  sweep of pristine `main` with the patch removed. Not claimed as green.
+- PHP lint 108/108. `node --check` clean on both gates.
+- **Not run:** the two failing contracts cannot execute in this sandbox —
+  `site-studio-private-preview-contract.ps1` and `public-route-stabilization.ps1`
+  fail under a full sweep with `browserType.launch: spawn /opt/pw-browsers
+  EACCES`. Both pass individually, neither reads the sentinel sources, and the
+  failure reproduces without this change. Environment-limited, not a result.
+
+### Corrections
+
+None to prior entries. The 2026-08-29 entry correctly stated that nothing in
+the 3.2.56 slice was integrated or deployed; the deployment and the partial
+integration both happened after it was written.
+
+### Logged, not fixed
+
+- **A deployed theme can outrun its plugins with nothing to stop it.** The
+  runbook states the plugins-before-theme order, but no gate enforces it. A
+  pre-deploy check comparing the theme's required plugin versions against what
+  is live would have caught this on 2026-08-29.
+- The canary could not distinguish "site broken" from "gate broken" for two
+  days. Fail-closed is the right direction, but a gate that cannot self-report
+  staleness invites exactly the rollback of a healthy site that nearly happened.
+- Carried forward: empty media anchors on posterless winner cards, and the five
+  older P2s.
+
+### Punch-list carried forward
+
+| Item | Status |
+| --- | --- |
+| **Deploy Core 0.8.9, Foundation 1.2.13, Dispatch 3.2.7** via the Control Desk | **Dalton's click.** Foundation before Dispatch. Theme already live. |
+| Re-run `lunara-canary-verify.sh 3.2.56` after those deploys | Ready |
+| Oscars Portal Studio presentation controls (#16) | Open — Dalton asked for it this session; deliberately sequenced after the deploys rather than started mid-flight |
+| Licensed Klim Tiempos fonts exist only in WP uploads | **Unresolved off-site copy.** The one asset a repo backup cannot restore. |
+
+### Whose move it is next
+
+**Dalton's**, on the deploy. Everything at the repo level is done and verified.
+
+---
+
 ## 2026-08-29 — Theme 3.2.56 final hardening and local candidate close
 
 ### Headline
