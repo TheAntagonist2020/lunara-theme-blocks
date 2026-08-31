@@ -200,9 +200,19 @@ function analyzeOscarsCanonicalCoherency({
 		return finalizeVerdict(contracts, failures, detail);
 	}
 
-	const mainTags = document.match(/<main\b[^>]*>/gi) || [];
+	// 3.2.56 moved the canonical route root from <main id="primary"> to a
+	// <div id="primary">. Scanning only <main> tags then found zero roots on a
+	// perfectly healthy page, reported INCOHERENT, and told an operator to roll
+	// back a good release. The root is identified by its id and route class —
+	// that is the contract; the element type never was.
+	//
+	// Widened, not lowered: exactly one root, the version binding, the tiempos
+	// marker, and zero legacy roots are all still required. A legacy root is
+	// still "carries the route class, lacks the modern id", which is precisely
+	// the mixed identity that forced the 3.2.48 rollback.
+	const candidateTags = document.match(/<[a-zA-Z][\w-]*\b[^>]*>/g) || [];
 	let modernRoot = null;
-	for (const tag of mainTags) {
+	for (const tag of candidateTags) {
 		const tokens = classTokens(tag);
 		if (!tokens.includes(PORTAL_ROOT_CLASS)) {
 			continue;
