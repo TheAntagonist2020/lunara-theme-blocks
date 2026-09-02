@@ -25,6 +25,126 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-02 — Theme 3.2.57 journal lede parity and local candidate close
+
+### Headline
+
+Theme 3.2.57 is assembled on `claude/text-difference-investigation-gt06xh`
+and pushed for review. It is a one-selector stylesheet change: journal entries
+no longer enlarge their first body paragraph, so a dispatch post reads in one
+size from the first word to the last. Reviews keep their lede. Dalton raised
+this from a draft preview where paragraphs two and three of the Star Trek
+Starfleet entry looked like a different typeface from paragraph one. They were
+not: same Tiempos Text, 28% smaller. Nothing in this slice is deployed or live.
+
+### Verified live state (read-only probes this session)
+
+| Check | Result |
+| --- | --- |
+| Draft journal 101876 raw content via the Lunara MCP inspect tool | three bare paragraphs, no markup, no classes; `journal_deck` is the first paragraph verbatim, set by Dispatch ingest |
+| Published `/journal/the-new-doomsday-trailer-…/` HTML (anonymous curl) | content wrapper children are plain `<p>` elements; Jetpack Boost concatenated bundles plus inline `lunara-journal-single-guardrail-css` |
+| Live 3.2.56 CSS bundles and inline guardrail, traced by hand | paragraph one: `clamp(1.1rem, 0.98rem + 0.4vw, 1.28rem) !important` from the `> p:first-of-type` rule; paragraphs two onward: `clamp(1rem, 1.05vw, 1.12rem) !important` from the guardrail `p` rule |
+| Computed sizes at 1280 / 1440 / 1920 px | 20.5 / 20.5 / 20.5 px versus 16.0 / 16.0 / 17.9 px |
+| Font family on both paragraphs | identical, inherited from the wrapper; no rule in the cascade sets a family on `p:first-of-type` |
+| Live build stamp, canary, deploy state | not probed; no live-version claim is made in this entry |
+
+No deployment, cache operation, production write, or live verification occurred.
+A branch push did occur, to `claude/text-difference-investigation-gt06xh` only.
+
+### What shipped and why
+
+The journal selector was removed from the shared review/journal lede rule in
+`style.css`. Every journal paragraph now takes the single-journal guardrail
+body clamp, which was evidently the intent when both rules landed together in
+Theme 3.2.18 and could not happen because `> p:first-of-type` outranks the
+guardrail `p` selector on specificity. Reviews keep the enlarged opening
+paragraph because a review has a distinct excerpt and a long body; a dispatch
+entry's first paragraph is its own deck repeated, so the lift only re-read the
+deck at a third size. The one surviving non-important generic lede rule loses
+to the `!important` guardrail clamp, so no second edit was needed.
+
+A new contract, `tests/journal-single-lede-parity.ps1`, holds the boundary.
+The version moved to 3.2.57 with the usual test-pin sweep and a regenerated
+release-identity contract. See the top 3.2.57 entry in `docs/CHANGELOG.md`
+for the code-level detail.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | `3835ca23ad2dac0ccc947ef58bb5fc681ce53a09` | Theme 3.2.57: journal lede parity, version sweep, identity and lede-parity contracts, changelog. |
+| `lunara-theme-blocks` | this commit | Session-log entry. |
+
+### Gate ledger
+
+- **Baseline, CSS edit only, before the version sweep and new tests:** 87/89
+  PowerShell contracts and 18/18 PHP runtime contracts passed. The two failures
+  were `public-route-stabilization.ps1` and
+  `site-studio-private-preview-contract.ps1`, both throwing before any
+  assertion because the pinned Playwright runtime was not installed. CI runs
+  `npm ci --ignore-scripts` first; doing the same here resolved it.
+- **Final run on the complete candidate:** 88/90 PowerShell contracts (the
+  count is 90 because `journal-single-lede-parity.ps1` is new and
+  `release-identity-3-2-56.ps1` became `release-identity-3-2-57.ps1`), 18/18
+  PHP runtime contracts. The same two browser contracts failed again, this time
+  on browser-executable resolution inside the agent container, which has no
+  `/usr/bin/chromium`. Re-run with `LUNARA_BROWSER_EXECUTABLE` pointed at the
+  container's Chromium 1194: both passed. Net 90/90 and 18/18, each contract
+  in a fresh process.
+- **Mutation:** re-added the `body.single-journal … > p:first-of-type` selector
+  to the review lede rule. `journal-single-lede-parity.ps1` went RED on
+  "Reviews must keep exactly one enlarged opening-paragraph rule in
+  style.css." Restored from a `cp` backup, GREEN, and `style.css` confirmed
+  byte-identical to the pre-mutation copy with `cmp`.
+- **Release identity:** `release-identity-3-2-57.ps1` passed alone and inside
+  the full run: exact `Version: 3.2.57` header, zero plain or regex-escaped
+  `3.2.56` in top-level test sources, the dated 3.2.54 Oscars provenance pin
+  intact, `.deployignore` locks intact, changelog and session headings present.
+- **CI static checks, run locally the way `lint.yml` runs them:** PHP lint on
+  every `.php` file passed, `node --check` on every `.js` file passed, CSS
+  brace balance passed.
+- **Not run:** `tests/tools/lunara-canary-verify.sh 3.2.57`. Nothing was
+  deployed, so there is nothing for it to verify. The browser gates ran on the
+  container's Chromium rather than a Playwright-downloaded build; the pinned
+  `playwright-core` 1.62.1 drove it.
+
+### Corrections
+
+None to the durable record. The changelog and this entry both say the two
+competing rules arrived in Theme 3.2.18; that is what `git log -S` reports for
+both strings, and it is stated as history, not as intent.
+
+### Logged, not fixed
+
+- **Deck duplication on dispatch posts.** Journal Foundation ingest sets
+  `journal_deck` from the excerpt, and the excerpt from the first 260
+  characters of the content, so on every automation-created entry the hero
+  deck is the first body paragraph verbatim. The 3.2.57 change makes it read
+  as one size, not as two; the sentence still appears twice. Whether the deck
+  should be a distinct line, or the first paragraph dropped from the body, is
+  an editorial and pipeline call for Dalton, in `lunara-plugin-journal-foundation`
+  and `lunara-plugin-dispatch`, not the theme.
+- **Three redundant wrapper font-family declarations.** `style.css` and
+  `lunara-shell.css` each still set Georgia with `!important` on the journal
+  content wrapper before the later Tiempos token rule wins. Harmless because
+  order settles it, but a future reorder would silently swap the reading face.
+  Not touched, to keep this release to one selector.
+
+### Punch-list carried forward
+
+| Item | Status | Whose call |
+| --- | --- | --- |
+| Merge the branch to `main` and rebuild the exact-rollback hatch | open | Dalton |
+| Deploy Theme 3.2.57 via Deployer for Git from the Control Desk, then `bash tests/tools/lunara-canary-verify.sh 3.2.57` | open, no plugin release precedes it | Dalton |
+| Deck-equals-first-paragraph on dispatch entries | logged above | Dalton |
+| Auto-deploy stays off | unchanged | Dalton |
+
+### Whose move it is next
+
+Dalton's. Review the diff, merge if it reads right, and deploy manually with
+Deployer for Git when ready; the canary argument is `3.2.57`. No plugin
+repositories changed in this session.
+
 ## 2026-08-31 — Canary was reporting a false ROLLBACK; deploy-order gap found and closed
 
 ### Headline

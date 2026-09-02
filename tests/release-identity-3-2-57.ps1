@@ -69,11 +69,11 @@ function Get-TopEntry {
 $stylePath = Join-Path $root 'style.css'
 $styleLines = @(Get-Content -LiteralPath $stylePath)
 $versionHeaderLines = @($styleLines | Where-Object { $_ -match '^Version:' })
-$exactVersionHeaders = @($styleLines | Where-Object { $_ -ceq 'Version: 3.2.56' })
+$exactVersionHeaders = @($styleLines | Where-Object { $_ -ceq 'Version: 3.2.57' })
 Assert-Contract ($versionHeaderLines.Count -eq 1 -and $exactVersionHeaders.Count -eq 1) `
-    'style.css must contain exactly one exact Version: 3.2.56 header.'
+    'style.css must contain exactly one exact Version: 3.2.57 header.'
 
-$priorVersion = @('3', '2', '55') -join '.'
+$priorVersion = @('3', '2', '56') -join '.'
 $escapedPriorVersion = $priorVersion.Replace('.', '\.')
 $trackedSources = @(Get-ChildItem -LiteralPath (Join-Path $root 'tests') -File | Where-Object { $_.Extension -in @('.ps1', '.php', '.js') })
 Assert-Contract ($trackedSources.Count -gt 0) 'Test-source discovery must return at least one file.'
@@ -143,35 +143,35 @@ foreach ($requiredDeployIgnore in @('docs', 'docs/**', 'tests', 'tests/**')) {
 }
 
 $releaseSeparator = [char]0x2014
-$changelogHeading = "## 2026-08-29 $releaseSeparator Theme 3.2.56 Site Studio Editorial and Utility Workspaces"
+$changelogHeading = "## 2026-09-02 $releaseSeparator Theme 3.2.57 Journal Single Lede Parity"
 $changelog = [IO.File]::ReadAllText((Join-Path $root 'docs/CHANGELOG.md'))
 $changelogHeadings = @($changelog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $changelogHeadingCount = @($changelogHeadings | Where-Object { $_ -ceq $changelogHeading }).Count
-Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.56 changelog heading must exist exactly once.'
+Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.57 changelog heading must exist exactly once.'
 Assert-Contract ($changelogHeadings.Count -gt 0 -and $changelogHeadings[0] -ceq $changelogHeading) `
-    'The 3.2.56 changelog entry must be the newest release entry.'
+    'The 3.2.57 changelog entry must be the newest release entry.'
 $changelogEntry = Get-TopEntry -Text $changelog -Heading $changelogHeading
 foreach ($coverage in @(
-    @{ Pattern = '(?is)Reviews Archive.+Journal Archive.+Review Single.+Utility Search.+Site Footer'; Label = 'all five editorial and utility surfaces' },
-    @{ Pattern = '(?is)canonical.+no second settings'; Label = 'canonical ownership without duplicate storage' },
-    @{ Pattern = '(?is)section order.+visibility.+canonical'; Label = 'canonical archive ordering and visibility' },
-    @{ Pattern = '(?is)private preview.+q=Lunara.+section bridge'; Label = 'fixed-query private preview and section bridge' },
-    @{ Pattern = '(?is)twelve.+revision.+safety\s+snapshot'; Label = 'twelve revisions and restore safety' },
-    @{ Pattern = '(?is)plain-language.+1440.+768.+390'; Label = 'responsive plain-language workspace' },
-    @{ Pattern = '(?is)Core 0\.8\.9.+Journal\s+Foundation 1\.2\.13.+Dispatch 3\.2\.7'; Label = 'plugin-first compatibility releases' },
-    @{ Pattern = '(?is)same-origin admin anchors.+fail closed'; Label = 'safe guided handoff anchors' },
-    @{ Pattern = '(?is)404-only.+Classic controls'; Label = '404-only Classic controls ownership boundary' },
-    @{ Pattern = '(?is)Removed.+version-change.+Header.+Hero.+purge'; Label = 'version-change, Header, and Hero purge removal' }
+    @{ Pattern = '(?is)Removed the journal half.+opening-paragraph rule'; Label = 'the journal lede removal' },
+    @{ Pattern = '(?is)Reviews keep their lede'; Label = 'the review lede survival' },
+    @{ Pattern = '(?is)same body clamp.+single-journal inline guardrail'; Label = 'the shared journal body clamp' },
+    @{ Pattern = '(?is)hero deck repeated.+Foundation ingest'; Label = 'the deck-duplication cause' },
+    @{ Pattern = '(?is)20\.5px.+16px.+28%'; Label = 'the measured size step' },
+    @{ Pattern = '(?is)Theme 3\.2\.18.+specificity'; Label = 'the origin and specificity diagnosis' },
+    @{ Pattern = '(?is)Verified the cascade.+live.+CSS bundles'; Label = 'the live cascade verification' },
+    @{ Pattern = '(?is)non-important.+1\.24rem.+still\s+loses'; Label = 'the surviving generic rule analysis' },
+    @{ Pattern = '(?is)journal-single-lede-parity\.ps1'; Label = 'the new contract test' },
+    @{ Pattern = '(?is)Not changed.+deck-equals-first-paragraph'; Label = 'the deliberately unfixed duplication' }
 )) {
     Assert-Contract ($changelogEntry -match $coverage.Pattern) `
-        "The 3.2.56 changelog entry must cover $($coverage.Label)."
+        "The 3.2.57 changelog entry must cover $($coverage.Label)."
 }
 
-$sessionHeading = "## 2026-08-29 $releaseSeparator Theme 3.2.56 final hardening and local candidate close"
+$sessionHeading = "## 2026-09-02 $releaseSeparator Theme 3.2.57 journal lede parity and local candidate close"
 $sessionLog = [IO.File]::ReadAllText((Join-Path $root 'docs/SESSION-LOG.md'))
 $sessionHeadings = @($sessionLog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $sessionHeadingCount = @($sessionHeadings | Where-Object { $_ -ceq $sessionHeading }).Count
-Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.56 local-candidate session heading must exist exactly once.'
+Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.57 local-candidate session heading must exist exactly once.'
 # Deliberately NOT asserted: that this entry is the newest in the session log.
 # It was newest when written, but AGENTS.md requires every session to append a
 # new entry at the top of docs/SESSION-LOG.md, so pinning position froze the log
@@ -187,7 +187,7 @@ Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.56 local-candidate s
 $sessionEntry = Get-TopEntry -Text $sessionLog -Heading $sessionHeading
 Assert-Contract ($sessionEntry.Contains('docs/CHANGELOG.md')) `
     'The newest session entry must point to docs/CHANGELOG.md for release detail.'
-Assert-Contract ($sessionEntry.Contains('No deployment, cache operation, production write, live verification, push, merge, or PR occurred.')) `
+Assert-Contract ($sessionEntry.Contains('No deployment, cache operation, production write, or live verification occurred.')) `
     'The newest session entry must explicitly record every release action that did not occur.'
 Assert-Contract ($sessionEntry -match '(?is)Dalton.+manual.+Deployer for Git') `
     'The newest session entry must name Dalton and manual Deployer for Git as the later deployment boundary.'
@@ -196,7 +196,7 @@ Assert-Contract ($sessionEntry -notmatch '(?im)^\s*(Deployment completed|Deploye
 
 if ($script:Failures.Count -gt 0) {
     $details = $script:Failures | ForEach-Object { " - $_" }
-    throw "Theme 3.2.56 release identity contract failed:`n$($details -join "`n")"
+    throw "Theme 3.2.57 release identity contract failed:`n$($details -join "`n")"
 }
 
-Write-Host 'Theme 3.2.56 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and intact local-only release records.'
+Write-Host 'Theme 3.2.57 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and intact local-only release records.'
