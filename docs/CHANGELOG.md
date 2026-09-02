@@ -40,6 +40,21 @@ directly from each repo's `git log`, not reconstructed from memory.
 - Not changed: the deck-equals-first-paragraph duplication itself. That is
   Dispatch and Journal Foundation ingest behavior, logged in the session log as
   a separate call for Dalton.
+- Companion plugin releases, same day, after Dalton made that call: **Dispatch
+  3.2.8** and **Journal Foundation 1.2.14** turn the deck into a model-written
+  tease. Foundation compiles a new instruction into the live Control Plane
+  prompt (and Dispatch's fallback prompt carries the same rule): directly after
+  the `<h3>`, an HTML comment `<!-- LUNARA_DECK: ... -->`, one or two
+  sentences, 18 to 40 words, a provocation into the entry that repeats neither
+  the headline nor the first sentence. Dispatch lifts the comment out of the
+  body before the quality gate, topic signature, excerpt, and SEO description
+  see it, and hands it to Foundation as `deck` and `journal_deck`. When the
+  comment is missing, empty, under 20 or over 400 characters, or restates the
+  headline or the body's first six words, the deck falls back to the old
+  260-character excerpt, so a model that ignores the rule reproduces 3.2.7
+  drafts exactly. New contracts: `tests/dispatch-deck-tease-runtime.php` and
+  `tests/prompt-compiler-deck-runtime.php`, both wired into CI. Deploy order:
+  Dispatch 3.2.8, then Foundation 1.2.14, then this theme.
 
 ## 2026-08-29 — Theme 3.2.56 Site Studio Editorial and Utility Workspaces
 

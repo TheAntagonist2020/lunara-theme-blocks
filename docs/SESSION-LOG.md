@@ -25,6 +25,119 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-02 — Dispatch 3.2.8 and Journal Foundation 1.2.14: the deck becomes a tease
+
+### Headline
+
+Same session as the Theme 3.2.57 entry below, second slice. Dalton read the
+"logged, not fixed" item there, the deck being the first body paragraph
+verbatim on every automation-created entry, and decided: the deck should be a
+provocative tease into the article, not a repeat. That is now built, tested,
+and pushed on `claude/text-difference-investigation-gt06xh` in both plugin
+repositories. Nothing is deployed or live.
+
+### Verified live state
+
+Not applicable. No production probe, canary, deployment, cache operation, or
+production write was run in this slice. The pipeline facts below were read
+from the repositories, not from the live site.
+
+### What shipped and why
+
+The deck was never written by the model. Dispatch's ingest bridge clipped the
+first 260 characters of the body and called that the deck; Foundation's ingest
+already accepted a distinct `deck` key but was never sent one. The change
+therefore has two halves and a strict order between them:
+
+- **Journal Foundation 1.2.14** compiles the instruction into the live
+  Control Plane system prompt and user directive: directly after the `<h3>`,
+  an HTML comment `<!-- LUNARA_DECK: ... -->`, one or two sentences, 18 to 40
+  words, a tease that names the tension or stakes and leaves them unresolved,
+  and repeats neither the headline nor the first sentence of the body. A
+  comment was chosen because the prompt forbids classes, wrappers, and divs,
+  the skip marker already uses the same convention, and a comment an older
+  parser fails to remove is invisible to readers.
+- **Dispatch 3.2.8** lifts that comment out of every section body before the
+  quality gate, topic signature, excerpt, and SEO description see it, passes
+  it through the bridge as `deck` and `journal_deck`, and validates it:
+  missing, empty, under 20 or over 400 characters, equal to the headline, or
+  sharing the body's first six words all fall back to the old 260-character
+  excerpt. A model that ignores the instruction produces exactly the drafts
+  3.2.7 produced. The in-plugin fallback prompt carries the same instruction
+  for runs without the Control Plane.
+
+The theme needs nothing: the hero already renders `journal_deck`. Code-level
+detail is in the 3.2.57 entry of `docs/CHANGELOG.md`, which now carries the
+companion releases as its final bullet.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-plugin-dispatch` | `4e5b0823c328fb500dae7676877eece18448109f` | Dispatch 3.2.8: deck extraction, validated pass-through with excerpt fallback, fallback prompt rule, version and user-agent sweep, new runtime contract in CI. |
+| `lunara-plugin-journal-foundation` | `52c765974e4a4cb5b9066d9973b7bf1d0f354c45` | Foundation 1.2.14: deck rule compiled into the live prompts, release contract extended, new compiler runtime contract in CI, version sweep including the three OpenAPI documents. |
+| `lunara-theme-blocks` | this commit | Changelog companion bullet and this entry. No theme code changed in this slice. |
+
+### Gate ledger
+
+- **Dispatch:** 14/14 PHP runtime contracts, each in a fresh process (13
+  existing plus `dispatch-deck-tease-runtime.php`). PHP lint clean across the
+  plugin. The CI workflow's named runtime list now includes the new contract.
+- **Foundation:** 9/9 PHP contracts (8 existing plus
+  `prompt-compiler-deck-runtime.php`); the release contract reports 283
+  assertions. PHP lint clean; all three OpenAPI JSON documents parse. The CI
+  workflow now runs the new contract.
+- **Mutation, Dispatch:** reverted the parser and bridge to their 3.2.7 bytes
+  with `cp`. The deck contract went RED. Restored from the working copies,
+  `cmp` confirmed byte-identical, GREEN.
+- **Mutation, Foundation:** reverted the compiler to its 1.2.13 bytes. Both
+  the new runtime contract and the four new release-contract assertions went
+  RED. Restored, `cmp` byte-identical, GREEN.
+- **Test-writing lesson recorded, not hidden:** the first draft of the Dispatch
+  contract failed twice. One failure was the fixture's fault: a single entry
+  with no `<hr>` has never produced a section in this parser. The other was a
+  real gap: a deck that reused the body's first eight words but diverged at
+  character 60 slipped past a 60-character prefix probe. The repeat check is
+  now word-based (first six normalized words), and a case for a deck that
+  shares only two opening words confirms the tease survives that check.
+- **Not run:** any browser or PowerShell gate (none apply to the plugins), the
+  theme suite (no theme code changed), and the canary (nothing deployed).
+
+### Corrections
+
+None to the durable record. The Theme 3.2.57 entry below listed this item
+under "Logged, not fixed"; it stays there as written, and this entry is where
+it was fixed.
+
+### Logged, not fixed
+
+- **Existing drafts keep their old decks.** The change applies to drafts
+  created after both plugins are live. Draft 101876 (Star Trek) and every
+  other queued Dispatch draft still carry the excerpt-as-deck and would need
+  their deck rewritten by hand or by a re-run.
+- **The deck's quality is the model's.** The rules bound length and forbid
+  repetition; they cannot make a tease good. If the first few live decks read
+  flat, the lever is the Control Plane voice refinement note, not more code.
+- **Redundant wrapper font-family declarations in the theme**, carried from
+  the 3.2.57 entry, unchanged.
+
+### Punch-list carried forward
+
+| Item | Status | Whose call |
+| --- | --- | --- |
+| Merge all three branches to `main`; rebuild the theme's exact-rollback hatch | open | Dalton |
+| Deploy in this order: Dispatch 3.2.8, Journal Foundation 1.2.14, Theme 3.2.57; then `bash tests/tools/lunara-canary-verify.sh 3.2.57` | open | Dalton |
+| Read the first two or three live decks and tune the voice refinement note if they read as summaries | open, after deploy | Dalton |
+| Rewrite or regenerate the decks on drafts created before 3.2.8 | open | Dalton |
+| Auto-deploy stays off | unchanged | Dalton |
+
+### Whose move it is next
+
+Dalton's. Three branches carry the same name across three repositories; merge
+each, deploy plugins before the theme and Dispatch before Foundation, and
+verify with the 3.2.57 canary argument. A deployment is manual, from the
+Control Desk, with Deployer for Git.
+
 ## 2026-09-02 — Theme 3.2.57 journal lede parity and local candidate close
 
 ### Headline
