@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.56
+Version: 3.2.57
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -16012,8 +16012,11 @@ body.single-journal .lunara-review-single-content p {
     overflow-wrap: break-word !important;
 }
 
-body.single-review .lunara-review-single-content > p:first-of-type,
-body.single-journal .lunara-review-single-content > p:first-of-type {
+/* Reviews keep the enlarged opening paragraph. Journal entries do not: their
+   first paragraph is the hero deck repeated, and a 28% size step on a
+   three-paragraph dispatch read as a second typeface. Journal paragraphs all
+   take the body clamp from the single-journal guardrail. */
+body.single-review .lunara-review-single-content > p:first-of-type {
     color: #FAFBFC !important;
     font-size: clamp(1.1rem, 0.98rem + 0.4vw, 1.28rem) !important;
     line-height: 1.78 !important;

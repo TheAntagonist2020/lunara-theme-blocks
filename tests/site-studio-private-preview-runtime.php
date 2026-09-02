@@ -141,7 +141,7 @@ function lunara_preview_provider_config( $surface, $token ) {
 function lunara_reviews_archive_studio_get_preview_config( $token ) { return lunara_preview_provider_config( 'reviews-archive', $token ); }
 function lunara_journal_archive_studio_get_preview_config( $token ) { return lunara_preview_provider_config( 'journal-archive', $token ); }
 
-/** Trace every real projection callback, including the five 3.2.56 surfaces. */
+/** Trace every real projection callback, including the five 3.2.57 surfaces. */
 function lunara_preview_trace_schema( $surface ) {
 	global $lunara_test_trace_callbacks, $lunara_preview_events;
 	if ( $lunara_test_trace_callbacks ) { $lunara_preview_events[] = 'projection'; }

@@ -93,7 +93,7 @@ function htmlFor(route) {
         ${css}
         body.lunara-public-stabilization-fixture .lunara-review-archive-rail-item{flex:0 0 280px!important}
         body.lunara-public-stabilization-fixture.lunara-oscars-portal-page .lunara-oscars-winner-carousel-track{display:grid!important;grid-template-columns:none!important;grid-auto-flow:column!important;grid-auto-columns:260px!important}
-    </style></head><body class="lunara-public-stabilization-fixture ${route.bodyClass}"><div class="site"><main id="canonical-main" class="site-main"><i class="test-box-sizing-sentinel" aria-hidden="true"></i><${tag} id="primary" class="${route.rootClass}" data-lunara-theme-version="3.2.56">${route.content}</${tag}></main></div></body></html>`;
+    </style></head><body class="lunara-public-stabilization-fixture ${route.bodyClass}"><div class="site"><main id="canonical-main" class="site-main"><i class="test-box-sizing-sentinel" aria-hidden="true"></i><${tag} id="primary" class="${route.rootClass}" data-lunara-theme-version="3.2.57">${route.content}</${tag}></main></div></body></html>`;
 }
 
 async function inspect(page, routeName, route, width) {

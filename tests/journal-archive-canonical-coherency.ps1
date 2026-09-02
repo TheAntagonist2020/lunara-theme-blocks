@@ -5,7 +5,7 @@ $ErrorActionPreference = 'Stop'
 # Theme 3.2.48 was rolled back from production because the anonymous no-query
 # /journal/ response served legacy cached archive markup while every other
 # cache key had advanced to the candidate. This contract proves — offline,
-# with no network — that the sentinel guarding the 3.2.56 reissue stays
+# with no network — that the sentinel guarding the 3.2.57 reissue stays
 # fail-closed, targets only the exact canonical URL, and cannot be satisfied
 # by query-bearing, cache-busted, or authenticated diagnostic variants.
 #
@@ -36,7 +36,7 @@ function Read-ThemeFile {
 }
 
 $style = Read-ThemeFile 'style.css'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.56\s*$') 'Theme version must be 3.2.56.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.57\s*$') 'Theme version must be 3.2.57.'
 
 $template = Read-ThemeFile 'archive-journal.php'
 Assert-True ($template -match 'data-lunara-theme-version="<\?php echo esc_attr\( \(string\) wp_get_theme\(\)->get\( ''Version'' \) \); \?>"') 'The modern Journal root must stamp the deployed theme version so cached HTML identity is provable.'

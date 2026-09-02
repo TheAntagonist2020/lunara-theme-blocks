@@ -11,6 +11,36 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-02 — Theme 3.2.57 Journal Single Lede Parity
+
+- Removed the journal half of the enlarged opening-paragraph rule in
+  `style.css`. Reviews keep their lede; journal entries no longer single out
+  `p:first-of-type`, so every journal paragraph now takes the same body clamp
+  from the single-journal inline guardrail in `inc/frontend.php`.
+- Why: on a journal entry the first body paragraph is the hero deck repeated,
+  because the Foundation ingest derives the deck from the excerpt and the
+  excerpt from the opening of the content. The lede rule then lifted that
+  repeated sentence to 20.5px while paragraph two sat at the 16px clamp floor
+  at 1280 to 1440px viewports, a 28% step in the same Tiempos Text face. On a
+  three-paragraph dispatch it read as the article changing typeface. Both
+  rules arrived together in Theme 3.2.18 "Journal reading focus"; the journal
+  body clamp was evidently meant to cover all paragraphs and could not, because
+  the `> p:first-of-type` selector outranks it on specificity.
+- Verified the cascade against the live 3.2.56 CSS bundles and the inline
+  guardrail block on a published journal entry before changing anything. The
+  stored post content is three bare paragraphs with no markup, so the
+  difference was entirely CSS.
+- The remaining non-important generic `p:first-of-type` rule at 1.24rem still
+  loses to the `!important` journal clamp, so this is a single-selector change
+  with no second edit and no cache flush.
+- Added `tests/journal-single-lede-parity.ps1` to hold the boundary: reviews
+  keep exactly one lede rule, no shipped CSS singles out the first journal
+  paragraph, and the shared guardrail clamp stays in place and stays
+  `!important`.
+- Not changed: the deck-equals-first-paragraph duplication itself. That is
+  Dispatch and Journal Foundation ingest behavior, logged in the session log as
+  a separate call for Dalton.
+
 ## 2026-08-29 — Theme 3.2.56 Site Studio Editorial and Utility Workspaces
 
 - Migrated Reviews Archive, Journal Archive, Review Single, Utility Search &
