@@ -1,0 +1,6 @@
+interface:
+  display_name: "Lunara Theme Blocks"
+  short_description: "Repo-specific patterns and workflows for lunara-theme-blocks"
+  default_prompt: "Use the lunara-theme-blocks repo skill to follow existing architecture, testing, and workflow conventions."
+policy:
+  allow_implicit_invocation: true
