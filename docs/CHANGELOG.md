@@ -11,6 +11,91 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-04 — Journal Foundation 1.2.14 and Dispatch 3.2.8 Journal Voice
+
+Plugin-only release. No theme change.
+
+**Journal Foundation 1.2.14** (`7a77042510d95e6b8fad5f3bbbbaabc9730afcff`)
+
+- The Control Plane prompt compiler now carries the full LUNARA Journal
+  register as code-owned defaults under `editorial.voice`: `register`,
+  `principles`, `structure`, `headline_rules`, `contrast_examples` (Not this /
+  This pairs), `drift_catalog`, `expertise_poison_phrases`, and
+  `engagement_close`. The compiled system prompt went from roughly 40 lines
+  with a one-sentence voice to a full register statement with nine worked
+  contrast pairs, ASCII-only, about 2,500 tokens.
+- Why: the compiled prompt is the only prompt the model sees while Foundation
+  is active. The rich voice prompt in Dispatch `class-prompts.php` is a
+  fallback that never executes on the live stack. Every Dispatch draft since
+  config 1.0.25 shares prompt hash `8b1b180c…`, and every one reads the same
+  way: paragraph one restates the source, paragraph two pivots on "not just X,
+  it is Y", paragraph three announces "the real story is". The voice Dalton
+  wants is documented in the `lunara-journal` skill and none of it reached the
+  model.
+- The new keys are filled from code on every read because
+  `sanitize_config()` deep-merges defaults into every stored version. A
+  configuration created before 1.2.14 compiles with the full voice while
+  keeping its admin-edited summary, refinement note, and banned phrases. The
+  refinement note now lands after the principles and carries the "freshest
+  steering, cannot override facts or formatting" framing the Dispatch fallback
+  already had.
+- The user directive now states the angle-first rule, fan before critic, first
+  person allowed, and a landing sentence plus one engagement question on every
+  entry. Each entry becomes its own post, so the skill's "question on the
+  final story only" rule for roundups applies per entry here.
+- The validator reports `expertise_poison_phrases` as warnings ("House tell
+  found, cut on sight"), never as errors, so a draft is flagged for a human
+  without being pushed into `validation_failed`.
+- Contracts added and wired into `lint.yml`:
+  `tests/prompt-compiler-voice-runtime.php` (sections present and ordered,
+  ASCII-only prompt, half-formed contrast pairs dropped, pre-1.2.14 stored
+  config still compiles the voice, directive ends at the news-data boundary,
+  ChatGPT editor instructions inherit it) and
+  `tests/validator-house-tells-runtime.php` (warnings not errors; banned
+  phrases still fail).
+- Version pins, OpenAPI release versions, README, and the Site Studio runtime
+  stub moved to 1.2.14. Protocol and schema versions stay at 1.2.2: no key
+  was renamed or removed and Dispatch reads the compiled strings, not the keys.
+
+**Dispatch 3.2.8** (`254a7605823053e91be5f51069ffa6a0928fd2d2`)
+
+- Fallback system prompt and user directive aligned with the compiled voice:
+  first person, opinion in paragraph one, performed-expertise phrases and
+  "the real story is" / "the takeaway is simple" banned, template headlines
+  ("X Turns Y Into Z") banned, landing sentence then engagement question on
+  every entry. The "Do not force a question" rule and "a question is optional,
+  never mandatory" line are gone; both contradicted the skill.
+- OpenAI Responses requests send `text.verbosity: medium` instead of `low`.
+  Low is an explicit terseness instruction, which is the wire-service register
+  the Journal exists to reject. `reasoning.effort` stays `none`: reasoning
+  tokens count against the 2,200 `max_output_tokens` cap and would truncate a
+  two-entry run. Output cost is bounded by the same cap either way; input
+  grows by about 2,500 cacheable tokens per run, which at the gpt-5.4-mini
+  cached rate is a fraction of a cent. `openai-cost-guard-runtime.php` pins
+  the new pair and explains the choice inline.
+- `Lunara_Dispatch_Post_Builder::normalize_typographic_punctuation()` folds
+  curly quotes, em and en dashes, ellipses, no-break and thin spaces, and their
+  HTML entities to ASCII at the top of `split_into_individual_posts()`, before
+  titles are derived. Three of the four drafts inspected this session carried
+  Foundation's "non-ASCII" warning purely from the model's curly apostrophes.
+  Accented characters in names are left alone so that warning still means
+  something.
+- Contract added and wired into `lint.yml`: `tests/journal-voice-runtime.php`
+  (fallback prompt agreement, normalizer output byte-for-byte, normalizer runs
+  before extraction).
+- Version pins and the three release-aligned user agents moved to 3.2.8.
+
+**Not changed, deliberately**
+
+- The Dispatch quality gate's `has_originality_signal()` list rewards "not
+  just", "the signal", "the pattern", "reads like": the exact tics the new
+  prompt tells the model to drop. It is a skip filter, not a generator, and
+  its list is broad enough ("studio", "filmmaker") that clean copy still
+  passes. Logged in the session log for a separate pass.
+- The deck-equals-first-paragraph duplication carried from 2026-09-02.
+- Provider and model. Dispatch stays on `gpt-5.4-mini`. Switching provider or
+  raising the output cap to allow reasoning is a cost decision for Dalton.
+
 ## 2026-09-02 — Theme 3.2.57 Journal Single Lede Parity
 
 - Removed the journal half of the enlarged opening-paragraph rule in

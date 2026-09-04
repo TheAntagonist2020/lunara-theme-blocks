@@ -25,6 +25,147 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-04 — The Journal voice was never reaching the model; Foundation 1.2.14 and Dispatch 3.2.8 put it there
+
+### Headline
+
+Dalton opened the session on the Journal prose: he cannot trust the voice and
+has to go line by line through every draft. The cause is structural, not a
+tuning problem. The full voice prompt in Dispatch is dead code on the live
+stack; the Control Plane compiler in Journal Foundation is what the model
+actually receives, and its entire voice instruction was one sentence. Every
+draft since config 1.0.25 carries the same prompt hash and the same three-move
+shape. Journal Foundation 1.2.14 moves the whole register, worked contrast
+pairs included, into the compiler as code-owned defaults that survive every
+stored config version. Dispatch 3.2.8 aligns its fallback, stops telling
+OpenAI to be terse, and folds curly punctuation to ASCII so the validator's
+non-ASCII warning stops firing on every draft. Both are pushed to
+`claude/journal-voice-optimization-kf6b9o`. Nothing is merged, deployed, or
+live. No theme code changed.
+
+### Verified live state (read-only probes this session)
+
+| Check | Result |
+| --- | --- |
+| Journal drafts 101898, 101897, 101902, 101886 via the Lunara MCP inspect tool | all four created by Dispatch 3.2.7 / Foundation 1.2.12 (per meta) on config 1.0.25, provider openai, model gpt-5.4-mini, `journal_status` needs_chatgpt_review |
+| `_lunara_dispatch_prompt_hash` on all four | identical: `8b1b180cbf58…` |
+| Draft shape, read by hand | paragraph one restates the source; paragraph two adds detail and a quote; paragraph three opens "The real story is" / "The takeaway is simple" / "If X … if not …". Zero first person. Zero closing questions. "not just X, it is Y" pivot in two of four |
+| Recent journal titles, 15 listed | four use the "X Turns Y Into Z" template |
+| Validation warnings | three of four carry "Content contains non-ASCII characters", caused by curly apostrophes and quotes from the model, not by names |
+| Live plugin versions on `main` | Foundation 1.2.13, Dispatch 3.2.7. Draft meta reports Foundation 1.2.12 at generation time, so 1.2.13 may not be deployed yet; not probed further |
+| Live theme build stamp, canary, deploy state | not probed; no live-version claim is made |
+
+No deployment, cache operation, production write, or live generation occurred.
+Branch pushes occurred to `claude/journal-voice-optimization-kf6b9o` in
+three repositories.
+
+### What shipped and why
+
+See the 2026-09-04 entry in `docs/CHANGELOG.md` for the code-level detail.
+The reasoning that matters for the handoff:
+
+- **Fix the seat, not the note.** The Control Plane's "Current Refinement"
+  textarea is the only voice lever Dalton has had, and it is appended as a
+  note to a skeleton. Twenty-five config versions did not move the prose
+  because the register was never in the prompt to begin with. The voice now
+  lives in code, under `editorial.voice`, and the refinement note lands after
+  it as steering.
+- **The voice is the skill's voice.** Register, principles, structure,
+  headline rules, drift catalog, poison phrases, and the engagement close are
+  transcribed from the `lunara-journal` skill, with two contrast pairs added
+  that rewrite actual sentences from this week's drafts. One decision Dalton
+  should check: the skill requires an engagement question on every post, and
+  the old Dispatch prompt forbade forcing one. The skill wins here, because
+  each Dispatch entry becomes its own post. Reverting is one string in
+  `engagement_close`.
+- **Verbosity, not reasoning.** `verbosity: low` was an instruction to be
+  terse; `medium` is the fix. Reasoning stays off because it shares the
+  2,200-token output cap and would truncate runs.
+- **ASCII at the source.** Foundation warns on non-ASCII; the model writes
+  curly quotes by habit. Normalizing in the Dispatch builder before the split
+  keeps the warning meaningful for accented names.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-plugin-journal-foundation` | `7a77042510d95e6b8fad5f3bbbbaabc9730afcff` | Foundation 1.2.14: full Journal voice in schema and compiler, validator house-tell warnings, two contracts, version pins. |
+| `lunara-plugin-dispatch` | `254a7605823053e91be5f51069ffa6a0928fd2d2` | Dispatch 3.2.8: fallback prompt alignment, verbosity medium, ASCII punctuation normalizer, contract, version pins. |
+| `lunara-theme-blocks` | this commit | Changelog and session-log entries. No theme code. |
+
+### Gate ledger
+
+- **Foundation, run the way `lint.yml` runs it:** PHP lint on every file
+  passed; `release-contract.php` 279 assertions; `wp-behavior-contract`,
+  `control-plane-sources-runtime`, `site-studio-workflow-runtime`,
+  `automation-contract` (52), `automation-source-bridge-runtime`,
+  `automation-attention-runtime`, `hub-telemetry-runtime` all passed; JSON
+  syntax clean. New: `prompt-compiler-voice-runtime.php` and
+  `validator-house-tells-runtime.php` passed and are wired into CI. Run on
+  the container's PHP only; CI's 7.4 / 8.2 / 8.3 matrix will confirm. Nothing
+  in the change uses syntax newer than 7.4.
+- **Dispatch, run the way `lint.yml` runs it:** PHP lint passed;
+  `dispatch-stabilization-contract` plus all eight CI runtimes passed; JS
+  syntax and CSS brace balance clean. Also run: `openai-cost-guard-runtime`,
+  `dispatch-ai-fallback-runtime`, `dispatch-heartbeat-runtime`,
+  `source-packet-runtime`, all passed. New: `journal-voice-runtime.php`
+  passed and is wired into CI alongside the cost guard.
+- **Mutations, each restored from a `cp` backup and confirmed byte-identical
+  with `cmp`:** dropping the REGISTER emission went RED in the compiler
+  contract; turning house-tell warnings into errors went RED in the validator
+  contract; reverting verbosity to `low` went RED in the cost guard; removing
+  the normalizer call from the split path went RED; reinstating "Do not force
+  a question" went RED. Five for five.
+- **Not run:** any live generation. The compiled prompt was rendered locally
+  and read in full, but no OpenAI call was made and no draft was produced.
+  The proof is the next Dispatch run after deploy, read by Dalton.
+  `lunara-canary-verify.sh` was not run; no theme release exists to verify.
+
+### Corrections
+
+None to the durable record. The 2026-09-02 entry's "Logged, not fixed" deck
+duplication stands and is carried below.
+
+### Logged, not fixed
+
+- **Dispatch quality gate rewards the tics.** `has_originality_signal()` in
+  `class-post-builder.php` passes a section on "not just", "the signal",
+  "the pattern", "reads like", "the takeaway": several are now on the
+  cut-on-sight list. The gate is a skip filter and its list is broad enough
+  that clean copy passes on "studio" or "filmmaker", so it does not block
+  the new voice, but it should be rebuilt around the new register in a
+  separate pass with its own mutation test.
+- **Provenance label will lag.** `_lunara_journal_prompt_version` on new
+  drafts will still read `journal-1.0.25` after deploy because the config
+  version does not change when code-owned defaults change. The
+  `_lunara_dispatch_prompt_hash` will change, which is the true signal. If
+  Dalton wants the label to move too, saving any Control Plane change will
+  mint 1.0.26.
+- **Deck equals first paragraph** on every dispatch entry, carried from
+  2026-09-02. Now that paragraph one is asked to be a claim rather than a
+  summary, the duplicated line will at least be the sharp one.
+
+### Punch-list carried forward
+
+| Item | Status | Whose call |
+| --- | --- | --- |
+| Review the compiled prompt (Journal → Control Plane, read-only compiled box) and the engagement-question decision | open | Dalton |
+| Open PRs and merge Foundation 1.2.14 then Dispatch 3.2.8 to `main` | open, not requested this session | Dalton |
+| Deploy plugins via Deployer for Git from the Control Desk: Foundation first, Dispatch second; no theme release in this slice | open | Dalton |
+| Read the first Dispatch draft after deploy against the register; confirm the prompt hash changed | open | Dalton |
+| Merge Theme 3.2.57 and rebuild the exact-rollback hatch | open, carried | Dalton |
+| Deploy Theme 3.2.57, then `bash tests/tools/lunara-canary-verify.sh 3.2.57` | open, carried | Dalton |
+| Rebuild the Dispatch originality gate around the new register | logged above | Dalton |
+| Deck-equals-first-paragraph | logged above, carried | Dalton |
+| Auto-deploy stays off | unchanged | Dalton |
+
+### Whose move it is next
+
+Dalton's. Read the compiled prompt in the Control Plane once 1.2.14 is on
+the site, decide on the per-entry engagement question, merge and deploy the
+two plugins in order, and judge the next draft. If it still reads like a
+trade desk, the next lever is the model, not the prompt.
+
 ## 2026-09-02 — Theme 3.2.57 journal lede parity and local candidate close
 
 ### Headline
