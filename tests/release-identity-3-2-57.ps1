@@ -148,8 +148,23 @@ $changelog = [IO.File]::ReadAllText((Join-Path $root 'docs/CHANGELOG.md'))
 $changelogHeadings = @($changelog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $changelogHeadingCount = @($changelogHeadings | Where-Object { $_ -ceq $changelogHeading }).Count
 Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.57 changelog heading must exist exactly once.'
-Assert-Contract ($changelogHeadings.Count -gt 0 -and $changelogHeadings[0] -ceq $changelogHeading) `
-    'The 3.2.57 changelog entry must be the newest release entry.'
+# Deliberately NOT asserted: that this entry is the first heading in the
+# changelog. docs/CHANGELOG.md covers all seven repositories (AGENTS.md), so a
+# plugin-only release lands above the newest theme release without moving the
+# theme's identity. Pinning absolute position froze the changelog on the first
+# such entry (2026-09-04, Journal Foundation 1.2.14 and Dispatch 3.2.8), the
+# same way the session-log pin froze the log (see the note below and the
+# 2026-08-31 change that removed it). What is asserted instead: the 3.2.57
+# entry is the newest THEME release entry. No heading above it may name a
+# theme version, so a later theme release still has to regenerate this file.
+$themeReleaseHeadingPattern = '^## .+ Theme \d+\.\d+\.\d+\b'
+$changelogHeadingIndex = [array]::IndexOf($changelogHeadings, $changelogHeading)
+$newerThemeHeadings = @()
+if ($changelogHeadingIndex -gt 0) {
+    $newerThemeHeadings = @($changelogHeadings[0..($changelogHeadingIndex - 1)] | Where-Object { $_ -match $themeReleaseHeadingPattern })
+}
+Assert-Contract ($changelogHeadingIndex -ge 0 -and $newerThemeHeadings.Count -eq 0) `
+    'The 3.2.57 changelog entry must be the newest theme release entry; only plugin-only entries may sit above it.'
 $changelogEntry = Get-TopEntry -Text $changelog -Heading $changelogHeading
 foreach ($coverage in @(
     @{ Pattern = '(?is)Removed the journal half.+opening-paragraph rule'; Label = 'the journal lede removal' },

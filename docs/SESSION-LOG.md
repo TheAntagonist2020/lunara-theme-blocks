@@ -99,7 +99,8 @@ The reasoning that matters for the handoff:
 | `lunara-plugin-dispatch` | `254a7605823053e91be5f51069ffa6a0928fd2d2` | Dispatch 3.2.8: fallback prompt alignment, verbosity medium, ASCII punctuation normalizer, contract, version pins. |
 | `lunara-plugin-journal-foundation` | `0b7e9d410783328654a28fcf2dfc5e0539e771e9` | Foundation 1.2.14 follow-up: engagement question conditional. |
 | `lunara-plugin-dispatch` | `e054843238733b47841839af14074f6529b02223` | Dispatch 3.2.8 follow-up: engagement question conditional. |
-| `lunara-theme-blocks` | this commit and its follow-up | Changelog and session-log entries. No theme code. |
+| `lunara-theme-blocks` | this commit and its follow-ups | Changelog and session-log entries, plus one contract change (below). No theme code. |
+| `lunara-plugin-journal-foundation` `main` | `45ed547061dfa29ff8d18a32df589cea718d8214` | PR #20 merged by Dalton at 20:11 UTC. Foundation 1.2.14 is on `main`, not yet deployed. |
 
 **Ledger addendum, PRs opened at Dalton's request in this session:**
 Foundation 1.2.14 is [PR #20](https://github.com/TheAntagonist2020/lunara-plugin-journal-foundation/pull/20);
@@ -131,6 +132,25 @@ exact-rollback hatch per `AGENTS.md`.
   contract; reverting verbosity to `low` went RED in the cost guard; removing
   the normalizer call from the split path went RED; reinstating "Do not force
   a question" went RED. Five for five.
+- **Theme CI on the docs PR went red, then green.** `lint` on
+  [PR #172](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/172)
+  failed in `tests/release-identity-3-2-57.ps1` on "The 3.2.57 changelog
+  entry must be the newest release entry." The contract pinned the 3.2.57
+  changelog heading to the absolute top of `docs/CHANGELOG.md`. Every
+  previous changelog entry was a theme release, so the pin had never met a
+  plugin-only entry; `AGENTS.md` says the changelog covers all seven repos,
+  so one was always coming. The 2026-08-31 session removed the same pin from
+  the session-log half of this contract for the same reason. Changed the
+  changelog assertion to "newest **theme** release entry": no heading above
+  3.2.57 may name a theme version, so a future theme release still has to
+  regenerate the contract, while plugin-only entries may sit above it. The
+  heading-exists-exactly-once and content-coverage assertions are untouched.
+  Reproduced the failure locally with PowerShell 7.4.6 installed into the
+  agent scratchpad, then green after the edit. Mutations, each restored from
+  a `cp` backup and confirmed with `cmp`: a fake "Theme 3.2.58" heading above
+  the 3.2.57 entry went RED on the new assertion; renaming the 3.2.57 heading
+  went RED on both the exists-once and newest-theme assertions. Only this one
+  contract was re-run locally; CI runs the full suite on the push.
 - **Not run:** any live generation. The compiled prompt was rendered locally
   and read in full, but no OpenAI call was made and no draft was produced.
   The proof is the next Dispatch run after deploy, read by Dalton.
@@ -165,7 +185,8 @@ duplication stands and is carried below.
 | Item | Status | Whose call |
 | --- | --- | --- |
 | Review the compiled prompt (Journal → Control Plane, read-only compiled box) | open | Dalton |
-| Merge Foundation 1.2.14 then Dispatch 3.2.8 to `main`; PRs opened at Dalton's request, links in the ledger addendum below | open | Dalton |
+| Merge Foundation 1.2.14 to `main` | done, PR #20 merged 20:11 UTC | Dalton |
+| Merge Dispatch 3.2.8 to `main` (PR #13, green and clean) | open | Dalton |
 | Deploy plugins via Deployer for Git from the Control Desk: Foundation first, Dispatch second; no theme release in this slice | open | Dalton |
 | Read the first Dispatch draft after deploy against the register; confirm the prompt hash changed | open | Dalton |
 | Merge Theme 3.2.57 and rebuild the exact-rollback hatch | open, carried | Dalton |
