@@ -143,6 +143,29 @@ Deployer for Git settings. Logged as a fact and a question, not fixed.
 Theme 3.2.57 was also deployed today at 16:04 UTC per the Desk's Deploy Truth
 card; not probed further here and no canary was run in this session.
 
+**Correction to the live-state addendum above, about 22:35 UTC, from the
+WordPress.com activity log (read-only):** the "both live" reading was true
+for 74 minutes and is no longer true. The mechanism is now known and the
+"auto-update" guess above is wrong. Timeline, all UTC:
+
+| Time | Event (actor per the activity log) |
+| --- | --- |
+| 20:15:46 | Dalton updated the Blocksy parent theme to 2.1.56 from wp-admin. |
+| 20:15:47 | The WordPress updater, fed by Deployer for Git, updated Dispatch 3.2.7 to 3.2.8 in place (`lunara-dispatch/`) and Foundation 1.2.12 to 1.2.14 in place (`lunara-plugin-journal-foundation/`). So the deploy button for plugins is the ordinary Updates screen: Deployer for Git surfaces GitHub `main` as an available update. |
+| 21:11 | Two GutenKit Blocks Pro update attempts failed (download failed). Unrelated. |
+| 21:15 to 21:18 | Dalton used Deployer for Git's install action, which created **second copies** of three plugins in repo-named directories: Core 0.8.9 in `lunara-plugin-core/`, Dispatch 3.2.8 in `lunara-plugin-dispatch/`, Oscars Ledger 2.7.82 in `lunara-plugin-oscars-ledger/`. Four further unnamed installs followed. |
+| 21:19:00 | Dalton deactivated Lunara Core 0.8.8 (`lunara-core/`) and at 21:19:15 activated the new copy, Core 0.8.9 (`lunara-plugin-core/`). |
+| 21:29:30 | Dalton started a Jetpack Backup restore to the 20:15:46 backup point, one second before the plugin updates. |
+| 21:42:04 | Restore complete. Foundation 1.2.12, Dispatch 3.2.7, and Core 0.8.8 are active again. The duplicate `lunara-plugin-dispatch/` (3.2.8) and `lunara-plugin-core/` (0.8.9) directories remain on disk, inactive. |
+| 21:42:04 | Dispatch draft 101913 generated, stamped Foundation 1.2.12, Dispatch 3.2.7, prompt hash `8b1b180c…`. Old code. |
+
+Consequences: no Dispatch run has executed on 1.2.14 / 3.2.8, so the voice
+work is untested on the live site. The 21:42 draft is not evidence either way.
+Why Dalton restored is not in the log; the last change before the restore was
+the Core 0.8.9 swap into a second directory, which is the likeliest trigger
+and is Dalton's to confirm. The Control Desk shows no deploy control for
+plugins because none exists: the Updates screen is the control.
+
 ### Gate ledger
 
 - **Foundation, run the way `lint.yml` runs it:** PHP lint on every file
@@ -221,9 +244,10 @@ duplication stands and is carried below.
 | Review the compiled prompt (Journal → Control Plane, read-only compiled box) | open | Dalton |
 | Merge Foundation 1.2.14 to `main` | done, PR #20 merged 20:11 UTC | Dalton |
 | Merge Dispatch 3.2.8 to `main` | done, PR #13 merged 20:12 UTC | Dalton |
-| Deploy Foundation 1.2.14 and Dispatch 3.2.8 | done: both live by 20:30 UTC (live-state addendum above); mechanism to confirm | Dalton |
-| Confirm how the two plugins went live: Deployer for Git per-project auto-update, or a click. Decide whether plugin auto-update should stay on given the runbook's human-press rule | open | Dalton |
-| Read the first Dispatch draft generated on 1.2.14 / 3.2.8 against the register; confirm the prompt hash moved off `8b1b180c…` | open, agent check-in scheduled for about 21:45 UTC | Dalton and agent |
+| Deploy Foundation 1.2.14 and Dispatch 3.2.8 | **reverted** by the 21:29 restore (correction above). Re-run from Dashboard → Updates, those two rows only | Dalton |
+| Say what broke between 21:19 and 21:29 that prompted the restore, so the trigger can be isolated from the two plugin releases | open | Dalton |
+| Remove the inactive duplicate plugin directories `lunara-plugin-dispatch/` and `lunara-plugin-core/`; update in place from the Updates screen instead of installing second copies | open | Dalton |
+| Read the first Dispatch draft generated on 1.2.14 / 3.2.8 against the register; confirm the prompt hash moved off `8b1b180c…` | blocked until the plugins are re-updated; the 21:42 draft ran on old code | Dalton and agent |
 | Deploy Theme 3.2.57, then `bash tests/tools/lunara-canary-verify.sh 3.2.57` | 3.2.57 live since 16:04 UTC per Deploy Truth; canary not yet run this session | Dalton |
 | Read the first Dispatch draft after deploy against the register; confirm the prompt hash changed | open | Dalton |
 | Merge Theme 3.2.57 and rebuild the exact-rollback hatch | done: 3.2.57 merged as PR #171 before this session; hatch rebuilt 2026-09-04 (addendum above) | Dalton |
@@ -233,10 +257,11 @@ duplication stands and is carried below.
 
 ### Whose move it is next
 
-Dalton's. Both plugins are live. Open Journal → Control Plane and read the
-compiled prompt box; confirm in Deployer for Git how the plugins went live;
-judge the next Dispatch draft, which the agent will also read at its
-scheduled check-in. The engagement-question decision is made and recorded
+Dalton's. Both plugin releases were live for 74 minutes and were reverted by
+his 21:29 restore. Re-update Foundation and Dispatch from Dashboard →
+Updates, say what prompted the restore, remove the duplicate plugin
+directories, then read the compiled prompt in the Control Plane and judge the
+next Dispatch draft. The engagement-question decision is made and recorded
 above. If it still reads like a
 trade desk, the next lever is the model, not the prompt.
 
