@@ -123,6 +123,26 @@ history rewrite; `main` is an ancestor, so merging the hatch restores exactly
 the 3.2.43 tree. Verified on the remote after the push with the `AGENTS.md`
 one-liner. Not deployed; the hatch is a branch, not a release.
 
+**Live-state addendum, about 20:30 UTC, read-only plugin list via the
+WordPress.com connector:** `LUNARA Journal Foundation` **1.2.14** active at
+`lunara-plugin-journal-foundation/`, `Lunara Dispatch Automation` **3.2.8**
+active at `lunara-dispatch/`, `Deployer for Git (Pro)` 1.0.12 active. Both
+plugin releases from this session are therefore already live, within twenty
+minutes of their merges, with no deploy click that Dalton could find on the
+Control Desk. The Desk's System tab has no Journal Foundation card and its
+Source Control panel reads GitHub `main`, not the live install, so it could
+not have shown this. `Lunara Core` is still **0.8.8** live while `main` has
+carried 0.8.9 since 2026-08-31, and the 09:31 and 13:31 UTC drafts today were
+generated on Foundation 1.2.12 while `main` had carried 1.2.13 since
+2026-08-31, so whatever moved these two plugins today is not a blanket
+"deploy main on merge." Most likely reading: Deployer for Git's per-project
+auto-update is enabled for Foundation and Dispatch and fired on its own
+schedule; that contradicts the runbook's "nothing goes live until a human
+presses deploy" for those two plugins and is Dalton's to confirm in the
+Deployer for Git settings. Logged as a fact and a question, not fixed.
+Theme 3.2.57 was also deployed today at 16:04 UTC per the Desk's Deploy Truth
+card; not probed further here and no canary was run in this session.
+
 ### Gate ledger
 
 - **Foundation, run the way `lint.yml` runs it:** PHP lint on every file
@@ -201,20 +221,23 @@ duplication stands and is carried below.
 | Review the compiled prompt (Journal → Control Plane, read-only compiled box) | open | Dalton |
 | Merge Foundation 1.2.14 to `main` | done, PR #20 merged 20:11 UTC | Dalton |
 | Merge Dispatch 3.2.8 to `main` | done, PR #13 merged 20:12 UTC | Dalton |
-| Deploy plugins via Deployer for Git from the Control Desk: Foundation 1.2.14 first, Dispatch 3.2.8 second; both on `main`, no theme release in this slice | open, both merged | Dalton |
+| Deploy Foundation 1.2.14 and Dispatch 3.2.8 | done: both live by 20:30 UTC (live-state addendum above); mechanism to confirm | Dalton |
+| Confirm how the two plugins went live: Deployer for Git per-project auto-update, or a click. Decide whether plugin auto-update should stay on given the runbook's human-press rule | open | Dalton |
+| Read the first Dispatch draft generated on 1.2.14 / 3.2.8 against the register; confirm the prompt hash moved off `8b1b180c…` | open, agent check-in scheduled for about 21:45 UTC | Dalton and agent |
+| Deploy Theme 3.2.57, then `bash tests/tools/lunara-canary-verify.sh 3.2.57` | 3.2.57 live since 16:04 UTC per Deploy Truth; canary not yet run this session | Dalton |
 | Read the first Dispatch draft after deploy against the register; confirm the prompt hash changed | open | Dalton |
 | Merge Theme 3.2.57 and rebuild the exact-rollback hatch | done: 3.2.57 merged as PR #171 before this session; hatch rebuilt 2026-09-04 (addendum above) | Dalton |
-| Deploy Theme 3.2.57, then `bash tests/tools/lunara-canary-verify.sh 3.2.57` | open, carried | Dalton |
 | Rebuild the Dispatch originality gate around the new register | logged above | Dalton |
 | Deck-equals-first-paragraph | logged above, carried | Dalton |
 | Auto-deploy stays off | unchanged | Dalton |
 
 ### Whose move it is next
 
-Dalton's. Both plugin PRs are merged. Deploy Foundation 1.2.14, then
-Dispatch 3.2.8, from the Control Desk; read the compiled prompt in the
-Control Plane once 1.2.14 is on the site; judge the next draft. The
-engagement-question decision is made and recorded above. If it still reads like a
+Dalton's. Both plugins are live. Open Journal → Control Plane and read the
+compiled prompt box; confirm in Deployer for Git how the plugins went live;
+judge the next Dispatch draft, which the agent will also read at its
+scheduled check-in. The engagement-question decision is made and recorded
+above. If it still reads like a
 trade desk, the next lever is the model, not the prompt.
 
 ## 2026-09-02 — Theme 3.2.57 journal lede parity and local candidate close
