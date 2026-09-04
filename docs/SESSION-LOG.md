@@ -101,6 +101,7 @@ The reasoning that matters for the handoff:
 | `lunara-plugin-dispatch` | `e054843238733b47841839af14074f6529b02223` | Dispatch 3.2.8 follow-up: engagement question conditional. |
 | `lunara-theme-blocks` | this commit and its follow-ups | Changelog and session-log entries, plus one contract change (below). No theme code. |
 | `lunara-plugin-journal-foundation` `main` | `45ed547061dfa29ff8d18a32df589cea718d8214` | PR #20 merged by Dalton at 20:11 UTC. Foundation 1.2.14 is on `main`, not yet deployed. |
+| `lunara-plugin-dispatch` `main` | `82955845d98a24d3675879fa5a3d1512d743f87e` | PR #13 merged by Dalton at 20:12 UTC. Dispatch 3.2.8 is on `main`, not yet deployed. |
 
 **Ledger addendum, PRs opened at Dalton's request in this session:**
 Foundation 1.2.14 is [PR #20](https://github.com/TheAntagonist2020/lunara-plugin-journal-foundation/pull/20);
@@ -186,8 +187,8 @@ duplication stands and is carried below.
 | --- | --- | --- |
 | Review the compiled prompt (Journal → Control Plane, read-only compiled box) | open | Dalton |
 | Merge Foundation 1.2.14 to `main` | done, PR #20 merged 20:11 UTC | Dalton |
-| Merge Dispatch 3.2.8 to `main` (PR #13, green and clean) | open | Dalton |
-| Deploy plugins via Deployer for Git from the Control Desk: Foundation first, Dispatch second; no theme release in this slice | open | Dalton |
+| Merge Dispatch 3.2.8 to `main` | done, PR #13 merged 20:12 UTC | Dalton |
+| Deploy plugins via Deployer for Git from the Control Desk: Foundation 1.2.14 first, Dispatch 3.2.8 second; both on `main`, no theme release in this slice | open, both merged | Dalton |
 | Read the first Dispatch draft after deploy against the register; confirm the prompt hash changed | open | Dalton |
 | Merge Theme 3.2.57 and rebuild the exact-rollback hatch | open, carried | Dalton |
 | Deploy Theme 3.2.57, then `bash tests/tools/lunara-canary-verify.sh 3.2.57` | open, carried | Dalton |
@@ -197,9 +198,10 @@ duplication stands and is carried below.
 
 ### Whose move it is next
 
-Dalton's. Read the compiled prompt in the Control Plane once 1.2.14 is on
-the site, merge and deploy the two plugins in order, and judge the next
-draft. The engagement-question decision is made and recorded above. If it still reads like a
+Dalton's. Both plugin PRs are merged. Deploy Foundation 1.2.14, then
+Dispatch 3.2.8, from the Control Desk; read the compiled prompt in the
+Control Plane once 1.2.14 is on the site; judge the next draft. The
+engagement-question decision is made and recorded above. If it still reads like a
 trade desk, the next lever is the model, not the prompt.
 
 ## 2026-09-02 — Theme 3.2.57 journal lede parity and local candidate close
