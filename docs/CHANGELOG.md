@@ -40,9 +40,14 @@ Plugin-only release. No theme change.
   steering, cannot override facts or formatting" framing the Dispatch fallback
   already had.
 - The user directive now states the angle-first rule, fan before critic, first
-  person allowed, and a landing sentence plus one engagement question on every
-  entry. Each entry becomes its own post, so the skill's "question on the
-  final story only" rule for roundups applies per entry here.
+  person allowed, and a landing sentence on every entry. The engagement
+  question is conditional: added only when the entry has a genuine fork the
+  reader could take the other side of, roughly one entry in three. Dalton's
+  call after discussion: a mandatory question on automated volume becomes a
+  format within a week, and a model with reasoning off produces the poll
+  version the prompt forbids. The first cut of this release made it mandatory
+  on every entry; that was corrected in a follow-up commit before any PR was
+  opened.
 - The validator reports `expertise_poison_phrases` as warnings ("House tell
   found, cut on sight"), never as errors, so a draft is flagged for a human
   without being pushed into `validation_failed`.
@@ -62,9 +67,10 @@ Plugin-only release. No theme change.
 - Fallback system prompt and user directive aligned with the compiled voice:
   first person, opinion in paragraph one, performed-expertise phrases and
   "the real story is" / "the takeaway is simple" banned, template headlines
-  ("X Turns Y Into Z") banned, landing sentence then engagement question on
-  every entry. The "Do not force a question" rule and "a question is optional,
-  never mandatory" line are gone; both contradicted the skill.
+  ("X Turns Y Into Z") banned, landing sentence on every entry with an
+  engagement question only when there is a real fork. The old "Do not force
+  a question" phrasing is gone; the new rule says when a question earns its
+  place instead of treating it as a formula or a foul.
 - OpenAI Responses requests send `text.verbosity: medium` instead of `low`.
   Low is an explicit terseness instruction, which is the wire-service register
   the Journal exists to reject. `reasoning.effort` stays `none`: reasoning

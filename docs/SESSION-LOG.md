@@ -73,11 +73,17 @@ The reasoning that matters for the handoff:
 - **The voice is the skill's voice.** Register, principles, structure,
   headline rules, drift catalog, poison phrases, and the engagement close are
   transcribed from the `lunara-journal` skill, with two contrast pairs added
-  that rewrite actual sentences from this week's drafts. One decision Dalton
-  should check: the skill requires an engagement question on every post, and
-  the old Dispatch prompt forbade forcing one. The skill wins here, because
-  each Dispatch entry becomes its own post. Reverting is one string in
-  `engagement_close`.
+  that rewrite actual sentences from this week's drafts. The skill requires
+  an engagement question on every post; the old Dispatch prompt forbade
+  forcing one. **Decision, Dalton's, after discussion in this session:** the
+  question is conditional for automated entries. The landing sentence is the
+  close; a question follows only when the entry has a genuine fork, roughly
+  one in three. Reasoning: mandatory questions on daily automated volume read
+  as a format within a week, and a mini model with reasoning off produces the
+  poll version the prompt forbids. The hand-written skill keeps its rule.
+  *Correction within this entry: the first commit of each plugin made the
+  question mandatory on every entry; the follow-up commits in the ledger
+  below made it conditional before any PR was opened.*
 - **Verbosity, not reasoning.** `verbosity: low` was an instruction to be
   terse; `medium` is the fix. Reasoning stays off because it shares the
   2,200-token output cap and would truncate runs.
@@ -91,7 +97,16 @@ The reasoning that matters for the handoff:
 | --- | --- | --- |
 | `lunara-plugin-journal-foundation` | `7a77042510d95e6b8fad5f3bbbbaabc9730afcff` | Foundation 1.2.14: full Journal voice in schema and compiler, validator house-tell warnings, two contracts, version pins. |
 | `lunara-plugin-dispatch` | `254a7605823053e91be5f51069ffa6a0928fd2d2` | Dispatch 3.2.8: fallback prompt alignment, verbosity medium, ASCII punctuation normalizer, contract, version pins. |
-| `lunara-theme-blocks` | this commit | Changelog and session-log entries. No theme code. |
+| `lunara-plugin-journal-foundation` | `0b7e9d410783328654a28fcf2dfc5e0539e771e9` | Foundation 1.2.14 follow-up: engagement question conditional. |
+| `lunara-plugin-dispatch` | `e054843238733b47841839af14074f6529b02223` | Dispatch 3.2.8 follow-up: engagement question conditional. |
+| `lunara-theme-blocks` | this commit and its follow-up | Changelog and session-log entries. No theme code. |
+
+**Ledger addendum, PRs opened at Dalton's request in this session:**
+Foundation 1.2.14 is [PR #20](https://github.com/TheAntagonist2020/lunara-plugin-journal-foundation/pull/20);
+Dispatch 3.2.8 is [PR #13](https://github.com/TheAntagonist2020/lunara-plugin-dispatch/pull/13).
+Merge order: Foundation first. This docs-only branch in the theme repo has
+its own PR so the session log reaches `main`; after that merge, rebuild the
+exact-rollback hatch per `AGENTS.md`.
 
 ### Gate ledger
 
@@ -149,8 +164,8 @@ duplication stands and is carried below.
 
 | Item | Status | Whose call |
 | --- | --- | --- |
-| Review the compiled prompt (Journal → Control Plane, read-only compiled box) and the engagement-question decision | open | Dalton |
-| Open PRs and merge Foundation 1.2.14 then Dispatch 3.2.8 to `main` | open, not requested this session | Dalton |
+| Review the compiled prompt (Journal → Control Plane, read-only compiled box) | open | Dalton |
+| Merge Foundation 1.2.14 then Dispatch 3.2.8 to `main`; PRs opened at Dalton's request, links in the ledger addendum below | open | Dalton |
 | Deploy plugins via Deployer for Git from the Control Desk: Foundation first, Dispatch second; no theme release in this slice | open | Dalton |
 | Read the first Dispatch draft after deploy against the register; confirm the prompt hash changed | open | Dalton |
 | Merge Theme 3.2.57 and rebuild the exact-rollback hatch | open, carried | Dalton |
@@ -162,8 +177,8 @@ duplication stands and is carried below.
 ### Whose move it is next
 
 Dalton's. Read the compiled prompt in the Control Plane once 1.2.14 is on
-the site, decide on the per-entry engagement question, merge and deploy the
-two plugins in order, and judge the next draft. If it still reads like a
+the site, merge and deploy the two plugins in order, and judge the next
+draft. The engagement-question decision is made and recorded above. If it still reads like a
 trade desk, the next lever is the model, not the prompt.
 
 ## 2026-09-02 — Theme 3.2.57 journal lede parity and local candidate close
