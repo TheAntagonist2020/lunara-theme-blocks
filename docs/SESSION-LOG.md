@@ -110,6 +110,19 @@ Merge order: Foundation first. This docs-only branch in the theme repo has
 its own PR so the session log reaches `main`; after that merge, rebuild the
 exact-rollback hatch per `AGENTS.md`.
 
+**Ledger addendum, after the merges:** all three PRs merged by Dalton on
+2026-09-04: Foundation #20 at 20:11 UTC, Dispatch #13 at 20:12 UTC, theme
+docs #172 at 20:27 UTC (`main` tip `bbbfea5b7ad9541f7fce5ab318cf675512fed276`).
+The exact-rollback hatch `claude/rollback-exact-theme-3.2.43` was then
+rebuilt at Dalton's request. It had not been rebuilt after PR #171 (the
+carried 3.2.57 punch-list item), so it was two merges stale. The new head
+is a two-parent commit: previous hatch tip plus the current `main` tip,
+tree `c55bf394594149db2888295c5d51f85f47b2b520`. Two parents rather than the
+earlier single-parent shape so the branch advances by fast-forward with no
+history rewrite; `main` is an ancestor, so merging the hatch restores exactly
+the 3.2.43 tree. Verified on the remote after the push with the `AGENTS.md`
+one-liner. Not deployed; the hatch is a branch, not a release.
+
 ### Gate ledger
 
 - **Foundation, run the way `lint.yml` runs it:** PHP lint on every file
@@ -190,7 +203,7 @@ duplication stands and is carried below.
 | Merge Dispatch 3.2.8 to `main` | done, PR #13 merged 20:12 UTC | Dalton |
 | Deploy plugins via Deployer for Git from the Control Desk: Foundation 1.2.14 first, Dispatch 3.2.8 second; both on `main`, no theme release in this slice | open, both merged | Dalton |
 | Read the first Dispatch draft after deploy against the register; confirm the prompt hash changed | open | Dalton |
-| Merge Theme 3.2.57 and rebuild the exact-rollback hatch | open, carried | Dalton |
+| Merge Theme 3.2.57 and rebuild the exact-rollback hatch | done: 3.2.57 merged as PR #171 before this session; hatch rebuilt 2026-09-04 (addendum above) | Dalton |
 | Deploy Theme 3.2.57, then `bash tests/tools/lunara-canary-verify.sh 3.2.57` | open, carried | Dalton |
 | Rebuild the Dispatch originality gate around the new register | logged above | Dalton |
 | Deck-equals-first-paragraph | logged above, carried | Dalton |
