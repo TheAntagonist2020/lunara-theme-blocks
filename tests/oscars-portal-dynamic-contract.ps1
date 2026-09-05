@@ -38,7 +38,7 @@ $portal   = Read-Text 'inc/oscars-portal.php'
 $custom   = Read-Text 'inc/customizer.php'
 $runtime  = Read-Text 'assets/js/lunara-public-runtime.js'
 $shell    = Read-Text 'assets/css/lunara-shell.css'
-$home     = Read-Text 'inc/home-sections.php'
+$homeSections = Read-Text 'inc/home-sections.php'
 
 # 1. Loader and the anonymous-cacheable boundary.
 Assert-Contract ($loader -match "require_once \`$lunara_inc \. 'oscars-portal-dynamic\.php'") 'The loader must require inc/oscars-portal-dynamic.php.'
@@ -82,7 +82,7 @@ foreach ($rule in @('.lunara-oscars-season-clock', '.lunara-oscars-board-summary
 }
 
 # 7. The import flush clears the new day-keyed transient.
-Assert-Contract ($home.Contains("delete_transient( 'lunara_oscars_todays_pull_v1_' . `$day )")) "The import flush must clear the Today's Pull key."
+Assert-Contract ($homeSections.Contains("delete_transient( 'lunara_oscars_todays_pull_v1_' . `$day )")) "The import flush must clear the Today's Pull key."
 
 # 8. Budgets.
 $shellBytes = (Get-Item (Join-Path $root 'assets/css/lunara-shell.css')).Length
