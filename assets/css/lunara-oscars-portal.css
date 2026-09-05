@@ -112,7 +112,7 @@
 .aat-filmography-poster-placeholder span { display:none; }
 
 /* ============================================================
-   THE BOARD — prediction ledger on the Oscars portal (3.2.58).
+   THE BOARD — prediction ledger on the Oscars portal (3.2.59).
    Picks read as a responsive card grid: category, call, status
    chip in one tile each, auto-filling the portal width. Tints
    follow the pick vocabulary (predicted gold, won green, lost
@@ -1149,7 +1149,7 @@ body.lunara-oscars-portal-page .lunara-oscars-board-note {
         }
     }
 
-    /* Wide screens (3.2.58): the portal grows to 1720px; six-up rows
+    /* Wide screens (3.2.59): the portal grows to 1720px; six-up rows
        where the content count is six so nothing orphans. */
     @media (min-width: 1500px) {
         body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-grid,

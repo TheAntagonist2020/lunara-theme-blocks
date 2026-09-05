@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-# Theme 3.2.58 — the Oscars portal scales to the screen.
+# Theme 3.2.59 — the Oscars portal scales to the screen.
 # Holds the three width authorities together, the board card grid in both
 # the route sheet and the critical seed, the plugin composer hook that drops
 # the duplicate hub blocks, the poster-first gallery authority, and the
@@ -70,4 +70,4 @@ if ($failures.Count -gt 0) {
     throw "Oscars portal fluid contract failed:`n$($details -join "`n")"
 }
 
-Write-Host 'Theme 3.2.58 Oscars portal fluid contract passed: one 1720px cap in three authorities, board card grid, composer hook, poster-first gallery, caps removed.'
+Write-Host 'Theme 3.2.59 Oscars portal fluid contract passed: one 1720px cap in three authorities, board card grid, composer hook, poster-first gallery, caps removed.'

@@ -6,7 +6,7 @@
  * a status summary above the prediction board, and a date-seeded ledger
  * pull in Deep Cuts. Every renderer returns the exact empty string when it
  * has nothing to say, so a site with no ceremony date, no picks, or no
- * ledger keeps its 3.2.58 markup byte-for-byte. Output is anonymous-
+ * ledger keeps the 3.2.58 markup byte-for-byte. Output is anonymous-
  * cacheable: no nonce, cookie, or user-conditional branch anywhere here.
  *
  * Proven by tests/fixtures/oscars-portal-dynamic-harness.php, which

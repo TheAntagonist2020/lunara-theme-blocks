@@ -52,7 +52,7 @@ if ($script -match 'sample\.src\s*=\s*img\.(?:currentSrc|src)') {
     throw 'The ambient sampler must not re-fetch an unapproved cross-origin image directly.'
 }
 if ($style -notmatch 'Version:\s*3\.2\.58') {
-    throw 'Theme version must be 3.2.58 for the immersive-read gate.'
+    throw 'Theme version must be 3.2.59 for the immersive-read gate.'
 }
 
 Write-Host 'Review immersive-read CORS contract passed.'

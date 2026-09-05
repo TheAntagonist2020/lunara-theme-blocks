@@ -531,7 +531,7 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 
 if ( ! function_exists( 'lunara_oscars_portal_landing_sections' ) ) {
 	/**
-	 * One owner per block on the portal page (Theme 3.2.58).
+	 * One owner per block on the portal page (Theme 3.2.59).
 	 *
 	 * The Academy Awards plugin's landing hub renders inside the portal's
 	 * research shell. Two of its blocks restate what the portal already

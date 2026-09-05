@@ -69,11 +69,11 @@ function Get-TopEntry {
 $stylePath = Join-Path $root 'style.css'
 $styleLines = @(Get-Content -LiteralPath $stylePath)
 $versionHeaderLines = @($styleLines | Where-Object { $_ -match '^Version:' })
-$exactVersionHeaders = @($styleLines | Where-Object { $_ -ceq 'Version: 3.2.58' })
+$exactVersionHeaders = @($styleLines | Where-Object { $_ -ceq 'Version: 3.2.59' })
 Assert-Contract ($versionHeaderLines.Count -eq 1 -and $exactVersionHeaders.Count -eq 1) `
-    'style.css must contain exactly one exact Version: 3.2.58 header.'
+    'style.css must contain exactly one exact Version: 3.2.59 header.'
 
-$priorVersion = @('3', '2', '57') -join '.'
+$priorVersion = @('3', '2', '58') -join '.'
 $escapedPriorVersion = $priorVersion.Replace('.', '\.')
 $trackedSources = @(Get-ChildItem -LiteralPath (Join-Path $root 'tests') -File | Where-Object { $_.Extension -in @('.ps1', '.php', '.js') })
 Assert-Contract ($trackedSources.Count -gt 0) 'Test-source discovery must return at least one file.'
@@ -143,18 +143,18 @@ foreach ($requiredDeployIgnore in @('docs', 'docs/**', 'tests', 'tests/**')) {
 }
 
 $releaseSeparator = [char]0x2014
-$changelogHeading = "## 2026-09-05 $releaseSeparator Theme 3.2.58 Oscars Portal Fluid Rebuild"
+$changelogHeading = "## 2026-09-05 $releaseSeparator Theme 3.2.59 Oscars Portal Dynamic Layer"
 $changelog = [IO.File]::ReadAllText((Join-Path $root 'docs/CHANGELOG.md'))
 $changelogHeadings = @($changelog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $changelogHeadingCount = @($changelogHeadings | Where-Object { $_ -ceq $changelogHeading }).Count
-Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.58 changelog heading must exist exactly once.'
+Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.59 changelog heading must exist exactly once.'
 # Deliberately NOT asserted: that this entry is the first heading in the
 # changelog. docs/CHANGELOG.md covers all seven repositories (AGENTS.md), so a
 # plugin-only release lands above the newest theme release without moving the
 # theme's identity. Pinning absolute position froze the changelog on the first
 # such entry (2026-09-04, Journal Foundation 1.2.14 and Dispatch 3.2.8), the
 # same way the session-log pin froze the log (see the note below and the
-# 2026-08-31 change that removed it). What is asserted instead: the 3.2.58
+# 2026-08-31 change that removed it). What is asserted instead: the 3.2.59
 # entry is the newest THEME release entry. No heading above it may name a
 # theme version, so a later theme release still has to regenerate this file.
 $themeReleaseHeadingPattern = '^## .+ Theme \d+\.\d+\.\d+\b'
@@ -164,29 +164,30 @@ if ($changelogHeadingIndex -gt 0) {
     $newerThemeHeadings = @($changelogHeadings[0..($changelogHeadingIndex - 1)] | Where-Object { $_ -match $themeReleaseHeadingPattern })
 }
 Assert-Contract ($changelogHeadingIndex -ge 0 -and $newerThemeHeadings.Count -eq 0) `
-    'The 3.2.58 changelog entry must be the newest theme release entry; only plugin-only entries may sit above it.'
+    'The 3.2.59 changelog entry must be the newest theme release entry; only plugin-only entries may sit above it.'
 $changelogEntry = Get-TopEntry -Text $changelog -Heading $changelogHeading
 foreach ($coverage in @(
-    @{ Pattern = '(?is)1180.+1720'; Label = 'the width cap moving from 1180 to 1720 pixels' },
-    @{ Pattern = '(?is)three (places|authorities).+critical'; Label = 'the three width authorities changing together' },
-    @{ Pattern = '(?is)board.+card grid'; Label = 'the prediction board card grid' },
-    @{ Pattern = '(?is)aat_landing_route_sections'; Label = 'the plugin landing composer hook' },
-    @{ Pattern = '(?is)Latest Ceremony.+Winner Circle'; Label = 'the two duplicate hub blocks dropped' },
-    @{ Pattern = '(?is)Poster Highlights.+2:3'; Label = 'the poster-first highlight cards' },
-    @{ Pattern = '(?is)clamp\(.+floor'; Label = 'the fluid type scale with floors' },
-    @{ Pattern = '(?is)rendered offline.+390.+2560'; Label = 'the offline render verification' },
-    @{ Pattern = '(?is)Oscars Ledger 2\.7\.83'; Label = 'the companion plugin release' },
-    @{ Pattern = '(?is)Not changed.+quality'; Label = 'the deliberately unfixed image quality setting' }
+    @{ Pattern = '(?is)season clock'; Label = 'the hero season clock' },
+    @{ Pattern = '(?is)lunara_oscars_next_ceremony_date'; Label = 'the ceremony date Customizer mod' },
+    @{ Pattern = '(?is)board summary|summary chips'; Label = 'the board summary chips' },
+    @{ Pattern = '(?is)Today.s Pull'; Label = 'the date-seeded ledger pull' },
+    @{ Pattern = '(?is)reveal'; Label = 'the portal scroll reveals' },
+    @{ Pattern = '(?is)safety timer'; Label = 'the reveal safety timer' },
+    @{ Pattern = '(?is)scroll-spy'; Label = 'the navigator scroll-spy' },
+    @{ Pattern = '(?is)counter'; Label = 'the extended counters' },
+    @{ Pattern = '(?is)posterless|without a visual|no poster'; Label = 'the posterless carousel card treatment' },
+    @{ Pattern = '(?is)rendered offline|offline render'; Label = 'the offline render verification' },
+    @{ Pattern = '(?is)Not changed'; Label = 'the deliberately unchanged items' }
 )) {
     Assert-Contract ($changelogEntry -match $coverage.Pattern) `
-        "The 3.2.58 changelog entry must cover $($coverage.Label)."
+        "The 3.2.59 changelog entry must cover $($coverage.Label)."
 }
 
-$sessionHeading = "## 2026-09-05 $releaseSeparator Theme 3.2.58 Oscars portal rebuild and local candidate close"
+$sessionHeading = "## 2026-09-05 $releaseSeparator Theme 3.2.59 Oscars portal dynamic layer and local candidate close"
 $sessionLog = [IO.File]::ReadAllText((Join-Path $root 'docs/SESSION-LOG.md'))
 $sessionHeadings = @($sessionLog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $sessionHeadingCount = @($sessionHeadings | Where-Object { $_ -ceq $sessionHeading }).Count
-Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.58 local-candidate session heading must exist exactly once.'
+Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.59 local-candidate session heading must exist exactly once.'
 # Deliberately NOT asserted: that this entry is the newest in the session log.
 # It was newest when written, but AGENTS.md requires every session to append a
 # new entry at the top of docs/SESSION-LOG.md, so pinning position froze the log
@@ -211,7 +212,7 @@ Assert-Contract ($sessionEntry -notmatch '(?im)^\s*(Deployment completed|Deploye
 
 if ($script:Failures.Count -gt 0) {
     $details = $script:Failures | ForEach-Object { " - $_" }
-    throw "Theme 3.2.58 release identity contract failed:`n$($details -join "`n")"
+    throw "Theme 3.2.59 release identity contract failed:`n$($details -join "`n")"
 }
 
-Write-Host 'Theme 3.2.58 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and intact local-only release records.'
+Write-Host 'Theme 3.2.59 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and intact local-only release records.'

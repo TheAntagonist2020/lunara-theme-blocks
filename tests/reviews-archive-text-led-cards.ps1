@@ -95,7 +95,7 @@ if ($criticalBytes.Count -ne 11602 -or $criticalHash -ne '24999682414bab62f5a05f
     throw "The 3.2.43 card repair must not alter the independently approved CLS seed ($($criticalBytes.Count)B $criticalHash)."
 }
 if ($style -notmatch '(?m)^Version:\s*3\.2\.58\s*$') {
-    throw 'Theme version must preserve the mobile text-led card repair in 3.2.58.'
+    throw 'Theme version must preserve the mobile text-led card repair in 3.2.59.'
 }
 foreach ($viewport in @('375', '390', '782', '1440')) {
     if ($runtime -notmatch "(?m)for \(const viewportWidth of \[[^\]]*\b$viewport\b") {
@@ -117,4 +117,4 @@ foreach ($runtimeGate in @(
     }
 }
 
-Write-Host 'Theme 3.2.58 Reviews mobile card legibility contract passed.'
+Write-Host 'Theme 3.2.59 Reviews mobile card legibility contract passed.'
