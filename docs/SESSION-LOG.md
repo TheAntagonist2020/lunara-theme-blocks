@@ -47,6 +47,18 @@ move, so the exact-rollback hatch still sits on it (verified: hatch contains
 is on `main`, not yet on the site: Dashboard → Updates is still the next
 click, before the theme PR merges and deploys.
 
+**Addendum, 15:24 UTC.** Dalton marked Theme 3.2.58
+([PR #173](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/173))
+ready and merged it. Both halves of the release are on `main`. The
+exact-rollback hatch was rebuilt on the new `main` as a two-parent commit
+(old hatch head, PR #173 merge) and verified tree-exact:
+`claude/rollback-exact-theme-3.2.43^{tree}` is
+`c55bf394594149db2888295c5d51f85f47b2b520` and the branch contains
+`origin/main`. Nothing is deployed. The order of Dalton's clicks is
+unchanged: Dashboard → Updates for Oscars Ledger 2.7.83 (and the two
+Journal plugins the restore reverted), then Deployer for Git for the theme,
+then the canary with `3.2.58`.
+
 ### Verified live state (read-only probes this session)
 
 | Check | Result |
@@ -144,7 +156,7 @@ None to prior entries.
 
 | Item | Status | Whose call |
 | --- | --- | --- |
-| Review the after-renders and the diff; merge Oscars Ledger 2.7.83 first, then Theme 3.2.58 | plugin merged 15:21 UTC; theme PR #173 open | Dalton |
+| Review the after-renders and the diff; merge Oscars Ledger 2.7.83 first, then Theme 3.2.58 | done, both merged 15:21 and 15:24 UTC; hatch rebuilt | Dalton |
 | Deploy: Oscars Ledger from Dashboard → Updates, then the theme via Deployer for Git from the Control Desk, then `bash tests/tools/lunara-canary-verify.sh 3.2.58` | open | Dalton |
 | Re-update Foundation 1.2.14 and Dispatch 3.2.8 from Dashboard → Updates (reverted by the 2026-09-04 restore) | open, carried | Dalton |
 | Jetpack Boost Image CDN quality 100 → 82 | logged above | Dalton |
@@ -153,9 +165,9 @@ None to prior entries.
 
 ### Whose move it is next
 
-Dalton's. Read the renders, merge the plugin then the theme, deploy in that
-order with Deployer for Git, run the canary with `3.2.58`, and look at the
-portal on the big monitor.
+Dalton's. Both PRs are merged. Update the plugin from Dashboard → Updates,
+deploy the theme with Deployer for Git, run the canary with `3.2.58`, and
+look at the portal on the big monitor.
 
 ## 2026-09-04 — The Journal voice was never reaching the model; Foundation 1.2.14 and Dispatch 3.2.8 put it there
 
