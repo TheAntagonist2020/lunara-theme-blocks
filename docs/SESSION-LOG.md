@@ -25,6 +25,138 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-05 — Theme 3.2.58 Oscars portal rebuild and local candidate close
+
+### Headline
+
+Dalton called the Oscars portal second-rate and not dynamic. He was right
+on both counts, and the offline render showed why: the page stopped scaling
+at 1180 pixels, so on his monitor it used the middle 44 percent of the
+screen; the prediction board was a 27-row list taking a third of the page;
+and the bottom half was the Academy Awards plugin's own hub restating the
+portal's spotlights and winners in a second design language. Theme 3.2.58
+and Oscars Ledger 2.7.83 are assembled on
+`claude/journal-voice-optimization-kf6b9o` in both repositories. Nothing in
+this slice is deployed or live.
+
+**Addendum, 15:21 UTC.** Dalton marked Oscars Ledger 2.7.83
+([PR #28](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/28))
+ready and merged it to that repository's `main`. The theme's `main` did not
+move, so the exact-rollback hatch still sits on it (verified: hatch contains
+`origin/main`, tree `c55bf394594149db2888295c5d51f85f47b2b520`). The plugin
+is on `main`, not yet on the site: Dashboard → Updates is still the next
+click, before the theme PR merges and deploys.
+
+### Verified live state (read-only probes this session)
+
+| Check | Result |
+| --- | --- |
+| `/oscars/` fetched anonymously, with and without Jetpack Boost (`?jb-disable-modules=all`) | 341 KB HTML, 20 stylesheets in cascade order unbundled, 12 scripts; Boost's inline critical CSS on this route is 132 KB |
+| Route CSS bundle on `/oscars/` | 936 KB raw |
+| Offline render of the live page at 1440 px | content column 1180 px, headline 63 px, page 11,962 px tall, board 2,326 px, 85 text elements under 12 px |
+| Offline render at 2560 px | column still 1180 px, headline 64 px, page 12,164 px |
+| Offline render at 390 px | page 17,357 px, board 5,700 px, plugin hub 5,745 px |
+| Reveal-on-scroll | sections are `opacity: 0` until an IntersectionObserver fires; a harness that scrolls faster than a reader leaves them invisible, a reader does not. No-JS renders fully visible |
+| `quality=100` image URLs on the Boost page | present on spotlight and winner images; absent from the unbundled page, so the parameter is Boost's Image CDN setting, not markup |
+| Live theme, plugin versions, deploy state | not probed beyond the above; no live-version claim is made |
+
+No deployment, cache operation, production write, or live verification occurred.
+Branch pushes occurred to `claude/journal-voice-optimization-kf6b9o` in the
+theme and Oscars Ledger repositories.
+
+### What shipped and why
+
+See the 2026-09-05 entry in `docs/CHANGELOG.md` for the code-level detail.
+The reasoning that matters:
+
+- **Three authorities, one number.** The 1180 cap lived in the route sheet,
+  the shell, and the inline critical seed, and the seed outranks both by
+  selector altitude. Changing one would have left the page clamped at first
+  paint. All three moved to 1720 in one commit and the seed was regenerated
+  through its own PHP for every render.
+- **CSS-led, contract-safe.** The board contract pins the list markup, the
+  coherency sentinel pins five section ids, and the route sheet has a
+  45,000-byte ceiling. The board became a card grid without touching markup;
+  a 3,985-byte duplicate of its rules was removed from the shell; every
+  section id survives.
+- **The plugin got a hook, not a hack.** The duplicate hub blocks could have
+  been hidden with CSS. Instead Oscars Ledger 2.7.83 mirrors its own ceremony
+  composer on the landing template, and the theme drops two keys on the
+  portal page only. The plugin's default output is byte-identical.
+- **Rendered before shipping.** Every change was rendered offline in the
+  container's Chromium at five widths from the real page and assets. Dalton
+  saw the before sheet; the after is in the changelog numbers.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-plugin-oscars-ledger` | `0d97fe88b5edab3170e3b2a75c6a972bc027b360` | Oscars Ledger 2.7.83: landing section composer, contract, version pins. |
+| `lunara-theme-blocks` | this commit | Theme 3.2.58: fluid portal, board grid, hub dedupe hook, poster-first highlights, cap removals, version sweep, identity contract, changelog, this entry. |
+
+### Gate ledger
+
+- **Oscars Ledger:** PHP lint on every file, JS syntax, CSS brace balance,
+  and all 30 portable contracts passed (the two local-provenance contracts
+  CI skips were skipped here too). New: `tests/landing-section-composer-contract.php`
+  passed; mutation (emit without the filter) went RED; restored from a `cp`
+  backup and confirmed byte-identical with `cmp`.
+- **Theme:** PHP lint on every file passed; 17 PHP runtime contracts passed
+  (one prints a JSON harness payload rather than a pass line; its PowerShell
+  consumer is the assertion). PowerShell contracts: **91 of 91**, each in
+  its own process, the two browser contracts driven by the container's
+  Chromium 1194 through `LUNARA_BROWSER_EXECUTABLE`. The count is 91
+  because `oscars-portal-fluid-contract.ps1` is new and
+  `release-identity-3-2-57.ps1` became `release-identity-3-2-58.ps1`. JS
+  syntax and CSS brace balance clean.
+- **Mutations on the new contract,** each restored from a `cp` backup and
+  confirmed byte-identical with `cmp`: the critical seed back to 1180px went
+  RED on two assertions; the theme hook dropping only one duplicate block
+  went RED; the poster-first gallery block deleted from the shell went RED.
+  Three for three.
+- **Budgets:** route sheet 44,120 of 45,000; shell 184,028 of 204,800;
+  critical seed 5,544 of 6,144.
+- **Not run:** `tests/tools/lunara-canary-verify.sh 3.2.58`. Nothing was
+  deployed, so there is nothing for it to verify. Dalton retains the later
+  manual deployment through Deployer for Git, followed by the canary with
+  argument `3.2.58`.
+
+### Corrections
+
+None to prior entries.
+
+### Logged, not fixed
+
+- **Jetpack Boost Image CDN quality is 100.** Six spotlight and winner
+  images weigh 300 to 550 KB each because of it. A wp-admin setting, Boost
+  → Image CDN; 82 is the sane value.
+- **Boost's critical CSS on this route is 132 KB inline.** It is generated
+  from a 936 KB bundle; it shrinks when the base stylesheet does. The
+  base-sheet diet from the 2026-09-04 performance findings remains open.
+- **Rotating winners carousel** shows tall, mostly empty cards and a blank
+  first slot. Pre-existing; not in this slice.
+- **The theme's shell carries at least four generations of "compact"
+  passes** for the portal that fight each other with `!important`. This
+  release removed the caps that were visibly wrong and appended a final
+  authority for the gallery; it did not archaeologize the rest.
+
+### Punch-list carried forward
+
+| Item | Status | Whose call |
+| --- | --- | --- |
+| Review the after-renders and the diff; merge Oscars Ledger 2.7.83 first, then Theme 3.2.58 | plugin merged 15:21 UTC; theme PR #173 open | Dalton |
+| Deploy: Oscars Ledger from Dashboard → Updates, then the theme via Deployer for Git from the Control Desk, then `bash tests/tools/lunara-canary-verify.sh 3.2.58` | open | Dalton |
+| Re-update Foundation 1.2.14 and Dispatch 3.2.8 from Dashboard → Updates (reverted by the 2026-09-04 restore) | open, carried | Dalton |
+| Jetpack Boost Image CDN quality 100 → 82 | logged above | Dalton |
+| Base stylesheet diet (print and footer split, then the `!important` archaeology) | open, carried from 2026-09-04 | Dalton and agent |
+| Auto-deploy stays off | unchanged | Dalton |
+
+### Whose move it is next
+
+Dalton's. Read the renders, merge the plugin then the theme, deploy in that
+order with Deployer for Git, run the canary with `3.2.58`, and look at the
+portal on the big monitor.
+
 ## 2026-09-04 — The Journal voice was never reaching the model; Foundation 1.2.14 and Dispatch 3.2.8 put it there
 
 ### Headline
@@ -110,6 +242,62 @@ Merge order: Foundation first. This docs-only branch in the theme repo has
 its own PR so the session log reaches `main`; after that merge, rebuild the
 exact-rollback hatch per `AGENTS.md`.
 
+**Ledger addendum, after the merges:** all three PRs merged by Dalton on
+2026-09-04: Foundation #20 at 20:11 UTC, Dispatch #13 at 20:12 UTC, theme
+docs #172 at 20:27 UTC (`main` tip `bbbfea5b7ad9541f7fce5ab318cf675512fed276`).
+The exact-rollback hatch `claude/rollback-exact-theme-3.2.43` was then
+rebuilt at Dalton's request. It had not been rebuilt after PR #171 (the
+carried 3.2.57 punch-list item), so it was two merges stale. The new head
+is a two-parent commit: previous hatch tip plus the current `main` tip,
+tree `c55bf394594149db2888295c5d51f85f47b2b520`. Two parents rather than the
+earlier single-parent shape so the branch advances by fast-forward with no
+history rewrite; `main` is an ancestor, so merging the hatch restores exactly
+the 3.2.43 tree. Verified on the remote after the push with the `AGENTS.md`
+one-liner. Not deployed; the hatch is a branch, not a release.
+
+**Live-state addendum, about 20:30 UTC, read-only plugin list via the
+WordPress.com connector:** `LUNARA Journal Foundation` **1.2.14** active at
+`lunara-plugin-journal-foundation/`, `Lunara Dispatch Automation` **3.2.8**
+active at `lunara-dispatch/`, `Deployer for Git (Pro)` 1.0.12 active. Both
+plugin releases from this session are therefore already live, within twenty
+minutes of their merges, with no deploy click that Dalton could find on the
+Control Desk. The Desk's System tab has no Journal Foundation card and its
+Source Control panel reads GitHub `main`, not the live install, so it could
+not have shown this. `Lunara Core` is still **0.8.8** live while `main` has
+carried 0.8.9 since 2026-08-31, and the 09:31 and 13:31 UTC drafts today were
+generated on Foundation 1.2.12 while `main` had carried 1.2.13 since
+2026-08-31, so whatever moved these two plugins today is not a blanket
+"deploy main on merge." Most likely reading: Deployer for Git's per-project
+auto-update is enabled for Foundation and Dispatch and fired on its own
+schedule; that contradicts the runbook's "nothing goes live until a human
+presses deploy" for those two plugins and is Dalton's to confirm in the
+Deployer for Git settings. Logged as a fact and a question, not fixed.
+Theme 3.2.57 was also deployed today at 16:04 UTC per the Desk's Deploy Truth
+card; not probed further here and no canary was run in this session.
+
+**Correction to the live-state addendum above, about 22:35 UTC, from the
+WordPress.com activity log (read-only):** the "both live" reading was true
+for 74 minutes and is no longer true. The mechanism is now known and the
+"auto-update" guess above is wrong. Timeline, all UTC:
+
+| Time | Event (actor per the activity log) |
+| --- | --- |
+| 20:15:46 | Dalton updated the Blocksy parent theme to 2.1.56 from wp-admin. |
+| 20:15:47 | The WordPress updater, fed by Deployer for Git, updated Dispatch 3.2.7 to 3.2.8 in place (`lunara-dispatch/`) and Foundation 1.2.12 to 1.2.14 in place (`lunara-plugin-journal-foundation/`). So the deploy button for plugins is the ordinary Updates screen: Deployer for Git surfaces GitHub `main` as an available update. |
+| 21:11 | Two GutenKit Blocks Pro update attempts failed (download failed). Unrelated. |
+| 21:15 to 21:18 | Dalton used Deployer for Git's install action, which created **second copies** of three plugins in repo-named directories: Core 0.8.9 in `lunara-plugin-core/`, Dispatch 3.2.8 in `lunara-plugin-dispatch/`, Oscars Ledger 2.7.82 in `lunara-plugin-oscars-ledger/`. Four further unnamed installs followed. |
+| 21:19:00 | Dalton deactivated Lunara Core 0.8.8 (`lunara-core/`) and at 21:19:15 activated the new copy, Core 0.8.9 (`lunara-plugin-core/`). |
+| 21:29:30 | Dalton started a Jetpack Backup restore to the 20:15:46 backup point, one second before the plugin updates. |
+| 21:42:04 | Restore complete. Foundation 1.2.12, Dispatch 3.2.7, and Core 0.8.8 are active again. The duplicate `lunara-plugin-dispatch/` (3.2.8) and `lunara-plugin-core/` (0.8.9) directories remain on disk, inactive. |
+| 21:42:04 | Dispatch draft 101913 generated, stamped Foundation 1.2.12, Dispatch 3.2.7, prompt hash `8b1b180c…`. Old code. |
+
+Consequences: no Dispatch run has executed on 1.2.14 / 3.2.8, so the voice
+work is untested on the live site. The 21:42 draft is not evidence either way.
+Why Dalton restored is not in the log; the last change before the restore was
+the Core 0.8.9 swap into a second directory, which is the likeliest trigger
+and is Dalton's to confirm. The Control Desk shows no deploy control for
+plugins because none exists: the Updates screen is the control.
+
 ### Gate ledger
 
 - **Foundation, run the way `lint.yml` runs it:** PHP lint on every file
@@ -188,20 +376,25 @@ duplication stands and is carried below.
 | Review the compiled prompt (Journal → Control Plane, read-only compiled box) | open | Dalton |
 | Merge Foundation 1.2.14 to `main` | done, PR #20 merged 20:11 UTC | Dalton |
 | Merge Dispatch 3.2.8 to `main` | done, PR #13 merged 20:12 UTC | Dalton |
-| Deploy plugins via Deployer for Git from the Control Desk: Foundation 1.2.14 first, Dispatch 3.2.8 second; both on `main`, no theme release in this slice | open, both merged | Dalton |
+| Deploy Foundation 1.2.14 and Dispatch 3.2.8 | **reverted** by the 21:29 restore (correction above). Re-run from Dashboard → Updates, those two rows only | Dalton |
+| Say what broke between 21:19 and 21:29 that prompted the restore, so the trigger can be isolated from the two plugin releases | open | Dalton |
+| Remove the inactive duplicate plugin directories `lunara-plugin-dispatch/` and `lunara-plugin-core/`; update in place from the Updates screen instead of installing second copies | open | Dalton |
+| Read the first Dispatch draft generated on 1.2.14 / 3.2.8 against the register; confirm the prompt hash moved off `8b1b180c…` | blocked until the plugins are re-updated; the 21:42 draft ran on old code | Dalton and agent |
+| Deploy Theme 3.2.57, then `bash tests/tools/lunara-canary-verify.sh 3.2.57` | 3.2.57 live since 16:04 UTC per Deploy Truth; canary not yet run this session | Dalton |
 | Read the first Dispatch draft after deploy against the register; confirm the prompt hash changed | open | Dalton |
-| Merge Theme 3.2.57 and rebuild the exact-rollback hatch | open, carried | Dalton |
-| Deploy Theme 3.2.57, then `bash tests/tools/lunara-canary-verify.sh 3.2.57` | open, carried | Dalton |
+| Merge Theme 3.2.57 and rebuild the exact-rollback hatch | done: 3.2.57 merged as PR #171 before this session; hatch rebuilt 2026-09-04 (addendum above) | Dalton |
 | Rebuild the Dispatch originality gate around the new register | logged above | Dalton |
 | Deck-equals-first-paragraph | logged above, carried | Dalton |
 | Auto-deploy stays off | unchanged | Dalton |
 
 ### Whose move it is next
 
-Dalton's. Both plugin PRs are merged. Deploy Foundation 1.2.14, then
-Dispatch 3.2.8, from the Control Desk; read the compiled prompt in the
-Control Plane once 1.2.14 is on the site; judge the next draft. The
-engagement-question decision is made and recorded above. If it still reads like a
+Dalton's. Both plugin releases were live for 74 minutes and were reverted by
+his 21:29 restore. Re-update Foundation and Dispatch from Dashboard →
+Updates, say what prompted the restore, remove the duplicate plugin
+directories, then read the compiled prompt in the Control Plane and judge the
+next Dispatch draft. The engagement-question decision is made and recorded
+above. If it still reads like a
 trade desk, the next lever is the model, not the prompt.
 
 ## 2026-09-02 — Theme 3.2.57 journal lede parity and local candidate close

@@ -11,6 +11,69 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-05 — Theme 3.2.58 Oscars Portal Fluid Rebuild
+
+Theme release plus a companion plugin release, **Oscars Ledger 2.7.83**.
+
+- **The portal scales to the screen.** The `/oscars/` portal was capped at
+  1180 pixels by three authorities that had to move together: the route
+  sheet `assets/css/lunara-oscars-portal.css`, the shell authority in
+  `assets/css/lunara-shell.css`, and the inline critical seed in
+  `inc/oscars-portal-critical.php`. All three now cap at 1720 pixels. On a
+  2560-pixel display the content column grows from 1180 to 1720 pixels and
+  the hero headline from 64 to 86 pixels; at 1440 the page reads as before.
+- **A fluid type scale with floors.** Every portal size that was a fixed rem
+  or a viewport clamp with a laptop ceiling is now `clamp(floor, vw-slope +
+  rem, ceiling)`: hero title, hero copy, section titles and summaries, card
+  headings and copy, kickers, stat labels and values, winner names, the
+  navigator pills. The floor is the point: text under 12 pixels on the page
+  drops from 85 elements at 2560 to 1.
+- **The prediction board is a card grid.** The 27-row list that took a third
+  of the desktop page and 5,700 pixels of a phone is now one tile per pick,
+  auto-filling the portal width (five across at 1440, six on a monitor, two
+  on a phone), category and status chip on top, call beneath. Markup is
+  untouched, so `tests/oscars-portal-board-contract.ps1` still holds; the
+  board went from 2,326 to 1,039 pixels tall at 1440.
+- **One owner per block.** The Academy Awards plugin's landing hub, rendered
+  inside the portal's research shell, restated what the portal already
+  shows: its Latest Ceremony marquee duplicated the spotlights, its Latest
+  Winner Circle duplicated the ceremony winners. Oscars Ledger 2.7.83 adds a
+  landing section composer, `aat_landing_route_sections`, mirroring the
+  plugin's existing ceremony and category composers; the theme hooks it in
+  `inc/oscars-portal.php` and drops those two blocks on the portal page
+  only. The hub is byte-identical everywhere else.
+- **Poster Highlights are posters.** Earlier compact passes in the shell had
+  turned each highlight into a sideways strip: poster in a narrow left
+  column, title floating bottom-right, the first two cards spanning three
+  tracks. A final block in the shell makes them poster-first cards at 2:3,
+  six across on desktop, four on tablet, three and then two on phones, with
+  the title and year beneath.
+- **Compact-pass caps removed where they were lying.** Stat, fact,
+  ceremony-winner, title and door cards carried `max-width` caps of 142 and
+  148 pixels from old compact passes, which is why "75 ceremonies" clipped in
+  Oscar Deep Cuts and why the ceremony winner cards sat 142 pixels wide in
+  428-pixel columns. The caps are gone for those cards; winner cards without
+  a photo collapse to a single column so producers' lists stop stacking one
+  word per line. Metric tiles lose their forced 150-pixel height.
+- **Verified by rendering, not by hope.** The live page was rebuilt offline
+  from its unbundled HTML and assets and rendered offline in the container's
+  Chromium at 390, 768, 1440, 1920, and 2560 pixels with the modified
+  stylesheets and a regenerated critical seed, scrolling through so the
+  reveal-on-scroll sections fired. Page height at 1440 went from 11,962 to
+  8,764 pixels, at 390 from 17,357 to 13,117. No horizontal overflow at any
+  width.
+- **Budgets held.** Route sheet 41,835 to 44,120 bytes (contract ceiling
+  45,000), shell 181,501 to 184,028 (ceiling 204,800; the shell also lost a
+  3,985-byte duplicate of the board rules), critical seed 5,163 to 5,544
+  (ceiling 6,144). The release identity contract moved to
+  `tests/release-identity-3-2-58.ps1`.
+- **Not changed, deliberately:** the spotlight and winner images still arrive
+  with `quality=100` in their CDN URLs. That parameter is not in theme or
+  plugin markup; it comes from Jetpack Boost's Image CDN quality setting,
+  which is a wp-admin control. Also not changed: the rotating winners
+  carousel's tall empty cards, and the doors and research sections, which
+  Dalton can now reorder or hide from the Oscars Portal Studio.
+
 ## 2026-09-04 — Journal Foundation 1.2.14 and Dispatch 3.2.8 Journal Voice
 
 Plugin-only release. No theme change.

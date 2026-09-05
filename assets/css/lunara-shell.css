@@ -881,8 +881,8 @@ body.lunara-oscars-portal-page .lunara-oscars-portal {
     gap: clamp(34px, 4.8vw, 58px) !important;
     grid-template-columns: minmax(0, 1fr) !important;
     justify-items: stretch !important;
-    width: min(1180px, calc(100vw - 48px)) !important;
-    max-width: 1180px !important;
+    width: min(1720px, calc(100vw - 48px)) !important;
+    max-width: 1720px !important;
     margin: 0 auto !important;
     padding: clamp(16px, 2.4vw, 26px) 0 clamp(48px, 6vw, 76px) !important;
     min-width: 0 !important;
@@ -1505,10 +1505,18 @@ body.lunara-oscars-portal-page .lunara-ceremony-winners-grid {
     gap: 14px !important;
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-card,
-body.lunara-oscars-portal-page .lunara-oscars-portal-title-card,
-body.lunara-oscars-portal-page .lunara-ceremony-winner-card {
+body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-card {
     max-width: 148px !important;
+    width: 100% !important;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-portal-title-card {
+    max-width: none !important;
+    width: 100% !important;
+}
+
+body.lunara-oscars-portal-page .lunara-ceremony-winner-card {
+    max-width: none !important;
     width: 100% !important;
 }
 
@@ -2283,10 +2291,9 @@ body.lunara-oscars-portal-page .lunara-oscars-research-card-grid {
 }
 
 body.lunara-oscars-portal-page .lunara-oscars-portal-title-grid,
-body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-grid,
-body.lunara-oscars-portal-page .lunara-ceremony-winners-grid {
-    grid-template-columns: repeat(auto-fill, minmax(116px, 142px)) !important;
-    justify-content: start !important;
+body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+    justify-content: stretch !important;
 }
 
 body.lunara-oscars-portal-page .lunara-oscars-portal-link-card,
@@ -2296,7 +2303,12 @@ body.lunara-oscars-portal-page .lunara-oscars-portal-fact-card,
 body.lunara-oscars-portal-page .lunara-oscars-research-card,
 body.lunara-oscars-portal-page .lunara-ceremony-winner-card {
     border-radius: 14px !important;
-    max-width: 142px !important;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-portal-link-card,
+body.lunara-oscars-portal-page .lunara-oscars-portal-spotlight-card,
+body.lunara-oscars-portal-page .lunara-oscars-research-card {
+    max-width: none !important;
 }
 
 body.lunara-oscars-portal-page .lunara-oscars-portal-link-card,
@@ -4832,134 +4844,148 @@ padding-bottom: clamp(14px, 1.8vw, 20px) !important;
 padding-top: clamp(14px, 1.8vw, 20px) !important;
     }
 
-/* ============================================================
-   THE BOARD — prediction ledger on the Oscars portal (3.2.16).
-   Dense category → call → status rows in the portal card
-   language; tints follow the pick vocabulary (predicted gold,
-   won green, lost grey). No animation — reads instantly.
-   ============================================================ */
 
-body.lunara-oscars-portal-page .lunara-oscars-board {
-    border: 1px solid rgba(201, 169, 97, 0.2);
-    border-radius: 22px;
-    background:
-        radial-gradient(circle at top right, rgba(201, 169, 97, 0.1), transparent 38%),
-        linear-gradient(180deg, rgba(16, 28, 43, 0.94), rgba(7, 15, 26, 0.96));
-    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28);
-    padding: clamp(20px, 2.8vw, 34px);
-    overflow: hidden;
+/*
+ * Oscars portal, Theme 3.2.58: poster-first hub gallery, honest tiles.
+ * The plugin's Poster Highlights arrive through the research shell. Earlier
+ * compact passes turned each card into a sideways strip (poster in a narrow
+ * left column, title floating bottom-right, the first two cards spanning
+ * three tracks). These rules sit last in the shell so they win on order at
+ * equal specificity: one poster per card, 2:3, title and year beneath, and
+ * a column count that follows the viewport. Metric tiles lose their forced
+ * height, and every hub kicker and label gets a floor that survives a
+ * 27-inch display.
+ */
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-hub-film-grid,
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-filmography-grid.aat-hub-film-grid {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: clamp(12px, 1.2vw, 20px) !important;
+    align-items: start !important;
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-board-title {
-    margin: 0;
-    color: #FAFBFC;
-    font-size: clamp(1.5rem, 2.2vw, 2.2rem);
-    line-height: 1.1;
-    text-wrap: balance;
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-card,
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-card:nth-child(1),
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-card:nth-child(2) {
+    display: block !important;
+    grid-column: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-board-list {
-    list-style: none;
-    margin: clamp(18px, 2.2vw, 26px) 0 0;
-    padding: 0;
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-link {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-board-row {
-    display: grid;
-    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: 10px clamp(14px, 2vw, 26px);
-    padding: clamp(12px, 1.5vw, 16px) 0;
-    border-top: 1px solid rgba(201, 169, 97, 0.14);
-    min-width: 0;
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-poster-wrap {
+    display: block !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 2 / 3 !important;
+    border-radius: 0 !important;
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-board-row:first-child {
-    border-top: 0;
-    padding-top: 0;
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-poster-wrap img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-board-category {
-    color: rgba(224, 196, 129, 0.92);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    line-height: 1.4;
-    text-transform: uppercase;
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-title {
+    display: block !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 12px 12px 2px !important;
+    font-size: clamp(.92rem, .38vw + .68rem, 1.18rem) !important;
+    line-height: 1.25 !important;
+    color: #fff7df !important;
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-board-call {
-    color: #FAFBFC;
-    font-size: clamp(1.02rem, 1.3vw, 1.18rem);
-    line-height: 1.35;
-    min-width: 0;
-    overflow-wrap: break-word;
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-meta {
+    display: block !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 12px 12px !important;
+    font-size: clamp(.78rem, .28vw + .56rem, .98rem) !important;
+    color: rgba(255, 247, 223, .68) !important;
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-board-call a {
-    color: inherit;
-    text-decoration: underline;
-    text-decoration-color: rgba(224, 196, 129, 0.55);
-    text-decoration-thickness: 1px;
-    text-underline-offset: 3px;
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-hub-metric-card {
+    min-height: 0 !important;
+    gap: 8px !important;
+    padding: clamp(16px, 1.4vw, 24px) !important;
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-board-call a:hover,
-body.lunara-oscars-portal-page .lunara-oscars-board-call a:focus-visible {
-    text-decoration-color: #e0c481;
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-hub-metric-value {
+    font-size: clamp(1.7rem, 1.2vw + 1rem, 3.2rem) !important;
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-board-call em {
-    display: block;
-    color: rgba(244, 239, 227, 0.66);
-    font-size: 0.88em;
-    font-style: italic;
+body.lunara-oscars-portal-page .lunara-home-section-kicker,
+body.lunara-oscars-portal-page .aat-hub-kicker,
+body.lunara-oscars-portal-page .aat-hub-metric-label,
+body.lunara-oscars-portal-page .aat-stat-label {
+    font-size: clamp(.78rem, .3vw + .5rem, 1rem) !important;
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-board-status {
-    justify-self: end;
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 12px;
-    border: 1px solid rgba(237, 210, 150, 0.34);
-    border-radius: 999px;
-    background: rgba(7, 15, 26, 0.62);
-    color: #e0c481;
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    line-height: 1.5;
-    text-transform: uppercase;
-    white-space: nowrap;
+body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-hub-metric-copy {
+    font-size: clamp(.86rem, .3vw + .62rem, 1.05rem) !important;
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-board-row.is-status-won .lunara-oscars-board-status {
-    border-color: rgba(82, 217, 147, 0.4);
-    color: rgba(82, 217, 147, 0.92);
+@media (max-width: 1120px) {
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-hub-film-grid,
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-filmography-grid.aat-hub-film-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
 }
 
-body.lunara-oscars-portal-page .lunara-oscars-board-row.is-status-lost .lunara-oscars-board-status {
-    border-color: rgba(255, 255, 255, 0.14);
-    color: rgba(180, 180, 180, 0.85);
-}
-
-body.lunara-oscars-portal-page .lunara-oscars-board-row.is-status-lost .lunara-oscars-board-call {
-    color: rgba(244, 239, 227, 0.62);
-}
-
-body.lunara-oscars-portal-page .lunara-oscars-board-note {
-    margin: clamp(16px, 2vw, 22px) 0 0;
-    color: rgba(244, 239, 227, 0.6);
-    font-size: 0.86rem;
-    line-height: 1.6;
-}
-
-@media (max-width: 782px) {
-    body.lunara-oscars-portal-page .lunara-oscars-board-row {
-        grid-template-columns: minmax(0, 1fr) auto;
+@media (max-width: 780px) {
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-hub-film-grid,
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-filmography-grid.aat-hub-film-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
 
-    body.lunara-oscars-portal-page .lunara-oscars-board-category {
-        grid-column: 1 / -1;
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-database-landing-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-card,
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-card:nth-child(1),
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-card:nth-child(2) {
+        min-height: 0 !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-link {
+        grid-template-columns: none !important;
+    }
+}
+
+@media (max-width: 430px) {
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-hub-film-grid,
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-filmography-grid.aat-hub-film-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-database-landing-metrics {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-ceremony-gallery-section .aat-filmography-link {
+        grid-template-columns: none !important;
+        gap: 0 !important;
     }
 }
