@@ -160,8 +160,9 @@
 
 (function(){
         if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-        // Only run scroll reveals on the front page — skip portal, plugin, single review, and other pages
+        // Scroll reveals: front page, the Oscars portal (3.2.59), and plugin entity pages. Other routes stay static.
         var isFrontPage=document.body.classList.contains('home')||document.querySelector('.lunara-front-page');
+        var isPortal=document.body.classList.contains('lunara-oscars-portal-page');
         var isPluginPage=document.querySelector('.aat-hub-page,.aat-entity-page');
         var revealSels=[];
         var staggerSels=[];
@@ -174,8 +175,20 @@
                 '.lunara-review-grid','.lunara-review-related-grid'
             ];
         }
-        // Entity pages get targeted reveals for stats/timeline only
-        if(isPluginPage){
+        /* Oscars portal: every section below the hero, and the cards inside its grids. Checked before the plugin-page branch because the portal embeds the plugin hub. */
+        if(isPortal){
+            revealSels=[
+                '#primary.lunara-oscars-portal>.lunara-home-section'+':not(.lunara-oscars-portal-slot-hero)',
+                '.lunara-oscars-portal-link-card','.lunara-oscars-portal-spotlight-card','.lunara-oscars-portal-title-card',
+                '.lunara-oscars-research-card','.lunara-oscars-portal-fact-card','.lunara-oscars-board-row',
+                '.lunara-ceremony-winners-grid>.lunara-ceremony-winner-card'
+            ];
+            staggerSels=[
+                '.lunara-oscars-portal-link-grid','.lunara-oscars-portal-spotlight-grid','.lunara-oscars-portal-title-grid',
+                '.lunara-oscars-research-card-grid','.lunara-oscars-portal-facts-grid','.lunara-oscars-board-list','.lunara-ceremony-winners-grid'
+            ];
+        }else if(isPluginPage){
+            // Entity pages get targeted reveals for stats/timeline only
             revealSels=['.aat-entity-status-banner','.aat-stat','.aat-timeline-card'];
             staggerSels=['.aat-stats-bar','.aat-timeline-list'];
         }
@@ -198,17 +211,23 @@
                 }
             });
 		},{threshold:0.01,rootMargin:'240px 0px'});
-        document.querySelectorAll('.lunara-reveal').forEach(function(el){obs.observe(el);});
+        /* Anything already on screen shows at once; a safety timer makes sure no observer can strand a section. */
+        var vh=window.innerHeight||0;
+        document.querySelectorAll('.lunara-reveal').forEach(function(el){
+            if(el.getBoundingClientRect().top<vh*0.9){el.classList.add('is-visible');}else{obs.observe(el);}
+        });
+        window.setTimeout(function(){document.querySelectorAll('.lunara-reveal:not(.is-visible)').forEach(function(el){el.classList.add('is-visible');});},6000);
     })();
 
 (function(){
-        var stats=document.querySelectorAll('.aat-stat-number');
+        var stats=document.querySelectorAll('.aat-stat-number,.lunara-oscars-portal-stat-value,.lunara-oscars-portal-fact-value,.lunara-oscars-season-days');
         if(!stats.length||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
         var obs=new IntersectionObserver(function(entries){
             entries.forEach(function(entry){
                 if(!entry.isIntersecting)return;
                 obs.unobserve(entry.target);
                 var el=entry.target,text=el.textContent.trim();
+                if(/^\d{4}$/.test(text))return;
                 var match=text.match(/^([\d,]+)(.*)/);
                 if(!match)return;
                 var target=parseInt(match[1].replace(/,/g,''),10);
@@ -228,6 +247,42 @@
             });
         },{threshold:0.3});
         stats.forEach(function(el){obs.observe(el);});
+    })();
+
+(function(){
+        var body=document.body;if(!body||!body.classList.contains('lunara-oscars-portal-page'))return;
+        /* Season clock (3.2.59): recompute at view time so anonymous cached HTML never shows yesterday's count. */
+        var labels={settled:'Ceremony settled',tonight:'Ceremony night',final:'Final stretch',season:'Awards season',countdown:'Ceremony countdown'};
+        document.querySelectorAll('[data-lunara-season-clock]').forEach(function(el){
+            var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(el.getAttribute('data-lunara-season-clock')||'');if(!m)return;
+            var now=new Date();
+            var days=Math.round((Date.UTC(+m[1],+m[2]-1,+m[3])-Date.UTC(now.getFullYear(),now.getMonth(),now.getDate()))/86400000);
+            if(days<-14){el.hidden=true;return;}
+            var num=el.querySelector('[data-lunara-season-days]'),unit=el.querySelector('[data-lunara-season-unit]'),ph=el.querySelector('.lunara-oscars-season-phase');
+            if(!num||!unit)return;
+            var phase=days<0?'settled':days===0?'tonight':days<=30?'final':days<=120?'season':'countdown';
+            if(ph)ph.textContent=labels[phase];
+            el.className=el.className.replace(/\bis-phase-\S+/,'is-phase-'+phase);
+            if(days>0){num.textContent=String(days);unit.textContent=days===1?'day to the ceremony':'days to the ceremony';}
+            else if(days===0){num.textContent='Tonight';unit.textContent='the envelopes open';}
+            else{num.textContent=String(-days);unit.textContent=days===-1?'day since the ceremony':'days since the ceremony';}
+        });
+        /* Navigator scroll-spy: the pill whose section owns the middle of the viewport is current. */
+        var nav=document.querySelector('.lunara-oscars-navigator');
+        if(!nav||!('IntersectionObserver' in window))return;
+        var links=Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]')),map={},targets=[];
+        links.forEach(function(a){var id=a.getAttribute('href').slice(1);var t=id?document.getElementById(id):null;if(t){map[id]=a;targets.push(t);}});
+        if(!targets.length)return;
+        var current='';
+        var spy=new IntersectionObserver(function(entries){
+            entries.forEach(function(en){
+                if(!en.isIntersecting||current===en.target.id)return;
+                current=en.target.id;
+                links.forEach(function(a){a.removeAttribute('aria-current');});
+                map[current].setAttribute('aria-current','location');
+            });
+        },{rootMargin:'-35% 0px -55% 0px',threshold:0});
+        targets.forEach(function(t){spy.observe(t);});
     })();
 
 (function(){
