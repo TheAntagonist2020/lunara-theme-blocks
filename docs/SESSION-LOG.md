@@ -37,7 +37,15 @@ and the bottom half was the Academy Awards plugin's own hub restating the
 portal's spotlights and winners in a second design language. Theme 3.2.58
 and Oscars Ledger 2.7.83 are assembled on
 `claude/journal-voice-optimization-kf6b9o` in both repositories. Nothing in
-this slice is merged, deployed, or live.
+this slice is deployed or live.
+
+**Addendum, 15:21 UTC.** Dalton marked Oscars Ledger 2.7.83
+([PR #28](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/28))
+ready and merged it to that repository's `main`. The theme's `main` did not
+move, so the exact-rollback hatch still sits on it (verified: hatch contains
+`origin/main`, tree `c55bf394594149db2888295c5d51f85f47b2b520`). The plugin
+is on `main`, not yet on the site: Dashboard → Updates is still the next
+click, before the theme PR merges and deploys.
 
 ### Verified live state (read-only probes this session)
 
@@ -136,7 +144,7 @@ None to prior entries.
 
 | Item | Status | Whose call |
 | --- | --- | --- |
-| Review the after-renders and the diff; merge Oscars Ledger 2.7.83 first, then Theme 3.2.58 | open | Dalton |
+| Review the after-renders and the diff; merge Oscars Ledger 2.7.83 first, then Theme 3.2.58 | plugin merged 15:21 UTC; theme PR #173 open | Dalton |
 | Deploy: Oscars Ledger from Dashboard → Updates, then the theme via Deployer for Git from the Control Desk, then `bash tests/tools/lunara-canary-verify.sh 3.2.58` | open | Dalton |
 | Re-update Foundation 1.2.14 and Dispatch 3.2.8 from Dashboard → Updates (reverted by the 2026-09-04 restore) | open, carried | Dalton |
 | Jetpack Boost Image CDN quality 100 → 82 | logged above | Dalton |
