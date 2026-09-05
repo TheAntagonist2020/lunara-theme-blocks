@@ -54,7 +54,7 @@ if (($labelRule + $selectRule) -match 'overflow(?:-x)?\s*:\s*hidden') {
 }
 
 $style = Get-Content -Raw (Join-Path $themeRoot 'style.css')
-if ($style -notmatch '(?m)^Version:\s*3\.2\.58\s*$') {
+if ($style -notmatch '(?m)^Version:\s*3\.2\.59\s*$') {
     throw 'Theme version must preserve the Site Studio Reviews lead mobile repair in 3.2.59.'
 }
 

@@ -245,6 +245,6 @@ Assert-True ($browserRuntime -match 'showRetention:\s*false') 'The director firs
 # Version lock: this intentionally asserts the NEXT reissue identity. It is
 # EXPECTED to fail until the 3.2.59 version migration lands as its own step;
 # every assertion above it must already pass on the pre-migration tree.
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.58\s*$') 'Theme version must be 3.2.59.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.59\s*$') 'Theme version must be 3.2.59.'
 
 Write-Host 'reviews-archive-studio: all assertions passed.'

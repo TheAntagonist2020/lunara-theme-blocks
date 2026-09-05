@@ -73,6 +73,6 @@ Write-Host ($nodeRuntime -join "`n")
 # EXPECTED to fail until the 3.2.59 version migration lands as its own step;
 # every assertion above it must already pass on the pre-migration tree.
 $style = Read-ThemeFile 'style.css'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.58\s*$') 'Theme version must be 3.2.59.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.59\s*$') 'Theme version must be 3.2.59.'
 
 Write-Host 'Oscars canonical cache-coherency sentinel contract passed.'

@@ -94,7 +94,7 @@ $criticalHash = -join ($criticalHashBytes | ForEach-Object { $_.ToString('x2') }
 if ($criticalBytes.Count -ne 11602 -or $criticalHash -ne '24999682414bab62f5a05fda4af3682d30459ff83c99e461188f01154fe37567') {
     throw "The 3.2.43 card repair must not alter the independently approved CLS seed ($($criticalBytes.Count)B $criticalHash)."
 }
-if ($style -notmatch '(?m)^Version:\s*3\.2\.58\s*$') {
+if ($style -notmatch '(?m)^Version:\s*3\.2\.59\s*$') {
     throw 'Theme version must preserve the mobile text-led card repair in 3.2.59.'
 }
 foreach ($viewport in @('375', '390', '782', '1440')) {

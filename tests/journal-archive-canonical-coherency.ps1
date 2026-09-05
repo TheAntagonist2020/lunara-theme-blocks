@@ -36,7 +36,7 @@ function Read-ThemeFile {
 }
 
 $style = Read-ThemeFile 'style.css'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.58\s*$') 'Theme version must be 3.2.59.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.59\s*$') 'Theme version must be 3.2.59.'
 
 $template = Read-ThemeFile 'archive-journal.php'
 Assert-True ($template -match 'data-lunara-theme-version="<\?php echo esc_attr\( \(string\) wp_get_theme\(\)->get\( ''Version'' \) \); \?>"') 'The modern Journal root must stamp the deployed theme version so cached HTML identity is provable.'

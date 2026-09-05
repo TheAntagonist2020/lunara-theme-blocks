@@ -24,7 +24,7 @@ $style = Get-Content -LiteralPath (Join-Path $root 'style.css') -Raw
 $shell = Get-Content -LiteralPath (Join-Path $root 'assets\css\lunara-shell.css') -Raw
 $frontend = Get-Content -LiteralPath (Join-Path $root 'inc\frontend.php') -Raw
 
-Assert-True ($style -match 'Version:\s*3\.2\.58') 'Journal lede parity must ship in Theme 3.2.59.'
+Assert-True ($style -match 'Version:\s*3\.2\.59') 'Journal lede parity must ship in Theme 3.2.59.'
 
 # The review lede survives, on its own, with the size it always had.
 $reviewLede = [regex]::Matches($style, '(?m)^body\.single-review \.lunara-review-single-content > p:first-of-type \{[^}]*?font-size:\s*clamp\(1\.1rem, 0\.98rem \+ 0\.4vw, 1\.28rem\) !important;[^}]*\}')

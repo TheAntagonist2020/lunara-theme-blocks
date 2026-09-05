@@ -11,6 +11,94 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-05 — Theme 3.2.59 Oscars Portal Dynamic Layer
+
+Theme-only release, stacked on the unreleased 3.2.58. No plugin change.
+Spec: `docs/superpowers/specs/2026-09-05-oscars-portal-dynamic-design.md`.
+
+- **The portal reveals as you scroll.** `assets/js/lunara-public-runtime.js`
+  skipped scroll reveals on the portal by design, and because the portal
+  embeds the plugin hub, the plugin-page branch ran instead and revealed
+  only stat and timeline nodes inside the research shell. The reveal IIFE
+  now has a portal branch, checked before the plugin-page branch: every
+  top-level section except the hero, and the cards inside the link,
+  spotlight, title, research, winners, facts, and board grids, get
+  `lunara-reveal`; the grids get `lunara-reveal-stagger`. The generic
+  reduced-motion-gated rules in `style.css` do the rest. Elements already
+  inside 90 percent of the viewport at boot are marked visible at once, and
+  a 6-second safety timer marks anything still hidden visible, so no slow
+  observer or render harness can strand a section. No-JS renders fully
+  visible because the class is only ever added by script.
+- **Counters extend to the portal.** The animated counter fired only on the
+  plugin's `.aat-stat-number`. It now covers the hero stat values, the Deep
+  Cuts fact values, and the season-clock day count. Four-digit years and
+  ordinal values ("98th Academy Awards") are skipped so nothing counts up
+  through other years or other ceremonies.
+- **Navigator scroll-spy.** An IntersectionObserver with a
+  `-35% 0px -55% 0px` band marks the navigator pill whose section owns the
+  middle of the viewport with `aria-current="location"`; the shell styles
+  that state.
+- **Season clock in the hero.** One new Customizer mod,
+  `lunara_oscars_next_ceremony_date` (`YYYY-MM-DD`, empty by default,
+  bounded by `lunara_oscars_sanitize_ceremony_date`). When set,
+  `lunara_oscars_season_clock()` resolves a phase by days to the ceremony:
+  countdown (over 120), season (31 to 120), final (1 to 30), tonight (0),
+  settled (-1 to -14). Past -14 it returns empty and the strip disappears,
+  so a stale date retires itself without an edit. The runtime recomputes the
+  count at view time from `data-lunara-season-clock`, so anonymous cached
+  HTML never shows yesterday's number.
+- **Board summary chips.** `lunara_render_oscars_prediction_board()` now
+  emits, above the untouched list, a chip row: total calls, one chip per
+  status present in canonical order (front-runner, contender, predicted,
+  watchlist, won, missed), and "Revised {Mon d}" from the newest pick's
+  modified time when WordPress exposes it. The board harness lifts the
+  renderer body alone, where the summary functions do not exist, so the
+  guard keeps its six cases byte-identical; the empty board still returns
+  the exact empty string.
+- **Today's Pull in Deep Cuts.** `lunara_get_oscars_todays_pull()` selects
+  one winning ledger row through `lunara_awards_table_name()` at a
+  deterministic offset from (year, day-of-year) with a prime stride, cached
+  in `lunara_oscars_todays_pull_v1_{day}` for a day and cleared by the
+  existing import flush. Links to the title, the person, the category, and
+  the ceremony go through the plugin's URL helpers. Rendered above the
+  facts grid so the four-up geometry is untouched.
+- **Posterless carousel cards are text-led.** The rotating winners carousel's
+  blank first slot was a data condition, not a layout bug: the day's
+  ceremony often has no backdrop for its Best Picture row, so the first
+  card rendered as a 332-pixel box with three lines of text centered in it.
+  Cards without a visual now carry a gold "Winner" badge, a ruled category
+  line, and a larger name, in the shell.
+- **One module, pure renderers.** `inc/oscars-portal-dynamic.php` holds the
+  helpers and renderers; every one returns the exact empty string when it
+  has nothing, so a site with no ceremony date, no picks, and no ledger
+  keeps the 3.2.58 markup byte-for-byte. `page-oscars.php` and the board
+  renderer consume them behind `function_exists` guards. The module calls
+  no nonce, cookie, or user-conditional function.
+- **Budgets held, route sheet untouched.** The route sheet had 880 bytes of
+  headroom, so every rule landed in `assets/css/lunara-shell.css`: 184,028
+  to 194,332 bytes (ceiling 204,800). Public runtime 11,759 to 16,029
+  (ceiling 20,480). Critical seed untouched. New type floors are 12 pixels.
+- **Rendered offline before shipping.** The live page was rebuilt from its
+  unbundled HTML against the working tree, with the 3.2.59 critical seed
+  regenerated through its own PHP and the three components injected from
+  their renderers, and driven in Chromium at 375, 1280, and 2560 pixels. At
+  1280, scrolled 1000 pixels two seconds after load, 21 of 70 reveal targets
+  were visible and the first hidden one sat just below the 240-pixel
+  observer margin; at 4000 pixels, 51 were visible and the spy read
+  "Titles". No horizontal overflow at any width; the 1720-pixel column and
+  six board columns hold at 2560.
+- **Contracts.** `tests/oscars-portal-dynamic-contract.ps1` runs
+  `tests/fixtures/oscars-portal-dynamic-harness.php` (seven cases against
+  the module's real code) and pins the loader, template guards, Customizer
+  registration, runtime branches, shell rules, flush key, forbidden list,
+  and budgets. Release identity moved to `tests/release-identity-3-2-59.ps1`.
+- **Not changed, deliberately:** the rotating showcase still prefers
+  backdrops over posters (the data condition behind the blank slot is
+  logged, not re-sourced); the pre-existing sub-12-pixel text at phone
+  widths in the board rows, kickers, and command rail, which belongs to
+  earlier compact passes; GSAP stays off the portal; no ceremony-date
+  history, because the ledger carries no dates.
+
 ## 2026-09-05 — Theme 3.2.58 Oscars Portal Fluid Rebuild
 
 Theme release plus a companion plugin release, **Oscars Ledger 2.7.83**.

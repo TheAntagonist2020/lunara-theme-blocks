@@ -184,7 +184,7 @@ const missingBinding = analyzeJournalCanonicalCoherency({
 	url: CANONICAL_JOURNAL_URL,
 	finalUrl: CANONICAL_JOURNAL_URL,
 	statusCode: 200,
-	html: candidateHtml().replace(/ data-lunara-theme-version="3\.2\.58"/, ''),
+	html: candidateHtml().replace(/ data-lunara-theme-version="3\.2\.59"/, ''),
 	expectedVersion: '3.2.59',
 });
 assert.equal(missingBinding.coherent, false, 'HTML without the version attribute predates the deployed theme and must fail.');
