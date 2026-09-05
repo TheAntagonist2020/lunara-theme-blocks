@@ -418,6 +418,7 @@ $command_cards = array(
                             </div>
                         <?php endforeach; ?>
                     </div>
+                    <?php if ( function_exists( 'lunara_oscars_render_season_clock' ) && function_exists( 'lunara_oscars_season_clock' ) ) { echo lunara_oscars_render_season_clock( lunara_oscars_season_clock( get_theme_mod( 'lunara_oscars_next_ceremony_date', '' ) ) ); } // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- renderer escapes internally. ?>
                 </div>
 
                 <?php if ( ! empty( $hero_title_card ) ) : ?>
@@ -749,6 +750,7 @@ $command_cards = array(
                     </div>
                 </div>
 
+                <?php if ( function_exists( 'lunara_oscars_render_todays_pull' ) && function_exists( 'lunara_get_oscars_todays_pull' ) ) { echo lunara_oscars_render_todays_pull( lunara_get_oscars_todays_pull() ); } // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- renderer escapes internally. ?>
                 <div class="lunara-oscars-portal-facts-grid">
                     <?php foreach ( $deep_cuts as $cut ) : ?>
                         <a class="lunara-oscars-portal-fact-card" href="<?php echo esc_url( $cut['url'] ?? $database_url ); ?>">

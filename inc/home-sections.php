@@ -518,6 +518,8 @@ function lunara_flush_oscars_home_transients() {
         for ( $limit = 4; $limit <= 16; $limit++ ) {
             delete_transient( 'lunara_oscars_rotating_showcase_v3_' . $day . '_' . $limit );
         }
+        // 3.2.59: Today's Pull is keyed by day only.
+        delete_transient( 'lunara_oscars_todays_pull_v1_' . $day );
     }
 
     if ( function_exists( 'rocket_clean_home' ) ) {

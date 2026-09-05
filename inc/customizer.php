@@ -1970,6 +1970,14 @@ function lunara_customize_register( $wp_customize ) {
             'sanitize'    => 'sanitize_text_field',
             'description' => __( 'Button label under the rotating ceremony winners carousel.', 'lunara-film' ),
         ),
+        array(
+            'setting'     => 'lunara_oscars_next_ceremony_date',
+            'default'     => '',
+            'label'       => __( 'Next Ceremony Date', 'lunara-film' ),
+            'type'        => 'date',
+            'sanitize'    => 'lunara_oscars_sanitize_ceremony_date',
+            'description' => __( 'Drives the season clock in the portal hero (YYYY-MM-DD). Leave empty to hide it; the clock retires itself two weeks after the date.', 'lunara-film' ),
+        ),
     );
 
     foreach ( $oscars_portal_controls as $control ) {
