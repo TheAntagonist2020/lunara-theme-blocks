@@ -397,21 +397,9 @@ function lunara_render_oscars_portal_direct() {
 
 /**
  * Add a body class so the portal can be styled without relying on generic page shells.
- *
- * Gate parity: the route seed and stylesheet enqueue on the whole portal
- * family (lunara_is_oscars_portal_route — the resolved /oscars/ page OR any
- * page assigned page-oscars.php), so the class-scoped styling owner must
- * stamp on the same family or a template-assigned page renders half-styled
- * (seed only, no body.lunara-oscars-portal-page rules). The narrow
- * is_page('oscars') detector remains the fallback when the family module
- * is not loaded.
  */
 function lunara_oscars_portal_body_class( $classes ) {
-    $is_portal_route = function_exists( 'lunara_is_oscars_portal_route' )
-        ? ( ! is_admin() && lunara_is_oscars_portal_route() )
-        : lunara_is_oscars_portal_page();
-
-    if ( $is_portal_route ) {
+    if ( lunara_is_oscars_portal_page() ) {
         $classes[] = 'lunara-oscars-portal-page';
     }
 
@@ -507,32 +495,4 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 		<?php
 		return trim( ob_get_clean() );
 	}
-}
-
-if ( ! function_exists( 'lunara_oscars_portal_landing_sections' ) ) {
-	/**
-	 * One owner per block on the portal page (Theme 3.2.58).
-	 *
-	 * The Academy Awards plugin's landing hub renders inside the portal's
-	 * research shell. Two of its blocks restate what the portal already
-	 * shows above it: the Latest Ceremony marquee (the portal's spotlights
-	 * and latest-winners sections) and the Latest Winner Circle (the
-	 * ceremony winners grid). Drop those two here, on the portal page only,
-	 * through the plugin's `aat_landing_route_sections` composer. Every
-	 * other landing block (header, metrics, poster highlights, footer) is
-	 * untouched, and the hub is byte-identical everywhere else.
-	 *
-	 * @param array<string,string> $sections Landing sections keyed by slug.
-	 * @return array<string,string>
-	 */
-	function lunara_oscars_portal_landing_sections( $sections ) {
-		if ( ! is_array( $sections ) || ! function_exists( 'lunara_is_oscars_portal_page' ) || ! lunara_is_oscars_portal_page() ) {
-			return $sections;
-		}
-
-		unset( $sections['ceremony-marquee'], $sections['winner-circle'] );
-
-		return $sections;
-	}
-	add_filter( 'aat_landing_route_sections', 'lunara_oscars_portal_landing_sections' );
 }

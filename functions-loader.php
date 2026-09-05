@@ -25,16 +25,13 @@ require_once $lunara_inc . 'customizer.php';
 require_once $lunara_inc . 'reviews-cpt.php';
 require_once $lunara_inc . 'journal-cpt.php';    // Journal CPT + journal_type taxonomy + per-post meta
 require_once $lunara_inc . 'journal-family.php'; // Canonical fields, taxonomy routes, and legacy presentation adapters
-require_once $lunara_inc . 'journal-archive-studio.php'; // Focused revisionable Journal archive curation + preview.
-require_once $lunara_inc . 'reviews-archive-studio.php'; // Focused revisionable Reviews archive curation + preview.
-require_once $lunara_inc . 'oscars-family.php';         // Oscars route-family detectors + the plugin read-path boundary.
-require_once $lunara_inc . 'oscars-portal-studio.php';  // Focused revisionable Oscars portal composition + preview.
 require_once $lunara_inc . 'editorial-meta.php';
 require_once $lunara_inc . 'trailers.php';
 require_once $lunara_inc . 'publish-guards.php';
 require_once $lunara_inc . 'carousel.php';
 require_once $lunara_inc . 'control-desk.php';
 if ( is_admin() ) {
+    require_once $lunara_inc . 'site-studio.php';
     require_once $lunara_inc . 'control-desk-automation.php';
 }
 // Legacy homepage shortcodes are intentionally not booted from inc/ anymore.
@@ -63,9 +60,6 @@ require_once $lunara_inc . 'oscars-portal.php';
 require_once $lunara_inc . 'blocks.php';
 require_once $lunara_inc . 'block-migration.php';
 require_once $lunara_inc . 'review-archive-critical.php';
-require_once $lunara_inc . 'journal-archive-critical.php';
-require_once $lunara_inc . 'oscars-portal-critical.php';
-require_once $lunara_inc . 'oscars-ledger-critical.php'; // Ledger route seed + Dossier variable assembly + label-face marker.
 require_once $lunara_inc . 'frontend.php';
 require_once $lunara_inc . 'cinematic-home.php';
 
@@ -82,11 +76,6 @@ require_once $lunara_inc . 'hero-command.php';
 // Layer 10b — responsive native hero image + preload parity. This module owns
 // only image delivery; Hero Command remains the editorial deck source.
 require_once $lunara_inc . 'hero-delivery.php';
-
-// Layer 10c — Journal archive cards use uncropped native candidates and a
-// bounded WordPress.com Image CDN fallback when attachment metadata has no
-// compatible responsive set.
-require_once $lunara_inc . 'journal-archive-media.php';
 
 // Layer 11 — Modular Essay Builder (Design Spec §12): renders the ACF
 // flexible-content modules registered by Lunara Core after essay content.
@@ -132,17 +121,6 @@ require_once $lunara_inc . 'header-command.php';
 // Layer 16 — Design Tokens: dial-level palette/voice overrides from the
 // Control Desk, printed as a :root layer over the shipped tokens.
 require_once $lunara_inc . 'design-tokens.php';
-
-// Layer 17 — Site Studio foundation. Registry, canonical adapters/services,
-// and REST routes must be available outside wp-admin so private front-end
-// previews and authenticated API requests do not depend on the admin router.
-require_once $lunara_inc . 'site-studio-registry.php';
-require_once $lunara_inc . 'site-studio-adapters.php';
-require_once $lunara_inc . 'site-studio-rest.php';
-require_once $lunara_inc . 'site-studio-preview.php';
-if ( is_admin() ) {
-    require_once $lunara_inc . 'site-studio.php';
-}
 
 // Signal that every modular include completed. The monolithic fallback uses
 // this theme-owned sentinel; LUNARA_CORE_VERSION remains owned by Lunara Core.

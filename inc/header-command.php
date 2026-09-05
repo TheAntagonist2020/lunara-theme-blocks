@@ -418,6 +418,9 @@ if ( ! function_exists( 'lunara_header_takeover_toggle_handler' ) ) {
 			wp_die( esc_html__( 'Header takeover toggle rejected.', 'lunara-film' ) );
 		}
 		update_option( 'lunara_header_takeover', empty( get_option( 'lunara_header_takeover' ) ) ? 1 : 0, true );
+		if ( function_exists( 'rocket_clean_domain' ) ) {
+			rocket_clean_domain();
+		}
 		$target = function_exists( 'lunara_control_desk_admin_url' )
 			? lunara_control_desk_admin_url( array( 'tab' => 'system-status' ) )
 			: admin_url( 'admin.php?page=lunara-control-desk' );

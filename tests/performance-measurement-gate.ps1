@@ -35,7 +35,6 @@ Assert-True ($runner -match "runs', 5") 'Benchmark must default to five paired r
 Assert-True ($runner -match 'coefficientOfVariation') 'Benchmark must report measurement variance.'
 Assert-True ($runner -match 'medianAbsolutePairedDeltaPct') 'A/A runs must report paired noise.'
 Assert-True ($runner -match 'Tracing\.start') 'Benchmark must capture diagnostic Chrome traces.'
-Assert-True ($runner -match 'executablePath:\s*process\.env\.LUNARA_BROWSER_EXECUTABLE') 'Benchmark must accept an explicitly resolved local Chromium/Chrome/Edge executable.'
 Assert-True ($runner -match 'lcpResource') 'Benchmark must record LCP request timing.'
 Assert-True ($runner -match 'inlineStyleBytes') 'Benchmark must record live inline CSS bytes.'
 Assert-True ($runner -match 'htmlDecodedBytes') 'Benchmark must record live HTML payload bytes.'

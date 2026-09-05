@@ -8,7 +8,7 @@ if ($controlDesk -notmatch 'class="lunara-control-desk-homepage-field lunara-con
     throw 'The production Reviews lead label must carry the scoped shrink-safe class.'
 }
 
-$labelSelector = '.lunara-control-desk #lunara-theme-studio-reviews-archive-studio .lunara-control-desk-reviews-lead-field'
+$labelSelector = '.lunara-site-studio #lunara-theme-studio-reviews-archive-studio .lunara-control-desk-reviews-lead-field'
 $selectSelector = $labelSelector + ' select[name="lunara_reviews_archive_lead_id"]'
 
 function Get-CssRuleBody {
@@ -54,12 +54,8 @@ if (($labelRule + $selectRule) -match 'overflow(?:-x)?\s*:\s*hidden') {
 }
 
 $style = Get-Content -Raw (Join-Path $themeRoot 'style.css')
-if ($style -notmatch '(?m)^Version:\s*3\.2\.58\s*$') {
-    throw 'Theme version must preserve the Site Studio Reviews lead mobile repair in 3.2.58.'
-}
-
-if ($adminCss -match [regex]::Escape('.lunara-site-studio #lunara-theme-studio-reviews-archive-studio')) {
-    throw 'The retired Site Studio Reviews renderer selector must not remain in Control Desk CSS.'
+if ($style -notmatch '(?m)^Version:\s*3\.2\.43\s*$') {
+    throw 'Theme version must preserve the Site Studio Reviews lead mobile repair in 3.2.43.'
 }
 
 Write-Host 'Site Studio Reviews lead 390px container contract passed.'

@@ -12,8 +12,8 @@
  *
  * Admin surface: the "Hero Command" studio inside Control Desk → Theme
  * Studio (lunara_control_desk_render_hero_command_studio, called from the
- * theme-studio tab). Saving writes only the canonical settings; public
- * correctness must not depend on invalidating shared caches.
+ * theme-studio tab). Saving purges the WP Rocket home cache so the hero
+ * changes are visible immediately.
  *
  * @package Lunara_Film
  */
@@ -311,6 +311,14 @@ if ( ! function_exists( 'lunara_hero_command_save' ) ) {
 		update_option( 'lunara_hero_command', lunara_hero_command_sanitize( $raw ), true );
 		set_theme_mod( 'lunara_home_cinematic_front_door_enabled', ! empty( $raw['cinematic_opener'] ) ? 1 : 0 );
 
+		// The hero is the homepage LCP band — make the change visible now.
+		if ( function_exists( 'rocket_clean_home' ) ) {
+			rocket_clean_home();
+		}
+		if ( function_exists( 'rocket_clean_used_css' ) ) {
+			rocket_clean_used_css();
+		}
+
 		wp_safe_redirect( add_query_arg( 'lunara_notice', 'hero_command_saved', $redirect ) );
 		exit;
 	}
@@ -501,7 +509,7 @@ if ( ! function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) {
 				<div class="lunara-control-desk-homepage-footer">
 					<div>
 						<strong><?php esc_html_e( 'The hero updates on save', 'lunara-film' ); ?></strong>
-						<span><?php esc_html_e( 'Save the deck, then use View the hero to verify it on the normal public route.', 'lunara-film' ); ?></span>
+						<span><?php esc_html_e( 'The homepage cache is purged automatically so the new deck screens immediately.', 'lunara-film' ); ?></span>
 					</div>
 					<div class="lunara-control-desk-actions">
 						<button type="submit" class="button button-primary"><?php esc_html_e( 'Save Hero Command', 'lunara-film' ); ?></button>
