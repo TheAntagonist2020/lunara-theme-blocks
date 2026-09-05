@@ -439,6 +439,7 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 		}
 
 		$ceremony_year = 0;
+		$revised_ts    = 0;
 		$rows          = array();
 		foreach ( $posts as $pick ) {
 			$pick_id  = $pick instanceof WP_Post ? $pick->ID : absint( $pick );
@@ -451,6 +452,12 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 			$year     = absint( get_post_meta( $pick_id, '_lunara_pick_ceremony_year', true ) );
 			if ( $year > $ceremony_year ) {
 				$ceremony_year = $year;
+			}
+			if ( function_exists( 'get_post_modified_time' ) ) {
+				$modified = (int) get_post_modified_time( 'U', true, $pick_id );
+				if ( $modified > $revised_ts ) {
+					$revised_ts = $modified;
+				}
 			}
 			$call = '' !== $person ? $person : $film;
 			if ( '' === $call ) {
@@ -469,6 +476,18 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 			return '';
 		}
 
+		// 3.2.59: status chips above the list. Guarded so the board harness
+		// (which lifts this body alone) and any site without the dynamic
+		// module keep the exact 3.2.58 output.
+		$summary_html = '';
+		if ( function_exists( 'lunara_oscars_board_summary' ) && function_exists( 'lunara_oscars_render_board_summary' ) ) {
+			$revised_label = '';
+			if ( $revised_ts > 0 && function_exists( 'wp_date' ) ) {
+				$revised_label = sprintf( /* translators: %s: month and day */ __( 'Revised %s', 'lunara-film' ), wp_date( 'M j', $revised_ts ) );
+			}
+			$summary_html = lunara_oscars_render_board_summary( lunara_oscars_board_summary( $rows ), $revised_label );
+		}
+
 		$heading = $ceremony_year
 			? sprintf( /* translators: %d: ceremony year */ __( 'The desk calls the %d ceremony, category by category.', 'lunara-film' ), $ceremony_year )
 			: __( 'The desk calls the next ceremony, category by category.', 'lunara-film' );
@@ -482,6 +501,7 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 					<h2 class="lunara-oscars-board-title"><?php echo esc_html( $heading ); ?></h2>
 				</div>
 			</div>
+			<?php echo $summary_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- renderer escapes internally. ?>
 			<ol class="lunara-oscars-board-list">
 				<?php foreach ( $rows as $row ) : ?>
 					<li class="lunara-oscars-board-row<?php echo '' !== $row['status'] ? ' is-status-' . esc_attr( $row['status'] ) : ''; ?>">
