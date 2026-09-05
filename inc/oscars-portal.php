@@ -508,3 +508,31 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 		return trim( ob_get_clean() );
 	}
 }
+
+if ( ! function_exists( 'lunara_oscars_portal_landing_sections' ) ) {
+	/**
+	 * One owner per block on the portal page (Theme 3.2.58).
+	 *
+	 * The Academy Awards plugin's landing hub renders inside the portal's
+	 * research shell. Two of its blocks restate what the portal already
+	 * shows above it: the Latest Ceremony marquee (the portal's spotlights
+	 * and latest-winners sections) and the Latest Winner Circle (the
+	 * ceremony winners grid). Drop those two here, on the portal page only,
+	 * through the plugin's `aat_landing_route_sections` composer. Every
+	 * other landing block (header, metrics, poster highlights, footer) is
+	 * untouched, and the hub is byte-identical everywhere else.
+	 *
+	 * @param array<string,string> $sections Landing sections keyed by slug.
+	 * @return array<string,string>
+	 */
+	function lunara_oscars_portal_landing_sections( $sections ) {
+		if ( ! is_array( $sections ) || ! function_exists( 'lunara_is_oscars_portal_page' ) || ! lunara_is_oscars_portal_page() ) {
+			return $sections;
+		}
+
+		unset( $sections['ceremony-marquee'], $sections['winner-circle'] );
+
+		return $sections;
+	}
+	add_filter( 'aat_landing_route_sections', 'lunara_oscars_portal_landing_sections' );
+}

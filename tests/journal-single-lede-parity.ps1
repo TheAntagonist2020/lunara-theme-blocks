@@ -11,7 +11,7 @@ function Assert-True {
     }
 }
 
-# Theme 3.2.57 — Journal single lede parity.
+# Theme 3.2.58 — Journal single lede parity.
 #
 # On a journal entry the first body paragraph is the hero deck repeated, so the
 # enlarged opening-paragraph treatment that reviews keep produced a 28% size
@@ -24,7 +24,7 @@ $style = Get-Content -LiteralPath (Join-Path $root 'style.css') -Raw
 $shell = Get-Content -LiteralPath (Join-Path $root 'assets\css\lunara-shell.css') -Raw
 $frontend = Get-Content -LiteralPath (Join-Path $root 'inc\frontend.php') -Raw
 
-Assert-True ($style -match 'Version:\s*3\.2\.57') 'Journal lede parity must ship in Theme 3.2.57.'
+Assert-True ($style -match 'Version:\s*3\.2\.58') 'Journal lede parity must ship in Theme 3.2.58.'
 
 # The review lede survives, on its own, with the size it always had.
 $reviewLede = [regex]::Matches($style, '(?m)^body\.single-review \.lunara-review-single-content > p:first-of-type \{[^}]*?font-size:\s*clamp\(1\.1rem, 0\.98rem \+ 0\.4vw, 1\.28rem\) !important;[^}]*\}')
@@ -45,4 +45,4 @@ $genericLede = [regex]::Match($style, '(?m)^\.lunara-review-single-content > p:f
 Assert-True ($genericLede.Success) 'The shared non-important opening-paragraph rule must remain for reviews.'
 Assert-True ($genericLede.Value -notmatch '!important') 'The shared opening-paragraph rule must stay non-important so the journal guardrail clamp outranks it.'
 
-Write-Host 'Theme 3.2.57 journal single lede parity contract passed: reviews keep the lede, journal paragraphs share one body clamp.'
+Write-Host 'Theme 3.2.58 journal single lede parity contract passed: reviews keep the lede, journal paragraphs share one body clamp.'

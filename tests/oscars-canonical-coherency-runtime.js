@@ -51,7 +51,7 @@ assert.ok(
 	'Demanding the winners anchor unconditionally would fail a correctly rendered portal for a ceremony that has no recorded winners yet.'
 );
 
-const FIXTURE_VERSION = '3.2.57';
+const FIXTURE_VERSION = '3.2.58';
 
 function anchorSection(anchorId) {
 	return '<section id="' + anchorId + '" class="lunara-home-section">' + anchorId + '</section>';

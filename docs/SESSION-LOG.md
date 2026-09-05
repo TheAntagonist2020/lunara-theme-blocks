@@ -25,6 +25,130 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-05 — Theme 3.2.58 Oscars portal rebuild and local candidate close
+
+### Headline
+
+Dalton called the Oscars portal second-rate and not dynamic. He was right
+on both counts, and the offline render showed why: the page stopped scaling
+at 1180 pixels, so on his monitor it used the middle 44 percent of the
+screen; the prediction board was a 27-row list taking a third of the page;
+and the bottom half was the Academy Awards plugin's own hub restating the
+portal's spotlights and winners in a second design language. Theme 3.2.58
+and Oscars Ledger 2.7.83 are assembled on
+`claude/journal-voice-optimization-kf6b9o` in both repositories. Nothing in
+this slice is merged, deployed, or live.
+
+### Verified live state (read-only probes this session)
+
+| Check | Result |
+| --- | --- |
+| `/oscars/` fetched anonymously, with and without Jetpack Boost (`?jb-disable-modules=all`) | 341 KB HTML, 20 stylesheets in cascade order unbundled, 12 scripts; Boost's inline critical CSS on this route is 132 KB |
+| Route CSS bundle on `/oscars/` | 936 KB raw |
+| Offline render of the live page at 1440 px | content column 1180 px, headline 63 px, page 11,962 px tall, board 2,326 px, 85 text elements under 12 px |
+| Offline render at 2560 px | column still 1180 px, headline 64 px, page 12,164 px |
+| Offline render at 390 px | page 17,357 px, board 5,700 px, plugin hub 5,745 px |
+| Reveal-on-scroll | sections are `opacity: 0` until an IntersectionObserver fires; a harness that scrolls faster than a reader leaves them invisible, a reader does not. No-JS renders fully visible |
+| `quality=100` image URLs on the Boost page | present on spotlight and winner images; absent from the unbundled page, so the parameter is Boost's Image CDN setting, not markup |
+| Live theme, plugin versions, deploy state | not probed beyond the above; no live-version claim is made |
+
+No deployment, cache operation, production write, or live verification occurred.
+Branch pushes occurred to `claude/journal-voice-optimization-kf6b9o` in the
+theme and Oscars Ledger repositories.
+
+### What shipped and why
+
+See the 2026-09-05 entry in `docs/CHANGELOG.md` for the code-level detail.
+The reasoning that matters:
+
+- **Three authorities, one number.** The 1180 cap lived in the route sheet,
+  the shell, and the inline critical seed, and the seed outranks both by
+  selector altitude. Changing one would have left the page clamped at first
+  paint. All three moved to 1720 in one commit and the seed was regenerated
+  through its own PHP for every render.
+- **CSS-led, contract-safe.** The board contract pins the list markup, the
+  coherency sentinel pins five section ids, and the route sheet has a
+  45,000-byte ceiling. The board became a card grid without touching markup;
+  a 3,985-byte duplicate of its rules was removed from the shell; every
+  section id survives.
+- **The plugin got a hook, not a hack.** The duplicate hub blocks could have
+  been hidden with CSS. Instead Oscars Ledger 2.7.83 mirrors its own ceremony
+  composer on the landing template, and the theme drops two keys on the
+  portal page only. The plugin's default output is byte-identical.
+- **Rendered before shipping.** Every change was rendered offline in the
+  container's Chromium at five widths from the real page and assets. Dalton
+  saw the before sheet; the after is in the changelog numbers.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-plugin-oscars-ledger` | `0d97fe88b5edab3170e3b2a75c6a972bc027b360` | Oscars Ledger 2.7.83: landing section composer, contract, version pins. |
+| `lunara-theme-blocks` | this commit | Theme 3.2.58: fluid portal, board grid, hub dedupe hook, poster-first highlights, cap removals, version sweep, identity contract, changelog, this entry. |
+
+### Gate ledger
+
+- **Oscars Ledger:** PHP lint on every file, JS syntax, CSS brace balance,
+  and all 30 portable contracts passed (the two local-provenance contracts
+  CI skips were skipped here too). New: `tests/landing-section-composer-contract.php`
+  passed; mutation (emit without the filter) went RED; restored from a `cp`
+  backup and confirmed byte-identical with `cmp`.
+- **Theme:** PHP lint on every file passed; 17 PHP runtime contracts passed
+  (one prints a JSON harness payload rather than a pass line; its PowerShell
+  consumer is the assertion). PowerShell contracts: **91 of 91**, each in
+  its own process, the two browser contracts driven by the container's
+  Chromium 1194 through `LUNARA_BROWSER_EXECUTABLE`. The count is 91
+  because `oscars-portal-fluid-contract.ps1` is new and
+  `release-identity-3-2-57.ps1` became `release-identity-3-2-58.ps1`. JS
+  syntax and CSS brace balance clean.
+- **Mutations on the new contract,** each restored from a `cp` backup and
+  confirmed byte-identical with `cmp`: the critical seed back to 1180px went
+  RED on two assertions; the theme hook dropping only one duplicate block
+  went RED; the poster-first gallery block deleted from the shell went RED.
+  Three for three.
+- **Budgets:** route sheet 44,120 of 45,000; shell 184,028 of 204,800;
+  critical seed 5,544 of 6,144.
+- **Not run:** `tests/tools/lunara-canary-verify.sh 3.2.58`. Nothing was
+  deployed, so there is nothing for it to verify. Dalton retains the later
+  manual deployment through Deployer for Git, followed by the canary with
+  argument `3.2.58`.
+
+### Corrections
+
+None to prior entries.
+
+### Logged, not fixed
+
+- **Jetpack Boost Image CDN quality is 100.** Six spotlight and winner
+  images weigh 300 to 550 KB each because of it. A wp-admin setting, Boost
+  → Image CDN; 82 is the sane value.
+- **Boost's critical CSS on this route is 132 KB inline.** It is generated
+  from a 936 KB bundle; it shrinks when the base stylesheet does. The
+  base-sheet diet from the 2026-09-04 performance findings remains open.
+- **Rotating winners carousel** shows tall, mostly empty cards and a blank
+  first slot. Pre-existing; not in this slice.
+- **The theme's shell carries at least four generations of "compact"
+  passes** for the portal that fight each other with `!important`. This
+  release removed the caps that were visibly wrong and appended a final
+  authority for the gallery; it did not archaeologize the rest.
+
+### Punch-list carried forward
+
+| Item | Status | Whose call |
+| --- | --- | --- |
+| Review the after-renders and the diff; merge Oscars Ledger 2.7.83 first, then Theme 3.2.58 | open | Dalton |
+| Deploy: Oscars Ledger from Dashboard → Updates, then the theme via Deployer for Git from the Control Desk, then `bash tests/tools/lunara-canary-verify.sh 3.2.58` | open | Dalton |
+| Re-update Foundation 1.2.14 and Dispatch 3.2.8 from Dashboard → Updates (reverted by the 2026-09-04 restore) | open, carried | Dalton |
+| Jetpack Boost Image CDN quality 100 → 82 | logged above | Dalton |
+| Base stylesheet diet (print and footer split, then the `!important` archaeology) | open, carried from 2026-09-04 | Dalton and agent |
+| Auto-deploy stays off | unchanged | Dalton |
+
+### Whose move it is next
+
+Dalton's. Read the renders, merge the plugin then the theme, deploy in that
+order with Deployer for Git, run the canary with `3.2.58`, and look at the
+portal on the big monitor.
+
 ## 2026-09-04 — The Journal voice was never reaching the model; Foundation 1.2.14 and Dispatch 3.2.8 put it there
 
 ### Headline
