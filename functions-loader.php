@@ -28,6 +28,7 @@ require_once $lunara_inc . 'journal-family.php'; // Canonical fields, taxonomy r
 require_once $lunara_inc . 'journal-archive-studio.php'; // Focused revisionable Journal archive curation + preview.
 require_once $lunara_inc . 'reviews-archive-studio.php'; // Focused revisionable Reviews archive curation + preview.
 require_once $lunara_inc . 'oscars-family.php';         // Oscars route-family detectors + the plugin read-path boundary.
+require_once $lunara_inc . 'oscars-portal-dynamic.php'; // Season clock, board summary, Today's Pull (pure renderers, 3.2.59).
 require_once $lunara_inc . 'oscars-portal-studio.php';  // Focused revisionable Oscars portal composition + preview.
 require_once $lunara_inc . 'editorial-meta.php';
 require_once $lunara_inc . 'trailers.php';
