@@ -5015,7 +5015,7 @@ body.lunara-oscars-portal-page .lunara-oscars-season-phase {
     border-radius: 999px;
     color: var(--lunara-gold-light, #e0c481);
     font-family: var(--lunara-font-label, sans-serif);
-    font-size: clamp(.62rem, .22vw + .5rem, .78rem);
+    font-size: clamp(.75rem, .2vw + .62rem, .84rem);
     letter-spacing: .18em;
     padding: 4px 10px;
     text-transform: uppercase;
@@ -5036,7 +5036,7 @@ body.lunara-oscars-portal-page .lunara-oscars-season-unit {
 
 body.lunara-oscars-portal-page .lunara-oscars-season-date {
     color: rgba(244, 239, 227, .62);
-    font-size: clamp(.76rem, .22vw + .62rem, .92rem);
+    font-size: clamp(.78rem, .22vw + .64rem, .94rem);
     margin-left: auto;
     white-space: nowrap;
 }
@@ -5075,7 +5075,7 @@ body.lunara-oscars-portal-page .lunara-oscars-board-chip {
     border-radius: 999px;
     color: rgba(244, 239, 227, .8);
     font-family: var(--lunara-font-label, sans-serif);
-    font-size: clamp(.68rem, .24vw + .54rem, .84rem);
+    font-size: clamp(.75rem, .22vw + .6rem, .88rem);
     letter-spacing: .1em;
     padding: 6px 12px;
     text-transform: uppercase;
@@ -5136,7 +5136,7 @@ body.lunara-oscars-portal-page .lunara-oscars-todays-pull-meta {
     display: flex;
     flex-wrap: wrap;
     font-family: var(--lunara-font-label, sans-serif);
-    font-size: clamp(.7rem, .24vw + .56rem, .86rem);
+    font-size: clamp(.75rem, .22vw + .6rem, .9rem);
     gap: 6px 10px;
     letter-spacing: .12em;
     margin: 0;
@@ -5241,8 +5241,8 @@ body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-o
     color: var(--lunara-gold-light, #e0c481);
     content: "Winner";
     font-family: var(--lunara-font-label, sans-serif);
-    font-size: .62rem;
-    letter-spacing: .26em;
+    font-size: .75rem;
+    letter-spacing: .22em;
     padding: 4px 9px;
     position: absolute;
     right: 16px;
@@ -5259,8 +5259,8 @@ body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-o
 body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-winner-carousel-card:not(.has-poster) .lunara-ceremony-winner-category a {
     border-bottom: 1px solid rgba(201, 169, 97, .35);
     color: var(--lunara-gold-light, #e0c481) !important;
-    font-size: .74rem !important;
-    letter-spacing: .2em !important;
+    font-size: .78rem !important;
+    letter-spacing: .18em !important;
     padding-bottom: 8px;
     text-transform: uppercase;
 }
