@@ -25,6 +25,174 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-05 — Theme 3.2.59 Oscars portal dynamic layer and local candidate close
+
+### Headline
+
+Dalton asked for the Oscars page, and the site, to be "incredibly dynamic."
+3.2.58 fixed the portal's geometry; it still read as static because the
+public runtime skipped scroll reveals on the portal by design (and, since the
+portal embeds the plugin hub, ran the plugin-page branch instead), the GSAP
+layer targets no portal selector, the counter fired only on plugin stat
+numbers, and every number on the page was fixed at render time. Theme 3.2.59
+adds a portal reveal branch with a safety timer, counters on the hero and
+Deep Cuts values, a navigator scroll-spy, a season clock driven by one new
+Customizer date, board summary chips, a date-seeded Today's Pull from the
+ledger, and a text-led treatment for posterless carousel cards. It is
+assembled on `claude/oscars-portal-dynamic-3.2.59` in the theme repository
+only. Nothing in this slice is merged, deployed, or live. The spec Dalton
+approved in conversation is at
+`docs/superpowers/specs/2026-09-05-oscars-portal-dynamic-design.md`; the
+plan at `docs/superpowers/plans/2026-09-05-oscars-portal-dynamic.md`.
+
+### Verified live state (read-only probes this session)
+
+| Check | Result |
+| --- | --- |
+| `/oscars/` fetched anonymously, bundled and with `?jb-disable-modules=all` | build stamp `3.2.57+20260904-210401`; `data-lunara-theme-version="3.2.57"`. **Theme 3.2.58 is merged to `main` (PR #173) but not deployed.** |
+| Plugin list via the WordPress.com connector | Academy Awards Database **2.7.82** active (2.7.83 merged, not deployed); Journal Foundation **1.3.0** active; Dispatch **3.2.7**; Lunara Core **0.8.8**; Deployer for Git (Pro) 1.0.12; Jetpack Boost 4.7.0 |
+| Scripts on the unbundled live portal | `lunara-public-runtime.js` and `lunara-scroll-carousel.js` load; zero `lunara-reveal` classes in the served HTML; no GSAP file on the route |
+| Exact-rollback hatch | `origin/claude/rollback-exact-theme-3.2.43` contains `origin/main`; tree `c55bf394594149db2888295c5d51f85f47b2b520` |
+| Continuity store for the review pipeline | `C:\Users\silve_i21do49\...\Film criticism (1)` is not present on this machine; `F:\CLAUDECOWORK` holds only a plugin zip. The LUNARA boot was skipped for website work; noted so nobody assumes the handoff files were read. |
+
+No deployment, cache operation, production write, or live verification occurred.
+One branch was pushed to the theme repository.
+
+### What shipped and why
+
+See the 2026-09-05 Theme 3.2.59 entry in `docs/CHANGELOG.md` for the code-level
+detail. The reasoning that matters:
+
+- **Inside the slots, not new slots.** The Studio slot registry, the six
+  sentinel ids, and the board list contract are all pinned. The season clock
+  sits inside the hero copy column, the chips inside the board renderer above
+  the untouched list, Today's Pull inside Deep Cuts above the four-up facts
+  grid. Nothing had to be renegotiated with a contract.
+- **Empty means byte-identical.** Every new renderer returns the exact empty
+  string when it has nothing. No ceremony date, no picks, no ledger: 3.2.58
+  markup byte-for-byte. The date mod defaults empty, so Dalton switches the
+  clock on by filling one field.
+- **The route sheet was full.** 880 bytes of headroom under its 45,000-byte
+  ceiling, so every rule landed in the shell (10,304 bytes added, 10,468 of
+  headroom left). The critical seed was not touched.
+- **The safety timer is the lesson from yesterday's log.** The 2026-09-05
+  render notes that a harness scrolling faster than a reader left reveal
+  sections invisible. Elements in the viewport at boot show at once; anything
+  the observer has not reached after six seconds shows anyway.
+- **The carousel's blank slot was data.** The day's ceremony had no backdrop
+  for its Best Picture row, so the first card rendered as a 332-pixel box
+  around three lines of centered text. It is now a text-led winner card; the
+  showcase's backdrop preference is logged, not re-sourced.
+- **Rendered before shipping, again.** The live page was rebuilt offline
+  against the working tree with the 3.2.59 seed regenerated through its own
+  PHP and the three components injected from their renderers, then driven in
+  Chromium at 375, 1280, and 2560 pixels. Screenshots were unreliable while
+  the desktop app was hidden, so the verification is by measurement: at 1280
+  and 1000 pixels of scroll, two seconds after load, 21 of 70 reveal targets
+  were visible and the first hidden one sat at 1047 pixels, just below the
+  240-pixel observer margin; at 4000 pixels, 51 were visible and the spy read
+  "Titles". No horizontal overflow at any width; the 1720-pixel column and six
+  board columns hold at 2560.
+
+### Commit ledger
+
+Repository `lunara-theme-blocks`, branch `claude/oscars-portal-dynamic-3.2.59`:
+
+| SHA | Meaning |
+| --- | --- |
+| `1d9e3474350b6aea97c42f824d2112a9df5713cd` | Docs: Oscars portal dynamic layer spec and implementation plan (3.2.59) |
+| `a2775a28f6cdf55461ebf6a11a9647eeeefa89df` | Theme 3.2.59: Oscars portal dynamic module, harness, contract |
+| `1286824c263d852c57b7fefe2c8e17f17f17bf23` | Theme 3.2.59: board summary chips above the prediction board |
+| `43e453e53d6a1431dfd33f9b67e9aea6c1c62ddf` | Theme 3.2.59: season clock, Today's Pull, ceremony date mod, flush key |
+| `0804b8fa5bacd4ae8a7912bb9cd7fb449c596ee4` | Theme 3.2.59: portal reveals, counters, scroll-spy, live clock, shell rules |
+| `e46882d0721ae05a5facd752f86e03c68e2a6baf` | Contract: avoid the reserved HOME variable |
+| `1dbf72d654d2c9ba41a25457a09b04b5970d7f26` | Theme 3.2.59: ordinal-safe counters, text-led posterless carousel cards |
+| `ed98e3d45597f17a24ed2aa9631a00ef8895018d` | Theme 3.2.59: version sweep and release identity contract |
+| `6426c3bdcacbbe8c547cd5cc3c2913094a871007` | Theme 3.2.59: 12px floors on the dynamic layer type |
+| `47b82f194e08fcbac28cf3b2ff952c347430503c` | Theme 3.2.59: escaped identity sweep, changelog entry |
+| this commit | Session log entry (this), gates re-run green after the escaped-pin sweep. |
+
+### Gate ledger
+
+- **PowerShell contracts: 91 of 91** on the final tree (92 files; the 92nd,
+  `release-identity-3-2-59.ps1`, passed once this entry existed, having
+  failed only on the four session-log assertions before that). Each ran in
+  its own process. The count is 92 because `oscars-portal-dynamic-contract.ps1`
+  is new and `release-identity-3-2-58.ps1` became `release-identity-3-2-59.ps1`.
+- **PHP runtime contracts: 19 of 19.** PHP lint: 110 files, 0 failures. JS
+  syntax: 26 files, 0 failures. CSS brace balance: 20 stylesheets, all balanced.
+- **A first gate run overlapped the mutation tests and reported 27 failures;
+  it was discarded** and the suite re-run on a quiet tree. The re-run also
+  caught that the first version sweep missed regex-escaped pins
+  (`3\.2\.58` in 29 test files); those were swept before the counts above.
+- **Mutation testing on the new contract,** each from a `cp` backup, restored
+  and confirmed byte-identical with `cmp`: loader require removed; hero clock
+  line removed; portal reveal branch disabled; shell season-clock rules
+  deleted; module retire threshold widened to -40 days; board summary moved
+  below the list; flush key removed. **Seven for seven RED**, GREEN restored.
+- **Harness:** `tests/fixtures/oscars-portal-dynamic-harness.php`, 7 cases,
+  36 checks, all passing on the shipped module.
+- **Budgets:** shell 194,332 of 204,800; public runtime 16,029 of 20,480;
+  route sheet 44,120 of 45,000 (unchanged); critical seed 5,544 of 6,144
+  (unchanged).
+- **Not run:** `bash tests/tools/lunara-canary-verify.sh 3.2.59`. Nothing was
+  deployed, so there is nothing for it to verify. Dalton retains the later
+  manual deployment through Deployer for Git, followed by the canary with
+  argument `3.2.59`.
+
+### Corrections
+
+None to prior entries. One reading in the 2026-09-05 3.2.58 entry deserves a
+gloss rather than a correction: its "sections are `opacity: 0` until an
+IntersectionObserver fires" observation was the plugin-page reveal branch
+running on the portal's embedded hub, not a portal reveal system. The portal
+had none until this release.
+
+### Logged, not fixed
+
+- **The rotating showcase prefers backdrops over posters** and returns a
+  visual-less card when the day's ceremony has no backdrop for a row. The
+  text-led treatment covers it; re-sourcing (fall back to the title poster in
+  `lunara_get_rotating_oscars_ceremony_showcase()`) is a data-builder change
+  with a cache-shape implication and was left alone.
+- **Sub-12-pixel text at phone widths is pre-existing.** At 375 pixels the
+  offline render counts 141 leaf text nodes under 12 pixels inside the
+  portal: board category (10.9), board status (9.9), command-rail kicker and
+  meta (9.3), stat label (10.9), fact label (11.2), meta text links (10.6),
+  plus plugin hub badges. All from earlier compact passes in the route sheet
+  and shell. The 3.2.58 floor claim was measured at 2560, not 375. This
+  release's own type floors are 12 pixels.
+- **Journal Foundation 1.3.0 is active on the site** while the last release
+  this log recorded was 1.2.14. Not investigated; not this slice.
+- **Lunara Core 0.8.8 live, 0.8.9 on `main`** (carried from 2026-09-04).
+- **Jetpack Boost Image CDN quality 100** (carried). Base stylesheet diet
+  (carried). Oscars Portal Studio parity build #16 and the Show Linked
+  Reviews toggle (carried, Dalton's calls).
+- **Backslashes in Bash heredocs are halved on this machine.** Two control
+  bytes landed in the runtime during this session and were caught by `od -c`
+  before commit. Saved to agent memory; worth a line in `AGENTS.md` if it
+  recurs.
+
+### Punch-list carried forward
+
+| Item | Status | Whose call |
+| --- | --- | --- |
+| Review the diff and the changelog; open and merge the 3.2.59 PR (no PR was opened this session, per `AGENTS.md`) | branch pushed | Dalton |
+| Deploy in order: Oscars Ledger 2.7.83 from Dashboard → Updates, then Theme 3.2.58 and 3.2.59 together via Deployer for Git from the Control Desk, then `bash tests/tools/lunara-canary-verify.sh 3.2.59` | open | Dalton |
+| Switch the season clock on: Customizer → Oscars Portal → Next Ceremony Date (`YYYY-MM-DD`, the 99th Academy Awards date) | open; empty until set | Dalton |
+| Rebuild the exact-rollback hatch after the merge and verify the tree | open | Dalton or agent |
+| Re-update Foundation and Dispatch from Dashboard → Updates if 1.3.0 / 3.2.7 is not the intent (carried) | open | Dalton |
+| Jetpack Boost Image CDN quality 100 → 82 | carried | Dalton |
+| Base stylesheet diet | carried | Dalton and agent |
+| Auto-deploy stays off | unchanged | Dalton |
+
+### Whose move it is next
+
+Dalton's. Read the changelog entry, open the PR from
+`claude/oscars-portal-dynamic-3.2.59` when satisfied, merge, deploy the
+plugin then the theme with Deployer for Git, run the canary with `3.2.59`,
+set the ceremony date, and look at the portal on the big monitor.
+
 ## 2026-09-05 — Theme 3.2.58 Oscars portal rebuild and local candidate close
 
 ### Headline
