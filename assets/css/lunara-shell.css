@@ -5223,3 +5223,50 @@ body.lunara-oscars-portal-page .lunara-oscars-navigator a[aria-current] {
         transition: none;
     }
 }
+
+/* Rotating winners without a visual (3.2.59): a text-led winner card in
+   place of an empty box. The daily ceremony often lacks a backdrop for its
+   Best Picture row, which is why the first slot looked blank. */
+body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-winner-carousel-card:not(.has-poster) {
+    background:
+        radial-gradient(circle at 18% 18%, rgba(241, 204, 110, .2), transparent 48%),
+        linear-gradient(160deg, rgba(24, 40, 60, .98), rgba(7, 15, 26, .98)) !important;
+    border-color: rgba(201, 169, 97, .34) !important;
+    position: relative !important;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-winner-carousel-card:not(.has-poster)::before {
+    border: 1px solid rgba(201, 169, 97, .5);
+    border-radius: 999px;
+    color: var(--lunara-gold-light, #e0c481);
+    content: "Winner";
+    font-family: var(--lunara-font-label, sans-serif);
+    font-size: .62rem;
+    letter-spacing: .26em;
+    padding: 4px 9px;
+    position: absolute;
+    right: 16px;
+    text-transform: uppercase;
+    top: 14px;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-winner-carousel-card:not(.has-poster) .lunara-ceremony-winner-copy {
+    align-content: end !important;
+    gap: 10px !important;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-winner-carousel-card:not(.has-poster) .lunara-ceremony-winner-category,
+body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-winner-carousel-card:not(.has-poster) .lunara-ceremony-winner-category a {
+    border-bottom: 1px solid rgba(201, 169, 97, .35);
+    color: var(--lunara-gold-light, #e0c481) !important;
+    font-size: .74rem !important;
+    letter-spacing: .2em !important;
+    padding-bottom: 8px;
+    text-transform: uppercase;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-winner-carousel-card:not(.has-poster) .lunara-ceremony-winner-name,
+body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-winner-carousel-card:not(.has-poster) .lunara-ceremony-winner-name a {
+    font-size: clamp(1.45rem, 1.9vw, 2.1rem) !important;
+    line-height: 1.04 !important;
+}

@@ -233,6 +233,7 @@
                 var target=parseInt(match[1].replace(/,/g,''),10);
                 var suffix=match[2];
                 if(isNaN(target)||target===0)return;
+                if(/^(st|nd|rd|th)\b/i.test(suffix))return;
                 var duration=Math.min(1600,Math.max(600,target*8));
                 var start=performance.now();
                 function tick(now){
