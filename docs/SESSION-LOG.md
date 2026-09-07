@@ -42,6 +42,17 @@ the hero drifts, and a daily WP-Cron warm fills the image caches the
 render path reads. Assembled on `claude/journal-voice-optimization-kf6b9o`.
 Nothing in this slice is deployed or live.
 
+**Addendum, 17:35 UTC.** Dalton marked Theme 3.2.59
+([PR #174](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/174))
+ready and merged it. The exact-rollback hatch was rebuilt on the new
+`main` as a two-parent commit (old hatch head, PR #174 merge) and verified
+tree-exact: `claude/rollback-exact-theme-3.2.43^{tree}` is
+`c55bf394594149db2888295c5d51f85f47b2b520` and the branch contains
+`origin/main`. Nothing is deployed by this session. The order of Dalton's
+clicks is unchanged: Deployer for Git for the theme (now that `main`
+carries 3.2.59), the Academy Awards Database to 2.7.83, Jetpack Boost
+critical CSS regeneration, then the canary with `3.2.59`.
+
 **Addendum, 17:33 UTC.** Dalton reported "everything has been deployed."
 Read-only probes say otherwise, and this is recorded so the next session
 does not trust the report over the site: [PR #174](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/174)
