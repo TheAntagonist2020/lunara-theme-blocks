@@ -4991,7 +4991,7 @@ body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-hub-metric-cop
 }
 
 /*
- * Oscars portal, Theme 3.2.59: motion where a picture is. The hero's
+ * Oscars portal, Theme 3.2.61: motion where a picture is. The hero's
  * backdrop drifts once it exists (the inline style sets the image; the
  * animation owns the position, and an animation beats an inline value),
  * the door cards zoom their backdrop on hover, and everything stops for

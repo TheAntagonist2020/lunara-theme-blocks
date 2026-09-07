@@ -120,9 +120,57 @@ function lunara_oscars_portal_studio_identity_specs() {
  */
 function lunara_oscars_portal_studio_geometry_specs() {
 	return array(
-		'section_gap'     => array( 'default' => 40, 'min' => 20, 'max' => 90, 'label' => __( 'Section gap (px)', 'lunara-film' ) ),
-		'hero_min_height' => array( 'default' => 360, 'min' => 300, 'max' => 640, 'label' => __( 'Hero minimum height (px)', 'lunara-film' ) ),
-		'card_min_height' => array( 'default' => 360, 'min' => 260, 'max' => 540, 'label' => __( 'Card minimum height (px)', 'lunara-film' ) ),
+		'section_gap'       => array( 'default' => 40, 'min' => 20, 'max' => 90, 'label' => __( 'Section gap (px)', 'lunara-film' ) ),
+		'hero_min_height'   => array( 'default' => 360, 'min' => 300, 'max' => 640, 'label' => __( 'Hero minimum height (px)', 'lunara-film' ) ),
+		'card_min_height'   => array( 'default' => 360, 'min' => 260, 'max' => 540, 'label' => __( 'Card minimum height (px)', 'lunara-film' ) ),
+		'winners_min_width' => array( 'default' => 200, 'min' => 140, 'max' => 320, 'label' => __( 'Winner portrait minimum width (px)', 'lunara-film' ) ),
+	);
+}
+
+/**
+ * Presentation rhythm choices — the enum half of the presentation state.
+ *
+ * These are deliberately NOT numeric: each maps to a small set of calibrated
+ * values in the route seed, the same way the Oscars ledger route maps its own
+ * density and treatment choices. Mapping enums to custom properties keeps the
+ * cost to one declaration per control; a class-multiplied ruleset per choice
+ * would grow the route sheet, which sits inside a hard 56 KB ceiling.
+ *
+ * Every choice must exist in the seed's corresponding map. A value outside
+ * these keys is invalid input, not a fallback: the validator rejects it and
+ * the last valid public configuration stands.
+ *
+ * @return array<string,array{default:string,label:string,choices:array<string,string>}>
+ */
+function lunara_oscars_portal_studio_rhythm_specs() {
+	return array(
+		'density'         => array(
+			'default' => 'standard',
+			'label'   => __( 'Grid density', 'lunara-film' ),
+			'choices' => array(
+				'standard' => __( 'Standard', 'lunara-film' ),
+				'compact'  => __( 'Compact — tighter gaps', 'lunara-film' ),
+				'showcase' => __( 'Showcase — open gaps', 'lunara-film' ),
+			),
+		),
+		'lead_prominence' => array(
+			'default' => 'balanced',
+			'label'   => __( 'Hero prominence', 'lunara-film' ),
+			'choices' => array(
+				'balanced' => __( 'Balanced', 'lunara-film' ),
+				'feature'  => __( 'Feature the copy', 'lunara-film' ),
+				'gallery'  => __( 'Feature the image', 'lunara-film' ),
+			),
+		),
+		'board_rhythm'    => array(
+			'default' => 'standard',
+			'label'   => __( 'Poster wall rhythm', 'lunara-film' ),
+			'choices' => array(
+				'standard' => __( 'Standard', 'lunara-film' ),
+				'gallery'  => __( 'Gallery — larger posters', 'lunara-film' ),
+				'dense'    => __( 'Dense — more per row', 'lunara-film' ),
+			),
+		),
 	);
 }
 
@@ -147,6 +195,9 @@ function lunara_oscars_portal_studio_defaults() {
 
 	$presentation = array();
 	foreach ( lunara_oscars_portal_studio_geometry_specs() as $key => $spec ) {
+		$presentation[ $key ] = $spec['default'];
+	}
+	foreach ( lunara_oscars_portal_studio_rhythm_specs() as $key => $spec ) {
 		$presentation[ $key ] = $spec['default'];
 	}
 
@@ -332,6 +383,14 @@ function lunara_oscars_portal_studio_repair_public_config( $config, $defaults ) 
 						$config['presentation'][ $key ] = $defaults['presentation'][ $key ];
 					}
 				}
+				foreach ( lunara_oscars_portal_studio_rhythm_specs() as $key => $spec ) {
+					$choice = isset( $config['presentation'][ $key ] ) && is_scalar( $config['presentation'][ $key ] )
+						? sanitize_key( (string) $config['presentation'][ $key ] )
+						: '';
+					if ( ! isset( $spec['choices'][ $choice ] ) ) {
+						$config['presentation'][ $key ] = $defaults['presentation'][ $key ];
+					}
+				}
 				break;
 
 			default:
@@ -514,6 +573,18 @@ function lunara_oscars_portal_studio_validate_config( $raw ) {
 			return new WP_Error( 'oscars_portal_geometry_invalid' );
 		}
 	}
+	// Rhythm choices fail closed for the same reason the numbers do: an
+	// unrecognized token would reach the seed's value maps, miss, and silently
+	// fall back — a saved setting that does nothing. Reject instead.
+	foreach ( lunara_oscars_portal_studio_rhythm_specs() as $key => $spec ) {
+		$choice = isset( $config['presentation'][ $key ] ) && is_scalar( $config['presentation'][ $key ] )
+			? sanitize_key( (string) $config['presentation'][ $key ] )
+			: '';
+		if ( ! isset( $spec['choices'][ $choice ] ) ) {
+			return new WP_Error( 'oscars_portal_geometry_invalid' );
+		}
+		$config['presentation'][ $key ] = $choice;
+	}
 	$config['presentation'] = array_intersect_key( $config['presentation'], $defaults['presentation'] );
 
 	return array(
@@ -572,6 +643,13 @@ function lunara_oscars_portal_studio_config_from_request( $request ) {
 	foreach ( array_keys( lunara_oscars_portal_studio_geometry_specs() ) as $key ) {
 		if ( isset( $numbers[ $key ] ) ) {
 			$current['presentation'][ $key ] = $numbers[ $key ];
+		}
+	}
+
+	$choices = isset( $request['lunara_oscars_portal_choice'] ) && is_array( $request['lunara_oscars_portal_choice'] ) ? $request['lunara_oscars_portal_choice'] : array();
+	foreach ( array_keys( lunara_oscars_portal_studio_rhythm_specs() ) as $key ) {
+		if ( isset( $choices[ $key ] ) ) {
+			$current['presentation'][ $key ] = $choices[ $key ];
 		}
 	}
 
@@ -892,6 +970,9 @@ function lunara_oscars_portal_studio_bound_invalid_stage( $candidate, $request =
 	foreach ( lunara_oscars_portal_studio_geometry_specs() as $key => $spec ) {
 		$stage['presentation'][ $key ] = min( 9999, absint( is_scalar( $stage['presentation'][ $key ] ) ? $stage['presentation'][ $key ] : 0 ) );
 	}
+	foreach ( lunara_oscars_portal_studio_rhythm_specs() as $key => $spec ) {
+		$stage['presentation'][ $key ] = sanitize_key( is_scalar( $stage['presentation'][ $key ] ) ? (string) $stage['presentation'][ $key ] : '' );
+	}
 	unset( $stage['_preview'] );
 
 	return $stage;
@@ -1152,6 +1233,7 @@ function lunara_control_desk_render_oscars_portal_studio( $context = 'control-de
 	$notice    = isset( $_GET['lunara_notice'] ) ? sanitize_key( wp_unslash( $_GET['lunara_notice'] ) ) : '';
 	$owners    = lunara_oscars_portal_studio_visibility_owners();
 	$geometry  = lunara_oscars_portal_studio_geometry_specs();
+	$rhythm    = lunara_oscars_portal_studio_rhythm_specs();
 	$identity  = lunara_oscars_portal_studio_identity_specs();
 	$portal_url = home_url( '/oscars/' );
 
@@ -1252,6 +1334,24 @@ function lunara_control_desk_render_oscars_portal_studio( $context = 'control-de
 							<span><?php echo esc_html( $spec['label'] ); ?></span>
 							<input type="number" name="lunara_oscars_portal_number[<?php echo esc_attr( $key ); ?>]" min="<?php echo esc_attr( $spec['min'] ); ?>" max="<?php echo esc_attr( $spec['max'] ); ?>" step="1" value="<?php echo esc_attr( isset( $form['presentation'][ $key ] ) && is_scalar( $form['presentation'][ $key ] ) ? absint( $form['presentation'][ $key ] ) : $spec['default'] ); ?>" required />
 							<small><?php echo esc_html( sprintf( __( '%1$d–%2$d, default %3$d', 'lunara-film' ), $spec['min'], $spec['max'], $spec['default'] ) ); ?></small>
+						</label>
+					<?php endforeach; ?>
+				</div>
+			</div>
+
+			<div class="lunara-control-desk-homepage-card">
+				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Rhythm', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Density, hero weight and the poster wall', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'Each choice maps to one calibrated custom property on the portal root, so a change costs no extra stylesheet. Like the numbers above, these stamp only after an explicit save.', 'lunara-film' ); ?></p></div></div>
+				<div class="lunara-control-desk-homepage-number-grid">
+					<?php foreach ( $rhythm as $key => $spec ) : ?>
+						<?php $selected = isset( $form['presentation'][ $key ] ) && is_scalar( $form['presentation'][ $key ] ) ? sanitize_key( (string) $form['presentation'][ $key ] ) : $spec['default']; ?>
+						<label>
+							<span><?php echo esc_html( $spec['label'] ); ?></span>
+							<select name="lunara_oscars_portal_choice[<?php echo esc_attr( $key ); ?>]" required>
+								<?php foreach ( $spec['choices'] as $choice => $choice_label ) : ?>
+									<option value="<?php echo esc_attr( $choice ); ?>"<?php selected( $selected, $choice ); ?>><?php echo esc_html( $choice_label ); ?></option>
+								<?php endforeach; ?>
+							</select>
+							<small><?php echo esc_html( sprintf( __( 'Default %s', 'lunara-film' ), $spec['choices'][ $spec['default'] ] ) ); ?></small>
 						</label>
 					<?php endforeach; ?>
 				</div>

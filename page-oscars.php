@@ -43,20 +43,13 @@ $oscars_portal_show       = static function ( $slot, $setting, $default ) use ( 
 // Geometry custom properties are provenance-gated: they stamp the portal root
 // only after an explicit Studio save (or inside a private preview), so an
 // unsaved site keeps its shipped markup untouched.
-$oscars_portal_geometry       = isset( $oscars_studio_config['presentation'] ) && is_array( $oscars_studio_config['presentation'] ) ? $oscars_studio_config['presentation'] : array();
-$oscars_portal_geometry_style = '';
-if (
-    ( ! empty( $oscars_studio_config['_preview'] ) || ( function_exists( 'lunara_oscars_portal_studio_has_saved_presentation' ) && lunara_oscars_portal_studio_has_saved_presentation() ) )
-    && isset( $oscars_portal_geometry['section_gap'], $oscars_portal_geometry['hero_min_height'], $oscars_portal_geometry['card_min_height'] )
-    && is_scalar( $oscars_portal_geometry['section_gap'] ) && is_scalar( $oscars_portal_geometry['hero_min_height'] ) && is_scalar( $oscars_portal_geometry['card_min_height'] )
-) {
-    $oscars_portal_geometry_style = sprintf(
-        '--lunara-oscars-portal-section-gap:%1$dpx;--lunara-oscars-portal-hero-min-height:%2$dpx;--lunara-oscars-portal-card-min-height:%3$dpx',
-        absint( $oscars_portal_geometry['section_gap'] ),
-        absint( $oscars_portal_geometry['hero_min_height'] ),
-        absint( $oscars_portal_geometry['card_min_height'] )
-    );
-}
+// One emitter, two consumers: the route seed wraps these declarations in its
+// own selector and this template stamps the identical string onto the root.
+// They used to carry separate copies of the property list and gating rules,
+// so a new control had to be added twice and a divergence would be silent.
+$oscars_portal_geometry_style = function_exists( 'lunara_oscars_portal_variable_declarations' )
+    ? lunara_oscars_portal_variable_declarations( $oscars_studio_config )
+    : '';
 
 // Typography is Design Tokens state, not Studio state: the route stylesheet's
 // Tiempos label rules engage only through this resolver-driven root marker.
@@ -793,7 +786,7 @@ $command_cards = array(
                     <div class="lunara-ledger-carousel-track lunara-oscars-winner-carousel-track" data-lunara-carousel-track>
                         <?php foreach ( $rotating_cards as $wcard ) :
                             $w_vis = is_array( $wcard['_visual'] ?? null ) ? $wcard['_visual'] : array();
-                            // Marquee backdrop (3.2.59): the film's backdrop when the
+                            // Marquee backdrop (3.2.61): the film's backdrop when the
                             // ledger has one, otherwise the poster blurred behind the
                             // slide. Exposed as a custom property so the shell paints it.
                             $w_backdrop = trim( (string) ( $w_vis['backdrop_url'] ?? '' ) );
