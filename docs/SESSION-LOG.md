@@ -25,6 +25,102 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-07 — Theme 3.2.60 Oscars hero backdrop and local candidate close
+
+### Headline
+
+Theme 3.2.59 went live at 17:36 UTC and the canary said GO. The live
+page then showed the one thing the offline render could not: the hero
+still wore the old near-opaque gradient and had no `has-backdrop` class,
+so the drift never fired. 3.2.59 had edited the hero in
+`inc/oscars-portal.php`; `/oscars/` renders through `page-oscars.php`.
+Theme 3.2.60 moves the gradient and the class into the template that is
+live and pins that template in the fluid contract. Assembled on
+`claude/journal-voice-optimization-kf6b9o`. Nothing in this slice is
+deployed or live.
+
+### Verified live state (read-only probes this session)
+
+| Component | Live | On `main` | Gap |
+| --- | --- | --- | --- |
+| Theme | 3.2.59 (`3.2.59+20260907-173613`), Dalton's Deployer for Git click at 17:36 UTC | 3.2.59 | 3.2.60 is this candidate, not yet merged |
+| Academy Awards Database | 2.7.83 | 2.7.83 | none; the hub duplicates are gone from the portal |
+| Lunara Dispatch | 3.2.8 | 3.2.8 | none |
+| Journal Foundation | 1.3.1 | 1.3.1 | none |
+| Jetpack Boost critical CSS on `/oscars/` | still the 135,541-byte pre-3.2.58 snapshot, nine `1180px !important` rules | n/a | regenerate from Jetpack Boost → Critical CSS |
+
+| Check | Result |
+| --- | --- |
+| `bash tests/tools/lunara-canary-verify.sh 3.2.59` | GO: three cache-separated reads agree on `3.2.59+20260907-173613`; Journal and Oscars sentinels both `LIVE_COHERENT` |
+| Live `/oscars/` HTML (unbundled) | 28 `lunara-oscars-board-art` spans, every tile `has-art-photo`; 7 `FRONT RUNNER` labels; rotation cards carry `has-backdrop` (TMDB w780) or `has-poster-backdrop`; 4 door cards `has-backdrop`; 0 hub duplicates |
+| Live hero markup | `lunara-oscars-portal-slot-hero` with a TMDB backdrop but no `has-backdrop` class and the 120deg gradient; computed `animation-name: none` |
+| Live HTML rendered offline at 1440 with the deployed stylesheets | page 9,976 px, board 1,846 px, winners 714 px, rotation 861 px, no overflow; marquee card 1,278 of 1,284 px with autoplay stripped |
+| Live HTML rendered offline at 390 | page 14,601 px, board 3,412 px, two tiles across, winners two across |
+
+No deployment, cache operation, production write, or live verification occurred.
+The canary and probes above are read-only observations of Dalton's 3.2.59
+deploy, not actions of this session on this candidate. A branch push occurred
+to `claude/journal-voice-optimization-kf6b9o` in the theme repository only.
+
+### What shipped and why
+
+See the 2026-09-07 Theme 3.2.60 entry in `docs/CHANGELOG.md`. The
+reasoning that matters: the contract that "proved" the drift only proved
+the shell had a keyframe; it never proved the live template emitted the
+class the keyframe keys off. 3.2.60 pins the template.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | this commit | Theme 3.2.60: hero gradient and `has-backdrop` in `page-oscars.php`, template pins in the fluid contract, version sweep, identity contract, changelog, this entry. |
+
+### Gate ledger
+
+- PHP lint on the changed template passed.
+- PowerShell contracts: **91 of 91**, each in its own process, the three
+  browser contracts on the container's Chromium.
+  `release-identity-3-2-59.ps1` became `release-identity-3-2-60.ps1`.
+- Mutation on the new pins, restored from a `cp` backup and confirmed
+  byte-identical with `cmp`: the template hero class removed went RED.
+- **Not run:** `tests/tools/lunara-canary-verify.sh 3.2.60`. Nothing was
+  deployed, so there is nothing for it to verify. Dalton retains the later
+  manual deployment through Deployer for Git, followed by the canary with
+  argument `3.2.60`.
+
+### Corrections
+
+- The 3.2.59 entry's headline and changelog said the hero would drift.
+  On the live route it did not, for the reason above. The 3.2.59 code
+  change is real but sits in a renderer the route does not use.
+
+### Logged, not fixed
+
+- **Jetpack Boost critical CSS is still stale on `/oscars/`.** It now
+  fights 3.2.59 the same way it fought 3.2.58. Jetpack Boost → Critical
+  CSS → regenerate, a derived-file regeneration, not a cache clear.
+- **`functions.php` carries a dead, guarded copy of the old portal
+  renderer** with the 120deg gradient. Left alone per `CLAUDE.md`; a
+  future session should delete the dead copies rather than edit them.
+
+### Punch-list carried forward
+
+| Item | Status | Whose call |
+| --- | --- | --- |
+| Merge 3.2.60; deploy via Deployer for Git; `bash tests/tools/lunara-canary-verify.sh 3.2.60` | open | Dalton |
+| Regenerate Jetpack Boost critical CSS | open | Dalton |
+| Rebuild the exact-rollback hatch after the merge | open, agent after merge | agent |
+| Re-save one Oscar pick to fire the first image warm, or wait for the daily cron | open | Dalton |
+| Jetpack Boost Image CDN quality 100 → 82 | open | Dalton |
+| Delete the dead guarded renderer copies in `functions.php` | open | agent, a later session |
+| Base stylesheet diet | open, carried | Dalton and agent |
+| Auto-deploy stays off | unchanged | Dalton |
+
+### Whose move it is next
+
+Dalton's. Merge the 3.2.60 PR, deploy it with Deployer for Git, run the
+canary with `3.2.60`, and regenerate Boost's critical CSS.
+
 ## 2026-09-07 — Theme 3.2.59 Oscars portal poster wall and local candidate close
 
 ### Headline

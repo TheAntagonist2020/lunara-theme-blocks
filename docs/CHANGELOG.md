@@ -11,6 +11,42 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-07 — Theme 3.2.60 Oscars Hero Backdrop
+
+Theme release, one fix. Follows Theme 3.2.59 within hours, because the
+live site showed what the offline render could not.
+
+- **The hero now drifts, on the page that is actually live.** 3.2.59 put
+  the lighter hero gradient and the `has-backdrop` class into the hero in
+  `inc/oscars-portal.php`, and the shell's `lunara-oscars-hero-drift`
+  animation keys off that class. But `/oscars/` renders through
+  `page-oscars.php`, whose slot composer carries its own hero markup; the
+  `inc/oscars-portal.php` renderer is not the live one for this route.
+  So 3.2.59 shipped with the old near-opaque 120deg gradient and no
+  `has-backdrop` on the hero, and the drift never fired. 3.2.60 moves
+  both into `page-oscars.php`: the 112deg gradient that lets the backdrop
+  read through its middle, and the class on the `lunara-oscars-portal-slot-hero`
+  section when a backdrop is set. `functions.php` still carries a
+  `function_exists`-guarded dead copy of the older renderer with the old
+  gradient; it is dead code and was left alone, as `CLAUDE.md` warns.
+- **Contract.** `tests/oscars-portal-fluid-contract.ps1` now pins the
+  template, not just the shell: the hero section must stamp
+  `has-backdrop`, must carry the 112deg gradient, and must not keep the
+  120deg one. The prior pin only proved the shell had a keyframe to run.
+- **How it was found.** 3.2.59 went live at 17:36 UTC
+  (`3.2.59+20260907-173613`); the canary returned GO on all three reads
+  and both sentinels. The live HTML then showed 28 art spans on the
+  board, `FRONT RUNNER` labels, backdrop and poster-backdrop classes on
+  the rotation, and zero plugin hub duplicates (Academy Awards Database
+  2.7.83 live), but a hero section with no `has-backdrop` and the 120deg
+  gradient. A computed-style probe of the live HTML rendered offline
+  confirmed `animation-name: none` on the hero and, for the record, a
+  marquee card at 1,278 of 1,284 pixels, one slide per view.
+- **Not changed, deliberately:** Jetpack Boost's inline critical CSS for
+  the route is still the pre-3.2.58 snapshot (135,541 bytes, nine
+  `1180px !important` rules) and still needs regenerating from Jetpack
+  Boost → Critical CSS. Also unchanged: everything else in 3.2.59.
+
 ## 2026-09-07 — Theme 3.2.59 Oscars Portal Poster Wall
 
 Theme release. No companion plugin release; Oscars Ledger 2.7.83 (already
