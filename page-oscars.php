@@ -187,7 +187,7 @@ $hero_backdrop_url = trim( (string) ( $best_visual['backdrop_url'] ?? '' ) );
 $hero_style        = '';
 
 if ( '' !== $hero_backdrop_url ) {
-    $hero_style = "background-image: linear-gradient(120deg, rgba(7,16,27,.92) 0%, rgba(7,16,27,.86) 48%, rgba(7,16,27,.97) 100%), url('" . esc_url( $hero_backdrop_url ) . "'); background-size: cover; background-position: center;";
+    $hero_style = "background-image: linear-gradient(112deg, rgba(7,16,27,.9) 0%, rgba(7,16,27,.66) 34%, rgba(7,16,27,.34) 58%, rgba(7,16,27,.9) 100%), url('" . esc_url( $hero_backdrop_url ) . "'); background-size: cover; background-position: center;";
 }
 
 $hero_title_card = array();
@@ -388,7 +388,7 @@ $command_cards = array(
 <?php // Route slot composer: every top-level portal section — and the structural whitespace around it — is captured into $oscars_slot_markup and re-emitted through lunara_oscars_portal_render_sections below. Visibility stays enforced inside each capture by the same theme-mod-backed booleans the template always used (preview-aware through the resolved Studio config), so a hidden section keeps leaving exactly the residue it left before and the default order reproduces today's byte stream. ?>
 <?php $oscars_slot_markup = array(); ob_start(); ?>
         <?php if ( $show_hero ) : ?>
-        <section class="lunara-home-section lunara-oscars-portal-hero lunara-oscars-portal-slot-hero"<?php if ( '' !== $hero_style ) : ?> style="<?php echo esc_attr( $hero_style ); ?>"<?php endif; ?>>
+        <section class="lunara-home-section lunara-oscars-portal-hero lunara-oscars-portal-slot-hero<?php echo '' !== $hero_style ? ' has-backdrop' : ''; ?>"<?php if ( '' !== $hero_style ) : ?> style="<?php echo esc_attr( $hero_style ); ?>"<?php endif; ?>>
             <div class="lunara-oscars-portal-hero-grid">
                 <div class="lunara-oscars-portal-copy">
                     <p class="lunara-home-section-kicker"><?php echo esc_html( $hero_kicker ); ?></p>
@@ -786,7 +786,7 @@ $command_cards = array(
                     <div class="lunara-ledger-carousel-track lunara-oscars-winner-carousel-track" data-lunara-carousel-track>
                         <?php foreach ( $rotating_cards as $wcard ) :
                             $w_vis = is_array( $wcard['_visual'] ?? null ) ? $wcard['_visual'] : array();
-                            // Marquee backdrop (3.2.60): the film's backdrop when the
+                            // Marquee backdrop (3.2.61): the film's backdrop when the
                             // ledger has one, otherwise the poster blurred behind the
                             // slide. Exposed as a custom property so the shell paints it.
                             $w_backdrop = trim( (string) ( $w_vis['backdrop_url'] ?? '' ) );

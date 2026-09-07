@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-# The previous release made the Oscars portal scale to the screen; Theme 3.2.60 made
+# The previous two releases made the Oscars portal scale to the screen and then made
 # it a poster wall. Holds the three width authorities together, the board
 # poster grid in both the route sheet and the critical seed, the tile art
 # layer, the portrait winners grid, the backdrop marquee, the drifting hero,
@@ -34,11 +34,11 @@ Assert-Contract ($route -match '\.lunara-oscars-board-list\s*\{[^}]*display:\s*g
 Assert-Contract ($route -match 'grid-template-areas:\s*"status"\s*"category"\s*"call"') 'Route sheet board row must stack the status chip, the category and the call.'
 Assert-Contract ($seedPhp -match '\.lunara-oscars-board-list\{display:grid!important;gap:clamp\(8px,\.8vw,14px\)!important;grid-template-columns:repeat\(auto-fill,minmax\(min\(100%,var\(--lunara-oscars-portal-board-min-width,190px\)\),1fr\)\)!important') 'Critical seed board list must be the same auto-fill poster grid, with the tile floor behind the Studio board-rhythm variable and its 190px shipped fallback.'
 
-# --- 3.2.60 presentation controls -------------------------------------------
+# --- 3.2.61 presentation controls -------------------------------------------
 # Every custom property the emitter can stamp must be consumed by the seed.
 # A property that is emitted and never read is a control that saves cleanly
 # and changes nothing, which is exactly what card_min_height did from the day
-# it shipped until 3.2.60.
+# it shipped until 3.2.61.
 foreach ($pair in @(
     @{ Property = 'section-gap';       Label = 'section gap' },
     @{ Property = 'hero-min-height';   Label = 'hero minimum height' },
@@ -76,7 +76,7 @@ Assert-Contract ($seedPhp -match 'grid-template-areas:"status" "category" "call"
 Assert-Contract (-not ($route -match '"category status"') -and -not ($seedPhp -match '"category status"')) 'No authority may keep the side-by-side category and status row that let long categories run under the chip.'
 Assert-Contract (-not ($seedPhp -match 'minmax\(0,\.72fr\) minmax\(0,1fr\) auto')) 'Critical seed must not retain the three-column list row.'
 Assert-Contract (-not ($shell -match 'THE BOARD')) 'Shell must not carry a second copy of the board rules.'
-# 2b. Every tile is a 2:3 poster with the art behind the copy (3.2.60).
+# 2b. Every tile is a 2:3 poster with the art behind the copy (3.2.61).
 $routeRow = [regex]::Match($route, '\.lunara-oscars-board-row\s*\{[^}]*\}').Value
 Assert-Contract ($routeRow -match 'aspect-ratio:\s*2 / 3;' -and $routeRow -match 'position:\s*relative;' -and $routeRow -match 'overflow:\s*hidden;') 'Route sheet board row must be a 2:3 positioned poster tile.'
 Assert-Contract ($seedPhp -match '\.lunara-oscars-board-row\{[^}]*aspect-ratio:2/3!important;[^}]*overflow:hidden!important;[^}]*position:relative!important\}') 'Critical seed board row must be the same 2:3 positioned poster tile.'
@@ -114,7 +114,7 @@ Assert-Contract (-not ($shell -match '\.lunara-oscars-portal-fact-card,\s*\r?\n[
 Assert-Contract ($shell -match '\.lunara-ceremony-winner-card \{\s*\r?\n\s*max-width: none !important;') 'Ceremony winner cards must fill their column.'
 Assert-Contract ($route -match '\.lunara-ceremony-winner-card:not\(:has\(\.lunara-ceremony-winner-media-link\)\)') 'Winner cards without media must collapse to one column.'
 
-# 6b. Winners are portraits, the rotation is a marquee, the hero drifts (3.2.60).
+# 6b. Winners are portraits, the rotation is a marquee, the hero drifts (3.2.61).
 Assert-Contract ($route -match '\.lunara-ceremony-winners-grid \.lunara-ceremony-winner-card\s*\{[^}]*aspect-ratio:\s*3 / 4 !important;[^}]*overflow:\s*hidden !important;') 'Ceremony winner cards must be 3:4 portraits.'
 Assert-Contract ($route -match '\.lunara-ceremony-winners-grid \.lunara-ceremony-winner-card\.has-poster::after') 'Winner portraits must carry the legibility gradient.'
 Assert-Contract ($route -match '\.lunara-oscars-winner-carousel-track \.lunara-oscars-winner-carousel-card\s*\{[^}]*aspect-ratio:\s*21 / 9 !important;') 'Marquee slides must be 21:9.'
@@ -122,9 +122,12 @@ Assert-Contract ($route -match '\.lunara-oscars-rotating-winners-section \.lunar
 Assert-Contract ($route -match '\.lunara-oscars-rotating-winners-section \.lunara-oscars-winner-carousel-track \.lunara-oscars-winner-carousel-card\s*\{[^}]*flex:\s*0 0 100% !important;[^}]*max-width:\s*100% !important;') 'The marquee must show one slide per view, outranking the shell three-up flex basis.'
 
 Assert-Contract ($shell -match '@keyframes lunara-oscars-hero-drift') 'Shell must define the hero drift.'
+$pageTemplate = [IO.File]::ReadAllText((Join-Path $root 'page-oscars.php'))
+Assert-Contract ($pageTemplate -match 'lunara-oscars-portal-slot-hero<\?php echo '''' !== \$hero_style \? '' has-backdrop'' : ''''; \?>"') 'The live page template must stamp has-backdrop on the hero it renders, or the drift never fires (3.2.61).'
+Assert-Contract ($pageTemplate -match 'linear-gradient\(112deg, rgba\(7,16,27,\.9\) 0%, rgba\(7,16,27,\.66\) 34%, rgba\(7,16,27,\.34\) 58%') 'The live page template hero gradient must let the backdrop read through its middle.'
+Assert-Contract (-not ($pageTemplate -match 'linear-gradient\(120deg, rgba\(7,16,27,\.92\)')) 'The live page template must not keep the near-opaque 120deg hero gradient.'
 Assert-Contract ($shell -match '\.lunara-oscars-portal-hero\.has-backdrop\s*\{\s*\r?\n\s*animation:\s*lunara-oscars-hero-drift') 'The hero must drift only when it has a backdrop.'
 Assert-Contract ($shell -match '@media \(prefers-reduced-motion: reduce\)\s*\{\s*\r?\n\s*body\.lunara-oscars-portal-page \.lunara-oscars-portal-hero\.has-backdrop\s*\{\s*\r?\n\s*animation:\s*none') 'Reduced motion must stop the hero drift.'
-$pageTemplate = [IO.File]::ReadAllText((Join-Path $root 'page-oscars.php'))
 Assert-Contract ($pageTemplate -match 'style="--lunara-card-backdrop:url\(''<\?php echo esc_url\( \$w_bg \); \?>''\)"') 'The rotation card must hand its backdrop to CSS through esc_url.'
 Assert-Contract ($portal -match "function\s+lunara_oscars_portal_warm_visuals\(") 'The daily backdrop warmer must exist.'
 Assert-Contract ($portal -match "add_action\(\s*'lunara_oscars_portal_warm_visuals',\s*'lunara_oscars_portal_warm_visuals'\s*\)") 'The warmer must be hooked to its cron event.'
@@ -134,7 +137,7 @@ $rendererBody = [regex]::Match($portal, 'function\s+lunara_oscars_pick_visuals\s
 Assert-Contract ($rendererBody.Length -gt 0 -and $rendererBody -notmatch 'get_title_visual_package\([^)]*true') 'The render-path visuals resolver must never allow a remote fetch.'
 
 # 7. Budgets that the studio and payload contracts also hold, restated here so a regression names itself.
-# 3.2.60 raised the route ceiling from 45,000 to 57,344 bytes (56 KB): the
+# 3.2.61 raised the route ceiling from 45,000 to 57,344 bytes (56 KB): the
 # poster wall, the portrait winners and the marquee are three image-led
 # blocks that each need their own layer rules. docs/CHANGELOG.md records it.
 $routeBytes = [Text.Encoding]::UTF8.GetByteCount($route)
@@ -145,4 +148,4 @@ if ($failures.Count -gt 0) {
     throw "Oscars portal fluid contract failed:`n$($details -join "`n")"
 }
 
-Write-Host 'Theme 3.2.60 Oscars portal fluid contract passed: one 1720px cap in three authorities, board poster wall with tile art, portrait winners, backdrop marquee, drifting hero, daily warmer, composer hook, poster-first gallery, caps removed.'
+Write-Host 'Theme 3.2.61 Oscars portal fluid contract passed: one 1720px cap in three authorities, board poster wall with tile art, portrait winners, backdrop marquee, drifting hero, daily warmer, composer hook, poster-first gallery, caps removed.'

@@ -25,7 +25,7 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
-## 2026-09-07 — Theme 3.2.60 Oscars Portal Studio presentation controls and local candidate close
+## 2026-09-07 — Theme 3.2.61 Oscars Portal Studio presentation controls and local candidate close
 
 ### Headline
 
@@ -65,7 +65,7 @@ release detail.
 
 | Repository | SHA | Meaning |
 | --- | --- | --- |
-| `lunara-theme-blocks` | this commit | Theme 3.2.60: four presentation controls, the inert `card_min_height` made live, one shared declaration emitter, contracts, version sweep, identity contract, changelog, this entry. |
+| `lunara-theme-blocks` | this commit | Theme 3.2.61: four presentation controls, the inert `card_min_height` made live, one shared declaration emitter, contracts, version sweep, identity contract, changelog, this entry. |
 
 The rollback hatch is named by branch, never by SHA — branch
 `claude/rollback-exact-theme-3.2.43`, tracked by PR #159. Verify with
@@ -90,7 +90,7 @@ The rollback hatch is named by branch, never by SHA — branch
   rather than the code bent to the test.
 - Route sheet unchanged at 53,293 bytes against its 57,344 ceiling; the route
   seed grew 413 bytes. Payload budget contract passes.
-- Version sweep 3.2.59 → 3.2.60: 29 escaped and 102 plain occurrences across 47
+- Version sweep 3.2.60 → 3.2.61: 29 escaped and 102 plain occurrences across 47
   files, zero residuals, escaped form replaced first.
 
 ### Corrections
@@ -116,8 +116,8 @@ identity and version-lock sites should move.
 
 | Item | Status |
 | --- | --- |
-| Merge and deploy Theme 3.2.60 | **Dalton's click.** Theme-only; no plugin ordering constraint this release. |
-| Re-run `lunara-canary-verify.sh 3.2.60` after that deploy | Ready |
+| Merge and deploy Theme 3.2.61 | **Dalton's click.** Theme-only; no plugin ordering constraint this release. |
+| Re-run `lunara-canary-verify.sh 3.2.61` after that deploy | Ready |
 | Licensed Klim Tiempos fonts exist only in WP uploads | **Unresolved off-site copy.** |
 
 ### Whose move it is next
@@ -128,6 +128,127 @@ followed by the versioned canary.
 No deployment, cache operation, production write, or live verification occurred.
 
 ---
+
+## 2026-09-07 — Theme 3.2.60 Oscars hero backdrop and local candidate close
+
+### Headline
+
+Theme 3.2.59 went live at 17:36 UTC and the canary said GO. The live
+page then showed the one thing the offline render could not: the hero
+still wore the old near-opaque gradient and had no `has-backdrop` class,
+so the drift never fired. 3.2.59 had edited the hero in
+`inc/oscars-portal.php`; `/oscars/` renders through `page-oscars.php`.
+Theme 3.2.60 moves the gradient and the class into the template that is
+live and pins that template in the fluid contract. Assembled on
+`claude/journal-voice-optimization-kf6b9o`. Nothing in this slice is
+deployed or live.
+
+**Addendum, 17:59 UTC, live state re-verified after Dalton's deploy.**
+Theme 3.2.60 went live at 17:56 UTC (`3.2.60+20260907-175607`, Dalton's
+Deployer for Git click). Read-only probes: `/oscars/` now emits the hero
+section with `has-backdrop` and the 112deg gradient, 28 board art spans,
+zero plugin hub duplicates; the canary
+`bash tests/tools/lunara-canary-verify.sh 3.2.60` returned GO (three
+cache-separated reads agree on the build, Journal and Oscars sentinels
+both `LIVE_COHERENT`). Still open: Jetpack Boost's inline critical CSS on
+the route is the same 135,541-byte pre-3.2.58 snapshot with nine
+`1180px !important` rules; it needs Jetpack Boost → Critical CSS →
+regenerate, which is Dalton's wp-admin click. CI on the `main` merge
+commit and on this branch both completed green.
+
+**Addendum, 17:55 UTC.** Dalton marked Theme 3.2.60
+([PR #175](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/175))
+ready and merged it while its CI `lint` job was still running on the head
+(the same suite had passed 91 of 91 locally on that commit). The
+exact-rollback hatch was rebuilt on the new `main` as a two-parent commit
+(old hatch head, PR #175 merge) and verified tree-exact:
+`claude/rollback-exact-theme-3.2.43^{tree}` is
+`c55bf394594149db2888295c5d51f85f47b2b520` and the branch contains
+`origin/main`. Nothing is deployed by this session. Dalton's clicks:
+Deployer for Git for the theme, the canary with `3.2.60`, Jetpack Boost
+critical CSS regeneration.
+
+### Verified live state (read-only probes this session)
+
+| Component | Live | On `main` | Gap |
+| --- | --- | --- | --- |
+| Theme | 3.2.59 (`3.2.59+20260907-173613`), Dalton's Deployer for Git click at 17:36 UTC | 3.2.59 | 3.2.60 is this candidate, not yet merged |
+| Academy Awards Database | 2.7.83 | 2.7.83 | none; the hub duplicates are gone from the portal |
+| Lunara Dispatch | 3.2.8 | 3.2.8 | none |
+| Journal Foundation | 1.3.1 | 1.3.1 | none |
+| Jetpack Boost critical CSS on `/oscars/` | still the 135,541-byte pre-3.2.58 snapshot, nine `1180px !important` rules | n/a | regenerate from Jetpack Boost → Critical CSS |
+
+| Check | Result |
+| --- | --- |
+| `bash tests/tools/lunara-canary-verify.sh 3.2.59` | GO: three cache-separated reads agree on `3.2.59+20260907-173613`; Journal and Oscars sentinels both `LIVE_COHERENT` |
+| Live `/oscars/` HTML (unbundled) | 28 `lunara-oscars-board-art` spans, every tile `has-art-photo`; 7 `FRONT RUNNER` labels; rotation cards carry `has-backdrop` (TMDB w780) or `has-poster-backdrop`; 4 door cards `has-backdrop`; 0 hub duplicates |
+| Live hero markup | `lunara-oscars-portal-slot-hero` with a TMDB backdrop but no `has-backdrop` class and the 120deg gradient; computed `animation-name: none` |
+| Live HTML rendered offline at 1440 with the deployed stylesheets | page 9,976 px, board 1,846 px, winners 714 px, rotation 861 px, no overflow; marquee card 1,278 of 1,284 px with autoplay stripped |
+| Live HTML rendered offline at 390 | page 14,601 px, board 3,412 px, two tiles across, winners two across |
+
+No deployment, cache operation, production write, or live verification occurred.
+The canary and probes above are read-only observations of Dalton's 3.2.59
+deploy, not actions of this session on this candidate. A branch push occurred
+to `claude/journal-voice-optimization-kf6b9o` in the theme repository only.
+
+### What shipped and why
+
+See the 2026-09-07 Theme 3.2.60 entry in `docs/CHANGELOG.md`. The
+reasoning that matters: the contract that "proved" the drift only proved
+the shell had a keyframe; it never proved the live template emitted the
+class the keyframe keys off. 3.2.60 pins the template.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | this commit | Theme 3.2.60: hero gradient and `has-backdrop` in `page-oscars.php`, template pins in the fluid contract, version sweep, identity contract, changelog, this entry. |
+
+### Gate ledger
+
+- PHP lint on the changed template passed.
+- PowerShell contracts: **91 of 91**, each in its own process, the three
+  browser contracts on the container's Chromium.
+  `release-identity-3-2-59.ps1` became `release-identity-3-2-60.ps1`.
+- Mutation on the new pins, restored from a `cp` backup and confirmed
+  byte-identical with `cmp`: the template hero class removed went RED.
+- **Not run:** `tests/tools/lunara-canary-verify.sh 3.2.60`. Nothing was
+  deployed, so there is nothing for it to verify. Dalton retains the later
+  manual deployment through Deployer for Git, followed by the canary with
+  argument `3.2.60`.
+
+### Corrections
+
+- The 3.2.59 entry's headline and changelog said the hero would drift.
+  On the live route it did not, for the reason above. The 3.2.59 code
+  change is real but sits in a renderer the route does not use.
+
+### Logged, not fixed
+
+- **Jetpack Boost critical CSS is still stale on `/oscars/`.** It now
+  fights 3.2.59 the same way it fought 3.2.58. Jetpack Boost → Critical
+  CSS → regenerate, a derived-file regeneration, not a cache clear.
+- **`functions.php` carries a dead, guarded copy of the old portal
+  renderer** with the 120deg gradient. Left alone per `CLAUDE.md`; a
+  future session should delete the dead copies rather than edit them.
+
+### Punch-list carried forward
+
+| Item | Status | Whose call |
+| --- | --- | --- |
+| Merge 3.2.60; deploy via Deployer for Git; `bash tests/tools/lunara-canary-verify.sh 3.2.60` | open | Dalton |
+| Regenerate Jetpack Boost critical CSS | open | Dalton |
+| Rebuild the exact-rollback hatch after the merge | open, agent after merge | agent |
+| Re-save one Oscar pick to fire the first image warm, or wait for the daily cron | open | Dalton |
+| Jetpack Boost Image CDN quality 100 → 82 | open | Dalton |
+| Delete the dead guarded renderer copies in `functions.php` | open | agent, a later session |
+| Base stylesheet diet | open, carried | Dalton and agent |
+| Auto-deploy stays off | unchanged | Dalton |
+
+### Whose move it is next
+
+Dalton's. Merge the 3.2.60 PR, deploy it with Deployer for Git, run the
+canary with `3.2.60`, and regenerate Boost's critical CSS.
 
 ## 2026-09-07 — Theme 3.2.59 Oscars portal poster wall and local candidate close
 
@@ -145,6 +266,17 @@ portraits, the rotation is a one-slide backdrop marquee that autoplays,
 the hero drifts, and a daily WP-Cron warm fills the image caches the
 render path reads. Assembled on `claude/journal-voice-optimization-kf6b9o`.
 Nothing in this slice is deployed or live.
+
+**Addendum, 17:35 UTC.** Dalton marked Theme 3.2.59
+([PR #174](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/174))
+ready and merged it. The exact-rollback hatch was rebuilt on the new
+`main` as a two-parent commit (old hatch head, PR #174 merge) and verified
+tree-exact: `claude/rollback-exact-theme-3.2.43^{tree}` is
+`c55bf394594149db2888295c5d51f85f47b2b520` and the branch contains
+`origin/main`. Nothing is deployed by this session. The order of Dalton's
+clicks is unchanged: Deployer for Git for the theme (now that `main`
+carries 3.2.59), the Academy Awards Database to 2.7.83, Jetpack Boost
+critical CSS regeneration, then the canary with `3.2.59`.
 
 **Addendum, 17:33 UTC.** Dalton reported "everything has been deployed."
 Read-only probes say otherwise, and this is recorded so the next session

@@ -363,7 +363,7 @@ $record(
 	)
 );
 
-// Case 7: tile art (3.2.60). The visuals helper hands back a src and a kind
+// Case 7: tile art (3.2.61). The visuals helper hands back a src and a kind
 // per pick; the renderer must route the src through esc_url (javascript:
 // collapses to an empty src, a quote can never break out of the attribute),
 // bound the kind to a letters-only class token, emit exactly one art span
