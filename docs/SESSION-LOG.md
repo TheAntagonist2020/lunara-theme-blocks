@@ -25,6 +25,145 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-07 — Theme 3.2.59 Oscars portal poster wall and local candidate close
+
+### Headline
+
+Dalton looked at the deployed 3.2.58 portal and said it was still
+haphazard: "there's gotta be pictures... Dynamic dynamic dynamic." He was
+right. 3.2.58 fixed the scale of the page and not its content: the board
+was text tiles with no image data behind them, the winners were tiny
+headshots beside text, the rotation was three empty rooms, and the hero
+and door backdrops were blank because the plugin's TMDB cache is only
+filled by admin importers. Theme 3.2.59 is the poster wall: every pick
+tile carries its film poster or the nominee's headshot, the winners are
+portraits, the rotation is a one-slide backdrop marquee that autoplays,
+the hero drifts, and a daily WP-Cron warm fills the image caches the
+render path reads. Assembled on `claude/journal-voice-optimization-kf6b9o`.
+Nothing in this slice is deployed or live.
+
+### Verified live state (read-only probes this session)
+
+| Component | Live | On `main` | Gap |
+| --- | --- | --- | --- |
+| Theme | 3.2.58 (`3.2.58+20260907-024206`), Dalton's Deployer for Git click at 02:42 UTC | 3.2.58 | 3.2.59 is this candidate, not yet merged |
+| Lunara Dispatch | 3.2.8 | 3.2.8 | none; the 2026-09-04 re-update item is closed |
+| Journal Foundation | 1.3.1 | 1.3.1 | none |
+| Academy Awards Database | 2.7.82 | 2.7.83 | 2.7.83 (landing composer) still not on the site, so the hub duplicates still render inside the portal |
+| Jetpack Boost critical CSS on `/oscars/` | 135,532-byte inline snapshot taken before 3.2.58, nine `1180px !important` rules on the portal | n/a | must be regenerated from Jetpack Boost → Critical CSS; a derived-file regeneration, not a cache clear |
+
+| Check | Result |
+| --- | --- |
+| Offline render of the 3.2.59 candidate at 1440 px | column 1,392 px, page 9,901 px, board 1,846 px (28 poster tiles, six across), winners 714 px, rotation 887 px, no horizontal overflow |
+| Offline render at 2560 px | column 1,720 px, page 9,556 px, eight tiles across, 19 text elements under 12 px |
+| Offline render at 390 px | page 14,122 px, board 3,443 px (two tiles across), winners 1,374 px (two across), rotation one 4:5 slide per view |
+| Offline render at 768 and 1920 px | 13,759 and 9,219 px; four and seven tiles across; no overflow |
+| Computed-style probes | found the shell's three-up flex basis on the rotation track, the 180 px `max-height` on winner photos, and the category column collapsing under the status chip; each fixed in the route sheet by specificity, then re-rendered |
+
+No deployment, cache operation, production write, or live verification occurred.
+A branch push occurred to `claude/journal-voice-optimization-kf6b9o` in the
+theme repository only.
+
+### What shipped and why
+
+See the 2026-09-07 entry in `docs/CHANGELOG.md` for the code-level detail.
+The reasoning that matters:
+
+- **Pictures come from what the site already has.** The Academy Awards
+  Database stores local `nm…-profile` and `tt…-poster` attachments and
+  exposes them through its visual-package methods. The board resolver
+  reads those, the pick's own thumbnail, and matched review or movie
+  posts. It never calls TMDB on a page view; it is memoised in a
+  transient keyed to the picks' modified times.
+- **Pinned ids beat guesswork.** A pick can now carry its `tt` and `nm`
+  ids. Without them the resolver falls back to the entity URL, a
+  person-name index built from the last eight ceremonies, and an
+  exact-title post match. Saving a pick schedules a one-shot warm.
+- **The warm is the fix for the blank backdrops.** Hero, door and
+  rotation images were empty on the live page because only admin
+  importers pass `$allow_remote`. A daily cron now fetches the large
+  visual package for up to 60 portal titles with remote allowed and
+  invalidates the board-art and home-snapshot transients.
+- **Specificity, not hope.** Three shell rules outranked the route sheet
+  (rotation track flex basis, winner photo `max-height`, category column
+  next to the chip). The marquee rules now carry the section class, the
+  photo rules lift the cap, and the tile stacks chip, category and call
+  in every authority including the critical seed.
+- **The route ceiling moved with a reason.** 45,000 to 57,344 bytes in
+  both contracts that hold it, because three image-led blocks each need
+  layer rules. Recorded in the changelog.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | this commit | Theme 3.2.59: poster-wall board with local art resolution, pinned pick ids, portrait winners, backdrop marquee, drifting hero, daily warm, contracts, ceiling, version sweep, identity contract, changelog, this entry. |
+
+### Gate ledger
+
+- PHP lint on every changed file passed; 17 PHP runtime contracts passed.
+- `php tests/fixtures/oscars-portal-board-harness.php`: 7 of 7 cases,
+  the new `board-art-src-escaped` included.
+- PowerShell contracts: **91 of 91**, each in its own process, the three
+  browser contracts driven by the container's Chromium 1194 through
+  `LUNARA_BROWSER_EXECUTABLE`. `release-identity-3-2-58.ps1` became
+  `release-identity-3-2-59.ps1` with 3.2.58 as the prior version and the
+  ten 3.2.59 coverage patterns.
+- Mutations on the new pins, each restored from a `cp` backup and
+  confirmed byte-identical with `cmp`: marquee flex basis removed went
+  RED; art `src` emitted without `esc_url` went RED in both the board and
+  fluid contracts; the seed row back to side-by-side went RED; the warmer
+  without remote allowed went RED. Four for four.
+- Budgets: route sheet 53,293 of 57,344 (raised from 45,000 this
+  release); shell 185,822 of 204,800; critical seed 5,973 of 6,144;
+  rendered vars plus seed under 12,288.
+- JS syntax and CSS brace balance clean.
+- **Not run:** `tests/tools/lunara-canary-verify.sh 3.2.59`. Nothing was
+  deployed, so there is nothing for it to verify. Dalton retains the later
+  manual deployment through Deployer for Git, followed by the canary with
+  argument `3.2.59`.
+
+### Corrections
+
+- The 2026-09-05 entry's live-state table (addendum of 02:35 UTC) listed
+  the theme as 3.2.57 and Dispatch as 3.2.7. Both moved after that
+  addendum: Theme 3.2.58 went live at 02:42 UTC and Dispatch 3.2.8 is
+  live. The table above supersedes it.
+
+### Logged, not fixed
+
+- **Jetpack Boost critical CSS is stale on `/oscars/`.** It fights 3.2.58
+  and will fight 3.2.59 the same way until regenerated. This is a wp-admin
+  action (Jetpack Boost → Critical CSS → regenerate), not a cache clear.
+- **Academy Awards Database is still 2.7.82 on the site.** The Deployer
+  reports zero updates available; the hub duplicates stay until it is
+  updated to 2.7.83.
+- **Board art on first anonymous view after deploy** will be whatever the
+  local attachments already cover. The daily warm (and the one-shot warm
+  on pick save) fills the rest; Dalton can force it by re-saving any pick.
+- **Jetpack Boost Image CDN quality 100** and the base-stylesheet diet
+  remain open from the 2026-09-04 and 2026-09-05 entries.
+
+### Punch-list carried forward
+
+| Item | Status | Whose call |
+| --- | --- | --- |
+| Update Academy Awards Database to 2.7.83 from Dashboard → Updates | open | Dalton |
+| Regenerate Jetpack Boost critical CSS after 3.2.58 (and again after 3.2.59) | open | Dalton |
+| Review the 3.2.59 renders and diff; merge; deploy via Deployer for Git; `bash tests/tools/lunara-canary-verify.sh 3.2.59` | open | Dalton |
+| Rebuild the exact-rollback hatch after the merge | open, agent after merge | agent |
+| Pin `tt` and `nm` ids on picks whose art does not resolve by name | open, as picks are edited | Dalton |
+| Jetpack Boost Image CDN quality 100 → 82 | open | Dalton |
+| Base stylesheet diet | open, carried | Dalton and agent |
+| Auto-deploy stays off | unchanged | Dalton |
+
+### Whose move it is next
+
+Dalton's. Review the poster wall renders, merge the theme PR when
+satisfied, update the Academy Awards plugin, regenerate Boost's critical
+CSS, deploy the theme with Deployer for Git, and run the canary with
+`3.2.59`.
+
 ## 2026-09-05 — Theme 3.2.58 Oscars portal rebuild and local candidate close
 
 ### Headline

@@ -793,8 +793,18 @@ $command_cards = array(
                     <div class="lunara-ledger-carousel-track lunara-oscars-winner-carousel-track" data-lunara-carousel-track>
                         <?php foreach ( $rotating_cards as $wcard ) :
                             $w_vis = is_array( $wcard['_visual'] ?? null ) ? $wcard['_visual'] : array();
+                            // Marquee backdrop (3.2.59): the film's backdrop when the
+                            // ledger has one, otherwise the poster blurred behind the
+                            // slide. Exposed as a custom property so the shell paints it.
+                            $w_backdrop = trim( (string) ( $w_vis['backdrop_url'] ?? '' ) );
+                            $w_poster   = trim( (string) ( $w_vis['poster_url'] ?? '' ) );
+                            if ( '' === $w_poster && ! empty( $w_vis['poster_html'] ) && preg_match( '/\ssrc="([^"]+)"/i', (string) $w_vis['poster_html'], $w_src_match ) ) {
+                                $w_poster = trim( (string) $w_src_match[1] );
+                            }
+                            $w_bg       = '' !== $w_backdrop ? $w_backdrop : $w_poster;
+                            $w_bg_class = '' !== $w_backdrop ? ' has-backdrop' : ( '' !== $w_poster ? ' has-poster-backdrop' : '' );
                         ?>
-                        <article class="lunara-ceremony-winner-card lunara-oscars-winner-carousel-card<?php echo ! empty( $w_vis['poster_url'] ) || ! empty( $w_vis['poster_html'] ) ? ' has-poster' : ''; ?>">
+                        <article class="lunara-ceremony-winner-card lunara-oscars-winner-carousel-card<?php echo ! empty( $w_vis['poster_url'] ) || ! empty( $w_vis['poster_html'] ) ? ' has-poster' : ''; ?><?php echo $w_bg_class; ?>"<?php if ( '' !== $w_bg ) : ?> style="--lunara-card-backdrop:url('<?php echo esc_url( $w_bg ); ?>')"<?php endif; ?>>
                             <?php $rotating_primary_url = ! empty( $wcard['primary_url'] ) ? $wcard['primary_url'] : ( ! empty( $wcard['film_url'] ) ? $wcard['film_url'] : $rotating_url ); ?>
                             <?php echo lunara_render_oscars_winner_media_link( $wcard, $rotating_url ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared renderer escapes attributes and preserves trusted visual markup. ?>
                             <div class="lunara-ceremony-winner-copy">

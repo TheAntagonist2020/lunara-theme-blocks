@@ -25,7 +25,8 @@ class WP_Error {}
 function is_wp_error( $value ) { return $value instanceof WP_Error; }
 
 $GLOBALS['lunara_board_test_state'] = array(
-	'picks' => array(), // pick_id => array( category, film, person, status, url, year, title )
+	'picks'   => array(), // pick_id => array( category, film, person, status, url, year, title, imdb_id, person_id )
+	'visuals' => array(), // pick_id => array( src, kind ) handed back by the lunara_oscars_pick_visuals stub
 );
 
 function lunara_get_oscar_picks( $args = array() ) {
@@ -52,6 +53,8 @@ function get_post_meta( $pick_id, $key, $single = false ) {
 		'_lunara_pick_status'            => $pick['status'] ?? '',
 		'_lunara_pick_oscar_entity_url'  => $pick['url'] ?? '',
 		'_lunara_pick_ceremony_year'     => $pick['year'] ?? 0,
+		'_lunara_pick_imdb_id'           => $pick['imdb_id'] ?? '',
+		'_lunara_pick_person_id'         => $pick['person_id'] ?? '',
 	);
 	return $map[ $key ] ?? '';
 }
@@ -167,8 +170,18 @@ $renderer_source = lunara_extract_named_function(
 );
 eval( $renderer_source );
 
-function lunara_board_render_with_picks( $picks ) {
-	$GLOBALS['lunara_board_test_state']['picks'] = $picks;
+/**
+ * The renderer resolves tile art through this helper when it exists; the
+ * harness owns it so each case decides exactly which src and kind arrive,
+ * including hostile ones the renderer must neutralize on its own.
+ */
+function lunara_oscars_pick_visuals( $rows ) {
+	return $GLOBALS['lunara_board_test_state']['visuals'];
+}
+
+function lunara_board_render_with_picks( $picks, $visuals = array() ) {
+	$GLOBALS['lunara_board_test_state']['picks']   = $picks;
+	$GLOBALS['lunara_board_test_state']['visuals'] = $visuals;
 	return lunara_render_oscars_prediction_board_under_test();
 }
 
@@ -347,6 +360,50 @@ $record(
 		'bad_protocol_href_emptied'   => false !== strpos( $hostile_url_output, 'href=""' ),
 		'no_double_quote_breakout'    => false === strpos( $hostile_url_output, '" onmouseover' ),
 		'quote_stripped_not_breaking' => false !== strpos( $hostile_url_output, 'href="https://x/%20onmouseover=alert(1)%20x="' ),
+	)
+);
+
+// Case 7: tile art (3.2.59). The visuals helper hands back a src and a kind
+// per pick; the renderer must route the src through esc_url (javascript:
+// collapses to an empty src, a quote can never break out of the attribute),
+// bound the kind to a letters-only class token, emit exactly one art span
+// per pick that has a src, and none at all for a pick without one.
+$art_output = lunara_board_render_with_picks(
+	array(
+		341 => array( 'category' => 'Best Picture', 'film' => 'Poster Film', 'person' => '', 'status' => 'won', 'url' => '', 'year' => 2027, 'title' => 'Pick 341', 'imdb_id' => 'tt0000341' ),
+		342 => array( 'category' => 'Best Actor', 'film' => '', 'person' => 'Head Shot', 'status' => '', 'url' => '', 'year' => 2027, 'title' => 'Pick 342', 'person_id' => 'nm0000342' ),
+		343 => array( 'category' => 'Best Director', 'film' => '', 'person' => 'No Art', 'status' => '', 'url' => '', 'year' => 2027, 'title' => 'Pick 343' ),
+		344 => array( 'category' => 'Best Actress', 'film' => '', 'person' => 'Hostile Src', 'status' => '', 'url' => '', 'year' => 2027, 'title' => 'Pick 344' ),
+		345 => array( 'category' => 'Best Score', 'film' => '', 'person' => 'Quote Src', 'status' => '', 'url' => '', 'year' => 2027, 'title' => 'Pick 345' ),
+	),
+	array(
+		341 => array( 'src' => 'https://cdn.example/poster-341.jpg', 'kind' => 'poster' ),
+		342 => array( 'src' => 'https://cdn.example/nm342-profile.jpg', 'kind' => 'portrait' ),
+		344 => array( 'src' => 'javascript:alert(1)', 'kind' => 'photo" onload="alert(1)' ),
+		345 => array( 'src' => 'https://cdn.example/x.jpg" onerror="alert(1)', 'kind' => 'photo' ),
+	)
+);
+preg_match_all( '/<li class="([^"]*)">/', $art_output, $art_li_matches );
+$art_li_classes = $art_li_matches[1];
+preg_match_all( '/<span class="lunara-oscars-board-art" aria-hidden="true"><img src="([^"]*)" alt="" loading="lazy" decoding="async" \/><\/span>/', $art_output, $art_img_matches );
+$art_srcs = $art_img_matches[1];
+$record(
+	'board-art-src-escaped',
+	array(
+		'five_rows'                => 5 === count( $art_li_classes ),
+		'poster_row_classes'       => 'lunara-oscars-board-row is-status-won has-art has-art-poster' === ( $art_li_classes[0] ?? '' ),
+		'portrait_row_classes'     => 'lunara-oscars-board-row has-art has-art-portrait' === ( $art_li_classes[1] ?? '' ),
+		'artless_row_bare'         => 'lunara-oscars-board-row' === ( $art_li_classes[2] ?? '' ),
+		'hostile_kind_bounded'     => 'lunara-oscars-board-row has-art has-art-photoonloadalert' === ( $art_li_classes[3] ?? '' ),
+		'four_art_spans'           => 4 === count( $art_srcs ),
+		'poster_src_preserved'     => 'https://cdn.example/poster-341.jpg' === ( $art_srcs[0] ?? null ),
+		'portrait_src_preserved'   => 'https://cdn.example/nm342-profile.jpg' === ( $art_srcs[1] ?? null ),
+		'javascript_src_emptied'   => '' === ( $art_srcs[2] ?? null ),
+		'quote_src_not_breaking'   => 'https://cdn.example/x.jpg%20onerror=alert(1)' === ( $art_srcs[3] ?? null ),
+		'no_javascript_anywhere'   => false === stripos( $art_output, 'javascript:' ),
+		'no_onload_attribute'      => false === stripos( $art_output, 'onload=' ),
+		'no_onerror_breakout'      => false === strpos( $art_output, '" onerror' ),
+		'art_before_category'      => preg_match( '/<li class="[^"]*has-art-poster">\s*<span class="lunara-oscars-board-art"[^>]*>.*?<\/span>\s*<span class="lunara-oscars-board-category"/s', $art_output ) === 1,
 	)
 );
 

@@ -4989,3 +4989,48 @@ body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-hub-metric-cop
         gap: 0 !important;
     }
 }
+
+/*
+ * Oscars portal, Theme 3.2.59: motion where a picture is. The hero's
+ * backdrop drifts once it exists (the inline style sets the image; the
+ * animation owns the position, and an animation beats an inline value),
+ * the door cards zoom their backdrop on hover, and everything stops for
+ * readers who asked for reduced motion.
+ */
+@keyframes lunara-oscars-hero-drift {
+    from { background-position: 50% 38%; }
+    to { background-position: 50% 62%; }
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-portal-hero.has-backdrop {
+    animation: lunara-oscars-hero-drift 46s ease-in-out infinite alternate;
+    background-size: 112% auto !important;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-portal-link-card.has-backdrop {
+    background-size: cover !important;
+    background-position: center 40% !important;
+    transition: background-size .8s ease, transform .4s ease, border-color .4s ease;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-portal-link-card.has-backdrop:hover {
+    background-size: 112% auto !important;
+    transform: translateY(-3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.lunara-oscars-portal-page .lunara-oscars-portal-hero.has-backdrop {
+        animation: none;
+        background-size: cover !important;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-link-card.has-backdrop,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-link-card.has-backdrop:hover,
+    body.lunara-oscars-portal-page .lunara-ceremony-winners-grid .lunara-ceremony-winner-card,
+    body.lunara-oscars-portal-page .lunara-ceremony-winners-grid .lunara-ceremony-winner-poster img,
+    body.lunara-oscars-portal-page .lunara-oscars-winner-carousel-card::before {
+        transition: none !important;
+        transform: none !important;
+    }
+}
+
