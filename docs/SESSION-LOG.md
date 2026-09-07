@@ -25,6 +25,114 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-07 — Boost regeneration complete; image quality saved; Theme 3.2.61 GO
+
+### Headline
+
+Resumed Dalton's handoff against current GitHub and production state. PR #176
+was already merged, and the exact-rollback hatch was already rebuilt against
+that merge. A fresh 3.2.60 canary returned GO. Requested Jetpack Boost Critical
+CSS regeneration at 18:05 UTC and changed Image CDN quality from lossless to
+JPEG 82, PNG 80, and WebP 80. Boost caps the latter two controls at 80; the
+closest supported values were used after presenting that adjustment to Dalton.
+Generation finished at 18:16 UTC: 24 files generated, two files still failed.
+A concurrent 3.2.61 deployment was reconciled and verified GO at 18:17 UTC.
+
+### Verified live state
+
+| Check | Result |
+| --- | --- |
+| Pre-change canary, 18:03 UTC | Three anonymous reads agree on `3.2.60+20260907-175607`; Journal and Oscars both `LIVE_COHERENT`; exit 0, GO. |
+| Active plugins, WordPress.com connector | Academy Awards Database 2.7.83; Dispatch 3.2.8; Journal Foundation 1.3.1; Jetpack Boost 4.7.0. |
+| PR #176 and hatch | PR merged; `origin/main` is `ac782357fb8c55aaf4431e0ef538540540cd1b0b`. `claude/rollback-exact-theme-3.2.43` contains main and its tree equals `c55bf394594149db2888295c5d51f85f47b2b520`; PR #159 is open and mergeable. |
+| Boost settings, independently loaded admin page at 18:07 UTC | JPEG 82, PNG 80, WEBP 80 persisted. |
+| Critical CSS generation, 18:16 UTC | Finished: 24 files generated; two files could not be generated automatically. Advanced recommendations list custom-taxonomy redirects and 404s. |
+| Anonymous canonical `/oscars/`, 18:11:16 UTC | New 131,284-byte Boost CSS, SHA-256 `9d75870d5a81fd7fe1675fab9a0a3ecb8618040b5d60af18067c38f19b4dd4d5`, with five `1180px` occurrences. Image URL occurrences: quality=80: 19; quality=82: 80; quality=86: 61; quality=100: zero. |
+| Browser layout with new CSS, signed-in session | At viewport 1536px, portal width 1488px and computed max-width 1720px; document scroll width 1526px, no horizontal overflow; hero has `has-backdrop`. This is separate from the anonymous canonical probe. |
+| Final 3.2.61 canary, 18:17 UTC | Three reads agree on `3.2.61+20260907-181231`; Journal and Oscars both `LIVE_COHERENT`; exit 0, GO. |
+| Final canonical Oscars probe, 18:17:14 UTC | Build 3.2.61; same new 131,284-byte Boost CSS/hash. Quality URL occurrences: 100: 27; 80: 7; 82: 100; 86: 26. Settings persistence does not mean every markup URL uses those settings. |
+
+### What changed and why
+
+The only production writes were the two requested Boost operations. Regeneration
+refreshes derived CSS following the 3.2.60 layout changes. Image-quality controls
+were lossless for all three formats, with dormant values 87/79/80; the UI permits
+JPEG up to 89 and PNG/WebP up to 80. No theme/plugin deployment or manual cache
+clear occurred. The base stylesheet diet and dead renderer cleanup remain open.
+
+**Concurrent deployment discovered at 18:13 UTC:** another session merged
+PR #177 and Theme 3.2.61 went live with build `3.2.61+20260907-181231`.
+This session did not trigger that deployment. The topic worktree was updated
+to `e2900718ac5448cfa19cfb621f34dbb22e2710f7`, preserving the incoming 3.2.61
+session-log entry and this entry. The rollback hatch already contained the new
+main tip and retained the exact 3.2.43 tree. An initial 3.2.61 canary at
+18:14 UTC failed solely because canonical Oscars still served 3.2.60 while
+Journal served 3.2.61; every non-version sentinel contract passed. This is a
+failed gate, not GO. No automatic rollback, redeploy, or cache clear was attempted.
+The final 3.2.61 canary at 18:17 UTC passed after the canonical Oscars response
+advanced naturally. This supersedes the transient failed gate without erasing it.
+
+### Commit ledger
+
+| Repository | Revision | Meaning |
+| --- | --- | --- |
+| Theme main | `ac782357fb8c55aaf4431e0ef538540540cd1b0b` | Existing PR #176 merge, verified rather than repeated. |
+| Theme main, final | `e2900718ac5448cfa19cfb621f34dbb22e2710f7` | Concurrent PR #177 merge; fresh canary 3.2.61 passed. Hatch already rebuilt by the other session. |
+| Theme topic branch | this commit | Operational session record on `codex/boost-handoff-20260907`; no application code changes. |
+
+### Gate ledger
+
+- `bash tests/tools/lunara-canary-verify.sh 3.2.60`: exit 0 before Boost changes.
+- A later 3.2.60 canary failed after the concurrent 3.2.61 deployment; Journal
+  had advanced to 3.2.61 and Oscars remained on 3.2.60.
+- `bash tests/tools/lunara-canary-verify.sh 3.2.61` from the updated main tree:
+  exit 1 at 18:14 UTC, Oscars version binding failed (3.2.60 versus 3.2.61).
+- Same 3.2.61 command after generation finished: exit 0, GO at 18:17 UTC.
+- `git diff --check`: passed; no application code changed in this branch.
+- `git merge-base --is-ancestor origin/main origin/claude/rollback-exact-theme-3.2.43`: exit 0; rollback tree equality verified separately.
+- Full contracts and mutation tests not run: this is an operational settings and
+  documentation session, with no application release.
+
+### Corrections and logged limitations
+
+- The incoming handoff listed PR #176 and hatch rebuilding as next steps; both
+  were complete when this session checked them.
+- The nine old-width matches are nine `1180px` occurrences, including three
+  literal `1180px !important` declarations, not nine identical declarations.
+- Theme code explicitly requests quality 86 in `inc/setup.php` and
+  `inc/journal-archive-media.php`; `functions.php` also contains an 86 quality
+  normalization default. Changing Boost does not establish that every public
+  image URL now uses 82/80. The canonical Oscars HTML still had seven quality=100
+  and 126 quality=86 occurrences at 18:06:55 UTC, before its natural refresh.
+  At 18:11:16 UTC it had no quality=100, but 61 quality=86 occurrences remain.
+- Before regeneration the canonical Boost CSS was 135,541 bytes with SHA-256
+  `888c9e738b36d200c97a30d3b2c56c995c76c4e6f4852b1c854b5c6ce50e7991`.
+  The first changed response was a query-bearing diagnostic at 18:08:46 UTC;
+  the anonymous canonical response independently changed by 18:11:16 UTC.
+  Five `1180px` occurrences still exist in the new CSS; regeneration is not a
+  stylesheet cleanup. The observed final portal width uses the 1720px maximum.
+- Boost previously reported 24 CSS files generated nine days ago and two failures.
+  The new job also finished with 24 generated files and two failures. Its detail
+  page reports six redirecting Oscar Picks category URLs, four Oscar Picks
+  category 404s, and three Oscar Facts category 404s. Examples: best-picture
+  redirects; best-director and genre-breakthroughs return 404 according to Boost.
+  No taxonomy URLs were changed or warnings dismissed by this session.
+- The new CSS generation overlapped the separate 3.2.61 deployment. The old
+  pre-3.2.58 CSS was replaced, but no claim is made that every generated file
+  was captured exclusively after 3.2.61. Further layout changes need a fresh
+  generation and their own verification.
+
+### Punch-list and whose move is next
+
+1. Review the failed custom-taxonomy URLs in Boost's advanced recommendations;
+   determine which redirects are intentional and which 404 routes should exist.
+2. Carry forward the base stylesheet diet, remaining quality=100/86 URLs,
+   and later deletion of dead guarded renderer copies. Preserve tt/nm pins and
+   daily/pick-save artwork warming decisions from the incoming handoff.
+3. This session record is committed and pushed on `codex/boost-handoff-20260907`;
+   no new PR was requested or opened. Dalton can request its PR/merge; rebuild
+   the exact-rollback hatch after any later main merge, including this log.
+
 ## 2026-09-07 — Theme 3.2.61 Oscars Portal Studio presentation controls and local candidate close
 
 ### Headline
@@ -37,6 +145,10 @@ the course of the build, `card_min_height` turned out to be an inert control:
 stamped by two emitters, read by nothing, since the day it shipped.
 
 ### Verified live state
+
+**Later observation:** the candidate below subsequently merged as PR #177 and
+Theme 3.2.61 was verified GO at 18:17 UTC. See the Boost regeneration entry above;
+the following paragraph records this candidate session's original boundary.
 
 Not applicable. This candidate is local and unmerged; no production probe,
 canary, deployment, cache operation or production write was run, so this entry
