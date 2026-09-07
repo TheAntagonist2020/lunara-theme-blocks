@@ -235,6 +235,7 @@ if ( ! function_exists( 'lunara_add_post_editorial_meta_box' ) ) {
         </p>
         <p>
             <label>
+                <?php if ( function_exists( 'lunara_home_carousel_settings' ) && lunara_home_carousel_settings( 'hero' )['adopted'] ) : ?><span>Legacy flag; the homepage carousel is managed in <a href="<?php echo esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=hero-carousel' ) ); ?>">Site Studio</a>.</span><?php endif; ?>
                 <input type="checkbox" name="lunara_review_home_hero_featured" value="1" <?php checked( $home_hero_featured, '1' ); ?>>
                 <strong>Top Homepage Showcase</strong>
             </label><br>

@@ -26,6 +26,7 @@ function lunara_home_cinematic_front_door_is_enabled() {
  * Whether a third-party slider shortcode is allowed to render the front door.
  */
 function lunara_home_plugin_hero_is_allowed() {
+	if ( function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'hero' ) ) { return false; }
 	$enabled = (bool) get_theme_mod( 'lunara_home_plugin_hero_enabled', false );
 
 	return (bool) apply_filters( 'lunara_home_plugin_hero_enabled', $enabled );

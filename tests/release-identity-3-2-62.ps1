@@ -69,11 +69,11 @@ function Get-TopEntry {
 $stylePath = Join-Path $root 'style.css'
 $styleLines = @(Get-Content -LiteralPath $stylePath)
 $versionHeaderLines = @($styleLines | Where-Object { $_ -match '^Version:' })
-$exactVersionHeaders = @($styleLines | Where-Object { $_ -ceq 'Version: 3.2.61' })
+$exactVersionHeaders = @($styleLines | Where-Object { $_ -ceq 'Version: 3.2.62' })
 Assert-Contract ($versionHeaderLines.Count -eq 1 -and $exactVersionHeaders.Count -eq 1) `
-    'style.css must contain exactly one exact Version: 3.2.61 header.'
+    'style.css must contain exactly one exact Version: 3.2.62 header.'
 
-$priorVersion = @('3', '2', '58') -join '.'
+$priorVersion = @('3', '2', '61') -join '.'
 $escapedPriorVersion = $priorVersion.Replace('.', '\.')
 $trackedSources = @(Get-ChildItem -LiteralPath (Join-Path $root 'tests') -File | Where-Object { $_.Extension -in @('.ps1', '.php', '.js') })
 Assert-Contract ($trackedSources.Count -gt 0) 'Test-source discovery must return at least one file.'
@@ -143,18 +143,18 @@ foreach ($requiredDeployIgnore in @('docs', 'docs/**', 'tests', 'tests/**')) {
 }
 
 $releaseSeparator = [char]0x2014
-$changelogHeading = "## 2026-09-07 $releaseSeparator Theme 3.2.61 Oscars Portal Studio Presentation Controls"
+$changelogHeading = "## 2026-09-07 $releaseSeparator Theme 3.2.62 Independent Homepage Carousels"
 $changelog = [IO.File]::ReadAllText((Join-Path $root 'docs/CHANGELOG.md'))
 $changelogHeadings = @($changelog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $changelogHeadingCount = @($changelogHeadings | Where-Object { $_ -ceq $changelogHeading }).Count
-Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.61 changelog heading must exist exactly once.'
+Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.62 changelog heading must exist exactly once.'
 # Deliberately NOT asserted: that this entry is the first heading in the
 # changelog. docs/CHANGELOG.md covers all seven repositories (AGENTS.md), so a
 # plugin-only release lands above the newest theme release without moving the
 # theme's identity. Pinning absolute position froze the changelog on the first
 # such entry (2026-09-04, Journal Foundation 1.2.14 and Dispatch 3.2.8), the
 # same way the session-log pin froze the log (see the note below and the
-# 2026-08-31 change that removed it). What is asserted instead: the 3.2.61
+# 2026-08-31 change that removed it). What is asserted instead: the 3.2.62
 # entry is the newest THEME release entry. No heading above it may name a
 # theme version, so a later theme release still has to regenerate this file.
 $themeReleaseHeadingPattern = '^## .+ Theme \d+\.\d+\.\d+\b'
@@ -164,27 +164,25 @@ if ($changelogHeadingIndex -gt 0) {
     $newerThemeHeadings = @($changelogHeadings[0..($changelogHeadingIndex - 1)] | Where-Object { $_ -match $themeReleaseHeadingPattern })
 }
 Assert-Contract ($changelogHeadingIndex -ge 0 -and $newerThemeHeadings.Count -eq 0) `
-    'The 3.2.61 changelog entry must be the newest theme release entry; only plugin-only entries may sit above it.'
+    'The 3.2.62 changelog entry must be the newest theme release entry; only plugin-only entries may sit above it.'
 $changelogEntry = Get-TopEntry -Text $changelog -Heading $changelogHeading
 foreach ($coverage in @(
-    @{ Pattern = '(?is)density.+hero prominence.+poster wall rhythm'; Label = 'the three new rhythm controls' },
-    @{ Pattern = '(?is)winner portrait minimum width'; Label = 'the new winner portrait width control' },
-    @{ Pattern = '(?is)card_min_height.+(never|inert|dead|consumed nowhere)'; Label = 'card_min_height having been an inert control' },
-    @{ Pattern = '(?is)custom propert.+(not|never|rather than).+class'; Label = 'enums mapping to custom properties instead of class-multiplied rules' },
-    @{ Pattern = '(?is)(one emitter|single|shared).+(page-oscars|template)'; Label = 'the duplicate emitter in the template being removed' },
-    @{ Pattern = '(?is)route sheet.+(unchanged|53,293|no.+growth)'; Label = 'the route sheet staying inside its ceiling' },
-    @{ Pattern = '(?is)mutation'; Label = 'the mutation evidence' },
-    @{ Pattern = '(?is)Not changed'; Label = 'the deliberately unchanged list' }
+    @{ Pattern = '(?is)Hero Carousel.+Journal Carousel'; Label = 'the two independent editor panels' },
+    @{ Pattern = '(?is)Automatic.+six newest.+Manual.+ordered'; Label = 'automatic and manual selection' },
+    @{ Pattern = '(?is)Apply.+adoption.+legacy.+private previews'; Label = 'explicit adoption and private preview' },
+    @{ Pattern = '(?is)three/two/one.+pause/play.+reduced motion'; Label = 'responsive layout and accessible playback' },
+    @{ Pattern = '(?is)empty.+single.+preload'; Label = 'empty and single-item delivery parity' },
+    @{ Pattern = '(?is)Lunara Method and Oscars composition are unchanged'; Label = 'the scope boundary' }
 )) {
     Assert-Contract ($changelogEntry -match $coverage.Pattern) `
-        "The 3.2.61 changelog entry must cover $($coverage.Label)."
+        "The 3.2.62 changelog entry must cover $($coverage.Label)."
 }
 
-$sessionHeading = "## 2026-09-07 $releaseSeparator Theme 3.2.61 Oscars Portal Studio presentation controls and local candidate close"
+$sessionHeading = "## 2026-09-07 $releaseSeparator Theme 3.2.62 homepage carousels candidate"
 $sessionLog = [IO.File]::ReadAllText((Join-Path $root 'docs/SESSION-LOG.md'))
 $sessionHeadings = @($sessionLog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $sessionHeadingCount = @($sessionHeadings | Where-Object { $_ -ceq $sessionHeading }).Count
-Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.61 local-candidate session heading must exist exactly once.'
+Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.62 local-candidate session heading must exist exactly once.'
 # Deliberately NOT asserted: that this entry is the newest in the session log.
 # It was newest when written, but AGENTS.md requires every session to append a
 # new entry at the top of docs/SESSION-LOG.md, so pinning position froze the log
@@ -209,7 +207,7 @@ Assert-Contract ($sessionEntry -notmatch '(?im)^\s*(Deployment completed|Deploye
 
 if ($script:Failures.Count -gt 0) {
     $details = $script:Failures | ForEach-Object { " - $_" }
-    throw "Theme 3.2.61 release identity contract failed:`n$($details -join "`n")"
+    throw "Theme 3.2.62 release identity contract failed:`n$($details -join "`n")"
 }
 
-Write-Host 'Theme 3.2.61 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and intact local-only release records.'
+Write-Host 'Theme 3.2.62 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and intact local-only release records.'

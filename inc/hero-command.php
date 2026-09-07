@@ -298,6 +298,7 @@ if ( ! function_exists( 'lunara_hero_command_save' ) ) {
 		}
 
 		check_admin_referer( 'lunara_save_hero_command', 'lunara_hero_command_nonce' );
+		if ( function_exists( 'lunara_home_carousel_settings' ) && lunara_home_carousel_settings( 'hero' )['adopted'] ) { wp_safe_redirect( admin_url( 'admin.php?page=lunara-site-studio&surface=hero-carousel' ) ); exit; }
 
 		$raw = array(
 			'enabled'          => isset( $_POST['lunara_hero_command_enabled'] ) ? 1 : 0,
@@ -323,6 +324,7 @@ if ( ! function_exists( 'lunara_hero_command_save' ) ) {
 
 if ( ! function_exists( 'lunara_control_desk_render_hero_command_studio' ) ) {
 	function lunara_control_desk_render_hero_command_studio() {
+		if ( function_exists( 'lunara_home_carousel_settings' ) && lunara_home_carousel_settings( 'hero' )['adopted'] ) { echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=hero-carousel' ) ) . '">Edit Hero Carousel in Site Studio</a></p>'; return; }
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
 			?>
 			<section id="lunara-theme-studio-hero-command" class="lunara-control-desk-homepage-studio">
