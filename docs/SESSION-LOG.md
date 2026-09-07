@@ -59,6 +59,31 @@ unchanged: Dashboard → Updates for Oscars Ledger 2.7.83 (and the two
 Journal plugins the restore reverted), then Deployer for Git for the theme,
 then the canary with `3.2.58`.
 
+**Addendum, 2026-09-07 02:35 UTC, live state re-verified after Dalton
+shared a Codex handoff.** The handoff (stored at
+`docs/handoffs/2026-09-07-journal-desk-foundation-1.3.x-handoff.md`)
+records Journal Foundation 1.3.0 and 1.3.1, a private `/journal-desk/`
+app built on the 1.2.14 baseline and merged as Foundation PR #21 and #22
+on 2026-09-05. Verified against `origin/main` of the Foundation repo:
+both merges are present, the plugin header reads 1.3.1, and the 1.2.14
+voice work (compiler sections, schema keys, conditional engagement close)
+is intact underneath the desk. Read-only probes of the site:
+
+| Component | Live | On `main` | Gap |
+| --- | --- | --- | --- |
+| Journal Foundation | 1.3.1 active | 1.3.1 | none; supersedes the 1.2.14 re-update item below |
+| Lunara Dispatch | 3.2.7 | 3.2.8 | 3.2.8 (voice fallback, verbosity, punctuation) still not on the site |
+| Academy Awards Database | 2.7.82 | 2.7.83 | 2.7.83 (landing composer) still not on the site |
+| Theme | 3.2.57 (`3.2.57+20260904-210401`) | 3.2.58 | `/oscars/` seed still carries `width:min(1180px`, no board grid, hub duplicates present |
+
+The plugin listing also reports `updates_available: 0`, so Dashboard →
+Updates may show nothing for Dispatch or the Academy Awards plugin until
+Deployer for Git re-checks its sources. The `/journal-desk/` route
+redirects anonymous requests to login and the 1.3.1-only
+`journal/app/media` route answers 403 `lunara_desk_session_required`,
+which is the installed-1.3.1 signal the handoff was missing. Nothing was
+deployed or changed on the site by this session.
+
 ### Verified live state (read-only probes this session)
 
 | Check | Result |
@@ -158,7 +183,7 @@ None to prior entries.
 | --- | --- | --- |
 | Review the after-renders and the diff; merge Oscars Ledger 2.7.83 first, then Theme 3.2.58 | done, both merged 15:21 and 15:24 UTC; hatch rebuilt | Dalton |
 | Deploy: Oscars Ledger from Dashboard → Updates, then the theme via Deployer for Git from the Control Desk, then `bash tests/tools/lunara-canary-verify.sh 3.2.58` | open | Dalton |
-| Re-update Foundation 1.2.14 and Dispatch 3.2.8 from Dashboard → Updates (reverted by the 2026-09-04 restore) | open, carried | Dalton |
+| Re-update Foundation 1.2.14 and Dispatch 3.2.8 from Dashboard → Updates (reverted by the 2026-09-04 restore) | Foundation done via 1.3.1; Dispatch 3.2.8 still open (site on 3.2.7) | Dalton |
 | Jetpack Boost Image CDN quality 100 → 82 | logged above | Dalton |
 | Base stylesheet diet (print and footer split, then the `!important` archaeology) | open, carried from 2026-09-04 | Dalton and agent |
 | Auto-deploy stays off | unchanged | Dalton |
