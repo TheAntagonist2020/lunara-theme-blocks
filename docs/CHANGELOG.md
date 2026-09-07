@@ -11,6 +11,106 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-07 — Theme 3.2.59 Oscars Portal Poster Wall
+
+Theme release. No companion plugin release; Oscars Ledger 2.7.83 (already
+on `main`) remains the plugin side of this portal.
+
+- **The prediction board is a poster wall.** Theme 3.2.58 made the board a
+  grid of text tiles. Dalton looked at it and said the page needed pictures
+  and dynamism, not blocks of text and negative space. Each pick is now a
+  2:3 poster tile with the art behind the copy: the status chip top-right,
+  the category beneath it, the call at the foot over a legibility gradient.
+  Tiles lift on hover, a won pick gets a gold ring, a lost pick desaturates.
+  The tile art is resolved in `inc/oscars-portal.php` by
+  `lunara_oscars_pick_visuals()` in this order: the pick's own thumbnail
+  (pick photo), then the person's headshot (portrait) from the Academy
+  Awards Database's local `nm…-profile` attachments, then the film's poster
+  from its local `tt…-poster` attachment, then the thumbnail of a matched
+  review or movie post. Nothing on the render path ever fetches remotely;
+  every lookup reads local attachments and the plugin's existing caches,
+  and the result is memoised in a 12-hour transient keyed to the picks'
+  modified times, invalidated when a pick is saved or the plugin imports.
+- **Picks can pin their IMDb ids.** The pick editor gains two fields,
+  `_lunara_pick_imdb_id` (a `tt` id) and `_lunara_pick_person_id` (an `nm`
+  id), sanitised by `lunara_oscar_pick_sanitize_imdb_id()`. When they are
+  empty the resolver falls back to the ids in the pick's Oscar entity URL,
+  then to a person-name index built from the last eight ceremonies'
+  rollups and ballot ledgers, then to an exact-title match against the
+  site's movie and review posts. Saving a pick schedules a one-shot warm
+  30 seconds later so its art is ready before the next anonymous view.
+  The status label now reads `FRONT RUNNER`, not `FRONT_RUNNER`.
+- **Ceremony winners are portraits.** The 98th Academy Awards block was a
+  row of tiny headshots beside text. Each winner card is now a 3:4 portrait
+  with the category, name and film laid over the lower third; winners
+  without a photo keep a plate at the same size so the grid never staggers.
+  Six across on desktop, auto-filled at 150 pixels on tablet, two across on
+  a phone. Rules are scoped to `.lunara-ceremony-winners-grid` so the
+  homepage winner cards are untouched.
+- **The rotation is a marquee.** "Ceremony Winners in Rotation" showed
+  three tall, mostly empty cards per view. It is now one 21:9 slide per
+  view: the film's TMDB backdrop across the whole slide (or its poster,
+  blurred, when no backdrop is cached), the winner's portrait inset at 3:4,
+  the copy over the image. The existing carousel script steps one slide at
+  a time and autoplays above 900 pixels, so the block finally moves on its
+  own. The rotation card in `page-oscars.php` hands the image to CSS
+  through `--lunara-card-backdrop` via `esc_url`. Where the shell's
+  three-up flex basis outranked the route sheet, the marquee rules now
+  carry the section class so they win on specificity, not on hope.
+- **The hero drifts.** The hero backdrop gradient was so dark the image
+  behind it never read. It is lighter across the middle, the section gets
+  a `has-backdrop` class when an image is set, and the shell animates the
+  background position over 46 seconds (`lunara-oscars-hero-drift`), off
+  under reduced motion. The four ledger doors zoom their backdrop on hover.
+- **A daily warm for the images that were never there.** Hero, door and
+  rotation backdrops were blank on the live page because the plugin's TMDB
+  cache is only filled when `$allow_remote` is true, which only the admin
+  importers pass. `lunara_oscars_portal_warm_visuals()` now runs daily by
+  WP-Cron, collects up to 60 title ids from the doors, the home snapshot,
+  the rotation showcase and the picks, fetches each large visual package
+  with remote allowed, rebuilds the person-name index, and invalidates the
+  board-art and home-snapshot transients. The render path still never
+  fetches; the warm fills the caches it reads.
+- **Contracts.** `tests/oscars-portal-fluid-contract.ps1` now pins the
+  190-pixel poster tiles, the 2:3 positioned row and the absolute art layer
+  in both the route sheet and the critical seed, the stacked
+  status-category-call areas in both, the portrait winners, the marquee's
+  one-slide flex basis and backdrop variable, the hero drift and its
+  reduced-motion stop, the daily warm hook and schedule, and that the
+  render-path resolver never passes `true` for a remote fetch.
+  `tests/fixtures/oscars-portal-board-harness.php` gains a seventh case,
+  `board-art-src-escaped`: a stubbed visuals helper hands the renderer
+  poster, portrait, `javascript:` and quote-breakout sources plus a hostile
+  kind, and the harness proves the `javascript:` source is emptied, the
+  quote never breaks the attribute, the kind collapses to a letters-only
+  class token, and artless picks emit no art span.
+  `tests/oscars-portal-board-contract.ps1` pins that every `src` the
+  renderer emits routes through `esc_url`. Four mutations went red
+  (marquee flex basis removed, art src unescaped, seed row back to
+  side-by-side, warmer without remote) and were restored byte-exact.
+- **Route sheet ceiling raised from 45 KB to 56 KB.** Three image-led
+  blocks each need their own layer rules; the route sheet went from 44,120
+  to 53,293 bytes, so both `tests/oscars-portal-fluid-contract.ps1` and
+  `tests/oscars-portal-studio-contract.ps1` now hold it at 57,344. The
+  critical seed is 5,973 of 6,144 bytes, the shell 185,822 of 204,800.
+- **Verified by rendering.** The 3.2.57 live page was patched to the 3.2.59
+  markup (art spans on the board, backdrop classes on the rotation, a hero
+  backdrop) with images the asset manifest already held, then it was
+  rendered offline in the container's Chromium at 390, 768, 1440, 1920
+  and 2560 pixels with the modified stylesheets and a regenerated seed. No
+  horizontal overflow at any width. The page is taller than 3.2.58 on
+  purpose: 9,901 pixels at 1440 (was 8,764) because 28 poster tiles at 2:3
+  take more room than 28 text tiles; 14,122 at 390 (was 13,117). The
+  probes that found the shell rules capping the marquee track, the winner
+  photo at 180 pixels and the category column under the chip are the
+  reason those three are now fixed rather than assumed.
+- **Not changed, deliberately:** Jetpack Boost's inline critical CSS for
+  this route is a snapshot taken before 3.2.58 and carries nine
+  `1180px !important` rules; it must be regenerated from Jetpack Boost →
+  Critical CSS after this release lands, which is a derived-file
+  regeneration, not a cache clear. Also unchanged: the Image CDN
+  `quality=100` setting, the research shell, and the doors' copy.
+
 ## 2026-09-05 — Theme 3.2.58 Oscars Portal Fluid Rebuild
 
 Theme release plus a companion plugin release, **Oscars Ledger 2.7.83**.

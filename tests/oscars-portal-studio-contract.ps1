@@ -233,11 +233,12 @@ Assert-True ($frontend -match "function\s+lunara_keep_oscars_portal_css_synchron
 Assert-True ($frontend -match "lunara_rocket_preserve_oscars_portal_css[\s\S]{0,300}'lunara-oscars-portal\.css'") 'WP Rocket RUCSS must exclude the portal route stylesheet.'
 Assert-True ($frontend -match "lunara_rocket_preserve_oscars_portal_inline_css[\s\S]{0,400}'lunara-oscars-portal-vars'[\s\S]{0,200}'lunara-oscars-portal-critical-css'") 'WP Rocket RUCSS must preserve both inline portal layers.'
 
-# First-paint budgets: the cacheable route CSS stays inside 45 KB and the
+# First-paint budgets: the cacheable route CSS stays inside 56 KB (raised from
+# 45 KB in 3.2.59 for the poster wall, portrait winners and marquee) and the
 # rendered inline layers (saved-provenance vars + structural seed) stay
 # inside the 12 KB inline budget, measured by executing the real builders.
 $portalCssBytes = (Get-Item -LiteralPath (Join-Path $themeRoot 'assets/css/lunara-oscars-portal.css')).Length
-Assert-True ($portalCssBytes -gt 30000 -and $portalCssBytes -le 45000) "Cacheable portal route CSS must stay within 45 KB; measured $portalCssBytes bytes."
+Assert-True ($portalCssBytes -gt 30000 -and $portalCssBytes -le 57344) "Cacheable portal route CSS must stay within 56 KB; measured $portalCssBytes bytes."
 $emitted = & php (Join-Path $testsRoot 'oscars-portal-studio-runtime.php') --emit-portal-critical 2>&1
 Assert-True ($LASTEXITCODE -eq 0) 'The portal critical-CSS emit fast path must execute successfully.'
 $emittedLines = @($emitted | Where-Object { $_ -ne '' })
@@ -257,8 +258,8 @@ Assert-True ($controlDesk -match "'Oscars Portal Studio'") 'The Theme Studio com
 Assert-True ($controlDesk -match "'#lunara-oscars-portal-studio'") 'The command index entry must anchor to the Portal Studio surface.'
 
 # Version lock: this intentionally asserts the NEXT reissue identity. It is
-# EXPECTED to fail until the 3.2.58 version migration lands as its own step;
+# EXPECTED to fail until the 3.2.59 version migration lands as its own step;
 # every assertion above it must already pass on the pre-migration tree.
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.58\s*$') 'Theme version must be 3.2.58.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.59\s*$') 'Theme version must be 3.2.59.'
 
 Write-Host 'oscars-portal-studio: all assertions passed.'

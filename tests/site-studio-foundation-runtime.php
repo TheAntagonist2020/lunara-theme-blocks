@@ -1,6 +1,6 @@
 <?php
 /**
- * Behavioral contract for the Site Studio 3.2.58 foundation.
+ * Behavioral contract for the Site Studio 3.2.59 foundation.
  *
  * This deliberately boots the production registry, adapter/service, REST, and
  * Design Token modules against a small WordPress stub. It exercises behavior;

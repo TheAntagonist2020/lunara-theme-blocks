@@ -12643,6 +12643,22 @@ if ( ! function_exists( 'lunara_oscar_ceremony_ordinal_from_year' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lunara_oscar_pick_sanitize_imdb_id' ) ) {
+	/**
+	 * Bound a pick's IMDb id to the one shape the board can use: a lowercase
+	 * tt/nm prefix and five to nine digits. Anything else is dropped, so a
+	 * pasted URL or a stray name never reaches the visual resolvers.
+	 */
+	function lunara_oscar_pick_sanitize_imdb_id( $value, $prefix = 'tt' ) {
+		$prefix = 'nm' === $prefix ? 'nm' : 'tt';
+		$value  = strtolower( trim( (string) $value ) );
+		if ( preg_match( '/\b(' . $prefix . '\d{5,9})\b/', $value, $m ) ) {
+			return $m[1];
+		}
+		return '';
+	}
+}
+
 if ( ! function_exists( 'lunara_oscar_pick_status_labels' ) ) {
 	function lunara_oscar_pick_status_labels() {
 		return array(
@@ -12690,6 +12706,8 @@ if ( ! function_exists( 'lunara_oscar_pick_meta_box_callback' ) ) {
 		$ceremony_year = (string) get_post_meta( $post->ID, '_lunara_pick_ceremony_year', true );
 		$status        = (string) get_post_meta( $post->ID, '_lunara_pick_status', true );
 		$ledger_url    = (string) get_post_meta( $post->ID, '_lunara_pick_oscar_entity_url', true );
+		$imdb_id       = (string) get_post_meta( $post->ID, '_lunara_pick_imdb_id', true );
+		$person_id     = (string) get_post_meta( $post->ID, '_lunara_pick_person_id', true );
 		if ( '' === $status ) {
 			$status = 'predicted';
 		}
@@ -12721,6 +12739,16 @@ if ( ! function_exists( 'lunara_oscar_pick_meta_box_callback' ) ) {
 			<input type="url" id="lunara_pick_oscar_entity_url" name="lunara_pick_oscar_entity_url" value="<?php echo esc_attr( $ledger_url ); ?>" class="widefat" placeholder="/oscars/title/tt12345/" />
 			<span class="description"><?php esc_html_e( 'Link to the film/person page in the Lunara Oscar Ledger. The card image deep-links here.', 'lunara-film' ); ?></span>
 		</p>
+		<p>
+			<label for="lunara_pick_imdb_id"><strong><?php esc_html_e( 'Film IMDb ID (optional)', 'lunara-film' ); ?></strong></label><br>
+			<input type="text" id="lunara_pick_imdb_id" name="lunara_pick_imdb_id" value="<?php echo esc_attr( $imdb_id ); ?>" class="widefat" placeholder="tt1234567" pattern="tt[0-9]{5,9}" />
+			<span class="description"><?php esc_html_e( 'Pins the poster on the Oscars portal board. Left blank, the desk matches the film title against reviews and the ledger.', 'lunara-film' ); ?></span>
+		</p>
+		<p>
+			<label for="lunara_pick_person_id"><strong><?php esc_html_e( 'Person IMDb ID (optional)', 'lunara-film' ); ?></strong></label><br>
+			<input type="text" id="lunara_pick_person_id" name="lunara_pick_person_id" value="<?php echo esc_attr( $person_id ); ?>" class="widefat" placeholder="nm0000123" pattern="nm[0-9]{5,9}" />
+			<span class="description"><?php esc_html_e( 'Pins the headshot on the board. Left blank, the desk matches the name against recent ceremony ballots. A featured image on this pick always wins over both.', 'lunara-film' ); ?></span>
+		</p>
 		<?php
 	}
 }
@@ -12742,6 +12770,8 @@ if ( ! function_exists( 'lunara_oscar_pick_save_meta' ) ) {
 			'_lunara_pick_person'           => isset( $_POST['lunara_pick_person'] ) ? sanitize_text_field( wp_unslash( $_POST['lunara_pick_person'] ) ) : '',
 			'_lunara_pick_ceremony_year'    => isset( $_POST['lunara_pick_ceremony_year'] ) ? absint( $_POST['lunara_pick_ceremony_year'] ) : 0,
 			'_lunara_pick_oscar_entity_url' => isset( $_POST['lunara_pick_oscar_entity_url'] ) ? esc_url_raw( wp_unslash( $_POST['lunara_pick_oscar_entity_url'] ) ) : '',
+			'_lunara_pick_imdb_id'          => isset( $_POST['lunara_pick_imdb_id'] ) ? lunara_oscar_pick_sanitize_imdb_id( wp_unslash( $_POST['lunara_pick_imdb_id'] ), 'tt' ) : '',
+			'_lunara_pick_person_id'        => isset( $_POST['lunara_pick_person_id'] ) ? lunara_oscar_pick_sanitize_imdb_id( wp_unslash( $_POST['lunara_pick_person_id'] ), 'nm' ) : '',
 		);
 
 		$status = isset( $_POST['lunara_pick_status'] ) ? sanitize_key( $_POST['lunara_pick_status'] ) : 'predicted';
@@ -12756,6 +12786,10 @@ if ( ! function_exists( 'lunara_oscar_pick_save_meta' ) ) {
 			} else {
 				update_post_meta( $post_id, $key, $value );
 			}
+		}
+
+		if ( function_exists( 'lunara_oscars_pick_after_save' ) ) {
+			lunara_oscars_pick_after_save( $post_id );
 		}
 	}
 	add_action( 'save_post_lunara_oscar_pick', 'lunara_oscar_pick_save_meta' );

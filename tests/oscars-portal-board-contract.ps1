@@ -39,7 +39,8 @@ $expectedCases = @(
     'status-class-bounded-via-sanitize-key',
     'board-shape-and-order',
     'no-state-conditional-output',
-    'hostile-url-meta-neutralized'
+    'hostile-url-meta-neutralized',
+    'board-art-src-escaped'
 )
 
 foreach ($caseName in $expectedCases) {
@@ -69,6 +70,16 @@ Assert-True (([regex]::Matches($renderer, 'id="oscars-board"')).Count -eq 1) 'Th
 # Bounded to the renderer body via the tempered (?!function\s) scan.
 $boardBody = [regex]::Match($renderer, 'function\s+lunara_render_oscars_prediction_board\s*\((?:(?!function\s)[\s\S])*').Value
 Assert-True ($boardBody.Length -gt 0) 'Unable to isolate the Prediction Board renderer body.'
+# src discipline (3.2.59 tile art): every img src the renderer emits routes
+# through esc_url too, and the art kind is bounded to a letters-only token
+# before it becomes a class.
+$srcEmissionCount = ([regex]::Matches($boardBody, 'src=')).Count
+$escUrlSrcCount = ([regex]::Matches($boardBody, 'src="<\?php\s+echo\s+esc_url\(')).Count
+Assert-True ($srcEmissionCount -ge 1) 'The Prediction Board renderer must emit tile art.'
+Assert-True ($srcEmissionCount -eq $escUrlSrcCount) 'Every img src the Prediction Board renderer emits must route through esc_url.'
+Assert-True ($boardBody -match "preg_replace\(\s*'/\[\^a-z\]/',\s*'',\s*strtolower\(") 'The art kind must be bounded to a letters-only token before it becomes a class.'
+Assert-True ($boardBody -match "function_exists\(\s*'lunara_oscars_pick_visuals'\s*\)") 'The renderer must resolve tile art only through the guarded visuals helper.'
+
 $hrefEmissionCount = ([regex]::Matches($boardBody, 'href=')).Count
 $escUrlHrefCount = ([regex]::Matches($boardBody, 'href="<\?php\s+echo\s+esc_url\(')).Count
 Assert-True ($hrefEmissionCount -ge 1) 'The Prediction Board renderer must emit at least one href.'
