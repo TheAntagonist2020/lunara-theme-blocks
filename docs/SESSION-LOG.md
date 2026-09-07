@@ -39,6 +39,18 @@ live and pins that template in the fluid contract. Assembled on
 `claude/journal-voice-optimization-kf6b9o`. Nothing in this slice is
 deployed or live.
 
+**Addendum, 17:55 UTC.** Dalton marked Theme 3.2.60
+([PR #175](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/175))
+ready and merged it while its CI `lint` job was still running on the head
+(the same suite had passed 91 of 91 locally on that commit). The
+exact-rollback hatch was rebuilt on the new `main` as a two-parent commit
+(old hatch head, PR #175 merge) and verified tree-exact:
+`claude/rollback-exact-theme-3.2.43^{tree}` is
+`c55bf394594149db2888295c5d51f85f47b2b520` and the branch contains
+`origin/main`. Nothing is deployed by this session. Dalton's clicks:
+Deployer for Git for the theme, the canary with `3.2.60`, Jetpack Boost
+critical CSS regeneration.
+
 ### Verified live state (read-only probes this session)
 
 | Component | Live | On `main` | Gap |
