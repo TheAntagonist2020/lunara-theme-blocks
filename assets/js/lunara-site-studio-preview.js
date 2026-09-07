@@ -3,6 +3,8 @@
 	var config = window.LunaraSiteStudioPreviewConfig;
 	var markerMap = {
 		'global-design': [],
+		'hero-carousel': ['hero'],
+		'journal-carousel': ['dispatch'],
 		'homepage-structure': ['hero', 'latest-reviews', 'pairing-desk', 'dispatch', 'oscar-picks', 'oscar-facts'],
 		'lunara-method': ['pairing-desk'],
 		'reviews-archive': ['hero', 'grid', 'pagination', 'pairing-desk'],

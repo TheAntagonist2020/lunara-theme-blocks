@@ -103,6 +103,7 @@ function lunara_control_desk_save_journal_lead() {
     }
 
     check_admin_referer( 'lunara_save_journal_lead', 'lunara_journal_lead_nonce' );
+    if ( function_exists( 'lunara_home_carousel_settings' ) && lunara_home_carousel_settings( 'journal' )['adopted'] ) { wp_safe_redirect( admin_url( 'admin.php?page=lunara-site-studio&surface=journal-carousel' ) ); exit; }
 
     $raw_value = isset( $_POST['lunara_home_journal_lead_post_id'] )
         ? sanitize_text_field( wp_unslash( $_POST['lunara_home_journal_lead_post_id'] ) )
@@ -14386,6 +14387,7 @@ function lunara_control_desk_get_recent_published_journals( $include_id = 0, $li
 }
 
 function lunara_control_desk_render_journal_lead_curator() {
+    if ( function_exists( 'lunara_home_carousel_settings' ) && lunara_home_carousel_settings( 'journal' )['adopted'] ) { echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=journal-carousel' ) ) . '">Edit Journal Carousel in Site Studio</a></p>'; return; }
     $current_lead_id = lunara_control_desk_get_current_journal_lead_id();
     $current_lead    = $current_lead_id ? get_post( $current_lead_id ) : null;
     $latest_posts    = lunara_control_desk_get_recent_published_journals( $current_lead_id, 40 );
@@ -15091,6 +15093,7 @@ function lunara_control_desk_render_homepage_board_tab( $rows ) {
         <div class="lunara-control-desk-panel-header">
             <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Homepage Curation Board', 'lunara-film' ); ?></p>
             <h2><?php esc_html_e( 'A read-only look at what can feed the front page', 'lunara-film' ); ?></h2>
+            <?php if ( function_exists( 'lunara_home_carousel_settings' ) && ( lunara_home_carousel_settings( 'hero' )['adopted'] || lunara_home_carousel_settings( 'journal' )['adopted'] ) ) : ?><p>These legacy flags do not control adopted homepage carousels. Edit <a href="<?php echo esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=hero-carousel' ) ); ?>">Hero Carousel</a> or <a href="<?php echo esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=journal-carousel' ) ); ?>">Journal Carousel</a> in Site Studio.</p><?php endif; ?>
             <p class="lunara-control-desk-intro"><?php esc_html_e( 'This board links to existing controls. It does not drag, pin, unpin, or save homepage flags.', 'lunara-film' ); ?></p>
         </div>
         <div class="lunara-control-desk-board">

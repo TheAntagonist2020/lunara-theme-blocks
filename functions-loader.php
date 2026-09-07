@@ -79,6 +79,8 @@ require_once $lunara_inc . 'entity-surfaces.php';
 // Layer 10 — Hero Command: curated hero deck + overlay intensity. Front-end
 // feed override plus the Control Desk studio and its save/search handlers.
 require_once $lunara_inc . 'hero-command.php';
+require_once $lunara_inc . 'home-carousel-settings.php';
+require_once $lunara_inc . 'home-carousels.php';
 // Layer 10b — responsive native hero image + preload parity. This module owns
 // only image delivery; Hero Command remains the editorial deck source.
 require_once $lunara_inc . 'hero-delivery.php';
@@ -138,6 +140,7 @@ require_once $lunara_inc . 'design-tokens.php';
 // previews and authenticated API requests do not depend on the admin router.
 require_once $lunara_inc . 'site-studio-registry.php';
 require_once $lunara_inc . 'site-studio-adapters.php';
+require_once $lunara_inc . 'site-studio-carousels.php';
 require_once $lunara_inc . 'site-studio-rest.php';
 require_once $lunara_inc . 'site-studio-preview.php';
 if ( is_admin() ) {

@@ -11,6 +11,35 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-07 — Theme 3.2.62 Independent Homepage Carousels
+
+Theme-only candidate. Site Studio > Homepage gains separate Hero Carousel and
+Journal Carousel panels. Automatic selects the six newest eligible published
+articles; Manual preserves an ordered selection with image, framing and copy
+overrides. Hero includes reviews and Journal; Journal includes Journal only.
+Seven-second autoplay is independently configurable. Apply is the explicit
+adoption boundary; legacy presentation and stored settings survive until then,
+with private previews and exact revision restore through the existing Studio.
+
+The applied Journal lane uses consistent three/two/one-card layouts. Both
+carousels support keyboard, arrows, swipe, pause/play and reduced motion.
+Unavailable selections are retained in the editor but skipped publicly; empty
+manual sections hide and single stories remain static. Missing artwork uses a
+shared placeholder. The hero preload follows the same adopted source, including
+empty/single decks. Request memoization is invalidated on content/settings edits;
+there is no new persistent payload cache. Legacy carousel controls redirect to
+the new owner after adoption. Lunara Method and Oscars composition are unchanged.
+
+Implementation and acceptance: `docs/superpowers/plans/2026-09-07-home-carousels.md`.
+Runtime contracts cover delivery, settings, preview isolation, revision restore,
+the editor and responsive browser behavior. Release identity advances to 3.2.62.
+
+The adopted hero keeps maximum-length headlines readable on mobile and the story
+button inside the hero. The existing Studio workspace test now holds mocked
+requests open until its busy-state assertions finish; this removes timing races
+without changing product behavior or weakening those assertions. The control
+guide is `docs/HOMEPAGE-CAROUSELS.md`.
+
 ## 2026-09-07 — Theme 3.2.61 Oscars Portal Studio Presentation Controls
 
 Theme release. No companion plugin release.

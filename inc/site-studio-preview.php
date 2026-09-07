@@ -9,6 +9,8 @@ if ( ! function_exists( 'lunara_site_studio_preview_instance_query_arg' ) ) {
 if ( ! function_exists( 'lunara_site_studio_preview_pilots' ) ) {
 	function lunara_site_studio_preview_pilots() {
 		return array(
+			'hero-carousel' => array( 'owner' => 'theme:hero-carousel', 'query' => 'lunara_hero_carousel_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero' ) ),
+			'journal-carousel' => array( 'owner' => 'theme:journal-carousel', 'query' => 'lunara_journal_carousel_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'dispatch' ) ),
 			'global-design' => array( 'owner' => 'theme:global-design', 'query' => 'lunara_global_design_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array() ),
 			'homepage-structure' => array( 'owner' => 'theme:homepage-structure', 'query' => 'lunara_homepage_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'latest-reviews', 'pairing-desk', 'dispatch', 'oscar-picks', 'oscar-facts' ) ),
 			'lunara-method' => array( 'owner' => 'theme:lunara-method', 'query' => 'lunara_method_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'pairing-desk' ) ),
@@ -78,6 +80,7 @@ if ( ! function_exists( 'lunara_site_studio_preview_request_origin' ) ) {
 if ( ! function_exists( 'lunara_site_studio_preview_install_state' ) ) {
 	function lunara_site_studio_preview_state_safe( $surface_id, $state ) {
 		if ( ! is_array( $state ) ) { return false; }
+		if ( in_array( $surface_id, array( 'hero-carousel', 'journal-carousel' ), true ) ) { $kind = 'journal-carousel' === $surface_id ? 'journal' : 'hero'; return lunara_site_studio_carousel_validate( $state, $kind ) === $state; }
 		if ( 'global-design' === $surface_id ) {
 			if ( array( 'colors', 'fonts' ) !== array_keys( $state ) || ! is_array( $state['colors'] ) || ! is_array( $state['fonts'] ) || array( 'gold', 'gold_light', 'bg_primary', 'bg_secondary', 'text', 'text_muted' ) !== array_keys( $state['colors'] ) || array( 'body', 'display', 'signature', 'glamour', 'label' ) !== array_keys( $state['fonts'] ) ) { return false; }
 			foreach ( $state['colors'] as $item ) { if ( ! is_array( $item ) || array( 'override', 'effective', 'source' ) !== array_keys( $item ) || ( null !== $item['override'] && ( ! is_string( $item['override'] ) || 1 !== preg_match( '/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/D', $item['override'] ) ) ) || ! is_string( $item['effective'] ) || 1 !== preg_match( '/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/D', $item['effective'] ) || ! in_array( $item['source'], array( 'design-tokens', 'customizer', 'shipped-default' ), true ) || ( null !== $item['override'] && ( 'design-tokens' !== $item['source'] || strtolower( $item['effective'] ) !== strtolower( $item['override'] ) ) ) ) { return false; } }
@@ -98,6 +101,7 @@ if ( ! function_exists( 'lunara_site_studio_preview_install_state' ) ) {
 	}
 	function lunara_site_studio_preview_install_state( $surface_id, $state, $front_page_id ) {
 		if ( ! lunara_site_studio_preview_state_safe( $surface_id, $state ) ) { return false; }
+		if ( in_array( $surface_id, array( 'hero-carousel', 'journal-carousel' ), true ) ) { $kind = 'journal-carousel' === $surface_id ? 'journal' : 'hero'; $state['adopted'] = true; $GLOBALS['lunara_home_carousel_preview'][ $kind ] = $state; return true; }
 		if ( 'global-design' === $surface_id ) {
 			$tokens = array( 'colors' => array(), 'fonts' => array() ); foreach ( array( 'colors', 'fonts' ) as $group ) { foreach ( $state[ $group ] as $key => $item ) { if ( null !== $item['override'] ) { $tokens[ $group ][ $key ] = $item['override']; } } }
 			add_filter( 'pre_option_lunara_design_tokens', static function () use ( $tokens ) { return $tokens; }, PHP_INT_MAX ); return true;

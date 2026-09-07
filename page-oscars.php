@@ -786,7 +786,7 @@ $command_cards = array(
                     <div class="lunara-ledger-carousel-track lunara-oscars-winner-carousel-track" data-lunara-carousel-track>
                         <?php foreach ( $rotating_cards as $wcard ) :
                             $w_vis = is_array( $wcard['_visual'] ?? null ) ? $wcard['_visual'] : array();
-                            // Marquee backdrop (3.2.61): the film's backdrop when the
+                            // Marquee backdrop (3.2.62): the film's backdrop when the
                             // ledger has one, otherwise the poster blurred behind the
                             // slide. Exposed as a custom property so the shell paints it.
                             $w_backdrop = trim( (string) ( $w_vis['backdrop_url'] ?? '' ) );

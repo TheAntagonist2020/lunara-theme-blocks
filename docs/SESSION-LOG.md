@@ -25,6 +25,88 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-07 — Theme 3.2.62 homepage carousels candidate
+
+### Headline
+
+The approved two-carousel plan is implemented on `codex/home-carousels-3.2.62`.
+Hero and Journal have independent automatic/manual selection and presentation
+controls in Site Studio. Public adoption is explicit per carousel; reads and
+private previews do not change live options. See `docs/CHANGELOG.md` and
+`docs/superpowers/plans/2026-09-07-home-carousels.md` for the final behavior.
+The editor guide is `docs/HOMEPAGE-CAROUSELS.md`.
+
+### Verified live state
+
+Not applicable: this is a topic-branch candidate.
+
+No deployment, cache operation, production write, or live verification occurred.
+Dalton owns the later manual deployment through Deployer for Git from main.
+
+### What shipped and why
+
+Nothing deployed. The candidate replaces stale featured-first carousel selection
+with explicit automatic/manual modes, keeps display overrides out of articles,
+and replaces the uneven news grid with readable responsive cards. Existing
+Hero Command storage and Studio preview/revision APIs are reused.
+
+### Commit ledger
+
+| Repository | Commit | Meaning |
+| --- | --- | --- |
+| lunara-theme-blocks | `e2900718ac5448cfa19cfb621f34dbb22e2710f7` | Main branch base for this candidate. |
+| lunara-theme-blocks | This branch's feature commit | Theme 3.2.62 carousel implementation, acceptance contracts and release record. |
+
+### Gate ledger
+
+- Final complete contract run: **92/92 PowerShell gates passed, zero failures**.
+- Carousel runtimes: **105 assertions passed** (29 settings/private preview,
+  29 browser editor, 18 public delivery, 29 public browser). Chromium checks use
+  the actual PHP markup and bundled Splide; cover desktop/tablet/mobile,
+  maximum-length mobile headlines, keyboard/playback, reduced motion and no JS.
+- Syntax: **113 PHP files and 49 JavaScript files passed**; CSS brace balance
+  and `git diff --check` passed. Latest changed browser harnesses also passed
+  their targeted syntax checks.
+- **Eight deliberate mutations were caught**: dropping unavailable IDs, accepting
+  adopted legacy Hero saves, allowing reviews in Journal, oldest-first automatic
+  ordering, ignored headline overrides, empty-manual fallback substitution,
+  stale request memoization, and removal of the Studio request busy guard.
+  Mutations ran in isolated copies outside the repository; clean sources passed
+  afterward.
+- Independent specification/code review and the final focused review have **no
+  open findings**. The legacy Hero metabox ownership finding was fixed, tested
+  and mutation-tested before review closure.
+- Earlier complete runs were 90/91 and 91/92: the existing Studio workspace
+  test raced short mocked responses during busy-state assertions. Explicit
+  request barriers replaced the delays without changing product behavior or
+  weakening assertions. Its complete targeted gate passed after that fix.
+- Not run: GitHub PR CI, production canary, real WordPress Media Library or live
+  publication-change acceptance. Media selection is mocked in browser contracts;
+  PHP integration uses WordPress stubs. These local results are not live proof.
+
+### Corrections
+
+No historical release entries were rewritten. The initial full-suite run began
+before feature edits and reached Studio afterward; it is not represented as an
+immutable baseline. No new claim about the currently deployed version is made.
+
+### Logged, not fixed
+
+The earlier Boost handoff remains on `codex/boost-handoff-20260907`. Broader CSS
+diet, dead guarded renderer cleanup and editorial publication are outside this
+carousel change. Licensed font files were not copied into the repository.
+
+### Punch-list and next move
+
+The candidate is ready for a PR from `codex/home-carousels-3.2.62` into `main`;
+PR creation remains Dalton's next call under `AGENTS.md`. No PR or main merge was
+performed in this session, so no rollback hatch rebuild was due. After every
+main merge rebuild branch `claude/rollback-exact-theme-3.2.43` (PR #159) and prove
+its tree is `c55bf394594149db2888295c5d51f85f47b2b520`. After Dalton deploys, run
+`bash tests/tools/lunara-canary-verify.sh 3.2.62` and inspect the actual homepage.
+Then preview and Apply each carousel and curate its opening lineup. A production
+canary and real WordPress Media Library interaction await deployment.
+
 ## 2026-09-07 — Theme 3.2.61 Oscars Portal Studio presentation controls and local candidate close
 
 ### Headline

@@ -15345,6 +15345,9 @@ if ( ! function_exists( 'lunara_get_review_hero_image_url' ) ) {
  */
 if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
 	function lunara_get_cinematic_hero_slides( $max = 6 ) {
+		if ( function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'hero' ) ) {
+			return lunara_home_carousel_slides( 'hero' );
+		}
 		// Hero Command — when the command deck is enabled with at least one
 		// renderable slide, the curated list IS the hero: exact slides, exact
 		// order, no cap at $max. The automatic feed below stays the fallback.
@@ -15610,6 +15613,10 @@ if ( ! function_exists( 'lunara_add_hero_feature_meta_box' ) ) {
 	add_action( 'add_meta_boxes', 'lunara_add_hero_feature_meta_box' );
 
 	function lunara_hero_feature_meta_callback( $post ) {
+		if ( function_exists( 'lunara_home_carousel_settings' ) && lunara_home_carousel_settings( 'hero' )['adopted'] ) {
+			echo '<p>' . esc_html__( 'Homepage Hero selection is managed in Site Studio.', 'lunara-film' ) . '</p><p><a href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=hero-carousel' ) ) . '">' . esc_html__( 'Edit Hero Carousel', 'lunara-film' ) . '</a></p>';
+			return;
+		}
 		wp_nonce_field( 'lunara_hero_feature_nonce', 'lunara_hero_feature_nonce' );
 		$featured = (bool) get_post_meta( $post->ID, '_lunara_hero_featured', true );
 		?>
@@ -15624,6 +15631,8 @@ if ( ! function_exists( 'lunara_add_hero_feature_meta_box' ) ) {
 	}
 
 	function lunara_save_hero_feature_meta( $post_id ) {
+		// Stale post-editor submissions must preserve the retired feature timestamp.
+		if ( function_exists( 'lunara_home_carousel_settings' ) && lunara_home_carousel_settings( 'hero' )['adopted'] ) return;
 		if ( ! isset( $_POST['lunara_hero_feature_nonce'] ) ) return;
 		if ( ! wp_verify_nonce( $_POST['lunara_hero_feature_nonce'], 'lunara_hero_feature_nonce' ) ) return;
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
@@ -15836,6 +15845,9 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
 		$image_markup      = function_exists( 'lunara_render_cinematic_hero_image' )
 			? lunara_render_cinematic_hero_image( $data, $is_priority_image )
 			: '';
+		if ( '' === $image_markup && isset( $data['post_id'] ) && function_exists( 'lunara_home_carousel_placeholder' ) ) {
+			$image_markup = lunara_home_carousel_placeholder();
+		}
 
 		ob_start();
 		?>
@@ -15873,6 +15885,9 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
  */
 if ( ! function_exists( 'lunara_get_home_cinematic_hero_slides' ) ) {
 	function lunara_get_home_cinematic_hero_slides() {
+		if ( function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'hero' ) ) {
+			return lunara_home_carousel_slides( 'hero' );
+		}
 		static $slides = null;
 
 		if ( null === $slides ) {
@@ -15891,6 +15906,9 @@ if ( ! function_exists( 'lunara_get_home_cinematic_hero_slides' ) ) {
 if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 	function lunara_render_cinematic_hero_carousel( $attrs = array() ) {
 		$attrs              = is_array( $attrs ) ? $attrs : array();
+		if ( function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'hero' ) ) {
+			return lunara_render_home_hero_carousel( $attrs );
+		}
 		$first_image_is_lcp = ! array_key_exists( 'first_image_is_lcp', $attrs ) || (bool) $attrs['first_image_is_lcp'];
 		$slides             = lunara_get_home_cinematic_hero_slides();
 
@@ -16262,6 +16280,9 @@ if ( ! function_exists( 'lunara_render_journal_card_provenance' ) ) {
 
 if ( ! function_exists( 'lunara_render_homepage_journal_lane' ) ) {
 	function lunara_render_homepage_journal_lane() {
+		if ( function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'journal' ) ) {
+			return lunara_render_home_journal_carousel();
+		}
 		// Pull copy from theme mods (with defaults + legacy normalization).
 		$kicker = function_exists( 'lunara_theme_mod_text' )
 			? lunara_theme_mod_text( 'lunara_home_dispatch_kicker', 'Journal' )
