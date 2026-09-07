@@ -39,6 +39,19 @@ live and pins that template in the fluid contract. Assembled on
 `claude/journal-voice-optimization-kf6b9o`. Nothing in this slice is
 deployed or live.
 
+**Addendum, 17:59 UTC, live state re-verified after Dalton's deploy.**
+Theme 3.2.60 went live at 17:56 UTC (`3.2.60+20260907-175607`, Dalton's
+Deployer for Git click). Read-only probes: `/oscars/` now emits the hero
+section with `has-backdrop` and the 112deg gradient, 28 board art spans,
+zero plugin hub duplicates; the canary
+`bash tests/tools/lunara-canary-verify.sh 3.2.60` returned GO (three
+cache-separated reads agree on the build, Journal and Oscars sentinels
+both `LIVE_COHERENT`). Still open: Jetpack Boost's inline critical CSS on
+the route is the same 135,541-byte pre-3.2.58 snapshot with nine
+`1180px !important` rules; it needs Jetpack Boost → Critical CSS →
+regenerate, which is Dalton's wp-admin click. CI on the `main` merge
+commit and on this branch both completed green.
+
 **Addendum, 17:55 UTC.** Dalton marked Theme 3.2.60
 ([PR #175](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/175))
 ready and merged it while its CI `lint` job was still running on the head
