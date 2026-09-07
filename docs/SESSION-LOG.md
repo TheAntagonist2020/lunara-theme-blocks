@@ -42,6 +42,21 @@ the hero drifts, and a daily WP-Cron warm fills the image caches the
 render path reads. Assembled on `claude/journal-voice-optimization-kf6b9o`.
 Nothing in this slice is deployed or live.
 
+**Addendum, 17:33 UTC.** Dalton reported "everything has been deployed."
+Read-only probes say otherwise, and this is recorded so the next session
+does not trust the report over the site: [PR #174](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/174)
+is still an open draft (head 5ea8cca, not merged) and `origin/main` is
+still 22cd6bc, so Deployer for Git can only have re-deployed 3.2.58.
+`/oscars/` still reports `data-lunara-theme-version="3.2.58"` with and
+without Jetpack Boost (`x-ac: BYPASS`, so not an edge cache), carries no
+board art spans and no hero backdrop class, the Academy Awards Database
+still reports 2.7.82 with both hub duplicates rendering, and Boost's
+inline critical CSS is still the 135,541-byte pre-3.2.58 snapshot with
+nine `1180px !important` rules. Dispatch 3.2.8 and Foundation 1.3.1 are
+the only parts of the earlier click list that are live. The blocker is
+the merge: Deployer deploys `main`, and 3.2.59 is not on `main` until
+the draft is marked ready and merged.
+
 ### Verified live state (read-only probes this session)
 
 | Component | Live | On `main` | Gap |
