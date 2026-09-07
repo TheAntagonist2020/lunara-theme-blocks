@@ -25,6 +25,110 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-07 — Theme 3.2.60 Oscars Portal Studio presentation controls and local candidate close
+
+### Headline
+
+The Oscars Portal Studio reaches presentation parity with the Reviews and
+Journal archive studios — seven settings each, where the portal carried three.
+The four new controls govern exactly the surfaces 3.2.57–3.2.59 built: the 2:3
+poster wall, the hero, the 3:4 winner portraits, and overall grid density. In
+the course of the build, `card_min_height` turned out to be an inert control:
+stamped by two emitters, read by nothing, since the day it shipped.
+
+### Verified live state
+
+Not applicable. This candidate is local and unmerged; no production probe,
+canary, deployment, cache operation or production write was run, so this entry
+makes no new live-version claim. Live remains 3.2.59
+(`3.2.59+20260907-173613`), verified GO earlier this session.
+
+### What changed and why
+
+- Four new presentation controls: `winners_min_width` (numeric) plus
+  `density`, `lead_prominence` and `board_rhythm` (enums). The enums resolve
+  through value maps in the route seed to one custom property each — the
+  approach the Oscars ledger route already used — because a ruleset per choice
+  would have grown a route sheet that has about 4 KB of headroom under a hard
+  56 KB ceiling.
+- `card_min_height` now governs the link, spotlight and research card grids.
+  It previously emitted a custom property nothing read; the slider validated,
+  saved, and changed no pixel. Same defect class as the 3.2.53 winner map.
+- `page-oscars.php` and `inc/oscars-portal-critical.php` each carried a copy of
+  the property list and provenance gate. Both now call one shared
+  `lunara_oscars_portal_variable_declarations()`.
+
+See the top 3.2.60 entry in `docs/CHANGELOG.md` for the complete code-level
+release detail.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | this commit | Theme 3.2.60: four presentation controls, the inert `card_min_height` made live, one shared declaration emitter, contracts, version sweep, identity contract, changelog, this entry. |
+
+The rollback hatch is named by branch, never by SHA — branch
+`claude/rollback-exact-theme-3.2.43`, tracked by PR #159. Verify with
+`git rev-parse origin/claude/rollback-exact-theme-3.2.43^{tree}` against
+`c55bf394594149db2888295c5d51f85f47b2b520` every time.
+
+### Gate ledger
+
+- **Eight mutations went red and were restored byte-exact:** a property emitted
+  but not consumed (board rhythm, and separately winner width),
+  `card_min_height` returned to inert, a seed map missing a validated choice, a
+  Studio choice the seed cannot map, the template regrowing its own property
+  list, the sanitizer accepting an unknown rhythm choice, and hero prominence
+  dropped from the emitter.
+- One mutation initially escaped — the sanitizer accepting an unknown choice —
+  because no test covered it. Coverage was added and the mutation then went
+  red. It is recorded as a real gap that existed, not as a clean first pass.
+- One assertion written during the build was itself wrong: it required a
+  missing rhythm key to be rejected, but validation runs on
+  `array_replace_recursive( $defaults, $raw )`, so an absent leaf refills from
+  default for every family alike. The test was corrected to the real contract
+  rather than the code bent to the test.
+- Route sheet unchanged at 53,293 bytes against its 57,344 ceiling; the route
+  seed grew 413 bytes. Payload budget contract passes.
+- Version sweep 3.2.59 → 3.2.60: 29 escaped and 102 plain occurrences across 47
+  files, zero residuals, escaped form replaced first.
+
+### Corrections
+
+The version sweep initially rewrote the 3.2.59 entries in `docs/CHANGELOG.md`
+and `docs/SESSION-LOG.md`, retitling a shipped release inside its own
+historical record. That is precisely what this log forbids. Both files were
+restored and the new entries re-applied above the preserved history. Documents
+that record history must be excluded from a mechanical version sweep; only
+identity and version-lock sites should move.
+
+### Logged, not fixed
+
+- A blanket version sweep has no notion of which files are records and which
+  are locks. It caught the changelog and this log this time and was caught by
+  eye, not by a gate. A sweep that skips `docs/` — or a contract asserting no
+  historical release heading ever changes — would close it.
+- Carried forward: nothing enforces the plugins-before-theme deploy order; the
+  canary cannot report its own staleness; empty media anchors on posterless
+  winner cards; the five older P2s.
+
+### Punch-list carried forward
+
+| Item | Status |
+| --- | --- |
+| Merge and deploy Theme 3.2.60 | **Dalton's click.** Theme-only; no plugin ordering constraint this release. |
+| Re-run `lunara-canary-verify.sh 3.2.60` after that deploy | Ready |
+| Licensed Klim Tiempos fonts exist only in WP uploads | **Unresolved off-site copy.** |
+
+### Whose move it is next
+
+Dalton owns the merge and the later manual deployment through Deployer for Git,
+followed by the versioned canary.
+
+No deployment, cache operation, production write, or live verification occurred.
+
+---
+
 ## 2026-09-07 — Theme 3.2.59 Oscars portal poster wall and local candidate close
 
 ### Headline

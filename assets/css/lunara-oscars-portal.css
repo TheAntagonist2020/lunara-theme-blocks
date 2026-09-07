@@ -112,7 +112,7 @@
 .aat-filmography-poster-placeholder span { display:none; }
 
 /* ============================================================
-   THE BOARD — poster wall (3.2.59). One pick per tile, the art
+   THE BOARD — poster wall (3.2.60). One pick per tile, the art
    underneath (the pick's own image, a headshot, or the film's
    poster), category and status on top, the call at the foot.
    Won picks wear a gold ring; lost picks go to grey. Markup is
@@ -564,7 +564,7 @@ body.lunara-oscars-portal-page .lunara-oscars-board-note {
         padding-bottom: 14px !important;
     }
 
-    /* Ceremony winners as portraits (3.2.59): the photo is the card,
+    /* Ceremony winners as portraits (3.2.60): the photo is the card,
        the copy sits on it. Posterless winners keep a plate at the same
        size so the grid never staggers. */
     body.lunara-oscars-portal-page .lunara-ceremony-winners-grid {
@@ -680,7 +680,7 @@ body.lunara-oscars-portal-page .lunara-oscars-board-note {
         text-shadow: 0 1px 8px rgba(0, 0, 0, .8);
     }
 
-    /* Rotation as a marquee (3.2.59): one slide per view, the film's
+    /* Rotation as a marquee (3.2.60): one slide per view, the film's
        backdrop (or its poster, blurred) across the whole slide, the
        winner's portrait inset, the copy over the image. The existing
        carousel script steps one card at a time and autoplays. */

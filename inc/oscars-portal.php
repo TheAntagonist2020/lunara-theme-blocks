@@ -49,7 +49,7 @@ function lunara_render_oscars_portal_markup() {
     $hero_style        = '';
 
     if ( '' !== $hero_backdrop_url ) {
-        // 3.2.59: the backdrop is meant to be seen. Dark enough on the left for
+        // 3.2.60: the backdrop is meant to be seen. Dark enough on the left for
         // the copy, open in the middle, dark again under the poster card.
         $hero_style = "background-image: linear-gradient(112deg, rgba(7,16,27,.9) 0%, rgba(7,16,27,.66) 34%, rgba(7,16,27,.34) 58%, rgba(7,16,27,.9) 100%), url('" . esc_url( $hero_backdrop_url ) . "'); background-size: cover; background-position: center;";
     }
@@ -473,7 +473,7 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 			return '';
 		}
 
-		// 3.2.59: the poster wall. Art per pick (the pick's own image, then a
+		// 3.2.60: the poster wall. Art per pick (the pick's own image, then a
 		// headshot, then the film's poster) is resolved and cached outside the
 		// renderer so this stays anonymous-cacheable and harness-extractable.
 		$visuals = function_exists( 'lunara_oscars_pick_visuals' ) ? (array) lunara_oscars_pick_visuals( $rows ) : array();
@@ -555,7 +555,7 @@ if ( ! function_exists( 'lunara_oscars_portal_landing_sections' ) ) {
 }
 
 /* ---------------------------------------------------------------------------
- * Oscars portal, Theme 3.2.59: the poster wall's art and the backdrop warmer.
+ * Oscars portal, Theme 3.2.60: the poster wall's art and the backdrop warmer.
  *
  * Picks store a film title and a person's name, not ids, so the board could
  * never show a picture. Each pick's art is now resolved in this order:

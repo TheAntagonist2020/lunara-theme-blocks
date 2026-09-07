@@ -11,6 +11,71 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-07 — Theme 3.2.60 Oscars Portal Studio Presentation Controls
+
+Theme release. No companion plugin release.
+
+- **The Studio reaches presentation parity with the archive studios.** Reviews
+  and Journal each carry seven presentation settings; the Oscars Portal Studio
+  carried three. It now carries seven: the existing section gap, hero minimum
+  height and card minimum height, plus a **winner portrait minimum width**
+  (the 3:4 grid 3.2.59 introduced) and three rhythm choices — **grid density**
+  (standard / compact / showcase), **hero prominence** (balanced / feature the
+  copy / feature the image) and **poster wall rhythm** (standard / gallery /
+  dense, moving the 2:3 tile floor between 150 and 230 pixels). The poster
+  wall, the hero and the winner portraits were all built in 3.2.57–3.2.59 and
+  could until now only be changed by editing CSS and shipping a release.
+- **`card_min_height` was an inert control and had been since it shipped.** It
+  was stamped onto the portal root by two separate emitters and read by
+  nothing: no seed rule, no route rule, no template. Moving the slider
+  validated, saved, wrote a custom property, and changed no pixel. It now
+  governs the minimum height of the link, spotlight and research card grids.
+  This is the same defect class as the winner map that never reached the
+  portal in 3.2.53 — a value produced and never consumed — and the contract
+  now pins every emitted property as also consumed, so it cannot recur
+  silently.
+- **Rhythm choices map to custom properties, not to class-multiplied rules.**
+  Each choice resolves through a small value map in
+  `inc/oscars-portal-critical.php` to exactly one declaration on
+  `#primary.lunara-oscars-portal`. A ruleset per choice would have multiplied
+  the route sheet, which sits under a hard 56 KB ceiling with roughly 4 KB
+  free. The Oscars ledger route already used this approach; the portal now
+  matches it. The **route sheet is unchanged at 53,293 bytes**; only the
+  route seed grew, by 413 bytes.
+- **One emitter, not two.** `inc/oscars-portal-critical.php` and
+  `page-oscars.php` each carried their own copy of the property list and the
+  provenance gate, so a new control had to be added twice and any divergence
+  between them would have been silent. Both now call
+  `lunara_oscars_portal_variable_declarations()`; the template stamps the
+  string it returns and the seed wraps the same string in its selector. The
+  contract pins that the template carries no second copy.
+- **Fail-closed, unchanged.** Variables still emit only inside an authorized
+  private preview or after an explicit Studio save, and the emitter is
+  all-or-nothing: one missing, non-scalar or unmappable value emits nothing at
+  all, so a site falls back to the shipped clamp geometry rather than a
+  half-stamped root. An unrecognized rhythm choice is rejected by validation
+  rather than stored, because a stored-but-unmappable choice would blank every
+  other saved setting.
+- **Contracts.** `tests/oscars-portal-fluid-contract.ps1` now pins, for all
+  seven properties, that each is both emitted and consumed; that the Studio's
+  offered choices and the seed's value maps are the same sets; and that
+  `page-oscars.php` holds no second property list.
+  `tests/oscars-portal-studio-runtime.php` gains the full presentation key
+  inventory, the rhythm defaults, per-choice emission for every choice of
+  every control, rejection of an unrecognized choice, and refill-from-default
+  for an absent one. Eight mutations went red — a property emitted but not
+  consumed (twice), `card_min_height` returned to inert, a seed map missing a
+  validated choice, a Studio choice the seed cannot map, the template
+  regrowing its own list, the sanitizer accepting an unknown choice, and the
+  hero prominence property dropped from the emitter — and all were restored
+  byte-exact.
+- **Not changed.** No template markup, no route stylesheet, no plugin, no
+  public copy, no default value: a site that has never saved the Studio
+  renders byte-identically to 3.2.59, and a site that has saved one keeps its
+  three existing numbers with the four new controls at their shipped defaults.
+
+---
+
 ## 2026-09-07 — Theme 3.2.59 Oscars Portal Poster Wall
 
 Theme release. No companion plugin release; Oscars Ledger 2.7.83 (already

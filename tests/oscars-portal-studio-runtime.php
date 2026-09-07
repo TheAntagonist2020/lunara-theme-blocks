@@ -221,7 +221,7 @@ $oscars_projection_schema = lunara_site_studio_oscars_portal_state_schema();
 lunara_test_assert( array( 'schema_version', 'identity', 'section_order', 'section_visibility', 'presentation' ) === array_keys( $oscars_projection_schema ), 'Oscars projection schema must inventory every authoritative top-level provider key.' );
 lunara_test_assert( array( 'kicker', 'title', 'explore_kicker', 'explore_heading', 'spotlights_heading', 'titles_kicker', 'titles_heading', 'research_kicker', 'research_heading', 'reviews_heading', 'deep_cuts_heading' ) === array_keys( $oscars_projection_schema['identity'] ), 'Oscars projection schema must inventory every authoritative identity key.' );
 lunara_test_assert( array( 'hero', 'navigator', 'board', 'doors', 'spotlights', 'titles', 'research', 'linked-reviews', 'winners', 'deep-cuts', 'rotating-winners' ) === array_keys( $oscars_projection_schema['section_visibility'] ), 'Oscars projection schema must inventory every authoritative visibility key.' );
-lunara_test_assert( array( 'section_gap', 'hero_min_height', 'card_min_height' ) === array_keys( $oscars_projection_schema['presentation'] ), 'Oscars projection schema must inventory every authoritative geometry key.' );
+lunara_test_assert( array( 'section_gap', 'hero_min_height', 'card_min_height', 'winners_min_width', 'density', 'lead_prominence', 'board_rhythm' ) === array_keys( $oscars_projection_schema['presentation'] ), 'Oscars projection schema must inventory every authoritative presentation key.' );
 $oscars_projection_accepted = false;
 $oscars_projection_roundtrip = lunara_site_studio_project_state_value( lunara_oscars_portal_studio_defaults(), $oscars_projection_schema, $oscars_projection_accepted );
 lunara_test_assert( $oscars_projection_accepted && lunara_oscars_portal_studio_defaults() === $oscars_projection_roundtrip, 'Oscars projection must preserve the complete authoritative default shape.' );
@@ -238,7 +238,7 @@ if ( in_array( '--emit-portal-critical', (array) ( $argv ?? array() ), true ) ) 
 		array(
 			'schema_version' => 1,
 			'section_order'  => lunara_oscars_portal_studio_slots(),
-			'presentation'   => array( 'section_gap' => 60, 'hero_min_height' => 420, 'card_min_height' => 300 ),
+			'presentation'   => array( 'section_gap' => 60, 'hero_min_height' => 420, 'card_min_height' => 300, 'winners_min_width' => 240, 'density' => 'standard', 'lead_prominence' => 'balanced', 'board_rhythm' => 'standard' ),
 		)
 	);
 	echo lunara_oscars_portal_variable_css( lunara_oscars_portal_studio_get_public_config( false ) ) . "\n";
@@ -275,7 +275,8 @@ lunara_test_assert( $validated['section_order'] === $lunara_template_order, 'Def
 lunara_test_assert( lunara_oscars_portal_studio_slots() === $lunara_template_order, 'The canonical slot list must be exactly the eleven template slots in emission order.' );
 lunara_test_assert( false === $validated['section_visibility']['linked-reviews'], 'Linked Reviews must default hidden, matching the shipped theme-mod default.' );
 lunara_test_assert( true === $validated['section_visibility']['board'] && true === $validated['section_visibility']['navigator'], 'Board and navigator lanes must resolve visible by default.' );
-lunara_test_assert( array( 40, 360, 360 ) === array( $validated['presentation']['section_gap'], $validated['presentation']['hero_min_height'], $validated['presentation']['card_min_height'] ), 'Default geometry must be 40/360/360.' );
+lunara_test_assert( array( 40, 360, 360, 200 ) === array( $validated['presentation']['section_gap'], $validated['presentation']['hero_min_height'], $validated['presentation']['card_min_height'], $validated['presentation']['winners_min_width'] ), 'Default geometry must be 40/360/360/200.' );
+lunara_test_assert( array( 'standard', 'balanced', 'standard' ) === array( $validated['presentation']['density'], $validated['presentation']['lead_prominence'], $validated['presentation']['board_rhythm'] ), 'Default rhythm must be standard/balanced/standard.' );
 lunara_test_assert( 'The Lunara Oscar Ledger' === $validated['identity']['kicker'] && 'Academy Awards history, treated like a living editorial system.' === $validated['identity']['title'], 'Default identity must reproduce the shipped portal literals byte-for-byte.' );
 
 // The identity defaults are byte-locked against the actual template source:
@@ -360,7 +361,7 @@ $code_producers = array(
 	},
 	'oscars_portal_geometry_invalid'      => static function () use ( $defaults ) {
 		$c = $defaults;
-		$c['presentation'] = array( 'section_gap' => 5, 'hero_min_height' => 360, 'card_min_height' => 360 );
+		$c['presentation'] = array( 'section_gap' => 5, 'hero_min_height' => 360, 'card_min_height' => 360, 'winners_min_width' => 200, 'density' => 'standard', 'lead_prominence' => 'balanced', 'board_rhythm' => 'standard' );
 		return lunara_oscars_portal_studio_validate_config( $c );
 	},
 	'oscars_portal_revision_not_found'    => static function () {
@@ -405,7 +406,7 @@ $lunara_test_options[ LUNARA_OSCARS_PORTAL_STUDIO_OPTION ] = array(
 	'schema_version' => 1,
 	'identity'       => array( 'rogue_field' => array( 'unrepairable' ) ),
 	'section_order'  => lunara_oscars_portal_studio_slots(),
-	'presentation'   => array( 'section_gap' => 44, 'hero_min_height' => 400, 'card_min_height' => 320 ),
+	'presentation'   => array( 'section_gap' => 44, 'hero_min_height' => 400, 'card_min_height' => 320, 'winners_min_width' => 200, 'density' => 'standard', 'lead_prominence' => 'balanced', 'board_rhythm' => 'standard' ),
 );
 $rogue_public = lunara_oscars_portal_studio_get_public_config( false );
 lunara_test_assert( ! is_wp_error( $rogue_public ) && 'Survivor Kicker' === $rogue_public['identity']['kicker'] && 44 === $rogue_public['presentation']['section_gap'], 'Rogue stored identity leaves must be normalized away without erasing valid siblings.' );
@@ -451,7 +452,7 @@ lunara_test_assert( is_wp_error( lunara_oscars_portal_studio_validate_config( $u
 $lunara_test_options[ LUNARA_OSCARS_PORTAL_STUDIO_OPTION ] = array(
 	'schema_version' => 'x',
 	'section_order'  => array( 'hero', 'hero', 'unknown-slug', 42, array( 'nested' ) ),
-	'presentation'   => array( 'section_gap' => 9999, 'hero_min_height' => 'soup', 'card_min_height' => array( 'bad' ) ),
+	'presentation'   => array( 'section_gap' => 9999, 'hero_min_height' => 'soup', 'card_min_height' => array( 'bad' ), 'winners_min_width' => 200, 'density' => 'nonsense', 'lead_prominence' => 'balanced', 'board_rhythm' => 'standard' ),
 );
 $repaired = lunara_oscars_portal_studio_get_public_config( false );
 lunara_test_assert( ! is_wp_error( $repaired ), 'A corrupt stored option must never surface a WP_Error publicly.' );
@@ -462,6 +463,45 @@ sort( $sorted_repaired );
 lunara_test_assert( $sorted_slots === $sorted_repaired && 11 === count( $repaired['section_order'] ), 'Repair must land on exactly the eleven canonical slots.' );
 lunara_test_assert( 'hero' === $repaired['section_order'][0], 'The recognized stored slug must keep its relative position through repair.' );
 lunara_test_assert( array( 40, 360, 360 ) === array( $repaired['presentation']['section_gap'], $repaired['presentation']['hero_min_height'], $repaired['presentation']['card_min_height'] ), 'Out-of-bounds or non-numeric geometry must repair to the defaults.' );
+lunara_test_assert( 'standard' === $repaired['presentation']['density'], 'An unrecognized rhythm choice must repair to its default, never reach the seed maps.' );
+
+// An unrecognized rhythm choice must be REJECTED at validation, not stored.
+// If it were stored, the emitter would fail closed on the missing map entry
+// and blank EVERY custom property — one bad select silently switching off
+// every other saved presentation setting.
+$rhythm_reject = $defaults;
+$rhythm_reject['presentation']['board_rhythm'] = 'no-such-rhythm';
+$rhythm_rejected = lunara_oscars_portal_studio_validate_config( $rhythm_reject );
+lunara_test_assert( is_wp_error( $rhythm_rejected ) && 'oscars_portal_geometry_invalid' === $rhythm_rejected->get_error_code(), 'An unrecognized rhythm choice must be rejected by validation.' );
+
+// A MISSING key is not an invalid one: validation runs on
+// array_replace_recursive( $defaults, $raw ), so an absent leaf refills from
+// the default for every family alike. Rhythm must behave the same way as
+// geometry, identity and visibility rather than inventing its own rule.
+$rhythm_missing = $defaults;
+unset( $rhythm_missing['presentation']['density'] );
+$rhythm_filled = lunara_oscars_portal_studio_validate_config( $rhythm_missing );
+lunara_test_assert( ! is_wp_error( $rhythm_filled ) && 'standard' === $rhythm_filled['presentation']['density'], 'A missing rhythm key must refill from the default, exactly as a missing geometry key does.' );
+
+// Every validated choice must have a mapped value in the seed, or the control
+// saves cleanly and blanks the root.
+$rhythm_maps = lunara_oscars_portal_rhythm_value_maps();
+foreach ( lunara_oscars_portal_studio_rhythm_specs() as $rhythm_key => $rhythm_spec ) {
+	lunara_test_assert( isset( $rhythm_maps[ $rhythm_key ] ), 'Rhythm control ' . $rhythm_key . ' must have a seed value map.' );
+	lunara_test_assert(
+		array_keys( $rhythm_spec['choices'] ) === array_keys( $rhythm_maps[ $rhythm_key ] ),
+		'Rhythm control ' . $rhythm_key . ' must offer exactly the choices the seed can map.'
+	);
+	$exercised = $defaults;
+	foreach ( array_keys( $rhythm_spec['choices'] ) as $rhythm_choice ) {
+		$exercised['presentation'][ $rhythm_key ] = $rhythm_choice;
+		$exercised['_preview'] = true;
+		lunara_test_assert(
+			false !== strpos( lunara_oscars_portal_variable_css( $exercised ), $rhythm_maps[ $rhythm_key ][ $rhythm_choice ] ),
+			'Choice ' . $rhythm_choice . ' of ' . $rhythm_key . ' must reach the emitted block.'
+		);
+	}
+}
 $lunara_test_options = array();
 
 // The comma-string repair path collapses duplicates and appends missing slots.
@@ -474,7 +514,7 @@ lunara_test_assert(
 $lunara_test_options[ LUNARA_OSCARS_PORTAL_STUDIO_OPTION ] = array(
 	'schema_version' => 1,
 	'section_order'  => array( 'deep-cuts', 'hero', 'navigator', 'board', 'doors', 'spotlights', 'titles', 'research', 'linked-reviews', 'winners', 'rotating-winners' ),
-	'presentation'   => array( 'section_gap' => 60, 'hero_min_height' => 420, 'card_min_height' => 300 ),
+	'presentation'   => array( 'section_gap' => 60, 'hero_min_height' => 420, 'card_min_height' => 300, 'winners_min_width' => 240, 'density' => 'standard', 'lead_prominence' => 'balanced', 'board_rhythm' => 'standard' ),
 );
 $saved = lunara_oscars_portal_studio_get_public_config( false );
 lunara_test_assert( 'deep-cuts' === $saved['section_order'][0] && 60 === $saved['presentation']['section_gap'], 'A valid stored order and geometry must resolve unchanged.' );
@@ -485,8 +525,8 @@ lunara_test_assert( true === lunara_oscars_portal_studio_has_saved_presentation(
 // ---------------------------------------------------------------------------
 $saved_vars = lunara_oscars_portal_variable_css( $saved );
 lunara_test_assert(
-	'#primary.lunara-oscars-portal{--lunara-oscars-portal-section-gap:60px;--lunara-oscars-portal-hero-min-height:420px;--lunara-oscars-portal-card-min-height:300px}' === $saved_vars,
-	'A saved presentation must emit the exact geometry custom-property block.'
+	'#primary.lunara-oscars-portal{--lunara-oscars-portal-section-gap:60px;--lunara-oscars-portal-hero-min-height:420px;--lunara-oscars-portal-card-min-height:300px;--lunara-oscars-portal-winners-min-width:240px;--lunara-oscars-portal-grid-gap:16px;--lunara-oscars-portal-hero-columns:minmax(0,1.25fr) minmax(260px,clamp(300px,24vw,440px));--lunara-oscars-portal-board-min-width:190px}' === $saved_vars,
+	'A saved presentation must emit the exact presentation custom-property block.'
 );
 $lunara_test_options = array();
 $unsaved_config      = lunara_oscars_portal_studio_get_public_config( false );
@@ -494,7 +534,7 @@ lunara_test_assert( '' === lunara_oscars_portal_variable_css( $unsaved_config ),
 $preview_config             = $unsaved_config;
 $preview_config['_preview'] = true;
 lunara_test_assert(
-	'#primary.lunara-oscars-portal{--lunara-oscars-portal-section-gap:40px;--lunara-oscars-portal-hero-min-height:360px;--lunara-oscars-portal-card-min-height:360px}' === lunara_oscars_portal_variable_css( $preview_config ),
+	'#primary.lunara-oscars-portal{--lunara-oscars-portal-section-gap:40px;--lunara-oscars-portal-hero-min-height:360px;--lunara-oscars-portal-card-min-height:360px;--lunara-oscars-portal-winners-min-width:200px;--lunara-oscars-portal-grid-gap:16px;--lunara-oscars-portal-hero-columns:minmax(0,1.25fr) minmax(260px,clamp(300px,24vw,440px));--lunara-oscars-portal-board-min-width:190px}' === lunara_oscars_portal_variable_css( $preview_config ),
 	'An authorized private preview must emit geometry variables without any saved option.'
 );
 lunara_test_assert( '' === lunara_oscars_portal_variable_css( 'garbage' ), 'A non-array config must fail the variable emitter closed.' );
