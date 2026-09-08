@@ -25,6 +25,42 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-08 — Uniform editing across Lunara agreed; initial standard recorded
+
+### Headline
+
+Dalton clarified that consistent controls must extend across all Lunara editors,
+including content and workflow editors. `docs/EDITOR-STANDARD.md` records that
+direction, a source inventory, shared interaction rules, and a proposed delivery
+order. This is a docs-only addition; implementation of the shared editor is pending.
+
+### Verification and delivery
+
+The inventory was checked against the theme, Core, Journal Foundation, and Oscars
+Ledger local source entry points. No production probes or changes were made in
+this continuation; the preceding live verification is recorded in the next entry.
+The release-identity contract and diff check cover this documentation update.
+The full implementation suite and production canary were not repeated because
+no executable code changed. No release or main merge occurred.
+
+### Commit ledger
+
+| Repository | Branch | Meaning |
+| --- | --- | --- |
+| lunara-theme-blocks | `codex/carousel-live-handoff-20260908` | Editor standard and inventory, following the live carousel handoff. |
+
+### Open work and next move
+
+The next implementation slice is shared controls proven in Hero and Journal,
+then reused across Site Studio, media, Review Studio, Journal Desk, and Academy
+editorial tools. Existing content ownership and publishing rules remain part of
+the design. The Hero artwork gaps and unadopted Journal carousel from the prior
+entry remain open. No corrections to that entry are needed.
+
+The agent can use the standard for the next implementation task. This docs branch
+remains available for a future requested PR; rebuild the rollback hatch after
+any eventual main merge. The standard is not a claim of completed UI work.
+
 ## 2026-09-08 — Live 3.2.62 verified; single-story hero replaced with automatic selection
 
 ### Headline
