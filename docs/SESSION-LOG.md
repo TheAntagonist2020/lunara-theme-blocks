@@ -25,6 +25,79 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-08 — Live 3.2.62 verified; single-story hero replaced with automatic selection
+
+### Headline
+
+PR #178 is merged and Dalton deployed Theme 3.2.62. The public hero still used
+the legacy manual deck containing only the "X Leaked Spider-Man" Journal story.
+The live Hero Carousel editor was switched to Automatic, privately previewed,
+and explicitly applied. Its saved state survives reloading, and the anonymous
+homepage now contains six recent reviews instead of that forced one-story deck.
+
+### Verified live state
+
+| Surface | Observed result |
+| --- | --- |
+| Theme build | `3.2.62+20260907-213435`; three anonymous build reads agreed. |
+| Journal and Oscars canonical routes | Canary exit 0, GO; both sentinels reported LIVE_COHERENT. This run preceded the Hero settings Apply. |
+| Hero editor | Automatic mode saved, private preview succeeded, Apply acknowledged, and the setting persisted after reload. |
+| Public homepage after Apply | Adopted hero markup; six reviews beginning with The Dog Stars. The old "X Leaked Spider-Man" article is absent from the hero. |
+| Rollback hatch | PR #159 is open and mergeable, parented on the current main tip; its tree remains `c55bf394594149db2888295c5d51f85f47b2b520`. |
+
+### What changed and why
+
+Only the Hero carousel's saved presentation was applied. Its prior manual list
+is retained, as designed; no source article was edited. Journal presentation
+was not adopted during this operation. An initial anonymous read still returned
+the old hero after the save; subsequent canonical reads and browser inspection
+confirmed the new lineup. No cache clear or deployment was triggered by the agent.
+Feature details remain in `docs/CHANGELOG.md` and `docs/HOMEPAGE-CAROUSELS.md`.
+
+### Commit ledger
+
+| Repository | Commit or branch | Meaning |
+| --- | --- | --- |
+| lunara-theme-blocks | `778282e6b783a579c774d2f09fe15a6e958ebf1f` | Carousel implementation from PR #178. |
+| lunara-theme-blocks | `fbff3da7702fa57237d5ee6c523a570f1efcce9e` | Verified merged main tip. |
+| lunara-theme-blocks | `claude/rollback-exact-theme-3.2.43`, PR #159 | Rebuilt against that main tip; tree and parent checked before push, remote head verified afterward. |
+| lunara-theme-blocks | `codex/carousel-live-handoff-20260908` | This docs-only operational record, based on current main. |
+
+### Gate ledger and corrections
+
+Production canary passed. Real authenticated Hero preview, Apply and reload
+passed; the final anonymous public lineup and browser rendering were checked.
+No implementation files changed, so the full local suite was not repeated.
+The release-identity contract and diff check are the checks for this docs update.
+
+The first editor snapshot was taken before its controller finished loading and
+showed the generic failure placeholder. The agent initially called this a startup
+defect, then retracted that diagnosis after the ready state and enabled controls
+appeared. No persistent startup defect was established. The loaded mode was
+Manual with one story, not Automatic as the uninitialized select had appeared.
+
+### Logged, not fixed
+
+Five of the six current automatic hero slides render the missing-art placeholder;
+The Invite has an image. The remaining image sources need investigation or curation.
+The initial loading message is misleading, and carousel controls across the site
+remain split among several custom implementations. No full-site rebuild or parent
+theme change was performed or approved as a concrete implementation scope.
+
+### Punch-list and next move
+
+The user wants consistent visual carousel editing across the site: select stories,
+drag thumbnails into order, replace imagery and copy, and reliably see saved changes.
+The recommended next scope is one shared carousel editor with direct edit links
+and migration of the existing custom carousels, preserving the site's styling.
+Start with a demonstrably usable manual Hero and Journal workflow, including image
+selection and accurate loading/save feedback; then apply the same controls elsewhere.
+The parent Blocksy theme is not implicated in the confirmed one-story selection.
+
+This docs branch is ready for a future requested PR. After any further main merge,
+rebuild the rollback hatch again. Editorial publication and broad CSS cleanup remain
+separate work.
+
 ## 2026-09-07 — Theme 3.2.62 homepage carousels candidate
 
 ### Headline
