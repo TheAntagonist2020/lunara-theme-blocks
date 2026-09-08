@@ -37,12 +37,14 @@ Journal Desk or Academy authoring forms.
 
 ### Verification and delivery
 
+The candidate passed both component reviews and the final integration review.
 Focused browser checks exercised the actual PHP inspector and shipped JavaScript
-with mocked REST persistence, Media Library selections and revisions. Full theme
-contracts, mutation checks and review are being completed before publication of
-the candidate. Desktop/mobile screenshots use sample content and local base
-styles. The interactive browser extension blocked the local review URL; no live
-admin UI acceptance is claimed.
+with mocked REST persistence, Media Library selections and revisions. Desktop/mobile
+screenshots use sample content and local base styles. The interactive browser
+extension blocked the local review URL; no live admin UI acceptance is claimed.
+The temporary local preview server was stopped after verification.
+
+### Verified live state
 
 Read-only production content inspection found a separate artwork gap: review
 102632 has no stored poster/backdrop or featured image. Review 102629 has saved
@@ -53,13 +55,40 @@ the manual Deployer for Git button after the reviewed candidate reaches main.
 
 ### Commit ledger
 
-| Repository | Branch | Meaning |
+| Repository | SHA | Meaning |
 | --- | --- | --- |
-| Theme | `codex/shared-editor-3.2.63` | Shared workflow, visual controls, regression coverage and release record; candidate in preparation. |
+| Theme | `a6ce114` | Shared Site Studio host, source metadata and canonical artwork. |
+| Theme | `da16048` | Reusable visual controls and carousel field adapter. |
+| Theme | `ccc29fb` | Positive automatic hero-to-card artwork fallback regression. |
+| Theme | `f614b06` | Clear stale metadata across restored/discarded candidates. |
+| Theme | `68fd9ff` | Theme 3.2.63 identity, guide and initial release record. |
+| Theme | `ad92ebb` | Resume interrupted metadata after Preview; deterministic browser regression. |
+
+These commits and this closing record are on `codex/shared-editor-3.2.63`.
+
+### Gate ledger
+
+| Gate | Result |
+| --- | --- |
+| Full theme contract suite | 92 unique PowerShell scripts passed; zero failures. |
+| Final combined carousel gate after review fixes | 40 settings/metadata, 149 shared-editor browser, 26 delivery and 29 public browser checks passed. |
+| Mutation checks | Seven deliberate faults caught at their intended assertions; clean scratch restored byte-exact. Working checkout was never mutated. |
+| Final Preview/metadata timing regression | Failed with the old code at the held-metadata artwork wait; passed after the read resumes on unfreeze. |
+| Syntax and whitespace | 113 PHP, 50 JavaScript and 26 CSS files passed; changed adapter rechecked after the final fix; diff check passed. |
+| Code review | Both task reviews and final whole-branch review approved, including focused fixes. |
+| Live 3.2.63 acceptance | Not run: requires Dalton's deployment, authenticated editor inspection, actual public homepage probe and versioned canary. |
+
+### Corrections and logged issues
+
+Historical comments in two Oscars contracts now describe the earlier poster-wall
+release without incorrectly attributing that CSS budget change to 3.2.63. No
+earlier production claim was revised. Missing source artwork on review 102632 is
+logged for curation; the editor cannot infer an image that was never stored.
 
 ### Punch-list and next move
 
-- Finish review and release gates; push the reviewable candidate.
+- Review and gates are complete. Merge the published candidate, then Dalton can
+  deploy Theme 3.2.63 with the manual Control Desk button.
 - After any main merge, rebuild `claude/rollback-exact-theme-3.2.43` / PR #159
   and verify the exact rollback tree.
 - After Dalton deploys, inspect Hero and Journal in Site Studio, verify the public

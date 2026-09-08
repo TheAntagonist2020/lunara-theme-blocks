@@ -18,6 +18,8 @@ for Preview changes, Apply changes, Discard changes and revision history.
 The carousel adapter owns selection and fields; it no longer implements a
 second save/preview workflow. Failed saves retain the draft, edits mark previews
 stale, and discarded or restored candidates reject late picker/search responses.
+If Preview interrupts a metadata read, the editor resumes it after the request
+finishes; restored settings cannot remain stuck on cached or loading artwork.
 
 Automatic shows the actual six newest eligible stories with artwork and dates.
 Use this lineup in Manual explicitly copies that lineup and confirms replacement
@@ -41,6 +43,12 @@ Desk and Academy authoring editors migrate in later releases. Lunara Method and
 Oscars composition are unchanged. Guide: `docs/HOMEPAGE-CAROUSELS.md`; standard:
 `docs/EDITOR-STANDARD.md`; implementation plan:
 `docs/superpowers/plans/2026-09-08-shared-editor-controls.md`.
+
+Validation: 92 theme contract scripts; final combined carousel gate with 40
+settings/metadata, 149 editor browser, 26 delivery and 29 public browser checks;
+seven mutations plus the final timing regression verified failing before its
+fix; repository syntax and both task/final code reviews passed. Authenticated
+WordPress acceptance and the public canary follow Dalton's manual deployment.
 
 ## 2026-09-07 — Theme 3.2.62 Independent Homepage Carousels
 

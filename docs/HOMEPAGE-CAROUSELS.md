@@ -1,7 +1,9 @@
 # Your homepage carousel controls
 
 After Theme 3.2.63 is deployed, open **Site Studio → Homepage** and choose
-**Hero Carousel** or **Journal Carousel**. Each panel controls only its section.
+[Hero Carousel](https://lunarafilm.com/wp-admin/admin.php?page=lunara-site-studio&surface=hero-carousel)
+or [Journal Carousel](https://lunarafilm.com/wp-admin/admin.php?page=lunara-site-studio&surface=journal-carousel).
+Each panel controls only its section.
 Your current homepage presentation continues until you apply that panel.
 
 | Panel | Eligible stories | Layout |
