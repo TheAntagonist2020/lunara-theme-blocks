@@ -17,7 +17,7 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
    const page = await browser.newPage({viewport:{width:1440,height:1000}});
    page.setDefaultTimeout(12000);
    const errors=[]; page.on('pageerror',error=>errors.push(error.message));
-   let submitted, saved, saves = 0, failure = false, previewBarrier, searchBarrier, metadataFailure = false, restores = 0;
+   let submitted, saved, saves = 0, failure = false, previewBarrier, searchBarrier, metadataFailure = false, metadataOmit = false, restores = 0;
    const items = [
     {id:10,title:'Published first',type:kind === 'hero' ? 'review' : 'journal',available:true,date_label:'Sep 8, 2026',image_url:'https://example.test/art.svg',image_source:'Review artwork',excerpt:'Inherited first excerpt',kicker:'Film',cta:'Read the review'},
     {id:20,title:'Published second',type:'journal',available:true,date_label:'Sep 7, 2026',image_url:'',image_source:'No source artwork',excerpt:'Inherited second excerpt',kicker:'Journal',cta:'Read the story'}
@@ -35,7 +35,7 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
     if (endpoint.endsWith('/metadata')) {
      check(request.headers()['x-wp-nonce']==='test-nonce','Metadata read carries nonce');
      if(metadataFailure) { return route.fulfill({status:503,json:{message:'Metadata unavailable'}}); }
-     return route.fulfill({json:{items:Object.fromEntries(items.map(item=>[item.id,item])),images:{42:'https://example.test/art.svg?custom=42',77:'https://example.test/art.svg?restored=77'},automatic:[10,20]}});
+     return route.fulfill({json:{items:Object.fromEntries(items.map(item=>[item.id,item])),images:metadataOmit?{}:{42:'https://example.test/art.svg?custom=42',77:'https://example.test/art.svg?restored=77'},automatic:[10,20]}});
     }
     if (endpoint.endsWith('/search')) {
      check(request.headers()['x-wp-nonce']==='test-nonce','Search carries nonce'); if(searchBarrier){await searchBarrier.wait;}
@@ -59,7 +59,7 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
     return route.fulfill({contentType:'text/html',body:'<html><head><style>body{margin:0}.lunara-cinematic-hero-bg{width:100%;height:600px}.lunara-home-news-media{width:400px;height:250px}@media(max-width:600px){.lunara-cinematic-hero-bg{height:420px}.lunara-home-news-media{width:360px;height:225px}}</style></head><body><main style="min-height:1200px;background:#091926;color:#ddbe72"><div class="'+mediaClass+'">Page preview fixture</div></main></body></html>'});
    });
    await page.goto('https://example.test/wp-admin/admin.php'); await page.waitForSelector('[data-lunara-site-studio-ready="true"]');
-   check((await page.locator('[data-carousel-items]').innerText()).includes('Unavailable'),'Unavailable selections visibly flagged');
+   check((await page.locator('[data-carousel-items]').innerText()).toLowerCase().includes('unavailable'),'Unavailable selections visibly flagged');
    check(await page.getByRole('button',{name:'Apply changes',exact:true}).count()===1,'Shared Apply action');
    await page.locator('[data-carousel-field="mode"]').selectOption('auto'); await page.waitForSelector('[data-carousel-automatic] li strong');
    check(await page.locator('[data-carousel-automatic] li strong').count()===2,'Automatic lineup is visible');
@@ -80,6 +80,9 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
    await page.evaluate(()=>{window.wp={media:()=>{let callback;return{on:(event,fn)=>{callback=fn;},state:()=>({get:()=>({first:()=>({toJSON:()=>({id:42,url:'https://example.test/art.svg?custom=42'})})})}),open:()=>callback()};}};});
    await rows.first().getByRole('button',{name:'Choose image',exact:true}).click();
    check((await rows.first().locator('.lunara-editor-image-stage img').getAttribute('src')).includes('custom=42'),'Chosen image is visible immediately');
+   await rows.first().getByRole('button',{name:/Image framing:/}).click({position:{x:1,y:1}});
+   check(Number(await rows.first().getByLabel('Horizontal focal point',{exact:true}).inputValue())<=1 && Number(await rows.first().getByLabel('Vertical focal point',{exact:true}).inputValue())<=1,'Pointer click sets focal coordinates at the frame edge');
+   for(const [field,value] of [['focal_x','50'],['focal_y','30']]) { await rows.first().locator('[data-editor-field="'+field+'"]').evaluate((input,next)=>{input.value=next;input.dispatchEvent(new Event('input',{bubbles:true}));},value); }
    await rows.first().getByRole('button',{name:/Image framing:/}).press('ArrowRight');
    check(await rows.first().getByLabel('Horizontal focal point',{exact:true}).inputValue()==='55','Arrow keys move visible focal point');
    await rows.first().getByLabel('Image fit',{exact:true}).selectOption('full');
@@ -109,10 +112,19 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
    check(await rows.first().getByLabel('Headline',{exact:true}).inputValue()==='Override headline revised','Saved settings survive reload');
    await page.evaluate(()=>window.confirm=()=>true);await page.locator('[data-action="preview"]').click();await page.waitForFunction(()=>document.querySelector('[data-lunara-site-studio]').dataset.workspaceState==='preview-current');
    await page.locator('[data-action="save"]').click();await page.waitForFunction(()=>document.querySelector('[data-lunara-site-studio]').dataset.workspaceState==='live-saved');
+   metadataFailure=true;
    await page.locator('[data-revision-summary]').click();await page.locator('[data-action="restore"]').first().click();await page.waitForFunction(()=>document.querySelector('[data-lunara-site-studio]').dataset.workspaceState==='restored');
    if(!(await rows.first().locator('details').evaluate(el=>el.open))){await rows.first().locator('summary').click();}
+   await page.waitForFunction(()=>document.querySelector('.lunara-editor-metadata-status').textContent.includes('could not refresh'));
+   check(!(await rows.first().locator('.lunara-editor-image-stage img').getAttribute('src')) && await rows.first().getByLabel('Headline',{exact:true}).inputValue()==='Restored headline','Failed restored metadata clears cached artwork while preserving exact saved fields');
+   metadataFailure=false;await page.getByRole('button',{name:'Refresh story details',exact:true}).click();
    await page.waitForFunction(()=>document.querySelector('.lunara-editor-image-stage img').src.includes('restored=77'));
    check(restores===1 && await rows.first().getByLabel('Headline',{exact:true}).inputValue()==='Restored headline','Restore refreshes image and text through common workflow');
+   metadataOmit=true;await page.locator('[data-carousel-field="mode"]').selectOption('auto');await page.locator('[data-carousel-field="mode"]').selectOption('manual');
+   await page.waitForFunction(()=>document.querySelector('.lunara-editor-metadata-status').textContent.includes('Some story details'));
+   check(!(await rows.first().locator('.lunara-editor-image-stage img').getAttribute('src')),'An omitted attachment cannot retain an earlier cached image');
+   metadataOmit=false;await page.getByRole('button',{name:'Refresh story details',exact:true}).click();
+   await page.waitForFunction(()=>document.querySelector('.lunara-editor-image-stage img').src.includes('restored=77'));
    await rows.first().getByRole('button',{name:'Use source image',exact:true}).click();
    check(await rows.first().locator('.lunara-editor-image-empty').isVisible(),'Removing an override returns to the source placeholder');
    await page.locator('[data-action="discard"]').click();
@@ -133,6 +145,7 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
    check(await page.locator('[data-carousel-field="mode"]').inputValue()==='auto' && await rows.count()===1,'Cancelling lineup replacement keeps manual work');
    await page.evaluate(()=>window.confirm=()=>true);await page.getByRole('button',{name:'Use this lineup in Manual',exact:true}).click();
    check(await page.locator('[data-carousel-field="mode"]').inputValue()==='manual' && await rows.count()===2 && (await rows.nth(1).innerText()).includes('Restored headline'),'Explicit adoption copies automatic order while retaining matching overrides');
+   check(await rows.first().locator('summary').evaluate(element=>document.activeElement===element),'Focus moves into the adopted manual lineup');
    await page.locator('[data-action="discard"]').click();
    if (process.env.LUNARA_EDITOR_SCREENSHOT_DIR) {
     fs.mkdirSync(process.env.LUNARA_EDITOR_SCREENSHOT_DIR,{recursive:true});

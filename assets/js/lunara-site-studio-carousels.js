@@ -19,6 +19,7 @@
   var root = context.root, config = context.config, container = root.querySelector('[data-carousel-editor]');
   var list = root.querySelector('[data-carousel-items]'), results = root.querySelector('[data-carousel-results]');
   var metadata = {items:{},images:{},automatic:[]}, version = 0, searchSequence = 0, metadataSequence = 0;
+  var metadataOwner = context.getState(), metadataLoading = false, metadataUnavailable = false;
   var metadataKey = '', searchItems = [], searchPending = false, openItems = new Set(), frozen = [], busy = false;
   var imageEditors = [], imageRenders = [], node = controls.node, button = controls.button;
   try { mergeMetadata(JSON.parse(root.querySelector('#lunara-carousel-metadata').textContent)); } catch (error) { /* A failed metadata refresh has a visible retry path. */ }
@@ -32,12 +33,14 @@
    var previous = {}; current.slides.forEach(function (slide) { previous[slide.post_id] = slide; });
    current.slides = metadata.automatic.map(function (id) { return previous[id] || blankSlide(id); }); current.mode = 'manual';
    invalidate(); render(); context.changed();
+   var firstStory = list.querySelector('summary'); if (firstStory) { firstStory.focus(); }
+   context.announce('Automatic stories copied to your manual lineup. Review them before Apply changes.');
   });
   var metadataStatus = node('p', '', container, 'lunara-editor-metadata-status');
   var retry = button('Refresh story details', container, function () { metadataKey = ''; refreshMetadata(); }); retry.hidden = true;
   function enabled() { return !busy && !context.isBusy(); }
   function blankSlide(id) { return {post_id:id,image_id:0,headline:'',excerpt:'',kicker:'',cta:'',overlay:0,focal_x:50,focal_y:30,zoom:100,fit:'cover'}; }
-  function itemMeta(id) { return metadata.items[id] || {id:id,title:'Item #' + id,available:false,image_url:'',date_label:''}; }
+  function itemMeta(id) { return metadata.items[id] || {id:id,title:(metadataLoading ? 'Loading story #' : 'Story #') + id,available:null,image_url:'',date_label:'',image_source:metadataLoading ? 'Loading artwork' : 'Story details unavailable'}; }
   function mergeMetadata(payload) {
    if (!payload || typeof payload !== 'object') { return false; }
    if (payload.items && !Array.isArray(payload.items) && typeof payload.items === 'object') {
@@ -61,15 +64,19 @@
   async function refreshMetadata() {
    var state = context.getState(), ids = state.slides.map(function (slide) { return slide.post_id; }), images = state.slides.map(function (slide) { return slide.image_id; }).filter(Boolean);
    var key = JSON.stringify([ids,images]); if (metadataKey === key) { return; } metadataKey = key;
-   var sequence = ++metadataSequence, ticket = version;
+   var sequence = ++metadataSequence, ticket = version; metadataLoading = true;
    try {
     var url = readUrl('metadata'); url.searchParams.set('ids', ids.join(',')); url.searchParams.set('image_ids', images.join(','));
     var response = await fetch(url.href, {credentials:'same-origin',headers:{'X-WP-Nonce':config.nonce}}), payload = await response.json();
     if (sequence !== metadataSequence || ticket !== version) { return; }
     if (!response.ok || !payload || !payload.items || !Array.isArray(payload.automatic)) { throw new Error('Story details could not refresh. Your choices are still here.'); }
-    mergeMetadata(payload); metadataStatus.textContent = ''; retry.hidden = true;
+    ids.concat(payload.automatic).forEach(function (id) { delete metadata.items[id]; });
+    images.forEach(function (id) { delete metadata.images[id]; });
+    mergeMetadata(payload); metadataLoading = false;
+    metadataUnavailable = ids.concat(payload.automatic).some(function (id) { return !metadata.items[id]; }) || images.some(function (id) { return !Object.prototype.hasOwnProperty.call(payload.images || {}, id); });
+    metadataStatus.textContent = metadataUnavailable ? 'Some story details could not refresh. Your choices are still here.' : ''; retry.hidden = !metadataUnavailable;
     imageRenders.forEach(function (update) { update(); }); imageEditors.forEach(function (editor) { editor.render(); }); renderAutomatic(); if (!searchPending) { renderSearchResults(); }
-   } catch (error) { if (sequence === metadataSequence && ticket === version) { metadataKey = ''; metadataStatus.textContent = 'Story details could not refresh. Your choices are still here.'; retry.hidden = false; } }
+   } catch (error) { if (sequence === metadataSequence && ticket === version) { metadataLoading = false; metadataUnavailable = true; metadataKey = ''; metadataStatus.textContent = 'Story details could not refresh. Your choices are still here.'; retry.hidden = false; imageRenders.forEach(function (update) { update(); }); imageEditors.forEach(function (editor) { editor.render(); }); renderAutomatic(); } }
   }
   function summary(parent, item, index) {
    var header = node('div', '', parent, 'lunara-carousel-story-heading');
@@ -81,14 +88,15 @@
   function renderAutomatic() {
    automatic.hidden = context.getState().mode !== 'auto'; automaticList.replaceChildren();
    metadata.automatic.forEach(function (id, index) { var row = node('li', '', automaticList); summary(row, itemMeta(id), index); });
-   if (!metadata.automatic.length) { node('li', 'No eligible published stories. This section will be hidden when applied.', automaticList); }
-   adoptLineup.disabled = !enabled() || metadata.automatic.length === 0;
+   if (!metadata.automatic.length) { node('li', metadataLoading ? 'Loading published stories…' : metadataUnavailable ? 'Published stories could not load. Refresh story details to try again.' : 'No eligible published stories. This section will be hidden when applied.', automaticList); }
+   adoptLineup.disabled = !enabled() || metadata.automatic.length === 0 || metadata.automatic.some(function (id) { return !metadata.items[id] || !metadata.items[id].available; });
   }
   function copyField(parent, slide, field, title, max, type, update) {
    var label = node('label', title, parent, 'lunara-editor-field'), input = node(type === 'textarea' ? 'textarea' : 'input', '', label);
    if (type !== 'textarea') { input.type = 'text'; } input.maxLength = max; input.value = slide[field]; input.dataset.carouselOverride = field;
    var inheritedKey = field === 'headline' ? 'title' : field;
-   input.placeholder = itemMeta(slide.post_id)[inheritedKey] || 'Use article text';
+   function updatePlaceholder() { input.placeholder = itemMeta(slide.post_id)[inheritedKey] || 'Use article text'; }
+   updatePlaceholder(); imageRenders.push(updatePlaceholder);
    input.addEventListener('input', function () { if (!enabled()) { return; } slide[field] = input.value; context.changed(); update(); });
   }
   function currentSlide(slide) { return context.getState().slides.indexOf(slide) >= 0; }
@@ -112,7 +120,8 @@
     var meta = itemMeta(slide.post_id), title = slide.headline || meta.title;
     header.title.textContent = (index + 1) + '. ' + title;
     header.details.textContent = [meta.type === 'review' ? 'Review' : meta.type === 'journal' ? 'Journal' : '',meta.date_label || ''].filter(Boolean).join(' · ');
-    warning.hidden = !!meta.available; warning.textContent = 'Unavailable or unpublished — retained here, skipped on the homepage.';
+    warning.hidden = !!meta.available;
+    warning.textContent = meta.available === false ? 'Unavailable or unpublished — retained here, skipped on the homepage.' : metadataLoading ? 'Loading story details…' : 'Story details unavailable. Refresh story details to check this selection.';
     var image = slide.image_id ? metadata.images[slide.image_id] : meta.image_url;
     var nextArt = controls.thumbnail(null, image); header.art.replaceWith(nextArt); header.art = nextArt;
     previewLabel.textContent = slide.kicker || meta.kicker || (meta.type === 'review' ? 'Review' : 'Journal');
@@ -189,6 +198,11 @@
    else { frozen.forEach(function (entry) { entry[0].disabled = entry[1]; }); frozen = []; renderAutomatic(); if (!searchPending) { renderSearchResults(); } imageEditors.forEach(function (editor) { editor.render(); }); }
   }
   function render(focus) {
+   if (metadataOwner !== context.getState()) {
+    metadataOwner = context.getState(); metadata = {items:{},images:{},automatic:[]}; metadataKey = '';
+    searchItems = []; searchPending = false;
+    metadataLoading = true; metadataUnavailable = false; metadataStatus.textContent = 'Loading story details…'; retry.hidden = true;
+   }
    root.querySelectorAll('[data-carousel-field]').forEach(function (input) { var value = context.getState()[input.dataset.carouselField]; if (input.type === 'checkbox') { input.checked = !!value; } else { input.value = value; } });
    root.querySelector('[data-carousel-manual]').hidden = context.getState().mode !== 'manual';
    root.querySelector('[data-carousel-empty]').hidden = context.getState().slides.length !== 0;
