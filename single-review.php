@@ -70,23 +70,6 @@ if ( have_posts() ) :
                 'media_html'     => '',
                 'pairings_html'  => '',
             );
-        $pairings_markup  = isset( $debrief_render['pairings_html'] ) ? (string) $debrief_render['pairings_html'] : '';
-        if ( '' !== trim( $pairings_markup ) ) {
-            if ( class_exists( 'WP_HTML_Tag_Processor' ) ) {
-                $pairings_processor = new WP_HTML_Tag_Processor( $pairings_markup );
-                if ( $pairings_processor->next_tag() ) {
-                    $pairings_processor->set_attribute( 'data-lunara-site-studio-section', 'pair-it-with' );
-                    $pairings_markup = $pairings_processor->get_updated_html();
-                }
-            } else {
-                $pairings_markup = preg_replace(
-                    '/\A(\s*<(?:div|section))(?=\s|>)/i',
-                    '$1 data-lunara-site-studio-section="pair-it-with"',
-                    $pairings_markup,
-                    1
-                );
-            }
-        }
         $hero_visual      = function_exists( 'lunara_render_review_visual_slot' )
             ? lunara_render_review_visual_slot(
                 $post_id,
@@ -204,7 +187,7 @@ if ( have_posts() ) :
         ?>
         <main id="primary" class="site-main lunara-archive-page lunara-review-single-page<?php echo $is_full_spoiler ? ' lunara-review-single-page--full-spoiler' : ''; ?>">
             <article <?php post_class( 'lunara-journal-single lunara-review-single' . ( $is_full_spoiler ? ' lunara-review-single--full-spoiler' : '' ) ); ?>>
-                <section class="lunara-review-single-hero" data-lunara-site-studio-section="hero">
+                <section class="lunara-review-single-hero">
                     <div class="lunara-review-single-hero-inner">
                         <p class="lunara-archive-hero-kicker"><?php echo esc_html( $display_label ); ?></p>
                         <h1 class="lunara-review-single-title"><?php the_title(); ?></h1>
@@ -225,7 +208,7 @@ if ( have_posts() ) :
                     </div>
                 </section>
 
-                <section class="lunara-review-single-body" data-lunara-site-studio-section="criticism">
+                <section class="lunara-review-single-body">
                     <div class="lunara-review-single-body-grid">
                         <div class="lunara-review-single-content">
                             <?php if ( '' !== trim( $hero_visual ) ) : ?>
@@ -367,7 +350,7 @@ if ( have_posts() ) :
                 </section>
 
                 <?php if ( ! empty( $debrief_render['has_content'] ) ) : ?>
-                <section class="lunara-review-single-debrief-section lunara-review-single-debrief-shell<?php echo $is_full_spoiler ? ' lunara-spoiler-protected-content lunara-spoiler-protected-content--module' : ''; ?>" data-lunara-site-studio-section="debrief"<?php echo $is_full_spoiler ? ' data-lunara-spoiler-protected data-lunara-spoiler-post="' . esc_attr( $post_id ) . '"' : ''; ?>>
+                <section class="lunara-review-single-debrief-section lunara-review-single-debrief-shell<?php echo $is_full_spoiler ? ' lunara-spoiler-protected-content lunara-spoiler-protected-content--module' : ''; ?>"<?php echo $is_full_spoiler ? ' data-lunara-spoiler-protected data-lunara-spoiler-post="' . esc_attr( $post_id ) . '"' : ''; ?>>
                     <div class="lunara-review-single-debrief-wrap<?php echo ! empty( $debrief_render['media_html'] ) ? ' has-signature-media' : ''; ?>">
                         <?php if ( ! empty( $debrief_render['media_html'] ) ) : ?>
                             <?php echo $debrief_render['media_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -376,8 +359,8 @@ if ( have_posts() ) :
                             <?php echo $debrief_render['signature_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         </div>
                     </div>
-                    <?php if ( '' !== trim( $pairings_markup ) ) : ?>
-                        <?php echo $pairings_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php if ( ! empty( $debrief_render['pairings_html'] ) ) : ?>
+                        <?php echo $debrief_render['pairings_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     <?php endif; ?>
                 </section>
             <?php endif; ?>

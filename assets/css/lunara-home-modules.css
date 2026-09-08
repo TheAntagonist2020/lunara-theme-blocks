@@ -670,7 +670,7 @@ body.home .lunara-cinematic-hero-carousel{isolation:isolate;background:radial-gr
 
 /* lunara-home-journal-mobile-runway-css */
 @media(max-width:820px){
-        body.home .lunara-dispatches-section .lunara-journal-home-grid{grid-template-columns:minmax(0,1fr)!important;box-sizing:border-box!important;gap:12px!important;width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:auto!important;}
+        body.home .lunara-dispatches-section .lunara-journal-home-grid{grid-template-columns:minmax(0,1fr)!important;gap:12px!important;width:min(100%,calc(100vw - 32px))!important;max-width:calc(100vw - 32px)!important;margin-inline:auto!important;}
         body.home .lunara-dispatches-section .lunara-journal-home-card{min-height:0!important;height:auto!important;overflow:hidden;border-radius:10px!important;}
         body.home .lunara-dispatches-section .lunara-journal-home-card-link{min-height:0!important;height:auto!important;}
         body.home .lunara-dispatches-section .lunara-journal-home-card.has-visual:not(.is-lead) .lunara-journal-home-card-link{display:grid!important;grid-template-columns:minmax(112px,38vw) minmax(0,1fr)!important;grid-template-rows:auto!important;align-items:stretch!important;}
