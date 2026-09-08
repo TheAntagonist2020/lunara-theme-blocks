@@ -157,6 +157,6 @@ foreach ($renderer in @(
     Assert-True ($functions -match [regex]::Escape($renderer)) "Public renderer ownership must retain $renderer."
 }
 Assert-True ($studio -notmatch "add_action\(\s*'wp_enqueue_scripts'") 'Site Studio must not add public assets.'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.62\s*$') 'Theme version must be 3.2.62.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.63\s*$') 'Theme version must be 3.2.63.'
 
 Write-Host 'site-studio: all assertions passed.'

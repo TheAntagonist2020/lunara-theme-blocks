@@ -25,6 +25,49 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-08 — Theme 3.2.63 shared editor candidate
+
+### Headline
+
+Dalton authorized the first shared editor implementation: Hero and Journal now
+use the common Site Studio workflow and reusable image/ordering controls.
+Release behavior and scope are recorded in `docs/CHANGELOG.md`. The wider editor
+standard remains the migration target; this release does not replace the Review,
+Journal Desk or Academy authoring forms.
+
+### Verification and delivery
+
+Focused browser checks exercised the actual PHP inspector and shipped JavaScript
+with mocked REST persistence, Media Library selections and revisions. Full theme
+contracts, mutation checks and review are being completed before publication of
+the candidate. Desktop/mobile screenshots use sample content and local base
+styles. The interactive browser extension blocked the local review URL; no live
+admin UI acceptance is claimed.
+
+Read-only production content inspection found a separate artwork gap: review
+102632 has no stored poster/backdrop or featured image. Review 102629 has saved
+TMDB art with automatic image slots. The shared resolver cannot supply artwork
+that has never been saved. No deployment, cache operation, production write, or
+verification of a live 3.2.63 release occurred. Dalton remains responsible for
+the manual Deployer for Git button after the reviewed candidate reaches main.
+
+### Commit ledger
+
+| Repository | Branch | Meaning |
+| --- | --- | --- |
+| Theme | `codex/shared-editor-3.2.63` | Shared workflow, visual controls, regression coverage and release record; candidate in preparation. |
+
+### Punch-list and next move
+
+- Finish review and release gates; push the reviewable candidate.
+- After any main merge, rebuild `claude/rollback-exact-theme-3.2.43` / PR #159
+  and verify the exact rollback tree.
+- After Dalton deploys, inspect Hero and Journal in Site Studio, verify the public
+  homepage and run `bash tests/tools/lunara-canary-verify.sh 3.2.63`.
+- Curate missing artwork and the opening lineups as a separate editorial action.
+- Reuse the controls in remaining presentation/media editors, then Review Studio,
+  Journal Desk and Academy editorial tools. Boost/CSS work remains a later task.
+
 ## 2026-09-08 — Uniform editing across Lunara agreed; initial standard recorded
 
 ### Headline

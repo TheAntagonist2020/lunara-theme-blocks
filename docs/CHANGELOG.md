@@ -11,6 +11,37 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-08 — Theme 3.2.63 Shared Carousel Editing
+
+Hero Carousel and Journal Carousel now use the common Site Studio controller
+for Preview changes, Apply changes, Discard changes and revision history.
+The carousel adapter owns selection and fields; it no longer implements a
+second save/preview workflow. Failed saves retain the draft, edits mark previews
+stale, and discarded or restored candidates reject late picker/search responses.
+
+Automatic shows the actual six newest eligible stories with artwork and dates.
+Use this lineup in Manual explicitly copies that lineup and confirms replacement
+of an existing list. Manual rows have thumbnails, drag ordering, Move up/down,
+Remove story and expandable image/text controls. Shared image controls offer
+Media Library replacement, source reset, click/keyboard focal position, fit and
+zoom. The framing guide follows the private page preview's image dimensions when
+available; copy previews update while typing. No changes rewrite source articles.
+
+Editor metadata and public delivery use the same canonical artwork resolver.
+Hero keeps the Review Image Studio hero backdrop, with card artwork as a fallback
+only when the automatic hero slot has no image. Explicit off and empty custom
+image choices are respected. Requested unavailable attachments clear stale
+editor URLs; inaccessible unpublished titles remain generic. Reads and private
+previews preserve saved presentation until Apply; each carousel keeps independent
+settings and exact revision restore. Public playback and layout remain unchanged.
+
+This is the first editor migration. Other Site Studio panels share the action
+labels and workflow; remaining presentation/media fields and the Review, Journal
+Desk and Academy authoring editors migrate in later releases. Lunara Method and
+Oscars composition are unchanged. Guide: `docs/HOMEPAGE-CAROUSELS.md`; standard:
+`docs/EDITOR-STANDARD.md`; implementation plan:
+`docs/superpowers/plans/2026-09-08-shared-editor-controls.md`.
+
 ## 2026-09-07 — Theme 3.2.62 Independent Homepage Carousels
 
 Theme-only candidate. Site Studio > Homepage gains separate Hero Carousel and

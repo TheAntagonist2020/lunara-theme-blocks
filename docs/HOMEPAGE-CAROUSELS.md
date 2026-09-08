@@ -1,6 +1,6 @@
 # Your homepage carousel controls
 
-After Theme 3.2.62 is deployed, open **Site Studio → Homepage** and choose
+After Theme 3.2.63 is deployed, open **Site Studio → Homepage** and choose
 **Hero Carousel** or **Journal Carousel**. Each panel controls only its section.
 Your current homepage presentation continues until you apply that panel.
 
@@ -12,15 +12,25 @@ Your current homepage presentation continues until you apply that panel.
 1. Choose **Automatic** for the six newest published stories, or **Manual** to
    choose the exact lineup. Automatic uses publication dates, so old feature
    flags do not pin stories at the front.
-2. In Manual, search published stories and add the ones you want. Drag to reorder
-   or use **Move up / Move down**. Remove a story to take it out of this section.
-3. Expand a story's display controls to choose a different image, focal point,
-   zoom or full-frame image. Optional headline, excerpt, kicker and button text
-   affect this homepage display only. Blank text fields inherit the source.
+2. See the current Automatic lineup, or use **Use this lineup in Manual** to
+   start curating it. Replacing an existing manual lineup asks first. In Manual,
+   search stories by title and use **Add story**. Thumbnails and dates identify
+   each story. Drag its heading to reorder, or use **Move up / Move down**.
+   **Remove story** takes it out of this section.
+3. Expand **Edit image and text**. Choose or replace an image, click the framing
+   preview to set its focal point, or use the arrow keys and sliders. **Use source
+   image** removes the image override. The image source is shown below the preview.
+   Fit and zoom controls update immediately, and the framing guide follows the
+   page preview's image dimensions when available. Headline, excerpt, label and
+   button fields affect this homepage placement only. Blank fields inherit the
+   article's text; the story preview updates as you type.
 4. Set the section heading and playback. Both default to automatic rotation
    every seven seconds; each can use a different interval or start paused.
-5. Click **Preview Changes**, check Desktop and Mobile, then **Apply Carousel**
-   when the result is ready for visitors. Discard returns to the saved settings.
+5. Click **Preview changes**, check Desktop and Mobile, then **Apply changes**
+   when the result is ready for visitors. **Discard changes** returns to the
+   saved settings. These actions use the same workflow as the other Site Studio
+   presentation panels. Editing after a preview marks it out of date; a failed
+   save keeps your work in the editor.
 
 Switching between Automatic and Manual keeps your manual list. You can use
 Automatic for Journal and Manual for the hero, or any other combination.

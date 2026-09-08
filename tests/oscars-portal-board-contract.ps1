@@ -70,7 +70,7 @@ Assert-True (([regex]::Matches($renderer, 'id="oscars-board"')).Count -eq 1) 'Th
 # Bounded to the renderer body via the tempered (?!function\s) scan.
 $boardBody = [regex]::Match($renderer, 'function\s+lunara_render_oscars_prediction_board\s*\((?:(?!function\s)[\s\S])*').Value
 Assert-True ($boardBody.Length -gt 0) 'Unable to isolate the Prediction Board renderer body.'
-# src discipline (3.2.62 tile art): every img src the renderer emits routes
+# src discipline (3.2.63 tile art): every img src the renderer emits routes
 # through esc_url too, and the art kind is bounded to a letters-only token
 # before it becomes a class.
 $srcEmissionCount = ([regex]::Matches($boardBody, 'src=')).Count

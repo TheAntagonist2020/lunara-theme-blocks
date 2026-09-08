@@ -1,7 +1,9 @@
 # Lunara editor standard
 
 Direction agreed with Dalton on 8 September 2026. This is the target experience
-and an initial source inventory; implementation is still pending.
+and an initial source inventory. The first implementation is the Theme 3.2.63
+candidate: Hero and Journal use Site Studio's shared workflow and reusable visual
+controls. The wider authoring-editor migrations remain subsequent work.
 
 Every Lunara editor should feel like the same product. Someone who learns to
 choose an image, reorder stories, preview, and save in one place should be able
