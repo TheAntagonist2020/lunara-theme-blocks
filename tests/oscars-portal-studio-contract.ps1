@@ -234,7 +234,7 @@ Assert-True ($frontend -match "lunara_rocket_preserve_oscars_portal_css[\s\S]{0,
 Assert-True ($frontend -match "lunara_rocket_preserve_oscars_portal_inline_css[\s\S]{0,400}'lunara-oscars-portal-vars'[\s\S]{0,200}'lunara-oscars-portal-critical-css'") 'WP Rocket RUCSS must preserve both inline portal layers.'
 
 # First-paint budgets: the cacheable route CSS stays inside 56 KB (raised from
-# 45 KB in 3.2.63 for the poster wall, portrait winners and marquee) and the
+# 45 KB for the earlier poster wall, portrait winners and marquee) and the
 # rendered inline layers (saved-provenance vars + structural seed) stay
 # inside the 12 KB inline budget, measured by executing the real builders.
 $portalCssBytes = (Get-Item -LiteralPath (Join-Path $themeRoot 'assets/css/lunara-oscars-portal.css')).Length

@@ -17,7 +17,7 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
    const page = await browser.newPage({viewport:{width:1440,height:1000}});
    page.setDefaultTimeout(12000);
    const errors=[]; page.on('pageerror',error=>errors.push(error.message));
-   let submitted, saved, saves = 0, failure = false, previewBarrier, searchBarrier, metadataFailure = false, metadataOmit = false, restores = 0;
+   let submitted, saved, saves = 0, failure = false, previewBarrier, searchBarrier, metadataBarrier, metadataFailure = false, metadataOmit = false, restores = 0;
    const items = [
     {id:10,title:'Published first',type:kind === 'hero' ? 'review' : 'journal',available:true,date_label:'Sep 8, 2026',image_url:'https://example.test/art.svg',image_source:'Review artwork',excerpt:'Inherited first excerpt',kicker:'Film',cta:'Read the review'},
     {id:20,title:'Published second',type:'journal',available:true,date_label:'Sep 7, 2026',image_url:'',image_source:'No source artwork',excerpt:'Inherited second excerpt',kicker:'Journal',cta:'Read the story'}
@@ -34,6 +34,7 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
     if (url.pathname === '/art.svg') { return route.fulfill({contentType:'image/svg+xml',body:art}); }
     if (endpoint.endsWith('/metadata')) {
      check(request.headers()['x-wp-nonce']==='test-nonce','Metadata read carries nonce');
+     if(metadataBarrier){await metadataBarrier.wait;}
      if(metadataFailure) { return route.fulfill({status:503,json:{message:'Metadata unavailable'}}); }
      return route.fulfill({json:{items:Object.fromEntries(items.map(item=>[item.id,item])),images:metadataOmit?{}:{42:'https://example.test/art.svg?custom=42',77:'https://example.test/art.svg?restored=77'},automatic:[10,20]}});
     }
@@ -71,6 +72,7 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
    check(await page.locator('[data-editor-key="20"] [data-editor-move="up"]').evaluate(el=>document.activeElement===el),'Focus follows keyboard ordering');
    await rows.nth(0).getByRole('button',{name:'Remove story',exact:true}).click();
    check((await rows.first().innerText()).includes('Published second'),'Accessible move and removal preserve order');
+   await page.locator('[data-carousel-items]').scrollIntoViewIfNeeded();
    await rows.first().locator('.lunara-carousel-story-heading').dragTo(rows.nth(1).locator('.lunara-carousel-story-heading'));
    check((await rows.first().innerText()).includes('Published first'),'Pointer drag changes manual order');
    await rows.first().getByRole('button',{name:'Move down',exact:true}).click();
@@ -127,11 +129,18 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
    await page.waitForFunction(()=>document.querySelector('.lunara-editor-image-stage img').src.includes('restored=77'));
    await rows.first().getByRole('button',{name:'Use source image',exact:true}).click();
    check(await rows.first().locator('.lunara-editor-image-empty').isVisible(),'Removing an override returns to the source placeholder');
+   metadataBarrier=barrier();
    await page.locator('[data-action="discard"]').click();
+   await page.waitForFunction(()=>document.querySelector('.lunara-editor-metadata-status').textContent.includes('Loading story details'));
+   await page.locator('[data-action="preview"]').click();await page.waitForFunction(()=>document.querySelector('[data-lunara-site-studio]').dataset.workspaceState==='preview-current');
+   metadataBarrier.release();metadataBarrier=null;
+   const resumedMetadata=await page.waitForFunction(()=>document.querySelector('.lunara-editor-image-stage img').src.includes('restored=77'));
+   check(await resumedMetadata.jsonValue(),'Preview resumes an interrupted metadata read and restores artwork');
    if(!(await rows.first().locator('details').evaluate(el=>el.open))){await rows.first().locator('summary').click();}
    await page.evaluate(()=>{window.wp={media:()=>{return{on:(event,fn)=>{window.pendingMedia=fn;},state:()=>({get:()=>({first:()=>({toJSON:()=>({id:999,url:'https://example.test/art.svg?stale=999'})})})}),open:()=>{}};}};});
    await rows.first().getByRole('button',{name:'Replace image',exact:true}).click();
    await rows.first().getByLabel('Headline',{exact:true}).fill('Unwanted change'); await page.locator('[data-action="discard"]').click(); await page.evaluate(()=>window.pendingMedia());
+   await page.waitForFunction(()=>document.querySelector('.lunara-editor-image-stage img').src.includes('restored=77'));
    check(!(await rows.first().locator('.lunara-editor-image-stage img').getAttribute('src')).includes('stale=999'),'Discard rejects late Media Library callback');
    await rows.first().getByRole('button',{name:'Remove story',exact:true}).click();check(await page.locator('[data-carousel-empty]').isVisible(),'Empty manual warning');
    searchBarrier=barrier();await page.locator('[data-carousel-search-button]').click();await page.locator('[data-action="discard"]').click();searchBarrier.release();searchBarrier=null;

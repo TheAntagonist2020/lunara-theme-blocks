@@ -137,7 +137,7 @@ $rendererBody = [regex]::Match($portal, 'function\s+lunara_oscars_pick_visuals\s
 Assert-Contract ($rendererBody.Length -gt 0 -and $rendererBody -notmatch 'get_title_visual_package\([^)]*true') 'The render-path visuals resolver must never allow a remote fetch.'
 
 # 7. Budgets that the studio and payload contracts also hold, restated here so a regression names itself.
-# 3.2.63 raised the route ceiling from 45,000 to 57,344 bytes (56 KB): the
+# The earlier poster-wall release raised the ceiling from 45,000 to 57,344 bytes (56 KB): the
 # poster wall, the portrait winners and the marquee are three image-led
 # blocks that each need their own layer rules. docs/CHANGELOG.md records it.
 $routeBytes = [Text.Encoding]::UTF8.GetByteCount($route)

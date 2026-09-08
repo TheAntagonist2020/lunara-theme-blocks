@@ -195,7 +195,7 @@
   function setBusy(value) {
    busy = value;
    if (value) { frozen = []; container.querySelectorAll('input,select,textarea,button').forEach(function (control) { frozen.push([control,control.disabled]); control.disabled = true; }); }
-   else { frozen.forEach(function (entry) { entry[0].disabled = entry[1]; }); frozen = []; renderAutomatic(); if (!searchPending) { renderSearchResults(); } imageEditors.forEach(function (editor) { editor.render(); }); }
+   else { frozen.forEach(function (entry) { entry[0].disabled = entry[1]; }); frozen = []; renderAutomatic(); if (!searchPending) { renderSearchResults(); } imageEditors.forEach(function (editor) { editor.render(); }); refreshMetadata(); }
   }
   function render(focus) {
    if (metadataOwner !== context.getState()) {
