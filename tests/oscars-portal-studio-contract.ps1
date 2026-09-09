@@ -234,7 +234,7 @@ Assert-True ($frontend -match "lunara_rocket_preserve_oscars_portal_css[\s\S]{0,
 Assert-True ($frontend -match "lunara_rocket_preserve_oscars_portal_inline_css[\s\S]{0,400}'lunara-oscars-portal-vars'[\s\S]{0,200}'lunara-oscars-portal-critical-css'") 'WP Rocket RUCSS must preserve both inline portal layers.'
 
 # First-paint budgets: the cacheable route CSS stays inside 56 KB (raised from
-# 45 KB in 3.2.62 for the poster wall, portrait winners and marquee) and the
+# 45 KB for the earlier poster wall, portrait winners and marquee) and the
 # rendered inline layers (saved-provenance vars + structural seed) stay
 # inside the 12 KB inline budget, measured by executing the real builders.
 $portalCssBytes = (Get-Item -LiteralPath (Join-Path $themeRoot 'assets/css/lunara-oscars-portal.css')).Length
@@ -258,8 +258,8 @@ Assert-True ($controlDesk -match "'Oscars Portal Studio'") 'The Theme Studio com
 Assert-True ($controlDesk -match "'#lunara-oscars-portal-studio'") 'The command index entry must anchor to the Portal Studio surface.'
 
 # Version lock: this intentionally asserts the NEXT reissue identity. It is
-# EXPECTED to fail until the 3.2.62 version migration lands as its own step;
+# EXPECTED to fail until the 3.2.63 version migration lands as its own step;
 # every assertion above it must already pass on the pre-migration tree.
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.62\s*$') 'Theme version must be 3.2.62.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.63\s*$') 'Theme version must be 3.2.63.'
 
 Write-Host 'oscars-portal-studio: all assertions passed.'

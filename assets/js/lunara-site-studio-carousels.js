@@ -1,107 +1,216 @@
+/* Carousel field adapter. The shared Site Studio host owns every save and preview. */
 (function () {
  'use strict';
- var root = document.querySelector('[data-lunara-site-studio]');
- var config = window.LunaraSiteStudioWorkspaceConfig;
- if (!root || !config || ['hero-carousel', 'journal-carousel'].indexOf(config.surface) < 0 || !config.endpoints || !config.nonce) { return; }
- var frame = root.querySelector('iframe'), status = root.querySelector('[data-workspace-status]');
- var baseline, candidate, metadata;
- try { baseline = JSON.parse(document.getElementById('lunara-site-studio-state').textContent); metadata = JSON.parse(document.getElementById('lunara-carousel-metadata').textContent); } catch (error) { return; }
- if (!baseline || !Array.isArray(baseline.slides) || !frame || !status) { return; }
+ var controls = window.LunaraEditorControls;
  function validState(state) {
   var keys = ['adopted','mode','heading','autoplay','interval','overlay','slides'];
-  if (!state || typeof state !== 'object' || JSON.stringify(Object.keys(state).sort()) !== JSON.stringify(keys.sort()) || typeof state.adopted !== 'boolean' || ['auto','manual'].indexOf(state.mode) < 0 || typeof state.heading !== 'string' || [0,1].indexOf(state.autoplay) < 0 || !Number.isInteger(state.interval) || state.interval < 3 || state.interval > 30 || !Number.isInteger(state.overlay) || state.overlay < 20 || state.overlay > 100 || !Array.isArray(state.slides) || state.slides.length > 48) { return false; }
+  if (!state || typeof state !== 'object' || JSON.stringify(Object.keys(state).sort()) !== JSON.stringify(keys.sort()) || typeof state.adopted !== 'boolean' || ['auto','manual'].indexOf(state.mode) < 0 || typeof state.heading !== 'string' || state.heading.length > 160 || [0,1].indexOf(state.autoplay) < 0 || !Number.isInteger(state.interval) || state.interval < 3 || state.interval > 30 || !Number.isInteger(state.overlay) || state.overlay < 20 || state.overlay > 100 || !Array.isArray(state.slides) || state.slides.length > 48) { return false; }
   var seen = {}; return state.slides.every(function (slide) {
-   if (!slide || JSON.stringify(Object.keys(slide).sort()) !== JSON.stringify(['post_id','image_id','headline','excerpt','kicker','cta','overlay','focal_x','focal_y','zoom','fit'].sort()) || !Number.isInteger(slide.post_id) || slide.post_id < 1 || seen[slide.post_id] || !Number.isInteger(slide.image_id) || slide.image_id < 0 || ['cover','full'].indexOf(slide.fit) < 0 || !['headline','excerpt','kicker','cta'].every(function (key) { return typeof slide[key] === 'string'; })) { return false; }
+   if (!slide || JSON.stringify(Object.keys(slide).sort()) !== JSON.stringify(['post_id','image_id','headline','excerpt','kicker','cta','overlay','focal_x','focal_y','zoom','fit'].sort()) || !Number.isSafeInteger(slide.post_id) || slide.post_id < 1 || seen[slide.post_id] || !Number.isSafeInteger(slide.image_id) || slide.image_id < 0 || ['cover','full'].indexOf(slide.fit) < 0) { return false; }
+   var limits = {headline:240,excerpt:600,kicker:60,cta:40};
+   if (!Object.keys(limits).every(function (key) { return typeof slide[key] === 'string' && slide[key].length <= limits[key]; })) { return false; }
    seen[slide.post_id] = true; return ['overlay','focal_x','focal_y','zoom'].every(function (key) { return Number.isInteger(slide[key]) && slide[key] >= (key === 'zoom' ? 100 : 0) && slide[key] <= (key === 'zoom' ? 112 : 100); });
   });
  }
- if (!validState(baseline)) { return; }
- var clone = function (value) { return JSON.parse(JSON.stringify(value)); };
- candidate = clone(baseline);
- var busy = false, generation = 0, searchGeneration = 0, dragId = null, previewFingerprint = '', previewInstance = '', mediaGeneration = 0;
- var list = root.querySelector('[data-carousel-items]'), results = root.querySelector('[data-carousel-results]');
- function text(tag, content, parent) { var node = document.createElement(tag); node.textContent = content; if (parent) { parent.appendChild(node); } return node; }
- function dirty() { return JSON.stringify(candidate) !== JSON.stringify(baseline); }
- function announce(message) { status.textContent = message; root.setAttribute('data-dirty', dirty() ? 'true' : 'false'); root.setAttribute('data-workspace-state', dirty() ? 'dirty' : 'live'); }
- function changed() { announce(previewFingerprint && previewFingerprint !== JSON.stringify(candidate) ? 'Preview is out of date. Preview Changes again.' : 'Unsaved changes. Preview, then Apply when ready.'); }
- function freeze(value) { busy = value; root.querySelectorAll('input,select,textarea,button').forEach(function (node) { node.disabled = value; }); root.querySelector('.lunara-site-studio-inspector').setAttribute('aria-busy', String(value)); }
- function endpoint(name) { var url = new URL(config.endpoints[name], window.location.href); if (url.origin !== window.location.origin) { throw new Error('Invalid workspace destination.'); } return url.href; }
- async function request(name, body) {
-  var response = await fetch(endpoint(name), {method: body ? 'POST' : 'GET', credentials: 'same-origin', headers: {'Content-Type': 'application/json', 'X-WP-Nonce': config.nonce}, body: body ? JSON.stringify(body) : undefined});
-  var payload = await response.json(); if (!response.ok) { throw new Error(payload.message || 'The request failed. Your changes are still here.'); } return payload;
+ function validDom(root) {
+  return !!controls && ['[data-carousel-editor]','[data-carousel-manual]','[data-carousel-items]','[data-carousel-results]','[data-carousel-search]','[data-carousel-search-button]','[data-carousel-empty]','#lunara-carousel-metadata'].every(function (selector) { return root.querySelectorAll(selector).length === 1; });
  }
- function button(label, action, parent) { var node = text('button', label, parent); node.type = 'button'; node.addEventListener('click', function () { if (!busy) { action(); } }); return node; }
- function field(parent, slide, key, label, type, min, max) {
-  var wrap = text('label', label, parent), input = document.createElement(type === 'textarea' ? 'textarea' : 'input');
-  if (type !== 'textarea') { input.type = type || 'text'; } input.value = slide[key];
-  if (min !== undefined) { input.min = min; input.max = max; } if (type === 'text') { input.maxLength = key === 'headline' ? 240 : key === 'kicker' ? 60 : 40; } if (type === 'textarea') { input.maxLength = 600; }
-  input.addEventListener('input', function () { slide[key] = type === 'number' || type === 'range' ? Number(input.value) : input.value; changed(); }); wrap.appendChild(input);
- }
- function move(index, destination) { if (destination < 0 || destination >= candidate.slides.length) { return; } var slide = candidate.slides.splice(index, 1)[0]; candidate.slides.splice(destination, 0, slide); render(); changed(); }
- function render() {
-  root.querySelectorAll('[data-carousel-field]').forEach(function (input) { var key = input.dataset.carouselField; if (input.type === 'checkbox') { input.checked = !!candidate[key]; } else { input.value = candidate[key]; } });
-  root.querySelector('[data-carousel-manual]').hidden = candidate.mode !== 'manual'; root.querySelector('[data-carousel-empty]').hidden = candidate.slides.length !== 0;
-  list.replaceChildren();
-  candidate.slides.forEach(function (slide, index) {
-   var row = document.createElement('li'); row.draggable = true; row.dataset.postId = String(slide.post_id); list.appendChild(row);
-   var meta = metadata[slide.post_id] || {title: 'Item #' + slide.post_id, available: false}; text('strong', (index + 1) + '. ' + meta.title, row);
-   if (!meta.available) { text('p', 'Unavailable or unpublished — retained here, skipped on homepage.', row); }
-   var controls = text('div', '', row); controls.className = 'lunara-carousel-item-actions';
-   button('Move up', function () { move(index, index - 1); }, controls); button('Move down', function () { move(index, index + 1); }, controls);
-   button('Remove', function () { candidate.slides.splice(index, 1); render(); changed(); }, controls);
-   var details = document.createElement('details'); row.appendChild(details); text('summary', 'Image and text overrides', details);
-   var imageLabel = text('p', slide.image_id ? 'Image override: attachment #' + slide.image_id : 'Uses source image', details);
-   button('Choose image', function () {
-    if (!window.wp || !wp.media) { announce('Media Library is unavailable.'); return; }
-    var currentGeneration = mediaGeneration, picker = wp.media({title: 'Carousel image override', library: {type: 'image'}, multiple: false});
-    picker.on('select', function () { if (busy || currentGeneration !== mediaGeneration || candidate.slides.indexOf(slide) < 0) { return; } var image = picker.state().get('selection').first().toJSON(); slide.image_id = Number(image.id); imageLabel.textContent = 'Image override: attachment #' + slide.image_id; changed(); }); picker.open();
-   }, details);
-   button('Use source image', function () { slide.image_id = 0; imageLabel.textContent = 'Uses source image'; changed(); }, details);
-   if (config.surface === 'hero-carousel') { field(details, slide, 'overlay', 'Overlay override (0 inherits global)', 'range', 0, 100); }
-   field(details, slide, 'focal_x', 'Horizontal focal point (%)', 'range', 0, 100); field(details, slide, 'focal_y', 'Vertical focal point (%)', 'range', 0, 100); field(details, slide, 'zoom', 'Zoom (%)', 'range', 100, 112);
-   var fitLabel = text('label', 'Image fit', details), fit = document.createElement('select'); [['cover','Fill frame'],['full','Show full image']].forEach(function (item) { var option = text('option', item[1], fit); option.value = item[0]; }); fit.value = slide.fit; fit.addEventListener('change', function () { slide.fit = fit.value; changed(); }); fitLabel.appendChild(fit);
-   field(details, slide, 'headline', 'Headline (blank inherits)', 'text'); field(details, slide, 'excerpt', 'Excerpt (blank inherits)', 'textarea'); field(details, slide, 'kicker', 'Kicker (blank inherits)', 'text'); field(details, slide, 'cta', 'Button text (blank inherits)', 'text');
-   row.addEventListener('dragstart', function (event) { if (busy || event.target.closest('input,textarea,select')) { event.preventDefault(); return; } dragId = slide.post_id; event.dataTransfer.setData('text/plain', String(dragId)); });
-   row.addEventListener('dragover', function (event) { if (!busy && dragId !== null) { event.preventDefault(); } });
-   row.addEventListener('drop', function (event) { event.preventDefault(); if (busy || dragId === null) { return; } var from = candidate.slides.findIndex(function (item) { return item.post_id === dragId; }); dragId = null; if (from >= 0) { move(from, index); } }); row.addEventListener('dragend', function () { dragId = null; });
+ function create(context) {
+  var root = context.root, config = context.config, container = root.querySelector('[data-carousel-editor]');
+  var list = root.querySelector('[data-carousel-items]'), results = root.querySelector('[data-carousel-results]');
+  var metadata = {items:{},images:{},automatic:[]}, version = 0, searchSequence = 0, metadataSequence = 0;
+  var metadataOwner = context.getState(), metadataLoading = false, metadataUnavailable = false;
+  var metadataKey = '', searchItems = [], searchPending = false, openItems = new Set(), frozen = [], busy = false;
+  var imageEditors = [], imageRenders = [], node = controls.node, button = controls.button;
+  try { mergeMetadata(JSON.parse(root.querySelector('#lunara-carousel-metadata').textContent)); } catch (error) { /* A failed metadata refresh has a visible retry path. */ }
+  var automatic = root.querySelector('[data-carousel-automatic]');
+  if (!automatic) { automatic = node('div', '', container); automatic.dataset.carouselAutomatic = ''; }
+  var automaticList = node('ol', '', automatic, 'lunara-carousel-automatic-list');
+  var adoptLineup = button('Use this lineup in Manual', automatic, function () {
+   if (!enabled() || !metadata.automatic.length) { return; }
+   var current = context.getState();
+   if (current.slides.length && !window.confirm('Replace your saved manual lineup with these stories? This stays private until Apply changes.')) { return; }
+   var previous = {}; current.slides.forEach(function (slide) { previous[slide.post_id] = slide; });
+   current.slides = metadata.automatic.map(function (id) { return previous[id] || blankSlide(id); }); current.mode = 'manual';
+   invalidate(); render(); context.changed();
+   var firstStory = list.querySelector('summary'); if (firstStory) { firstStory.focus(); }
+   context.announce('Automatic stories copied to your manual lineup. Review them before Apply changes.');
   });
- }
- root.querySelectorAll('[data-carousel-field]').forEach(function (input) { input.addEventListener('input', function () { var key = input.dataset.carouselField; candidate[key] = input.type === 'checkbox' ? Number(input.checked) : input.type === 'number' || input.type === 'range' ? Number(input.value) : input.value; if (key === 'mode') { render(); } changed(); }); });
- async function search() {
-  var sequence = ++searchGeneration; var url = new URL(endpoint('state')); url.pathname = url.pathname.replace(/\/state$/, '/search'); url.searchParams.set('search', root.querySelector('[data-carousel-search]').value);
-  try { var response = await fetch(url.href, {credentials:'same-origin', headers: {'X-WP-Nonce': config.nonce}}); var payload = await response.json(); if (!response.ok || !Array.isArray(payload.items)) { throw new Error('Search unavailable.'); } if (sequence !== searchGeneration) { return; } results.replaceChildren();
-   payload.items.forEach(function (item) { button(item.title + ' (' + item.type + ')', function () { if (candidate.slides.length >= 48) { announce('A carousel can contain up to 48 items.'); return; } if (candidate.slides.some(function (slide) { return slide.post_id === item.id; })) { announce('This item is already selected.'); return; } metadata[item.id] = {title:item.title,available:true}; candidate.slides.push({post_id:item.id,image_id:0,headline:'',excerpt:'',kicker:'',cta:'',overlay:0,focal_x:50,focal_y:30,zoom:100,fit:'cover'}); render(); changed(); }, results); }); if (!payload.items.length) { text('p','No published items found.',results); }
-  } catch (error) { if (sequence === searchGeneration) { announce(error.message); } }
- }
- root.querySelector('[data-carousel-search-button]').addEventListener('click', search);
- root.querySelector('[data-carousel-search]').addEventListener('keydown', function (event) { if (event.key === 'Enter') { event.preventDefault(); search(); } });
- async function refreshRevisions() {
-  var payload = await request('revisions'), revisionList = root.querySelector('[data-revision-list]'); if (!revisionList || !Array.isArray(payload.revisions)) { return; } revisionList.replaceChildren(); payload.revisions.forEach(function (revision) { var row = text('li', revision.timestamp + ' ', revisionList), restore = button('Restore', function () { perform('restore', revision.id); }, row); restore.dataset.revisionId = revision.id; });
- }
- async function perform(action, revision) {
-  if (busy) { return; }
-  if (action === 'discard') { candidate = clone(baseline); mediaGeneration++; previewFingerprint = ''; previewInstance = ''; frame.src = config.previewOrigin + config.previewRoute; render(); announce('Changes discarded.'); return; }
-  if (action === 'restore' && !window.confirm('Restore this revision to the live site?')) { return; }
-  freeze(true); mediaGeneration++; announce(action === 'save' ? 'Applying carousel…' : 'Working…');
-  try {
-   var payload = await request(action, action === 'restore' ? {revision_id: revision} : {state: clone(candidate)});
-   if (action === 'preview') {
-    var url = new URL(payload.url); if (url.origin !== config.previewOrigin || url.pathname !== config.previewRoute || !url.searchParams.has(config.previewQueryArg) || Array.from(url.searchParams.keys()).length !== 1 || !/^[0-9a-f-]{36}$/.test(url.searchParams.get(config.previewQueryArg))) { throw new Error('Invalid private preview URL.'); }
-    previewInstance = config.pageUuid + ':' + (++generation); url.searchParams.set(config.previewInstanceArg, previewInstance); frame.src = url.href; previewFingerprint = JSON.stringify(candidate); announce('Private preview updated. Check desktop and mobile before Apply.');
-   } else {
-    if (!validState(payload.state) || typeof payload.timestamp !== 'string' || typeof payload[action === 'restore' ? 'safety_revision_id' : 'revision_id'] !== 'string') { throw new Error('Invalid saved state. Reload this workspace.'); }
-    baseline = clone(payload.state); candidate = clone(baseline); previewFingerprint = ''; previewInstance = ''; render(); frame.src = config.previewOrigin + config.previewRoute; announce(action === 'save' ? 'Carousel applied.' : 'Revision restored.'); await refreshRevisions();
+  var metadataStatus = node('p', '', container, 'lunara-editor-metadata-status');
+  var retry = button('Refresh story details', container, function () { metadataKey = ''; refreshMetadata(); }); retry.hidden = true;
+  function enabled() { return !busy && !context.isBusy(); }
+  function blankSlide(id) { return {post_id:id,image_id:0,headline:'',excerpt:'',kicker:'',cta:'',overlay:0,focal_x:50,focal_y:30,zoom:100,fit:'cover'}; }
+  function itemMeta(id) { return metadata.items[id] || {id:id,title:(metadataLoading ? 'Loading story #' : 'Story #') + id,available:null,image_url:'',date_label:'',image_source:metadataLoading ? 'Loading artwork' : 'Story details unavailable'}; }
+  function mergeMetadata(payload) {
+   if (!payload || typeof payload !== 'object') { return false; }
+   if (payload.items && !Array.isArray(payload.items) && typeof payload.items === 'object') {
+    Object.keys(payload.items).forEach(function (key) {
+     var item = payload.items[key]; if (item && typeof item.title === 'string' && Number.isSafeInteger(Number(key)) && Number(key) > 0) { metadata.items[key] = item; }
+    });
    }
-  } catch (error) { announce(error.message); } finally { freeze(false); }
+   if (payload.images && typeof payload.images === 'object') {
+    Object.keys(payload.images).forEach(function (id) { if (Number.isSafeInteger(Number(id)) && Number(id) > 0) { metadata.images[id] = controls.imageUrl(payload.images[id]); } });
+   }
+   if (Array.isArray(payload.automatic)) { metadata.automatic = payload.automatic.filter(function (id, i, ids) { return Number.isSafeInteger(id) && id > 0 && ids.indexOf(id) === i; }).slice(0,6); }
+   return true;
+  }
+  function readUrl(action) {
+   var url = new URL(config.endpoints.state, window.location.href), route = url.searchParams.get('rest_route');
+   if (url.origin !== window.location.origin || url.username || url.password) { throw new Error('The editor destination is invalid.'); }
+   if (route) { url.searchParams.set('rest_route', route.replace(/\/state$/, '/' + action)); }
+   else { url.pathname = url.pathname.replace(/\/state$/, '/' + action); }
+   return url;
+  }
+  async function refreshMetadata() {
+   var state = context.getState(), ids = state.slides.map(function (slide) { return slide.post_id; }), images = state.slides.map(function (slide) { return slide.image_id; }).filter(Boolean);
+   var key = JSON.stringify([ids,images]); if (metadataKey === key) { return; } metadataKey = key;
+   var sequence = ++metadataSequence, ticket = version; metadataLoading = true;
+   try {
+    var url = readUrl('metadata'); url.searchParams.set('ids', ids.join(',')); url.searchParams.set('image_ids', images.join(','));
+    var response = await fetch(url.href, {credentials:'same-origin',headers:{'X-WP-Nonce':config.nonce}}), payload = await response.json();
+    if (sequence !== metadataSequence || ticket !== version) { return; }
+    if (!response.ok || !payload || !payload.items || !Array.isArray(payload.automatic)) { throw new Error('Story details could not refresh. Your choices are still here.'); }
+    ids.concat(payload.automatic).forEach(function (id) { delete metadata.items[id]; });
+    images.forEach(function (id) { delete metadata.images[id]; });
+    mergeMetadata(payload); metadataLoading = false;
+    metadataUnavailable = ids.concat(payload.automatic).some(function (id) { return !metadata.items[id]; }) || images.some(function (id) { return !Object.prototype.hasOwnProperty.call(payload.images || {}, id); });
+    metadataStatus.textContent = metadataUnavailable ? 'Some story details could not refresh. Your choices are still here.' : ''; retry.hidden = !metadataUnavailable;
+    imageRenders.forEach(function (update) { update(); }); imageEditors.forEach(function (editor) { editor.render(); }); renderAutomatic(); if (!searchPending) { renderSearchResults(); }
+   } catch (error) { if (sequence === metadataSequence && ticket === version) { metadataLoading = false; metadataUnavailable = true; metadataKey = ''; metadataStatus.textContent = 'Story details could not refresh. Your choices are still here.'; retry.hidden = false; imageRenders.forEach(function (update) { update(); }); imageEditors.forEach(function (editor) { editor.render(); }); renderAutomatic(); } }
+  }
+  function summary(parent, item, index) {
+   var header = node('div', '', parent, 'lunara-carousel-story-heading');
+   var art = controls.thumbnail(header, item.image_url);
+   var copy = node('div', '', header), title = node('strong', (index === null ? '' : (index + 1) + '. ') + item.title, copy);
+   var details = node('span', [item.type === 'review' ? 'Review' : item.type === 'journal' ? 'Journal' : '',item.date_label || ''].filter(Boolean).join(' · '), copy, 'lunara-carousel-story-date');
+   return {art:art,title:title,details:details};
+  }
+  function renderAutomatic() {
+   automatic.hidden = context.getState().mode !== 'auto'; automaticList.replaceChildren();
+   metadata.automatic.forEach(function (id, index) { var row = node('li', '', automaticList); summary(row, itemMeta(id), index); });
+   if (!metadata.automatic.length) { node('li', metadataLoading ? 'Loading published stories…' : metadataUnavailable ? 'Published stories could not load. Refresh story details to try again.' : 'No eligible published stories. This section will be hidden when applied.', automaticList); }
+   adoptLineup.disabled = !enabled() || metadata.automatic.length === 0 || metadata.automatic.some(function (id) { return !metadata.items[id] || !metadata.items[id].available; });
+  }
+  function copyField(parent, slide, field, title, max, type, update) {
+   var label = node('label', title, parent, 'lunara-editor-field'), input = node(type === 'textarea' ? 'textarea' : 'input', '', label);
+   if (type !== 'textarea') { input.type = 'text'; } input.maxLength = max; input.value = slide[field]; input.dataset.carouselOverride = field;
+   var inheritedKey = field === 'headline' ? 'title' : field;
+   function updatePlaceholder() { input.placeholder = itemMeta(slide.post_id)[inheritedKey] || 'Use article text'; }
+   updatePlaceholder(); imageRenders.push(updatePlaceholder);
+   input.addEventListener('input', function () { if (!enabled()) { return; } slide[field] = input.value; context.changed(); update(); });
+  }
+  function currentSlide(slide) { return context.getState().slides.indexOf(slide) >= 0; }
+  function storyRow(slide, index) {
+   var row = node('li', '', null, 'lunara-carousel-story'); row.dataset.postId = String(slide.post_id);
+   var header = summary(row, itemMeta(slide.post_id), index);
+   var warning = node('p', '', row, 'lunara-carousel-item-warning');
+   var actions = node('div', '', row, 'lunara-editor-actions');
+   var up = button('Move up', actions, function () { if (enabled()) { move(index, index - 1, 'up'); } }); up.dataset.editorMove = 'up'; up.disabled = index === 0;
+   var down = button('Move down', actions, function () { if (enabled()) { move(index, index + 1, 'down'); } }); down.dataset.editorMove = 'down'; down.disabled = index === context.getState().slides.length - 1;
+   button('Remove story', actions, function () {
+    if (!enabled()) { return; } context.getState().slides.splice(index, 1); openItems.delete(slide.post_id); invalidate(); render(); context.changed();
+    var next = list.children[Math.min(index, list.children.length - 1)]; if (next) { next.querySelector('summary').focus(); } else { root.querySelector('[data-carousel-search]').focus(); }
+   });
+   var details = node('details', '', row, 'lunara-carousel-story-editor'); details.open = openItems.has(slide.post_id);
+   node('summary', 'Edit image and text', details); details.addEventListener('toggle', function () { if (!details.isConnected) { return; } if (details.open) { openItems.add(slide.post_id); } else { openItems.delete(slide.post_id); } });
+   node('p', 'These changes affect this homepage placement. Leave text blank to use the article.', details, 'description');
+   var copyPreview = node('div', '', details, 'lunara-carousel-copy-preview');
+   var previewLabel = node('small', '', copyPreview), previewHeadline = node('strong', '', copyPreview), previewExcerpt = node('p', '', copyPreview), previewButton = node('span', '', copyPreview);
+   function update() {
+    var meta = itemMeta(slide.post_id), title = slide.headline || meta.title;
+    header.title.textContent = (index + 1) + '. ' + title;
+    header.details.textContent = [meta.type === 'review' ? 'Review' : meta.type === 'journal' ? 'Journal' : '',meta.date_label || ''].filter(Boolean).join(' · ');
+    warning.hidden = !!meta.available;
+    warning.textContent = meta.available === false ? 'Unavailable or unpublished — retained here, skipped on the homepage.' : metadataLoading ? 'Loading story details…' : 'Story details unavailable. Refresh story details to check this selection.';
+    var image = slide.image_id ? metadata.images[slide.image_id] : meta.image_url;
+    var nextArt = controls.thumbnail(null, image); header.art.replaceWith(nextArt); header.art = nextArt;
+    previewLabel.textContent = slide.kicker || meta.kicker || (meta.type === 'review' ? 'Review' : 'Journal');
+    previewHeadline.textContent = title; previewExcerpt.textContent = slide.excerpt || meta.excerpt || '';
+    previewButton.textContent = slide.cta || meta.cta || 'Read the story';
+   }
+   imageRenders.push(update);
+   var image = controls.image({parent:details,aspect:config.surface === 'journal-carousel' ? '16 / 10' : '16 / 9',getValue:function () { return slide; },
+    enabled:function () { return enabled() && currentSlide(slide); },ticket:function () { return version; },announce:context.announce,
+    source:function () { var meta = itemMeta(slide.post_id); return {url:meta.image_url,label:meta.image_source}; },image:function (id) { return metadata.images[id] || ''; },
+    selectedImage:function (id, url) { if (url) { metadata.images[id] = url; } },
+    change:function (patch) { Object.keys(patch).forEach(function (key) { slide[key] = patch[key]; }); context.changed(); update(); if (patch.image_id && !metadata.images[patch.image_id]) { metadataKey = ''; refreshMetadata(); } }
+   }); imageEditors.push(image);
+   if (config.surface === 'hero-carousel') { controls.range(details, 'Overlay strength (0 uses section setting)', 'overlay', 0, 100, function () { return slide; }, function (key, value) { if (enabled()) { slide[key] = value; context.changed(); } }); }
+   copyField(details, slide, 'headline', 'Headline', 240, 'text', update); copyField(details, slide, 'excerpt', 'Excerpt', 600, 'textarea', update);
+   copyField(details, slide, 'kicker', 'Label', 60, 'text', update); copyField(details, slide, 'cta', 'Button text', 40, 'text', update); update(); return row;
+  }
+  var ordered = controls.orderedList({parent:list,items:function () { return context.getState().slides; },key:function (slide) { return slide.post_id; },row:storyRow,enabled:enabled,move:move});
+  var previewFrame = root.querySelector('iframe');
+  function syncFraming() {
+   if (!previewFrame) { return; }
+   try {
+    var media = previewFrame.contentDocument.querySelector(config.surface === 'hero-carousel' ? '.lunara-cinematic-hero-bg' : '.lunara-home-news-media');
+    if (media) { var rect = media.getBoundingClientRect(); imageEditors.forEach(function (editor) { editor.setAspect(rect.width, rect.height); }); }
+   } catch (error) { /* Keep the framing guide until the same-origin preview is ready. */ }
+  }
+  if (previewFrame) { previewFrame.addEventListener('load', syncFraming); if (window.MutationObserver) { new MutationObserver(syncFraming).observe(previewFrame, {attributes:true,attributeFilter:['width','height']}); } }
+  function move(index, destination, direction) {
+   var slides = context.getState().slides;
+   if (!enabled() || destination < 0 || destination >= slides.length || index === destination) { return; }
+   var slide = slides.splice(index, 1)[0]; slides.splice(destination, 0, slide); render({key:slide.post_id,direction:direction || 'up'}); context.changed(); context.announce('Story order updated.');
+  }
+  function renderSearchResults() {
+   results.replaceChildren(); var selected = context.getState().slides.map(function (slide) { return slide.post_id; });
+   searchItems.forEach(function (item) {
+    var card = node('div', '', results, 'lunara-carousel-search-result'); summary(card, item, null);
+    var chosen = selected.indexOf(item.id) >= 0;
+    var add = button(chosen ? 'Selected' : 'Add story', card, function () {
+     if (!enabled() || context.getState().mode !== 'manual') { return; }
+     var slides = context.getState().slides;
+     if (slides.length >= 48) { context.announce('A carousel can contain up to 48 stories.'); return; }
+     if (slides.some(function (slide) { return slide.post_id === item.id; })) { return; }
+     metadata.items[item.id] = Object.assign({available:true},item); slides.push(blankSlide(item.id)); render(); context.changed();
+    }); add.disabled = chosen || !enabled(); add.setAttribute('aria-label', (chosen ? 'Selected: ' : 'Add story: ') + item.title);
+   });
+  }
+  async function search() {
+   if (!enabled() || context.getState().mode !== 'manual') { return; }
+   var sequence = ++searchSequence, ticket = version; searchPending = true; results.replaceChildren(); node('p', 'Searching stories…', results);
+   try {
+    var url = readUrl('search'); url.searchParams.set('search', root.querySelector('[data-carousel-search]').value);
+    var response = await fetch(url.href, {credentials:'same-origin',headers:{'X-WP-Nonce':config.nonce}}), payload = await response.json();
+    if (sequence !== searchSequence || ticket !== version) { return; }
+    if (!response.ok || !payload || !Array.isArray(payload.items)) { throw new Error('Search could not load. Try again.'); }
+    searchItems = payload.items.filter(function (item) { return item && Number.isSafeInteger(item.id) && item.id > 0 && typeof item.title === 'string' && item.available !== false; });
+    searchItems.forEach(function (item) { metadata.items[item.id] = Object.assign({available:true}, item); });
+    renderSearchResults(); if (!searchItems.length) { node('p', 'No published stories found.', results); }
+   } catch (error) { if (sequence === searchSequence && ticket === version) { results.replaceChildren(); node('p', 'Search could not load. Try again.', results); } }
+   finally { if (sequence === searchSequence) { searchPending = false; } }
+  }
+  root.querySelector('[data-carousel-search-button]').addEventListener('click', search);
+  root.querySelector('[data-carousel-search]').addEventListener('keydown', function (event) { if (event.key === 'Enter') { event.preventDefault(); search(); } });
+  root.querySelectorAll('[data-carousel-field]').forEach(function (input) {
+   input.addEventListener('input', function () {
+    if (!enabled()) { return; } var key = input.dataset.carouselField;
+    context.getState()[key] = input.type === 'checkbox' ? Number(input.checked) : input.type === 'number' || input.type === 'range' ? Number(input.value) : input.value;
+    if (key === 'mode') { invalidate(); render(); } context.changed();
+   });
+  });
+  function invalidate() { version++; searchSequence++; metadataSequence++; metadataKey = ''; ordered.cancelDrag(); searchPending = false; }
+  function setBusy(value) {
+   busy = value;
+   if (value) { frozen = []; container.querySelectorAll('input,select,textarea,button').forEach(function (control) { frozen.push([control,control.disabled]); control.disabled = true; }); }
+   else { frozen.forEach(function (entry) { entry[0].disabled = entry[1]; }); frozen = []; renderAutomatic(); if (!searchPending) { renderSearchResults(); } imageEditors.forEach(function (editor) { editor.render(); }); refreshMetadata(); }
+  }
+  function render(focus) {
+   if (metadataOwner !== context.getState()) {
+    metadataOwner = context.getState(); metadata = {items:{},images:{},automatic:[]}; metadataKey = '';
+    searchItems = []; searchPending = false;
+    metadataLoading = true; metadataUnavailable = false; metadataStatus.textContent = 'Loading story details…'; retry.hidden = true;
+   }
+   root.querySelectorAll('[data-carousel-field]').forEach(function (input) { var value = context.getState()[input.dataset.carouselField]; if (input.type === 'checkbox') { input.checked = !!value; } else { input.value = value; } });
+   root.querySelector('[data-carousel-manual]').hidden = context.getState().mode !== 'manual';
+   root.querySelector('[data-carousel-empty]').hidden = context.getState().slides.length !== 0;
+   imageEditors = []; imageRenders = []; ordered.render(focus); renderAutomatic(); if (!searchPending) { renderSearchResults(); } syncFraming();
+   var notice = root.querySelector('[data-carousel-adoption-notice]'); if (notice) { notice.hidden = context.getState().adopted; }
+   refreshMetadata();
+  }
+  return {render:render,setBusy:setBusy,invalidate:invalidate};
  }
- root.querySelectorAll('[data-action]').forEach(function (node) { var action = node.dataset.action; if (['save','preview','discard','restore'].indexOf(action) >= 0) { node.addEventListener('click', function () { perform(action, node.dataset.revisionId); }); } });
- root.querySelector('[data-action="save"]').textContent = 'Apply Carousel';
- root.querySelectorAll('[data-preview-width]').forEach(function (node) { node.addEventListener('click', function () { var width = config.widths[node.dataset.previewWidth]; if (!width) { return; } frame.style.width = width + 'px'; frame.setAttribute('width', String(width)); root.querySelectorAll('[data-preview-width]').forEach(function (button) { button.setAttribute('aria-pressed', String(button === node)); }); scale(); }); });
- function scale() { var viewport = root.querySelector('.lunara-site-studio-preview-viewport') || root.querySelector('.lunara-site-studio-preview'); if (viewport) { var width = Number(frame.getAttribute('width')) || 1440; frame.style.transformOrigin = 'top left'; var ratio = Math.min(1, viewport.clientWidth / width); frame.style.transform = 'scale(' + ratio + ')'; var flow = root.querySelector('.lunara-site-studio-preview-flow'); if (flow) { flow.style.height = (900 * ratio) + 'px'; } } }
- window.addEventListener('resize', scale);
- root.addEventListener('click', function (event) { var link = event.target.closest('[data-lunara-surface-card],[data-workspace-navigation]'); if (link && (busy || (dirty() && !window.confirm('Discard unsaved changes and leave this carousel?')))) { event.preventDefault(); event.stopPropagation(); } }, true);
- window.addEventListener('beforeunload', function (event) { if (dirty() || busy) { event.preventDefault(); event.returnValue = ''; } });
- window.addEventListener('message', function (event) { var data = event.data; if (event.origin !== config.previewOrigin || event.source !== frame.contentWindow || !previewInstance || !data || data.protocol !== config.protocol || data.version !== 1 || data.surface !== config.surface || data.instance !== previewInstance || data.type !== 'select-section' || config.markers.indexOf(data.section) < 0) { return; } root.querySelector('.lunara-site-studio-inspector').scrollIntoView({block:'nearest'}); });
- root.querySelectorAll('[data-lunara-site-studio-section-link]').forEach(function (node) { node.addEventListener('click', function () { root.querySelector('.lunara-site-studio-inspector').scrollIntoView({block:'nearest'}); }); });
- render(); freeze(false); root.setAttribute('data-lunara-site-studio-ready', 'true'); announce('Settings loaded. Preview changes privately, then Apply.'); scale();
+ window.LunaraSiteStudioCarouselEditor = {validateState:validState,validateDom:validDom,create:create};
 }());

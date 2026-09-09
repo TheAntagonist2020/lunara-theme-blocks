@@ -25,6 +25,187 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-08 — Theme 3.2.63 shared editor candidate
+
+### Headline
+
+Dalton authorized the first shared editor implementation: Hero and Journal now
+use the common Site Studio workflow and reusable image/ordering controls.
+Release behavior and scope are recorded in `docs/CHANGELOG.md`. The wider editor
+standard remains the migration target; this release does not replace the Review,
+Journal Desk or Academy authoring forms.
+
+### Verification and delivery
+
+The candidate passed both component reviews and the final integration review.
+Focused browser checks exercised the actual PHP inspector and shipped JavaScript
+with mocked REST persistence, Media Library selections and revisions. Desktop/mobile
+screenshots use sample content and local base styles. The interactive browser
+extension blocked the local review URL; no live admin UI acceptance is claimed.
+The temporary local preview server was stopped after verification.
+
+### Verified live state
+
+Read-only production content inspection found a separate artwork gap: review
+102632 has no stored poster/backdrop or featured image. Review 102629 has saved
+TMDB art with automatic image slots. The shared resolver cannot supply artwork
+that has never been saved. No deployment, cache operation, production write, or
+verification of a live 3.2.63 release occurred. Dalton remains responsible for
+the manual Deployer for Git button after the reviewed candidate reaches main.
+
+### Commit ledger
+
+| Repository | SHA | Meaning |
+| --- | --- | --- |
+| Theme | `a6ce114` | Shared Site Studio host, source metadata and canonical artwork. |
+| Theme | `da16048` | Reusable visual controls and carousel field adapter. |
+| Theme | `ccc29fb` | Positive automatic hero-to-card artwork fallback regression. |
+| Theme | `f614b06` | Clear stale metadata across restored/discarded candidates. |
+| Theme | `68fd9ff` | Theme 3.2.63 identity, guide and initial release record. |
+| Theme | `ad92ebb` | Resume interrupted metadata after Preview; deterministic browser regression. |
+
+These commits and this closing record are on `codex/shared-editor-3.2.63`.
+
+### Gate ledger
+
+| Gate | Result |
+| --- | --- |
+| Full theme contract suite | 92 unique PowerShell scripts passed; zero failures. |
+| Final combined carousel gate after review fixes | 40 settings/metadata, 149 shared-editor browser, 26 delivery and 29 public browser checks passed. |
+| Mutation checks | Seven deliberate faults caught at their intended assertions; clean scratch restored byte-exact. Working checkout was never mutated. |
+| Final Preview/metadata timing regression | Failed with the old code at the held-metadata artwork wait; passed after the read resumes on unfreeze. |
+| Syntax and whitespace | 113 PHP, 50 JavaScript and 26 CSS files passed; changed adapter rechecked after the final fix; diff check passed. |
+| Code review | Both task reviews and final whole-branch review approved, including focused fixes. |
+| Live 3.2.63 acceptance | Not run: requires Dalton's deployment, authenticated editor inspection, actual public homepage probe and versioned canary. |
+
+### Corrections and logged issues
+
+Historical comments in two Oscars contracts now describe the earlier poster-wall
+release without incorrectly attributing that CSS budget change to 3.2.63. No
+earlier production claim was revised. Missing source artwork on review 102632 is
+logged for curation; the editor cannot infer an image that was never stored.
+
+### Punch-list and next move
+
+- Review and gates are complete. Merge the published candidate, then Dalton can
+  deploy Theme 3.2.63 with the manual Control Desk button.
+- After any main merge, rebuild `claude/rollback-exact-theme-3.2.43` / PR #159
+  and verify the exact rollback tree.
+- After Dalton deploys, inspect Hero and Journal in Site Studio, verify the public
+  homepage and run `bash tests/tools/lunara-canary-verify.sh 3.2.63`.
+- Curate missing artwork and the opening lineups as a separate editorial action.
+- Reuse the controls in remaining presentation/media editors, then Review Studio,
+  Journal Desk and Academy editorial tools. Boost/CSS work remains a later task.
+
+## 2026-09-08 — Uniform editing across Lunara agreed; initial standard recorded
+
+### Headline
+
+Dalton clarified that consistent controls must extend across all Lunara editors,
+including content and workflow editors. `docs/EDITOR-STANDARD.md` records that
+direction, a source inventory, shared interaction rules, and a proposed delivery
+order. This is a docs-only addition; implementation of the shared editor is pending.
+
+### Verification and delivery
+
+The inventory was checked against the theme, Core, Journal Foundation, and Oscars
+Ledger local source entry points. No production probes or changes were made in
+this continuation; the preceding live verification is recorded in the next entry.
+The release-identity contract and diff check cover this documentation update.
+The full implementation suite and production canary were not repeated because
+no executable code changed. No release or main merge occurred.
+
+### Commit ledger
+
+| Repository | Branch | Meaning |
+| --- | --- | --- |
+| lunara-theme-blocks | `codex/carousel-live-handoff-20260908` | Editor standard and inventory, following the live carousel handoff. |
+
+### Open work and next move
+
+The next implementation slice is shared controls proven in Hero and Journal,
+then reused across Site Studio, media, Review Studio, Journal Desk, and Academy
+editorial tools. Existing content ownership and publishing rules remain part of
+the design. The Hero artwork gaps and unadopted Journal carousel from the prior
+entry remain open. No corrections to that entry are needed.
+
+The agent can use the standard for the next implementation task. This docs branch
+remains available for a future requested PR; rebuild the rollback hatch after
+any eventual main merge. The standard is not a claim of completed UI work.
+
+## 2026-09-08 — Live 3.2.62 verified; single-story hero replaced with automatic selection
+
+### Headline
+
+PR #178 is merged and Dalton deployed Theme 3.2.62. The public hero still used
+the legacy manual deck containing only the "X Leaked Spider-Man" Journal story.
+The live Hero Carousel editor was switched to Automatic, privately previewed,
+and explicitly applied. Its saved state survives reloading, and the anonymous
+homepage now contains six recent reviews instead of that forced one-story deck.
+
+### Verified live state
+
+| Surface | Observed result |
+| --- | --- |
+| Theme build | `3.2.62+20260907-213435`; three anonymous build reads agreed. |
+| Journal and Oscars canonical routes | Canary exit 0, GO; both sentinels reported LIVE_COHERENT. This run preceded the Hero settings Apply. |
+| Hero editor | Automatic mode saved, private preview succeeded, Apply acknowledged, and the setting persisted after reload. |
+| Public homepage after Apply | Adopted hero markup; six reviews beginning with The Dog Stars. The old "X Leaked Spider-Man" article is absent from the hero. |
+| Rollback hatch | PR #159 is open and mergeable, parented on the current main tip; its tree remains `c55bf394594149db2888295c5d51f85f47b2b520`. |
+
+### What changed and why
+
+Only the Hero carousel's saved presentation was applied. Its prior manual list
+is retained, as designed; no source article was edited. Journal presentation
+was not adopted during this operation. An initial anonymous read still returned
+the old hero after the save; subsequent canonical reads and browser inspection
+confirmed the new lineup. No cache clear or deployment was triggered by the agent.
+Feature details remain in `docs/CHANGELOG.md` and `docs/HOMEPAGE-CAROUSELS.md`.
+
+### Commit ledger
+
+| Repository | Commit or branch | Meaning |
+| --- | --- | --- |
+| lunara-theme-blocks | `778282e6b783a579c774d2f09fe15a6e958ebf1f` | Carousel implementation from PR #178. |
+| lunara-theme-blocks | `fbff3da7702fa57237d5ee6c523a570f1efcce9e` | Verified merged main tip. |
+| lunara-theme-blocks | `claude/rollback-exact-theme-3.2.43`, PR #159 | Rebuilt against that main tip; tree and parent checked before push, remote head verified afterward. |
+| lunara-theme-blocks | `codex/carousel-live-handoff-20260908` | This docs-only operational record, based on current main. |
+
+### Gate ledger and corrections
+
+Production canary passed. Real authenticated Hero preview, Apply and reload
+passed; the final anonymous public lineup and browser rendering were checked.
+No implementation files changed, so the full local suite was not repeated.
+The release-identity contract and diff check are the checks for this docs update.
+
+The first editor snapshot was taken before its controller finished loading and
+showed the generic failure placeholder. The agent initially called this a startup
+defect, then retracted that diagnosis after the ready state and enabled controls
+appeared. No persistent startup defect was established. The loaded mode was
+Manual with one story, not Automatic as the uninitialized select had appeared.
+
+### Logged, not fixed
+
+Five of the six current automatic hero slides render the missing-art placeholder;
+The Invite has an image. The remaining image sources need investigation or curation.
+The initial loading message is misleading, and carousel controls across the site
+remain split among several custom implementations. No full-site rebuild or parent
+theme change was performed or approved as a concrete implementation scope.
+
+### Punch-list and next move
+
+The user wants consistent visual carousel editing across the site: select stories,
+drag thumbnails into order, replace imagery and copy, and reliably see saved changes.
+The recommended next scope is one shared carousel editor with direct edit links
+and migration of the existing custom carousels, preserving the site's styling.
+Start with a demonstrably usable manual Hero and Journal workflow, including image
+selection and accurate loading/save feedback; then apply the same controls elsewhere.
+The parent Blocksy theme is not implicated in the confirmed one-story selection.
+
+This docs branch is ready for a future requested PR. After any further main merge,
+rebuild the rollback hatch again. Editorial publication and broad CSS cleanup remain
+separate work.
+
 ## 2026-09-07 — Theme 3.2.62 homepage carousels candidate
 
 ### Headline

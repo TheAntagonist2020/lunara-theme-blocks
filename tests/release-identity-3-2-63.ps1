@@ -69,11 +69,11 @@ function Get-TopEntry {
 $stylePath = Join-Path $root 'style.css'
 $styleLines = @(Get-Content -LiteralPath $stylePath)
 $versionHeaderLines = @($styleLines | Where-Object { $_ -match '^Version:' })
-$exactVersionHeaders = @($styleLines | Where-Object { $_ -ceq 'Version: 3.2.62' })
+$exactVersionHeaders = @($styleLines | Where-Object { $_ -ceq 'Version: 3.2.63' })
 Assert-Contract ($versionHeaderLines.Count -eq 1 -and $exactVersionHeaders.Count -eq 1) `
-    'style.css must contain exactly one exact Version: 3.2.62 header.'
+    'style.css must contain exactly one exact Version: 3.2.63 header.'
 
-$priorVersion = @('3', '2', '61') -join '.'
+$priorVersion = @('3', '2', '62') -join '.'
 $escapedPriorVersion = $priorVersion.Replace('.', '\.')
 $trackedSources = @(Get-ChildItem -LiteralPath (Join-Path $root 'tests') -File | Where-Object { $_.Extension -in @('.ps1', '.php', '.js') })
 Assert-Contract ($trackedSources.Count -gt 0) 'Test-source discovery must return at least one file.'
@@ -143,18 +143,18 @@ foreach ($requiredDeployIgnore in @('docs', 'docs/**', 'tests', 'tests/**')) {
 }
 
 $releaseSeparator = [char]0x2014
-$changelogHeading = "## 2026-09-07 $releaseSeparator Theme 3.2.62 Independent Homepage Carousels"
+$changelogHeading = "## 2026-09-08 $releaseSeparator Theme 3.2.63 Shared Carousel Editing"
 $changelog = [IO.File]::ReadAllText((Join-Path $root 'docs/CHANGELOG.md'))
 $changelogHeadings = @($changelog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $changelogHeadingCount = @($changelogHeadings | Where-Object { $_ -ceq $changelogHeading }).Count
-Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.62 changelog heading must exist exactly once.'
+Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.63 changelog heading must exist exactly once.'
 # Deliberately NOT asserted: that this entry is the first heading in the
 # changelog. docs/CHANGELOG.md covers all seven repositories (AGENTS.md), so a
 # plugin-only release lands above the newest theme release without moving the
 # theme's identity. Pinning absolute position froze the changelog on the first
 # such entry (2026-09-04, Journal Foundation 1.2.14 and Dispatch 3.2.8), the
 # same way the session-log pin froze the log (see the note below and the
-# 2026-08-31 change that removed it). What is asserted instead: the 3.2.62
+# 2026-08-31 change that removed it). What is asserted instead: the 3.2.63
 # entry is the newest THEME release entry. No heading above it may name a
 # theme version, so a later theme release still has to regenerate this file.
 $themeReleaseHeadingPattern = '^## .+ Theme \d+\.\d+\.\d+\b'
@@ -164,25 +164,27 @@ if ($changelogHeadingIndex -gt 0) {
     $newerThemeHeadings = @($changelogHeadings[0..($changelogHeadingIndex - 1)] | Where-Object { $_ -match $themeReleaseHeadingPattern })
 }
 Assert-Contract ($changelogHeadingIndex -ge 0 -and $newerThemeHeadings.Count -eq 0) `
-    'The 3.2.62 changelog entry must be the newest theme release entry; only plugin-only entries may sit above it.'
+    'The 3.2.63 changelog entry must be the newest theme release entry; only plugin-only entries may sit above it.'
 $changelogEntry = Get-TopEntry -Text $changelog -Heading $changelogHeading
 foreach ($coverage in @(
     @{ Pattern = '(?is)Hero Carousel.+Journal Carousel'; Label = 'the two independent editor panels' },
-    @{ Pattern = '(?is)Automatic.+six newest.+Manual.+ordered'; Label = 'automatic and manual selection' },
-    @{ Pattern = '(?is)Apply.+adoption.+legacy.+private previews'; Label = 'explicit adoption and private preview' },
-    @{ Pattern = '(?is)three/two/one.+pause/play.+reduced motion'; Label = 'responsive layout and accessible playback' },
-    @{ Pattern = '(?is)empty.+single.+preload'; Label = 'empty and single-item delivery parity' },
-    @{ Pattern = '(?is)Lunara Method and Oscars composition are unchanged'; Label = 'the scope boundary' }
+    @{ Pattern = '(?is)common Site Studio controller.+Preview changes.+Apply changes.+Discard changes.+revision history'; Label = 'one shared workflow' },
+    @{ Pattern = '(?is)Automatic.+six newest.+Manual.+confirms replacement'; Label = 'explicit automatic-lineup adoption' },
+    @{ Pattern = '(?is)drag ordering.+Move up/down.+Media Library replacement.+source reset.+click/keyboard focal position'; Label = 'reusable visual controls and keyboard ordering' },
+    @{ Pattern = '(?is)Failed saves retain the draft.+previews\s+stale.+late picker/search responses'; Label = 'failure recovery and stale callback protection' },
+    @{ Pattern = '(?is)canonical artwork resolver.+hero backdrop.+off and empty custom'; Label = 'source image precedence and explicit empty choices' },
+    @{ Pattern = '(?is)private\s+previews preserve saved presentation until Apply.+independent\s+settings.+revision restore'; Label = 'independent settings and private preview' },
+    @{ Pattern = '(?is)Lunara Method and\s+Oscars composition are unchanged'; Label = 'the scope boundary' }
 )) {
     Assert-Contract ($changelogEntry -match $coverage.Pattern) `
-        "The 3.2.62 changelog entry must cover $($coverage.Label)."
+        "The 3.2.63 changelog entry must cover $($coverage.Label)."
 }
 
-$sessionHeading = "## 2026-09-07 $releaseSeparator Theme 3.2.62 homepage carousels candidate"
+$sessionHeading = "## 2026-09-08 $releaseSeparator Theme 3.2.63 shared editor candidate"
 $sessionLog = [IO.File]::ReadAllText((Join-Path $root 'docs/SESSION-LOG.md'))
 $sessionHeadings = @($sessionLog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $sessionHeadingCount = @($sessionHeadings | Where-Object { $_ -ceq $sessionHeading }).Count
-Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.62 local-candidate session heading must exist exactly once.'
+Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.63 local-candidate session heading must exist exactly once.'
 # Deliberately NOT asserted: that this entry is the newest in the session log.
 # It was newest when written, but AGENTS.md requires every session to append a
 # new entry at the top of docs/SESSION-LOG.md, so pinning position froze the log
@@ -198,7 +200,7 @@ Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.62 local-candidate s
 $sessionEntry = Get-TopEntry -Text $sessionLog -Heading $sessionHeading
 Assert-Contract ($sessionEntry.Contains('docs/CHANGELOG.md')) `
     'The newest session entry must point to docs/CHANGELOG.md for release detail.'
-Assert-Contract ($sessionEntry.Contains('No deployment, cache operation, production write, or live verification occurred.')) `
+Assert-Contract ($sessionEntry -match '(?s)No deployment, cache operation, production write, or\s+verification of a live 3\.2\.63 release occurred\.') `
     'The newest session entry must explicitly record every release action that did not occur.'
 Assert-Contract ($sessionEntry -match '(?is)Dalton.+manual.+Deployer for Git') `
     'The newest session entry must name Dalton and manual Deployer for Git as the later deployment boundary.'
@@ -207,7 +209,7 @@ Assert-Contract ($sessionEntry -notmatch '(?im)^\s*(Deployment completed|Deploye
 
 if ($script:Failures.Count -gt 0) {
     $details = $script:Failures | ForEach-Object { " - $_" }
-    throw "Theme 3.2.62 release identity contract failed:`n$($details -join "`n")"
+    throw "Theme 3.2.63 release identity contract failed:`n$($details -join "`n")"
 }
 
-Write-Host 'Theme 3.2.62 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and intact local-only release records.'
+Write-Host 'Theme 3.2.63 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and intact local-only release records.'

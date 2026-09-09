@@ -6,6 +6,84 @@ function lunara_home_carousel_is_adopted( $kind = 'hero' ) {
 	return function_exists( 'lunara_home_carousel_settings' ) && ! empty( lunara_home_carousel_settings( $kind )['adopted'] );
 }
 
+/** Return the exact public source types for a carousel. */
+function lunara_home_carousel_source_types( $kind = 'hero' ) {
+	return 'journal' === $kind ? array( 'journal' ) : array( 'review', 'journal' );
+}
+
+/** Resolve the six newest eligible sources in stable date/ID order. */
+function lunara_home_carousel_automatic_posts( $kind = 'hero' ) {
+	$query = new WP_Query( array(
+		'post_type' => lunara_home_carousel_source_types( $kind ), 'post_status' => 'publish', 'has_password' => false,
+		'posts_per_page' => 6, 'orderby' => array( 'date' => 'DESC', 'ID' => 'DESC' ),
+		'ignore_sticky_posts' => true, 'no_found_rows' => true,
+	) );
+	return is_array( $query->posts ) ? $query->posts : array();
+}
+
+/**
+ * Resolve inherited carousel artwork through the same canonical source owners
+ * used by Review cards and Journal cards. Review Image Studio's explicit off
+ * and empty-custom modes deliberately remain empty here.
+ */
+function lunara_home_carousel_source_artwork( $post_id, $size = 'full', $placement = 'hero' ) {
+	$post_id = absint( $post_id );
+	$post    = $post_id ? get_post( $post_id ) : null;
+	$result  = array( 'url' => '', 'attachment_id' => 0, 'source' => '' );
+	if ( ! ( $post instanceof WP_Post ) ) { return $result; }
+
+	if ( 'review' === $post->post_type ) {
+		$core_source = array();
+		if ( 'hero' === $placement && class_exists( 'Lunara_Review_Image_Studio' ) ) {
+			$core_source = Lunara_Review_Image_Studio::resolve_slot( $post_id, 'hero_banner' );
+			if ( isset( $core_source['mode'] ) && ( 'off' === $core_source['mode'] || ( 'custom' === $core_source['mode'] && empty( $core_source['url'] ) ) ) ) { return $result; }
+			$result['url']           = ! empty( $core_source['url'] ) ? trim( (string) $core_source['url'] ) : '';
+			$result['attachment_id'] = absint( isset( $core_source['attachment_id'] ) ? $core_source['attachment_id'] : 0 );
+		} elseif ( 'hero' === $placement && function_exists( 'lunara_get_review_hero_image_url' ) ) {
+			$result['url'] = trim( (string) lunara_get_review_hero_image_url( $post_id ) );
+		}
+		if ( '' === $result['url'] ) {
+			$core_source = class_exists( 'Lunara_Review_Image_Studio' ) ? Lunara_Review_Image_Studio::resolve_slot( $post_id, 'card' ) : array();
+			if ( isset( $core_source['mode'] ) && ( 'off' === $core_source['mode'] || ( 'custom' === $core_source['mode'] && empty( $core_source['url'] ) ) ) ) { return $result; }
+			$image_data = function_exists( 'lunara_get_review_card_image_data' ) ? lunara_get_review_card_image_data( $post_id, $size, array() ) : array();
+			$result['url'] = ! empty( $image_data['url'] ) ? trim( (string) $image_data['url'] ) : '';
+			if ( '' === $result['url'] && ! function_exists( 'lunara_get_review_card_image_data' ) ) {
+				$result['url'] = (string) get_the_post_thumbnail_url( $post_id, $size );
+			}
+			$result['attachment_id'] = absint( isset( $core_source['attachment_id'] ) ? $core_source['attachment_id'] : 0 );
+		}
+		$result['source'] = '' !== $result['url'] ? __( 'Review artwork', 'lunara-film' ) : '';
+	} elseif ( 'journal' === $post->post_type ) {
+		$result['url']    = function_exists( 'lunara_get_journal_card_image_url' ) ? trim( (string) lunara_get_journal_card_image_url( $post_id, $size ) ) : (string) get_the_post_thumbnail_url( $post_id, $size );
+		$result['source'] = '' !== $result['url'] ? __( 'Journal artwork', 'lunara-film' ) : '';
+	}
+
+	if ( '' !== $result['url'] && ! $result['attachment_id'] && function_exists( 'attachment_url_to_postid' ) ) {
+		$result['attachment_id'] = absint( attachment_url_to_postid( $result['url'] ) );
+	}
+	return $result;
+}
+
+/** Build inherited copy and artwork once so editor metadata matches delivery. */
+function lunara_home_carousel_source_slide( $post, $kind = 'hero' ) {
+	if ( ! ( $post instanceof WP_Post ) ) { return array(); }
+	$id    = (int) $post->ID;
+	$slide = function_exists( 'lunara_build_hero_slide_for_post' ) ? lunara_build_hero_slide_for_post( $id ) : null;
+	if ( ! is_array( $slide ) ) {
+		$slide = array(
+			'title' => get_the_title( $id ), 'url' => get_permalink( $id ),
+			'kicker' => 'review' === $post->post_type ? __( 'Latest Review', 'lunara-film' ) : __( 'Journal', 'lunara-film' ),
+			'cta' => 'review' === $post->post_type ? __( 'Read the review', 'lunara-film' ) : __( 'Read the story', 'lunara-film' ),
+			'excerpt' => function_exists( 'lunara_card_excerpt' ) ? lunara_card_excerpt( $id, 28 ) : wp_trim_words( wp_strip_all_tags( get_the_excerpt( $id ) ), 28, '…' ),
+		);
+	}
+	$artwork = lunara_home_carousel_source_artwork( $id, 'full', 'journal' === $kind ? 'card' : 'hero' );
+	$slide['image']          = $artwork['url'];
+	$slide['attachment_id']  = $artwork['attachment_id'];
+	$slide['image_source']   = $artwork['source'];
+	return $slide;
+}
+
 /** Resolve published sources without the legacy featured/lead ordering. */
 function lunara_home_carousel_slides( $kind = 'hero' ) {
 	$kind = 'journal' === $kind ? 'journal' : 'hero';
@@ -14,38 +92,17 @@ function lunara_home_carousel_slides( $kind = 'hero' ) {
 	$changed = function_exists( 'wp_cache_get_last_changed' ) ? wp_cache_get_last_changed( 'posts' ) : '';
 	$key = md5( serialize( array( $kind, $settings, $changed ) ) );
 	if ( isset( $GLOBALS['lunara_home_carousel_slide_cache'][ $key ] ) ) { return $GLOBALS['lunara_home_carousel_slide_cache'][ $key ]; }
-	$types = 'journal' === $kind ? array( 'journal' ) : array( 'review', 'journal' );
+	$types = lunara_home_carousel_source_types( $kind );
 	$entries = $settings['slides'];
 	if ( 'auto' === $settings['mode'] ) {
-		$query = new WP_Query( array(
-			'post_type' => $types, 'post_status' => 'publish', 'has_password' => false,
-			'posts_per_page' => 6, 'orderby' => array( 'date' => 'DESC', 'ID' => 'DESC' ),
-			'ignore_sticky_posts' => true, 'no_found_rows' => true,
-		) );
-		$entries = array_map( static function ( $post ) { return array( 'post_id' => (int) $post->ID ); }, $query->posts );
+		$entries = array_map( static function ( $post ) { return array( 'post_id' => (int) $post->ID ); }, lunara_home_carousel_automatic_posts( $kind ) );
 	}
 	$slides = array();
 	foreach ( $entries as $entry ) {
 		$post = get_post( $entry['post_id'] );
 		if ( ! ( $post instanceof WP_Post ) || 'publish' !== $post->post_status || ! empty( $post->post_password ) || ! in_array( $post->post_type, $types, true ) ) { continue; }
 		$id = (int) $post->ID;
-		$slide = function_exists( 'lunara_build_hero_slide_for_post' ) ? lunara_build_hero_slide_for_post( $id ) : null;
-		if ( ! is_array( $slide ) ) {
-			$slide = array(
-				'image' => '', 'attachment_id' => 0, 'title' => get_the_title( $id ), 'url' => get_permalink( $id ),
-				'kicker' => 'review' === $post->post_type ? __( 'Latest Review', 'lunara-film' ) : __( 'Journal', 'lunara-film' ),
-				'cta' => 'review' === $post->post_type ? __( 'Read the review', 'lunara-film' ) : __( 'Read the story', 'lunara-film' ),
-				'excerpt' => function_exists( 'lunara_card_excerpt' ) ? lunara_card_excerpt( $id, 28 ) : wp_trim_words( wp_strip_all_tags( get_the_excerpt( $id ) ), 28, '…' ),
-			);
-		}
-		// Journal cards can use portrait or smaller artwork too; no wide-image gate.
-		if ( 'journal' === $kind || empty( $slide['image'] ) ) {
-			$image = function_exists( 'lunara_get_journal_card_image_url' ) && 'journal' === $post->post_type ? lunara_get_journal_card_image_url( $id, 'full' ) : get_the_post_thumbnail_url( $id, 'full' );
-			if ( $image ) {
-				$slide['image'] = $image;
-				$slide['attachment_id'] = function_exists( 'lunara_hero_attachment_id_from_url' ) ? lunara_hero_attachment_id_from_url( $image ) : 0;
-			}
-		}
+		$slide = lunara_home_carousel_source_slide( $post, $kind );
 		if ( ! empty( $entry['image_id'] ) && wp_attachment_is_image( $entry['image_id'] ) ) {
 			$image = wp_get_attachment_image_url( $entry['image_id'], 'full' );
 			if ( $image ) { $slide['image'] = $image; $slide['attachment_id'] = (int) $entry['image_id']; }
