@@ -25,6 +25,77 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-08 — Theme 3.2.63 merged; manual deployment next
+
+### Headline
+
+PR #179 merged at 2026-09-09 01:41:37 UTC after Dalton authorized the release
+handoff. Main now contains Theme 3.2.63 with the exact reviewed source tree.
+The standing rollback PR #159 was rebuilt against that merge and verified.
+The public site still reports 3.2.62; merging did not deploy the theme.
+
+### Verified live state
+
+Read-only, canonical URLs without query strings were checked on 2026-09-09 UTC:
+
+| Route | HTTP | Public build | Checked UTC |
+| --- | --- | --- | --- |
+| `/` | 200 | `3.2.62+20260907-213435` | 01:42:20 |
+| `/journal/` | 200 | `3.2.62+20260907-213435` | 01:42:22 |
+| `/oscars/` | 200 | `3.2.62+20260907-213435` | 01:42:24 |
+
+These are availability/build probes, not a 3.2.63 live canary or authenticated
+editor acceptance. No deployment, production write, or cache operation occurred.
+
+### What shipped and why
+
+The shared Hero/Journal editor candidate is now merged into `main` and ready
+for Dalton's manual Deployer for Git release from Lunara Control Desk.
+See `docs/CHANGELOG.md`, **Theme 3.2.63 Shared Carousel Editing**, for behavior
+and scope. This session adds a release record without changing deployed files.
+
+### Commit ledger
+
+| Repository | Commit | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | `9d702f93c0c8a332a9986c3859055e8765a831fe` | Reviewed PR #179 head; GitHub lint passed before merge. |
+| `lunara-theme-blocks` | `09705df1b9152847a3c4154f14ab4f30ed2716aa` | PR #179 merge; tree equals the reviewed head. |
+| `lunara-theme-blocks` | PR #159 / `claude/rollback-exact-theme-3.2.43` | Rebuilt after PR #179 with current main as first parent and previous hatch as second parent; normal fast-forward push. |
+
+### Gate ledger
+
+| Gate | Result |
+| --- | --- |
+| Published PR head | GitHub lint run `34289477407` passed on `9d702f9`. |
+| Merge integrity | Main and reviewed head both have tree `c6ea74c2a52a684a8f19c9153e60ceb98d69cba4`. |
+| Rollback after PR #179 | Remote tree and simulated merge both equal `c55bf394594149db2888295c5d51f85f47b2b520`; first parent is the PR #179 merge; PR #159 is open and mergeable. |
+| Release checks reused | Candidate's 92 theme contracts, 40 settings/metadata, 149 editor browser, 26 delivery, 29 public browser checks; 113 PHP, 50 JS and 26 CSS syntax/balance checks; seven mutations and final timing regression. See preceding candidate record. |
+| Record-only checks | Release identity contract and `git diff --check` passed before committing this entry. |
+| Not run in this merge session | Full local suite and mutations were not repeated for the identical source tree; live 3.2.63 canary and authenticated editor acceptance await manual deployment. |
+
+### Corrections
+
+None. The earlier candidate record remains an accurate account of its own
+session and has not been rewritten to claim deployment or merging.
+
+### Logged, not fixed
+
+Remaining authoring/media editors still need the shared-control migration.
+Missing source artwork and opening-lineup curation remain editorial follow-ups;
+Boost Critical CSS, Image CDN quality and the base stylesheet diet remain open.
+
+### Punch-list and whose move is next
+
+- Agent: merge this docs-only record and rebuild/verify PR #159 again, as required
+  after every merge. Always resolve the hatch against current main.
+- Dalton: use Lunara Control Desk to deploy the theme from `main` with Deployer
+  for Git. Auto-deploy remains off.
+- After deployment: verify the public build, run
+  `bash tests/tools/lunara-canary-verify.sh 3.2.63`, and accept Hero/Journal editing
+  in the authenticated Studio. Only a live exit 0 is GO.
+- Follow-up: curate the two opening lineups, then migrate the remaining editors
+  to the shared controls in the agreed sequence.
+
 ## 2026-09-08 — Theme 3.2.63 shared editor candidate
 
 ### Headline
