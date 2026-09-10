@@ -720,6 +720,8 @@ body.home .lunara-latest-reviews-section .lunara-review-grid-card.has-no-visual{
     body.home .lunara-oscar-picks-section .lunara-oscar-pick-card .lunara-oscar-pick-card-link{height:100%!important;min-height:0!important;grid-template-rows:auto 1fr!important;}
     body.home .lunara-oscar-picks-section .lunara-oscar-pick-card.has-no-visual .lunara-oscar-pick-card-link{grid-template-rows:1fr!important;}
     body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-media{aspect-ratio:16/10!important;height:auto!important;min-height:0!important;max-height:none!important;border-radius:8px 8px 0 0!important;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-media picture{display:contents;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-media.is-portrait img{object-fit:contain!important;transform:none!important;}
     body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-copy{padding:16px!important;min-width:0!important;}
     body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-title{display:block!important;min-height:0!important;max-height:none!important;overflow:visible!important;overflow-wrap:anywhere;hyphens:none;}
     body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:8px;max-width:100%;}

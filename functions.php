@@ -13503,7 +13503,10 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 					$rationale   = wp_trim_words( wp_strip_all_tags( get_the_excerpt( $pid ) ), 28, '…' );
 					$card_url    = lunara_resolve_oscar_pick_ledger_url( $pid, $film, $person, $year, $category );
 					$has_visual  = has_post_thumbnail( $pid );
-					$thumb_url   = $has_visual ? get_the_post_thumbnail_url( $pid, 'newspack-article-block-landscape-intermediate' ) : '';
+					$mobile_art = $has_visual ? wp_get_attachment_image_src( get_post_thumbnail_id( $pid ), 'full' ) : false;
+					$mobile_portrait = $mobile_art && $mobile_art[1] > 0 && $mobile_art[2] > $mobile_art[1];
+					$mobile_srcset = $mobile_art ? wp_get_attachment_image_srcset( get_post_thumbnail_id( $pid ), 'full' ) : '';
+					if ( $mobile_art && ! $mobile_srcset ) { $mobile_srcset = $mobile_art[0]; }
 					$thumb_attrs = array(
 						'class'         => 'lunara-oscar-pick-card-image',
 						'loading'       => 'lazy',
@@ -13515,8 +13518,15 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 					<article class="lunara-oscar-pick-card is-status-<?php echo esc_attr( $status ); ?> <?php echo $has_visual ? 'has-visual' : 'has-no-visual'; ?>" role="listitem">
 						<a class="lunara-oscar-pick-card-link" href="<?php echo esc_url( $card_url ); ?>">
 							<?php if ( $has_visual ) : ?>
-								<div class="lunara-oscar-pick-card-media">
-									<?php echo get_the_post_thumbnail( $pid, 'newspack-article-block-landscape-intermediate', $thumb_attrs ); ?>
+								<div class="lunara-oscar-pick-card-media<?php echo $mobile_portrait ? ' is-portrait' : ''; ?>">
+									<?php if ( $mobile_art ) : ?>
+										<picture>
+											<source media="(max-width: 820px)" srcset="<?php echo esc_attr( $mobile_srcset ); ?>" sizes="calc(100vw - 64px)" width="<?php echo (int) $mobile_art[1]; ?>" height="<?php echo (int) $mobile_art[2]; ?>">
+											<?php echo get_the_post_thumbnail( $pid, 'newspack-article-block-landscape-intermediate', $thumb_attrs ); ?>
+										</picture>
+									<?php else : ?>
+										<?php echo get_the_post_thumbnail( $pid, 'newspack-article-block-landscape-intermediate', $thumb_attrs ); ?>
+									<?php endif; ?>
 									<span class="lunara-oscar-pick-card-status"><?php echo esc_html( strtoupper( $status_label ) ); ?></span>
 								</div>
 							<?php endif; ?>
