@@ -2,6 +2,8 @@
 	'use strict';
 	var config = window.LunaraSiteStudioPreviewConfig;
 	var markerMap = {
+		'home-oscar-picks': ['oscar-picks'],
+		'home-oscar-facts': ['oscar-facts'],
 		'global-design': [],
 		'oscars-portal': ['board','hero','navigator','doors','spotlights','titles','research','linked-reviews','winners','deep-cuts','rotating-winners'],
 		'hero-carousel': ['hero'],

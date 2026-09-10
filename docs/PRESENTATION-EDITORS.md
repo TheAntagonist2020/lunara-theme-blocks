@@ -1,6 +1,6 @@
 # Site Studio presentation controls
 
-Guide for the Theme 3.2.64 candidate. Deployment and acceptance status belong in
+Guide for the Theme 3.2.65 candidate. Deployment and acceptance status belong in
 `docs/SESSION-LOG.md`; this guide does not establish what is live.
 
 Open **Site Studio** and choose the page or section you want to change. An
@@ -83,6 +83,17 @@ the cards. Desktop keeps its existing landscape presentation.
 
 ## Next editors
 
-Continue with Homepage Oscar Picks/Facts and reusable media, then the Review,
-Journal Desk, and Academy authoring surfaces. Each migration must reuse these
+Homepage **Oscar Picks** and **Oscar Facts** now have separate Site Studio
+destinations. Both offer Legacy (keep the existing selection rules), Automatic
+(newest published items), and Manual selection. Search, add, remove, drag, or
+use Move earlier / Move later. Switching modes retains the manual list.
+Picks also filter by ceremony year. Unavailable selections are flagged and
+skipped; an empty Manual list hides that section. Copy, card count, density,
+card height and rotation timing use the same private Preview / Apply and
+revision history workflow. Existing presentation stays intact until Apply.
+The old Homepage curation panel links to these destinations. Artwork framing
+and record authoring remain in the individual Pick and Fact editors.
+
+Continue with reusable media, then the Review, Journal Desk, and Academy
+authoring surfaces. Each migration must reuse these
 controls while preserving its publishing rules and saved content.

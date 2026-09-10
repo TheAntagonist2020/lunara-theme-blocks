@@ -12,6 +12,8 @@ if ( ! function_exists( 'lunara_site_studio_preview_pilots' ) ) {
 			'oscars-portal' => array( 'owner' => 'theme:oscars-portal', 'query' => 'lunara_oscars_preview', 'route' => '/oscars/', 'params' => array(), 'storage' => 'provider', 'preview_callback' => 'lunara_oscars_portal_studio_get_preview_config', 'markers' => array( 'board','hero','navigator','doors','spotlights','titles','research','linked-reviews','winners','deep-cuts','rotating-winners' ) ),
 			'hero-carousel' => array( 'owner' => 'theme:hero-carousel', 'query' => 'lunara_hero_carousel_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero' ) ),
 			'journal-carousel' => array( 'owner' => 'theme:journal-carousel', 'query' => 'lunara_journal_carousel_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'dispatch' ) ),
+			'home-oscar-picks' => array( 'owner' => 'theme:home-oscar-picks', 'query' => 'lunara_home_oscar_picks_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'oscar-picks' ) ),
+			'home-oscar-facts' => array( 'owner' => 'theme:home-oscar-facts', 'query' => 'lunara_home_oscar_facts_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'oscar-facts' ) ),
 			'global-design' => array( 'owner' => 'theme:global-design', 'query' => 'lunara_global_design_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array() ),
 			'homepage-structure' => array( 'owner' => 'theme:homepage-structure', 'query' => 'lunara_homepage_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'latest-reviews', 'pairing-desk', 'dispatch', 'oscar-picks', 'oscar-facts' ) ),
 			'lunara-method' => array( 'owner' => 'theme:lunara-method', 'query' => 'lunara_method_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'pairing-desk' ) ),
@@ -90,6 +92,8 @@ if ( ! function_exists( 'lunara_site_studio_preview_install_state' ) ) {
 		if ( 'homepage-structure' === $surface_id ) { $slugs = array( 'hero', 'latest-reviews', 'pairing-desk', 'dispatch', 'oscar-picks', 'oscar-facts' ); if ( array( 'mode', 'front_page_id', 'preset', 'desktop_order', 'mobile_order', 'visibility' ) !== array_keys( $state ) || ! in_array( $state['mode'], array( 'registry', 'blocks' ), true ) || ! is_int( $state['front_page_id'] ) || ! is_string( $state['preset'] ) || ! is_array( $state['desktop_order'] ) || ! is_array( $state['mobile_order'] ) || ! is_array( $state['visibility'] ) || array_values( $state['desktop_order'] ) !== $state['desktop_order'] || array_values( $state['mobile_order'] ) !== $state['mobile_order'] || 6 !== count( array_unique( $state['desktop_order'] ) ) || 6 !== count( array_unique( $state['mobile_order'] ) ) || array() !== array_diff( $slugs, $state['desktop_order'] ) || array() !== array_diff( $state['desktop_order'], $slugs ) || array() !== array_diff( $slugs, $state['mobile_order'] ) || array() !== array_diff( $state['mobile_order'], $slugs ) || $slugs !== array_keys( $state['visibility'] ) ) { return false; } foreach ( $state['visibility'] as $visible ) { if ( ! is_bool( $visible ) ) { return false; } } return true; }
 		if ( 'lunara-method' === $surface_id ) { return ! is_wp_error( lunara_site_studio_lunara_method_validate_state( $state ) ); }
 		$validators = array(
+			'home-oscar-facts' => 'lunara_site_studio_home_oscar_facts_validate',
+			'home-oscar-picks' => 'lunara_site_studio_home_oscar_picks_validate',
 			'review-single' => 'lunara_site_studio_review_single_validate_state',
 			'utility-search' => 'lunara_site_studio_utility_search_validate_state',
 			'site-footer' => 'lunara_site_studio_footer_validate_state',
@@ -112,6 +116,8 @@ if ( ! function_exists( 'lunara_site_studio_preview_install_state' ) ) {
 			foreach ( $map as $field => $mod ) { $value = $state[ $field ]; add_filter( 'theme_mod_' . $mod, static function () use ( $value ) { return $value; }, PHP_INT_MAX ); } return true;
 		}
 		$spec_callbacks = array(
+			'home-oscar-facts' => 'lunara_site_studio_home_oscar_facts_spec',
+			'home-oscar-picks' => 'lunara_site_studio_home_oscar_picks_spec',
 			'review-single' => 'lunara_site_studio_review_single_spec',
 			'utility-search' => 'lunara_site_studio_utility_search_spec',
 			'site-footer' => 'lunara_site_studio_footer_spec',

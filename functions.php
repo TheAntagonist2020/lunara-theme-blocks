@@ -12870,6 +12870,7 @@ if ( ! function_exists( 'lunara_get_oscar_picks' ) ) {
 			'post_type'           => 'lunara_oscar_pick',
 			'posts_per_page'      => (int) $args['posts_per_page'],
 			'post_status'         => 'publish',
+			'has_password'        => false,
 			'ignore_sticky_posts' => true,
 			'no_found_rows'       => true,
 			'meta_query'          => array(),
@@ -13391,7 +13392,7 @@ if ( ! function_exists( 'lunara_resolve_oscar_fact_ledger_url' ) ) {
  */
 if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 	function lunara_render_oscar_picks_carousel( $args = array() ) {
-		$default_count    = max( 4, min( 16, absint( get_theme_mod( 'lunara_home_oscar_picks_count', 12 ) ) ) );
+		$default_count    = max( 1, min( 16, absint( get_theme_mod( 'lunara_home_oscar_picks_count', 12 ) ) ) );
 		$default_autoplay = max( 0, min( 12000, absint( get_theme_mod( 'lunara_home_oscar_picks_autoplay_interval', 6500 ) ) ) );
 		$default_ceremony_year = lunara_home_oscar_picks_ceremony_year();
 		$default_ceremony_ordinal = lunara_oscar_ceremony_ordinal_from_year( $default_ceremony_year );
@@ -13433,7 +13434,7 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 			'ordered_ids' => $manual_order_ids,
 		);
 		$args  = lunara_repair_mojibake_args( wp_parse_args( $args, $defaults ), array( 'kicker', 'heading', 'summary', 'cta_text' ) );
-		$args['count']    = max( 4, min( 16, absint( $args['count'] ) ) );
+		$args['count']    = max( 1, min( 16, absint( $args['count'] ) ) );
 		$args['autoplay'] = max( 0, min( 12000, absint( $args['autoplay'] ) ) );
 		$args['ceremony_year'] = max( 1929, min( 2100, absint( $args['ceremony_year'] ) ) );
 		$oscar_picks_density = sanitize_key( (string) $args['density'] );
@@ -13442,6 +13443,9 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 			$oscar_picks_density = 'editorial';
 		}
 
+		$selection = lunara_home_oscars_selection( 'picks', (int) $args['ceremony_year'] );
+		if ( 'manual' === $selection['mode'] && empty( $selection['ids'] ) ) { return ''; }
+		if ( 'legacy' !== $selection['mode'] ) { $args['ordered_ids'] = $selection['ids']; }
 		$query = lunara_get_oscar_picks(
 			array(
 				'posts_per_page' => (int) $args['count'],
@@ -13903,6 +13907,7 @@ if ( ! function_exists( 'lunara_get_oscar_facts' ) ) {
 			'post_type'           => 'oscar_fact',
 			'posts_per_page'      => (int) $args['posts_per_page'],
 			'post_status'         => 'publish',
+			'has_password'        => false,
 			'ignore_sticky_posts' => true,
 			'no_found_rows'       => true,
 			'orderby'             => 'rand' === $args['orderby'] ? 'rand' : 'date',
@@ -13919,6 +13924,12 @@ if ( ! function_exists( 'lunara_get_oscar_facts' ) ) {
 			);
 		}
 
+		if ( ! empty( $args['ordered_ids'] ) ) {
+			$query_args['post__in'] = array_map( 'absint', $args['ordered_ids'] );
+			$query_args['orderby'] = 'post__in';
+			$query_args['has_password'] = false;
+			return new WP_Query( $query_args );
+		}
 		if ( 'visual_priority' === $args['orderby'] ) {
 			$limit         = max( 1, (int) $args['posts_per_page'] );
 			$held_ids      = function_exists( 'lunara_oscar_fact_visual_hold_ids' ) ? lunara_oscar_fact_visual_hold_ids() : array();
@@ -13979,7 +13990,11 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 			'count'    => 8,
 		);
 		$args  = lunara_repair_mojibake_args( wp_parse_args( $args, $defaults ), array( 'kicker', 'heading', 'summary', 'cta_text' ) );
-		$query = lunara_get_oscar_facts( array( 'posts_per_page' => (int) $args['count'], 'orderby' => 'visual_priority' ) );
+		foreach ( array( 'kicker', 'heading', 'summary', 'cta_text', 'count' ) as $field ) { $args[$field] = get_theme_mod( 'lunara_home_oscar_facts_' . $field, $args[$field] ); }
+		$selection = lunara_home_oscars_selection( 'facts' );
+		if ( 'manual' === $selection['mode'] && empty( $selection['ids'] ) ) { return ''; }
+		$query = lunara_get_oscar_facts( array( 'posts_per_page' => max( 1, min( 16, (int) $args['count'] ) ), 'orderby' => 'legacy' === $selection['mode'] ? 'visual_priority' : 'date', 'ordered_ids' => $selection['ids'] ) );
+		$autoplay = $query->post_count > 1 ? max( 0, min( 12000, (int) get_theme_mod( 'lunara_home_oscar_facts_autoplay_interval', 6500 ) ) ) : 0;
 
 		if ( ! $query->have_posts() ) {
 			return '';
@@ -14015,7 +14030,7 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 				<a class="lunara-section-link" href="<?php echo esc_url( $args['cta_url'] ); ?>"><?php echo esc_html( $args['cta_text'] ); ?></a>
 			</div>
 
-			<div class="lunara-oscar-facts-carousel lunara-carousel" data-autoplay="6500" data-lunara-splide-pilot data-lunara-splide-autoplay="6500" data-lunara-facts-total="<?php echo esc_attr( (string) $fact_total ); ?>" style="--lunara-oscar-facts-progress:<?php echo esc_attr( $fact_total > 0 ? (string) ( 100 / $fact_total ) . '%' : '0%' ); ?>;" aria-label="<?php esc_attr_e( 'Rotating Oscar facts', 'lunara-film' ); ?>">
+			<div class="lunara-oscar-facts-carousel lunara-carousel" data-autoplay="<?php echo (int) $autoplay; ?>" data-lunara-splide-pilot data-lunara-splide-autoplay="<?php echo (int) $autoplay; ?>" data-lunara-facts-total="<?php echo esc_attr( (string) $fact_total ); ?>" style="--lunara-oscar-facts-progress:<?php echo esc_attr( $fact_total > 0 ? (string) ( 100 / $fact_total ) . '%' : '0%' ); ?>;" aria-label="<?php esc_attr_e( 'Rotating Oscar facts', 'lunara-film' ); ?>">
 				<?php if ( $fact_total > 1 ) : ?>
 					<div class="lunara-oscar-facts-console" aria-label="<?php esc_attr_e( 'Oscar Facts carousel status', 'lunara-film' ); ?>">
 						<span class="lunara-oscar-facts-console-label"><?php esc_html_e( 'Oscar Ledger File', 'lunara-film' ); ?></span>
