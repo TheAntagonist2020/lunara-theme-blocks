@@ -55,10 +55,6 @@
 			if (!interval || interval < 1500) {
 				interval = 6500;
 			}
-			var optedIn = root.getAttribute('data-lunara-autoplay-enabled');
-			var autoplay = optedIn === null ? !reduceMotion : optedIn === '1' && !reduceMotion;
-			var toggle = root.querySelector('.splide__toggle');
-			if (toggle) { toggle.hidden = reduceMotion; }
 
 			var splide = new window.Splide(root, {
 				type: 'fade',
@@ -69,13 +65,12 @@
 				pagination: true,
 				drag: true,
 				keyboard: 'focused',
-				autoplay: autoplay ? true : 'pause',
+				autoplay: !reduceMotion,
 				interval: interval,
 				pauseOnHover: true,
 				pauseOnFocus: true,
 				speed: reduceMotion ? 0 : 850,
 				rewindSpeed: reduceMotion ? 0 : 850,
-				reducedMotion: { speed: 0, rewindSpeed: 0, autoplay: 'pause' },
 				classes: {
 					arrows: 'splide__arrows lunara-hero-arrows',
 					arrow: 'splide__arrow lunara-hero-arrow',
