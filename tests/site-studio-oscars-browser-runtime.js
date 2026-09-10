@@ -16,6 +16,31 @@ async function pointerDrag(page, source, target) { const from=await source.bound
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.LUNARA_BROWSER_EXECUTABLE});
  try {
+  for(const surface of ['oscars-portal','homepage-structure','reviews-archive','journal-archive']) {
+   for(const width of [390,1281]) {
+    const layout=await browser.newPage({viewport:{width,height:1000}});
+    await layout.route('https://example.test/**',r=>r.fulfill({contentType:'text/html',body:r.request().url().includes('/wp-admin/')?fixture(surface):'<!doctype html><body>Live</body>'}));
+    await layout.goto('https://example.test/wp-admin/admin.php?page=lunara-site-studio&surface='+surface);await layout.waitForSelector('[data-lunara-site-studio-ready="true"]');
+    await layout.addStyleTag({content:'body{margin:0;font:14px/1.5 system-ui}button,input,select,textarea{font:inherit}'});
+    const measured=await layout.locator('.lunara-site-studio-order-row').evaluateAll(rows=>rows.map(row=>{
+     const rect=n=>{const r=n.getBoundingClientRect();return{x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height};};
+     const overlaps=(a,b)=>Math.min(a.right,b.right)-Math.max(a.x,b.x)>0.5&&Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y)>0.5;
+     const children=[...row.children].filter(n=>!n.hidden),bounds=rect(row),boxes=children.map(rect),errors=[];
+     boxes.forEach((box,i)=>{if(box.x<bounds.x||box.right>bounds.right||box.y<bounds.y||box.bottom>bounds.bottom)errors.push('child '+i+' escapes row');for(let j=i+1;j<boxes.length;j++)if(overlaps(box,boxes[j]))errors.push('children '+i+'/'+j+' overlap');});
+     const moves=[...row.querySelectorAll('[data-editor-move]')];
+     moves.forEach(button=>{const box=rect(button);if(box.width<44||box.height<44||box.width>48)errors.push('move button must have a separate 44px target');});
+     const title=row.querySelector(':scope > strong,:scope > span:not([data-derived-visibility])'),visibility=row.querySelector('label,[data-derived-visibility]');
+     for(const node of [title,visibility]){if(!node){errors.push('missing title/status');continue;}const range=document.createRange();range.selectNodeContents(node);for(const glyph of range.getClientRects()){for(const button of moves){if(overlaps(glyph,rect(button)))errors.push('label text overlaps move button');}const own=rect(node);if(glyph.left<own.x-0.5||glyph.right>own.right+0.5)errors.push('label text escapes its cell');}}
+     if(moves.length!==2||Math.abs(rect(moves[0]).y-rect(moves[1]).y)>0.5)errors.push('both move buttons must share a row');
+     return {slug:row.dataset.slug,railWidth:row.closest('.lunara-site-studio-section-rail').getBoundingClientRect().width,errors};
+    }));
+    assert(measured.length>0&&measured.every(row=>row.errors.length===0),'Ordered rows must contain non-overlapping titles, visibility and separate buttons: '+surface+' at '+width,measured);
+    if(width===1281)assert(measured[0].railWidth<=220,'Desktop regression must exercise a narrow rail.',measured[0]);
+    process.stdout.write('row-boxes '+surface+' viewport='+width+' rail='+measured[0].railWidth+' rows='+measured.length+' overlap=0 escaped=0\n');
+    await layout.close();
+   }
+  }
+  process.stdout.write('Ordered row boxes: Oscars, Homepage, Reviews and Journal at 390px and narrow desktop passed.\n');
   for(const width of [1440,390]) {
    const page=await browser.newPage({viewport:{width,height:1000}});page.on('dialog',d=>d.accept());
    let baseline,saved,mode='ok',requests=[];

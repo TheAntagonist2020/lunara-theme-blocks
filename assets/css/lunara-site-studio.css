@@ -45,7 +45,14 @@
 .lunara-site-studio-error[hidden] { display:none; }
 .lunara-site-studio-order-row { align-items:center; border:1px solid var(--studio-line); border-radius:8px; display:grid; gap:6px; grid-template-columns:minmax(0,1fr) 44px 44px; margin:7px 0; min-width:0; padding:7px; }
 .lunara-site-studio-order-row > span { grid-column:1 / -1; overflow-wrap:anywhere; }
+/* Explicit tracks keep labels and move targets separate in the narrow section rail. */
+.lunara-site-studio-order-row > strong, .lunara-site-studio-order-row > span:not([data-derived-visibility]) { grid-column:1 / -1; grid-row:1; min-width:0; overflow-wrap:anywhere; }
+.lunara-site-studio-order-row > label, .lunara-site-studio-order-row > [data-derived-visibility] { grid-column:1 / -1; grid-row:2; min-width:0; overflow-wrap:anywhere; }
+.lunara-site-studio-order-row > [data-editor-move] { grid-row:3; width:44px; }
+.lunara-site-studio-order-row > [data-editor-move="earlier"] { grid-column:2; }
+.lunara-site-studio-order-row > [data-editor-move="later"] { grid-column:3; }
 .lunara-site-studio-order-row label { align-items:center; display:flex; gap:4px; }
+.lunara-site-studio-order-row label input { flex:0 0 auto; }
 .lunara-site-studio-presets { border:0; display:grid; gap:0; margin:0; padding:0; }
 .lunara-site-studio-presets legend { font-weight:700; margin-bottom:7px; }
 .lunara-site-studio-presets label, .lunara-site-studio-order-row label { align-items:center; display:flex; min-height:44px; padding:8px; }
