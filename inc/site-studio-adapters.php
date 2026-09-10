@@ -1379,6 +1379,16 @@ if ( ! function_exists( 'lunara_site_studio_journal_archive_adapter' ) ) {
 		);
 	}
 }
+if ( ! function_exists( 'lunara_site_studio_oscars_portal_managed_paths' ) ) {
+	function lunara_site_studio_oscars_portal_managed_paths() {
+		return array( 'section_order', 'identity.kicker', 'identity.title', 'identity.explore_kicker', 'identity.explore_heading', 'identity.spotlights_heading', 'identity.titles_kicker', 'identity.titles_heading', 'identity.research_kicker', 'identity.research_heading', 'identity.reviews_heading', 'identity.deep_cuts_heading', 'section_visibility.hero', 'section_visibility.doors', 'section_visibility.spotlights', 'section_visibility.titles', 'section_visibility.research', 'section_visibility.linked-reviews', 'section_visibility.winners', 'section_visibility.deep-cuts', 'section_visibility.rotating-winners', 'presentation.section_gap', 'presentation.hero_min_height', 'presentation.card_min_height', 'presentation.winners_min_width', 'presentation.density', 'presentation.lead_prominence', 'presentation.board_rhythm' );
+	}
+	function lunara_site_studio_oscars_portal_validation_fields() {
+		$identity = array(); $presentation = array();
+		foreach ( lunara_site_studio_oscars_portal_managed_paths() as $path ) { if ( 0 === strpos( $path, 'identity.' ) ) { $identity[] = $path; } if ( 0 === strpos( $path, 'presentation.' ) ) { $presentation[] = $path; } }
+		return array( 'oscars_portal_identity_invalid' => $identity, 'oscars_portal_geometry_invalid' => $presentation, 'oscars_portal_section_order_invalid' => array( 'section_order' ), 'oscars_portal_visibility_invalid' => array( 'section_visibility' ), 'oscars_portal_config_invalid' => array_merge( $identity, $presentation, array( 'section_order', 'section_visibility' ) ) );
+	}
+}
 if ( ! function_exists( 'lunara_site_studio_oscars_portal_adapter' ) ) {
 	function lunara_site_studio_oscars_portal_adapter() {
 		return new Lunara_Site_Studio_Provider_Adapter(
@@ -1387,6 +1397,7 @@ if ( ! function_exists( 'lunara_site_studio_oscars_portal_adapter' ) ) {
 				'read' => 'lunara_oscars_portal_studio_get_public_config', 'validate' => 'lunara_oscars_portal_studio_validate_config',
 				'save' => 'lunara_oscars_portal_studio_promote_config_transaction', 'preview' => 'lunara_oscars_portal_studio_store_preview',
 				'revisions' => 'lunara_oscars_portal_studio_get_revisions', 'restore' => 'lunara_oscars_portal_studio_restore_revision_transaction',
+				'managed_paths' => lunara_site_studio_oscars_portal_managed_paths(), 'validation_fields' => lunara_site_studio_oscars_portal_validation_fields(),
 			)
 		);
 	}

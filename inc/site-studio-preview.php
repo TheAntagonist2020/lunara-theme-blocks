@@ -9,6 +9,7 @@ if ( ! function_exists( 'lunara_site_studio_preview_instance_query_arg' ) ) {
 if ( ! function_exists( 'lunara_site_studio_preview_pilots' ) ) {
 	function lunara_site_studio_preview_pilots() {
 		return array(
+			'oscars-portal' => array( 'owner' => 'theme:oscars-portal', 'query' => 'lunara_oscars_preview', 'route' => '/oscars/', 'params' => array(), 'storage' => 'provider', 'preview_callback' => 'lunara_oscars_portal_studio_get_preview_config', 'markers' => array( 'board','hero','navigator','doors','spotlights','titles','research','linked-reviews','winners','deep-cuts','rotating-winners' ) ),
 			'hero-carousel' => array( 'owner' => 'theme:hero-carousel', 'query' => 'lunara_hero_carousel_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero' ) ),
 			'journal-carousel' => array( 'owner' => 'theme:journal-carousel', 'query' => 'lunara_journal_carousel_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'dispatch' ) ),
 			'global-design' => array( 'owner' => 'theme:global-design', 'query' => 'lunara_global_design_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array() ),
