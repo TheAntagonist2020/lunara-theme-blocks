@@ -46,6 +46,7 @@ The six missing sources have not been filled or represented as repaired live.
 | Review Artwork Audit census | 268 Reviews; 268 canonical IMDb identities; 6 missing poster, 6 missing banner, 116 protected custom selections. Historical completed pass covered 261, excluding seven newer Reviews. |
 | Ten inspected Review records | Six recent records lack both TMDB URLs. The Invite and three older sampled Reviews have saved TMDB posters. Four sampled saved poster URLs returned HTTP 200 and JPEG content. |
 | Public `/reviews/` DOM | Six missing-source Reviews are text-led. The Invite uses an uploaded image despite a saved TMDB poster; older sampled Reviews use local or TMDB images. Offscreen lazy images were not classified as broken. |
+| Native WordPress.com Repositories, inspected after the audit | All seven connections use `main` with Auto Deploy Off. Core targets `/wp-content/plugins/lunara-core`; theme targets `/wp-content/themes/lunara-theme-blocks-20260513-2300`. No connection settings changed. |
 
 Missing-source IDs: **102632** The Dog Stars (`tt21285562`), **102631** One Night
 Only (`tt37853455`), **102630** Spider-Man: Brand New Day (`tt22084616`),
@@ -115,9 +116,9 @@ Further production form actions were stopped. No browser backup was restored.
 
 - The server provider failure behind identity-only hydration needs the new
   redacted status or a supported read-only diagnostic after deployment.
-- Native WordPress.com deployment connection destination and automatic toggle
-  still need direct inspection; installation of Deployer for Git proves none
-  of these settings.
+- Native WordPress.com repository destinations and Auto Deploy Off are now
+  directly verified, superseding the earlier unverified state in this day's
+  deployment-route entry. No Deployer for Git setup is needed for this route.
 - Full authenticated Preview/Apply/history acceptance and remaining editor
   migrations, Boost Critical CSS, CDN quality and base stylesheet diet remain.
 
