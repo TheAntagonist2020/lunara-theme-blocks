@@ -25,6 +25,91 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-10 — Theme 3.2.66 editor bootstrap candidate
+
+### Headline
+
+Dalton deployed Core 0.8.11, then Theme 3.2.65. Both versions are verified live.
+All six missing Review poster/backdrop pairs were recovered through the dedicated
+Retry movie artwork button. Live editor acceptance exposed a separate shared
+bootstrap failure; Theme 3.2.66 corrects it and is the next release candidate.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| WordPress.com active plugin inventory | Core 0.8.11 active. |
+| Theme anonymous canonical canary | Build `3.2.65+20260910-210003` in all three reads; Journal and Oscars both `LIVE_COHERENT`, verifier exit 0 / GO. |
+| Reviews 102632, 102631, 102630, 102628, 102627, 102626 | Each now has saved `_lunara_tmdb_poster_url` and `_lunara_tmdb_backdrop_url`, hydration `ready`, and an empty provider issue. |
+| Before/after inspection of those six Reviews | Body, title, excerpt, published status and card/hero/Debrief choices unchanged. Review 102632's Markdown metadata also retained. |
+| Comparison Review 102629, The Invite | Existing artwork retained; no retry or article save performed. Its older OMDb diagnostic remains. |
+| Public Review pages and archive | All six canonical pages return 200 and reference their recovered poster/backdrop filenames. All six responsive poster files return 200 / image/jpeg; the archive uses those filenames at responsive sizes. |
+| Live Homepage Oscar Picks, Facts and Hero editors | All three initially entered recovery state with Preview / Apply disabled. The public canary does not cover authenticated editor startup. |
+
+### What shipped and why
+
+Core 0.8.11's direct TMDB path works in production. Six targeted retries were
+content-maintenance actions; no bulk backfill or article-form submission ran.
+Theme 3.2.66 changes the shared configuration transport and private preview
+bridge; see `docs/CHANGELOG.md` for implementation detail.
+
+No agent deployment or cache operation occurred. Theme 3.2.66 is not
+deployed; its live canary is pending.
+
+### Commit ledger
+
+| Repo | Commit or release reference | Meaning |
+| --- | --- | --- |
+| Core | `37670e307934c6d4a95af35074a185e4eae87b43` / PR #34 | 0.8.11 merge, now deployed and artwork recovery verified. |
+| Theme | `dce54d909eaebbe45152044592f1062fb8f5935f` / PR #185 | 3.2.65 merge, now publicly verified. |
+| Theme | `codex/site-studio-bootstrap-3.2.66` | New topic branch from current main; this record travels with the correction. |
+
+The standing rollback PR #159 was rebuilt after PR #185 and remains
+tree-exact to `c55bf394594149db2888295c5d51f85f47b2b520`. Rebuild it after
+the next theme merge as required.
+
+### Gate ledger
+
+- The first canary attempts hit local CRLF and WSL PATH problems; they did not
+  prove a pass. Running the LF-normalized script with Git Bash completed the
+  actual live protocol and returned GO. No repository script was changed.
+- Reproduced the editor failure by making the PHP localization stub match
+  WordPress's scalar conversion. The protocol assertion failed, and the real
+  PHP-rendered browser workspace could not become ready.
+- After correction, the workspace and private-preview PHP suites passed;
+  the Oscars browser suite passed 22 checks, including ordering, mode retention,
+  mobile preview, private Preview, Apply and Discard.
+- Full theme release suite: 95/95 contracts passed. Syntax: 121 PHP, 59 JS
+  and 26 CSS files, zero failures. Reverting the workspace transport or the
+  preview transport was caught by the corresponding regression test; both
+  mutations were restored. The unchanged Core suite was not repeated.
+
+### Corrections
+
+The earlier local harness preserved scalar types that WordPress localization
+changes. Its passing editor tests therefore did not prove live startup. The
+production scripts matched the deployed repository files; this was a transport
+bug, not a stale-file problem. Public canary GO remains valid for its scope.
+
+### Logged, not fixed
+
+Full Movie enrichment still has the separate OMDb connection issue. Review
+artwork now bypasses it successfully. Pick/Fact artwork framing, Academy record
+authoring and the next mobile layout pass remain open.
+
+### Punch-list carried forward
+
+- Finish and merge 3.2.66, then rebuild the exact rollback hatch — agent.
+- Dalton performs the manual theme deployment through WordPress.com; verify
+  both live Oscars editors and their private previews afterward.
+- Continue with uniform artwork controls and mobile framing for Oscar Picks
+  and Facts, then Academy record editing. Editorial lineup curation remains separate.
+
+### Whose move it is next
+
+Agent: finish the correction's release checks and merge/hatch preparation.
+Dalton: manual WordPress.com theme deployment after that handoff.
+
 ## 2026-09-10 — Theme 3.2.65 homepage Oscars candidate
 
 ### Headline
