@@ -63,3 +63,5 @@ Write-Host 'Homepage Journal mobile runway contract passed.'
 Assert-True ($LASTEXITCODE -eq 0) 'Homepage Oscars mobile source-art rendering failed.'
 & node (Join-Path $PSScriptRoot 'home-mobile-panels-runtime.js')
 Assert-True ($LASTEXITCODE -eq 0) 'Homepage Journal/Oscars mobile browser geometry failed.'
+& node (Join-Path $PSScriptRoot 'home-oscar-navigation-runtime.js')
+Assert-True ($LASTEXITCODE -eq 0) 'Homepage Oscars arrow/keyboard/dot navigation failed.'
