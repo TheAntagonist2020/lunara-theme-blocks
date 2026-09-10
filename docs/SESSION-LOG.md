@@ -25,6 +25,79 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-10 — Theme 3.2.65 homepage Oscars candidate
+
+### Headline
+
+Dalton confirmed his deployment. Read-only plugin inventory verified Core
+0.8.10 active, and its new Review diagnostic identified OMDb failures before
+artwork lookup reached TMDB. Core 0.8.11 now removes that artwork dependency;
+PR #34 is merged. The next focused theme batch adds shared Homepage Oscar
+Picks and Facts editors, without expanding into Academy record authoring.
+See `docs/CHANGELOG.md` for the implementation detail.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| WordPress.com active plugin inventory | `lunara-core/lunara-core` is 0.8.10. |
+| Review 102631 One Night Only and 102629 The Invite | Redacted provider issue names OMDB lookup failure; hydration status is identity_only. The Invite retains its existing artwork URLs. |
+| Seven recent Review metadata records | Six still lack saved poster/backdrop URLs. They have not been represented as repaired. |
+
+The preceding entry records Theme 3.2.64 build and GO. Those earlier theme
+probes were not repeated for this code-only batch.
+
+### What shipped and why
+
+Core 0.8.11 is merged for manual deployment. Theme 3.2.65 is the local release
+candidate accompanying this record. Its two independent editors reuse the
+existing shared selection/order controls and private preview/save system.
+Legacy preserves saved lineups until a selection mode is explicitly changed;
+the new controls do not rewrite articles. The old Homepage curation entry
+points to Site Studio and cannot compete with it.
+
+### Commit ledger
+
+| Repo | Commit or release reference | Meaning |
+| --- | --- | --- |
+| Core | `ba3572263de862618a7142746cbb5006e4feb63a` | 0.8.11 implementation, 24 suites and three caught mutations. |
+| Core | `37670e307934c6d4a95af35074a185e4eae87b43` | PR #34 merge, 19:50:12 UTC; CI run 34522380321 passed. |
+| Theme | `774e426e278817861c4281378d413cf1efe8e3ca` | Main base for `codex/homepage-oscars-studio-3.2.65`; candidate and this record travel in the same functional PR. |
+
+### Gate ledger
+
+- Core: 24/24 regression suites; syntax on 50 PHP and 5 JS files; 6 CSS
+  files balanced. Identity mismatch, OMDb recoupling and unauthorized-retry
+  mutations were each caught and restored.
+- Theme focused tests: 20 adapter/query checks, 12 request-local preview
+  checks, and 22 real-browser editor checks passed.
+- Full theme release contracts: 95/95 passed. The older mobile renderer
+  fixture initially lacked the new selection helper; it now loads the real
+  helper and passes, including 305 mobile layout checks and 38 navigation /
+  reduced-motion checks. Syntax passed on 121 PHP and 59 JS files; 26 CSS
+  files balanced. Empty-manual fallback, manual-order and preview-write
+  mutations were all caught and restored. Final changed-file checks passed.
+- No deployment, cache operation, production write, or verification of a live 3.2.65 release occurred.
+
+### Corrections and open work
+
+The preceding entry's unknown server-side provider cause is now narrowed to
+OMDb by the deployed redacted diagnostic. It does not establish whether the
+TMDB credential is valid; only a successful deployed retry can prove that.
+Missing sources remain IDs 102632, 102631, 102630, 102628, 102627, 102626.
+Layout/image framing beyond the existing mobile fixes, reusable media tools,
+Review authoring, Journal Desk and Academy authoring remain subsequent work.
+The pre-existing Critical CSS regeneration, CDN quality and stylesheet diet
+items remain open. No work on those settings occurred in this batch.
+
+### Next move
+
+The theme gates are complete. Merge the functional PR and rebuild exact
+rollback PR #159 against the resulting main. Dalton then performs the manual deployment
+in WordPress.com Settings → Repositories: Core first, then theme. Verify the
+versioned theme canary and actual public homepage after his click, then retry
+the six affected Reviews and check their saved URLs and rendered images.
+
 ## 2026-09-10 — Core 0.8.10 poster retrieval prepared; six live sources missing
 
 ### Headline

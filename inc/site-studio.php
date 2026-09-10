@@ -33,7 +33,7 @@ if ( ! function_exists( 'lunara_site_studio_workspace_surface' ) ) {
 if ( ! function_exists( 'lunara_site_studio_workspace_editable_surfaces' ) ) {
 	/** @return array<int,string> */
 	function lunara_site_studio_workspace_editable_surfaces() {
-		return array( 'global-design', 'homepage-structure', 'lunara-method', 'reviews-archive', 'review-single', 'journal-archive', 'utility-search', 'site-footer', 'hero-carousel', 'journal-carousel', 'oscars-portal' );
+		return array( 'home-oscar-picks', 'home-oscar-facts', 'global-design', 'homepage-structure', 'lunara-method', 'reviews-archive', 'review-single', 'journal-archive', 'utility-search', 'site-footer', 'hero-carousel', 'journal-carousel', 'oscars-portal' );
 	}
 }
 
@@ -145,7 +145,8 @@ if ( ! function_exists( 'lunara_enqueue_site_studio_assets' ) ) {
 		if ( ! empty( $asset['uri'] ) ) { wp_enqueue_style( 'lunara-site-studio', $asset['uri'], array( 'dashicons' ), function_exists( 'lunara_theme_asset_version' ) ? lunara_theme_asset_version( $asset['path'] ) : false ); }
 		$is_carousel = in_array( $surface_id, array( 'hero-carousel', 'journal-carousel' ), true );
 		$uses_ordered_list = in_array( $surface_id, array( 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal' ), true );
-		$uses_editor_controls = $is_carousel || $uses_ordered_list || 'lunara-method' === $surface_id;
+		$uses_home_oscars = in_array( $surface_id, array( 'home-oscar-picks', 'home-oscar-facts' ), true );
+		$uses_editor_controls = $uses_home_oscars || $is_carousel || $uses_ordered_list || 'lunara-method' === $surface_id;
 		$script_dependencies = array();
 		if ( $uses_editor_controls ) {
 			$asset = lunara_resolve_theme_asset( 'assets/css/lunara-editor-controls.css' );
@@ -165,6 +166,11 @@ if ( ! function_exists( 'lunara_enqueue_site_studio_assets' ) ) {
 			$asset = lunara_resolve_theme_asset( 'assets/js/lunara-site-studio-method.js' );
 			if ( ! empty( $asset['uri'] ) ) { wp_enqueue_script( 'lunara-site-studio-method', $asset['uri'], array( 'lunara-editor-controls' ), function_exists( 'lunara_theme_asset_version' ) ? lunara_theme_asset_version( $asset['path'] ) : false, true ); }
 			$script_dependencies = array( 'lunara-site-studio-method' );
+		}
+		if ( $uses_home_oscars ) {
+			$asset = lunara_resolve_theme_asset( 'assets/js/lunara-site-studio-home-oscars.js' );
+			if ( ! empty( $asset['uri'] ) ) { wp_enqueue_script( 'lunara-site-studio-home-oscars', $asset['uri'], array( 'lunara-editor-controls' ), lunara_theme_asset_version( $asset['path'] ), true ); }
+			$script_dependencies = array( 'lunara-site-studio-home-oscars' );
 		}
 		$asset = lunara_resolve_theme_asset( 'assets/js/lunara-site-studio.js' );
 		if ( ! empty( $asset['uri'] ) ) {
@@ -211,7 +217,7 @@ if ( ! function_exists( 'lunara_site_studio_control_label' ) ) {
 		);
 		return isset( $labels[ $field ] ) ? $labels[ $field ] : ucwords( str_replace( '_', ' ', $field ) );
 	}
-	function lunara_site_studio_choice_label( $choice ) { return ucwords( str_replace( '-', ' ', $choice ) ); }
+	function lunara_site_studio_choice_label( $choice ) { return 'legacy' === $choice ? __( 'Keep current selection', 'lunara-film' ) : ucwords( str_replace( '-', ' ', $choice ) ); }
 }
 
 if ( ! function_exists( 'lunara_site_studio_render_control' ) ) {
@@ -386,7 +392,7 @@ if ( ! function_exists( 'lunara_render_site_studio_page' ) ) {
 			<div class="lunara-site-studio-workspace">
 				<aside class="lunara-site-studio-section-rail" aria-label="<?php echo esc_attr__( 'Site sections', 'lunara-film' ); ?>"><h2><?php esc_html_e( 'Sections', 'lunara-film' ); ?></h2><?php if ( 'homepage-structure' === $active_id ) { lunara_site_studio_render_home_order( $state ); } elseif ( 'oscars-portal' === $active_id ) { lunara_site_studio_render_archive_order( $state, array( 'board' => 'Shown when board content is available', 'navigator' => $state['section_visibility']['doors'] ? 'Visible with doors' : 'Hidden with doors' ) ); } elseif ( in_array( $active_id, array( 'reviews-archive', 'journal-archive' ), true ) ) { lunara_site_studio_render_archive_order( $state ); } else { ?><ol><?php foreach ( $active['sections'] as $section ) : ?><li data-section-control="<?php echo esc_attr( $section ); ?>" tabindex="-1"><?php echo esc_html( ucwords( str_replace( '-', ' ', $section ) ) ); ?></li><?php endforeach; ?></ol><?php } ?></aside>
 				<section class="lunara-site-studio-preview" aria-label="<?php echo esc_attr__( 'Live preview', 'lunara-film' ); ?>"><div class="lunara-site-studio-widths" aria-label="<?php echo esc_attr__( 'Preview width', 'lunara-film' ); ?>"><button id="lunara-preview-desktop" type="button" data-preview-width="desktop"<?php echo 'homepage-structure' === $active_id ? ' data-error-key="desktop_order" aria-describedby="lunara-home-desktop-order-error"' : ''; ?> aria-pressed="true"><?php esc_html_e( 'Desktop', 'lunara-film' ); ?></button><button type="button" data-preview-width="tablet" aria-pressed="false"><?php esc_html_e( 'Tablet', 'lunara-film' ); ?></button><button id="lunara-preview-mobile" type="button" data-preview-width="mobile"<?php echo 'homepage-structure' === $active_id ? ' data-error-key="mobile_order" aria-describedby="lunara-home-mobile-order-error"' : ''; ?> aria-pressed="false"><?php esc_html_e( 'Mobile', 'lunara-film' ); ?></button></div><div class="lunara-site-studio-preview-viewport"><div class="lunara-site-studio-preview-flow"><div class="lunara-site-studio-preview-canvas"><iframe title="<?php echo esc_attr( sprintf( __( '%s live preview', 'lunara-film' ), $active['label'] ) ); ?>" src="<?php echo esc_url( $route ); ?>" width="1440" height="900" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin"></iframe></div></div></div></section>
-				<aside class="lunara-site-studio-inspector" aria-label="<?php echo esc_attr__( 'Settings inspector', 'lunara-film' ); ?>" aria-busy="false"><h2><?php echo esc_html( $active['label'] ); ?></h2><?php if ( in_array( $active_id, array( 'hero-carousel', 'journal-carousel' ), true ) ) { lunara_site_studio_render_carousel_inspector( $active_id, $state, $revisions ); } elseif ( 'global-design' === $active_id ) { lunara_site_studio_render_global_inspector( $state, $revisions, $active['classic_url'] ); } elseif ( 'homepage-structure' === $active_id ) { lunara_site_studio_render_home_inspector( $state, $revisions, $active['classic_url'] ); } elseif ( 'lunara-method' === $active_id ) { lunara_site_studio_render_method_inspector( $state, $revisions, $active['classic_url'] ); } elseif ( 'oscars-portal' === $active_id ) { lunara_site_studio_render_oscars_portal_inspector( $state, $revisions ); } elseif ( in_array( $active_id, array( 'reviews-archive', 'journal-archive' ), true ) ) { lunara_site_studio_render_archive_inspector( $active_id, $state, $revisions, $active['classic_url'] ); } else { lunara_site_studio_render_mod_surface_inspector( $active_id, $state, $revisions, $active['classic_url'] ); } ?><div class="lunara-site-studio-actions"><button type="button" class="button" data-action="preview" disabled><?php esc_html_e( 'Preview changes', 'lunara-film' ); ?></button><button type="button" class="button button-primary" data-action="save" disabled><?php esc_html_e( 'Apply changes', 'lunara-film' ); ?></button><button type="button" class="button" data-action="discard" disabled><?php esc_html_e( 'Discard changes', 'lunara-film' ); ?></button></div><p class="lunara-site-studio-status" data-workspace-status aria-live="polite"><?php esc_html_e( 'Loading editor…', 'lunara-film' ); ?></p></aside>
+				<aside class="lunara-site-studio-inspector" aria-label="<?php echo esc_attr__( 'Settings inspector', 'lunara-film' ); ?>" aria-busy="false"><h2><?php echo esc_html( $active['label'] ); ?></h2><?php if ( in_array( $active_id, array( 'home-oscar-picks', 'home-oscar-facts' ), true ) ) { lunara_site_studio_render_home_oscars_inspector( $active_id, $state, $revisions ); } elseif ( in_array( $active_id, array( 'hero-carousel', 'journal-carousel' ), true ) ) { lunara_site_studio_render_carousel_inspector( $active_id, $state, $revisions ); } elseif ( 'global-design' === $active_id ) { lunara_site_studio_render_global_inspector( $state, $revisions, $active['classic_url'] ); } elseif ( 'homepage-structure' === $active_id ) { lunara_site_studio_render_home_inspector( $state, $revisions, $active['classic_url'] ); } elseif ( 'lunara-method' === $active_id ) { lunara_site_studio_render_method_inspector( $state, $revisions, $active['classic_url'] ); } elseif ( 'oscars-portal' === $active_id ) { lunara_site_studio_render_oscars_portal_inspector( $state, $revisions ); } elseif ( in_array( $active_id, array( 'reviews-archive', 'journal-archive' ), true ) ) { lunara_site_studio_render_archive_inspector( $active_id, $state, $revisions, $active['classic_url'] ); } else { lunara_site_studio_render_mod_surface_inspector( $active_id, $state, $revisions, $active['classic_url'] ); } ?><div class="lunara-site-studio-actions"><button type="button" class="button" data-action="preview" disabled><?php esc_html_e( 'Preview changes', 'lunara-film' ); ?></button><button type="button" class="button button-primary" data-action="save" disabled><?php esc_html_e( 'Apply changes', 'lunara-film' ); ?></button><button type="button" class="button" data-action="discard" disabled><?php esc_html_e( 'Discard changes', 'lunara-film' ); ?></button></div><p class="lunara-site-studio-status" data-workspace-status aria-live="polite"><?php esc_html_e( 'Loading editor…', 'lunara-film' ); ?></p></aside>
 			</div><?php endif; ?>
 		</div><?php
 	}

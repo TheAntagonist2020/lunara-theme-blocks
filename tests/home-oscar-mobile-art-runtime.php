@@ -2,6 +2,11 @@
 // Execute the real public renderer with WordPress attachment/query fixtures.
 $root = dirname( __DIR__ );
 $source = file_get_contents( $root . '/functions.php' );
+$selection_source = file_get_contents( $root . '/inc/site-studio-home-oscars.php' );
+foreach ( array( 'lunara_home_oscars_selection', 'lunara_site_studio_home_oscars_ids', 'lunara_home_oscars_item_available' ) as $helper ) {
+    if ( ! preg_match( '/^function ' . $helper . '\(.*?^\}/ms', $selection_source, $match ) ) { throw new RuntimeException( 'Missing real selection helper.' ); }
+    eval( $match[0] );
+}
 $tokens = token_get_all( $source );
 for ( $i = 0; $i < count( $tokens ); $i++ ) {
     if ( ! is_array( $tokens[$i] ) || T_FUNCTION !== $tokens[$i][0] ) { continue; }

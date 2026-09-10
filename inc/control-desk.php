@@ -899,7 +899,7 @@ function lunara_control_desk_homepage_number_specs() {
         'lunara_home_oscar_picks_count' => array(
             'label'   => __( 'Oscar Picks card count', 'lunara-film' ),
             'default' => 12,
-            'min'     => 4,
+            'min'     => 1,
             'max'     => 16,
             'step'    => 1,
             'unit'    => __( 'cards', 'lunara-film' ),
@@ -1165,6 +1165,7 @@ function lunara_control_desk_save_homepage_studio() {
 
     foreach ( lunara_control_desk_homepage_select_specs() as $key => $spec ) {
         $value = isset( $apply_values[ $key ] ) ? sanitize_key( $apply_values[ $key ] ) : ( isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'] );
+        if ( function_exists( 'lunara_site_studio_home_oscars_owns_mod' ) && lunara_site_studio_home_oscars_owns_mod( $key ) ) { continue; }
         if ( ! isset( $spec['options'][ $value ] ) ) {
             $value = (string) $spec['default'];
         }
@@ -1193,6 +1194,7 @@ function lunara_control_desk_save_homepage_studio() {
     $resets      = array_map( 'sanitize_key', array_keys( $raw_resets ) );
 
     foreach ( lunara_control_desk_homepage_number_specs() as $key => $spec ) {
+        if ( function_exists( 'lunara_site_studio_home_oscars_owns_mod' ) && lunara_site_studio_home_oscars_owns_mod( $key ) ) { continue; }
         if ( in_array( $key, $resets, true ) ) {
             remove_theme_mod( $key );
             continue;
@@ -1203,6 +1205,9 @@ function lunara_control_desk_save_homepage_studio() {
         }
     }
 
+    // Homepage Oscar curation now belongs to Site Studio. Preserve the fallback
+    // only when that module is unavailable; old open forms cannot compete.
+    if ( ! function_exists( 'lunara_site_studio_home_oscar_picks_adapter' ) ) {
     $default_oscar_ceremony_year = function_exists( 'lunara_home_oscar_picks_default_ceremony_year' )
         ? lunara_home_oscar_picks_default_ceremony_year()
         : (int) wp_date( 'Y' );
@@ -1272,6 +1277,8 @@ function lunara_control_desk_save_homepage_studio() {
         set_theme_mod( 'lunara_home_oscar_picks_manual_order', implode( ',', $oscar_pick_ids ) );
     } else {
         remove_theme_mod( 'lunara_home_oscar_picks_manual_order' );
+    }
+
     }
 
     $raw_visible = isset( $_POST['lunara_homepage_visibility'] ) && is_array( $_POST['lunara_homepage_visibility'] )
@@ -8445,6 +8452,10 @@ function lunara_control_desk_render_homepage_oscar_pick_candidate( $post ) {
 }
 
 function lunara_control_desk_render_homepage_oscar_picks_curation() {
+    if ( function_exists( 'lunara_site_studio_home_oscar_picks_adapter' ) ) {
+        echo '<div class="lunara-control-desk-homepage-card"><h3>Homepage Oscars</h3><p>Use the shared Preview / Apply editors for lineups, copy and presentation.</p><a class="button" href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=home-oscar-picks' ) ) . '">Edit Oscar Picks</a> <a class="button" href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=home-oscar-facts' ) ) . '">Edit Oscar Facts</a></div>';
+        return;
+    }
     $ceremony_year = function_exists( 'lunara_home_oscar_picks_ceremony_year' )
         ? lunara_home_oscar_picks_ceremony_year()
         : absint( wp_date( 'Y' ) );
@@ -8682,6 +8693,7 @@ function lunara_control_desk_render_homepage_studio( $context = 'control-desk' )
                     </div>
                     <div class="lunara-control-desk-homepage-choice-grid">
                         <?php foreach ( lunara_control_desk_homepage_select_specs() as $key => $spec ) : ?>
+                            <?php if ( function_exists( 'lunara_site_studio_home_oscars_owns_mod' ) && lunara_site_studio_home_oscars_owns_mod( $key ) ) { continue; } ?>
                             <?php lunara_control_desk_render_homepage_select_control( $key, $spec ); ?>
                         <?php endforeach; ?>
                     </div>
@@ -8697,6 +8709,7 @@ function lunara_control_desk_render_homepage_studio( $context = 'control-desk' )
                     </div>
                     <div class="lunara-control-desk-homepage-number-grid">
                         <?php foreach ( lunara_control_desk_homepage_number_specs() as $key => $spec ) : ?>
+                            <?php if ( function_exists( 'lunara_site_studio_home_oscars_owns_mod' ) && lunara_site_studio_home_oscars_owns_mod( $key ) ) { continue; } ?>
                             <?php lunara_control_desk_render_homepage_number_control( $key, $spec ); ?>
                         <?php endforeach; ?>
                     </div>

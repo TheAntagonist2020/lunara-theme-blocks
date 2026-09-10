@@ -11,6 +11,43 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-10 — Theme 3.2.65 Homepage Oscar Lineups
+
+Homepage Oscar Picks and Oscar Facts now have separate Site Studio workspaces
+using the shared Preview / Apply / Discard and revision history workflow.
+Legacy preserves the existing selection rules; Automatic uses the newest
+published eligible records; Manual retains its list when switching modes.
+Search, add, remove, drag and keyboard Move controls arrange each lineup.
+Picks filter by ceremony year. Private, deleted, wrong-type and unavailable
+selections are skipped and flagged; empty Manual lineups hide the section.
+
+Both workspaces control heading, label, supporting text, button text, count,
+rotation interval in seconds, density and card height. The real desktop,
+tablet and mobile preview consumes only the private candidate. Apply writes
+canonical theme mods through the existing verified transactions; revision
+restore retains missing keys as well as values. The previous Homepage Picks
+curation panel links to these editors and its old writer becomes inert while
+the shared editor module is available. Pick/Fact article authoring and artwork
+framing remain in their existing editors; the Academy database is unchanged.
+The existing 3.2.64 mobile artwork treatment remains in place.
+
+The live renderers are the uniquely defined Picks/Facts functions in
+`functions.php`; these changes do not edit the dead guarded Oscars Portal
+renderer. Public output remains server-rendered. One-item rails stay static,
+and the existing carousel controllers honor zero rotation and reduced motion.
+
+### Core 0.8.11 companion fix
+
+Live Core 0.8.10 diagnostics identified OMDb failures before TMDB was reached.
+Review artwork now queries TMDB directly using exact canonical IMDb identity,
+with a separate artwork cache. `_lunara_tmdb_poster_url` and backdrop metadata
+retain the existing Auto / Custom / Off rules. Full Movie enrichment still
+uses its existing provider contract. A nonce-protected Retry movie artwork
+button queues one Review without submitting its article editor; duplicate
+queued/running work is suppressed. Artwork Audit needs TMDB credentials only.
+Core PR #34 is merged. Missing production sources still require a successful
+retry after the new Core deployment; this code change is not live proof.
+
 ## 2026-09-10 — Core 0.8.10 Review poster source and safe film lookup
 
 Automatic Review cards now prefer `_lunara_tmdb_poster_url` over older local,
