@@ -93,21 +93,31 @@
  }
  function orderedList(options) {
   var dragKey = null;
+  function cancelDrag() {
+   dragKey = null;
+   var dragging = options.parent.querySelectorAll('.is-dragging');
+   for (var i = 0; i < dragging.length; i += 1) { dragging[i].classList.remove('is-dragging'); }
+  }
+  function eventRow(event) {
+   var row = event.target && event.target.closest ? event.target.closest('[data-editor-key]') : null;
+   return row && row.parentNode === options.parent ? row : null;
+  }
+  options.parent.addEventListener('dragstart', function (event) {
+   var row = eventRow(event);
+   if (!row || !options.enabled() || event.target.closest('input,select,textarea,button,a,summary')) { if (row) { event.preventDefault(); } return; }
+   dragKey = row.dataset.editorKey; row.classList.add('is-dragging'); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', dragKey);
+  });
+  options.parent.addEventListener('dragover', function (event) { if (eventRow(event) && options.enabled() && dragKey !== null) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } });
+  options.parent.addEventListener('drop', function (event) {
+   var row = eventRow(event), items = options.items(), from = items.findIndex(function (entry) { return String(options.key(entry)) === dragKey; }), to = row ? items.findIndex(function (entry) { return String(options.key(entry)) === row.dataset.editorKey; }) : -1;
+   event.preventDefault(); cancelDrag(); if (row && options.enabled() && from >= 0 && to >= 0) { options.move(from, to); }
+  });
+  options.parent.addEventListener('dragend', cancelDrag);
   function render(focus) {
-   options.parent.replaceChildren(); var items = options.items();
+   cancelDrag(); options.parent.replaceChildren(); var items = options.items();
    items.forEach(function (item, index) {
     var key = String(options.key(item)), row = options.row(item, index);
     row.dataset.editorKey = key; row.draggable = true; options.parent.appendChild(row);
-    row.addEventListener('dragstart', function (event) {
-     if (!options.enabled() || event.target.closest('input,select,textarea,button,a,summary')) { event.preventDefault(); return; }
-     dragKey = key; row.classList.add('is-dragging'); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', key);
-    });
-    row.addEventListener('dragover', function (event) { if (options.enabled() && dragKey !== null) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } });
-    row.addEventListener('drop', function (event) {
-     event.preventDefault(); var from = options.items().findIndex(function (entry) { return String(options.key(entry)) === dragKey; });
-     dragKey = null; if (options.enabled() && from >= 0) { options.move(from, index); }
-    });
-    row.addEventListener('dragend', function () { dragKey = null; row.classList.remove('is-dragging'); });
    });
    if (focus) {
     var row = Array.from(options.parent.children).find(function (entry) { return entry.dataset.editorKey === String(focus.key); });
@@ -115,7 +125,7 @@
     if (target) { target.focus(); }
    }
   }
-  return {render:render, cancelDrag:function () { dragKey = null; }};
+  return {render:render, cancelDrag:cancelDrag};
  }
  window.LunaraEditorControls = {node:node,button:button,imageUrl:imageUrl,thumbnail:thumb,range:range,image:imageControl,orderedList:orderedList};
 }());

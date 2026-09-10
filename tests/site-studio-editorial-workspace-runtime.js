@@ -13,7 +13,9 @@ try {
 
 const themeRoot = path.resolve(__dirname, '..');
 const css = fs.readFileSync(path.join(themeRoot, 'assets/css/lunara-site-studio.css'), 'utf8');
+const editorCss = fs.readFileSync(path.join(themeRoot, 'assets/css/lunara-editor-controls.css'), 'utf8');
 const controller = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio.js'), 'utf8');
+const editorControls = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-editor-controls.js'), 'utf8');
 const previewBridge = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio-preview.js'), 'utf8');
 const token = '123e4567-e89b-42d3-a456-426614174111';
 
@@ -29,7 +31,8 @@ const cases = [
 		marker: 'hero',
 		markers: ['hero', 'grid', 'pagination', 'pairing-desk'],
 		handoff: 'Open full archive controls',
-		archive: true
+		archive: true,
+		expectedOrder: ['pagination', 'grid', 'hero', 'pairing-desk']
 	},
 	{
 		surface: 'journal-archive',
@@ -42,7 +45,8 @@ const cases = [
 		marker: 'deskbar',
 		markers: ['hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination'],
 		handoff: 'Open full archive controls',
-		archive: true
+		archive: true,
+		expectedOrder: ['filters', 'deskbar', 'hero', 'toolbar', 'grid', 'retention', 'pagination']
 	},
 	{
 		surface: 'review-single',
@@ -93,16 +97,29 @@ function assert(condition, message, evidence) {
 	throw new Error(message);
 }
 
+async function startDrag(page, selector) {
+	return page.locator(selector).evaluate(node => {
+		const dataTransfer = new DataTransfer();
+		node.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, dataTransfer }));
+		return { draggable: node.draggable, dragging: node.classList.contains('is-dragging') };
+	});
+}
+
+async function dropOn(page, selector) {
+	await page.locator(selector).evaluate(node => node.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: new DataTransfer() })));
+}
+
 function fixture(surface) {
 	const result = spawnSync('php', [path.join(__dirname, 'site-studio-runtime.php'), `--fixture=${surface}`], { encoding: 'utf8' });
 	if (result.error || result.status !== 0) {
 		throw result.error || new Error(result.stderr);
 	}
 	const adminCss = '<style>#wpcontent{margin-left:160px}#wpbody-content{min-width:0;padding-bottom:40px}@media(max-width:782px){#wpcontent{margin-left:0}}</style>';
+	const usesOrderedList = surface === 'reviews-archive' || surface === 'journal-archive';
 	return result.stdout
-		.replace('</head>', `<style>${css}</style>${adminCss}</head>`)
+		.replace('</head>', `<style>${css}</style>${usesOrderedList ? `<style>${editorCss}</style>` : ''}${adminCss}</head>`)
 		.replace('<body class="wp-admin">', '<body class="wp-admin"><div id="wpwrap"><div id="wpcontent"><div id="wpbody"><div id="wpbody-content">')
-		.replace('</body>', `</div></div></div></div><script>${controller}</script></body>`);
+		.replace('</body>', `</div></div></div></div>${usesOrderedList ? `<script>${editorControls}</script>` : ''}<script>${controller}</script></body>`);
 }
 
 function mutateFixtureState(html, mutate) {
@@ -181,6 +198,7 @@ async function waitForFrame(page, expectedUrl) {
 			const requests = [];
 			let frontendLoads = 0;
 			let saveFailure = null;
+			let archiveHiddenSlug = '';
 
 			await page.route('https://example.test/**', async route => {
 				const request = route.request();
@@ -275,12 +293,17 @@ async function waitForFrame(page, expectedUrl) {
 			assert(await page.locator('[data-lunara-site-studio]').getAttribute('data-dirty') === 'true', `${testCase.surface} must visibly mark unsaved changes.`);
 
 			if (testCase.archive) {
+				const dragged = await startDrag(page, '[data-section-row]:first-child');
+				await dropOn(page, '[data-section-row]:nth-child(3)');
 				const movable = page.locator('[data-section-row]').nth(1);
 				const movedSlug = await movable.getAttribute('data-slug');
 				await movable.locator('[data-section-move="earlier"]').click();
-				assert(await page.locator('[data-section-row]').first().getAttribute('data-slug') === movedSlug, `${testCase.surface} must update the recognizable section order locally.`);
+				const ordered = await page.locator('[data-section-row]').evaluateAll(rows => rows.map(row => row.dataset.slug));
+				const orderFocus = await page.evaluate(() => ({ slug: document.activeElement.closest('[data-section-row]').dataset.slug, direction: document.activeElement.getAttribute('data-editor-move'), first: document.querySelector('[data-section-row]:first-child [data-section-move="earlier"]').disabled, last: document.querySelector('[data-section-row]:last-child [data-section-move="later"]').disabled }));
+				assert(dragged.draggable && dragged.dragging && JSON.stringify(ordered) === JSON.stringify(testCase.expectedOrder) && ordered[0] === movedSlug && orderFocus.slug === movedSlug && orderFocus.direction === 'later' && orderFocus.first && orderFocus.last, `${testCase.surface} pointer and keyboard ordering must share the mutation path, retain focus, and preserve exact boundaries.`, { dragged, ordered, orderFocus });
 
 				const visibility = page.locator('[data-section-visible]').first();
+				archiveHiddenSlug = await visibility.getAttribute('data-section-visible');
 				await page.evaluate(() => { window.__removeConfirms = 0; window.confirm = () => { window.__removeConfirms += 1; return false; }; });
 				await visibility.click();
 				assert(await visibility.isChecked() && await page.evaluate(() => window.__removeConfirms) === 1, `${testCase.surface} must preserve a section when removal is cancelled.`);
@@ -312,6 +335,9 @@ async function waitForFrame(page, expectedUrl) {
 			await waitForFrame(page, privateUrl);
 			const previewRequest = lastRequest(requests, '/preview');
 			assert(previewRequest && getPath(previewRequest.body.state, testCase.field) === testCase.value, `${testCase.surface} Preview must submit the complete current candidate.`);
+			if (testCase.archive) {
+				assert(JSON.stringify(previewRequest.body.state.section_order) === JSON.stringify(testCase.expectedOrder) && previewRequest.body.state.section_visibility[archiveHiddenSlug] === false && Object.keys(previewRequest.body.state.section_visibility).every(slug => slug === archiveHiddenSlug || previewRequest.body.state.section_visibility[slug] === true), `${testCase.surface} private Preview must receive the exact dragged order while retaining every section visibility value.`, previewRequest.body.state);
+			}
 
 			await page.frameLocator('iframe').locator(`[data-lunara-site-studio-section="${testCase.marker}"]`).click();
 			await page.waitForFunction(marker => {
@@ -347,6 +373,9 @@ async function waitForFrame(page, expectedUrl) {
 			await waitForFrame(page, canonicalUrl(testCase, false));
 			const saveRequest = lastRequest(requests, '/save');
 			assert(saveRequest && getPath(saveRequest.body.state, testCase.field) === testCase.value, `${testCase.surface} Save Live must persist the visible candidate.`);
+			if (testCase.archive) {
+				assert(JSON.stringify(saveRequest.body.state.section_order) === JSON.stringify(testCase.expectedOrder) && JSON.stringify(saveRequest.body.state.section_visibility) === JSON.stringify(previewRequest.body.state.section_visibility), `${testCase.surface} Save must persist the same authoritative dragged order and visibility candidate sent to Preview.`, saveRequest.body.state);
+			}
 			assert(await page.evaluate(() => window.__saveConfirms) === 0, `${testCase.surface} ordinary Save Live must not ask for confirmation.`);
 			assert(await page.locator('[data-lunara-site-studio]').getAttribute('data-dirty') === 'false', `${testCase.surface} must visibly return to live state after save.`);
 
