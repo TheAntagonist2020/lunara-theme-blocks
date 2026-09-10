@@ -15,6 +15,7 @@ method_check( lunara_site_studio_valid_method_revision_config( $historical ), 'H
 $id = lunara_site_studio_private_revision( 'lunara-method', $historical, 'save' );
 $state['review_mode'] = 'automatic'; $state['backdrop']['focal_x'] = 17; $state['backdrop']['zoom'] = 109;
 method_check( ! is_wp_error( lunara_site_studio_lunara_method_save_state( $state ) ), 'Automatic accepts and retains manual IDs.' );
+method_check( $state['backdrop'] === lunara_method_backdrop_settings(), 'Apply persists every exact backdrop framing value.' );
 method_check( 201 === get_theme_mod( 'lunara_home_pairing_desk_review_id' ) && 'automatic' === get_theme_mod( 'lunara_home_pairing_desk_review_mode' ), 'Mode change persists without discarding the manual ID.' );
 $restored = lunara_site_studio_lunara_method_restore_revision( $id );
 method_check( ! is_wp_error( $restored ) && $restored['state']['backdrop'] === $defaults && 'manual' === $restored['state']['review_mode'] && ! array_key_exists( 'lunara_home_pairing_desk_review_mode', $lunara_pilot_theme_mods ) && ! array_key_exists( 'lunara_home_pairing_desk_backdrop', $lunara_pilot_theme_mods ), 'Historical restore removes additive overrides exactly.' );
