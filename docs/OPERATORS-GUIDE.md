@@ -1,17 +1,16 @@
 # Lunara Film — The Operator's Guide
 
 *For the editor of lunarafilm.com. What is where, how to drive it, and where it can still go.*
-*Presentation controls updated for Theme 3.2.64. Other editorial
-and plugin sections retain their earlier scope; see the session log for verified
-live versions.*
+*Current as of theme 3.1.83 · lunara-core 0.5.1 · oscars-ledger 2.7.74 · imdb-guard 0.4.0*
 
 ---
 
 ## 1. The site at a glance
 
-**Lunara is a Blocksy child theme.** The active stylesheet declares
-`Template: blocksy`. The theme repository owns Lunara's presentation and
-Site Studio controls; the shared editor migration keeps WordPress and Blocksy.
+**Lunara Film Living Pulse is a standalone theme.** The Blocksy parent is gone
+(the `Template:` line was removed in 3.1.77); every template, style, and
+behavior on the site is yours, in this repository. There is no upstream theme
+that can change under you.
 
 The stack:
 
@@ -25,20 +24,15 @@ The stack:
 | AI Assistant | `lunara-plugin-ai-assistant-classic` | Private editorial suggestions (Claude/OpenAI/Gemini) |
 
 **How to know what's live:** view source on any page and find the
-`lunara-build` meta tag — its value contains the version and build timestamp.
+`lunara-build` meta tag — `3.1.83+20260708-…` is version + deploy moment.
 Or open **Control Desk → System Status → Deploy Truth**, which also runs a
 drift sweep: any theme file edited outside the repo→deploy pipeline gets
 named there before the next deploy can silently overwrite it.
 
 **The release loop:** work lands in the repo → PR → CI lint gate (PHP
 syntax, JS syntax, CSS brace balance on every PR) → merge to `main` → you
-deploy the theme through WordPress.com **Settings → Repositories** (also
-reachable from **Deployments → Go to repositories**) → the versioned public
-canary confirms. Control Desk's Deploy Truth panel reports the live version;
-it does not perform deployment. Keep automatic deployments off; inspect the
-repository connection to verify that setting. The rollback hatch is PR #159 on
-`claude/rollback-exact-theme-3.2.43`; rebuild and verify it after every main merge.
-Use `docs/GO-LIVE-RUNBOOK.md` for the deployment and recovery procedure.
+deploy (as a timestamped theme directory) → Deploy Truth confirms.
+**Rollback is always one revert commit + redeploy.**
 
 ---
 
@@ -87,20 +81,25 @@ the guarded-insert log catches anything the schema rejects.
 ### System Status
 - **Deploy Truth** — live version, active theme directory, deploy moment,
   drift sweep, parent baseline.
-- **Header Command** — Lunara header presentation controls.
+- **Header Command** — the takeover switch (moot now that the theme is
+  standalone: the Lunara header is always on).
 - **Design Tokens** — *your dials.* Six palette dials (golds, navies, text
   tones) and five typographic-role dials (body / display / signature /
   glamour / label, each assignable to any house face). Only turned dials
-  are output; **Reset** returns to pure stylesheet.
+  are output; **Reset** returns to pure stylesheet. Saves purge the cache.
 - Phase cards, source map, source-control anchors, OMDb queue.
 
 ### Homepage Board
-- **Site Studio → Homepage** — independent desktop/mobile section order,
-  visibility, density, and review-grid columns. Drag sections or use their
-  keyboard move controls, then Preview changes and Apply changes.
-- **Lunara Method** — Automatic/Manual Review selection, band copy, and a
-  shared backdrop chooser with focal point, fit, and zoom. The older Method
-  presentation form routes here. See `docs/PRESENTATION-EDITORS.md`.
+- **Homepage Studio** — section order (desktop + mobile presets),
+  visibility switches, density, review-grid columns. Saves write through
+  to the Home page's blocks.
+- **Pairing Desk Showcase** (the Lunara Method band):
+  - Kicker / headline / paragraph copy.
+  - **Featured review** — the marquee dial. Pick any published review and
+    the whole band re-dresses itself (trio, credit, backdrop). Program a
+    director season; "Automatic" follows your newest complete review.
+  - **Backdrop image** — media-picker override for the band's cinematic
+    background; Clear returns to the review's own hero.
 
 ### Reviews
 Draft/pending pipeline with blockers, editor deep-links, AI suggestion
@@ -111,10 +110,9 @@ Logo sizing (desktop/tablet/mobile), brand imagery, and the Customizer
 text mods for every archive and portal heading.
 
 ### Hero Command
-Use **Site Studio → Homepage → Hero Carousel** for the homepage story deck.
-Hero and Journal have separate Automatic/Manual modes and shared drag, image,
-Preview, Apply, and history controls. The old Hero Command controls route to
-the shared owner after adoption. See `docs/HOMEPAGE-CAROUSELS.md`.
+The curated hero deck: slides, kickers, CTAs, overlay intensity, AJAX
+search to add any post. (The homepage front desk currently supersedes the
+hero on Home; the deck still drives anywhere the hero renders.)
 
 ### Oscars Integrity / Speed / Visual QA / AI Operator
 Diagnostics: poster & route checks, payload watch, breakpoint list,
@@ -124,16 +122,17 @@ provider-routed private suggestions.
 
 ## 4. The homepage system
 
-Use Site Studio for homepage presentation. The saved section order and
-visibility determine which bands appear; desktop and mobile have independent
-orders. Hero, Method, and Journal have their own presentation panels inside
-the shared workspace. Homepage Oscar Picks/Facts retain their existing controls.
+The Home page is **block-composed** (five section blocks) with the Studio
+writing through to them — edit in either place, they stay in sync.
+Top-to-bottom:
 
-Existing Journal grid settings survive upgrade until its new carousel is
-explicitly applied. Mobile Journal and Oscar Picks artwork has been repaired
-without changing saved content selection. The Oscars Portal is a separate
-Site Studio surface with its own copy, order, visibility, and presentation.
-The complete control map is `docs/PRESENTATION-EDITORS.md`.
+1. **Front desk masthead** — brand, dek, lead review, Journal/Oscars/search
+   signal stack, route doors.
+2. **Signal Bar** — the slim live strip (Review · Journal · Ledger · ⌘K
+   Search). Reuses the masthead's own data; swipeable on phones.
+3. **Only on Lunara / Pairing desk** — the Method marquee (§3).
+4. **Journal lane**, **Oscar picks**, **Oscar facts** — carousels and lanes,
+   all Studio-controlled.
 
 ---
 
