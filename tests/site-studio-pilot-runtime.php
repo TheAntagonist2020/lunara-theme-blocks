@@ -270,6 +270,7 @@ require $theme_root . '/inc/design-tokens.php';
 require $theme_root . '/inc/site-studio-registry.php';
 require $theme_root . '/inc/site-studio-adapters.php';
 require $theme_root . '/inc/site-studio-rest.php';
+if ( defined( 'LUNARA_METHOD_BOOTSTRAP_ONLY' ) ) { return; }
 
 $required = array(
 	'lunara_site_studio_global_design_adapter', 'lunara_site_studio_global_design_state_schema',
@@ -334,14 +335,14 @@ $validation_error = new WP_Error(
 		'fields' => array(
 			'colors' => 'Choose valid colors.', 'color_gold' => 'Choose gold.', 'color_gold_light' => 'Choose light gold.', 'color_bg_primary' => 'Choose the ground.', 'color_bg_secondary' => 'Choose the surface.', 'color_text' => 'Choose text.', 'color_text_muted' => 'Choose muted text.',
 			'fonts' => 'Choose valid fonts.', 'font_body' => 'Choose body.', 'font_display' => 'Choose display.', 'font_signature' => 'Choose signature.', 'font_glamour' => 'Choose glamour.', 'font_label' => 'Choose label.',
-			'kicker' => 'Enter a kicker.', 'title' => 'Enter a title.', 'copy' => 'Enter copy.', 'review_id' => 'Choose a Review.', 'backdrop_id' => 'Choose an image.',
+			'kicker' => 'Enter a kicker.', 'title' => 'Enter a title.', 'copy' => 'Enter copy.', 'review_id' => 'Choose a Review.', 'backdrop_id' => 'Choose an image.', 'review_mode' => 'Choose mode.', 'backdrop' => 'Check framing.',
 			'preset' => 'Choose a preset.', 'desktop_order' => 'Complete desktop order.', 'mobile_order' => 'Complete mobile order.', 'visibility' => 'Complete visibility.', 'front_page' => 'Reload the front page.',
 			'raw_option_key' => 'secret', 'theme_mod' => 'secret', 'revision_config' => 'secret', 'post_content' => 'private content',
 		),
 	)
 );
 $safe_fields = lunara_site_studio_safe_validation_fields( $validation_error );
-$expected_safe_fields = array( 'title', 'kicker', 'colors', 'color_gold', 'color_gold_light', 'color_bg_primary', 'color_bg_secondary', 'color_text', 'color_text_muted', 'fonts', 'font_body', 'font_display', 'font_signature', 'font_glamour', 'font_label', 'copy', 'review_id', 'backdrop_id', 'preset', 'desktop_order', 'mobile_order', 'visibility', 'front_page' );
+$expected_safe_fields = array( 'title', 'kicker', 'colors', 'color_gold', 'color_gold_light', 'color_bg_primary', 'color_bg_secondary', 'color_text', 'color_text_muted', 'fonts', 'font_body', 'font_display', 'font_signature', 'font_glamour', 'font_label', 'copy', 'review_id', 'backdrop_id', 'review_mode', 'backdrop', 'preset', 'desktop_order', 'mobile_order', 'visibility', 'front_page' );
 lunara_pilot_assert( $expected_safe_fields === array_keys( $safe_fields ), 'REST validation projection must include exactly the explicit pilot human field paths in stable allowlist order.' );
 echo "pilot case validation-redaction: passed.\n";
 
@@ -427,27 +428,27 @@ echo "pilot case global-design: passed.\n";
 lunara_pilot_reset();
 $method = lunara_site_studio_lunara_method_adapter();
 $method_state = $method->read_state();
-lunara_pilot_assert( array( 'kicker', 'title', 'copy', 'review_id', 'backdrop_id' ) === array_keys( $method_state ), 'Method public state must expose exactly its five canonical human fields.' );
+lunara_pilot_assert( array( 'kicker', 'title', 'copy', 'review_id', 'backdrop_id', 'review_mode', 'backdrop' ) === array_keys( $method_state ), 'Method public state must expose its canonical fields and additive presentation fields.' );
 lunara_pilot_assert( '' === $method_state['kicker'] && '' === $method_state['title'] && '' === $method_state['copy'] && 0 === $method_state['review_id'], 'Method public state must preserve raw absent text overrides; rendering owns shipped fallback copy.' );
 $review_only = $method_state; $review_only['review_id'] = 201; $review_only['backdrop_id'] = 301;
 $review_only_save = $method->save_state( $review_only );
-lunara_pilot_assert( ! is_wp_error( $review_only_save ) && array( 'lunara_home_pairing_desk_review_id', 'lunara_home_pairing_desk_backdrop_id' ) === array_keys( $lunara_pilot_theme_mods ), 'Saving only Method Review/backdrop must preserve absence for all three text mods.' );
+lunara_pilot_assert( ! is_wp_error( $review_only_save ) && array( 'lunara_home_pairing_desk_review_id', 'lunara_home_pairing_desk_backdrop_id', 'lunara_home_pairing_desk_review_mode', 'lunara_home_pairing_desk_backdrop' ) === array_keys( $lunara_pilot_theme_mods ), 'Saving only Method Review/backdrop must preserve absence for all three text mods.' );
 $lunara_pilot_theme_mods = array();
-$valid_method = array( 'kicker' => 'A kicker', 'title' => 'A title', 'copy' => 'A copy', 'review_id' => 201, 'backdrop_id' => 301 );
+$valid_method = array( 'kicker' => 'A kicker', 'title' => 'A title', 'copy' => 'A copy', 'review_id' => 201, 'backdrop_id' => 301, 'review_mode' => 'manual', 'backdrop' => lunara_site_studio_method_backdrop_defaults() );
 lunara_pilot_assert( ! is_wp_error( $method->validate_state( $valid_method ) ), 'Method must accept a published Review and valid image.' );
 $bad_method = $valid_method; $bad_method['review_id'] = 202;
 $invalid_method = $method->validate_state( $bad_method );
-lunara_pilot_assert( is_wp_error( $invalid_method ) && 'site_studio_method_invalid' === $invalid_method->get_error_code() && array( 'review_id' ) === array_keys( lunara_pilot_error_fields( $invalid_method ) ), 'Method must return the exact safe review_id field for an unpublished Review.' );
+lunara_pilot_assert( ! is_wp_error( $invalid_method ), 'Method retains unavailable selections for the editor to warn without revealing private titles.' );
 $bad_method['review_id'] = 203;
-lunara_pilot_assert( is_wp_error( $method->validate_state( $bad_method ) ), 'Method must reject a published non-Review.' );
+lunara_pilot_assert( ! is_wp_error( $method->validate_state( $bad_method ) ), 'Method may retain a stale non-Review ID; rendering checks eligibility.' );
 $bad_method = $valid_method; $bad_method['backdrop_id'] = 302;
-lunara_pilot_assert( is_wp_error( $method->validate_state( $bad_method ) ), 'Method must reject a non-image attachment.' );
+lunara_pilot_assert( ! is_wp_error( $method->validate_state( $bad_method ) ), 'Method retains missing artwork with a visible editor warning.' );
 $method_save = $method->save_state( $valid_method );
 lunara_pilot_assert( ! is_wp_error( $method_save ) && 201 === get_theme_mod( 'lunara_home_pairing_desk_review_id' ), 'Method save must write the five canonical mods.' );
 lunara_pilot_assert( array( 'language', 'featured-review', 'backdrop' ) === $method_save['changed_sections'], 'Method save must report the exact canonical changed sections.' );
-$blank_method = array( 'kicker' => '', 'title' => '', 'copy' => '', 'review_id' => 0, 'backdrop_id' => 0 );
+$blank_method = array( 'kicker' => '', 'title' => '', 'copy' => '', 'review_id' => 0, 'backdrop_id' => 0, 'review_mode' => 'automatic', 'backdrop' => lunara_site_studio_method_backdrop_defaults() );
 $blank_save = $method->save_state( $blank_method );
-lunara_pilot_assert( ! is_wp_error( $blank_save ) && '' === $blank_save['state']['title'] && array() === $lunara_pilot_theme_mods, 'Blank Method values must remove overrides and keep public state raw/empty.' );
+lunara_pilot_assert( ! is_wp_error( $blank_save ) && '' === $blank_save['state']['title'] && array( 'lunara_home_pairing_desk_review_mode', 'lunara_home_pairing_desk_backdrop' ) === array_keys( $lunara_pilot_theme_mods ), 'Blank Method values must remove overrides and keep public state raw/empty.' );
 $method_restore = $method->restore_revision( $blank_save['revision_id'] );
 lunara_pilot_assert( ! is_wp_error( $method_restore ) && $valid_method === $method_restore['state'] && ! empty( $method_restore['safety_revision_id'] ), 'Method restore must apply the selected private raw-mod snapshot and create verified safety history.' );
 $lunara_pilot_theme_mods = array( 'lunara_home_pairing_desk_kicker' => '', 'lunara_home_pairing_desk_review_id' => 0 );
