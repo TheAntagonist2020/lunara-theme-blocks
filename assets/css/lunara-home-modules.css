@@ -672,17 +672,13 @@ body.home .lunara-cinematic-hero-carousel{isolation:isolate;background:radial-gr
 @media(max-width:820px){
         body.home .lunara-dispatches-section .lunara-journal-home-grid{grid-template-columns:minmax(0,1fr)!important;box-sizing:border-box!important;gap:12px!important;width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:auto!important;}
         body.home .lunara-dispatches-section .lunara-journal-home-card{min-height:0!important;height:auto!important;overflow:hidden;border-radius:10px!important;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card-link{min-height:0!important;height:auto!important;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card.has-visual:not(.is-lead) .lunara-journal-home-card-link{display:grid!important;grid-template-columns:minmax(112px,38vw) minmax(0,1fr)!important;grid-template-rows:auto!important;align-items:stretch!important;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-link{grid-template-columns:minmax(0,1fr)!important;display:grid!important;grid-template-rows:auto!important;min-height:0!important;height:auto!important;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card.is-lead.has-visual .lunara-journal-home-card-media{max-height:clamp(180px,50vw,260px)!important;min-height:0!important;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card-media{aspect-ratio:16/10!important;min-height:0!important;height:auto!important;align-self:stretch!important;max-height:230px!important;border-radius:8px 0 0 8px!important;overflow:hidden;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card.is-lead .lunara-journal-home-card-media{border-radius:8px 8px 0 0!important;}
+        body.home .lunara-dispatches-section .lunara-journal-home-card .lunara-journal-home-card-link{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto 1fr!important;min-height:0!important;height:auto!important;}
+        body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-link{grid-template-rows:auto!important;}
+        body.home .lunara-dispatches-section .lunara-journal-home-card .lunara-journal-home-card-media{aspect-ratio:16/10!important;min-height:0!important;height:auto!important;width:100%!important;max-height:none!important;align-self:start!important;border-radius:8px 8px 0 0!important;overflow:hidden;}
         body.home .lunara-dispatches-section .lunara-journal-home-card-image{width:100%!important;height:100%!important;object-fit:cover!important;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card-copy{display:grid!important;align-content:center!important;gap:7px!important;min-height:0!important;padding:12px 13px!important;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-copy{min-height:0!important;align-content:start!important;padding:14px 15px!important;gap:8px!important;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card-title{font-size:clamp(1rem,4.7vw,1.15rem)!important;line-height:1.1!important;letter-spacing:0!important;min-height:0!important;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card.is-lead .lunara-journal-home-card-title{font-size:clamp(1.2rem,5.6vw,1.48rem)!important;}
+        body.home .lunara-dispatches-section .lunara-journal-home-card-copy{display:grid!important;align-content:start!important;gap:8px!important;min-width:0!important;min-height:0!important;padding:16px!important;}
+        body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-copy{padding:14px 15px!important;}
+        body.home .lunara-front-page .lunara-dispatches-section .lunara-journal-home-grid .lunara-journal-home-card .lunara-journal-home-card-title{font-size:clamp(1.2rem,4.7vw,1.45rem)!important;line-height:1.2!important;letter-spacing:0!important;min-height:0!important;max-height:none!important;display:block!important;overflow:visible!important;overflow-wrap:anywhere;hyphens:none;}
         body.home .lunara-dispatches-section .lunara-journal-home-card-kicker,
         body.home .lunara-dispatches-section .lunara-dispatch-type{font-size:.66rem!important;line-height:1.2!important;}
         body.home .lunara-dispatches-section .lunara-journal-home-card-excerpt{-webkit-line-clamp:2!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;overflow:hidden!important;font-size:.84rem!important;line-height:1.36!important;}
@@ -690,10 +686,8 @@ body.home .lunara-cinematic-hero-carousel{isolation:isolate;background:radial-gr
     }
     @media(max-width:520px){
         body.home .lunara-dispatches-section .lunara-journal-home-grid{gap:10px!important;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card.has-visual:not(.is-lead) .lunara-journal-home-card-link{grid-template-columns:minmax(108px,36vw) minmax(0,1fr)!important;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card-copy{padding:11px 12px!important;}
+        body.home .lunara-dispatches-section .lunara-journal-home-card-copy{padding:14px!important;}
         body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-copy{padding:13px 14px!important;}
-        body.home .lunara-dispatches-section .lunara-journal-home-card-title{font-size:clamp(.98rem,4.9vw,1.08rem)!important;}
     }
     @media(prefers-reduced-motion:reduce){
         body.home .lunara-dispatches-section .lunara-journal-home-card,
@@ -714,6 +708,22 @@ body.home .lunara-latest-reviews-section .lunara-review-grid-card.has-no-visual{
     body.home .lunara-oscar-facts-section .lunara-home-section-head.is-with-summary .lunara-home-section-title{max-width:680px!important;}
     @media(max-width:820px){body.home .lunara-latest-reviews-section .lunara-review-grid-card.has-no-visual,body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual,body.home .lunara-dispatches-section .lunara-journal-home-card.is-lead.has-no-visual{min-height:0!important;height:auto!important;align-self:stretch!important;}body.home .lunara-latest-reviews-section .lunara-review-grid-card.has-no-visual .lunara-review-grid-copy,body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-copy{padding:14px 15px!important;}}
     @media(prefers-reduced-motion:reduce){body.home .lunara-latest-reviews-section .lunara-review-grid-card.has-no-visual,body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual{transition:none!important;}}
+
+/* Contain the mobile Oscar rail and long cards. */
+@media(max-width:820px){
+    body.home .lunara-oscar-picks-section .lunara-oscar-picks-track{box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;grid-auto-columns:100%!important;gap:14px!important;align-items:stretch!important;padding:0 0 14px!important;scroll-padding-inline:0!important;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card{box-sizing:border-box;height:100%!important;align-self:stretch!important;border-radius:10px!important;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card .lunara-oscar-pick-card-link{height:100%!important;min-height:0!important;grid-template-rows:auto 1fr!important;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card.has-no-visual .lunara-oscar-pick-card-link{grid-template-rows:1fr!important;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-media{aspect-ratio:16/10!important;height:auto!important;min-height:0!important;max-height:none!important;border-radius:8px 8px 0 0!important;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-media picture{display:contents;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-media.is-portrait img{object-fit:contain!important;transform:none!important;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-copy{padding:16px!important;min-width:0!important;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-title{display:block!important;min-height:0!important;max-height:none!important;overflow:visible!important;overflow-wrap:anywhere;hyphens:none;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:8px;max-width:100%;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-picks-dots{position:static;inset:auto;transform:none;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;min-width:0;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-control{width:44px;height:44px;}
+}
 
 /* Phase 1C: cacheable Front Desk */
 /*lunara-home-front-door-css*/

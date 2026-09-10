@@ -2806,6 +2806,19 @@ function lunara_customize_register( $wp_customize ) {
 }
 add_action( 'customize_register', 'lunara_customize_register' );
 
+/** Retire covered Portal writers while preserving supplemental Oscar tools. */
+function lunara_customize_retire_portal_studio_controls( $wp_customize ) {
+    if ( ! function_exists( 'lunara_oscars_portal_studio_identity_specs' ) ) { return; }
+    $covered = array( 'lunara_oscars_portal_section_order', 'lunara_oscars_portal_copy', 'lunara_oscars_portal_research_copy' );
+    foreach ( lunara_oscars_portal_studio_identity_specs() as $spec ) { $covered[] = $spec['setting']; }
+    foreach ( lunara_oscars_portal_studio_visibility_owners() as $owner ) { if ( $owner['setting'] ) { $covered[] = $owner['setting']; } }
+    foreach ( $covered as $setting ) { $wp_customize->remove_control( $setting ); $wp_customize->remove_setting( $setting ); }
+    $section = $wp_customize->get_section( 'lunara_oscars_portal_options' );
+    if ( $section ) { $section->description = '<a href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-portal' ) ) . '">' . esc_html__( 'Open Site Studio for Portal copy, visibility, order and presentation.', 'lunara-film' ) . '</a>'; }
+}
+add_action( 'customize_register', 'lunara_customize_retire_portal_studio_controls', 100 );
+
+
 /**
  * Print runtime CSS for Lunara design controls.
  */

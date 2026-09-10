@@ -9,6 +9,7 @@ if ( ! function_exists( 'lunara_site_studio_preview_instance_query_arg' ) ) {
 if ( ! function_exists( 'lunara_site_studio_preview_pilots' ) ) {
 	function lunara_site_studio_preview_pilots() {
 		return array(
+			'oscars-portal' => array( 'owner' => 'theme:oscars-portal', 'query' => 'lunara_oscars_preview', 'route' => '/oscars/', 'params' => array(), 'storage' => 'provider', 'preview_callback' => 'lunara_oscars_portal_studio_get_preview_config', 'markers' => array( 'board','hero','navigator','doors','spotlights','titles','research','linked-reviews','winners','deep-cuts','rotating-winners' ) ),
 			'hero-carousel' => array( 'owner' => 'theme:hero-carousel', 'query' => 'lunara_hero_carousel_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero' ) ),
 			'journal-carousel' => array( 'owner' => 'theme:journal-carousel', 'query' => 'lunara_journal_carousel_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'dispatch' ) ),
 			'global-design' => array( 'owner' => 'theme:global-design', 'query' => 'lunara_global_design_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array() ),
@@ -87,7 +88,7 @@ if ( ! function_exists( 'lunara_site_studio_preview_install_state' ) ) {
 			foreach ( $state['fonts'] as $item ) { if ( ! is_array( $item ) || array( 'override', 'effective', 'source' ) !== array_keys( $item ) || ( null !== $item['override'] && ! is_string( $item['override'] ) ) || ! is_string( $item['effective'] ) || ! in_array( $item['source'], array( 'design-tokens', 'shipped-default' ), true ) || ( null !== $item['override'] && ( 'design-tokens' !== $item['source'] || $item['effective'] !== $item['override'] ) ) ) { return false; } } return true;
 		}
 		if ( 'homepage-structure' === $surface_id ) { $slugs = array( 'hero', 'latest-reviews', 'pairing-desk', 'dispatch', 'oscar-picks', 'oscar-facts' ); if ( array( 'mode', 'front_page_id', 'preset', 'desktop_order', 'mobile_order', 'visibility' ) !== array_keys( $state ) || ! in_array( $state['mode'], array( 'registry', 'blocks' ), true ) || ! is_int( $state['front_page_id'] ) || ! is_string( $state['preset'] ) || ! is_array( $state['desktop_order'] ) || ! is_array( $state['mobile_order'] ) || ! is_array( $state['visibility'] ) || array_values( $state['desktop_order'] ) !== $state['desktop_order'] || array_values( $state['mobile_order'] ) !== $state['mobile_order'] || 6 !== count( array_unique( $state['desktop_order'] ) ) || 6 !== count( array_unique( $state['mobile_order'] ) ) || array() !== array_diff( $slugs, $state['desktop_order'] ) || array() !== array_diff( $state['desktop_order'], $slugs ) || array() !== array_diff( $slugs, $state['mobile_order'] ) || array() !== array_diff( $state['mobile_order'], $slugs ) || $slugs !== array_keys( $state['visibility'] ) ) { return false; } foreach ( $state['visibility'] as $visible ) { if ( ! is_bool( $visible ) ) { return false; } } return true; }
-		if ( 'lunara-method' === $surface_id ) { return array( 'kicker', 'title', 'copy', 'review_id', 'backdrop_id' ) === array_keys( $state ) && is_string( $state['kicker'] ) && is_string( $state['title'] ) && is_string( $state['copy'] ) && is_int( $state['review_id'] ) && 0 <= $state['review_id'] && is_int( $state['backdrop_id'] ) && 0 <= $state['backdrop_id']; }
+		if ( 'lunara-method' === $surface_id ) { return ! is_wp_error( lunara_site_studio_lunara_method_validate_state( $state ) ); }
 		$validators = array(
 			'review-single' => 'lunara_site_studio_review_single_validate_state',
 			'utility-search' => 'lunara_site_studio_utility_search_validate_state',
@@ -107,7 +108,7 @@ if ( ! function_exists( 'lunara_site_studio_preview_install_state' ) ) {
 			add_filter( 'pre_option_lunara_design_tokens', static function () use ( $tokens ) { return $tokens; }, PHP_INT_MAX ); return true;
 		}
 		if ( 'lunara-method' === $surface_id ) {
-			$map = array( 'kicker' => 'lunara_home_pairing_desk_kicker', 'title' => 'lunara_home_pairing_desk_title', 'copy' => 'lunara_home_pairing_desk_copy', 'review_id' => 'lunara_home_pairing_desk_review_id', 'backdrop_id' => 'lunara_home_pairing_desk_backdrop_id' );
+			$map = array( 'kicker' => 'lunara_home_pairing_desk_kicker', 'title' => 'lunara_home_pairing_desk_title', 'copy' => 'lunara_home_pairing_desk_copy', 'review_id' => 'lunara_home_pairing_desk_review_id', 'backdrop_id' => 'lunara_home_pairing_desk_backdrop_id', 'review_mode' => 'lunara_home_pairing_desk_review_mode', 'backdrop' => 'lunara_home_pairing_desk_backdrop' );
 			foreach ( $map as $field => $mod ) { $value = $state[ $field ]; add_filter( 'theme_mod_' . $mod, static function () use ( $value ) { return $value; }, PHP_INT_MAX ); } return true;
 		}
 		$spec_callbacks = array(

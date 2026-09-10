@@ -56,10 +56,11 @@
     var selection = frame.state().get('selection').first(); if (!selection) { return; }
     var item = selection.toJSON(), id = Number(item.id), url = imageUrl(item.url || (item.sizes && item.sizes.large && item.sizes.large.url));
     if (!Number.isSafeInteger(id) || id < 1) { options.announce('Choose an image from the Media Library.'); return; }
-    options.selectedImage(id, url); options.change({image_id:id}); render();
+    options.selectedImage(id, url); options.change(options.allowHidden ? {image_id:id,hidden:false} : {image_id:id}); render();
    }); frame.open();
   });
-  var reset = button('Use source image', actions, function () { if (options.enabled()) { options.change({image_id:0}); render(); } });
+  var reset = button('Use source image', actions, function () { if (options.enabled()) { options.change(options.allowHidden ? {image_id:0,hidden:false} : {image_id:0}); render(); } });
+  var remove = options.allowHidden ? button('Remove image', actions, function () { if (options.enabled()) { options.change({hidden:true}); render(); } }) : null;
   var fitLabel = node('label', 'Image fit', root, 'lunara-editor-field'), fit = node('select', '', fitLabel);
   fit.setAttribute('aria-label', 'Image fit');
   [['cover','Fill frame'],['full','Show full image']].forEach(function (entry) { var option = node('option', entry[1], fit); option.value = entry[0]; });
@@ -76,16 +77,18 @@
   img.addEventListener('error', function () { failedUrl = lastUrl; img.hidden = true; placeholder.hidden = false; placeholder.textContent = 'Artwork unavailable — choose another image'; });
   var lastUrl = '', failedUrl = '';
   function render() {
-   var value = options.getValue(), inherited = options.source(), url = imageUrl(value.image_id ? options.image(value.image_id) : inherited.url);
+   var value = options.getValue(), inherited = options.source(), url = value.hidden ? '' : imageUrl(value.image_id ? options.image(value.image_id) : inherited.url);
    if (url !== lastUrl) { lastUrl = url; if (url) { img.src = url; } else { img.removeAttribute('src'); } }
    img.hidden = !url || failedUrl === url; placeholder.hidden = !!url && failedUrl !== url;
-   if (!url) { placeholder.textContent = value.image_id ? 'Display image unavailable' : 'No source artwork'; }
+   if (!url) { placeholder.textContent = value.hidden ? 'Image hidden for this placement' : value.image_id ? 'Display image unavailable' : 'No source artwork'; }
    img.style.objectFit = value.fit === 'full' ? 'contain' : 'cover';
    img.style.objectPosition = value.focal_x + '% ' + value.focal_y + '%';
    img.style.transform = value.fit === 'full' ? 'none' : 'scale(' + value.zoom / 100 + ')';
+   if (options.bleed) { var bleed = value.fit === 'full' ? 0 : options.bleed; img.style.inset = -bleed + '%'; img.style.width = img.style.height = (100 + bleed * 2) + '%'; }
    target.style.left = value.focal_x + '%'; target.style.top = value.focal_y + '%'; target.hidden = !url || value.fit === 'full';
    source.textContent = value.image_id ? 'Custom image for this placement' : 'Source: ' + (inherited.label || 'Article artwork');
-   choose.textContent = url || value.image_id ? 'Replace image' : 'Choose image'; reset.disabled = !value.image_id || !options.enabled();
+   choose.textContent = url || value.image_id ? 'Replace image' : 'Choose image'; reset.disabled = (!value.image_id && !value.hidden) || !options.enabled();
+   if (remove) { remove.disabled = value.hidden || !options.enabled(); }
    fit.value = value.fit; sliders.forEach(function (slider) { slider.render(); slider.input.disabled = value.fit === 'full' || !options.enabled(); });
    stage.setAttribute('aria-description', 'Focal point: ' + value.focal_x + '% horizontal, ' + value.focal_y + '% vertical.');
   }
@@ -93,21 +96,31 @@
  }
  function orderedList(options) {
   var dragKey = null;
+  function cancelDrag() {
+   dragKey = null;
+   var dragging = options.parent.querySelectorAll('.is-dragging');
+   for (var i = 0; i < dragging.length; i += 1) { dragging[i].classList.remove('is-dragging'); }
+  }
+  function eventRow(event) {
+   var row = event.target && event.target.closest ? event.target.closest('[data-editor-key]') : null;
+   return row && row.parentNode === options.parent ? row : null;
+  }
+  options.parent.addEventListener('dragstart', function (event) {
+   var row = eventRow(event);
+   if (!row || !options.enabled() || event.target.closest('input,select,textarea,button,a,summary')) { if (row) { event.preventDefault(); } return; }
+   dragKey = row.dataset.editorKey; row.classList.add('is-dragging'); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', dragKey);
+  });
+  options.parent.addEventListener('dragover', function (event) { if (eventRow(event) && options.enabled() && dragKey !== null) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } });
+  options.parent.addEventListener('drop', function (event) {
+   var row = eventRow(event), items = options.items(), from = items.findIndex(function (entry) { return String(options.key(entry)) === dragKey; }), to = row ? items.findIndex(function (entry) { return String(options.key(entry)) === row.dataset.editorKey; }) : -1;
+   event.preventDefault(); cancelDrag(); if (row && options.enabled() && from >= 0 && to >= 0) { options.move(from, to); }
+  });
+  options.parent.addEventListener('dragend', cancelDrag);
   function render(focus) {
-   options.parent.replaceChildren(); var items = options.items();
+   cancelDrag(); options.parent.replaceChildren(); var items = options.items();
    items.forEach(function (item, index) {
     var key = String(options.key(item)), row = options.row(item, index);
     row.dataset.editorKey = key; row.draggable = true; options.parent.appendChild(row);
-    row.addEventListener('dragstart', function (event) {
-     if (!options.enabled() || event.target.closest('input,select,textarea,button,a,summary')) { event.preventDefault(); return; }
-     dragKey = key; row.classList.add('is-dragging'); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', key);
-    });
-    row.addEventListener('dragover', function (event) { if (options.enabled() && dragKey !== null) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } });
-    row.addEventListener('drop', function (event) {
-     event.preventDefault(); var from = options.items().findIndex(function (entry) { return String(options.key(entry)) === dragKey; });
-     dragKey = null; if (options.enabled() && from >= 0) { options.move(from, index); }
-    });
-    row.addEventListener('dragend', function () { dragKey = null; row.classList.remove('is-dragging'); });
    });
    if (focus) {
     var row = Array.from(options.parent.children).find(function (entry) { return entry.dataset.editorKey === String(focus.key); });
@@ -115,7 +128,7 @@
     if (target) { target.focus(); }
    }
   }
-  return {render:render, cancelDrag:function () { dragKey = null; }};
+  return {render:render, cancelDrag:cancelDrag};
  }
  window.LunaraEditorControls = {node:node,button:button,imageUrl:imageUrl,thumbnail:thumb,range:range,image:imageControl,orderedList:orderedList};
 }());

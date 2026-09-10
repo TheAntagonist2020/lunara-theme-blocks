@@ -1,6 +1,6 @@
 <?php
 /**
- * Behavioral contract for the Site Studio 3.2.63 foundation.
+ * Behavioral contract for the Site Studio 3.2.64 foundation.
  *
  * This deliberately boots the production registry, adapter/service, REST, and
  * Design Token modules against a small WordPress stub. It exercises behavior;
@@ -93,7 +93,7 @@ $lunara_test_provider_defaults = array(
 		'identity' => array( 'kicker' => 'Oscar Ledger', 'title' => 'Academy Awards', 'explore_kicker' => 'Explore', 'explore_heading' => 'Start anywhere', 'spotlights_heading' => 'Latest Ceremony', 'titles_kicker' => 'Poster-Led', 'titles_heading' => 'Open through films', 'research_kicker' => 'Research', 'research_heading' => 'Open the ledger', 'reviews_heading' => 'Reviews', 'deep_cuts_heading' => 'Deep Cuts' ),
 		'section_order' => array( 'hero', 'navigator', 'board', 'doors', 'spotlights', 'titles', 'research', 'linked-reviews', 'winners', 'deep-cuts', 'rotating-winners' ),
 		'section_visibility' => array( 'hero' => true, 'navigator' => true, 'board' => true, 'doors' => true, 'spotlights' => true, 'titles' => true, 'research' => true, 'linked-reviews' => false, 'winners' => true, 'deep-cuts' => true, 'rotating-winners' => true ),
-		'presentation' => array( 'section_gap' => 40, 'hero_min_height' => 360, 'card_min_height' => 360 ),
+		'presentation' => array( 'section_gap' => 40, 'hero_min_height' => 360, 'card_min_height' => 360, 'winners_min_width' => 200, 'density' => 'standard', 'lead_prominence' => 'balanced', 'board_rhythm' => 'standard' ),
 	),
 );
 $lunara_test_provider_state = $lunara_test_provider_defaults;
@@ -1291,7 +1291,7 @@ function lunara_review_case_state_projection() {
 			'top' => array( 'schema_version', 'identity', 'section_order', 'section_visibility', 'presentation' ),
 			'identity' => array( 'kicker', 'title', 'explore_kicker', 'explore_heading', 'spotlights_heading', 'titles_kicker', 'titles_heading', 'research_kicker', 'research_heading', 'reviews_heading', 'deep_cuts_heading' ),
 			'section_visibility' => array( 'hero', 'navigator', 'board', 'doors', 'spotlights', 'titles', 'research', 'linked-reviews', 'winners', 'deep-cuts', 'rotating-winners' ),
-			'presentation' => array( 'section_gap', 'hero_min_height', 'card_min_height' ),
+			'presentation' => array( 'section_gap', 'hero_min_height', 'card_min_height', 'winners_min_width', 'density', 'lead_prominence', 'board_rhythm' ),
 		),
 	);
 	foreach ( $inventories as $provider => $inventory ) {

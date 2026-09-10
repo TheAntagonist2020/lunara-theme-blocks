@@ -388,7 +388,7 @@ $command_cards = array(
 <?php // Route slot composer: every top-level portal section — and the structural whitespace around it — is captured into $oscars_slot_markup and re-emitted through lunara_oscars_portal_render_sections below. Visibility stays enforced inside each capture by the same theme-mod-backed booleans the template always used (preview-aware through the resolved Studio config), so a hidden section keeps leaving exactly the residue it left before and the default order reproduces today's byte stream. ?>
 <?php $oscars_slot_markup = array(); ob_start(); ?>
         <?php if ( $show_hero ) : ?>
-        <section class="lunara-home-section lunara-oscars-portal-hero lunara-oscars-portal-slot-hero<?php echo '' !== $hero_style ? ' has-backdrop' : ''; ?>"<?php if ( '' !== $hero_style ) : ?> style="<?php echo esc_attr( $hero_style ); ?>"<?php endif; ?>>
+        <section class="lunara-home-section lunara-oscars-portal-hero lunara-oscars-portal-slot-hero<?php echo '' !== $hero_style ? ' has-backdrop' : ''; ?>" data-lunara-site-studio-section="hero"<?php if ( '' !== $hero_style ) : ?> style="<?php echo esc_attr( $hero_style ); ?>"<?php endif; ?>>
             <div class="lunara-oscars-portal-hero-grid">
                 <div class="lunara-oscars-portal-copy">
                     <p class="lunara-home-section-kicker"><?php echo esc_html( $hero_kicker ); ?></p>
@@ -466,7 +466,7 @@ $command_cards = array(
         <?php $lunara_board_html = function_exists( 'lunara_render_oscars_prediction_board' ) ? lunara_render_oscars_prediction_board() : ''; ?>
 
         <?php if ( $show_portal_links && ! empty( $portal_links ) ) : ?>
-        <nav class="lunara-oscars-navigator" aria-label="<?php esc_attr_e( 'Ledger navigator', 'lunara-film' ); ?>">
+        <nav class="lunara-oscars-navigator" data-lunara-site-studio-section="navigator" aria-label="<?php esc_attr_e( 'Ledger navigator', 'lunara-film' ); ?>">
             <span class="lunara-oscars-navigator-label"><?php esc_html_e( 'Ledger', 'lunara-film' ); ?></span>
             <?php if ( '' !== $lunara_board_html ) : ?><a href="#oscars-board"><?php esc_html_e( 'The Board', 'lunara-film' ); ?></a><?php endif; ?>
             <a href="#oscars-doors"><?php esc_html_e( 'Quick Start', 'lunara-film' ); ?></a>
@@ -480,11 +480,11 @@ $command_cards = array(
         <?php endif; ?>
 <?php $oscars_slot_markup['navigator'] = ob_get_clean(); ob_start(); ?>
 
-        <?php echo $lunara_board_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- renderer escapes internally. ?>
+        <?php echo preg_replace( '/(<section\b)/', '$1 data-lunara-site-studio-section="board"', $lunara_board_html, 1 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- renderer escapes internally. ?>
 <?php $oscars_slot_markup['board'] = ob_get_clean(); ob_start(); ?>
 
         <?php if ( $show_portal_links && ! empty( $portal_links ) ) : ?>
-        <section id="oscars-doors" class="lunara-home-section lunara-oscars-portal-links-section lunara-oscars-portal-slot-portal-links">
+        <section id="oscars-doors" class="lunara-home-section lunara-oscars-portal-links-section lunara-oscars-portal-slot-portal-links" data-lunara-site-studio-section="doors">
                 <div class="lunara-home-section-header">
                     <div>
                     <p class="lunara-home-section-kicker"><?php echo esc_html( $explore_kicker ); ?></p>
@@ -512,7 +512,7 @@ $command_cards = array(
 <?php $oscars_slot_markup['doors'] = ob_get_clean(); ob_start(); ?>
 
         <?php if ( $show_spotlights && ! empty( $spotlights ) ) : ?>
-            <section id="oscars-spotlights" class="lunara-home-section lunara-oscars-portal-spotlights lunara-oscars-portal-slot-spotlights">
+            <section id="oscars-spotlights" class="lunara-home-section lunara-oscars-portal-spotlights lunara-oscars-portal-slot-spotlights" data-lunara-site-studio-section="spotlights">
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker"><?php echo esc_html( $ceremony_label ); ?></p>
@@ -581,7 +581,7 @@ $command_cards = array(
 <?php $oscars_slot_markup['spotlights'] = ob_get_clean(); ob_start(); ?>
 
         <?php if ( $show_title_cards && ! empty( $title_cards ) ) : ?>
-            <section id="oscars-titles" class="lunara-home-section lunara-oscars-portal-titles lunara-oscars-portal-slot-titles">
+            <section id="oscars-titles" class="lunara-home-section lunara-oscars-portal-titles lunara-oscars-portal-slot-titles" data-lunara-site-studio-section="titles">
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker"><?php echo esc_html( $titles_kicker ); ?></p>
@@ -624,7 +624,7 @@ $command_cards = array(
 <?php $oscars_slot_markup['titles'] = ob_get_clean(); ob_start(); ?>
 
         <?php if ( $show_research && class_exists( 'WP_Block_Type_Registry' ) && WP_Block_Type_Registry::get_instance()->is_registered( 'academy-awards/database' ) ) : ?>
-            <section id="oscars-research" class="lunara-home-section lunara-oscars-portal-research lunara-oscars-portal-slot-research">
+            <section id="oscars-research" class="lunara-home-section lunara-oscars-portal-research lunara-oscars-portal-slot-research" data-lunara-site-studio-section="research">
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker"><?php echo esc_html( $research_kicker ); ?></p>
@@ -666,7 +666,7 @@ $command_cards = array(
          */
         ?>
         <?php if ( $show_linked_reviews && $linked_reviews instanceof WP_Query && $linked_reviews->have_posts() ) : ?>
-            <section id="oscars-reviews" class="lunara-home-section lunara-oscars-portal-reviews lunara-oscars-portal-slot-linked-reviews">
+            <section id="oscars-reviews" class="lunara-home-section lunara-oscars-portal-reviews lunara-oscars-portal-slot-linked-reviews" data-lunara-site-studio-section="linked-reviews">
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker">Criticism Meets the Ledger</p>
@@ -686,7 +686,7 @@ $command_cards = array(
 
         <?php // Latest Ceremony Winners grid. Its data — and the $has_latest_winners gate the navigator shares — is resolved in the data-prep block above. ?>
         <?php if ( $has_latest_winners ) : ?>
-            <section id="oscars-winners" class="lunara-home-section lunara-oscars-portal-winners lunara-ceremony-winners-section lunara-oscars-portal-slot-latest-winners" aria-label="Ceremony Winners">
+            <section id="oscars-winners" class="lunara-home-section lunara-oscars-portal-winners lunara-ceremony-winners-section lunara-oscars-portal-slot-latest-winners" data-lunara-site-studio-section="winners" aria-label="Ceremony Winners">
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker">Oscar Ledger</p>
@@ -734,7 +734,7 @@ $command_cards = array(
 <?php $oscars_slot_markup['winners'] = ob_get_clean(); ob_start(); ?>
 
         <?php if ( $show_deep_cuts && ! empty( $deep_cuts ) ) : ?>
-            <section id="oscars-deep-cuts" class="lunara-home-section lunara-oscars-portal-deep-cuts lunara-oscars-portal-slot-deep-cuts">
+            <section id="oscars-deep-cuts" class="lunara-home-section lunara-oscars-portal-deep-cuts lunara-oscars-portal-slot-deep-cuts" data-lunara-site-studio-section="deep-cuts">
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker">Rotating Stats</p>
@@ -765,7 +765,7 @@ $command_cards = array(
             $rotating_copy  = trim( (string) ( $rotating_showcase['summary'] ?? '' ) );
 
             ?>
-            <section class="lunara-home-section lunara-oscars-rotating-winners-section lunara-oscars-portal-slot-rotating-winners" aria-label="Oscars Deep Dive"<?php if ( $rotating_autoplay > 0 ) : ?> data-lunara-carousel data-lunara-carousel-autoplay="<?php echo absint( $rotating_autoplay ); ?>"<?php else : ?> data-lunara-carousel<?php endif; ?>>
+            <section class="lunara-home-section lunara-oscars-rotating-winners-section lunara-oscars-portal-slot-rotating-winners" data-lunara-site-studio-section="rotating-winners" aria-label="Oscars Deep Dive"<?php if ( $rotating_autoplay > 0 ) : ?> data-lunara-carousel data-lunara-carousel-autoplay="<?php echo absint( $rotating_autoplay ); ?>"<?php else : ?> data-lunara-carousel<?php endif; ?>>
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker"><?php echo esc_html( $rotating_kicker ); ?></p>

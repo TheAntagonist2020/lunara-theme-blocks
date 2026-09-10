@@ -3,6 +3,7 @@
 	var config = window.LunaraSiteStudioPreviewConfig;
 	var markerMap = {
 		'global-design': [],
+		'oscars-portal': ['board','hero','navigator','doors','spotlights','titles','research','linked-reviews','winners','deep-cuts','rotating-winners'],
 		'hero-carousel': ['hero'],
 		'journal-carousel': ['dispatch'],
 		'homepage-structure': ['hero', 'latest-reviews', 'pairing-desk', 'dispatch', 'oscar-picks', 'oscar-facts'],

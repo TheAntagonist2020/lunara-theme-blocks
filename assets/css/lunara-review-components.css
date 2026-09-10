@@ -363,7 +363,7 @@ body.post-type-archive-review .lunara-review-archive-run-grid .lunara-review-gri
 
 /* Pairing Desk showcase: shared by Home and the Reviews archive. */
 .lunara-pairing-desk-section{overflow:hidden;position:relative}
-.lunara-pairing-desk-backdrop{background-position:center 26%;background-size:cover;filter:saturate(.9);inset:-4%;position:absolute;z-index:0}
+.lunara-pairing-desk-backdrop{background-position:var(--lunara-method-x,50%) var(--lunara-method-y,26%);background-size:var(--lunara-method-fit,cover);background-repeat:no-repeat;filter:saturate(.9);inset:-4%;position:absolute;transform:scale(var(--lunara-method-zoom,1));z-index:0}
 .lunara-pairing-desk-overlay{background:radial-gradient(circle at 82% 8%,rgba(201,169,97,.16),transparent 34%),linear-gradient(180deg,rgba(5,12,21,.88),rgba(7,16,27,.8) 42%,rgba(4,10,18,.95));inset:0;position:absolute;z-index:1}
 .lunara-pairing-desk-inner{position:relative;z-index:2}
 .lunara-pairing-desk-head{display:grid;grid-template-columns:minmax(0,max-content) minmax(280px,42ch);justify-content:start;gap:14px clamp(38px,5vw,72px);align-items:end;margin-bottom:18px}
@@ -384,9 +384,10 @@ body.post-type-archive-review .lunara-review-archive-run-grid .lunara-review-gri
 .lunara-pairing-desk-section .lunara-pair-card:hover .lunara-pair-card-poster img{transform:scale(1.06)}
 @media(prefers-reduced-motion:no-preference){
     .lunara-pairing-desk-backdrop{animation:lunaraPairDrift 28s ease-in-out infinite alternate}
-    @keyframes lunaraPairDrift{from{transform:scale(1) translateY(0)}to{transform:scale(1.07) translateY(-1.5%)}}
+    @keyframes lunaraPairDrift{from{transform:scale(var(--lunara-method-zoom,1)) translateY(0)}to{transform:scale(calc(var(--lunara-method-zoom,1) * 1.07)) translateY(-1.5%)}}
     html:not(.lunara-gsap-motion) .lunara-pairing-desk-section.lunara-reveal .lunara-pair-card{opacity:1;transform:none}
 }
+.lunara-pairing-desk-backdrop.is-full-image{inset:0;animation:none;transform:none}
 @media(max-width:900px){.lunara-pairing-desk-head{grid-template-columns:minmax(0,1fr)}.lunara-pairing-desk-intro{align-content:start;padding-bottom:0}}
 @media(max-width:820px){
     .lunara-pairing-desk-backdrop{display:none!important;animation:none!important;transform:none!important}

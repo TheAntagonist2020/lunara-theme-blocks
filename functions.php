@@ -13503,7 +13503,10 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 					$rationale   = wp_trim_words( wp_strip_all_tags( get_the_excerpt( $pid ) ), 28, '…' );
 					$card_url    = lunara_resolve_oscar_pick_ledger_url( $pid, $film, $person, $year, $category );
 					$has_visual  = has_post_thumbnail( $pid );
-					$thumb_url   = $has_visual ? get_the_post_thumbnail_url( $pid, 'newspack-article-block-landscape-intermediate' ) : '';
+					$mobile_art = $has_visual ? wp_get_attachment_image_src( get_post_thumbnail_id( $pid ), 'full' ) : false;
+					$mobile_portrait = $mobile_art && $mobile_art[1] > 0 && $mobile_art[2] > $mobile_art[1];
+					$mobile_srcset = $mobile_art ? wp_get_attachment_image_srcset( get_post_thumbnail_id( $pid ), 'full' ) : '';
+					if ( $mobile_art && ! $mobile_srcset ) { $mobile_srcset = $mobile_art[0]; }
 					$thumb_attrs = array(
 						'class'         => 'lunara-oscar-pick-card-image',
 						'loading'       => 'lazy',
@@ -13515,8 +13518,15 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 					<article class="lunara-oscar-pick-card is-status-<?php echo esc_attr( $status ); ?> <?php echo $has_visual ? 'has-visual' : 'has-no-visual'; ?>" role="listitem">
 						<a class="lunara-oscar-pick-card-link" href="<?php echo esc_url( $card_url ); ?>">
 							<?php if ( $has_visual ) : ?>
-								<div class="lunara-oscar-pick-card-media">
-									<?php echo get_the_post_thumbnail( $pid, 'newspack-article-block-landscape-intermediate', $thumb_attrs ); ?>
+								<div class="lunara-oscar-pick-card-media<?php echo $mobile_portrait ? ' is-portrait' : ''; ?>">
+									<?php if ( $mobile_art ) : ?>
+										<picture>
+											<source media="(max-width: 820px)" srcset="<?php echo esc_attr( $mobile_srcset ); ?>" sizes="calc(100vw - 64px)" width="<?php echo (int) $mobile_art[1]; ?>" height="<?php echo (int) $mobile_art[2]; ?>">
+											<?php echo get_the_post_thumbnail( $pid, 'newspack-article-block-landscape-intermediate', $thumb_attrs ); ?>
+										</picture>
+									<?php else : ?>
+										<?php echo get_the_post_thumbnail( $pid, 'newspack-article-block-landscape-intermediate', $thumb_attrs ); ?>
+									<?php endif; ?>
 									<span class="lunara-oscar-pick-card-status"><?php echo esc_html( strtoupper( $status_label ) ); ?></span>
 								</div>
 							<?php endif; ?>
@@ -15666,51 +15676,15 @@ if ( ! function_exists( 'lunara_add_hero_feature_meta_box' ) ) {
  */
 if ( ! function_exists( 'lunara_get_pairing_desk_review_id' ) ) {
 	function lunara_get_pairing_desk_review_id() {
-		// Curated showcase: a review hand-picked in the Homepage Studio wins
-		// outright — the Method band is a shareable stage, and its programming
-		// (a Nolan season, a festival run) belongs to the editor.
+		$mode = get_theme_mod( 'lunara_home_pairing_desk_review_mode', null );
 		$curated = absint( get_theme_mod( 'lunara_home_pairing_desk_review_id', 0 ) );
-		if ( $curated ) {
-			$curated_post = get_post( $curated );
-			if ( $curated_post && 'review' === $curated_post->post_type && 'publish' === $curated_post->post_status ) {
-				return $curated;
-			}
+		if ( 'manual' === $mode ) { return lunara_method_review_available( $curated ) ? $curated : 0; }
+		// Until first Apply, preserve the historical invalid-selection fallback.
+		if ( null === $mode && $curated ) {
+			$post = get_post( $curated );
+			if ( $post && 'review' === $post->post_type && 'publish' === $post->post_status ) { return $curated; }
 		}
-
-		// Plain loop instead of a meta_query: scan the most recent reviews and
-		// take the first one with any pairing filled. Bounded (20 posts, meta
-		// primed in one round trip) and immune to meta-query edge cases.
-		$ids = get_posts(
-			array(
-				'post_type'              => 'review',
-				'post_status'            => 'publish',
-				'posts_per_page'         => 20,
-				'fields'                 => 'ids',
-				'no_found_rows'          => true,
-				'update_post_term_cache' => false,
-			)
-		);
-
-		if ( empty( $ids ) ) {
-			return 0;
-		}
-
-		update_meta_cache( 'post', array_map( 'intval', $ids ) );
-
-		foreach ( $ids as $review_id ) {
-			$review_id = (int) $review_id;
-			$has_pairing =
-				'' !== trim( (string) get_post_meta( $review_id, '_lunara_theme_echo', true ) ) ||
-				'' !== trim( (string) get_post_meta( $review_id, '_lunara_counter_program', true ) ) ||
-				'' !== trim( (string) get_post_meta( $review_id, '_lunara_career_context', true ) ) ||
-				'' !== trim( (string) get_post_meta( $review_id, '_lunara_craft_mirror', true ) );
-
-			if ( $has_pairing ) {
-				return $review_id;
-			}
-		}
-
-		return 0;
+		return lunara_method_automatic_review_id();
 	}
 }
 
@@ -15752,30 +15726,14 @@ if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 		$review_title = get_the_title( $review_id );
 		$review_url   = get_permalink( $review_id );
 
-		// Cinematic backdrop: the reviewed film's own qualified wide image,
-		// drifting slowly behind the pairings (reduced-motion turns it off).
-		$backdrop = function_exists( 'lunara_get_review_hero_image_url' )
-			? trim( (string) lunara_get_review_hero_image_url( $review_id ) )
-			: '';
-		if ( '' !== $backdrop && function_exists( 'lunara_rightsize_backdrop_url' ) ) {
-			$backdrop = lunara_rightsize_backdrop_url( $backdrop );
-		}
-
-		// Homepage Studio override: a hand-picked backdrop from the media
-		// library beats the automatic review-hero image when set.
-		$backdrop_override_id = absint( get_theme_mod( 'lunara_home_pairing_desk_backdrop_id', 0 ) );
-		if ( $backdrop_override_id ) {
-			$backdrop_override_url = (string) wp_get_attachment_image_url( $backdrop_override_id, 'full' );
-			if ( '' !== $backdrop_override_url ) {
-				$backdrop = $backdrop_override_url;
-			}
-		}
+		$framing = lunara_method_backdrop_settings();
+		$backdrop = lunara_method_backdrop_url( $review_id, absint( get_theme_mod( 'lunara_home_pairing_desk_backdrop_id', 0 ) ), $framing, null === get_theme_mod( 'lunara_home_pairing_desk_review_mode', null ) );
 
 		ob_start();
 		?>
 		<section id="pairing-desk" class="lunara-home-section lunara-home-slot-pairing-desk lunara-pairing-desk-section<?php echo '' !== $backdrop ? ' has-desk-backdrop' : ''; ?>" data-lunara-site-studio-section="pairing-desk" aria-label="<?php esc_attr_e( 'Pair It With showcase', 'lunara-film' ); ?>">
 			<?php if ( '' !== $backdrop ) : ?>
-				<div class="lunara-pairing-desk-backdrop" style="background-image:url('<?php echo esc_url( $backdrop ); ?>');" aria-hidden="true"></div>
+				<div class="lunara-pairing-desk-backdrop<?php echo 'full' === $framing['fit'] ? ' is-full-image' : ''; ?>" style="<?php echo esc_attr( lunara_method_backdrop_style( $framing ) ); ?>background-image:url('<?php echo esc_url( $backdrop ); ?>');" aria-hidden="true"></div>
 				<div class="lunara-pairing-desk-overlay" aria-hidden="true"></div>
 			<?php endif; ?>
 			<div class="lunara-pairing-desk-inner">

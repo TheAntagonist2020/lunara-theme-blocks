@@ -1221,235 +1221,42 @@ function lunara_oscars_portal_render_sections( $markup, $order, $visibility ) {
  * @return void
  */
 function lunara_control_desk_render_oscars_portal_studio( $context = 'control-desk' ) {
-	if ( ! current_user_can( 'edit_theme_options' ) ) {
-		return;
-	}
-
-	$config    = lunara_oscars_portal_studio_get_public_config( false );
-	$staged    = lunara_oscars_portal_studio_get_invalid_stage();
-	$has_stage = is_array( $staged );
-	$form      = $has_stage ? array_replace( $config, array_intersect_key( $staged, $config ) ) : $config;
-	$revisions = lunara_oscars_portal_studio_get_revisions();
-	$notice    = isset( $_GET['lunara_notice'] ) ? sanitize_key( wp_unslash( $_GET['lunara_notice'] ) ) : '';
-	$owners    = lunara_oscars_portal_studio_visibility_owners();
-	$geometry  = lunara_oscars_portal_studio_geometry_specs();
-	$rhythm    = lunara_oscars_portal_studio_rhythm_specs();
-	$identity  = lunara_oscars_portal_studio_identity_specs();
-	$portal_url = home_url( '/oscars/' );
-
-	$slot_labels = array(
-		'hero'             => __( 'Hero', 'lunara-film' ),
-		'navigator'        => __( 'Navigator', 'lunara-film' ),
-		'board'            => __( 'Prediction Board', 'lunara-film' ),
-		'doors'            => __( 'Quick Start Doors', 'lunara-film' ),
-		'spotlights'       => __( 'Ceremony Spotlights', 'lunara-film' ),
-		'titles'           => __( 'Title Cards', 'lunara-film' ),
-		'research'         => __( 'Research Layer', 'lunara-film' ),
-		'linked-reviews'   => __( 'Linked Reviews', 'lunara-film' ),
-		'winners'          => __( 'Latest Winners', 'lunara-film' ),
-		'deep-cuts'        => __( 'Deep Cuts', 'lunara-film' ),
-		'rotating-winners' => __( 'Rotating Winners', 'lunara-film' ),
-	);
-
-	$positions = array();
-	foreach ( array_values( $form['section_order'] ) as $index => $slug ) {
-		$positions[ $slug ] = $index + 1;
-	}
-	if ( $has_stage && isset( $staged['_staged_positions'] ) && is_array( $staged['_staged_positions'] ) ) {
-		foreach ( $staged['_staged_positions'] as $slug => $position ) {
-			if ( isset( $positions[ $slug ] ) ) {
-				$positions[ $slug ] = absint( $position );
-			}
-		}
-	}
-	?>
-	<section class="lunara-control-desk-homepage lunara-oscars-portal-studio" id="lunara-oscars-portal-studio" data-lunara-oscars-portal-studio-context="<?php echo esc_attr( 'site-studio' === $context ? 'site-studio' : 'control-desk' ); ?>">
-		<div class="lunara-control-desk-card-head">
-			<div>
-				<p class="lunara-control-desk-kicker"><?php esc_html_e( 'Oscars Portal Studio', 'lunara-film' ); ?></p>
-				<h3><?php esc_html_e( 'Compose the public /oscars/ portal', 'lunara-film' ); ?></h3>
-				<p class="lunara-control-desk-subtle"><?php esc_html_e( 'Copy and visibility save through their existing Customizer owners; the slot order and geometry live in the Studio option. Invalid input changes nothing public.', 'lunara-film' ); ?></p>
-			</div>
-		</div>
-
-		<?php if ( 'oscars_portal_studio_saved' === $notice ) : ?>
-			<div class="notice notice-success"><p><?php esc_html_e( 'The Oscars Portal configuration validated and is now public.', 'lunara-film' ); ?></p></div>
-		<?php elseif ( 'oscars_portal_studio_restored' === $notice ) : ?>
-			<div class="notice notice-success"><p><?php esc_html_e( 'The selected prior public configuration was restored.', 'lunara-film' ); ?></p></div>
-		<?php elseif ( 'oscars_portal_studio_invalid' === $notice || 'oscars_portal_studio_restore_invalid' === $notice ) : ?>
-			<div class="notice notice-error"><p><?php echo esc_html( lunara_oscars_portal_studio_validation_message() ); ?></p></div>
-		<?php elseif ( 'oscars_portal_studio_forbidden' === $notice ) : ?>
-			<div class="notice notice-error"><p><?php esc_html_e( 'Theme editing permission is required to change the Oscars Portal.', 'lunara-film' ); ?></p></div>
-		<?php endif; ?>
-
-		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-			<input type="hidden" name="action" value="lunara_save_oscars_portal_studio" />
-			<?php wp_nonce_field( 'lunara_save_oscars_portal_studio', 'lunara_oscars_portal_nonce' ); ?>
-			<?php wp_nonce_field( 'lunara_preview_oscars_portal_studio', 'lunara_oscars_portal_preview_nonce' ); ?>
-			<?php if ( 'site-studio' === $context ) : ?>
-				<input type="hidden" name="lunara_oscars_portal_return" value="site-studio" />
-			<?php endif; ?>
-
-			<div class="lunara-control-desk-homepage-card">
-				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Portal Language', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Identity copy', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'Stored in the existing lunara_oscars_portal_* Customizer settings. Leave a field empty to keep its shipped copy.', 'lunara-film' ); ?></p></div></div>
-				<div class="lunara-control-desk-field-grid">
-					<?php foreach ( $identity as $field => $spec ) : ?>
-						<label>
-							<span><?php echo esc_html( $spec['label'] ); ?></span>
-							<input type="text" name="lunara_oscars_portal_identity[<?php echo esc_attr( $field ); ?>]" maxlength="<?php echo esc_attr( $spec['max'] ); ?>" value="<?php echo esc_attr( isset( $form['identity'][ $field ] ) && is_scalar( $form['identity'][ $field ] ) ? (string) $form['identity'][ $field ] : '' ); ?>" placeholder="<?php echo esc_attr( $spec['default'] ); ?>" />
-						</label>
-					<?php endforeach; ?>
-				</div>
-			</div>
-
-			<div class="lunara-control-desk-homepage-card">
-				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Composition', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Eleven-slot order and visibility', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'Visibility toggles write to the existing lunara_oscars_show_* settings. The navigator follows the Quick Start doors toggle, and the Prediction Board shows whenever published picks exist.', 'lunara-film' ); ?></p></div></div>
-				<div class="lunara-control-desk-section-lanes">
-					<?php foreach ( lunara_oscars_portal_studio_slots() as $slot ) : $owner = $owners[ $slot ]; ?>
-						<div class="lunara-control-desk-section-lane">
-							<label>
-								<span><?php echo esc_html( sprintf( __( '%s position', 'lunara-film' ), $slot_labels[ $slot ] ) ); ?></span>
-								<input type="number" name="lunara_oscars_portal_section_positions[<?php echo esc_attr( $slot ); ?>]" min="1" max="<?php echo esc_attr( count( $slot_labels ) ); ?>" step="1" value="<?php echo esc_attr( isset( $positions[ $slot ] ) ? $positions[ $slot ] : '' ); ?>" required />
-							</label>
-							<?php if ( '' === $owner['bound'] ) : ?>
-								<label class="lunara-control-desk-inline-toggle">
-									<input type="checkbox" name="lunara_oscars_portal_section_visibility[<?php echo esc_attr( $slot ); ?>]" value="1" <?php checked( ! empty( $form['section_visibility'][ $slot ] ) ); ?> />
-									<span><?php esc_html_e( 'Visible', 'lunara-film' ); ?></span>
-								</label>
-							<?php elseif ( 'doors' === $owner['bound'] ) : ?>
-								<span class="lunara-control-desk-subtle"><?php esc_html_e( 'Follows the Quick Start doors toggle.', 'lunara-film' ); ?></span>
-							<?php else : ?>
-								<span class="lunara-control-desk-subtle"><?php esc_html_e( 'Content-driven: hides itself when no picks are published.', 'lunara-film' ); ?></span>
-							<?php endif; ?>
-						</div>
-					<?php endforeach; ?>
-				</div>
-			</div>
-
-			<div class="lunara-control-desk-homepage-card">
-				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Geometry', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Bounded spacing and chambers', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'Stamped onto the portal root as custom properties only after an explicit save; an unsaved site keeps its shipped markup untouched.', 'lunara-film' ); ?></p></div></div>
-				<div class="lunara-control-desk-homepage-number-grid">
-					<?php foreach ( $geometry as $key => $spec ) : ?>
-						<label>
-							<span><?php echo esc_html( $spec['label'] ); ?></span>
-							<input type="number" name="lunara_oscars_portal_number[<?php echo esc_attr( $key ); ?>]" min="<?php echo esc_attr( $spec['min'] ); ?>" max="<?php echo esc_attr( $spec['max'] ); ?>" step="1" value="<?php echo esc_attr( isset( $form['presentation'][ $key ] ) && is_scalar( $form['presentation'][ $key ] ) ? absint( $form['presentation'][ $key ] ) : $spec['default'] ); ?>" required />
-							<small><?php echo esc_html( sprintf( __( '%1$d–%2$d, default %3$d', 'lunara-film' ), $spec['min'], $spec['max'], $spec['default'] ) ); ?></small>
-						</label>
-					<?php endforeach; ?>
-				</div>
-			</div>
-
-			<div class="lunara-control-desk-homepage-card">
-				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Rhythm', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Density, hero weight and the poster wall', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'Each choice maps to one calibrated custom property on the portal root, so a change costs no extra stylesheet. Like the numbers above, these stamp only after an explicit save.', 'lunara-film' ); ?></p></div></div>
-				<div class="lunara-control-desk-homepage-number-grid">
-					<?php foreach ( $rhythm as $key => $spec ) : ?>
-						<?php $selected = isset( $form['presentation'][ $key ] ) && is_scalar( $form['presentation'][ $key ] ) ? sanitize_key( (string) $form['presentation'][ $key ] ) : $spec['default']; ?>
-						<label>
-							<span><?php echo esc_html( $spec['label'] ); ?></span>
-							<select name="lunara_oscars_portal_choice[<?php echo esc_attr( $key ); ?>]" required>
-								<?php foreach ( $spec['choices'] as $choice => $choice_label ) : ?>
-									<option value="<?php echo esc_attr( $choice ); ?>"<?php selected( $selected, $choice ); ?>><?php echo esc_html( $choice_label ); ?></option>
-								<?php endforeach; ?>
-							</select>
-							<small><?php echo esc_html( sprintf( __( 'Default %s', 'lunara-film' ), $spec['choices'][ $spec['default'] ] ) ); ?></small>
-						</label>
-					<?php endforeach; ?>
-				</div>
-			</div>
-
-			<div class="lunara-control-desk-homepage-footer">
-				<div><strong><?php esc_html_e( 'Last-valid promotion', 'lunara-film' ); ?></strong><span><?php esc_html_e( 'Invalid input changes nothing public. Preview is private and expires after 30 minutes.', 'lunara-film' ); ?></span></div>
-				<div class="lunara-control-desk-actions">
-					<button type="submit" class="button button-primary"><?php esc_html_e( 'Validate and Save Public Configuration', 'lunara-film' ); ?></button>
-					<button type="submit" class="button" name="action" value="lunara_preview_oscars_portal_studio" formtarget="_blank"><?php esc_html_e( 'Preview unsaved desktop + mobile', 'lunara-film' ); ?></button>
-					<a class="button" href="<?php echo esc_url( $portal_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open current Portal', 'lunara-film' ); ?></a>
-				</div>
-			</div>
-		</form>
-
-		<div class="lunara-control-desk-homepage-card lunara-oscars-portal-history">
-			<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Configuration History', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Restore a prior valid public state', 'lunara-film' ); ?></h3><p class="lunara-control-desk-subtle"><?php esc_html_e( 'Up to twelve prior-public snapshots retain who changed the Studio, when, why, and the validator result.', 'lunara-film' ); ?></p></div></div>
-			<?php if ( empty( $revisions ) ) : ?><p><?php esc_html_e( 'No Oscars Portal Studio revisions exist yet.', 'lunara-film' ); ?></p><?php else : ?><div class="lunara-oscars-portal-revision-list"><?php foreach ( $revisions as $revision ) : ?><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="lunara_restore_oscars_portal_studio" /><input type="hidden" name="lunara_oscars_portal_revision_id" value="<?php echo esc_attr( $revision['id'] ); ?>" /><?php wp_nonce_field( 'lunara_restore_oscars_portal_studio', 'lunara_oscars_portal_restore_nonce' ); ?><span><strong><?php echo esc_html( $revision['saved_at'] ); ?></strong><small><?php echo esc_html( sprintf( __( 'User %1$d / %2$s / validator %3$s', 'lunara-film' ), absint( $revision['saved_by'] ), $revision['action'], $revision['validator_result'] ) ); ?></small></span><button type="submit" class="button" onclick="return confirm('<?php echo esc_js( __( 'Restore this prior public Oscars Portal configuration?', 'lunara-film' ) ); ?>');"><?php esc_html_e( 'Restore this revision', 'lunara-film' ); ?></button></form><?php endforeach; ?></div><?php endif; ?>
-		</div>
-	</section>
-	<?php
+	if ( ! current_user_can( 'edit_theme_options' ) ) { return; }
+	echo '<section id="lunara-oscars-portal-studio"><h2>' . esc_html__( 'Oscars Portal', 'lunara-film' ) . '</h2><p>' . esc_html__( 'Edit Portal copy, section order, visibility and presentation in Site Studio.', 'lunara-film' ) . '</p><a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-portal' ) ) . '">' . esc_html__( 'Open Oscars Portal editor', 'lunara-film' ) . '</a></section>';
 }
 
 /**
  * Focused save flow. Validation happens before any public owner is touched.
  */
 function lunara_control_desk_save_oscars_portal_studio() {
-	$legacy_redirect = admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-portal' );
-	$redirect        = function_exists( 'lunara_control_desk_bounded_return_url' )
-		? lunara_control_desk_bounded_return_url( 'lunara_oscars_portal_return', 'oscars-portal', $legacy_redirect )
-		: $legacy_redirect;
-	if ( ! current_user_can( 'edit_theme_options' ) ) {
-		wp_safe_redirect( add_query_arg( 'lunara_notice', 'oscars_portal_studio_forbidden', $redirect ) );
-		exit;
-	}
+	if ( ! current_user_can( 'edit_theme_options' ) ) { wp_die( esc_html__( 'You do not have permission to edit Oscars Portal settings.', 'lunara-film' ) ); }
 	check_admin_referer( 'lunara_save_oscars_portal_studio', 'lunara_oscars_portal_nonce' );
-	$candidate = lunara_oscars_portal_studio_config_from_request( $_POST );
-	$result    = lunara_oscars_portal_studio_promote_config( $candidate, 'save' );
-	if ( is_wp_error( $result ) ) {
-		lunara_oscars_portal_studio_store_invalid_stage( $candidate, $_POST, $result->get_error_code() );
-		$notice = 'oscars_portal_studio_invalid';
-	} else {
-		lunara_oscars_portal_studio_clear_invalid_stage();
-		$notice = 'oscars_portal_studio_saved';
-	}
-	wp_safe_redirect( add_query_arg( 'lunara_notice', $notice, $redirect ) );
+	wp_safe_redirect( admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-portal' ) );
 	exit;
 }
+
 add_action( 'admin_post_lunara_save_oscars_portal_studio', 'lunara_control_desk_save_oscars_portal_studio' );
 
 /**
  * Restore handler for a selected prior-public snapshot.
  */
 function lunara_control_desk_restore_oscars_portal_studio() {
-	$redirect = admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-portal' );
-	if ( ! current_user_can( 'edit_theme_options' ) ) {
-		wp_safe_redirect( add_query_arg( 'lunara_notice', 'oscars_portal_studio_forbidden', $redirect ) );
-		exit;
-	}
+	if ( ! current_user_can( 'edit_theme_options' ) ) { wp_die( esc_html__( 'You do not have permission to edit Oscars Portal settings.', 'lunara-film' ) ); }
 	check_admin_referer( 'lunara_restore_oscars_portal_studio', 'lunara_oscars_portal_restore_nonce' );
-	$revision_id = isset( $_POST['lunara_oscars_portal_revision_id'] ) ? sanitize_text_field( wp_unslash( $_POST['lunara_oscars_portal_revision_id'] ) ) : '';
-	$result      = lunara_oscars_portal_studio_restore_revision( $revision_id );
-	if ( is_wp_error( $result ) ) {
-		lunara_oscars_portal_studio_store_feedback( $result->get_error_code() );
-		$notice = 'oscars_portal_studio_restore_invalid';
-	} else {
-		lunara_oscars_portal_studio_clear_invalid_stage();
-		$notice = 'oscars_portal_studio_restored';
-	}
-	wp_safe_redirect( add_query_arg( 'lunara_notice', $notice, $redirect ) );
+	wp_safe_redirect( admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-portal' ) );
 	exit;
 }
+
 add_action( 'admin_post_lunara_restore_oscars_portal_studio', 'lunara_control_desk_restore_oscars_portal_studio' );
 
 /**
  * Private side-by-side preview of an unsaved candidate.
  */
 function lunara_control_desk_preview_oscars_portal_studio() {
-	if ( ! current_user_can( 'edit_theme_options' ) ) {
-		wp_die( esc_html__( 'You do not have permission to preview Oscars Portal changes.', 'lunara-film' ) );
-	}
+	if ( ! current_user_can( 'edit_theme_options' ) ) { wp_die( esc_html__( 'You do not have permission to edit Oscars Portal settings.', 'lunara-film' ) ); }
 	check_admin_referer( 'lunara_preview_oscars_portal_studio', 'lunara_oscars_portal_preview_nonce' );
-	$token = lunara_oscars_portal_studio_store_preview( lunara_oscars_portal_studio_config_from_request( $_POST ) );
-	if ( is_wp_error( $token ) ) {
-		wp_die( esc_html( sprintf( __( 'The preview was not created: %s', 'lunara-film' ), lunara_oscars_portal_studio_validation_message( $token->get_error_code() ) ) ) );
-	}
-	nocache_headers();
-	header( 'Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0', true );
-	$url = add_query_arg( 'lunara_oscars_preview', rawurlencode( $token ), home_url( '/oscars/' ) );
-	?><!doctype html>
-	<html <?php language_attributes(); ?>><head><meta charset="<?php bloginfo( 'charset' ); ?>"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?php esc_html_e( 'Oscars Portal Preview', 'lunara-film' ); ?></title></head>
-	<body style="margin:0;background:#151515;color:#fff;font-family:system-ui,sans-serif">
-		<header style="padding:18px 24px"><h1 style="margin:0;font-size:20px"><?php esc_html_e( 'Unsaved Oscars Portal preview', 'lunara-film' ); ?></h1><p><?php esc_html_e( 'Private, read-only, and expires in 30 minutes. Nothing below is public yet.', 'lunara-film' ); ?></p></header>
-		<div style="display:flex;gap:24px;align-items:flex-start;overflow:auto;padding:0 24px 24px">
-			<iframe title="<?php esc_attr_e( 'Desktop Portal preview', 'lunara-film' ); ?>" data-lunara-oscars-preview-frame="desktop" style="width:1440px;height:900px;flex:0 0 1440px;border:1px solid #555;background:#fff" src="<?php echo esc_url( $url ); ?>"></iframe>
-			<iframe title="<?php esc_attr_e( 'Mobile Portal preview', 'lunara-film' ); ?>" data-lunara-oscars-preview-frame="mobile" style="width:390px;height:844px;flex:0 0 390px;border:1px solid #555;background:#fff" src="<?php echo esc_url( $url ); ?>"></iframe>
-		</div>
-	</body></html><?php
+	wp_safe_redirect( admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-portal' ) );
 	exit;
 }
+
 add_action( 'admin_post_lunara_preview_oscars_portal_studio', 'lunara_control_desk_preview_oscars_portal_studio' );

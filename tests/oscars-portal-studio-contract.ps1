@@ -150,8 +150,6 @@ Assert-True ($studio -match "check_admin_referer\(\s*'lunara_restore_oscars_port
 Assert-True ($studio -match "check_admin_referer\(\s*'lunara_preview_oscars_portal_studio'\s*,\s*'lunara_oscars_portal_preview_nonce'\s*\)") 'Unsaved preview must use a nonce distinct from public save.'
 Assert-True ($studio -match "current_user_can\(\s*'edit_theme_options'\s*\)") 'Portal Studio mutations and previews must be capability-gated.'
 Assert-True ($studio -match 'function\s+lunara_control_desk_save_oscars_portal_studio[\s\S]{0,700}current_user_can[\s\S]{0,400}check_admin_referer') 'The save flow must check capability before its nonce work.'
-Assert-True ($studio -match "lunara_control_desk_bounded_return_url\(\s*'lunara_oscars_portal_return'\s*,\s*'oscars-portal'") 'The save flow must resolve its redirect through the bounded return-URL helper.'
-Assert-True ($studio -match 'lunara_oscars_portal_studio_store_invalid_stage\(\s*\$candidate\s*,\s*\$_POST[\s\S]{0,200}get_error_code') 'Rejected saves must retain a bounded private draft and allowlisted reason.'
 Assert-True ($studio -match 'function\s+lunara_oscars_portal_studio_validation_messages[\s\S]*?oscars_portal_config_invalid[\s\S]*?oscars_portal_geometry_invalid[\s\S]*?oscars_portal_preview_forbidden') 'Validator feedback must use an explicit safe reason allowlist.'
 
 # Preview responses become private no-store BEFORE any token denial can be
@@ -165,8 +163,6 @@ Assert-True ($studio -match "add_action\(\s*'pre_get_posts'\s*,\s*'lunara_oscars
 # hash_equals can never satisfy this owner-binding assertion.
 Assert-True ($studio -match 'function\s+lunara_oscars_portal_studio_get_preview_config\((?:(?!function\s)[\s\S])*?get_current_user_id\(\)(?:(?!function\s)[\s\S])*?hash_equals\(') 'Preview retrieval must bind an unguessable token to the current authorized user inside get_preview_config itself.'
 Assert-True ($studio -match 'set_transient[\s\S]*?lunara_oscars_portal_preview_') 'Unsaved previews must be short-lived transients that never replace public state.'
-Assert-True ($studio -match 'data-lunara-oscars-preview-frame="desktop"[\s\S]*?data-lunara-oscars-preview-frame="mobile"') 'Preview output must render actual desktop and mobile frames.'
-Assert-True ($studio -match 'data-lunara-oscars-preview-frame="mobile"[^>]*style="[^"]*width:\s*390px') 'The mobile preview frame must have a real 390px viewport.'
 # The preview family is exactly the theme-owned portal; ledger routes are
 # contractually excluded so a token can never restyle a plugin page.
 Assert-True ($studio -notmatch 'function\s+lunara_oscars_portal_studio_is_portal_family_request\((?:(?!function\s)[\s\S])*?aat_') 'The preview family body must never include plugin aat_* ledger routes.'
@@ -258,8 +254,16 @@ Assert-True ($controlDesk -match "'Oscars Portal Studio'") 'The Theme Studio com
 Assert-True ($controlDesk -match "'#lunara-oscars-portal-studio'") 'The command index entry must anchor to the Portal Studio surface.'
 
 # Version lock: this intentionally asserts the NEXT reissue identity. It is
-# EXPECTED to fail until the 3.2.63 version migration lands as its own step;
+# EXPECTED to fail until the 3.2.64 version migration lands as its own step;
 # every assertion above it must already pass on the pre-migration tree.
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.63\s*$') 'Theme version must be 3.2.63.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.64\s*$') 'Theme version must be 3.2.64.'
+
+
+$workspace = Get-Content -LiteralPath (Join-Path $themeRoot 'inc/site-studio.php') -Raw
+Assert-True ($studio -match 'function lunara_control_desk_preview_oscars_portal_studio[\s\S]*?wp_safe_redirect' -and $studio -notmatch '<form') 'Covered legacy forms must route to the common workspace.'
+Assert-True ($workspace -match "'mobile' => 390" -and $workspace -match 'lunara_site_studio_render_oscars_portal_inspector') 'Portal previews use the common real mobile viewport and native inspector.'
+
+$hostController = Get-Content -LiteralPath (Join-Path $themeRoot 'assets/js/lunara-site-studio.js') -Raw
+Assert-True ($hostController -match 'function save\(\).*?request\(' -and $hostController -match 'function discard\(\)') 'The common host owns draft recovery and Discard after failed saves.'
 
 Write-Host 'oscars-portal-studio: all assertions passed.'

@@ -1,5 +1,5 @@
 <?php
-/** Behavioral contract for Theme 3.2.63 editorial and utility adapters. */
+/** Behavioral contract for Theme 3.2.64 editorial and utility adapters. */
 
 require __DIR__ . '/site-studio-pilot-runtime.php';
 

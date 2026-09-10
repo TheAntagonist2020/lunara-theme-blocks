@@ -46,8 +46,10 @@ function lunara_test_assert( $condition, $message ) {
 }
 
 class WP_Error {
-	private $code;
-	public function __construct( $code ) { $this->code = $code; }
+	private $code; private $message; private $data;
+	public function __construct( $code, $message = '', $data = null ) { $this->code = $code; $this->message = $message; $this->data = $data; }
+	public function get_error_message() { return $this->message; }
+	public function get_error_data() { return $this->data; }
 	public function get_error_code() { return $this->code; }
 }
 function is_wp_error( $value ) { return $value instanceof WP_Error; }

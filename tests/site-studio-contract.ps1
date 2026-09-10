@@ -29,6 +29,7 @@ Assert-True ($LASTEXITCODE -eq 0) ("Homepage composition runtime failed: " + ($c
 $studio    = Read-ThemeFile 'inc/site-studio.php'
 $registry  = Read-ThemeFile 'inc/site-studio-registry.php'
 $control   = Read-ThemeFile 'inc/control-desk.php'
+$adapters  = Read-ThemeFile 'inc/site-studio-adapters.php'
 $blocks    = Read-ThemeFile 'inc/blocks.php'
 $blockHub  = Read-ThemeFile 'inc/blocks-hub.php'
 $hubEditor = Read-ThemeFile 'assets/js/lunara-blocks-hub.js'
@@ -50,12 +51,12 @@ Assert-True ($studio -match "current_user_can\(\s*'edit_theme_options'\s*\)") 'S
 Assert-True ($control -notmatch "in_array\(\s*\$hook[\s\S]{0,180}lunara_page_lunara-site-studio") 'Site Studio must not receive the Control Desk bundle.'
 Assert-True ($registry -match "'lunara-method'[\s\S]*?'homepage-structure'[\s\S]*?'reviews-archive'[\s\S]*?'journal-archive'") 'The unconditional Site Studio registry must expose the focused Homepage and Archive surfaces.'
 
-# One Method form and one secure storage path.
+# Method presentation now has one shared inspector and one secure storage path.
 Assert-True ($control -match 'function\s+lunara_control_desk_render_pairing_desk_form\s*\(') 'The Lunara Method form must be a shared Control Desk renderer.'
-Assert-True (($control | Select-String -Pattern 'name="lunara_home_pairing_desk_copy"' -AllMatches).Matches.Count -eq 1) 'The Method supporting-copy field must be rendered in exactly one shared form.'
+Assert-True (($control | Select-String -Pattern 'name="lunara_home_pairing_desk_copy"' -AllMatches).Matches.Count -eq 0) 'Retired Method forms must not submit presentation settings.'
 Assert-True ($helpers -match 'function\s+lunara_home_pairing_desk_copy_defaults\s*\(') 'The Method editor and public renderer must share one fallback-copy source.'
 Assert-True ($helpers -match 'No other film desk builds this rail\.') 'The shared Method fallback must include the complete public sentence.'
-Assert-True ($control -match 'lunara_home_pairing_desk_copy_defaults\(\)') 'The Method form must preview the exact shared public fallback.'
+Assert-True ($studio -match 'data-method-editor' -and $studio -match 'data-method-search') 'The Method shared inspector must expose bounded visual selection.'
 Assert-True ($functions -match 'lunara_home_pairing_desk_copy_defaults\(\)') 'The public Method renderer must consume the shared fallback without changing its output.'
 Assert-True ($control -match "check_admin_referer\(\s*'lunara_save_pairing_desk_copy'\s*,\s*'lunara_pairing_desk_copy_nonce'\s*\)") 'The existing Method save handler must retain its nonce.'
 Assert-True ($control -match "current_user_can\(\s*'edit_theme_options'\s*\)") 'The existing Method save handler must retain its capability gate.'
@@ -66,9 +67,9 @@ foreach ($setting in @(
     'lunara_home_pairing_desk_review_id',
     'lunara_home_pairing_desk_backdrop_id'
 )) {
-    Assert-True ($control -match [regex]::Escape($setting)) "The shared Method editor must retain $setting."
+    Assert-True ($adapters -match [regex]::Escape($setting)) "The shared Method adapter must retain $setting."
 }
-Assert-True ($control -match "'lunara_pairing_desk_return'[\s\S]*?'site-studio'") 'The Method handler must use a bounded return context for the direct Site Studio form.'
+Assert-True ($control -match 'Presentation writes now belong exclusively to Site Studio Apply/Restore' -and $control -match 'page=lunara-site-studio&surface=lunara-method') 'The retired Method handler must redirect into the common editor without a competing save path.'
 foreach ($returnContract in @(
     @{ Field = 'lunara_homepage_studio_return'; Surface = 'homepage-structure' },
     @{ Field = 'lunara_reviews_archive_return'; Surface = 'reviews-archive' }
@@ -157,6 +158,6 @@ foreach ($renderer in @(
     Assert-True ($functions -match [regex]::Escape($renderer)) "Public renderer ownership must retain $renderer."
 }
 Assert-True ($studio -notmatch "add_action\(\s*'wp_enqueue_scripts'") 'Site Studio must not add public assets.'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.63\s*$') 'Theme version must be 3.2.63.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.64\s*$') 'Theme version must be 3.2.64.'
 
 Write-Host 'site-studio: all assertions passed.'

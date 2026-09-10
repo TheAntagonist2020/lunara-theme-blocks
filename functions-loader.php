@@ -139,6 +139,7 @@ require_once $lunara_inc . 'design-tokens.php';
 // and REST routes must be available outside wp-admin so private front-end
 // previews and authenticated API requests do not depend on the admin router.
 require_once $lunara_inc . 'site-studio-registry.php';
+require_once $lunara_inc . 'site-studio-method.php';
 require_once $lunara_inc . 'site-studio-adapters.php';
 require_once $lunara_inc . 'site-studio-carousels.php';
 require_once $lunara_inc . 'site-studio-rest.php';
