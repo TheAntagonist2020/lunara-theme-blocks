@@ -8,21 +8,34 @@ or a fresh machine — can run a deploy without re-deriving any of it.
 
 ## 1. How deployment actually works here
 
-Deployment is **manual and push-button**. It is not WordPress.com's native
-Hosting → Deployments feature.
+Dalton deploys manually through **WordPress.com's native GitHub deployments**.
+His September 10, 2026 screenshot shows **Lunara Film → Production →
+Deployments**, with theme commit `959d253` on `main` marked **Deployed**.
+The earlier claim that this was Deployer for Git inside Control Desk was wrong.
 
-- The mechanism is the **Deployer for Git (Pro)** plugin, active on the site.
-  The repo's `.deployignore` is its config: docs, tests, `node_modules`, and
-  local artifacts never reach the live theme.
-- The button lives in the **Lunara Control Desk** in wp-admin. Deploys go from
-  `main` into a timestamped theme directory.
-- **Auto-deploy is deliberately off.** It has been off since the 3.2.48
-  incident, in which an auto-shipped release split the anonymous canonical
-  `/journal/` cache with nobody watching. Merging to `main` is therefore
-  always safe; nothing goes live until a human presses deploy.
+- Open **Settings → Repositories** for the existing connection, or use
+  **Deployments → Go to repositories**. Select `lunara-theme-blocks` and verify
+  its `main` branch and existing destination before deploying. Do not create a
+  second connection or change the destination merely to match old notes.
+- Use the existing manual deployment action. The Deployments screen also has
+  **Trigger deployment**. Confirm the intended repository if prompted, then
+  wait for **Deployed** and check the commit in its run details. This dashboard
+  result is followed by the public checks in §3.
+- WordPress.com honors the repo's `.deployignore`: documentation, tests,
+  dependencies and local artifacts are excluded. See the
+  [official GitHub deployment guide](https://wordpress.com/support/github-deployments/)
+  and the actual run logs for exclusion behavior.
+- **Keep automatic deployments off** under the standing release policy. The
+  September 10 screenshot proves a deployment and its branch/commit; it does
+  not show the automation toggle, destination or deployment mode. Verify those
+  on the connection rather than assuming that merging cannot trigger a run.
+- Deployer for Git (Pro) is installed and active, but its configuration and
+  use have not been verified. It is not required to operate the native
+  connection shown by Dalton. Do not enable, configure or remove it as part of
+  a routine theme deployment.
 - **Control Desk → System Status → Deploy Truth** names the live version, the
   active theme directory, the deploy moment, and any file that drifted outside
-  the repo→deploy pipeline.
+  the repo→deploy pipeline. It is a status panel, not the deploy button.
 
 Every page carries the live identity in its head:
 
@@ -87,8 +100,9 @@ git rev-parse <known-good-commit>^{tree}  # this
 Rebuild it onto the new tip after every merge to `main`, so it is always one
 merge away from restoring the good tree.
 
-To roll back: merge that PR, redeploy from the Control Desk, then re-run the
-verifier against the restored version.
+To roll back: merge that PR, have Dalton deploy the theme from the same
+WordPress.com repository connection, then re-run the verifier against the
+restored version.
 
 ## 5. Record it — the step that makes the next session cheap
 

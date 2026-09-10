@@ -132,7 +132,7 @@ note "VERDICT: ROLLBACK - $EXPECTED is NOT proven coherently live."
 note ""
 note "Rollback path (see docs/GO-LIVE-RUNBOOK.md):"
 note "  1. merge the standing exact-rollback PR against the current main tip"
-note "  2. redeploy from the Control Desk"
+note "  2. Dalton redeploys the theme through WordPress.com Settings > Repositories"
 note "  3. re-run this verifier against the restored version"
 rule
 exit 1

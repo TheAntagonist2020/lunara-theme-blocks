@@ -1,5 +1,9 @@
 # Lunara Site Studio Implementation Plan
 
+Deployment correction, September 10, 2026: the historical constraint below
+named the wrong tool. Dalton uses WordPress.com's native Settings →
+Repositories deployment. Follow `docs/GO-LIVE-RUNBOOK.md` for current steps.
+
 **Spec authority:** Dalton's approved Site Studio plan in the 2026-08-28 Codex task.
 
 ## Global Constraints

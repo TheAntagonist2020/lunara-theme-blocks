@@ -1,7 +1,7 @@
 # Lunara Film — The Operator's Guide
 
 *For the editor of lunarafilm.com. What is where, how to drive it, and where it can still go.*
-*Presentation controls updated for the Theme 3.2.64 candidate. Other editorial
+*Presentation controls updated for Theme 3.2.64. Other editorial
 and plugin sections retain their earlier scope; see the session log for verified
 live versions.*
 
@@ -32,8 +32,11 @@ named there before the next deploy can silently overwrite it.
 
 **The release loop:** work lands in the repo → PR → CI lint gate (PHP
 syntax, JS syntax, CSS brace balance on every PR) → merge to `main` → you
-deploy through Deployer for Git in Lunara Control Desk → the versioned public
-canary confirms. Auto-deploy stays off. The rollback hatch is PR #159 on
+deploy the theme through WordPress.com **Settings → Repositories** (also
+reachable from **Deployments → Go to repositories**) → the versioned public
+canary confirms. Control Desk's Deploy Truth panel reports the live version;
+it does not perform deployment. Keep automatic deployments off; inspect the
+repository connection to verify that setting. The rollback hatch is PR #159 on
 `claude/rollback-exact-theme-3.2.43`; rebuild and verify it after every main merge.
 Use `docs/GO-LIVE-RUNBOOK.md` for the deployment and recovery procedure.
 

@@ -69,11 +69,15 @@ it. A log tidied into correctness is worth nothing.
 
 ## Standing rules that do not expire
 
-- **Deployment is Dalton's button, always.** The mechanism is the *Deployer for
-  Git (Pro)* plugin, driven from the Lunara Control Desk in wp-admin — **not**
-  WordPress.com's native Hosting → Deployments, and **not** scp. No agent
-  tooling can or should trigger it. Merging to `main` is safe; nothing goes live
-  until a human clicks.
+- **Deployment is Dalton's button, always.** Use WordPress.com's native
+  **Lunara Film → Production → Deployments** screen, or the connected theme
+  under **Settings → Repositories**, deploying `lunara-theme-blocks` from
+  `main`. Dalton's September 10 deployment history confirms this mechanism.
+  **Control Desk → System Status → Deploy Truth** reports the live identity;
+  it does not deploy. Deployer for Git (Pro) is installed, but installation is
+  not evidence that it owns this deployment. No agent tooling should trigger
+  deployment. Do not infer automation settings from an installed plugin or a
+  successful manual run; inspect the repository connection when needed.
 - **Auto-deploy stays off** until canaries have been clean for several
   consecutive releases. A deliberate decision, not an oversight.
 - **Verify after every deploy** with the version argument, which is required:

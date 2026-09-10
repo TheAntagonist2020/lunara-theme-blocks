@@ -1,5 +1,9 @@
 # Independent homepage carousels
 
+Deployment correction, September 10, 2026: the historical delivery paragraph
+below named the wrong tool. Dalton uses WordPress.com's native Settings →
+Repositories deployment. Follow `docs/GO-LIVE-RUNBOOK.md` for current steps.
+
 Approved implementation: the circled homepage hero and Journal lane become
 independently configurable under Site Studio > Homepage. Preserve Lunara's
 cinematic styling and leave Lunara Method and Oscars composition outside scope.

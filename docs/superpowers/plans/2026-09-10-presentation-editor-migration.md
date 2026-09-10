@@ -102,4 +102,5 @@ Use the existing `lunara_site_studio_oscars_portal_adapter()` and schema. The Po
 - [x] Inspect desktop/mobile fixtures visually and verify that keyboard controls, long copy, missing art, and failed saves remain usable. Distinguish local fixtures from authenticated WordPress acceptance.
 - [x] Update release identity to 3.2.64, editor guide/standard and changelog; append a truthful session log including the observed 3.2.63 live canary GO. Commit and push a reviewable candidate using the authorized release workflow.
 - [x] Rebuild and verify the tree-exact rollback hatch after each main merge. The release merge was verified; repeat after the documentation merge.
-- [ ] Dalton performs deployment; verify the public 3.2.64 build and canary only after that occurs, then complete authenticated editor acceptance.
+- [x] Dalton deployed through WordPress.com's native repository connection. Public homepage build `3.2.64+20260910-184351` and the versioned 3.2.64 canary passed on September 10, 2026; Journal and Oscars both `LIVE_COHERENT`. See the session log for evidence and the corrected deployment route.
+- [ ] Complete authenticated editor acceptance. Public canary and local editor fixtures do not establish acceptance of the signed-in production editor.
