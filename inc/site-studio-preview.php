@@ -164,7 +164,8 @@ if ( ! function_exists( 'lunara_site_studio_enqueue_preview_bridge' ) ) {
 	function lunara_site_studio_enqueue_preview_bridge() {
 		global $lunara_site_studio_preview_context; if ( ! is_array( $lunara_site_studio_preview_context ) ) { return; }
 		$asset = lunara_resolve_theme_asset( 'assets/js/lunara-site-studio-preview.js' ); wp_enqueue_script( 'lunara-site-studio-preview', $asset['uri'], array(), lunara_theme_asset_version( $asset['path'] ), true );
-		wp_localize_script( 'lunara-site-studio-preview', 'LunaraSiteStudioPreviewConfig', array( 'protocol' => 'lunara-site-studio/v1', 'version' => 1, 'type' => 'select-section', 'surface' => $lunara_site_studio_preview_context['surface'], 'instance' => $lunara_site_studio_preview_context['instance'], 'markers' => $lunara_site_studio_preview_context['markers'] ) );
+		// Preserve the numeric protocol version in the private preview as well.
+		wp_add_inline_script( 'lunara-site-studio-preview', 'window.LunaraSiteStudioPreviewConfig = ' . wp_json_encode( array( 'protocol' => 'lunara-site-studio/v1', 'version' => 1, 'type' => 'select-section', 'surface' => $lunara_site_studio_preview_context['surface'], 'instance' => $lunara_site_studio_preview_context['instance'], 'markers' => $lunara_site_studio_preview_context['markers'] ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) . ';', 'before' );
 	}
 }
 

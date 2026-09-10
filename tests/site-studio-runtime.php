@@ -30,7 +30,25 @@ function wp_create_nonce() { return 'fixture-rest-nonce'; } function absint( $va
 $lunara_test_uuid_counter = 0; function wp_generate_uuid4() { global $lunara_test_uuid_counter; $uuid = sprintf( '123e4567-e89b-42d3-a456-%012d', $lunara_test_uuid_counter ); ++$lunara_test_uuid_counter; return $uuid; }
 function wp_enqueue_style( $handle, $src = '', $deps = array(), $version = false ) { global $lunara_test_enqueued_styles; $lunara_test_enqueued_styles[ $handle ] = compact( 'src', 'deps', 'version' ); }
 function wp_enqueue_script( $handle, $src = '', $deps = array(), $version = false, $footer = false ) { global $lunara_test_enqueued_scripts; $lunara_test_enqueued_scripts[ $handle ] = compact( 'src', 'deps', 'version', 'footer' ); }
-function wp_localize_script( $handle, $name, $value ) { global $lunara_test_localized; $lunara_test_localized[ $name ] = $value; return true; }
+function wp_localize_script( $handle, $name, $value ) {
+	global $lunara_test_localized;
+	// Match WP_Scripts::localize: top-level scalar values become strings.
+	foreach ( $value as $key => $item ) {
+		if ( is_scalar( $item ) ) { $value[ $key ] = html_entity_decode( (string) $item, ENT_QUOTES, 'UTF-8' ); }
+	}
+	$lunara_test_localized[ $name ] = $value;
+	return true;
+}
+function wp_add_inline_script( $handle, $data, $position = 'after' ) {
+	global $lunara_test_inline_scripts, $lunara_test_localized;
+	$lunara_test_inline_scripts[ $handle ][ $position ][] = $data;
+	if ( preg_match( '/^window\.(LunaraSiteStudio(?:Workspace|Preview)Config)\s*=\s*(.+);$/s', $data, $matches ) ) {
+		$value = json_decode( $matches[2], true, 512, JSON_THROW_ON_ERROR );
+		if ( isset( $value['previewParams'] ) ) { $value['previewParams'] = (object) $value['previewParams']; }
+		$lunara_test_localized[ $matches[1] ] = $value;
+	}
+	return true;
+}
 function wp_enqueue_media() { global $lunara_test_media_enqueues; ++$lunara_test_media_enqueues; }
 function lunara_resolve_theme_asset( $path ) { return array( 'uri' => 'https://example.test/theme/' . $path, 'path' => dirname( __DIR__ ) . '/' . $path ); }
 function lunara_theme_asset_version( $path ) { return 'fixture-' . basename( $path ); }

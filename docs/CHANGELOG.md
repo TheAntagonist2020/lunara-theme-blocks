@@ -11,6 +11,22 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-10 — Theme 3.2.66 Site Studio Bootstrap
+
+Site Studio now sends typed configuration with `wp_add_inline_script` and
+HTML-safe JSON before its workspace and private-preview scripts. WordPress
+`wp_localize_script` converts top-level scalars to strings, turning the numeric
+protocol versions into text. Strict validation then disabled the editor before
+Preview or Apply could run. The correction covers the shared workspaces,
+including Homepage Oscar Picks and Facts, and their private preview bridge.
+
+Protocol validation, authorization, saved lineups and public layouts remain
+intact. The PHP harness now reproduces WordPress's actual localization behavior;
+the Oscars browser fixture executes the emitted configuration script instead of
+rebuilding it. This exposed the original failure before the fix was applied.
+The scalar conversion is documented in
+[WordPress's script localization implementation](https://developer.wordpress.org/reference/classes/wp_scripts/localize/).
+
 ## 2026-09-10 — Theme 3.2.65 Homepage Oscar Lineups
 
 Homepage Oscar Picks and Oscar Facts now have separate Site Studio workspaces
