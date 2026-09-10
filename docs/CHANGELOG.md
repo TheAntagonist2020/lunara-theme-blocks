@@ -11,6 +11,31 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-10 — Core 0.8.10 Review poster source and safe film lookup
+
+Automatic Review cards now prefer `_lunara_tmdb_poster_url` over older local,
+Dossier or featured artwork. Custom and Off retain their meaning. Missing or
+malformed provider URLs fall back normally, and deleted attachment pointers
+no longer stop the source chain. The existing theme already consumes this
+Core resolver for Review cards and homepage Review artwork.
+
+Canonical IMDb metadata written after `save_post_review`, including REST
+creation, now queues artwork hydration. Obsolete queued identities stop before
+provider calls. Failed provider requests retain a fixed, redacted explanation
+in Review Image Studio; raw provider errors and credentials are never stored.
+
+The Classic Review Debrief film importer contained a nested form: its lookup
+submit button could save the parent Review. Lookup now uses detached controls
+and explicit click/Enter handlers. It cannot submit the Review when the editor
+script is absent. Invalid lookups clear the old candidate. Core is 0.8.10 in
+both plugin header and runtime; no theme version change is needed.
+
+Validation: 24 Core regressions, 50 PHP/5 JS syntax checks, 6 CSS brace checks,
+four caught mutations, and local browser checks of actual PHP-rendered markup.
+Theme Review Image Studio integration and all homepage carousel contracts
+also passed. Core PR #33 merged as `d22f18ef86bbe8516f40462d13fa2207171ddcbc`.
+Deployment and the existing six missing-source Reviews remain separate gates.
+
 ## 2026-09-10 — Theme 3.2.64 Shared Presentation Editors and Mobile Cards
 
 Homepage desktop/mobile order and Reviews/Journal archive order now reuse the

@@ -25,6 +25,112 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-10 — Core 0.8.10 poster retrieval prepared; six live sources missing
+
+### Headline
+
+Dalton asked to verify Review images through `_lunara_tmdb_poster_url`.
+The live audit found six recent Reviews without saved poster/backdrop URLs,
+and Automatic source ordering could prefer older artwork over a saved TMDB
+poster. Core 0.8.10 fixes source priority and late-metadata queueing, and fixes
+a film-lookup control that unexpectedly submitted the parent Review during
+this investigation. Core PR #33 is merged; no agent deployment was triggered.
+The six missing sources have not been filled or represented as repaired live.
+
+### Verified live state
+
+| Evidence | Observed result |
+| --- | --- |
+| Theme identity and canary, 18:47 UTC | Theme `3.2.64+20260910-184351`; exit 0 / GO; Journal and Oscars `LIVE_COHERENT`, detailed below. |
+| Active Core inventory during artwork audit | `lunara-core/lunara-core`, version **0.8.8**. Core 0.8.9 on main was not evidence of a deployed plugin. |
+| Review Artwork Audit census | 268 Reviews; 268 canonical IMDb identities; 6 missing poster, 6 missing banner, 116 protected custom selections. Historical completed pass covered 261, excluding seven newer Reviews. |
+| Ten inspected Review records | Six recent records lack both TMDB URLs. The Invite and three older sampled Reviews have saved TMDB posters. Four sampled saved poster URLs returned HTTP 200 and JPEG content. |
+| Public `/reviews/` DOM | Six missing-source Reviews are text-led. The Invite uses an uploaded image despite a saved TMDB poster; older sampled Reviews use local or TMDB images. Offscreen lazy images were not classified as broken. |
+| Native WordPress.com Repositories, inspected after the audit | All seven connections use `main` with Auto Deploy Off. Core targets `/wp-content/plugins/lunara-core`; theme targets `/wp-content/themes/lunara-theme-blocks-20260513-2300`. No connection settings changed. |
+
+Missing-source IDs: **102632** The Dog Stars (`tt21285562`), **102631** One Night
+Only (`tt37853455`), **102630** Spider-Man: Brand New Day (`tt22084616`),
+**102628** Tony (`tt33095251`), **102627** Teenage Sex and Death at Camp Miasma
+(`tt35298123`), **102626** The End of Oak Street (`tt27165187`). Local OMDb reads
+returned matching identities and poster availability for these six; this is
+not proof that the server's TMDB connection works. No OMDb URLs were written
+into TMDB metadata. The server-side failure reason remains unverified.
+
+### What shipped and why
+
+See **Core 0.8.10 Review poster source and safe film lookup** in
+`docs/CHANGELOG.md`. The Core change is on main and ready for Dalton's existing
+WordPress.com repository deployment. This theme record is documentation only.
+The new plugin does not automatically retry the library; retrieval of existing
+missing artwork still needs a deliberate action after deployment.
+
+### Commit ledger
+
+| Repository | Commit | Meaning |
+| --- | --- | --- |
+| `lunara-plugin-core` | `d55ec660a08796169700d6ffdc30a5148e6c665f` | Reviewed and tested 0.8.10 code; PR #33 head. |
+| `lunara-plugin-core` | `d22f18ef86bbe8516f40462d13fa2207171ddcbc` | PR #33 merged September 10, 19:12:25 UTC. |
+| `lunara-theme-blocks` | `54d9d1bc7a9aebaf04b8437e50f991db58e3d582` | PR #183 corrected the deployment route; rollback hatch verified against this main. |
+| `lunara-theme-blocks` | `codex/review-poster-record-0.8.10` | This audit, incident and deployment handoff record. |
+
+### Gate ledger
+
+- Core: **24/24** regression scripts; **50 PHP**, **5 JS**, **6 CSS** checks.
+- Four isolated mutations caught: late IMDb hook, preferred poster source,
+  canonical poster write key and redacted provider diagnostic.
+- Browser fixture uses real importer markup inside a parent Review form and
+  mocked lookup responses. Before fix: click caused 0 lookups / 1 Review save.
+  After fix: click and Enter each look up without saving; invalid input clears
+  the old candidate; no editor script causes no lookup/save; normal Update
+  Review still submits its parent form. No provider/production calls in tests.
+- Theme Review Image Studio integration passed. Homepage suite passed:
+  40 settings/preview, 149 editor, 26 delivery and 29 browser contracts.
+- Core PR CI `34518933444`: lint SUCCESS on the merged head.
+- Live Core 0.8.10, successful server retrieval, six filled source URLs and
+  public Review/homepage image acceptance **not yet verified**. No cache purge.
+
+### Corrections and unintended production save
+
+At **18:58:46 UTC**, the existing Classic Review dialog's **Look up film**
+button submitted Review **102632**, despite lookup being intended as read-only.
+Browser form parsing drops the nested form, leaving its submit button owned
+by the Review form. This is reproduced locally and fixed in Core 0.8.10.
+
+The save retained the title, published status and September 7 publication
+date. It wrote default image modes, queued hydration, and linked draft Film
+Dossier **102720**, whose body/excerpt are empty. Hydration finished
+`identity_only`; no poster or backdrop was retrieved. No draft-import
+confirmation button was clicked. The saved body (5,280 characters), excerpt
+(143 characters), title and Debrief fields match available revision **102719**.
+That revision was created during the save, so it is not an independent
+pre-save body snapshot. Do not claim a complete before/after proof.
+
+The revision retained `_wpcom_is_markdown=1`, which the save cleared. A bounded
+MCP update restored only this formatting flag. A fresh inspect confirmed that
+the flag was the only changed meta value during that restoration; body,
+excerpt, title, publication date and published status were identical. The
+linked draft and image-processing metadata are recorded, not silently deleted.
+Further production form actions were stopped. No browser backup was restored.
+
+### Logged, not fixed
+
+- The server provider failure behind identity-only hydration needs the new
+  redacted status or a supported read-only diagnostic after deployment.
+- Native WordPress.com repository destinations and Auto Deploy Off are now
+  directly verified, superseding the earlier unverified state in this day's
+  deployment-route entry. No Deployer for Git setup is needed for this route.
+- Full authenticated Preview/Apply/history acceptance and remaining editor
+  migrations, Boost Critical CSS, CDN quality and base stylesheet diet remain.
+
+### Whose move it is next
+
+Dalton deploys **lunara-plugin-core main**, using the existing Core connection
+and active destination, then reports completion. Agent verifies Core **0.8.10**,
+retries exact-IMDb artwork through a safe supported path, inspects the six
+canonical URL values, and checks actual Review cards/homepage art. A failed
+provider request must be diagnosed, not replaced by a title-only image guess.
+Rebuild and verify theme rollback branch / PR #159 after merging this record.
+
 ## 2026-09-10 — Theme 3.2.64 live; WordPress.com deployment route corrected
 
 ### Headline
