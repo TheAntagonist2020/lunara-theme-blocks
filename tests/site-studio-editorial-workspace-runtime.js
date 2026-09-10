@@ -109,6 +109,18 @@ async function dropOn(page, selector) {
 	await page.locator(selector).evaluate(node => node.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: new DataTransfer() })));
 }
 
+async function pointerDrag(page, source, target) {
+	const from = await source.boundingBox();
+	const to = await target.boundingBox();
+	assert(from && to, 'Pointer drag rows must be visible.');
+	await page.mouse.move(from.x + 3, from.y + 3);
+	await page.mouse.down();
+	await page.mouse.move(from.x + 18, from.y + 18, { steps: 5 });
+	await page.waitForTimeout(50);
+	await page.mouse.move(to.x + 3, to.y + 3, { steps: 16 });
+	await page.mouse.up();
+}
+
 function fixture(surface) {
 	const result = spawnSync('php', [path.join(__dirname, 'site-studio-runtime.php'), `--fixture=${surface}`], { encoding: 'utf8' });
 	if (result.error || result.status !== 0) {
@@ -193,7 +205,7 @@ async function waitForFrame(page, expectedUrl) {
 
 		for (const testCase of cases) {
 			process.stdout.write(`checking ${testCase.surface}...\n`);
-			const page = await browser.newPage({ viewport: { width: testCase.outerWidth, height: 1050 } });
+			const page = await browser.newPage({ viewport: { width: testCase.outerWidth, height: testCase.archive ? 1800 : 1050 } });
 			const adminFixture = fixture(testCase.surface);
 			const requests = [];
 			let frontendLoads = 0;
@@ -293,14 +305,16 @@ async function waitForFrame(page, expectedUrl) {
 			assert(await page.locator('[data-lunara-site-studio]').getAttribute('data-dirty') === 'true', `${testCase.surface} must visibly mark unsaved changes.`);
 
 			if (testCase.archive) {
-				const dragged = await startDrag(page, '[data-section-row]:first-child');
-				await dropOn(page, '[data-section-row]:nth-child(3)');
+				const dragSource = page.locator('[data-section-row]').first();
+				const dragTarget = page.locator('[data-section-row]').nth(2);
+				const dragged = { draggable: await dragSource.evaluate(node => node.draggable) };
+				await pointerDrag(page, dragSource, dragTarget);
 				const movable = page.locator('[data-section-row]').nth(1);
 				const movedSlug = await movable.getAttribute('data-slug');
 				await movable.locator('[data-section-move="earlier"]').click();
 				const ordered = await page.locator('[data-section-row]').evaluateAll(rows => rows.map(row => row.dataset.slug));
 				const orderFocus = await page.evaluate(() => ({ slug: document.activeElement.closest('[data-section-row]').dataset.slug, direction: document.activeElement.getAttribute('data-editor-move'), first: document.querySelector('[data-section-row]:first-child [data-section-move="earlier"]').disabled, last: document.querySelector('[data-section-row]:last-child [data-section-move="later"]').disabled }));
-				assert(dragged.draggable && dragged.dragging && JSON.stringify(ordered) === JSON.stringify(testCase.expectedOrder) && ordered[0] === movedSlug && orderFocus.slug === movedSlug && orderFocus.direction === 'later' && orderFocus.first && orderFocus.last, `${testCase.surface} pointer and keyboard ordering must share the mutation path, retain focus, and preserve exact boundaries.`, { dragged, ordered, orderFocus });
+				assert(dragged.draggable && JSON.stringify(ordered) === JSON.stringify(testCase.expectedOrder) && ordered[0] === movedSlug && orderFocus.slug === movedSlug && orderFocus.direction === 'later' && orderFocus.first && orderFocus.last, `${testCase.surface} pointer and keyboard ordering must share the mutation path, retain focus, and preserve exact boundaries.`, { dragged, ordered, orderFocus });
 
 				const visibility = page.locator('[data-section-visible]').first();
 				archiveHiddenSlug = await visibility.getAttribute('data-section-visible');
