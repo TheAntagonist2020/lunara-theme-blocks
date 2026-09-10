@@ -725,7 +725,7 @@ body.home .lunara-latest-reviews-section .lunara-review-grid-card.has-no-visual{
     body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-copy{padding:16px!important;min-width:0!important;}
     body.home .lunara-oscar-picks-section .lunara-oscar-pick-card-title{display:block!important;min-height:0!important;max-height:none!important;overflow:visible!important;overflow-wrap:anywhere;hyphens:none;}
     body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:8px;max-width:100%;}
-    body.home .lunara-oscar-picks-section .lunara-oscar-picks-dots{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;min-width:0;}
+    body.home .lunara-oscar-picks-section .lunara-oscar-picks-dots{position:static;inset:auto;transform:none;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;min-width:0;}
     body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-control{width:44px;height:44px;}
 }
 

@@ -71,6 +71,7 @@ if (process.argv.includes('--fixture')) { process.stdout.write(panelFixture()); 
                         if (item.media) assert(Math.abs(item.media.width / item.media.height - 1.6) < .02, `${width}px: Oscars landscape art must keep its ratio.`);
                     }
                     assert(geometry.buttons.every(button => button.x >= geometry.controls.x - 1 && button.right <= geometry.controls.right + 1), `${width}px: all fifteen slide controls must stay inside their panel.`);
+                    assert(geometry.buttons.every(button => button.y >= geometry.controls.y - 1 && button.bottom <= geometry.controls.bottom + 1), `${width}px: slide dots must stay beside the arrows, without overlaying card content.`);
                 } else {
                     assert(geometry.portrait.fit === 'cover' && geometry.portrait.width > geometry.portrait.height, 'Desktop must retain the existing landscape thumbnail and crop.');
                     assert(geometry.journal[3].copy.x >= geometry.journal[3].media.right - 1, 'Desktop must retain the existing side-by-side fourth Journal card.');
