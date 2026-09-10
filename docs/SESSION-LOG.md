@@ -25,7 +25,101 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-10 — Theme 3.2.64 live; WordPress.com deployment route corrected
+
+### Headline
+
+Dalton deployed the merged Theme 3.2.64 through WordPress.com's native GitHub
+deployment system. The public homepage and the versioned Journal/Oscars canary
+confirm the release is serving. The prior Control Desk / Deployer for Git
+instructions were wrong and are corrected in the working agreement, runbook,
+operator guide and canary's rollback message.
+
+### Verified live state
+
+| Evidence | Observed result |
+| --- | --- |
+| Dalton's WordPress.com Production → Deployments screenshot | `lunara-theme-blocks`, branch `main`, commit `959d253`, PR #182, **Deployed**, marked Latest Deployment. |
+| Anonymous canonical homepage, 18:47:08 UTC | HTTP 200; build `3.2.64+20260910-184351`. |
+| Versioned canary, completed 18:47:38 UTC | `bash tests/tools/lunara-canary-verify.sh 3.2.64`; exit 0 / GO. Three anonymous canonical Journal reads returned the same 3.2.64 build; Journal and Oscars both `LIVE_COHERENT`. |
+| Rollback hatch after PR #182 | Remote tree equals `c55bf394594149db2888295c5d51f85f47b2b520`; first parent is deployed main `959d253ae9742263801f189eef7a616dd44ee767`. The previous session also verified its simulated merge. |
+
+The screenshot identifies the deployment mechanism, repository, branch and
+commit. It does not display the destination, mode or automatic-deployment
+toggle. The standing manual-deployment policy remains; those configuration
+values must be checked on the connection before making claims about them.
+
+### What shipped and why
+
+The deployed code is the already reviewed Theme 3.2.64 from PR #181, with the
+release record in PR #182. See `docs/CHANGELOG.md`, **Theme 3.2.64 Shared
+Presentation Editors and Mobile Cards**, and `docs/PRESENTATION-EDITORS.md`.
+This follow-up changes only repository instructions and the verifier's
+operator-facing rollback text, all excluded by `.deployignore`; it does not
+change the public theme version or production settings.
+
+### Commit ledger
+
+| Repository | Commit | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | `e2554ae74a89ea29ef939ecab78dd473d4c8d876` | PR #181 merged the 3.2.64 presentation editors and mobile repairs. |
+| `lunara-theme-blocks` | `959d253ae9742263801f189eef7a616dd44ee767` | PR #182 merge; the commit shown deployed in Dalton's native dashboard. |
+| `lunara-theme-blocks` | This record's topic branch, `codex/deployment-route-and-live-record-3.2.64` | Correct deployment guidance and record production verification. |
+| `lunara-theme-blocks` | `claude/rollback-exact-theme-3.2.43` / PR #159 | Rebuild and verify against current main after any merge of this record. |
+
+### Gate ledger
+
+- The actual 3.2.64 public canary passed as recorded above, without cache
+  clearing or agent-triggered deployment.
+- Code-release contracts, syntax checks, mutation coverage and independent
+  review are recorded in the preceding candidate and merged entries; no new
+  application code is introduced here. The existing release-identity gate,
+  shell syntax and whitespace checks passed for this instruction correction.
+  Normal GitHub CI is required before merging.
+- Authenticated production editor Preview/Apply/Discard/history acceptance
+  remains outstanding. Canary coherence does not prove that editing workflow.
+
+### Corrections
+
+The installed Deployer for Git Pro plugin was incorrectly treated as evidence
+of the active theme deployment mechanism. Dalton's direct explanation and
+screenshot establish the native WordPress.com connection. Control Desk's
+`lunara_control_desk_get_deploy_truth_cards()` reads theme version, timestamps
+and file fingerprints; its status panel does not perform deployment.
+
+Affected historical entries retain their original text and now carry a
+correction pointer to this entry. Current instructions name WordPress.com and
+avoid claiming that the auto-deploy toggle or destination was verified.
+The official WordPress.com deployment guide confirms `.deployignore` support:
+https://wordpress.com/support/github-deployments/.
+
+### Logged, not fixed
+
+Deployer for Git Pro remains installed and active; its configuration/use was
+not established and nothing was enabled, disabled or removed. The native
+repository destination, deployment mode and automation setting were not shown
+in the supplied screenshot. The homepage Journal still uses the saved legacy
+selection, including its older lead; deploying code does not Apply a new
+carousel selection. The fresh Automatic lineup remains an explicit editor step.
+
+### Punch-list carried forward and whose move is next
+
+- Agent: finish the repository-only record, CI and rollback-hatch maintenance.
+- Editor acceptance: exercise the shared controls in signed-in Site Studio and
+  check the homepage at phone widths. Apply Automatic to Journal Carousel or
+  curate a Manual lineup when Dalton is ready to change its public selection.
+- Continue Homepage Oscar Picks/Facts, reusable media, Review authoring,
+  Journal Desk and Academy authoring through the common editor workflow.
+- Boost Critical CSS, global CDN quality verification, stylesheet reduction,
+  dead guarded renderers and fresh editorial coverage remain separate work.
+
 ## 2026-09-10 — Theme 3.2.64 merged; manual deployment next
+
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
 
 ### Headline
 
@@ -103,6 +197,12 @@ guarded renderer cleanup remain open.
   Picks/Facts and the remaining authoring editors.
 
 ## 2026-09-10 — Theme 3.2.64 presentation editors candidate
+
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
 
 ### Headline
 
@@ -208,6 +308,12 @@ focused Portal/workspace reruns plus independent re-review passed.
 
 ## 2026-09-08 — Theme 3.2.63 merged; manual deployment next
 
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
+
 ### Headline
 
 PR #179 merged at 2026-09-09 01:41:37 UTC after Dalton authorized the release
@@ -278,6 +384,12 @@ Boost Critical CSS, Image CDN quality and the base stylesheet diet remain open.
   to the shared controls in the agreed sequence.
 
 ## 2026-09-08 — Theme 3.2.63 shared editor candidate
+
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
 
 ### Headline
 
@@ -460,6 +572,12 @@ separate work.
 
 ## 2026-09-07 — Theme 3.2.62 homepage carousels candidate
 
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
+
 ### Headline
 
 The approved two-carousel plan is implemented on `codex/home-carousels-3.2.62`.
@@ -541,6 +659,12 @@ Then preview and Apply each carousel and curate its opening lineup. A production
 canary and real WordPress Media Library interaction await deployment.
 
 ## 2026-09-07 — Theme 3.2.61 Oscars Portal Studio presentation controls and local candidate close
+
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
 
 ### Headline
 
@@ -645,6 +769,12 @@ No deployment, cache operation, production write, or live verification occurred.
 ---
 
 ## 2026-09-07 — Theme 3.2.60 Oscars hero backdrop and local candidate close
+
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
 
 ### Headline
 
@@ -766,6 +896,12 @@ Dalton's. Merge the 3.2.60 PR, deploy it with Deployer for Git, run the
 canary with `3.2.60`, and regenerate Boost's critical CSS.
 
 ## 2026-09-07 — Theme 3.2.59 Oscars portal poster wall and local candidate close
+
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
 
 ### Headline
 
@@ -931,6 +1067,12 @@ CSS, deploy the theme with Deployer for Git, and run the canary with
 `3.2.59`.
 
 ## 2026-09-05 — Theme 3.2.58 Oscars portal rebuild and local candidate close
+
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
 
 ### Headline
 
@@ -1100,6 +1242,12 @@ deploy the theme with Deployer for Git, run the canary with `3.2.58`, and
 look at the portal on the big monitor.
 
 ## 2026-09-04 — The Journal voice was never reaching the model; Foundation 1.2.14 and Dispatch 3.2.8 put it there
+
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
 
 ### Headline
 
@@ -1340,6 +1488,12 @@ above. If it still reads like a
 trade desk, the next lever is the model, not the prompt.
 
 ## 2026-09-02 — Theme 3.2.57 journal lede parity and local candidate close
+
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
 
 ### Headline
 
@@ -1582,6 +1736,12 @@ integration both happened after it was written.
 
 ## 2026-08-29 — Theme 3.2.56 final hardening and local candidate close
 
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
+
 ### Headline
 
 Theme 3.2.56 is assembled locally on
@@ -1696,6 +1856,12 @@ No deployment, cache operation, production write, live verification, push, merge
 
 ## 2026-08-29 — Theme 3.2.55 final hardening and local candidate close
 
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
+
 ### Headline
 
 Theme 3.2.55 is review-clean and closed as a local release candidate on
@@ -1787,6 +1953,12 @@ integration approval.
 No deployment, cache operation, production write, live verification, push, merge, or PR occurred.
 
 ## 2026-08-29 — Theme 3.2.55 local release-candidate closure
+
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
 
 ### Headline
 
@@ -2075,6 +2247,12 @@ cache operations, production writes, and live canary proof were intentionally
 outside this task.
 
 ## 2026-08-24 (later) — Agent handoff made portable; two stale docs defused
+
+> Deployment-route correction (2026-09-10): theme deployment references in this
+> entry misidentified the tool or menu. Dalton uses WordPress.com native
+> Deployments / Settings → Repositories. See **Theme 3.2.64 live; WordPress.com
+> deployment route corrected** above. Original observations and gate results
+> remain as recorded; plugin activation alone does not identify a deploy path.
 
 ### Headline
 
