@@ -48,6 +48,16 @@ $source = file_get_contents( dirname( __DIR__ ) . '/functions.php' );
 $start = strpos( $source, "if ( ! function_exists( 'lunara_get_pairing_desk_review_id' ) )" );
 $end = strpos( $source, "if ( ! function_exists( 'lunara_get_hero_featured_slides' ) )", $start );
 eval( substr( $source, $start, $end - $start ) );
+foreach ( array( 'cover', 'full', 'hidden' ) as $fixture_fit ) {
+	if ( ! in_array( '--fixture-framing=' . $fixture_fit, $argv, true ) ) { continue; }
+	$lunara_pilot_theme_mods = array(
+		'lunara_home_pairing_desk_review_id' => 201,
+		'lunara_home_pairing_desk_review_mode' => 'manual',
+		'lunara_home_pairing_desk_backdrop' => array( 'hidden' => 'hidden' === $fixture_fit, 'focal_x' => 17, 'focal_y' => 81, 'fit' => 'full' === $fixture_fit ? 'full' : 'cover', 'zoom' => 109 ),
+	);
+	echo json_encode( array( 'state' => lunara_site_studio_lunara_method_read_state(), 'html' => lunara_render_home_pairing_desk() ) );
+	exit;
+}
 $lunara_pilot_theme_mods = array( 'lunara_home_pairing_desk_review_id' => 202 );
 method_check( 201 === lunara_get_pairing_desk_review_id(), 'Legacy invalid curated Review still falls back before Apply.' );
 $lunara_pilot_theme_mods['lunara_home_pairing_desk_review_mode'] = 'manual';

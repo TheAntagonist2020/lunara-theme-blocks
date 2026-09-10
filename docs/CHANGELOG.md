@@ -11,6 +11,47 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-10 — Theme 3.2.64 Shared Presentation Editors and Mobile Cards
+
+Homepage desktop/mobile order and Reviews/Journal archive order now reuse the
+shared drag and keyboard controls. Order changes retain visibility and the
+other Homepage layout. Method and Oscars Portal join the common Site Studio
+workflow for Preview changes, Apply changes, Discard changes and revision
+history; they do not introduce another save controller.
+
+Method gains bounded published-Review search, Automatic/Manual selection with
+retained manual choices, current source artwork, and the shared image chooser.
+Replace image, Remove image and Use source image work with focal point, fit and
+zoom. The framing guide follows the actual desktop section. Public and private
+renderers consume the same values; the decorative backdrop stays hidden through
+820px. Existing five-field revisions restore exactly and remove newer overrides.
+Legacy public fallback survives until Apply; an applied empty or unavailable
+Manual selection hides Method and warns in its editor. Private titles remain
+private, late callbacks are rejected, and failed saves preserve unsaved work.
+
+Oscars Portal keeps its existing canonical theme mods, option, revisions and
+owner-bound preview tokens inside the shared workspace. Its eleven-section
+rail supports drag and keyboard order, direct visibility controls and derived
+states: the board is content-driven and navigator visibility follows doors.
+The inspector covers existing identity copy and all seven presentation controls.
+The active page-oscars.php composer receives the private candidate and section
+markers. Covered old forms/writers redirect to Site Studio; supplemental Classic
+controls and Academy data tools remain available.
+
+Mobile Journal cards in the legacy homepage layout put stable artwork above
+full-width text and readable headlines. Homepage Oscars cards stay within their
+panel, show one full card per view, and use original portrait artwork inside a
+consistent frame. Arrows and dots sit above the cards. Next reaches the final
+card before wrapping, and arrow/keyboard motion respects reduced motion.
+Desktop retains its existing landscape presentation. These layout repairs do
+not change saved selections or adopt the new Journal carousel automatically.
+
+Homepage Oscar Picks/Facts curation, Review authoring, Journal Desk and Academy
+authoring remain later editor migrations. Guide: `docs/PRESENTATION-EDITORS.md`;
+standard: `docs/EDITOR-STANDARD.md`; implementation plan:
+`docs/superpowers/plans/2026-09-10-presentation-editor-migration.md`.
+Release gates and deployment status are recorded in `docs/SESSION-LOG.md`.
+
 ## 2026-09-08 — Theme 3.2.63 Shared Carousel Editing
 
 Hero Carousel and Journal Carousel now use the common Site Studio controller

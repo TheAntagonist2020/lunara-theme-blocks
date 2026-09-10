@@ -1,9 +1,11 @@
 # Lunara editor standard
 
 Direction agreed with Dalton on 8 September 2026. This is the target experience
-and an initial source inventory. The first implementation is the Theme 3.2.63
-candidate: Hero and Journal use Site Studio's shared workflow and reusable visual
-controls. The wider authoring-editor migrations remain subsequent work.
+and a source inventory. Hero and Journal gained Site Studio's shared workflow
+and reusable visual controls in Theme 3.2.63. The 3.2.64 candidate extends that
+work to section ordering, Method selection/artwork, and the Oscars Portal.
+The wider authoring-editor migrations remain subsequent work. Current controls:
+`docs/PRESENTATION-EDITORS.md`.
 
 Every Lunara editor should feel like the same product. Someone who learns to
 choose an image, reorder stories, preview, and save in one place should be able
@@ -47,6 +49,13 @@ entry points, not a claim that every current production form has been exercised.
 | Reusable media and blocks | Theme `inc/carousel.php`, `inc/curated-media.php`, and `inc/blocks.php`: additional media/slide editing paths, including a separate Save Order action. |
 
 ## Delivery order
+
+The 3.2.64 candidate reuses the same ordered-list control for Homepage desktop
+and mobile layouts, Reviews and Journal archives, and the Oscars Portal.
+Method uses the common image control and the same private Preview/Apply/history
+host. Oscars Portal retains its existing settings and revisions inside that
+host. These are presentation migrations; Homepage Oscar Picks/Facts, Review
+authoring, Journal Desk, and Academy authoring remain separate follow-ups.
 
 1. Establish shared editor components and state handling through the Hero and
    Journal carousels. Prove search, ordering, image replacement/framing,

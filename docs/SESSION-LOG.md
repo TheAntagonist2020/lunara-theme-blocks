@@ -25,6 +25,110 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-10 — Theme 3.2.64 presentation editors candidate
+
+### Headline
+
+The local Theme 3.2.64 candidate extends the shared presentation editor to
+Homepage/archive ordering, Method selection/artwork, and Oscars Portal. It also
+repairs the public homepage Journal/Oscars cards on mobile. The live baseline
+was verified as 3.2.63; this candidate record does not claim deployment.
+
+### Verified live state
+
+Read-only probes against canonical production URLs on 2026-09-10 UTC:
+
+| Probe | Observed result |
+| --- | --- |
+| Homepage `/`, 16:46:29 UTC | HTTP 200; build `3.2.63+20260909-015214`. |
+| `lunara-canary-verify.sh 3.2.63` | Exit 0, GO; Journal and Oscars `LIVE_COHERENT`, including three coherent anonymous Journal reads. |
+| Phone-width public DOM | Legacy Journal grid is still active; its non-lead cards squeeze copy beside tall images. Homepage Oscar Picks track exceeds its panel width. |
+
+No deployment, cache operation, production write, or
+verification of a live 3.2.64 release occurred.
+Authenticated WordPress acceptance was not performed.
+Local browser fixtures use real theme markup and code with mocked WordPress
+services; they are not production editing acceptance.
+
+### What changed and why
+
+See `docs/CHANGELOG.md`, **Theme 3.2.64 Shared Presentation Editors and Mobile
+Cards**, for behavior and scope. `docs/PRESENTATION-EDITORS.md` maps the current
+controls. The migration reuses the common workflow and canonical stores while
+retiring covered competing writers. Mobile repairs apply to the currently
+active legacy Journal presentation without silently adopting another lineup.
+
+### Commit ledger
+
+| Repository | Commit | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | `40e2f1c6d2a963ef33f6982cbddcccd7a4bf1638` | Main baseline for this candidate. |
+| `lunara-theme-blocks` | `1640abe` / `9db9d43` | Shared section ordering and real-pointer regression. |
+| `lunara-theme-blocks` | `d1c9cc7` / `b0b7fb1` | Method migration and exact framing persistence. |
+| `lunara-theme-blocks` | `3677ddc` / `6fbfee7` / `2b372d6` / `a3791a3` | Mobile card geometry, original portrait sources, control placement, and final-card navigation. |
+| `lunara-theme-blocks` | `1871aea` / `d5e888c` / `75b927f` | Portal shared host, mobile ordering layout, and common test fixture. |
+| `lunara-theme-blocks` | This candidate's release commit | Real-renderer Method framing coverage, CSS budget cleanup, 3.2.64 identity and release documentation. |
+
+### Gate ledger
+
+| Gate | Result |
+| --- | --- |
+| Full theme contracts | Initial 93/94; the sole failure was the 60 KB homepage CSS budget. Budget and full mobile gates passed after repair, satisfying all 94 required contracts. Original failure evidence was retained. |
+| Repository syntax | 117 PHP, 57 JavaScript and 26 CSS files checked; zero syntax/brace failures. |
+| Mobile public rendering | Actual PHP artwork renderer plus 305 layout and 38 navigation checks; phone/tablet/desktop, long headlines, missing art, portrait sources, arrows/dots/keyboard and reduced motion. |
+| Shared ordering | Workspace/editorial contracts; real-pointer checks at 1440, 1101, 782 and 390; independent task review approved. |
+| Method | 34 PHP, 53 editor browser and 28 real-renderer framing checks; task review approved. |
+| Portal | Real-provider/private-preview, shared-host, save/reload/restore and browser gates passed. All 56 ordered-row geometry checks passed across Portal/Homepage/Reviews/Journal at phone and narrow desktop widths. Independent task review approved after fixture cleanup. |
+| Mutations | Shared drag, Journal columns, Oscars width/source/portrait-fit, last-card wrapping, Method framing persistence/picker invalidation and actual public focal CSS mutations were caught. Portal token-owner, preview non-persistence and active-renderer candidate mutations were caught. File mutations restored byte-exactly. |
+| Visual inspection | Local Journal phone comparison, final Oscar renderer at 390/1440, Method and Portal inspectors at 390/1440, and corrected mobile section-order controls. |
+| Whole-branch review | Pending against the complete candidate commit; all three task reviews approved. |
+| Not performed | Production settings/article writes, cache operations, deployment, authenticated Apply/reload/restore, or a live 3.2.64 canary. |
+
+### Corrections
+
+The prior session's observation that production was still 3.2.62 remains an
+accurate account of that earlier check. This session now verifies 3.2.63 live.
+The operator guide's stale standalone-theme claim has been corrected to match
+the active `Template: blocksy` header and the standing operating agreement.
+
+### Logged, not fixed
+
+Homepage Oscar Picks/Facts curation, reusable media, Review Studio, Journal Desk
+and Academy authoring still need subsequent shared-control migrations. Source
+artwork gaps and the opening lineups remain editorial follow-ups. Boost Critical
+CSS regeneration, global Image CDN quality verification, the base stylesheet
+diet and dead guarded renderer cleanup remain separate work.
+
+Method's browser regressions were partly written after implementation. The
+report records that process deviation without claiming complete test-first
+sequencing. Its framing-coverage follow-up was addressed with actual renderer
+composition checks and a public-CSS mutation.
+
+The initial combined run caught homepage CSS at 61,654 bytes against its
+61,440-byte budget. Removing redundant mobile declarations and compacting the
+track rule reduced it to 61,407 bytes. The unchanged size limit and the full
+305-layout/38-navigation gate passed after the repair. Two static no-art checks
+were updated to reflect properties inherited from the shared card rules.
+
+Portal review found a duplicated browser fixture builder and two unused test
+helpers. The builder now has one owner; both consumers use it. Eight fixture
+variants stayed byte-identical, executable assertions were preserved, and
+focused Portal/workspace reruns plus independent re-review passed.
+
+### Punch-list and whose move is next
+
+- Agent: finish integrated checks/review, push the candidate through the
+  authorized PR/merge workflow, then rebuild and verify rollback PR #159 against
+  current main. No merge happened when this candidate record was prepared.
+- Dalton: after the release is merged, perform the manual **Deployer for Git**
+  action from Lunara Control Desk. Auto-deploy stays off.
+- After deployment: verify the actual public build and run
+  `bash tests/tools/lunara-canary-verify.sh 3.2.64`; accept the authenticated
+  controls at desktop and phone widths. Only a live exit 0 is GO.
+- Follow-up: apply/curate the Journal and Hero lineups, then migrate Homepage
+  Oscar Picks/Facts and the remaining authoring editors to the shared controls.
+
+
 ## 2026-09-08 — Theme 3.2.63 merged; manual deployment next
 
 ### Headline

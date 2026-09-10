@@ -9,5 +9,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Method server contract failed.' }
     & node (Join-Path $PSScriptRoot 'site-studio-method-browser-runtime.js')
     if ($LASTEXITCODE -ne 0) { throw 'Method browser contract failed.' }
+    & node (Join-Path $PSScriptRoot 'site-studio-method-framing-runtime.js')
+    if ($LASTEXITCODE -ne 0) { throw 'Method real-renderer framing parity failed.' }
     Write-Output 'Site Studio Method contract passed.'
 } finally { $env:NODE_PATH = $oldNodePath }
