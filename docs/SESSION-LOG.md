@@ -25,6 +25,83 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-10 — Theme 3.2.64 merged; manual deployment next
+
+### Headline
+
+Theme 3.2.64 is merged to main through [PR #181](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/181), including the shared
+presentation editors and public mobile Journal/Oscars repairs. Local checks,
+independent review and GitHub CI passed. This entry records repository delivery;
+the measured public state below determines what is live.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| Canonical public homepage, 18:30:21 UTC | HTTP 200; build `3.2.63+20260909-015214`. |
+| Versioned canary | Expected 3.2.63; exit 0 / GO, Journal and Oscars `LIVE_COHERENT`, three consistent anonymous reads. |
+
+No agent deployment, cache operation, or production settings/article write
+occurred. Authenticated WordPress editing acceptance remains outstanding.
+
+### What shipped and why
+
+See `docs/CHANGELOG.md`, **Theme 3.2.64 Shared Presentation Editors and Mobile
+Cards**, and `docs/PRESENTATION-EDITORS.md`. The approved work now gives Method
+and Oscars Portal the common editing workflow, shared section ordering, and
+usable mobile public artwork. Saved selections remain unchanged until Apply.
+
+### Commit ledger
+
+| Repository | Commit | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | `e2554ae74a89ea29ef939ecab78dd473d4c8d876` | [PR #181](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/181) merged Theme 3.2.64 to main. |
+| `lunara-theme-blocks` | `40390f2280b360694be92798b3161cd495224660` | Release candidate, guide, identity and integrated validation record. |
+| `lunara-theme-blocks` | `e61da2ace4b3fc71c971321a6c17146e3243c33a` | Final-review correction: preserve native Portal validation anchors through the actual REST save response. |
+| `lunara-theme-blocks` | `claude/rollback-exact-theme-3.2.43` / PR #159 | Remote tree and simulated merge verified against `c55bf394594149db2888295c5d51f85f47b2b520`; first parent matched release main. Rebuild again after this documentation merge. |
+
+### Gate ledger
+
+- All 94 required local contracts passed after correcting the measured CSS
+  budget failure and rerunning the affected budget/mobile gates. Initial run
+  and corrected results are preserved in the candidate record.
+- 117 PHP, 57 JavaScript and 26 CSS syntax/balance checks passed; the two PHP files in the final REST fix passed syntax again.
+- All three task reviews and the whole-branch follow-up review approved. The
+  duplicated fixture builder and unused helpers identified in Task 3 were
+  removed; Method framing coverage was strengthened with actual renderer checks.
+- The initial whole-branch review required the Portal field-error correction.
+  Thirteen exact canonical paths were added to the REST allowlist. Real save
+  endpoint tests cover identity and presentation errors, unknown/private-field
+  exclusion and unchanged settings/revisions after failure. The narrow fix
+  passed its covering gates and independent re-review.
+- GitHub CI: [Lint run 34514173476](https://github.com/TheAntagonist2020/lunara-theme-blocks/actions/runs/34514173476) passed on the exact reviewed head `e61da2ace4b3fc71c971321a6c17146e3243c33a`.
+- No live 3.2.64 acceptance is claimed unless the versioned canary row above
+  explicitly records it. Merging and a replayed canary are not deployment proof.
+
+### Corrections and remaining work
+
+The earlier candidate entry remains an accurate pre-merge snapshot. Its
+remaining PR/merge step is superseded by this entry. No historical live-state
+claim was rewritten.
+
+Homepage Oscar Picks/Facts, reusable media, Review authoring, Journal Desk and
+Academy authoring remain later shared-editor migrations. Curating the opening
+lineups and publishing fresh coverage remain editorial work. Boost Critical
+CSS, global CDN quality verification, the wider stylesheet diet and dead
+guarded renderer cleanup remain open.
+
+### Whose move is next
+
+- Agent: merge this documentation record and rebuild/verify the exact rollback
+  hatch against the resulting main, following the standing runbook.
+- Dalton: use **Lunara Control Desk → Deployer for Git** for the manual theme
+  deployment. Auto-deploy stays off. Then verify the actual public build and
+  `bash tests/tools/lunara-canary-verify.sh 3.2.64` and exercise the authenticated
+  editor controls at desktop and phone widths.
+- Follow-up: in Journal Carousel, choose Automatic and Apply to adopt the
+  latest eligible stories, or curate Manual. Then continue Homepage Oscar
+  Picks/Facts and the remaining authoring editors.
+
 ## 2026-09-10 — Theme 3.2.64 presentation editors candidate
 
 ### Headline
