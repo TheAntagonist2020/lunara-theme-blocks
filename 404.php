@@ -98,7 +98,7 @@ $reentry_actions = lunara_404_order_reentry_actions(
 );
 ?>
 <main id="primary" class="site-main lunara-archive-page lunara-404-page lunara-404-page--primary-<?php echo esc_attr( $reentry_primary ); ?>">
-    <section class="lunara-home-section lunara-archive-hero" data-lunara-site-studio-section="search-command">
+    <section class="lunara-home-section lunara-archive-hero">
         <div class="lunara-editorial-archive-hero-shell">
             <div class="lunara-editorial-archive-hero-copy-wrap">
                 <p class="lunara-archive-hero-kicker"><?php echo esc_html( get_theme_mod( 'lunara_404_kicker', __( 'Lost Signal', 'lunara-film' ) ) ); ?></p>
@@ -125,7 +125,7 @@ $reentry_actions = lunara_404_order_reentry_actions(
         </div>
     </section>
 
-    <section class="lunara-home-section lunara-404-shell" data-lunara-site-studio-section="recovery">
+    <section class="lunara-home-section lunara-404-shell">
         <div class="lunara-404-panel">
             <div class="lunara-home-section-head">
                 <div>
