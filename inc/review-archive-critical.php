@@ -14,35 +14,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-if ( ! function_exists( 'lunara_reviews_archive_resolved_label_font_slug' ) ) {
-	/**
-	 * Resolve the Studio label role without allowing one malformed field to
-	 * corrupt the rest of the design-token document.
-	 *
-	 * @return string
-	 */
-	function lunara_reviews_archive_resolved_label_font_slug() {
-		$default = 'tiempos-text';
-		$tokens  = function_exists( 'lunara_get_design_tokens' ) ? lunara_get_design_tokens() : array();
-		$fonts   = isset( $tokens['fonts'] ) && is_array( $tokens['fonts'] ) ? $tokens['fonts'] : array();
-		$slug    = isset( $fonts['label'] ) && is_scalar( $fonts['label'] ) ? (string) $fonts['label'] : $default;
-		$choices = function_exists( 'lunara_design_token_font_choices' ) ? lunara_design_token_font_choices() : array();
-
-		return is_array( $choices ) && isset( $choices[ $slug ] ) ? $slug : $default;
-	}
-}
-
-if ( ! function_exists( 'lunara_reviews_archive_uses_tiempos_label_face' ) ) {
-	/**
-	 * Whether the default Studio label role should use the licensed route face.
-	 *
-	 * @return bool
-	 */
-	function lunara_reviews_archive_uses_tiempos_label_face() {
-		return 'tiempos-text' === lunara_reviews_archive_resolved_label_font_slug();
-	}
-}
-
 if ( ! function_exists( 'lunara_reviews_archive_minify_structural_css' ) ) {
     function lunara_reviews_archive_minify_structural_css( $css ) {
         $css = preg_replace( '#/\*[^!][\s\S]*?\*/#', '', (string) $css );
@@ -65,8 +36,6 @@ if ( ! function_exists( 'lunara_reviews_archive_critical_css' ) ) {
 &>:is(.lunara-review-archive-slot-utility,.lunara-review-archive-slot-grid){order:var(--lunara-reviews-archive-order-grid,2)!important}
 &>.lunara-review-archive-slot-pagination{order:var(--lunara-reviews-archive-order-pagination,3)!important}
 &>.lunara-review-archive-slot-pairing-desk{order:var(--lunara-reviews-archive-order-pairing,4)!important}
-&>.lunara-review-archive-slot-retention{margin:0!important;order:var(--lunara-reviews-archive-order-grid,2)!important;width:100%!important}
-& .lunara-review-archive-gallery{min-width:0!important;width:100%!important}
 &>.lunara-review-archive-slot-grid{gap:var(--lunara-reviews-archive-shell-gap,36px)!important}
 &>.lunara-review-archive-slot-pagination{margin:0 auto!important;width:100%!important}
 &>.lunara-home-section{margin-bottom:calc(var(--lunara-reviews-archive-section-gap,40px)*.72)!important}

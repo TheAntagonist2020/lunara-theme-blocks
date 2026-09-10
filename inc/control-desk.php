@@ -33,7 +33,7 @@ function lunara_register_control_desk_page() {
 add_action( 'admin_menu', 'lunara_register_control_desk_page' );
 
 function lunara_enqueue_control_desk_assets( $hook ) {
-    if ( ! in_array( $hook, array( 'toplevel_page_lunara-control-desk', 'appearance_page_lunara-control-desk' ), true ) ) {
+    if ( ! in_array( $hook, array( 'toplevel_page_lunara-control-desk', 'appearance_page_lunara-control-desk', 'lunara_page_lunara-site-studio' ), true ) ) {
         return;
     }
 
@@ -69,20 +69,11 @@ function lunara_enqueue_control_desk_assets( $hook ) {
             array(
                 'suggestUrl' => esc_url_raw( rest_url( 'lunara-ai-classic/v1/suggest' ) ),
                 'nonce'      => wp_create_nonce( 'wp_rest' ),
-                'journalSearchUrl'   => admin_url( 'admin-ajax.php' ),
-                'journalSearchNonce' => wp_create_nonce( 'lunara_journal_archive_studio_search' ),
-                'reviewsSearchNonce' => wp_create_nonce( 'lunara_reviews_archive_studio_search' ),
                 'i18n'       => array(
                     'working' => __( 'Asking the private AI desk...', 'lunara-film' ),
                     'ready'   => __( 'Suggestion saved privately.', 'lunara-film' ),
                     'failed'  => __( 'Suggestion request failed.', 'lunara-film' ),
                     'copied'  => __( 'Copied.', 'lunara-film' ),
-                    'journalSearching'    => __( 'Searching published Journal files…', 'lunara-film' ),
-                    'journalSearchReady'  => __( 'Published matches updated.', 'lunara-film' ),
-                    'journalSearchFailed' => __( 'Search could not be completed. Your current selection is unchanged.', 'lunara-film' ),
-                    'reviewsSearching'    => __( 'Searching published Reviews…', 'lunara-film' ),
-                    'reviewsSearchReady'  => __( 'Published matches updated.', 'lunara-film' ),
-                    'reviewsSearchFailed' => __( 'Search could not be completed. Your current selection is unchanged.', 'lunara-film' ),
                 ),
             )
         );
@@ -103,7 +94,6 @@ function lunara_control_desk_save_journal_lead() {
     }
 
     check_admin_referer( 'lunara_save_journal_lead', 'lunara_journal_lead_nonce' );
-    if ( function_exists( 'lunara_home_carousel_settings' ) && lunara_home_carousel_settings( 'journal' )['adopted'] ) { wp_safe_redirect( admin_url( 'admin.php?page=lunara-site-studio&surface=journal-carousel' ) ); exit; }
 
     $raw_value = isset( $_POST['lunara_home_journal_lead_post_id'] )
         ? sanitize_text_field( wp_unslash( $_POST['lunara_home_journal_lead_post_id'] ) )
@@ -152,8 +142,45 @@ function lunara_control_desk_save_pairing_desk_copy() {
 
     check_admin_referer( 'lunara_save_pairing_desk_copy', 'lunara_pairing_desk_copy_nonce' );
 
-    // Presentation writes now belong exclusively to Site Studio Apply/Restore.
-    wp_safe_redirect( admin_url( 'admin.php?page=lunara-site-studio&surface=lunara-method' ) );
+    $fields = array(
+        'lunara_home_pairing_desk_kicker' => 'sanitize_text_field',
+        'lunara_home_pairing_desk_title'  => 'sanitize_text_field',
+        'lunara_home_pairing_desk_copy'   => 'sanitize_textarea_field',
+    );
+
+    foreach ( $fields as $setting => $sanitizer ) {
+        $value = isset( $_POST[ $setting ] ) ? call_user_func( $sanitizer, wp_unslash( $_POST[ $setting ] ) ) : '';
+        $value = trim( (string) $value );
+
+        if ( '' !== $value ) {
+            set_theme_mod( $setting, $value );
+        } else {
+            remove_theme_mod( $setting );
+        }
+    }
+
+    // Curated showcase review: which review's trio the Method band wears.
+    // Zero or anything that is not a published review clears the override
+    // and the band returns to automatic (latest review with a full trio).
+    $curated_review = isset( $_POST['lunara_home_pairing_desk_review_id'] ) ? absint( $_POST['lunara_home_pairing_desk_review_id'] ) : 0;
+    $curated_post   = $curated_review ? get_post( $curated_review ) : null;
+    if ( $curated_post && 'review' === $curated_post->post_type && 'publish' === $curated_post->post_status ) {
+        set_theme_mod( 'lunara_home_pairing_desk_review_id', $curated_review );
+    } else {
+        remove_theme_mod( 'lunara_home_pairing_desk_review_id' );
+    }
+
+    // Backdrop override: an attachment id from the media picker. Zero or
+    // an invalid image clears the override and the section returns to its
+    // automatic backdrop (the featured review's own hero image).
+    $backdrop_id = isset( $_POST['lunara_home_pairing_desk_backdrop_id'] ) ? absint( $_POST['lunara_home_pairing_desk_backdrop_id'] ) : 0;
+    if ( $backdrop_id && lunara_control_desk_brand_image_is_valid( $backdrop_id ) ) {
+        set_theme_mod( 'lunara_home_pairing_desk_backdrop_id', $backdrop_id );
+    } else {
+        remove_theme_mod( 'lunara_home_pairing_desk_backdrop_id' );
+    }
+
+    wp_safe_redirect( add_query_arg( 'lunara_notice', 'pairing_desk_copy_saved', $redirect ) );
     exit;
 }
 add_action( 'admin_post_lunara_save_pairing_desk_copy', 'lunara_control_desk_save_pairing_desk_copy' );
@@ -1141,11 +1168,7 @@ function lunara_control_desk_save_homepage_studio() {
         }
 
         if ( function_exists( 'lunara_sync_home_section_blocks_from_settings' ) ) {
-            $sync_result = lunara_sync_home_section_blocks_from_settings();
-            if ( is_wp_error( $sync_result ) ) {
-                wp_safe_redirect( add_query_arg( 'lunara_notice', 'homepage_studio_write_failed', $redirect ) );
-                exit;
-            }
+            lunara_sync_home_section_blocks_from_settings();
         }
 
         wp_safe_redirect( add_query_arg( 'lunara_notice', 'homepage_studio_saved', $redirect ) );
@@ -1293,11 +1316,7 @@ function lunara_control_desk_save_homepage_studio() {
     // the just-saved order + visibility recompose the Home page's blocks so
     // the Studio and the editor never disagree.
     if ( function_exists( 'lunara_sync_home_section_blocks_from_settings' ) ) {
-        $sync_result = lunara_sync_home_section_blocks_from_settings();
-        if ( is_wp_error( $sync_result ) ) {
-            wp_safe_redirect( add_query_arg( 'lunara_notice', 'homepage_studio_write_failed', $redirect ) );
-            exit;
-        }
+        lunara_sync_home_section_blocks_from_settings();
     }
 
     $notice = $apply_values ? 'homepage_preset_applied' : 'homepage_studio_saved';
@@ -1502,11 +1521,6 @@ function lunara_control_desk_reviews_archive_lead_options() {
 }
 
 function lunara_control_desk_save_reviews_archive_studio() {
-    if ( function_exists( 'lunara_reviews_archive_studio_promote_config' ) && function_exists( 'lunara_reviews_archive_studio_handle_save' ) ) {
-        lunara_reviews_archive_studio_handle_save();
-        return;
-    }
-
     $legacy_redirect = lunara_control_desk_admin_url(
         array(
             'tab' => 'theme-studio',
@@ -2851,12 +2865,11 @@ function lunara_control_desk_apply_oscars_dossier_values( $values ) {
 }
 
 function lunara_control_desk_save_oscars_dossier_studio() {
-    $legacy_redirect = lunara_control_desk_admin_url(
+    $redirect = lunara_control_desk_admin_url(
         array(
             'tab' => 'theme-studio',
         )
     ) . '#lunara-theme-studio-oscars-dossier-studio';
-    $redirect = lunara_control_desk_bounded_return_url( 'lunara_oscars_dossier_return', 'oscars-ledger', $legacy_redirect );
 
     if ( ! current_user_can( 'edit_theme_options' ) ) {
         wp_safe_redirect( add_query_arg( 'lunara_notice', 'oscars_dossier_studio_forbidden', $redirect ) );
@@ -3066,6 +3079,57 @@ function lunara_control_desk_journal_archive_number_value( $key ) {
         get_theme_mod( $key, $specs[ $key ]['default'] )
     );
 }
+
+function lunara_control_desk_save_journal_archive_studio() {
+    $legacy_redirect = lunara_control_desk_admin_url(
+        array(
+            'tab' => 'theme-studio',
+        )
+    ) . '#lunara-theme-studio-journal-archive-studio';
+    $redirect = lunara_control_desk_bounded_return_url( 'lunara_journal_archive_return', 'journal-archive', $legacy_redirect );
+
+    if ( ! current_user_can( 'edit_theme_options' ) ) {
+        wp_safe_redirect( add_query_arg( 'lunara_notice', 'journal_archive_studio_forbidden', $redirect ) );
+        exit;
+    }
+
+    check_admin_referer( 'lunara_save_journal_archive_studio', 'lunara_journal_archive_nonce' );
+
+    $raw_selects = isset( $_POST['lunara_journal_archive_select'] ) && is_array( $_POST['lunara_journal_archive_select'] )
+        ? wp_unslash( $_POST['lunara_journal_archive_select'] )
+        : array();
+
+    foreach ( lunara_control_desk_journal_archive_select_specs() as $key => $spec ) {
+        $value = isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'];
+        if ( ! isset( $spec['options'][ $value ] ) ) {
+            $value = (string) $spec['default'];
+        }
+        set_theme_mod( $key, $value );
+    }
+
+    $raw_numbers = isset( $_POST['lunara_journal_archive_number'] ) && is_array( $_POST['lunara_journal_archive_number'] )
+        ? wp_unslash( $_POST['lunara_journal_archive_number'] )
+        : array();
+    $raw_resets  = isset( $_POST['lunara_journal_archive_reset'] ) && is_array( $_POST['lunara_journal_archive_reset'] )
+        ? wp_unslash( $_POST['lunara_journal_archive_reset'] )
+        : array();
+    $resets      = array_map( 'sanitize_key', array_keys( $raw_resets ) );
+
+    foreach ( lunara_control_desk_journal_archive_number_specs() as $key => $spec ) {
+        if ( in_array( $key, $resets, true ) ) {
+            remove_theme_mod( $key );
+            continue;
+        }
+
+        if ( array_key_exists( $key, $raw_numbers ) ) {
+            set_theme_mod( $key, (string) lunara_control_desk_journal_archive_clamp_number( $key, $raw_numbers[ $key ] ) );
+        }
+    }
+
+    wp_safe_redirect( add_query_arg( 'lunara_notice', 'journal_archive_studio_saved', $redirect ) );
+    exit;
+}
+add_action( 'admin_post_lunara_save_journal_archive_studio', 'lunara_control_desk_save_journal_archive_studio' );
 
 function lunara_control_desk_utility_search_select_specs() {
     return array(
@@ -3902,7 +3966,7 @@ function lunara_control_desk_get_system_status() {
             'label' => __( 'Object cache', 'lunara-film' ),
             'value' => wp_using_ext_object_cache() ? __( 'External cache active', 'lunara-film' ) : __( 'Default WordPress cache', 'lunara-film' ),
             'state' => 'ready',
-            'note'  => __( 'Never clear caches as a deployment fix; verify public routes against normal cache behavior.', 'lunara-film' ),
+            'note'  => __( 'Flush cache after every deployment.', 'lunara-film' ),
         ),
         array(
             'label' => __( 'Last deploy backup', 'lunara-film' ),
@@ -6163,7 +6227,7 @@ function lunara_control_desk_render_operating_plan_tab() {
         array(
             'label' => __( 'Always', 'lunara-film' ),
             'title' => __( 'Verify, cache, document, repeat', 'lunara-film' ),
-            'body'  => __( 'Keep 390px and 768px first-class, never clear caches as a fix, block unsafe source images, and update session notes after meaningful changes.', 'lunara-film' ),
+            'body'  => __( 'Keep 390px and 768px first-class, flush cache after deploys, block unsafe source images, and update session notes after meaningful changes.', 'lunara-film' ),
             'links' => array(
                 array( __( 'Speed & Stability', 'lunara-film' ), lunara_control_desk_url( array( 'tab' => 'speed-stability' ) ) ),
                 array( __( 'Visual QA', 'lunara-film' ), lunara_control_desk_url( array( 'tab' => 'visual-qa' ) ) ),
@@ -6273,7 +6337,7 @@ function lunara_control_desk_render_operating_plan_tab() {
 
     $rules = array(
         __( 'AI is suggest-first and cannot silently mutate public copy, metadata, homepage flags, or Ledger data.', 'lunara-film' ),
-        __( 'Back up before deployment, lint changed PHP, never clear caches as a fix, and verify public routes after deploy.', 'lunara-film' ),
+        __( 'Back up before deployment, lint changed PHP, flush cache, and verify public routes after deploy.', 'lunara-film' ),
         __( 'Mobile 390px and 768px are first-class acceptance lanes, not afterthoughts.', 'lunara-film' ),
         __( 'World of Reel images stay blocked for featured-image use; external exclusive images need visible provenance and credit.', 'lunara-film' ),
         __( 'Update session logs and the long-term changelog after meaningful product changes.', 'lunara-film' ),
@@ -6281,7 +6345,7 @@ function lunara_control_desk_render_operating_plan_tab() {
 
     $tools = array(
         array( __( 'Control Desk', 'lunara-film' ), __( 'Private operating surface for readiness, QA, curation, and next actions.', 'lunara-film' ) ),
-        array( __( 'WordPress.com + SSH', 'lunara-film' ), __( 'Read-only live checks, backups, deploys, no cache clearing as a fix, and remote linting.', 'lunara-film' ) ),
+        array( __( 'WordPress.com + SSH', 'lunara-film' ), __( 'Live checks, backups, deploys, cache flushes, and remote linting.', 'lunara-film' ) ),
         array( __( 'Browser QA', 'lunara-film' ), __( 'Screenshots and interaction checks at mobile, tablet, and desktop widths.', 'lunara-film' ) ),
         array( __( 'OpenAI / Anthropic / Gemini', 'lunara-film' ), __( 'Private snapshots for structure, taste, long context, and Ledger checks.', 'lunara-film' ) ),
         array( __( 'Dispatch', 'lunara-film' ), __( 'Draft-first Journal source pipeline with a hard originality gate.', 'lunara-film' ) ),
@@ -8815,11 +8879,6 @@ function lunara_control_desk_render_reviews_archive_number_control( $key, $spec 
 }
 
 function lunara_control_desk_render_reviews_archive_studio( $context = 'control-desk' ) {
-    if ( function_exists( 'lunara_reviews_archive_studio_render_control_surface' ) ) {
-        lunara_reviews_archive_studio_render_control_surface( $context );
-        return;
-    }
-
     if ( ! current_user_can( 'edit_theme_options' ) ) {
         ?>
         <section id="lunara-theme-studio-reviews-archive-studio" class="lunara-control-desk-homepage-studio">
@@ -10065,7 +10124,7 @@ function lunara_control_desk_render_oscars_dossier_preset_card( $preset_key, $pr
     <?php
 }
 
-function lunara_control_desk_render_oscars_dossier_studio( $context = 'control-desk' ) {
+function lunara_control_desk_render_oscars_dossier_studio() {
     if ( ! current_user_can( 'edit_theme_options' ) ) {
         ?>
         <section id="lunara-theme-studio-oscars-dossier-studio" class="lunara-control-desk-homepage-studio lunara-control-desk-oscars-dossier-studio">
@@ -10079,7 +10138,6 @@ function lunara_control_desk_render_oscars_dossier_studio( $context = 'control-d
         return;
     }
 
-    $context           = 'site-studio' === sanitize_key( (string) $context ) ? 'site-studio' : 'control-desk';
     $presets           = lunara_control_desk_oscars_dossier_preset_specs();
     $active_preset_key = lunara_control_desk_oscars_dossier_active_preset_key();
     $active_label      = $active_preset_key && isset( $presets[ $active_preset_key ] )
@@ -10116,7 +10174,6 @@ function lunara_control_desk_render_oscars_dossier_studio( $context = 'control-d
         </div>
         <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
             <input type="hidden" name="action" value="lunara_save_oscars_dossier_studio" />
-            <input type="hidden" name="lunara_oscars_dossier_return" value="<?php echo esc_attr( $context ); ?>" />
             <?php wp_nonce_field( 'lunara_save_oscars_dossier_studio', 'lunara_oscars_dossier_nonce' ); ?>
 
             <div class="lunara-control-desk-homepage-card">
@@ -10276,11 +10333,6 @@ function lunara_control_desk_render_journal_archive_number_control( $key, $spec 
 }
 
 function lunara_control_desk_render_journal_archive_studio( $context = 'control-desk' ) {
-    if ( function_exists( 'lunara_journal_archive_studio_render_control_surface' ) ) {
-        lunara_journal_archive_studio_render_control_surface( $context );
-        return;
-    }
-
     if ( ! current_user_can( 'edit_theme_options' ) ) {
         ?>
         <section id="lunara-theme-studio-journal-archive-studio" class="lunara-control-desk-homepage-studio">
@@ -12389,22 +12441,6 @@ function lunara_control_desk_theme_studio_command_index_items() {
             'next'               => __( 'Next frontier: older Oscars poster chambers and route-family image backlog triage.', 'lunara-film' ),
         ),
         array(
-            'label'              => __( 'Oscars Portal Studio', 'lunara-film' ),
-            'status'             => __( 'Live controls', 'lunara-film' ),
-            'surface'            => __( 'Route-family front door', 'lunara-film' ),
-            'affects'            => __( 'Portal identity copy, eleven-slot order and visibility, bounded geometry, private previews, and restorable history.', 'lunara-film' ),
-            // The composer section (#lunara-oscars-portal-studio) renders on
-            // the Site Studio oscars-portal surface, never on the theme-studio
-            // tab, so this entry carries a full control_url (the
-            // lunara_site_studio_admin_url + anchor shape control-desk already
-            // uses elsewhere) instead of a dead tab anchor.
-            'anchor'             => '',
-            'control_url'        => function_exists( 'lunara_site_studio_admin_url' ) ? lunara_site_studio_admin_url( 'oscars-portal' ) . '#lunara-oscars-portal-studio' : '',
-            'preview_url'        => home_url( '/oscars/' ),
-            'mobile_preview_url' => add_query_arg( 'lunara-width', '390', home_url( '/oscars/' ) ),
-            'next'               => __( 'Next frontier: portal chamber presets and per-slot art direction.', 'lunara-film' ),
-        ),
-        array(
             'label'              => __( 'Oscars Dossier Studio', 'lunara-film' ),
             'status'             => __( 'Live controls', 'lunara-film' ),
             'surface'            => __( 'Premium historical ledger', 'lunara-film' ),
@@ -12458,13 +12494,7 @@ function lunara_control_desk_render_theme_studio_command_index() {
             <?php foreach ( $items as $item ) : ?>
                 <?php
                 $anchor      = isset( $item['anchor'] ) ? (string) $item['anchor'] : '';
-                // A complete control_url wins over the theme-studio tab +
-                // anchor assembly: Studios whose controls live on a Site
-                // Studio surface link straight there instead of pointing at
-                // an anchor this tab never renders.
-                $control_url = isset( $item['control_url'] ) && '' !== (string) $item['control_url']
-                    ? (string) $item['control_url']
-                    : ( $anchor ? $base_url . $anchor : $base_url );
+                $control_url = $anchor ? $base_url . $anchor : $base_url;
                 ?>
                 <article class="lunara-control-desk-command-card">
                     <div class="lunara-control-desk-command-card-head">
@@ -13788,7 +13818,7 @@ function lunara_control_desk_speed_route_notes() {
         'home'            => array(
             'image'  => __( 'First-lane media must avoid original-size requests.', 'lunara-film' ),
             'mobile' => __( '390px stack should keep the first viewport clean and readable.', 'lunara-film' ),
-            'next'   => __( 'Check newest review, Journal, and Ledger lanes after deploy without clearing caches.', 'lunara-film' ),
+            'next'   => __( 'Check newest review, Journal, and Ledger lanes after cache flush.', 'lunara-film' ),
         ),
         'reviews'         => array(
             'image'  => __( 'Archive cards should use bounded card/featured images.', 'lunara-film' ),
@@ -14350,7 +14380,6 @@ function lunara_control_desk_get_recent_published_journals( $include_id = 0, $li
 }
 
 function lunara_control_desk_render_journal_lead_curator() {
-    if ( function_exists( 'lunara_home_carousel_settings' ) && lunara_home_carousel_settings( 'journal' )['adopted'] ) { echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=journal-carousel' ) ) . '">Edit Journal Carousel in Site Studio</a></p>'; return; }
     $current_lead_id = lunara_control_desk_get_current_journal_lead_id();
     $current_lead    = $current_lead_id ? get_post( $current_lead_id ) : null;
     $latest_posts    = lunara_control_desk_get_recent_published_journals( $current_lead_id, 40 );
@@ -14934,7 +14963,111 @@ function lunara_control_desk_render_homepage_lane( $label, $description, $posts,
  * @return void
  */
 function lunara_control_desk_render_pairing_desk_form( $context = 'control-desk' ) {
-    echo '<p>The Lunara Method presentation is managed in Site Studio.</p><a class="button" href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=lunara-method' ) ) . '">Open Method editor</a>';
+    $context = 'site-studio' === sanitize_key( (string) $context ) ? 'site-studio' : 'control-desk';
+    $defaults = function_exists( 'lunara_home_pairing_desk_copy_defaults' )
+        ? lunara_home_pairing_desk_copy_defaults()
+        : array(
+            'kicker' => __( 'The Lunara Method', 'lunara-film' ),
+            'title'  => __( 'Every review ends with three more films.', 'lunara-film' ),
+            'copy'   => __( 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm. No other film desk builds this rail.', 'lunara-film' ),
+        );
+    $values = array(
+        'kicker' => (string) get_theme_mod( 'lunara_home_pairing_desk_kicker', '' ),
+        'title'  => (string) get_theme_mod( 'lunara_home_pairing_desk_title', '' ),
+        'copy'   => (string) get_theme_mod( 'lunara_home_pairing_desk_copy', '' ),
+    );
+    ?>
+    <section class="lunara-control-desk-panel lunara-site-studio-method">
+        <div class="lunara-control-desk-panel-header">
+            <p class="lunara-control-desk-kicker"><?php echo esc_html( 'site-studio' === $context ? __( 'Homepage · Signature Section', 'lunara-film' ) : __( 'Pairing Desk Showcase', 'lunara-film' ) ); ?></p>
+            <h2><?php esc_html_e( 'Edit the Lunara Method', 'lunara-film' ); ?></h2>
+            <p class="lunara-control-desk-intro"><?php esc_html_e( 'These three lines introduce the Pair It With trio on the front page. A blank field deliberately uses its built-in line; the preview below always shows what readers see now.', 'lunara-film' ); ?></p>
+        </div>
+
+        <div class="lunara-site-studio-effective-copy" aria-label="<?php echo esc_attr__( 'Current public Lunara Method copy', 'lunara-film' ); ?>">
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'What readers see now', 'lunara-film' ); ?></p>
+            <span><?php echo esc_html( '' !== trim( $values['kicker'] ) ? $values['kicker'] : $defaults['kicker'] ); ?></span>
+            <strong><?php echo esc_html( '' !== trim( $values['title'] ) ? $values['title'] : $defaults['title'] ); ?></strong>
+            <p><?php echo esc_html( '' !== trim( $values['copy'] ) ? $values['copy'] : $defaults['copy'] ); ?></p>
+        </div>
+
+        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+            <input type="hidden" name="action" value="lunara_save_pairing_desk_copy" />
+            <input type="hidden" name="lunara_pairing_desk_return" value="<?php echo esc_attr( $context ); ?>" />
+            <?php wp_nonce_field( 'lunara_save_pairing_desk_copy', 'lunara_pairing_desk_copy_nonce' ); ?>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><label for="lunara-pairing-desk-kicker"><?php esc_html_e( 'Kicker (small gold line)', 'lunara-film' ); ?></label></th>
+                    <td>
+                        <input type="text" class="regular-text" id="lunara-pairing-desk-kicker" name="lunara_home_pairing_desk_kicker"
+                            value="<?php echo esc_attr( $values['kicker'] ); ?>"
+                            placeholder="<?php echo esc_attr( $defaults['kicker'] ); ?>" />
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="lunara-pairing-desk-title"><?php esc_html_e( 'Headline', 'lunara-film' ); ?></label></th>
+                    <td>
+                        <input type="text" class="large-text" id="lunara-pairing-desk-title" name="lunara_home_pairing_desk_title"
+                            value="<?php echo esc_attr( $values['title'] ); ?>"
+                            placeholder="<?php echo esc_attr( $defaults['title'] ); ?>" />
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="lunara-pairing-desk-copy"><?php esc_html_e( 'Supporting paragraph', 'lunara-film' ); ?></label></th>
+                    <td>
+                        <textarea class="large-text" rows="3" id="lunara-pairing-desk-copy" name="lunara_home_pairing_desk_copy"
+                            placeholder="<?php echo esc_attr( $defaults['copy'] ); ?>"><?php echo esc_textarea( $values['copy'] ); ?></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="lunara-pairing-desk-review"><?php esc_html_e( 'Featured review (the whole showcase)', 'lunara-film' ); ?></label></th>
+                    <td>
+                        <?php
+                        $curated_showcase = absint( get_theme_mod( 'lunara_home_pairing_desk_review_id', 0 ) );
+                        $showcase_reviews = get_posts(
+                            array(
+                                'post_type'      => 'review',
+                                'post_status'    => 'publish',
+                                'posts_per_page' => -1,
+                                'orderby'        => 'date',
+                                'order'          => 'DESC',
+                                'no_found_rows'  => true,
+                            )
+                        );
+                        ?>
+                        <select id="lunara-pairing-desk-review" name="lunara_home_pairing_desk_review_id">
+                            <option value="0" <?php selected( $curated_showcase, 0 ); ?>><?php esc_html_e( 'Automatic — latest review with a full trio', 'lunara-film' ); ?></option>
+                            <?php foreach ( $showcase_reviews as $showcase_review ) : ?>
+                                <option value="<?php echo esc_attr( $showcase_review->ID ); ?>" <?php selected( $curated_showcase, $showcase_review->ID ); ?>>
+                                    <?php echo esc_html( get_the_title( $showcase_review ) . ' — ' . get_the_date( 'M j, Y', $showcase_review ) ); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="description"><?php esc_html_e( 'The band wears this review’s trio, credit line, and backdrop. Automatic follows the newest complete Review.', 'lunara-film' ); ?></p>
+                    </td>
+                </tr>
+            </table>
+
+            <?php
+            lunara_control_desk_render_brand_media_control(
+                array(
+                    'eyebrow' => __( 'Showcase Backdrop', 'lunara-film' ),
+                    'label'   => __( 'The image behind the Lunara Method', 'lunara-film' ),
+                    'note'    => __( 'By default the section wears the featured review’s own hero image. Pick an image here to override it; Clear returns to automatic.', 'lunara-film' ),
+                    'affects' => __( 'The full-width cinematic backdrop behind the Pair It With trio on the homepage.', 'lunara-film' ),
+                    'field'   => 'lunara_home_pairing_desk_backdrop_id',
+                    'value'   => absint( get_theme_mod( 'lunara_home_pairing_desk_backdrop_id', 0 ) ),
+                )
+            );
+            ?>
+
+            <div class="lunara-control-desk-actions">
+                <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Lunara Method', 'lunara-film' ); ?></button>
+                <a class="button" href="<?php echo esc_url( home_url( '/#pairing-desk' ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'View Section', 'lunara-film' ); ?></a>
+            </div>
+        </form>
+    </section>
+    <?php
 }
 
 function lunara_control_desk_render_homepage_board_tab( $rows ) {
@@ -14952,7 +15085,6 @@ function lunara_control_desk_render_homepage_board_tab( $rows ) {
         <div class="lunara-control-desk-panel-header">
             <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Homepage Curation Board', 'lunara-film' ); ?></p>
             <h2><?php esc_html_e( 'A read-only look at what can feed the front page', 'lunara-film' ); ?></h2>
-            <?php if ( function_exists( 'lunara_home_carousel_settings' ) && ( lunara_home_carousel_settings( 'hero' )['adopted'] || lunara_home_carousel_settings( 'journal' )['adopted'] ) ) : ?><p>These legacy flags do not control adopted homepage carousels. Edit <a href="<?php echo esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=hero-carousel' ) ); ?>">Hero Carousel</a> or <a href="<?php echo esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=journal-carousel' ) ); ?>">Journal Carousel</a> in Site Studio.</p><?php endif; ?>
             <p class="lunara-control-desk-intro"><?php esc_html_e( 'This board links to existing controls. It does not drag, pin, unpin, or save homepage flags.', 'lunara-film' ); ?></p>
         </div>
         <div class="lunara-control-desk-board">
@@ -15238,14 +15370,6 @@ function lunara_control_desk_render_notice() {
         return;
     }
 
-    $journal_archive_reason = function_exists( 'lunara_journal_archive_studio_validation_message' )
-        ? lunara_journal_archive_studio_validation_message()
-        : __( 'Review the Journal Archive fields and try again.', 'lunara-film' );
-
-    $reviews_archive_reason = function_exists( 'lunara_reviews_archive_studio_validation_message' )
-        ? lunara_reviews_archive_studio_validation_message()
-        : __( 'Review the Reviews Archive fields and try again.', 'lunara-film' );
-
     $messages = array(
         'pairing_desk_copy_saved'     => array(
             'class'   => 'notice-success',
@@ -15295,10 +15419,6 @@ function lunara_control_desk_render_notice() {
             'class'   => 'notice-success',
             'message' => __( 'Homepage Studio saved. The front-door rhythm and section shortcuts now read the updated values.', 'lunara-film' ),
         ),
-        'homepage_studio_write_failed' => array(
-            'class'   => 'notice-error',
-            'message' => __( 'Homepage Studio settings were not announced as saved because the Home page blocks could not be updated.', 'lunara-film' ),
-        ),
         'homepage_preset_applied' => array(
             'class'   => 'notice-success',
             'message' => __( 'Homepage package applied. The existing front-door controls now match that publication package.', 'lunara-film' ),
@@ -15309,7 +15429,7 @@ function lunara_control_desk_render_notice() {
         ),
         'hero_command_saved' => array(
             'class'   => 'notice-success',
-            'message' => __( 'Hero Command saved. The hero now reads the deck and overlay settings through normal cache-versioned delivery.', 'lunara-film' ),
+            'message' => __( 'Hero Command saved. The hero now reads the deck and overlay settings; the homepage cache was purged so it screens immediately.', 'lunara-film' ),
         ),
         'hero_command_forbidden' => array(
             'class'   => 'notice-error',
@@ -15322,18 +15442,6 @@ function lunara_control_desk_render_notice() {
         'reviews_archive_studio_forbidden' => array(
             'class'   => 'notice-error',
             'message' => __( 'You can view the Control Desk, but changing Reviews Archive Studio controls requires theme editing permission.', 'lunara-film' ),
-        ),
-        'reviews_archive_studio_invalid' => array(
-            'class'   => 'notice-error',
-            'message' => sprintf( __( 'Reviews Archive Studio was not saved. %s Your rejected values remain in the private form below; the last valid public archive is unchanged.', 'lunara-film' ), $reviews_archive_reason ),
-        ),
-        'reviews_archive_studio_restored' => array(
-            'class'   => 'notice-success',
-            'message' => __( 'Reviews Archive Studio restored the selected prior-valid public configuration and recorded the state it replaced.', 'lunara-film' ),
-        ),
-        'reviews_archive_studio_restore_invalid' => array(
-            'class'   => 'notice-error',
-            'message' => sprintf( __( 'Reviews Archive Studio could not restore that revision. %s The current public archive is unchanged.', 'lunara-film' ), $reviews_archive_reason ),
         ),
         'review_card_image_focus_saved' => array(
             'class'   => 'notice-success',
@@ -15381,19 +15489,7 @@ function lunara_control_desk_render_notice() {
         ),
         'journal_archive_studio_saved' => array(
             'class'   => 'notice-success',
-            'message' => __( 'Journal Archive Studio saved. Identity, curation, labels, sections, media, retention, and presentation now read the validated public configuration.', 'lunara-film' ),
-        ),
-        'journal_archive_studio_invalid' => array(
-            'class'   => 'notice-error',
-            'message' => sprintf( __( 'Journal Archive Studio was not saved. %s Your rejected values remain in the private form below; the last valid public archive is unchanged.', 'lunara-film' ), $journal_archive_reason ),
-        ),
-        'journal_archive_studio_restored' => array(
-            'class'   => 'notice-success',
-            'message' => __( 'Journal Archive Studio restored the selected prior-valid public configuration and recorded the state it replaced.', 'lunara-film' ),
-        ),
-        'journal_archive_studio_restore_invalid' => array(
-            'class'   => 'notice-error',
-            'message' => sprintf( __( 'Journal Archive Studio could not restore that revision. %s The current public archive is unchanged.', 'lunara-film' ), $journal_archive_reason ),
+            'message' => __( 'Journal Archive Studio saved. The live-desk rhythm and archive card geometry now read the updated values.', 'lunara-film' ),
         ),
         'journal_archive_studio_forbidden' => array(
             'class'   => 'notice-error',

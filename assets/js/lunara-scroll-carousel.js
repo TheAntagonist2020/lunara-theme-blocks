@@ -58,17 +58,15 @@ document.addEventListener('DOMContentLoaded', function () {
             function step(direction) {
                 const distance = amount() * direction;
                 const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
-                const behavior = reduceMotion ? 'auto' : 'smooth';
-                // Reach the final card before wrapping on the following advance.
-                if (direction > 0 && track.scrollLeft >= maxScroll - 6) {
-                    track.scrollTo({ left: 0, behavior: behavior });
+                if (direction > 0 && track.scrollLeft + distance >= maxScroll - 6) {
+                    track.scrollTo({ left: 0, behavior: 'smooth' });
                     return;
                 }
                 if (direction < 0 && track.scrollLeft <= 6) {
-                    track.scrollTo({ left: maxScroll, behavior: behavior });
+                    track.scrollTo({ left: maxScroll, behavior: 'smooth' });
                     return;
                 }
-                track.scrollBy({ left: distance, behavior: behavior });
+                track.scrollBy({ left: distance, behavior: 'smooth' });
             }
             if (prev) {
                 prev.addEventListener('click', function () {
