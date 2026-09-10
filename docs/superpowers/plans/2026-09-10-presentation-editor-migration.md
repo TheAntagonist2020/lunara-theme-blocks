@@ -97,8 +97,9 @@ Use the existing `lunara_site_studio_oscars_portal_adapter()` and schema. The Po
 ## Task 4: Integration and release
 
 - [x] Prioritize Dalton's added mobile issue: inspect Journal and Oscars image panels on the live site at phone widths, identify the affected routes/control surfaces, and fix measured cropping, card sizing, spacing or horizontal overflow. Cover the actual active renderers and confirm the fix at desktop as well. Capture before/after evidence; do not infer the cause from a screenshot alone.
-- [ ] Complete task reviews and a whole-branch review; resolve material findings.
+- [x] Complete task reviews and a whole-branch review; resolve material findings.
 - [x] Run all required theme contracts, PHP/JS/CSS checks, and focused mutations of order isolation, Method metadata invalidation/framing persistence, and Oscars preview/persistence. Record observed failures and exact restoration.
 - [x] Inspect desktop/mobile fixtures visually and verify that keyboard controls, long copy, missing art, and failed saves remain usable. Distinguish local fixtures from authenticated WordPress acceptance.
-- [ ] Update release identity to 3.2.64, editor guide/standard and changelog; append a truthful session log including the observed 3.2.63 live canary GO. Commit and push a reviewable candidate using the authorized release workflow.
-- [ ] After any main merge, rebuild and verify the tree-exact rollback hatch. Dalton performs deployment; verify the public 3.2.64 build and canary only after that occurs.
+- [x] Update release identity to 3.2.64, editor guide/standard and changelog; append a truthful session log including the observed 3.2.63 live canary GO. Commit and push a reviewable candidate using the authorized release workflow.
+- [x] Rebuild and verify the tree-exact rollback hatch after each main merge. The release merge was verified; repeat after the documentation merge.
+- [ ] Dalton performs deployment; verify the public 3.2.64 build and canary only after that occurs, then complete authenticated editor acceptance.
