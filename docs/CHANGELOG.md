@@ -11,6 +11,26 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-11 — Theme 3.2.67 Stable Site Studio Viewports
+
+The shared Preview / Apply workspace now keeps a stable device viewport:
+1440 by 900 for desktop, 768 by 1024 for tablet, and 390 by 844 for mobile.
+Long pages scroll inside the preview. Previously, the parent copied the page's
+scrollHeight into the iframe height. Viewport-sized heroes then grew with that
+height, causing repeated resizing and distorted artwork. The live Journal
+editor reached over 377,000 pixels before this correction.
+
+The correction applies to every shared Site Studio editor, including Hero,
+Journal, Oscar Picks and Facts. The scaled canvas fits the inspector column;
+switching devices, opening a private preview and returning from Apply retain
+the chosen dimensions. A browser regression exercises a viewport-sized image
+above long content, keyboard access to the footer, narrow admin layouts and
+both ResizeObserver and its resize fallback. No public image rules or article
+content change in this release.
+
+The local interactive preview helper also remaps PHP's escaped JSON URLs to
+localhost, so its sample editors start with the same strict origin checks.
+
 ## 2026-09-10 — Theme 3.2.66 Site Studio Bootstrap
 
 Site Studio now sends typed configuration with `wp_add_inline_script` and

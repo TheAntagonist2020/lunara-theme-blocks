@@ -18,7 +18,8 @@ const server = http.createServer(async (request,response) => {
   if(rendered.status!==0){response.writeHead(500);response.end(rendered.stdout+rendered.stderr);return;}
   saved[kind] ||= {adopted:true,mode:'manual',heading:kind==='hero'?'Featured stories':'The Journal',autoplay:1,interval:7,overlay:100,slides:(kind==='hero'?[10,20,30]:[20,30]).map(slide)};
   const css=['lunara-site-studio.css','lunara-editor-controls.css','lunara-site-studio-carousels.css'].map(file=>fs.readFileSync(path.join(root,'assets/css',file),'utf8')).join('\n');
-  let html=rendered.stdout.replaceAll('https://example.test',origin).replace(/(<script[^>]+id="lunara-site-studio-state"[^>]*>)[\s\S]*?(<\/script>)/,(_m,start,end)=>start+JSON.stringify(saved[kind])+end);
+  // PHP JSON escapes URL slashes; remap configuration URLs as well as HTML links.
+  let html=rendered.stdout.replaceAll('https:\\/\\/example.test',origin).replaceAll('https://example.test',origin).replace(/(<script[^>]+id="lunara-site-studio-state"[^>]*>)[\s\S]*?(<\/script>)/,(_m,start,end)=>start+JSON.stringify(saved[kind])+end);
   html=html.replace('</head>',`<meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;padding:20px;font:14px/1.5 system-ui;background:#f0f0f1}button,input,select,textarea{font:inherit}button{border:1px solid #a7b0bb;border-radius:5px;background:#f6f7f7;padding:8px 12px}.button-primary{background:#142033;color:#fff}input,select,textarea{border:1px solid #a7b0bb;border-radius:5px;padding:8px}${css}</style></head>`);
   html=html.replace('<body>','<body><p style="background:#fff1cb;padding:12px;border-radius:8px"><strong>Local interactive preview.</strong> These are sample stories. Apply changes saves only in this temporary preview. <a href="?surface=hero-carousel">Hero</a> · <a href="?surface=journal-carousel">Journal</a></p>');
   response.writeHead(200,{'Content-Type':'text/html'});response.end(html);return;
