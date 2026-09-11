@@ -684,10 +684,7 @@ async function main() {
     const traceDirectory = path.join(outputDirectory, 'traces');
     fs.mkdirSync(traceDirectory, { recursive: true });
 
-    const browser = await chromium.launch({
-        headless: true,
-        executablePath: process.env.LUNARA_BROWSER_EXECUTABLE || undefined,
-    });
+    const browser = await chromium.launch({ headless: true });
     const records = [];
     let sequence = 1;
     try {
