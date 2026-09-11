@@ -1136,6 +1136,12 @@ if ( ! function_exists( 'lunara_site_studio_mod_surface_restore_revision' ) ) {
 	function lunara_site_studio_mod_surface_restore_revision( $revision_id, $surface, $spec, $code ) {
 		$target = lunara_site_studio_private_revision_target( $surface, $revision_id );
 		$keys = lunara_site_studio_mod_surface_keys( $spec );
+		// Pre-framing Oscar revisions restore the original absence of the new placement mod.
+		if ( in_array( $surface, array( 'home-oscar-picks', 'home-oscar-facts' ), true ) && is_array( $target ) && array( 'mods' ) === array_keys( $target ) && is_array( $target['mods'] ) ) {
+			$artwork_key = 'lunara_home_oscar_' . ( 'home-oscar-picks' === $surface ? 'picks' : 'facts' ) . '_artwork_overrides';
+			$legacy_keys = array_values( array_diff( $keys, array( $artwork_key ) ) );
+			if ( $legacy_keys === array_keys( $target['mods'] ) ) { $target['mods'][$artwork_key] = array( 'present' => false, 'value' => null ); }
+		}
 		if ( is_wp_error( $target ) || ! is_array( $target ) || array( 'mods' ) !== array_keys( $target ) || ! lunara_site_studio_valid_mod_snapshot( $target['mods'], $keys ) ) {
 			return is_wp_error( $target ) ? $target : new WP_Error( 'site_studio_revision_invalid', __( 'The selected revision is invalid.', 'lunara-film' ) );
 		}

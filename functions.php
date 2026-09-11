@@ -13507,6 +13507,9 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 					$rationale   = wp_trim_words( wp_strip_all_tags( get_the_excerpt( $pid ) ), 28, '…' );
 					$card_url    = lunara_resolve_oscar_pick_ledger_url( $pid, $film, $person, $year, $category );
 					$has_visual  = has_post_thumbnail( $pid );
+					$artwork = lunara_home_oscar_artwork( 'picks', $pid );
+					if ( $artwork['override'] ) { $has_visual = $artwork['has_image']; }
+					$artwork_style = $artwork['override'] ? lunara_home_oscar_artwork_style( $artwork ) : '';
 					$mobile_art = $has_visual ? wp_get_attachment_image_src( get_post_thumbnail_id( $pid ), 'full' ) : false;
 					$mobile_portrait = $mobile_art && $mobile_art[1] > 0 && $mobile_art[2] > $mobile_art[1];
 					$mobile_srcset = $mobile_art ? wp_get_attachment_image_srcset( get_post_thumbnail_id( $pid ), 'full' ) : '';
@@ -13519,11 +13522,13 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 						'sizes'         => '(max-width: 420px) 92vw, (max-width: 760px) 44vw, (max-width: 1180px) 42vw, 360px',
 					);
 					?>
-					<article class="lunara-oscar-pick-card is-status-<?php echo esc_attr( $status ); ?> <?php echo $has_visual ? 'has-visual' : 'has-no-visual'; ?>" role="listitem">
+					<article class="lunara-oscar-pick-card is-status-<?php echo esc_attr( $status ); ?> <?php echo $has_visual ? 'has-visual' : 'has-no-visual'; ?><?php echo $artwork['override'] ? ' has-artwork-override' : ''; ?>" role="listitem" data-lunara-oscar-item-id="<?php echo (int) $pid; ?>" style="<?php echo esc_attr( $artwork_style ); ?>">
 						<a class="lunara-oscar-pick-card-link" href="<?php echo esc_url( $card_url ); ?>">
 							<?php if ( $has_visual ) : ?>
 								<div class="lunara-oscar-pick-card-media<?php echo $mobile_portrait ? ' is-portrait' : ''; ?>">
-									<?php if ( $mobile_art ) : ?>
+									<?php if ( $artwork['override'] ) : ?>
+										<?php echo wp_get_attachment_image( $artwork['image_id'], 'full', false, $thumb_attrs ); ?>
+									<?php elseif ( $mobile_art ) : ?>
 										<picture>
 											<source media="(max-width: 820px)" srcset="<?php echo esc_attr( $mobile_srcset ); ?>" sizes="calc(100vw - 64px)" width="<?php echo (int) $mobile_art[1]; ?>" height="<?php echo (int) $mobile_art[2]; ?>">
 											<?php echo get_the_post_thumbnail( $pid, 'newspack-article-block-landscape-intermediate', $thumb_attrs ); ?>
@@ -14057,14 +14062,22 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 					$held_ids    = function_exists( 'lunara_oscar_fact_visual_hold_ids' ) ? lunara_oscar_fact_visual_hold_ids() : array();
 					$visual_ok   = '1' === (string) get_post_meta( $pid, '_lunara_fact_visual_verified', true ) && ! in_array( $pid, array_map( 'absint', $held_ids ), true );
 					$has_image   = $visual_ok && has_post_thumbnail( $pid );
+					$artwork = lunara_home_oscar_artwork( 'facts', $pid );
+					if ( $artwork['override'] ) { $has_image = $artwork['has_image']; }
+					$mobile_art = $has_image ? wp_get_attachment_image_src( $artwork['image_id'], 'full' ) : false;
+					$mobile_portrait = $mobile_art && $mobile_art[1] > 0 && $mobile_art[2] > $mobile_art[1];
+					$mobile_srcset = $mobile_art ? wp_get_attachment_image_srcset( $artwork['image_id'], 'full' ) : '';
+					if ( $mobile_art && ! $mobile_srcset ) { $mobile_srcset = $mobile_art[0]; }
 					$visual_treatment = 'archival' === (string) get_post_meta( $pid, '_lunara_fact_visual_treatment', true ) ? 'archival' : 'wide';
 					$is_archival_visual = $has_image && 'archival' === $visual_treatment;
 					$visual_focus = lunara_sanitize_oscar_fact_visual_focus( get_post_meta( $pid, '_lunara_fact_visual_focus', true ) );
 					$visual_focus_css = lunara_oscar_fact_visual_focus_css( $visual_focus );
 					$thumb_size = $is_archival_visual ? 'full' : 'lunara-hero-spotlight';
 					$card_style_parts = array( '--lunara-fact-image-position:' . $visual_focus_css );
+					if ( $artwork['override'] ) { $card_style_parts[] = lunara_home_oscar_artwork_style( $artwork ); }
 					$card_style  = implode( ';', $card_style_parts ) . ';';
 					$card_class  = 'lunara-oscar-fact-card lunara-carousel-slide' . ( 0 === $fact_index ? ' active' : '' ) . ( $has_image ? ' has-poster' : '' ) . ( $is_archival_visual ? ' has-archival-visual' : '' );
+					if ( $artwork['override'] ) { $card_class .= ' has-artwork-override'; }
 					$card_url    = lunara_resolve_oscar_fact_ledger_url( $pid, $category, $year );
 					$thumb_attrs = array(
 						'class'         => 'lunara-oscar-fact-card-poster-image',
@@ -14074,11 +14087,20 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 						'sizes'         => '(max-width: 640px) 92vw, (max-width: 980px) 44vw, 480px',
 					);
 					?>
-					<article class="<?php echo esc_attr( $card_class ); ?>" role="listitem" data-fact-id="<?php echo esc_attr( (string) $pid ); ?>" data-slide-index="<?php echo esc_attr( (string) ( $fact_index + 1 ) ); ?>" data-visual-treatment="<?php echo esc_attr( $visual_treatment ); ?>" data-visual-focus="<?php echo esc_attr( $visual_focus ); ?>" style="<?php echo esc_attr( $card_style ); ?>"<?php echo 0 === $fact_index ? ' aria-current="true"' : ''; ?>>
+					<article class="<?php echo esc_attr( $card_class ); ?>" role="listitem" data-lunara-oscar-item-id="<?php echo (int) $pid; ?>" data-fact-id="<?php echo esc_attr( (string) $pid ); ?>" data-slide-index="<?php echo esc_attr( (string) ( $fact_index + 1 ) ); ?>" data-visual-treatment="<?php echo esc_attr( $visual_treatment ); ?>" data-visual-focus="<?php echo esc_attr( $visual_focus ); ?>" style="<?php echo esc_attr( $card_style ); ?>"<?php echo 0 === $fact_index ? ' aria-current="true"' : ''; ?>>
 						<a class="lunara-oscar-fact-card-link" href="<?php echo esc_url( $card_url ); ?>">
 							<?php if ( $has_image ) : ?>
-								<div class="lunara-oscar-fact-card-poster">
-									<?php echo get_the_post_thumbnail( $pid, $thumb_size, $thumb_attrs ); ?>
+								<div class="lunara-oscar-fact-card-poster<?php echo $mobile_portrait ? ' is-portrait' : ''; ?>">
+									<?php if ( $artwork['override'] ) : ?>
+										<?php echo wp_get_attachment_image( $artwork['image_id'], 'full', false, $thumb_attrs ); ?>
+									<?php elseif ( $mobile_art ) : ?>
+										<picture>
+											<source media="(max-width: 820px)" srcset="<?php echo esc_attr( $mobile_srcset ); ?>" sizes="calc(100vw - 64px)" width="<?php echo (int) $mobile_art[1]; ?>" height="<?php echo (int) $mobile_art[2]; ?>">
+											<?php echo get_the_post_thumbnail( $pid, $thumb_size, $thumb_attrs ); ?>
+										</picture>
+									<?php else : ?>
+										<?php echo get_the_post_thumbnail( $pid, $thumb_size, $thumb_attrs ); ?>
+									<?php endif; ?>
 								</div>
 							<?php endif; ?>
 							<div class="lunara-oscar-fact-card-text">

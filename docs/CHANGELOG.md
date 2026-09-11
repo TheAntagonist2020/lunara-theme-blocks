@@ -11,6 +11,29 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-11 — Theme 3.2.68 Oscar Artwork Controls
+
+Homepage Oscar Picks and Facts now share the image controls already used by
+Hero, Journal and Method: Media Library selection, source reset, full-image
+fit, focal point and zoom. Each placement retains its framing independently of
+the article and of its automatic, manual or existing lineup. Preview, Apply,
+Discard and revision restore use the existing private workspace transactions;
+restoring an older revision removes the newly introduced override setting.
+
+Both public renderers consume the same attachment resolver as the editor.
+Explicit framing uses the original image's aspect ratio instead of a previously
+cropped thumbnail. Mobile Facts now use uncropped responsive sources in stable
+16:10 frames, with portrait originals contained by default. Desktop placements
+without an override retain their existing treatment. Fact verification and held
+visual rules still apply, and a missing custom image never silently substitutes
+the source. The keyboard focal controls and stale Media Library callbacks receive
+browser coverage alongside the public mobile layouts. Facts remain stacked and
+readable when JavaScript is unavailable; the existing carousel controllers claim
+slide visibility only when initialized.
+
+Homepage CSS indentation was compacted to keep these fixes inside the existing
+60 KiB stylesheet budget; no selectors or declarations were removed for size.
+
 ## 2026-09-11 — Theme 3.2.67 Stable Site Studio Viewports
 
 The shared Preview / Apply workspace now keeps a stable device viewport:

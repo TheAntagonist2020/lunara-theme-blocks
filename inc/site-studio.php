@@ -179,7 +179,7 @@ if ( ! function_exists( 'lunara_enqueue_site_studio_assets' ) ) {
 			// Localization stringifies top-level numbers; the workspace protocol is typed.
 			wp_add_inline_script( 'lunara-site-studio', 'window.LunaraSiteStudioWorkspaceConfig = ' . wp_json_encode( lunara_site_studio_workspace_config_is_safe( $config ) ? $config : array(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) . ';', 'before' );
 		}
-		if ( 'lunara-method' === $surface_id || $is_carousel ) { wp_enqueue_media(); }
+		if ( 'lunara-method' === $surface_id || $is_carousel || $uses_home_oscars ) { wp_enqueue_media(); }
 	}
 	add_action( 'admin_enqueue_scripts', 'lunara_enqueue_site_studio_assets' );
 }

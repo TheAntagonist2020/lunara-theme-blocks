@@ -61,6 +61,8 @@ Write-Host 'Homepage Journal mobile runway contract passed.'
 
 & php (Join-Path $PSScriptRoot 'home-oscar-mobile-art-runtime.php')
 Assert-True ($LASTEXITCODE -eq 0) 'Homepage Oscars mobile source-art rendering failed.'
+& node (Join-Path $PSScriptRoot 'home-oscar-framing-runtime.js')
+Assert-True ($LASTEXITCODE -eq 0) 'Homepage Oscars public image framing and no-JavaScript readability failed.'
 & node (Join-Path $PSScriptRoot 'home-mobile-panels-runtime.js')
 Assert-True ($LASTEXITCODE -eq 0) 'Homepage Journal/Oscars mobile browser geometry failed.'
 & node (Join-Path $PSScriptRoot 'home-oscar-navigation-runtime.js')

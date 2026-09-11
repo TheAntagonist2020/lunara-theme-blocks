@@ -25,6 +25,89 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-11 — Theme 3.2.67 acceptance and 3.2.68 Oscar artwork
+
+### Headline
+
+Theme 3.2.67 is verified live after Dalton's deployment. The shared editor's
+device viewport is stable. Theme 3.2.68 adds the missing Oscar Picks and Facts
+artwork controls to the same Site Studio workflow; see `docs/CHANGELOG.md`.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| Versioned 3.2.67 canary | Three reads agree on `3.2.67+20260911-195706`; Journal and Oscars both `LIVE_COHERENT`, exit 0 / GO. |
+| Signed-in Oscar Picks editor | Live settings loaded; desktop iframe 1440 by 900, tablet 768 by 1024 and mobile 390 by 844; return to desktop remains stable. |
+| Public mobile Oscar Picks | One complete card fits inside the panel; visible artwork loads in a roughly 327 by 205 pixel frame. |
+
+The initial checks still returned 3.2.66 while deployment and cached responses
+caught up. A later complete canary passed. No cache purge was used to obtain it.
+
+### What shipped and why
+
+The 3.2.68 candidate connects shared artwork controls to both homepage Oscar
+renderers. It preserves existing saved lineups, source articles and Fact visual
+approval, while making per-placement framing reviewable through private Preview.
+No agent deployment or manual cache purge occurred. Theme 3.2.68 is not
+deployed; its live canary is pending.
+
+### Commit ledger
+
+| Repo | Commit or release reference | Meaning |
+| --- | --- | --- |
+| Theme | `3d3fd866ad4f09906ef90ed72b7af22d58cc0b48` / PR #187 | 3.2.67 main merge, now publicly verified. |
+| Theme | `codex/oscars-framing-3.2.68` | Oscar artwork implementation and acceptance record, based on current main. |
+
+### Gate ledger
+
+- Versioned production canary for 3.2.67: exit 0 / GO.
+- Oscar editor browser regression: 87 checks passed. A screenshot run adds two
+  narrow-inspector overflow checks; its sample images are test fixtures.
+- Artwork PHP contract: 66 cumulative checks, including the 20 existing Oscar
+  transaction assertions. Private preview: 18 checks with no public writes.
+- Actual public renderers and complete stylesheet cascade: 1,227 browser checks
+  across 320, 390, 768, 820 and 1440 pixels, with JavaScript disabled and with
+  the generic carousel controller enabled.
+- Reset-race mutation: removing request invalidation/restart reproduces an
+  eight-second readiness timeout. Restored fixed JS was hash-verified exactly.
+- Full release run: 94/95 passed initially; the only failure was homepage CSS
+  size (64,929 bytes against the unchanged 60 KiB limit). Removing indentation
+  reduced it to 61,315 bytes without changing non-whitespace content. All 11
+  contracts referencing that stylesheet were then rerun and passed. Effective
+  final contract result: 95/95 passed; the original failed log is retained.
+- Syntax: 123 PHP, 61 JavaScript and 26 CSS files, zero failures.
+- No plugin changed; plugin tests are not repeated.
+
+### Corrections
+
+None to prior recorded evidence. Initial stale public responses were retained
+as failed attempts, not counted as a successful deployment.
+
+Public fixtures exposed pre-existing Facts rules that hid inactive stories
+without JavaScript, clipped long headlines and positioned generic navigation
+over the footer. Corrected these along with the inherited column flow and fixed
+hero height that prevented a readable static layout.
+
+### Logged, not fixed
+
+- The Oscars portal's presentation and the Academy database authoring screens
+  remain separate work from homepage Picks and Facts.
+- Fresh coverage and the current Odyssey lineup remain editorial decisions.
+
+### Punch-list carried forward
+
+- Complete local checks, merge the candidate and rebuild the exact rollback
+  hatch after the merge.
+- Dalton performs the manual WordPress.com deployment; the agent then runs
+  the explicit-version public canary and checks the real editors.
+- Follow up with Oscars portal layout and editor consistency.
+
+### Whose move it is next
+
+Agent: finish candidate verification and release preparation. Dalton: manual
+WordPress.com deployment after the verified main-branch handoff.
+
 ## 2026-09-11 — Journal carousel live; Theme 3.2.67 preview correction
 
 ### Headline
