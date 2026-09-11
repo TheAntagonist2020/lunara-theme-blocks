@@ -45,6 +45,14 @@
 .lunara-site-studio-error[hidden] { display:none; }
 .lunara-site-studio-order-row { align-items:center; border:1px solid var(--studio-line); border-radius:8px; display:grid; gap:6px; grid-template-columns:minmax(0,1fr) 44px 44px; margin:7px 0; min-width:0; padding:7px; }
 .lunara-site-studio-order-row > span { grid-column:1 / -1; overflow-wrap:anywhere; }
+[data-oscars-lineup] { padding:0; list-style:none; }
+[data-oscars-lineup] > .lunara-site-studio-order-row { display:block; padding:14px; overflow:hidden; }
+[data-oscars-lineup] .lunara-carousel-story-heading { display:flex; align-items:center; gap:12px; min-width:0; margin-bottom:10px; }
+[data-oscars-lineup] .lunara-carousel-story-heading strong { display:block; min-width:0; overflow-wrap:anywhere; }
+[data-oscars-lineup] .lunara-carousel-story-editor { margin-top:10px; }
+[data-oscars-lineup] .lunara-carousel-story-editor > summary { min-height:44px; padding:12px 0; box-sizing:border-box; cursor:pointer; font-weight:600; border-top:1px solid #cdd3db; }
+[data-oscars-lineup] .lunara-editor-image .lunara-editor-field { display:grid; padding:0; align-items:start; }
+[data-oscars-lineup] .lunara-carousel-item-warning { padding:10px; border-left:3px solid #b36b00; background:#fff7e6; }
 /* Explicit tracks keep labels and move targets separate in the narrow section rail. */
 .lunara-site-studio-order-row > strong, .lunara-site-studio-order-row > span:not([data-derived-visibility]) { grid-column:1 / -1; grid-row:1; min-width:0; overflow-wrap:anywhere; }
 .lunara-site-studio-order-row > label, .lunara-site-studio-order-row > [data-derived-visibility] { grid-column:1 / -1; grid-row:2; min-width:0; overflow-wrap:anywhere; }

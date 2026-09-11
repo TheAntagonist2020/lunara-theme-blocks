@@ -2,12 +2,12 @@
 /** Transactions and public selection rules use real adapters and query helpers. */
 require __DIR__ . '/site-studio-pilot-runtime.php';
 require dirname( __DIR__ ) . '/inc/site-studio-home-oscars.php';
-function get_post_meta( $id, $key, $single = true ) { return '_lunara_pick_ceremony_year' === $key ? ( 3 === (int) $id ? 2026 : 2027 ) : ''; }
+function get_post_meta( $id, $key, $single = true ) { if ( isset( $GLOBALS['home_oscars_meta'][$id][$key] ) ) { return $GLOBALS['home_oscars_meta'][$id][$key]; } return '_lunara_pick_ceremony_year' === $key ? ( 3 === (int) $id ? 2026 : 2027 ) : ''; }
 function wp_parse_args( $args, $defaults ) { return array_merge( $defaults, $args ); }
 function lunara_home_oscar_picks_ceremony_year() { return 2027; }
 function lunara_oscar_ceremony_ordinal_from_year( $year ) { return '99th'; }
 function lunara_repair_mojibake_args( $args, $keys ) { return $args; }
-class WP_Query { public $args; public $post_count = 0; public function __construct( $args ) { $this->args = $args; $GLOBALS['home_oscars_queries'][] = $args; } public function have_posts() { return false; } }
+class WP_Query { public $args; public $post_count = 0; public $posts = array(); public function __construct( $args ) { $this->args = $args; $GLOBALS['home_oscars_queries'][] = $args; $this->posts = isset( $GLOBALS['home_oscars_query_posts'] ) ? $GLOBALS['home_oscars_query_posts'] : array(); } public function have_posts() { return false; } }
 $source = file_get_contents( dirname( __DIR__ ) . '/functions.php' );
 foreach ( array( 'lunara_get_oscar_picks', 'lunara_get_oscar_facts', 'lunara_render_oscar_picks_carousel', 'lunara_render_oscar_facts_carousel' ) as $function ) {
 	if ( ! preg_match( '/\tfunction ' . $function . '\(.*?^\t\}/ms', $source, $match ) ) { throw new RuntimeException( $function . ' not found' ); }
