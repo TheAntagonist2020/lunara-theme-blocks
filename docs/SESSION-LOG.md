@@ -25,6 +25,96 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-11 — Journal carousel live; Theme 3.2.67 preview correction
+
+### Headline
+
+Theme 3.2.66 is now verified live and the Journal Carousel editor loads normally.
+Applied Dalton's requested Journal carousel: six newest published Journal
+stories, seven-second rotation, and the existing "Fresh movement from the
+Lunara Journal" heading. The old uneven grid and its July lead are gone from
+the anonymous homepage. A separate shared preview sizing defect was reproduced
+and corrected in the Theme 3.2.67 candidate; see `docs/CHANGELOG.md`.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| Theme canary with explicit 3.2.66 argument | All three reads report `3.2.66+20260911-104401`; Journal and Oscars both `LIVE_COHERENT`, exit 0 / GO. |
+| Journal editor | Live settings loaded; private Preview became current; Apply returned "Changes applied." |
+| Anonymous canonical homepage after Apply | HTTP 200; six new Journal cards; old grid absent; old Tom Cruise lead absent from the Journal section. |
+| Desktop 1536px / tablet 768px / mobile 390px | Three / two / one visible cards, respectively; no horizontal document overflow. Equal card and image dimensions within each viewport. |
+| Six Journal images on mobile | All loaded; each frame measured approximately 327 by 205 pixels. |
+| Public carousel controls | Drag advanced the slide; Enter on Next advanced it again; pause/play was available. |
+| Reduced motion / JavaScript disabled | Reduced motion kept slide 1 stationary with a polite live region. Without JavaScript all six stories remained in a readable single-column mobile grid. |
+| Shared editor preview before correction | Its mobile iframe grew beyond 377,000 pixels. This is an editor canvas defect, separate from the corrected public card layout. |
+
+### What shipped and why
+
+Journal activation is a user-requested presentation change on existing Theme
+3.2.66, through Site Studio's private Preview and Apply workflow. Hero selection,
+Method, Oscars lineups and article content were not edited. The automatic
+Journal lineup ignores old featured ordering and retains any manual list.
+
+No agent deployment or manual cache purge occurred. Theme 3.2.67 is not
+deployed; its live canary is pending. The existing runtime dependencies are
+working after the Codex restart; no additional installation was needed.
+
+### Commit ledger
+
+| Repo | Commit or release reference | Meaning |
+| --- | --- | --- |
+| Theme | `1aea52ca07764e048019481852a9b1d5400384bb` / PR #186 | 3.2.66 main merge, now publicly verified. |
+| Theme | `codex/site-studio-viewport-3.2.67` | Preview correction and this acceptance record, based on current main. |
+
+The standing rollback PR #159 was rebuilt after PR #186. Rebuild and prove
+tree-exactness again after the next merge, including a documentation merge.
+
+### Gate ledger
+
+- New regression first failed against the shipped controller: iframe height
+  grew from 18,400 to 35,900 pixels over eight animation frames.
+- Corrected controller: 14 browser scenarios passed, including both observer
+  paths, device changes, private Preview, Apply and keyboard access below the fold.
+- Reintroducing the original scroll-height controller was caught by the new
+  regression; the corrected file was restored before the full release run.
+- The local interactive helper initially rejected its unmapped escaped JSON
+  URLs. Corrected that development-only remapping and verified editor startup
+  in the browser; its CJS entry point also passes syntax checking.
+- Full release suite: 95/95 contracts passed. Syntax: 121 PHP, 60 JavaScript
+  and 26 CSS files, zero failures; the local CJS helper was checked separately.
+- The first full run was stopped after stale escaped version expectations were
+  found; those expectations were advanced before restarting. This was not a
+  passing release run.
+- Core tests were not repeated because no plugin changed.
+
+### Corrections
+
+A successful deployment did not itself activate the new Journal presentation.
+The explicit Apply boundary preserved the old grid until this session. The
+3.2.66 bootstrap fix made that operation possible. Live verification also found
+that earlier small-height preview fixtures did not exercise viewport-sized
+heroes followed by long pages; the new regression covers that feedback loop.
+
+### Logged, not fixed
+
+Oscar Pick/Fact artwork framing, Academy record authoring, the broader mobile
+layout review and the remaining base stylesheet diet stay on the backlog.
+
+### Punch-list carried forward
+
+- 3.2.67 release gates are complete. Merge and rebuild the exact rollback hatch.
+- Dalton performs the manual WordPress.com theme deployment from main.
+- Then verify the actual Site Studio preview dimensions and 3.2.67 canary.
+- Next editorial/design pass: Oscar Pick/Fact artwork framing using the same
+  predictable control vocabulary. Fresh coverage remains editorial work.
+
+### Whose move it is next
+
+Agent: finish the prepared release and report its actual state. Dalton: manual
+WordPress.com deployment of the merged theme. No additional carousel activation
+is required for the public Journal layout fixed here.
+
 ## 2026-09-10 — Theme 3.2.66 editor bootstrap candidate
 
 ### Headline

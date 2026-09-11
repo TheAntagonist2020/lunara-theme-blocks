@@ -69,11 +69,11 @@ function Get-TopEntry {
 $stylePath = Join-Path $root 'style.css'
 $styleLines = @(Get-Content -LiteralPath $stylePath)
 $versionHeaderLines = @($styleLines | Where-Object { $_ -match '^Version:' })
-$exactVersionHeaders = @($styleLines | Where-Object { $_ -ceq 'Version: 3.2.66' })
+$exactVersionHeaders = @($styleLines | Where-Object { $_ -ceq 'Version: 3.2.67' })
 Assert-Contract ($versionHeaderLines.Count -eq 1 -and $exactVersionHeaders.Count -eq 1) `
-    'style.css must contain exactly one exact Version: 3.2.66 header.'
+    'style.css must contain exactly one exact Version: 3.2.67 header.'
 
-$priorVersion = @('3', '2', '65') -join '.'
+$priorVersion = @('3', '2', '66') -join '.'
 $escapedPriorVersion = $priorVersion.Replace('.', '\.')
 $trackedSources = @(Get-ChildItem -LiteralPath (Join-Path $root 'tests') -File | Where-Object { $_.Extension -in @('.ps1', '.php', '.js') })
 Assert-Contract ($trackedSources.Count -gt 0) 'Test-source discovery must return at least one file.'
@@ -143,18 +143,18 @@ foreach ($requiredDeployIgnore in @('docs', 'docs/**', 'tests', 'tests/**')) {
 }
 
 $releaseSeparator = [char]0x2014
-$changelogHeading = "## 2026-09-10 $releaseSeparator Theme 3.2.66 Site Studio Bootstrap"
+$changelogHeading = "## 2026-09-11 $releaseSeparator Theme 3.2.67 Stable Site Studio Viewports"
 $changelog = [IO.File]::ReadAllText((Join-Path $root 'docs/CHANGELOG.md'))
 $changelogHeadings = @($changelog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $changelogHeadingCount = @($changelogHeadings | Where-Object { $_ -ceq $changelogHeading }).Count
-Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.66 changelog heading must exist exactly once.'
+Assert-Contract ($changelogHeadingCount -eq 1) 'The 3.2.67 changelog heading must exist exactly once.'
 # Deliberately NOT asserted: that this entry is the first heading in the
 # changelog. docs/CHANGELOG.md covers all seven repositories (AGENTS.md), so a
 # plugin-only release lands above the newest theme release without moving the
 # theme's identity. Pinning absolute position froze the changelog on the first
 # such entry (2026-09-04, Journal Foundation 1.2.14 and Dispatch 3.2.8), the
 # same way the session-log pin froze the log (see the note below and the
-# 2026-08-31 change that removed it). What is asserted instead: the 3.2.66
+# 2026-08-31 change that removed it). What is asserted instead: the 3.2.67
 # entry is the newest THEME release entry. No heading above it may name a
 # theme version, so a later theme release still has to regenerate this file.
 $themeReleaseHeadingPattern = '^## .+ Theme \d+\.\d+\.\d+\b'
@@ -164,17 +164,17 @@ if ($changelogHeadingIndex -gt 0) {
     $newerThemeHeadings = @($changelogHeadings[0..($changelogHeadingIndex - 1)] | Where-Object { $_ -match $themeReleaseHeadingPattern })
 }
 Assert-Contract ($changelogHeadingIndex -ge 0 -and $newerThemeHeadings.Count -eq 0) `
-    'The 3.2.66 changelog entry must be the newest theme release entry; only plugin-only entries may sit above it.'
+    'The 3.2.67 changelog entry must be the newest theme release entry; only plugin-only entries may sit above it.'
 $changelogEntry = Get-TopEntry -Text $changelog -Heading $changelogHeading
-foreach ($term in @('Preview', 'Apply', 'Picks', 'Facts', 'wp_localize_script', 'wp_add_inline_script', 'numeric', 'WordPress')) {
+foreach ($term in @('Preview', 'Apply', 'Picks', 'Facts', 'viewport', 'scrollHeight', 'keyboard', 'ResizeObserver')) {
     Assert-Contract ($changelogEntry.Contains($term)) "The current changelog must cover $term."
 }
 
-$sessionHeading = "## 2026-09-10 $releaseSeparator Theme 3.2.66 editor bootstrap candidate"
+$sessionHeading = "## 2026-09-11 $releaseSeparator Journal carousel live; Theme 3.2.67 preview correction"
 $sessionLog = [IO.File]::ReadAllText((Join-Path $root 'docs/SESSION-LOG.md'))
 $sessionHeadings = @($sessionLog.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -like '## *' })
 $sessionHeadingCount = @($sessionHeadings | Where-Object { $_ -ceq $sessionHeading }).Count
-Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.66 local-candidate session heading must exist exactly once.'
+Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.67 local-candidate session heading must exist exactly once.'
 # Deliberately NOT asserted: that this entry is the newest in the session log.
 # It was newest when written, but AGENTS.md requires every session to append a
 # new entry at the top of docs/SESSION-LOG.md, so pinning position froze the log
@@ -190,7 +190,7 @@ Assert-Contract ($sessionHeadingCount -eq 1) 'The final 3.2.66 local-candidate s
 $sessionEntry = Get-TopEntry -Text $sessionLog -Heading $sessionHeading
 Assert-Contract ($sessionEntry.Contains('docs/CHANGELOG.md')) `
     'The newest session entry must point to docs/CHANGELOG.md for release detail.'
-Assert-Contract ($sessionEntry -match '(?s)No agent deployment or cache operation occurred\. Theme 3\.2\.66 is not\s+deployed; its live canary is pending\.') `
+Assert-Contract ($sessionEntry -match '(?s)No agent deployment or manual cache purge occurred\. Theme 3\.2\.67 is not\s+deployed; its live canary is pending\.') `
     'The newest session entry must explicitly record every release action that did not occur.'
 Assert-Contract ($sessionEntry -match '(?is)Dalton.+manual.+WordPress.com') `
     'The newest session entry must name Dalton and manual WordPress.com deployment as the later deployment boundary.'
@@ -199,7 +199,7 @@ Assert-Contract ($sessionEntry -notmatch '(?im)^\s*(Deployment completed|Deploye
 
 if ($script:Failures.Count -gt 0) {
     $details = $script:Failures | ForEach-Object { " - $_" }
-    throw "Theme 3.2.66 release identity contract failed:`n$($details -join "`n")"
+    throw "Theme 3.2.67 release identity contract failed:`n$($details -join "`n")"
 }
 
-Write-Host 'Theme 3.2.66 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and intact local-only release records.'
+Write-Host 'Theme 3.2.67 release identity contract passed: exact stylesheet identity, stale-version census, deploy exclusions, and intact local-only release records.'

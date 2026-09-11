@@ -157,7 +157,23 @@
 	function moveArchiveOrder(from,to){var order=candidate.section_order;if(isBusy()||from===to||from<0||to<0||from>=order.length||to>=order.length){return;}var slug=order[from],direction=to<from?'earlier':'later';candidate.section_order=reordered(order,from,to);clearErrorKey('section_order');renderState({key:slug,direction:direction});syncDirty();if(statusNode){statusNode.textContent=config.strings.moved;}}
 	function moveArchiveSection(button){var row=button.closest('[data-section-row]');if(!row){return;}var index=candidate.section_order.indexOf(row.getAttribute('data-slug'));var target=button.getAttribute('data-section-move')==='earlier'?index-1:index+1;moveArchiveOrder(index,target);}
 	function previewWidth(name){var width=config.widths[name];if(orderedEditor){orderedEditor.cancelDrag();}widthName=name;iframe.setAttribute('width',String(width));iframe.style.width=String(width)+'px';var buttons=root.querySelectorAll('[data-preview-width]');for(var i=0;i<buttons.length;i+=1){buttons[i].setAttribute('aria-pressed',buttons[i].getAttribute('data-preview-width')===name?'true':'false');}if(config.surface==='homepage-structure'){renderHomeOrder(name==='mobile'?'mobile':'desktop');}scalePreview();}
-	function scalePreview(){var viewport=root.querySelector('.lunara-site-studio-preview-viewport');var canvas=root.querySelector('.lunara-site-studio-preview-canvas');var flow=root.querySelector('.lunara-site-studio-preview-flow');if(!viewport||!canvas||!flow){return;}var width=parseInt(iframe.getAttribute('width'),10);var height=parseInt(iframe.getAttribute('height'),10)||900;try{height=Math.max(500,iframe.contentDocument.body.scrollHeight,iframe.contentDocument.documentElement.scrollHeight);}catch(error){}iframe.style.height=height+'px';iframe.setAttribute('height',String(height));var scale=Math.min(1,Math.max(0.1,(viewport.clientWidth-24)/width));canvas.style.transform='scale('+scale+')';flow.style.width=(width*scale)+'px';flow.style.height=(height*scale)+'px';}
+	function scalePreview(){
+		var viewport=root.querySelector('.lunara-site-studio-preview-viewport');
+		var canvas=root.querySelector('.lunara-site-studio-preview-canvas');
+		var flow=root.querySelector('.lunara-site-studio-preview-flow');
+		if(!viewport||!canvas||!flow){return;}
+		var width=parseInt(iframe.getAttribute('width'),10);
+		// Keep the device viewport independent of page length. Measuring scrollHeight
+		// here feeds viewport-sized heroes back into the iframe and grows it forever.
+		var heights={desktop:900,tablet:1024,mobile:844};
+		var height=heights[widthName]||900;
+		iframe.style.height=height+'px';
+		iframe.setAttribute('height',String(height));
+		var scale=Math.min(1,Math.max(0.1,(viewport.clientWidth-24)/width));
+		canvas.style.transform='scale('+scale+')';
+		flow.style.width=(width*scale)+'px';
+		flow.style.height=(height*scale)+'px';
+	}
 	function resetCandidate(){if(!window.confirm(config.strings.resetConfirm)){return;}if(orderedEditor){orderedEditor.cancelDrag();}if(carouselEditor){carouselEditor.invalidate();}candidate=clone(baseline);lastPreviewFingerprint='';renderState();clearErrors();syncDirty();liveRoute();}
 	function resetOverrides(){if(!window.confirm(config.strings.resetOverridesConfirm)){return;}['colors','fonts'].forEach(function(group){Object.keys(candidate[group]).forEach(function(key){candidate[group][key].override=null;});});renderState();clearErrors();syncDirty();}
 	function strictBridgeMessage(value){var names,symbols,descriptor,i;var expected=['protocol','version','type','surface','section','instance'].sort();if(!value||typeof value!=='object'||Object.getPrototypeOf(value)!==Object.prototype){return false;}try{names=Object.getOwnPropertyNames(value).sort();symbols=Object.getOwnPropertySymbols?Object.getOwnPropertySymbols(value):[];}catch(error){return false;}if(symbols.length||JSON.stringify(names)!==JSON.stringify(expected)){return false;}for(i=0;i<names.length;i+=1){descriptor=Object.getOwnPropertyDescriptor(value,names[i]);if(!descriptor||!Object.prototype.hasOwnProperty.call(descriptor,'value')||descriptor.get||descriptor.set){return false;}}return value.protocol===config.protocol&&value.version===config.clientVersion&&value.type==='select-section'&&value.surface===config.surface&&value.instance===activePreviewInstance&&typeof value.section==='string'&&config.markers.indexOf(value.section)!==-1;}
