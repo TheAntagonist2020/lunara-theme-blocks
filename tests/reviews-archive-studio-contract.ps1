@@ -244,8 +244,8 @@ Assert-True ($browserRuntime -match 'lunara-review-archive-page lra is-label-fon
 Assert-True ($browserRuntime -match 'showRetention:\s*false') 'The director first-paint fixture must omit the Studio-exempt retention lane.'
 
 # Version lock: this intentionally asserts the NEXT reissue identity. It is
-# EXPECTED to fail until the 3.2.70 version migration lands as its own step;
+# EXPECTED to fail until the 3.2.71 version migration lands as its own step;
 # every assertion above it must already pass on the pre-migration tree.
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.70\s*$') 'Theme version must be 3.2.70.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.71\s*$') 'Theme version must be 3.2.71.'
 
 Write-Host 'reviews-archive-studio: all assertions passed.'

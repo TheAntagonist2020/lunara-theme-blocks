@@ -25,6 +25,89 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-12 — Theme 3.2.70 acceptance and 3.2.71 Reviews opening
+
+### Headline
+
+Theme 3.2.70 is verified live. Dalton identified the public Reviews Command
+panel as inappropriate for the reader-facing opening. Theme 3.2.71 removes
+that panel and condenses the introduction while retaining the saved page
+identity and story selection.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| Explicit-version 3.2.70 canary | Three anonymous reads agree on `3.2.70+20260912-174826`; Journal and Oscars both `LIVE_COHERENT`, exit 0 / GO. |
+| Public Reviews route in browser | Theme 3.2.70; the large introduction and Reviews Command panel precede the toolbar and first film. This is rendered page content, not an editor-only overlay. |
+
+### What shipped and why
+
+See `docs/CHANGELOG.md` for the compact Reviews opening candidate. The obsolete
+Classic label inputs are retired without deleting saved labels or revisions.
+No agent deployment or manual cache purge occurred. Theme 3.2.71 is not
+deployed; its live canary is pending.
+
+### Commit ledger
+
+| Repo | Commit or release reference | Meaning |
+| --- | --- | --- |
+| Theme | `59cffc42c2f7797e7034c0544873b92034294589` / PR #190 | 3.2.70 merged on main and verified live. |
+| Theme | `codex/reviews-opening-3.2.71` | Compact Reviews opening candidate based on that main commit. |
+
+### Gate ledger
+
+- Versioned production canary for 3.2.70: exit 0 / GO.
+- Full required theme contract suite: 95/95 passed.
+- Syntax/structure checks: 129 PHP files, 65 JavaScript files and 26 CSS files;
+  zero failures. Release identity was rechecked after the record update.
+- Actual Reviews renderer runtime: 117 assertions passed, plus the existing
+  provider checks. Ten desktop/mobile browser cases passed without JavaScript;
+  saved long text remains readable and the removed panel never appears.
+- Mutation test: restoring the public panel fails its intended assertion;
+  restoring the fixed renderer matches its SHA-256 and passes again.
+- Additional legacy Reviews first-paint runtime: FAILED at 390px on both the
+  untouched 3.2.70 baseline and this candidate. See the bounded finding below.
+  This extra failure is not included in, or represented as, the 95 passing gates.
+- Independent renderer/CSS review found no further issue in the opening change.
+  Final syntax, CI, merge identity and exact rollback proof are retained in the
+  release receipt alongside the local gate logs.
+- Production canary for 3.2.71 is not run until Dalton deploys it.
+
+### Corrections
+
+None. The previous session's 3.2.70 deployment-pending state is superseded by
+the live probes above.
+
+### Logged, not fixed
+
+The extra stylesheet-delivery simulation found a pre-existing mobile root-width
+conflict. Historic Boost CSS starts the 390px archive at 362px; current base CSS
+later changes it to 390px. The route asset and critical seed are already present
+but do not own that root width. The exact 3.2.70 baseline has the same conflict.
+The candidate reduces default simulated delivery movement from 100.875px to
+52.21875px; seed withdrawal itself causes zero movement. Three mobile archive
+scenarios fail, while tablet, desktop and the other route classes pass. No
+mobile width change was added to this release. This simulation is not a live
+measurement; explicit mobile width ownership and live delivery verification
+remain a separate follow-up. Logs and isolated baseline assets are in the
+`reviews-opening-3.2.71` artifact folder.
+
+The rest of the site, archive card presentation, large sorting toolbar and
+broader stylesheet diet remain outside this bounded opening correction.
+
+### Punch-list carried forward
+
+- Complete and merge 3.2.71, then rebuild the exact rollback hatch: agent.
+- Manual WordPress.com deployment and reader review of the opening: Dalton.
+- Continue the shared editor and premium public-layout work after acceptance.
+
+### Whose move it is next
+
+The agent finishes verification and the release handoff. Dalton then uses the
+manual deployment in WordPress.com for `lunara-theme-blocks` from `main`; the
+agent verifies the versioned public canary after the deployment is reported.
+
 ## 2026-09-12 — Theme 3.2.69 acceptance and 3.2.70 archive selection
 
 ### Headline

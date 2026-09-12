@@ -1,6 +1,6 @@
 <?php
 /**
- * Isolated behavioral contract for Theme 3.2.70 Reviews Archive Studio.
+ * Isolated behavioral contract for Theme 3.2.71 Reviews Archive Studio.
  *
  * Run: php tests/reviews-archive-studio-runtime.php
  */
@@ -181,7 +181,12 @@ function wp_get_attachment_metadata( $id ) {
 	$dimensions = array( 101 => array( 'width' => 1280, 'height' => 720 ), 102 => array( 'width' => 1920, 'height' => 1080 ), 104 => array( 'width' => 2000, 'height' => 3000 ) );
 	return isset( $dimensions[ $id ] ) ? $dimensions[ $id ] : false;
 }
-function get_the_title( $post ) { global $lunara_test_title_args; $lunara_test_title_args[] = $post; return is_object( $post ) && isset( $post->post_title ) ? $post->post_title : 'Attachment ' . $post; }
+function get_the_title( $post ) {
+	global $lunara_test_title_args, $lunara_test_posts;
+	$lunara_test_title_args[] = $post;
+	$resolved = is_object( $post ) ? $post : ( isset( $lunara_test_posts[ $post ] ) ? $lunara_test_posts[ $post ] : null );
+	return $resolved && isset( $resolved->post_title ) ? $resolved->post_title : 'Attachment ' . $post;
+}
 function wp_get_attachment_image( $id, $size, $icon, $attrs ) {
 	global $lunara_test_attachment_renderable;
 	if ( ! $lunara_test_attachment_renderable ) {
@@ -350,7 +355,7 @@ $expected_label_literals = array(
 foreach ( $expected_label_literals as $label_key => $label_literal ) {
 	lunara_test_assert( isset( $defaults['labels'][ $label_key ] ) && $label_literal === $defaults['labels'][ $label_key ], 'Default label ' . $label_key . ' must reproduce its shipped public literal byte-for-byte.' );
 }
-lunara_test_assert( array_keys( $expected_label_literals ) === array_keys( $defaults['labels'] ), 'The Studio label set must be exactly the consumed public-language keys — no dead controls.' );
+lunara_test_assert( array_keys( $expected_label_literals ) === array_keys( $defaults['labels'] ), 'The stored label schema preserves active labels and historical keys needed for lossless revisions; the opening runtime checks the visible form.' );
 // The empty state's canonical owners are the lunara_archive_review_empty_text
 // theme mod (archive-review.php) and the hub template literal; the Studio
 // must expose no dead empty_title/empty_copy controls.

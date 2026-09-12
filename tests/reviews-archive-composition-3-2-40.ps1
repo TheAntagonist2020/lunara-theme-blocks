@@ -133,7 +133,15 @@ $pinRuntimeOutput = & php (Join-Path $PSScriptRoot 'reviews-archive-pin-runtime.
 Assert-True ($LASTEXITCODE -eq 0) ("Reviews Archive pin runtime failed: " + ($pinRuntimeOutput -join [Environment]::NewLine))
 Assert-True (($pinRuntimeOutput -join "`n") -match 'all assertions passed') 'Reviews Archive pin runtime did not report success.'
 
-$versionLine = (Read-ThemeFile 'style.css' | Select-String -Pattern 'Version:\s*3\.2\.70').Matches.Count
-Assert-True ($versionLine -ge 1) 'Theme version must be 3.2.70.'
+$openingOutput = & php -d error_reporting=24575 (Join-Path $PSScriptRoot 'reviews-opening-runtime.php') 2>&1
+Assert-True ($LASTEXITCODE -eq 0) ("Actual Reviews opening runtime failed: " + ($openingOutput -join [Environment]::NewLine))
+Assert-True (($openingOutput -join "`n") -match 'reviews-opening-runtime: \d+ assertions passed') 'Actual Reviews opening runtime did not report success.'
 
-Write-Host 'Theme 3.2.70 Reviews Archive composition contract passed.'
+$openingBrowser = & node (Join-Path $PSScriptRoot 'reviews-opening-browser-runtime.js') 2>&1
+Assert-True ($LASTEXITCODE -eq 0) ("Actual Reviews opening browser failed: " + ($openingBrowser -join [Environment]::NewLine))
+Assert-True (($openingBrowser -join "`n") -match '"result": "PASS"') 'Actual Reviews opening browser did not report success.'
+
+$versionLine = (Read-ThemeFile 'style.css' | Select-String -Pattern 'Version:\s*3\.2\.71').Matches.Count
+Assert-True ($versionLine -ge 1) 'Theme version must be 3.2.71.'
+
+Write-Host 'Theme 3.2.71 Reviews Archive composition contract passed.'

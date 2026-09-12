@@ -11,6 +11,27 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-12 — Theme 3.2.71 Reviews Opening
+
+The Reviews page opens with a compact title and introduction. The public
+Reviews Command statistics and its navigation buttons are removed, so the
+opening no longer presents archive administration ahead of the films. The
+existing saved title, description, section visibility and order still apply.
+Director archives use the same compact treatment and keep their own identity.
+
+The route stylesheet and first-paint critical CSS agree on the single-column
+layout, with a 32–48px heading, readable copy and no large framed backdrop.
+Long titles wrap on mobile. The lead review and archive selection remain
+unchanged; a hidden introduction retains the accessible page heading.
+
+Classic no longer exposes the eight labels belonging to the removed panel.
+Their saved values and revision schema remain compatible, and ordinary editor
+saves preserve those values. Home, Journal and Oscars are outside this change.
+
+Verification covers actual rendered normal, empty, director and hidden-intro
+pages, mobile and desktop geometry, no-JavaScript reading, retained editor
+values, and the existing stylesheet delivery checks.
+
 ## 2026-09-12 — Theme 3.2.70 Archive Story Selection
 
 Reviews and Journal gain a shared Stories inspector in Site Studio. Editors can

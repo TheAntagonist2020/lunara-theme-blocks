@@ -223,7 +223,8 @@ Assert-True ($browserRuntime -match 'seedPersistenceDelta\s*>\s*1') 'The browser
 Assert-True ($browserRuntime -match "bodyClass:\s*'tax-lunara_director'") 'The browser regression must exercise the real director archive body class.'
 Assert-True ($browserRuntime -match "bodyClass:\s*'page page-template-page-reviews'") 'The browser regression must exercise an explicitly selected Reviews page template.'
 Assert-True ($browserRuntime -match "bodyClass:\s*'page page-template-default'") 'The browser regression must exercise the slug-selected Reviews page with the default body class.'
-Assert-True ($browserRuntime -match 'showPairing:\s*false' -and $browserRuntime -match 'showYearFilter:\s*false' -and $browserRuntime -match 'showHeroActions:\s*false') 'The director fixture must omit Pairing, Release Year, and archive-only hero actions.'
+Assert-True ($browserRuntime -match 'showPairing:\s*false' -and $browserRuntime -match 'showYearFilter:\s*false') 'The director fixture must omit Pairing and Release Year.'
+Assert-True ($browserRuntime -notmatch '<aside class="lunara-review-archive-debrief"|<div class="lunara-review-archive-hero-actions"') 'The first-paint fixture must not resurrect the removed Reviews opening panel.'
 Assert-True ($browserRuntime -match 'showRetention:\s*false') 'The director fixture must omit the Studio-owned retention/gallery lane.'
 Assert-True ($browserRuntime -match 'class="lunara-review-archive-retention lunara-review-archive-slot-retention"' -and $browserRuntime -match 'lunara-review-archive-gallery-media') 'The first-paint fixture must model the Studio retention slot and root archive gallery markup.'
 Assert-True ($browserRuntime -match 'lunara-review-archive-page lra is-label-font-tiempos') 'The first-paint fixture must exercise the resolver-emitted Tiempos label marker.'
@@ -243,7 +244,7 @@ Assert-True ($pageTemplate -match "'classes'\s*=>\s*'lunara-review-archive-page'
 Assert-True ($directorTemplate -match "'classes'\s*=>\s*'lunara-review-archive-page\s+lunara-director-archive-page'") 'The director archive must emit the route-owned Reviews wrapper.'
 Assert-True ($frontend -match "wp_enqueue_style\([\s\S]{0,180}'lunara-review-archive'[\s\S]{0,180}array\(\s*'lunara-review-components',\s*'lunara-shell'\s*\)") 'The Reviews route asset must keep its explicit component and shell dependencies.'
 Assert-True ($frontend -notmatch '<style id="lunara-review-archive-authority-css">') 'The legacy 43 KB inline archive cascade must not return.'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.70\s*$') 'Theme version must preserve the Reviews critical-delivery repair in 3.2.70.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.71\s*$') 'Theme version must preserve the Reviews critical-delivery repair in 3.2.71.'
 Assert-True ($stagingGate -match 'real iPhone[\s\S]{0,80}Safari' -and $stagingGate -match 'native\s+CSS nesting') 'The staging gate must require a real-iPhone Safari smoke for the nested critical guard.'
 
-Write-Host "Theme 3.2.70 Reviews critical delivery contract passed: universal seed ${seedByteCount}B ($seedSha256); route CSS ${routeCssBytes}B; Boost fixture ${fixtureBytes}B."
+Write-Host "Theme 3.2.71 Reviews critical delivery contract passed: universal seed ${seedByteCount}B ($seedSha256); route CSS ${routeCssBytes}B; Boost fixture ${fixtureBytes}B."
