@@ -3601,13 +3601,6 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
             $copy = (string) $defaults['copy'];
         }
         $classes         = trim( 'site-main lunara-archive-page lra ' . $base_classes );
-        $total_reviews   = wp_count_posts( 'review' );
-        $total_reviews   = isset( $total_reviews->publish ) ? intval( $total_reviews->publish ) : 0;
-        $visible_count   = count( $posts );
-        $latest_ts       = 0;
-        foreach ( $posts as $post_item ) {
-            $latest_ts = max( $latest_ts, (int) get_post_modified_time( 'U', true, $post_item ) );
-        }
         $current_sort    = isset( $args['current_sort'] ) ? sanitize_key( (string) $args['current_sort'] ) : lunara_get_review_archive_sort();
         $current_year    = $is_director_archive ? '' : lunara_get_review_archive_year();
         $year_options    = $is_director_archive ? array() : lunara_get_review_archive_year_options();
@@ -3617,9 +3610,6 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
         $remaining_posts = array_slice( $posts, 4 );
         $has_posts       = $lead_post instanceof WP_Post;
         $classes        .= $has_posts ? ' lunara-review-archive-has-posts' : ' lunara-review-archive-is-empty';
-        $archive_mode    = $has_posts
-            ? ( ! empty( $remaining_posts ) ? __( 'Lead / Support / Archive Run', 'lunara-film' ) : __( 'Lead / Support', 'lunara-film' ) )
-            : __( 'Standby', 'lunara-film' );
         $sort_options    = isset( $args['sort_options'] ) && is_array( $args['sort_options'] ) ? $args['sort_options'] : lunara_get_review_archive_sort_options();
 
         // Reviews Archive Studio: the last-valid public configuration owns the
@@ -3709,10 +3699,6 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                 : true );
         $sort_base_url  = remove_query_arg( array( 'sort', 'paged' ), get_pagenum_link( 1 ) );
         $filter_base_url = remove_query_arg( array( 'sort', 'review_year', 'paged' ), get_pagenum_link( 1 ) );
-        $sort_label     = isset( $sort_options[ $current_sort ] ) && is_scalar( $sort_options[ $current_sort ] )
-            ? (string) $sort_options[ $current_sort ]
-            : lunara_get_review_archive_sort_label( $current_sort );
-        $latest_label   = $latest_ts > 0 ? wp_date( 'M j, Y', $latest_ts ) : __( 'Standby', 'lunara-film' );
 
         // Retention routes: the three configured cards drive the existing
         // remainder-fill aside. The defaults reproduce today's exact labels
@@ -3818,34 +3804,6 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                             <p class="lunara-archive-hero-copy"><?php echo esc_html( wp_trim_words( $copy, max( 12, intval( $args['copy_words'] ) ) ) ); ?></p>
                         <?php endif; ?>
                     </div>
-                    <aside class="lunara-review-archive-debrief" aria-label="<?php esc_attr_e( 'Review archive summary', 'lunara-film' ); ?>">
-                        <p class="lunara-review-archive-debrief-kicker"><?php echo esc_html( $labels['debrief_kicker'] ); ?></p>
-                        <ul class="lunara-review-archive-debrief-list">
-                            <li>
-                                <strong><?php echo esc_html( $labels['debrief_depth'] ); ?></strong>
-                                <span><?php echo esc_html( number_format_i18n( $total_reviews ) ); ?></span>
-                            </li>
-                            <li>
-                                <strong><?php echo esc_html( $labels['debrief_visible'] ); ?></strong>
-                                <span><?php echo esc_html( number_format_i18n( $visible_count ) ); ?></span>
-                            </li>
-                            <li>
-                                <strong><?php echo esc_html( $labels['debrief_latest'] ); ?></strong>
-                                <span><?php echo esc_html( $latest_label ); ?></span>
-                            </li>
-                            <li>
-                                <strong><?php echo esc_html( $labels['debrief_order'] ); ?></strong>
-                                <span><?php echo esc_html( $sort_label ); ?></span>
-                            </li>
-                        </ul>
-                        <?php if ( ! $is_director_archive ) : ?>
-                            <div class="lunara-review-archive-hero-actions">
-                                <a href="#lunara-review-archive-run"><?php echo esc_html( $labels['hero_action_run'] ); ?></a>
-                                <a href="<?php echo esc_url( home_url( '/oscars/' ) ); ?>"><?php echo esc_html( $labels['hero_action_oscars'] ); ?></a>
-                                <a href="<?php echo esc_url( home_url( '/journal/' ) ); ?>"><?php echo esc_html( $labels['hero_action_journal'] ); ?></a>
-                            </div>
-                        <?php endif; ?>
-                    </aside>
                 </div>
             </section>
             <?php endif; ?>

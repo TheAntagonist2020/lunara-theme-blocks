@@ -455,15 +455,11 @@ function assertPairingCollisionFree(snapshot, label) {
             for (const viewport of [{ width: 1440, height: 1000 }, { width: 782, height: 1000 }, { width: 390, height: 844 }]) {
                 const page = await browser.newPage();
                 await page.setViewport({ ...viewport, deviceScaleFactor: 1 });
-                const heroActionsMarkup = orders.showHeroActions === false
-                    ? ''
-                    : '<div class="lunara-review-archive-hero-actions"><a href="#run">Browse The Run</a><a href="#ledger">Oscar Ledger</a><a href="#journal">Journal Desk</a></div>';
                 const heroMarkup = orders.showHero === false
                     ? '<h1 class="screen-reader-text">Lunara Reviews</h1>'
                     : `<section class="lunara-home-section lunara-archive-hero lunara-review-archive-hero lunara-review-archive-slot-hero" style="order:${orders.hero}!important">
                         <div class="lunara-review-archive-hero-shell">
                             <div class="lunara-review-archive-hero-copy-wrap"><p class="lunara-archive-hero-kicker">Criticism Desk</p><h1 class="lunara-archive-hero-title">Lunara Reviews</h1><p class="lunara-archive-hero-copy">Spoiler-free criticism, full-spoiler companion files, festival finds, and the films that deserve a longer argument after the credits roll.</p></div>
-                            <aside class="lunara-review-archive-debrief"><p class="lunara-review-archive-debrief-kicker">Reviews Command</p><ul class="lunara-review-archive-debrief-list"><li><strong>Archive Depth</strong><span>100</span></li><li><strong>Visible File</strong><span>9</span></li><li><strong>Latest Update</strong><span>Aug 15, 2026</span></li><li><strong>Current Order</strong><span>Release Timeline</span></li></ul>${heroActionsMarkup}</aside>
                         </div>
                     </section>`;
                 const bodyClass = orders.bodyClass || 'post-type-archive-review';

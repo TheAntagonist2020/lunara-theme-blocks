@@ -2322,8 +2322,16 @@ function lunara_reviews_archive_studio_render_control_surface( $context = 'site-
 			</div>
 
 			<div class="lunara-control-desk-homepage-card">
-				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Public Language', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Desk, toolbar, retention, and pagination labels', 'lunara-film' ); ?></h3></div></div>
-				<div class="lunara-reviews-archive-label-grid"><?php foreach ( $config['labels'] as $label_key => $label_value ) : ?><label><span><strong><?php echo esc_html( ucwords( str_replace( '_', ' ', $label_key ) ) ); ?></strong></span><input type="text" maxlength="120" name="lunara_reviews_archive_labels[<?php echo esc_attr( $label_key ); ?>]" value="<?php echo esc_attr( $label_value ); ?>" required /></label><?php endforeach; ?></div>
+				<div class="lunara-control-desk-card-head"><div><p class="lunara-control-desk-kicker"><?php esc_html_e( 'Public Language', 'lunara-film' ); ?></p><h3><?php esc_html_e( 'Toolbar, archive, retention, and pagination labels', 'lunara-film' ); ?></h3></div></div>
+				<div class="lunara-reviews-archive-label-grid"><?php foreach ( $config['labels'] as $label_key => $label_value ) : ?>
+					<?php
+					// Keep retired opening labels in saved state and revisions, not the live form.
+					if ( in_array( $label_key, array( 'debrief_kicker', 'debrief_depth', 'debrief_visible', 'debrief_latest', 'debrief_order', 'hero_action_run', 'hero_action_oscars', 'hero_action_journal' ), true ) ) {
+						continue;
+					}
+					?>
+					<label><span><strong><?php echo esc_html( ucwords( str_replace( '_', ' ', $label_key ) ) ); ?></strong></span><input type="text" maxlength="120" name="lunara_reviews_archive_labels[<?php echo esc_attr( $label_key ); ?>]" value="<?php echo esc_attr( $label_value ); ?>" required /></label>
+				<?php endforeach; ?></div>
 			</div>
 
 			<div class="lunara-control-desk-homepage-card">

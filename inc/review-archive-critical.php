@@ -77,22 +77,13 @@ if ( ! function_exists( 'lunara_reviews_archive_critical_css' ) ) {
 CSS;
 
         $hero = <<<'CSS'
-&>.lunara-review-archive-slot-hero{padding-bottom:clamp(18px,2.8vw,34px)!important;padding-top:clamp(34px,4.8vw,58px)!important}
-& .lunara-review-archive-hero-shell{align-items:stretch!important;display:grid!important;gap:clamp(18px,2.4vw,32px)!important;grid-template-columns:minmax(0,1.1fr) minmax(280px,.64fr)!important;padding:clamp(24px,3vw,34px) clamp(24px,3.2vw,38px)!important}
-& .lunara-review-archive-hero-copy-wrap{align-content:center!important;display:grid!important;gap:clamp(14px,1.8vw,22px)!important;min-width:0!important}
+&>.lunara-review-archive-slot-hero{height:auto!important;min-height:0!important;padding-bottom:0!important;padding-top:clamp(20px,2.5vw,32px)!important}
+& .lunara-review-archive-hero-shell{align-items:start!important;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:grid!important;gap:0!important;grid-template-columns:minmax(0,1fr)!important;height:auto!important;min-height:0!important;overflow:visible!important;padding:0!important}
+& .lunara-review-archive-hero-shell::before{content:none!important;display:none!important}
+& .lunara-review-archive-hero-copy-wrap{align-content:start!important;display:grid!important;gap:10px!important;grid-template-columns:minmax(0,1fr)!important;min-width:0!important}
 & :is(.lunara-archive-hero-kicker,.lunara-archive-hero-title){font-family:var(--h)!important}
-& :is(.lunara-archive-hero-copy,.lunara-review-archive-debrief,.lunara-review-archive-debrief-kicker,.lunara-review-archive-debrief-list,.lunara-review-archive-hero-actions){font-family:var(--b)!important}
-& .lunara-review-archive-debrief{align-content:space-between!important;display:grid!important;gap:18px!important;margin:0!important;padding:clamp(18px,2.2vw,26px)!important}
-& .lunara-review-archive-debrief-kicker{font-size:.76rem!important;letter-spacing:0!important;margin:0!important}
-& .lunara-review-archive-debrief-list{display:grid!important;gap:10px!important;list-style:none!important;margin:0!important;padding:0!important}
-& .lunara-review-archive-debrief-list li{align-items:center!important;display:flex!important;gap:12px!important;justify-content:space-between!important;padding:10px 12px!important}
-& .lunara-review-archive-debrief-list strong{font-size:.72rem!important;letter-spacing:0!important}
-& .lunara-review-archive-debrief-list span{font-weight:700!important;text-align:right!important}
-& .lunara-review-archive-hero-actions{display:flex!important;flex-wrap:wrap!important;gap:8px!important}
-& .lunara-review-archive-hero-actions a{align-items:center!important;display:inline-flex!important;font-size:.76rem!important;font-weight:800!important;justify-content:center!important;letter-spacing:0!important;min-height:38px!important;padding:9px 13px!important;text-transform:uppercase!important}
-@media(max-width:900px){& .lunara-review-archive-hero-shell{grid-template-columns:minmax(0,1fr)!important}}
-@media(max-width:820px){& .lunara-review-archive-hero-shell{gap:16px!important}& .lunara-review-archive-debrief-list{gap:8px!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}& .lunara-review-archive-debrief-list li{padding:10px 11px!important}& .lunara-review-archive-debrief-list span{text-align:left!important}}
-@media(max-width:540px){& .lunara-review-archive-hero-shell{padding:18px!important}& .lunara-review-archive-debrief-list{grid-template-columns:minmax(0,1fr)!important}& .lunara-review-archive-debrief-list li{align-items:flex-start!important;flex-direction:column!important;gap:4px!important}& .lunara-review-archive-hero-actions a{flex:1 1 auto!important;min-width:min(100%,142px)!important}}
+& .lunara-archive-hero-title{color:var(--lunara-gold,#d8b665)!important;font-size:clamp(32px,3.6vw,48px)!important;hyphens:none!important;letter-spacing:-.02em!important;line-height:1.1!important;margin:0!important;max-width:none!important;overflow-wrap:break-word!important;word-break:normal!important}
+& .lunara-archive-hero-copy{color:rgba(238,242,245,.82)!important;font-family:var(--b)!important;font-size:1rem!important;line-height:1.55!important;margin:0!important;max-width:70ch!important;overflow-wrap:anywhere!important}
 CSS;
 
         $utility = <<<'CSS'

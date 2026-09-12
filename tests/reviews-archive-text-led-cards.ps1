@@ -91,11 +91,11 @@ try {
     $sha256.Dispose()
 }
 $criticalHash = -join ($criticalHashBytes | ForEach-Object { $_.ToString('x2') })
-if ($criticalBytes.Count -ne 11602 -or $criticalHash -ne '24999682414bab62f5a05fda4af3682d30459ff83c99e461188f01154fe37567') {
-    throw "The 3.2.43 card repair must not alter the independently approved CLS seed ($($criticalBytes.Count)B $criticalHash)."
+if ($criticalBytes.Count -ne 10111 -or $criticalHash -ne '0e7dfa44569a5dc0db3d9d4df1981b10217cd17a9a82446fb7cbca5339fa6841') {
+    throw "The compact Reviews opening must preserve the verified structural seed ($($criticalBytes.Count)B $criticalHash)."
 }
-if ($style -notmatch '(?m)^Version:\s*3\.2\.70\s*$') {
-    throw 'Theme version must preserve the mobile text-led card repair in 3.2.70.'
+if ($style -notmatch '(?m)^Version:\s*3\.2\.71\s*$') {
+    throw 'Theme version must preserve the mobile text-led card repair in 3.2.71.'
 }
 foreach ($viewport in @('375', '390', '782', '1440')) {
     if ($runtime -notmatch "(?m)for \(const viewportWidth of \[[^\]]*\b$viewport\b") {
@@ -117,4 +117,4 @@ foreach ($runtimeGate in @(
     }
 }
 
-Write-Host 'Theme 3.2.70 Reviews mobile card legibility contract passed.'
+Write-Host 'Theme 3.2.71 Reviews mobile card legibility contract passed.'
