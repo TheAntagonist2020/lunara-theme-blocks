@@ -211,7 +211,7 @@ require dirname( __DIR__ ) . '/inc/site-studio-registry.php';
 require dirname( __DIR__ ) . '/inc/site-studio-adapters.php';
 
 $journal_projection_schema = lunara_site_studio_journal_archive_state_schema();
-lunara_test_assert( array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'filter_caps', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) === array_keys( $journal_projection_schema ), 'Journal projection schema must inventory every authoritative top-level provider key.' );
+lunara_test_assert( array( 'schema_version', 'selection_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'filter_caps', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) === array_keys( $journal_projection_schema ), 'Journal projection schema must inventory every authoritative top-level provider key.' );
 lunara_test_assert( array( 'desk_count', 'desk_latest', 'desk_mix', 'file_singular', 'file_plural', 'lane_singular', 'lane_plural', 'filter_sections', 'filter_types', 'filter_topics', 'filter_archive_types', 'taxonomy_section_kicker', 'taxonomy_topic_kicker', 'taxonomy_type_kicker', 'filter_all', 'toolbar_kicker', 'toolbar_title', 'sort_newest', 'sort_oldest', 'sort_updated', 'lead_kicker', 'card_kicker', 'card_cta', 'retention_kicker', 'retention_title', 'pagination_prev', 'pagination_next', 'empty_copy' ) === array_keys( $journal_projection_schema['labels'] ), 'Journal projection schema must inventory every authoritative label key.' );
 lunara_test_assert( array( 'journal_section', 'journal_topic', 'journal_type' ) === array_keys( $journal_projection_schema['filter_caps'] ), 'Journal projection schema must inventory every authoritative filter-cap key.' );
 lunara_test_assert( array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ) === array_keys( $journal_projection_schema['section_visibility'] ), 'Journal projection schema must inventory every authoritative visibility key.' );
@@ -907,5 +907,8 @@ lunara_test_assert( 1 === substr_count( $rendered, '<h1>' ), 'Server-rendered Jo
 $visibility['hero'] = false;
 $rendered_without_hero = lunara_journal_archive_studio_render_sections( $markup, $custom_order, $visibility );
 lunara_test_assert( 1 === substr_count( $rendered_without_hero, '<h1' ), 'Hiding the visual Hero must emit exactly one accessible fallback H1.' );
+
+$archive_selection_kind = 'journal';
+require __DIR__ . '/archive-selection-provider-cases.php';
 
 fwrite( STDOUT, "journal-archive-studio-runtime: all assertions passed.\n" );

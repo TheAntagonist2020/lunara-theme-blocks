@@ -25,6 +25,94 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-12 — Theme 3.2.69 acceptance and 3.2.70 archive selection
+
+### Headline
+
+Theme 3.2.69 is verified live after Dalton's deployment. Home, Reviews, Journal
+and Oscars have their page workspaces. The next bounded delivery, 3.2.70,
+migrates archive lead and priority-story selection into that shared editor.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| Explicit-version 3.2.69 canary | Three anonymous reads agree on `3.2.69+20260912-151630`; Journal and Oscars both `LIVE_COHERENT`, exit 0 / GO. |
+| Signed-in Site Studio | Default Home workspace reports Live settings loaded; four primary page links and contextual Home editors are present. |
+| Reviews workspace navigation | Reviews becomes the active page; Content, Layout, Advanced and History groups load. No public settings were saved. |
+
+### What shipped and why
+
+See `docs/CHANGELOG.md` for the archive story selection candidate. Existing
+presentation remains in place until its new selection controls are adopted and
+applied. No agent deployment or manual cache purge occurred. Theme 3.2.70 is not
+deployed; its live canary is pending.
+
+### Commit ledger
+
+| Repo | Commit or release reference | Meaning |
+| --- | --- | --- |
+| Theme | `9869110a460273a651fc77bdf265fe9e7218b8c5` / PR #189 | 3.2.69 merged on main and now verified live. |
+| Theme | `codex/archive-selection-3.2.70` | Archive selection candidate based on that verified main commit. |
+
+### Gate ledger
+
+- Versioned production canary for 3.2.69: exit 0 / GO.
+- Archive selection browser runtime: 123 checks passed across Reviews and
+  Journal at 1440px and 390px. Coverage includes independent modes, retained
+  choices, drag/keyboard order, missing artwork, empty/maximal lists, validation
+  focus, delayed responses, Preview/Apply/Discard, reload and legacy history.
+- Real provider runtime additions: 59 Reviews and 50 Journal assertions passed,
+  including canonical pin ownership, private Manual versus Automatic query/SQL
+  ordering, old revisions, unavailable Classic rows and metadata permissions.
+  The unchanged public shell consumes the query's first result; these additions
+  exercise the actual query/SQL chain, not a newly rendered full public page.
+- Existing editorial workspaces and page navigation checks passed. Screenshots
+  use actual PHP inspector markup and fixture artwork; they verify editor layout,
+  not candidate deployment or final public-page art.
+- Mutation: removing metadata refresh after Preview unfreezes the editor failed
+  the interrupted-read regression. The working file was restored by copy with
+  an identical SHA-256. A subsequent narrow focus fix also passes the browser
+  suite: refreshed rows retain the focused Remove action.
+- Independent review found and closed stale unactivated selection overwrite,
+  Classic unavailable-ID loss/title disclosure, and refresh-related keyboard
+  focus loss. No other actionable findings remained.
+- Two initial static archive checks expected row markup inside each provider.
+  They now verify the shared row owner and its executable hidden-field behavior;
+  both complete archive gates pass on focused reruns. Initial logs are retained.
+- Full theme contract suite: 95/95 passed after the two focused archive reruns
+  above (initial pass 93/95). The final workspace gate includes the focus fix.
+- Syntax: 128 PHP, 64 JavaScript and 26 CSS files, zero failures.
+- No plugin code changed. No public settings or article content changed.
+
+### Corrections
+
+The previous entry records the earlier 3.2.67 observations honestly. The new
+canary above supersedes its deployment-pending state without changing that
+historical evidence.
+
+### Logged, not fixed
+
+- Archive artwork/gallery and retention controls still need shared migration.
+- Oscars portal controls and Academy record authoring remain distinct work.
+- Public opening compositions, shared headers, mobile typography, Boost Critical
+  CSS, CDN quality and the base stylesheet diet remain open.
+
+### Punch-list carried forward
+
+- Candidate verification complete. Agent: merge after GitHub checks and rebuild
+  the exact rollback hatch.
+- Dalton: manual WordPress.com deployment after the verified main handoff.
+- Agent after deployment: explicit-version canary and real archive editor acceptance.
+- Next: remaining Oscars controls and the public layout pass under the recorded
+  site experience standard.
+
+### Whose move it is next
+
+Agent: merge the verified archive selection candidate after GitHub checks and
+rebuild the hatch. Dalton retains the manual WordPress.com deployment action.
+The broader site work remains open.
+
 ## 2026-09-12 — Theme 3.2.69 page workspaces and site standard
 
 ### Headline

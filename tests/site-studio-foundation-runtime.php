@@ -1,6 +1,6 @@
 <?php
 /**
- * Behavioral contract for the Site Studio 3.2.69 foundation.
+ * Behavioral contract for the Site Studio 3.2.70 foundation.
  *
  * This deliberately boots the production registry, adapter/service, REST, and
  * Design Token modules against a small WordPress stub. It exercises behavior;
@@ -53,7 +53,7 @@ $lunara_test_provider_preview_state = array();
 $lunara_test_provider_forced_error = '';
 $lunara_test_provider_defaults = array(
 	'reviews' => array(
-		'schema_version' => 1, 'kicker' => 'Criticism Desk', 'title' => 'Reviews', 'deck' => 'Review deck', 'supporting_copy' => 'Support',
+		'schema_version' => 1, 'selection_version' => 0, 'kicker' => 'Criticism Desk', 'title' => 'Reviews', 'deck' => 'Review deck', 'supporting_copy' => 'Support',
 		'lead_mode' => 'automatic', 'lead_id' => 0, 'lane_mode' => 'query', 'curated_ids' => array( 10, 11 ), 'item_count' => 9,
 		'section_order' => array( 'hero', 'grid', 'pagination', 'pairing-desk' ),
 		'section_visibility' => array( 'hero' => true, 'grid' => true, 'pagination' => true, 'pairing-desk' => true ),
@@ -71,7 +71,7 @@ $lunara_test_provider_defaults = array(
 		'presentation' => array( 'density' => 'editorial', 'lead_prominence' => 'standard', 'rail_density' => 'editorial', 'section_gap' => 40, 'lead_min_height' => 460, 'card_min_height' => 360, 'compact_media_width' => 116 ),
 	),
 	'journal' => array(
-		'schema_version' => 1, 'kicker' => 'Journal', 'title' => 'Journal', 'deck' => 'Journal deck', 'supporting_copy' => 'Support',
+		'schema_version' => 1, 'selection_version' => 0, 'kicker' => 'Journal', 'title' => 'Journal', 'deck' => 'Journal deck', 'supporting_copy' => 'Support',
 		'lead_mode' => 'shared', 'lead_id' => 0, 'lane_mode' => 'query', 'curated_ids' => array( 20, 21 ), 'item_count' => 8,
 		'filter_caps' => array( 'journal_section' => 8, 'journal_topic' => 10, 'journal_type' => 8 ),
 		'section_order' => array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ),
@@ -1269,7 +1269,7 @@ function lunara_review_case_state_projection() {
 	$failures = array();
 	$inventories = array(
 		'reviews' => array(
-			'top' => array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ),
+			'top' => array( 'schema_version', 'selection_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ),
 			'section_visibility' => array( 'hero', 'grid', 'pagination', 'pairing-desk' ),
 			'labels' => array( 'debrief_kicker', 'debrief_depth', 'debrief_visible', 'debrief_latest', 'debrief_order', 'hero_action_run', 'hero_action_oscars', 'hero_action_journal', 'toolbar_kicker', 'toolbar_title', 'sort_label', 'sort_release_desc', 'sort_release_asc', 'sort_modified_desc', 'year_label', 'year_all', 'year_filter', 'support_kicker', 'support_title', 'run_kicker', 'run_title', 'retention_kicker', 'retention_title', 'retention_copy', 'pagination_prev', 'pagination_next' ),
 			'gallery' => array( 'kicker', 'title', 'copy', 'items' ),
@@ -1278,7 +1278,7 @@ function lunara_review_case_state_projection() {
 			'presentation' => array( 'density', 'lead_prominence', 'rail_density', 'section_gap', 'lead_min_height', 'card_min_height', 'compact_media_width' ),
 		),
 		'journal' => array(
-			'top' => array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'filter_caps', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ),
+			'top' => array( 'schema_version', 'selection_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'filter_caps', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ),
 			'filter_caps' => array( 'journal_section', 'journal_topic', 'journal_type' ),
 			'section_visibility' => array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ),
 			'labels' => array( 'desk_count', 'desk_latest', 'desk_mix', 'file_singular', 'file_plural', 'lane_singular', 'lane_plural', 'filter_sections', 'filter_types', 'filter_topics', 'filter_archive_types', 'taxonomy_section_kicker', 'taxonomy_topic_kicker', 'taxonomy_type_kicker', 'filter_all', 'toolbar_kicker', 'toolbar_title', 'sort_newest', 'sort_oldest', 'sort_updated', 'lead_kicker', 'card_kicker', 'card_cta', 'retention_kicker', 'retention_title', 'pagination_prev', 'pagination_next', 'empty_copy' ),
@@ -1607,7 +1607,7 @@ function lunara_review_case_provider_managed_merge() {
 		$reviews_state = $reviews_save['state'];
 		if ( 'Managed Reviews title' !== $reviews_state['title'] || array( 'pairing-desk', 'hero', 'grid', 'pagination' ) !== $reviews_state['section_order'] || false !== $reviews_state['section_visibility']['pagination'] || 'compact' !== $reviews_state['presentation']['density'] ) { $failures[] = 'Reviews must publish every managed candidate value in exact requested section order.'; }
 		if ( 'manual' !== $reviews_state['lead_mode'] || 44 !== $reviews_state['lead_id'] || 'Advanced Reviews command' !== $reviews_state['labels']['run_title'] || 'Advanced Reviews gallery' !== $reviews_state['gallery']['copy'] ) { $failures[] = 'Reviews must preserve fresh provider-owned fields that were absent from the Site Studio inspector.'; }
-		if ( array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) !== array_keys( $reviews_state ) || array( 'hero', 'grid', 'pagination', 'pairing-desk' ) !== array_keys( $reviews_state['section_visibility'] ) ) { $failures[] = 'Reviews managed merge must retain canonical top-level and visibility key order.'; }
+		if ( array( 'schema_version', 'selection_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) !== array_keys( $reviews_state ) || array( 'hero', 'grid', 'pagination', 'pairing-desk' ) !== array_keys( $reviews_state['section_visibility'] ) ) { $failures[] = 'Reviews managed merge must retain canonical top-level and visibility key order.'; }
 		$reviews_revision = isset( $lunara_test_provider_revisions['reviews'][0] ) ? $lunara_test_provider_revisions['reviews'][0] : array();
 		if ( $fresh_reviews !== ( isset( $reviews_revision['config'] ) ? $reviews_revision['config'] : null ) || 'site-studio-save' !== ( isset( $reviews_revision['action'] ) ? $reviews_revision['action'] : '' ) || $reviews_save['revision_id'] !== ( isset( $reviews_revision['id'] ) ? $reviews_revision['id'] : '' ) ) { $failures[] = 'Reviews provider transaction must snapshot the exact fresh state with its verified Site Studio revision ID.'; }
 	}
@@ -1632,6 +1632,11 @@ function lunara_review_case_provider_managed_merge() {
 	$journal_adapter = lunara_site_studio_journal_archive_adapter();
 	$stale_journal = $journal_adapter->read_state();
 	$fresh_journal = $lunara_test_provider_defaults['journal'];
+	$fresh_journal['selection_version'] = 1;
+	$fresh_journal['lead_mode'] = 'manual';
+	$fresh_journal['lead_id'] = 65;
+	$fresh_journal['lane_mode'] = 'curated';
+	$fresh_journal['curated_ids'] = array( 66, 67 );
 	$fresh_journal['filter_caps']['journal_topic'] = 17;
 	$fresh_journal['labels']['toolbar_title'] = 'Advanced Journal command';
 	$fresh_journal['retention'][0]['copy'] = 'Advanced Journal route';
@@ -1646,13 +1651,24 @@ function lunara_review_case_provider_managed_merge() {
 	if ( is_wp_error( $journal_save ) ) { $failures[] = 'Journal managed save must succeed.'; }
 	else {
 		$journal_state = $journal_save['state'];
+		if ( 1 !== $journal_state['selection_version'] || 'manual' !== $journal_state['lead_mode'] || 65 !== $journal_state['lead_id'] || array( 66, 67 ) !== $journal_state['curated_ids'] ) { $failures[] = 'Unactivated stale Journal controls must preserve newer canonical selection and activation during a copy-only save.'; }
 		if ( 'Managed Journal title' !== $journal_state['title'] || array( 'retention', 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'pagination' ) !== $journal_state['section_order'] || false !== $journal_state['section_visibility']['pagination'] || 'showcase' !== $journal_state['presentation']['density'] ) { $failures[] = 'Journal must publish every managed candidate value in exact requested section order.'; }
 		if ( 17 !== $journal_state['filter_caps']['journal_topic'] || 'Advanced Journal command' !== $journal_state['labels']['toolbar_title'] || 'Advanced Journal route' !== $journal_state['retention'][0]['copy'] ) { $failures[] = 'Journal must preserve fresh provider-owned workflow fields that were absent from the Site Studio inspector.'; }
-		if ( array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'filter_caps', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) !== array_keys( $journal_state ) || array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ) !== array_keys( $journal_state['section_visibility'] ) ) { $failures[] = 'Journal managed merge must retain canonical top-level and visibility key order.'; }
+		if ( array( 'schema_version', 'selection_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'filter_caps', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) !== array_keys( $journal_state ) || array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ) !== array_keys( $journal_state['section_visibility'] ) ) { $failures[] = 'Journal managed merge must retain canonical top-level and visibility key order.'; }
 		$journal_revision = isset( $lunara_test_provider_revisions['journal'][0] ) ? $lunara_test_provider_revisions['journal'][0] : array();
 		if ( $fresh_journal !== ( isset( $journal_revision['config'] ) ? $journal_revision['config'] : null ) || 'site-studio-save' !== ( isset( $journal_revision['action'] ) ? $journal_revision['action'] : '' ) || $journal_save['revision_id'] !== ( isset( $journal_revision['id'] ) ? $journal_revision['id'] : '' ) ) { $failures[] = 'Journal provider transaction must snapshot the exact fresh state with its verified Site Studio revision ID.'; }
 	}
 
+
+	// Explicit activation takes ownership only of the selected story fields.
+	$adopted = $reviews_adapter->read_state();
+	$adopted['selection_version'] = 1;
+	$adopted['lead_mode'] = 'automatic';
+	$adopted['lead_id'] = 44;
+	$adopted['lane_mode'] = 'curated';
+	$adopted['curated_ids'] = array( 77, 78 );
+	$adopt_result = $reviews_adapter->save_state( $adopted );
+	if ( is_wp_error( $adopt_result ) || 1 !== $adopt_result['state']['selection_version'] || 'automatic' !== $adopt_result['state']['lead_mode'] || array( 77, 78 ) !== $adopt_result['state']['curated_ids'] ) { $failures[] = 'Explicit story adoption must merge its selected mode and priority list through the canonical provider.'; }
 	lunara_review_finish( 'provider-managed-merge', $failures );
 }
 

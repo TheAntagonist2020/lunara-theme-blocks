@@ -103,6 +103,8 @@ try {
     Assert-True ($LASTEXITCODE -eq 0) ("Site Studio browser runtime failed: " + ($nodeOutput -join [Environment]::NewLine))
     $editorialNodeOutput = & $node (Join-Path $PSScriptRoot 'site-studio-editorial-workspace-runtime.js') 2>&1
     Assert-True ($LASTEXITCODE -eq 0) ("Site Studio editorial browser runtime failed: " + ($editorialNodeOutput -join [Environment]::NewLine))
+    $archiveSelectionOutput = & $node (Join-Path $PSScriptRoot 'site-studio-archive-selection-browser-runtime.js') 2>&1
+    Assert-True ($LASTEXITCODE -eq 0) ("Site Studio archive selection failed: " + ($archiveSelectionOutput -join [Environment]::NewLine))
     $viewportOutput = & $node (Join-Path $PSScriptRoot 'site-studio-preview-viewport-runtime.js') 2>&1
     Assert-True ($LASTEXITCODE -eq 0) ("Site Studio preview viewport failed: " + ($viewportOutput -join [Environment]::NewLine))
     $navigationOutput = & $node (Join-Path $PSScriptRoot 'site-studio-navigation-runtime.js') 2>&1

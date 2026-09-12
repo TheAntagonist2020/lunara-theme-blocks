@@ -174,6 +174,11 @@ if ( ! function_exists( 'lunara_enqueue_site_studio_assets' ) ) {
 			if ( ! empty( $asset['uri'] ) ) { wp_enqueue_script( 'lunara-site-studio-home-oscars', $asset['uri'], array( 'lunara-editor-controls' ), lunara_theme_asset_version( $asset['path'] ), true ); }
 			$script_dependencies = array( 'lunara-site-studio-home-oscars' );
 		}
+		if ( in_array( $surface_id, array( 'reviews-archive', 'journal-archive' ), true ) ) {
+			$asset = lunara_resolve_theme_asset( 'assets/js/lunara-site-studio-archive-selection.js' );
+			if ( ! empty( $asset['uri'] ) ) { wp_enqueue_script( 'lunara-site-studio-archive-selection', $asset['uri'], array( 'lunara-editor-controls' ), lunara_theme_asset_version( $asset['path'] ), true ); }
+			$script_dependencies = array( 'lunara-site-studio-archive-selection' );
+		}
 		$asset = lunara_resolve_theme_asset( 'assets/js/lunara-site-studio.js' );
 		if ( ! empty( $asset['uri'] ) ) {
 			wp_enqueue_script( 'lunara-site-studio', $asset['uri'], $script_dependencies, function_exists( 'lunara_theme_asset_version' ) ? lunara_theme_asset_version( $asset['path'] ) : false, true );
@@ -295,10 +300,30 @@ if ( ! function_exists( 'lunara_site_studio_render_archive_order' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lunara_site_studio_render_archive_selection' ) ) {
+	function lunara_site_studio_render_archive_selection( $surface_id, $state ) {
+		$journal = 'journal-archive' === $surface_id;
+		lunara_site_studio_render_details_open( 'stories', __( 'Stories', 'lunara-film' ), false, array( 'hero', 'grid' ) );
+		echo '<div data-archive-editor><div data-archive-legacy><p>' . esc_html__( 'Your existing story selection is preserved. Content and Layout changes keep those rules until you choose to use these story controls.', 'lunara-film' ) . '</p>';
+		echo '<p>' . esc_html( $journal ? __( 'The existing Shared lead follows the older homepage Journal pin, independently of the homepage carousel. Existing automatic or manual choices remain in place.', 'lunara-film' ) : __( 'The existing Reviews lead follows the first result of the saved archive query. A pinned or prioritized Review can appear before the newest publication.', 'lunara-film' ) ) . '</p>';
+		echo '<button type="button" data-archive-activate disabled>' . esc_html__( 'Use these story controls', 'lunara-film' ) . '</button></div><fieldset data-archive-controls disabled><legend>' . esc_html__( 'Featured story and archive order', 'lunara-film' ) . '</legend>';
+		echo '<p>' . esc_html__( 'Selections stay in this workspace until Apply. Switching modes retains your Manual choices. Preview the full page before applying.', 'lunara-film' ) . '</p>';
+		echo '<label>' . esc_html__( 'Featured story', 'lunara-film' ) . ' <select data-archive-lead-mode data-error-key="lead_mode" aria-describedby="lunara-archive-lead-mode-error"><option value="automatic">' . esc_html__( 'Automatic — newest published', 'lunara-film' ) . '</option><option value="manual">' . esc_html__( 'Manual selection', 'lunara-film' ) . '</option>';
+		if ( $journal ) { echo '<option value="shared">' . esc_html__( 'Legacy shared — older homepage Journal pin', 'lunara-film' ) . '</option>'; }
+		echo '</select></label><span class="lunara-site-studio-error" id="lunara-archive-lead-mode-error" hidden></span><p data-archive-lead-status aria-live="polite"></p><div data-archive-lead-selected data-error-key="lead_id" tabindex="-1" aria-describedby="lunara-archive-lead-error" aria-live="polite"></div><span class="lunara-site-studio-error" id="lunara-archive-lead-error" hidden></span>';
+		echo '<div data-archive-lead-manual><label>' . esc_html__( 'Search for a featured story', 'lunara-film' ) . ' <input type="search" data-archive-lead-search maxlength="100"></label><button type="button" data-archive-lead-search-button>' . esc_html__( 'Search', 'lunara-film' ) . '</button><div data-archive-lead-results aria-live="polite"></div><button type="button" data-archive-lead-clear>' . esc_html__( 'Clear Manual selection', 'lunara-film' ) . '</button></div>';
+		echo '<label>' . esc_html__( 'Archive ordering', 'lunara-film' ) . ' <select data-archive-lane-mode data-error-key="lane_mode" aria-describedby="lunara-archive-lane-mode-error"><option value="query">' . esc_html__( 'Automatic — normal archive ordering', 'lunara-film' ) . '</option><option value="curated">' . esc_html__( 'Manual priorities — selected stories first', 'lunara-film' ) . '</option></select></label><span class="lunara-site-studio-error" id="lunara-archive-lane-mode-error" hidden></span>';
+		echo '<p>' . esc_html( $journal ? __( 'Priorities come first on the Journal archive, followed by the remaining stories. They stay ahead when visitors change the archive sort; topic and section archives keep their own ordering.', 'lunara-film' ) : __( 'Priorities come first with the default Newest publication sort and no year filter. Other sorts and year filters use the normal archive order. The complete archive remains available.', 'lunara-film' ) ) . '</p><p data-archive-priority-status aria-live="polite"></p>';
+		echo '<div data-archive-priority-manual><label>' . esc_html__( 'Search stories to prioritize', 'lunara-film' ) . ' <input type="search" data-archive-priority-search maxlength="100"></label><button type="button" data-archive-priority-search-button>' . esc_html__( 'Search', 'lunara-film' ) . '</button><div data-archive-priority-results aria-live="polite"></div><p>' . esc_html__( 'Choose up to 24 stories. Drag to reorder, or use Move earlier and Move later with the keyboard.', 'lunara-film' ) . '</p><div data-error-key="curated_ids" tabindex="-1" aria-describedby="lunara-archive-priority-error"><ol data-archive-priority-list></ol><span class="lunara-site-studio-error" id="lunara-archive-priority-error" hidden></span></div></div></fieldset><p data-archive-status aria-live="polite"></p><button type="button" data-archive-retry hidden>' . esc_html__( 'Retry details', 'lunara-film' ) . '</button></div>';
+		lunara_site_studio_render_details_close();
+	}
+}
+
 if ( ! function_exists( 'lunara_site_studio_render_archive_inspector' ) ) {
 	function lunara_site_studio_render_archive_inspector( $surface_id, $state, $revisions, $classic_url ) {
 		lunara_site_studio_render_details_open( 'essentials', __( 'Content', 'lunara-film' ), true, 'reviews-archive' === $surface_id ? array( 'hero' ) : array( 'hero', 'deskbar' ) );
 		lunara_site_studio_render_field( 'kicker', __( 'Kicker', 'lunara-film' ), $state['kicker'] ); lunara_site_studio_render_field( 'title', __( 'Title', 'lunara-film' ), $state['title'] ); lunara_site_studio_render_field( 'deck', __( 'Introduction', 'lunara-film' ), $state['deck'], 'textarea' ); lunara_site_studio_render_field( 'supporting_copy', __( 'Supporting copy', 'lunara-film' ), $state['supporting_copy'], 'textarea' ); lunara_site_studio_render_details_close();
+		lunara_site_studio_render_archive_selection( $surface_id, $state );
 		$specs = lunara_site_studio_archive_control_specs( $surface_id );
 		lunara_site_studio_render_details_open( 'fine-tune', __( 'Layout', 'lunara-film' ), false, 'reviews-archive' === $surface_id ? array( 'grid', 'pagination', 'pairing-desk' ) : array( 'filters', 'toolbar', 'grid' ) );
 		echo '<p>' . esc_html__( 'These settings shape the whole page. Check Desktop, Tablet and Mobile above the preview before applying.', 'lunara-film' ) . '</p>';

@@ -16,7 +16,7 @@ async function pointerDrag(page, source, target) { const from=await source.bound
     await layout.route('https://example.test/**',r=>r.fulfill({contentType:'text/html',body:r.request().url().includes('/wp-admin/')?fixture(surface):'<!doctype html><body>Live</body>'}));
     await layout.goto('https://example.test/wp-admin/admin.php?page=lunara-site-studio&surface='+surface);await layout.waitForSelector('[data-lunara-site-studio-ready="true"]');
     await layout.addStyleTag({content:'body{margin:0;font:14px/1.5 system-ui}button,input,select,textarea{font:inherit}'});
-    const measured=await layout.locator('.lunara-site-studio-order-row').evaluateAll(rows=>rows.map(row=>{
+    const measured=await layout.locator('[data-section-row],[data-home-row]').evaluateAll(rows=>rows.map(row=>{
      const rect=n=>{const r=n.getBoundingClientRect();return{x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height};};
      const overlaps=(a,b)=>Math.min(a.right,b.right)-Math.max(a.x,b.x)>0.5&&Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y)>0.5;
      const children=[...row.children].filter(n=>!n.hidden),bounds=rect(row),boxes=children.map(rect),errors=[];
