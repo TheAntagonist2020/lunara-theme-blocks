@@ -192,14 +192,14 @@ function lunara_site_studio_render_home_oscars_inspector( $surface, $state, $rev
 	$kind = 'home-oscar-picks' === $surface ? 'picks' : 'facts';
 	$spec = lunara_site_studio_home_oscars_spec( $kind );
 	$labels = array( 'kicker' => 'Label', 'heading' => 'Section heading', 'summary' => 'Supporting text', 'cta_text' => 'Button text', 'mode' => 'Selection mode', 'ceremony_year' => 'Ceremony year', 'count' => 'Maximum cards', 'autoplay_interval' => 'Rotation interval (milliseconds; 0 pauses)', 'density' => 'Card spacing and text density', 'card_min_height' => 'Minimum card height (pixels)' );
-	lunara_site_studio_render_details_open( 'essentials', 'Essentials', true, array( 'oscar-' . $kind ) );
+	lunara_site_studio_render_details_open( 'essentials', 'Content', true, array( 'oscar-' . $kind ) );
 	foreach ( $spec['copy'] as $key => $def ) { lunara_site_studio_render_control( 'copy.' . $key, $state['copy'][$key], $def, $labels[$key] ); }
 	lunara_site_studio_render_details_close();
-	lunara_site_studio_render_details_open( 'lineup', 'Lineup', true, array( 'oscar-' . $kind ) );
+	lunara_site_studio_render_details_open( 'lineup', 'Stories and images', true, array( 'oscar-' . $kind ) );
 	foreach ( $spec['selection'] as $key => $def ) { if ( 'ids' !== $key ) { lunara_site_studio_render_control( 'selection.' . $key, $state['selection'][$key], $def, $labels[$key] ); } }
 	echo '<p>Legacy keeps your existing lineup. Automatic uses the newest published items. Manual retains your list when switching modes; unavailable selections are skipped. Image framing changes this homepage placement only.</p><div data-home-oscars-editor><div data-home-oscars-manual><label>Search published items <input type="search" maxlength="200" data-oscars-search></label><button type="button" data-oscars-search-button>Search</button><div data-oscars-results></div></div><ol data-oscars-lineup></ol><p data-oscars-status role="status" aria-live="polite"></p><p data-error-key="selection.ids" tabindex="-1" aria-describedby="lunara-oscars-ids-error"><span id="lunara-oscars-ids-error" class="lunara-site-studio-error" hidden></span></p><p data-error-key="artwork.overrides" tabindex="-1" aria-describedby="lunara-oscars-artwork-error"><span id="lunara-oscars-artwork-error" data-oscars-artwork-error class="lunara-site-studio-error" hidden></span></p></div>';
 	lunara_site_studio_render_details_close();
-	lunara_site_studio_render_details_open( 'fine-tune', 'Fine Tune', false, array( 'oscar-' . $kind ) );
+	lunara_site_studio_render_details_open( 'fine-tune', 'Layout', false, array( 'oscar-' . $kind ) );
 	foreach ( $spec['presentation'] as $key => $def ) {
 		if ( 'autoplay_interval' === $key ) {
 			echo '<label class="lunara-site-studio-field">Time between advances (seconds; 0 pauses)<input type="number" min="0" max="12" step="0.5" data-oscars-interval data-error-key="presentation.autoplay_interval" aria-describedby="lunara-oscars-interval-error" value="' . esc_attr( $state['presentation'][$key] / 1000 ) . '"><span id="lunara-oscars-interval-error" class="lunara-site-studio-error" hidden></span></label>';

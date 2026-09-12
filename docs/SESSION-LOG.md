@@ -25,6 +25,88 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-12 — Theme 3.2.69 page workspaces and site standard
+
+### Headline
+
+Dalton wants one intuitive editing suite and a premium, recognizable experience
+across Home, Reviews, Journal and Oscars. The audit found shared transactions
+already in place but incomplete control migration and fragmented navigation.
+Theme 3.2.69 groups editors by page; the broader standard and measured backlog
+are in `docs/SITE-EXPERIENCE-STANDARD.md`.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| Explicit-version 3.2.68 canary | All three anonymous reads still served `3.2.67+20260911-195706`. Journal and Oscars failed the expected-version binding; exit 1, not GO. |
+| Signed-in public browser | Home, Reviews, Journal and Oscars also served 3.2.67. Reported deployment has not been verified. |
+| Four-page visual inspection | Reviews opens with a large statistics/identity panel; Journal places identity, counters and filters above story images; header text navigation differs across routes. |
+| Oscars at 390px | Document width remains 390px; main heading hyphenates ordinary words across lines. Public typography fix remains open. |
+
+### What shipped and why
+
+See `docs/CHANGELOG.md` for the candidate's navigation and inspector changes.
+No agent deployment or manual cache purge occurred. Theme 3.2.69 is not
+deployed; its live canary is pending.
+
+### Commit ledger
+
+| Repo | Commit or release reference | Meaning |
+| --- | --- | --- |
+| Theme | `6efe56141cb4ef5cbb6bdec62583b97f2d031d9b` / PR #188 | 3.2.68 merged on main; reported deployment is not yet confirmed by public probes. |
+| Theme | `codex/site-studio-pages-3.2.69` | Page navigation, inspector grouping and site experience standard, based on current main. |
+
+### Gate ledger
+
+- Full theme contract suite: 95/95 passed, including the new navigation browser
+  regression in the existing workspace gate.
+- Targeted shared PHP runtime, four-width workspace browser run and five-surface
+  editorial browser run passed. Initial test expectations were corrected for
+  the intentionally collapsed directory and archive Layout's item-count field.
+- New navigation coverage checks page/context links, permission filtering,
+  unavailable destinations, local search, no-JavaScript keyboard navigation,
+  unsaved-change cancellation/acceptance, and pending-preview navigation locks.
+- Mutation: removing the new links from the dirty-navigation guard failed the
+  first primary-page cancellation assertion. The fixed JS was restored by copy
+  and its SHA-256 matched the saved file exactly.
+- Desktop/mobile Home and desktop Reviews fixture screenshots were inspected.
+  They use real PHP editor markup with stubbed preview content; they are not
+  proof of a candidate deployed to WordPress.
+- Independent review found one misleading ledger destination label, corrected
+  to Ledger layouts. No other actionable review findings remained.
+- Syntax: 125 PHP, 62 JavaScript and 26 CSS files, zero failures.
+- No plugin code changed. No public settings or article content changed.
+
+### Corrections
+
+None to prior measured evidence. The 3.2.68 deployment report is recorded
+separately from the observed 3.2.67 responses; it is not treated as a passing
+canary or attributed to caching without further evidence.
+
+### Logged, not fixed
+
+- Archive lead/manual ordering, gallery and retention controls still need
+  shared-editor migration; existing canonical provider fields are identified
+  in the site experience standard.
+- Oscars portal controls and Academy record authoring remain distinct work.
+- The public design findings above, Boost Critical CSS, CDN quality and the
+  stylesheet diet remain open.
+
+### Punch-list carried forward
+
+- Candidate verification is complete. Agent: merge and rebuild exact rollback hatch.
+- Dalton: manual WordPress.com deployment of the verified main handoff.
+- Agent after deployment: explicit-version canary and real editor verification.
+- Next implementation: Reviews/Journal lead and ordered selection in Site
+  Studio, followed by the remaining Oscars controls and public layout pass.
+
+### Whose move it is next
+
+Agent: merge the verified candidate. Dalton: manual WordPress.com deployment
+after the main commit is supplied. The broader site work continues from the
+recorded standard, not from an assumption that navigation alone completes it.
+
 ## 2026-09-11 — Theme 3.2.67 acceptance and 3.2.68 Oscar artwork
 
 ### Headline

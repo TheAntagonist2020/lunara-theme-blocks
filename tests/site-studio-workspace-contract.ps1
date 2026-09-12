@@ -105,5 +105,7 @@ try {
     Assert-True ($LASTEXITCODE -eq 0) ("Site Studio editorial browser runtime failed: " + ($editorialNodeOutput -join [Environment]::NewLine))
     $viewportOutput = & $node (Join-Path $PSScriptRoot 'site-studio-preview-viewport-runtime.js') 2>&1
     Assert-True ($LASTEXITCODE -eq 0) ("Site Studio preview viewport failed: " + ($viewportOutput -join [Environment]::NewLine))
+    $navigationOutput = & $node (Join-Path $PSScriptRoot 'site-studio-navigation-runtime.js') 2>&1
+    Assert-True ($LASTEXITCODE -eq 0) ("Site Studio page navigation failed: " + ($navigationOutput -join [Environment]::NewLine))
 } finally { $env:LUNARA_BROWSER_EXECUTABLE = $priorBrowser; $env:NODE_PATH = $priorNodePath }
 Write-Host 'site-studio-workspace: all assertions passed.'

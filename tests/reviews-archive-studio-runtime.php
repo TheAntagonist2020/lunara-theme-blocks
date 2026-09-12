@@ -1,6 +1,6 @@
 <?php
 /**
- * Isolated behavioral contract for Theme 3.2.68 Reviews Archive Studio.
+ * Isolated behavioral contract for Theme 3.2.69 Reviews Archive Studio.
  *
  * Run: php tests/reviews-archive-studio-runtime.php
  */

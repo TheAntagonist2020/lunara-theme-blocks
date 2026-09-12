@@ -11,6 +11,27 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-12 — Theme 3.2.69 Page Workspaces
+
+Site Studio now starts with Home, Reviews, Journal and Oscars. Contextual links
+keep each page's editors together, while the complete searchable directory is
+available under All editors and tools. Home is the default destination when
+authorized. Its section rows link directly to the Hero, Journal, Method, Oscar
+Picks and Facts editors. Existing permissions, unavailable-destination feedback,
+safe URLs, keyboard access and mobile target sizing remain enforced.
+
+The new links share busy-state freezes and unsaved-change confirmation with the
+existing directory. Reviews and Journal now put all page geometry under Layout,
+rather than implying that height and spacing affect only mobile. Content and
+Layout labels align with the portal and homepage Oscar inspectors; History uses
+one shared label. Preview and Apply retain their existing private-preview and
+save transactions, and revision storage is unchanged.
+
+This release changes editing navigation and control grouping, not saved public
+presentation. It does not yet migrate archive lead/curation/gallery controls or
+the remaining Oscars portal tools from their existing owners. The measured gaps
+and next delivery sequence are recorded in `docs/SITE-EXPERIENCE-STANDARD.md`.
+
 ## 2026-09-11 — Theme 3.2.68 Oscar Artwork Controls
 
 Homepage Oscar Picks and Facts now share the image controls already used by
