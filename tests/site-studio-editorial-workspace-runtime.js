@@ -289,7 +289,7 @@ async function waitForFrame(page, expectedUrl) {
 			});
 			const expectedColumns = testCase.outerWidth > 1280 ? 3 : testCase.outerWidth > 782 ? 2 : 1;
 			assert(initial.cards === 10 && initial.iframes === 1, `${testCase.surface} must render the complete map and exactly one preview.`, initial);
-			assert(JSON.stringify(initial.open) === '["essentials"]', `${testCase.surface} must open only Essentials.`, initial);
+			assert(JSON.stringify(initial.open) === '["essentials"]', `${testCase.surface} must open only its first inspector group.`, initial);
 			assert(initial.doc[1] <= initial.doc[0] + 1 && initial.columns === expectedColumns, `${testCase.surface} responsive shell failed at ${testCase.outerWidth}px.`, initial);
 			assert(!initial.technicalText && initial.labels && initial.handoffText.includes(testCase.handoff), `${testCase.surface} controls must remain plain-language, labeled, and provide the canonical handoff.`, initial);
 
