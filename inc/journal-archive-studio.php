@@ -13,6 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/site-studio-archive-selection.php';
+
 if ( ! defined( 'LUNARA_JOURNAL_ARCHIVE_STUDIO_OPTION' ) ) {
 	define( 'LUNARA_JOURNAL_ARCHIVE_STUDIO_OPTION', 'lunara_journal_archive_studio_public' );
 }
@@ -31,6 +33,7 @@ if ( ! defined( 'LUNARA_JOURNAL_ARCHIVE_STUDIO_REVISION_LIMIT' ) ) {
 function lunara_journal_archive_studio_defaults() {
 	return array(
 		'schema_version'  => 1,
+		'selection_version' => 0,
 		'kicker'         => __( 'Journal', 'lunara-film' ),
 		'title'          => __( 'Lunara Journal', 'lunara-film' ),
 		'deck'           => '',
@@ -226,7 +229,7 @@ function lunara_journal_archive_studio_normalize_public_shape( $config, $default
 	$defaults = is_array( $defaults ) && ! empty( $defaults ) ? $defaults : lunara_journal_archive_studio_defaults();
 	$config   = is_array( $config ) ? array_replace( $defaults, $config ) : $defaults;
 
-	foreach ( array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'item_count' ) as $field ) {
+	foreach ( array( 'schema_version', 'selection_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'item_count' ) as $field ) {
 		$config[ $field ] = lunara_journal_archive_studio_scalar_or( $config[ $field ], $defaults[ $field ] );
 	}
 
@@ -330,6 +333,9 @@ function lunara_journal_archive_studio_repair_public_config( $config, $defaults 
 
 		$code = $validated->get_error_code();
 		switch ( $code ) {
+			case 'journal_archive_selection_version_invalid':
+				$config['selection_version'] = 0;
+				break;
 			case 'journal_archive_identity_required':
 				if ( '' === trim( (string) $config['kicker'] ) ) {
 					$config['kicker'] = $defaults['kicker'];
@@ -462,7 +468,7 @@ function lunara_journal_archive_studio_get_public_config( $allow_preview = true 
 	$new      = lunara_journal_archive_studio_get_new_fields();
 	$config   = $defaults;
 
-	foreach ( array( 'schema_version', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'filter_caps', 'labels', 'gallery', 'retention' ) as $key ) {
+	foreach ( array( 'schema_version', 'selection_version', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'filter_caps', 'labels', 'gallery', 'retention' ) as $key ) {
 		if ( array_key_exists( $key, $new ) ) {
 			$config[ $key ] = $new[ $key ];
 		}
@@ -521,6 +527,10 @@ function lunara_journal_archive_studio_get_public_config( $allow_preview = true 
  */
 function lunara_journal_archive_studio_degrade_invalid_references( $config ) {
 	$warnings = array();
+	if ( lunara_archive_selection_enabled( $config ) ) {
+		$warnings = lunara_archive_selection_warnings( $config, 'journal' );
+		$config = lunara_archive_selection_recover( $config, 'journal' );
+	} else {
 	if ( 'manual' === $config['lead_mode'] && ! lunara_journal_archive_studio_validate_post_id( $config['lead_id'] ) ) {
 		$config['lead_mode'] = 'shared';
 		$config['lead_id']   = 0;
@@ -539,6 +549,7 @@ function lunara_journal_archive_studio_degrade_invalid_references( $config ) {
 	if ( 'curated' === $config['lane_mode'] && empty( $curated ) ) {
 		$config['lane_mode'] = 'query';
 		$warnings[] = 'curated_lane_fell_back_to_query';
+	}
 	}
 	foreach ( $config['retention'] as $index => $card ) {
 		$image_id = absint( isset( $card['image_id'] ) ? $card['image_id'] : 0 );
@@ -959,6 +970,11 @@ function lunara_journal_archive_studio_validate_config( $raw ) {
 		}
 	}
 
+	if ( ! is_int( $config['selection_version'] ) || ! in_array( $config['selection_version'], array( 0, 1 ), true ) ) { return new WP_Error( 'journal_archive_selection_version_invalid' ); }
+	if ( lunara_archive_selection_enabled( $config ) ) {
+		$config = lunara_archive_selection_validate( $config, 'journal' );
+		if ( is_wp_error( $config ) ) { return $config; }
+	} else {
 	$config['lead_mode'] = sanitize_key( $config['lead_mode'] );
 	if ( ! in_array( $config['lead_mode'], array( 'shared', 'automatic', 'manual' ), true ) ) {
 		return new WP_Error( 'journal_archive_lead_mode_invalid' );
@@ -994,6 +1010,8 @@ function lunara_journal_archive_studio_validate_config( $raw ) {
 		return new WP_Error( 'journal_archive_curated_count_invalid' );
 	}
 	$config['curated_ids'] = $curated;
+
+	}
 
 	$required_order = $defaults['section_order'];
 	$order          = is_array( $config['section_order'] ) ? array_map( 'sanitize_key', $config['section_order'] ) : array();
@@ -1296,6 +1314,7 @@ function lunara_journal_archive_studio_apply_config( $config ) {
 		LUNARA_JOURNAL_ARCHIVE_STUDIO_OPTION,
 		array(
 			'schema_version'  => 1,
+			'selection_version' => $config['selection_version'],
 			'supporting_copy' => $config['supporting_copy'],
 			'lead_mode'       => $config['lead_mode'],
 			'lead_id'         => $config['lead_id'],
@@ -1403,7 +1422,9 @@ function lunara_journal_archive_studio_restore_revision_transaction( $revision_i
 		if ( empty( $revision['id'] ) || ! hash_equals( (string) $revision['id'], $revision_id ) || empty( $revision['prior_public'] ) ) {
 			continue;
 		}
-		$validated = lunara_journal_archive_studio_validate_config( isset( $revision['config'] ) ? $revision['config'] : array() );
+		$target = isset( $revision['config'] ) ? $revision['config'] : array();
+		if ( lunara_archive_selection_enabled( $target ) ) { $target = lunara_archive_selection_recover( $target, 'journal' ); }
+		$validated = lunara_journal_archive_studio_validate_config( $target );
 		if ( is_wp_error( $validated ) ) {
 			return $validated;
 		}
@@ -1951,7 +1972,7 @@ function lunara_journal_archive_studio_configure_query( $query ) {
 	}
 	if ( 'curated' === $config['lane_mode'] ) {
 		foreach ( $config['curated_ids'] as $post_id ) {
-			$post_id = absint( $post_id );
+			$post_id = lunara_journal_archive_studio_validate_post_id( $post_id );
 			if ( $post_id && ! in_array( $post_id, $priority, true ) ) {
 				$priority[] = $post_id;
 			}
@@ -2236,7 +2257,7 @@ function lunara_journal_archive_studio_render_control_surface( $context = 'site-
 						<?php endforeach; ?>
 					</div></fieldset>
 					<label><span><strong><?php esc_html_e( 'Find a published lead', 'lunara-film' ); ?></strong><small><?php esc_html_e( 'Twenty recent choices load first; type at least two title characters or an exact ID to search every published Journal file.', 'lunara-film' ); ?></small></span><input type="search" data-lunara-journal-post-filter="#lunara-journal-archive-lead-id" placeholder="<?php esc_attr_e( 'Search title or ID', 'lunara-film' ); ?>" /><small data-lunara-journal-post-search-status aria-live="polite"></small></label>
-					<label><span><strong><?php esc_html_e( 'Manual lead file', 'lunara-film' ); ?></strong></span><select id="lunara-journal-archive-lead-id" name="lunara_journal_archive_lead_id"><option value="0"><?php esc_html_e( 'Choose a published Journal file', 'lunara-film' ); ?></option><?php foreach ( $posts as $journal_post ) : ?><option value="<?php echo esc_attr( $journal_post->ID ); ?>" <?php selected( $config['lead_id'], $journal_post->ID ); ?>><?php echo esc_html( sprintf( '#%1$d — %2$s', $journal_post->ID, get_the_title( $journal_post ) ) ); ?></option><?php endforeach; ?></select></label>
+					<label><span><strong><?php esc_html_e( 'Manual lead file', 'lunara-film' ); ?></strong></span><select id="lunara-journal-archive-lead-id" name="lunara_journal_archive_lead_id"><option value="0"><?php esc_html_e( 'Choose a published Journal file', 'lunara-film' ); ?></option><?php echo lunara_archive_selection_unavailable_lead_option( $config, 'journal' ); ?><?php foreach ( $posts as $journal_post ) : ?><option value="<?php echo esc_attr( $journal_post->ID ); ?>" <?php selected( $config['lead_id'], $journal_post->ID ); ?>><?php echo esc_html( sprintf( '#%1$d — %2$s', $journal_post->ID, get_the_title( $journal_post ) ) ); ?></option><?php endforeach; ?></select></label>
 				</div>
 
 				<div class="lunara-control-desk-homepage-card">
@@ -2250,7 +2271,7 @@ function lunara_journal_archive_studio_render_control_surface( $context = 'site-
 						<label><span><strong><?php esc_html_e( 'Find any published Journal file', 'lunara-film' ); ?></strong><small><?php esc_html_e( 'Twenty recent choices load first; type at least two title characters or an exact ID to search every eligible published file.', 'lunara-film' ); ?></small></span><input type="search" data-lunara-journal-post-filter="#lunara-journal-curated-picker" placeholder="<?php esc_attr_e( 'Search title or ID', 'lunara-film' ); ?>" /><small data-lunara-journal-post-search-status aria-live="polite"></small></label>
 						<div class="lunara-control-desk-actions"><select id="lunara-journal-curated-picker" data-lunara-journal-curated-picker><option value="0"><?php esc_html_e( 'Choose a published file', 'lunara-film' ); ?></option><?php foreach ( $posts as $journal_post ) : ?><option value="<?php echo esc_attr( $journal_post->ID ); ?>"><?php echo esc_html( sprintf( '#%1$d — %2$s', $journal_post->ID, get_the_title( $journal_post ) ) ); ?></option><?php endforeach; ?></select><button type="button" class="button" data-lunara-journal-curated-add><?php esc_html_e( 'Add to curated run', 'lunara-film' ); ?></button></div>
 						<ol class="lunara-journal-curated-list" data-lunara-journal-curated-list aria-label="<?php esc_attr_e( 'Curated Journal order', 'lunara-film' ); ?>">
-							<?php foreach ( $config['curated_ids'] as $curated_id ) : $curated_post = get_post( $curated_id ); if ( ! $curated_post instanceof WP_Post ) { continue; } ?><li data-lunara-journal-curated-item data-post-id="<?php echo esc_attr( $curated_id ); ?>"><span><?php echo esc_html( sprintf( '#%1$d — %2$s', $curated_id, get_the_title( $curated_post ) ) ); ?></span><input type="hidden" name="lunara_journal_archive_curated_ids[]" value="<?php echo esc_attr( $curated_id ); ?>" /><span class="lunara-control-desk-actions"><button type="button" class="button button-small" data-lunara-journal-curated-move="up"><?php esc_html_e( 'Up', 'lunara-film' ); ?></button><button type="button" class="button button-small" data-lunara-journal-curated-move="down"><?php esc_html_e( 'Down', 'lunara-film' ); ?></button><button type="button" class="button button-small" data-lunara-journal-curated-remove><?php esc_html_e( 'Remove', 'lunara-film' ); ?></button></span></li><?php endforeach; ?>
+							<?php echo lunara_archive_selection_classic_rows( $config, 'journal' ); ?>
 						</ol>
 						<p class="lunara-control-desk-subtle"><?php esc_html_e( 'Up and Down define the exact server-rendered priority order. Buttons are keyboard accessible; duplicates are refused.', 'lunara-film' ); ?></p>
 					</div>

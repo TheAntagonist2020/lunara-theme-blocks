@@ -292,6 +292,10 @@ if ( ! class_exists( 'Lunara_Site_Studio_Provider_Adapter' ) ) {
 			}
 			$merged = $current;
 			foreach ( $this->managed_paths as $path ) {
+				// Unactivated story controls are a read-only snapshot. A copy/layout
+				// save must preserve selections changed by their canonical owner
+				// after this browser opened, including another Studio activation.
+				if ( in_array( $this->surface, array( 'reviews-archive', 'journal-archive' ), true ) && isset( $candidate['selection_version'] ) && 0 === $candidate['selection_version'] && in_array( $path, array( 'selection_version', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids' ), true ) ) { continue; }
 				$parts = explode( '.', $path );
 				$source = $candidate;
 				foreach ( $parts as $part ) {
@@ -1308,6 +1312,7 @@ if ( ! function_exists( 'lunara_site_studio_reviews_archive_managed_paths' ) ) {
 	/** @return array<int,string> */
 	function lunara_site_studio_reviews_archive_managed_paths() {
 		return array(
+			'selection_version', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids',
 			'kicker', 'title', 'deck', 'supporting_copy', 'item_count', 'section_order',
 			'section_visibility.hero', 'section_visibility.grid', 'section_visibility.pagination', 'section_visibility.pairing-desk',
 			'presentation.density', 'presentation.lead_prominence', 'presentation.rail_density', 'presentation.section_gap',
@@ -1319,6 +1324,7 @@ if ( ! function_exists( 'lunara_site_studio_journal_archive_managed_paths' ) ) {
 	/** @return array<int,string> */
 	function lunara_site_studio_journal_archive_managed_paths() {
 		return array(
+			'selection_version', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids',
 			'kicker', 'title', 'deck', 'supporting_copy', 'item_count', 'section_order',
 			'section_visibility.hero', 'section_visibility.deskbar', 'section_visibility.filters', 'section_visibility.toolbar',
 			'section_visibility.grid', 'section_visibility.retention', 'section_visibility.pagination',
@@ -1332,6 +1338,14 @@ if ( ! function_exists( 'lunara_site_studio_reviews_archive_validation_fields' )
 	/** Map mature provider codes to the exact safe controls Site Studio owns. */
 	function lunara_site_studio_reviews_archive_validation_fields() {
 		return array(
+			'reviews_archive_selection_version_invalid' => array( 'lead_mode' ),
+			'reviews_archive_lead_mode_invalid' => array( 'lead_mode' ),
+			'reviews_archive_lead_invalid' => array( 'lead_id' ),
+			'reviews_archive_lane_mode_invalid' => array( 'lane_mode' ),
+			'reviews_archive_curated_count_invalid' => array( 'curated_ids' ),
+			'reviews_archive_curated_post_invalid' => array( 'curated_ids' ),
+			'reviews_archive_curated_duplicate' => array( 'curated_ids' ),
+
 			'reviews_archive_config_invalid' => array( 'deck', 'supporting_copy', 'section_visibility' ),
 			'reviews_archive_identity_required' => array( 'kicker', 'title' ),
 			'reviews_archive_item_count_invalid' => array( 'item_count' ),
@@ -1346,6 +1360,14 @@ if ( ! function_exists( 'lunara_site_studio_journal_archive_validation_fields' )
 	/** Map mature provider codes to the exact safe controls Site Studio owns. */
 	function lunara_site_studio_journal_archive_validation_fields() {
 		return array(
+			'journal_archive_selection_version_invalid' => array( 'lead_mode' ),
+			'journal_archive_lead_mode_invalid' => array( 'lead_mode' ),
+			'journal_archive_lead_invalid' => array( 'lead_id' ),
+			'journal_archive_lane_mode_invalid' => array( 'lane_mode' ),
+			'journal_archive_curated_count_invalid' => array( 'curated_ids' ),
+			'journal_archive_curated_post_invalid' => array( 'curated_ids' ),
+			'journal_archive_curated_duplicate' => array( 'curated_ids' ),
+
 			'journal_archive_config_invalid' => array( 'deck', 'supporting_copy', 'section_visibility' ),
 			'journal_archive_identity_required' => array( 'kicker', 'title' ),
 			'journal_archive_item_count_invalid' => array( 'item_count' ),

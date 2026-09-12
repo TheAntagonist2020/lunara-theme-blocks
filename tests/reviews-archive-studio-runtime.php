@@ -1,6 +1,6 @@
 <?php
 /**
- * Isolated behavioral contract for Theme 3.2.69 Reviews Archive Studio.
+ * Isolated behavioral contract for Theme 3.2.70 Reviews Archive Studio.
  *
  * Run: php tests/reviews-archive-studio-runtime.php
  */
@@ -277,7 +277,7 @@ require dirname( __DIR__ ) . '/inc/site-studio-registry.php';
 require dirname( __DIR__ ) . '/inc/site-studio-adapters.php';
 
 $reviews_projection_schema = lunara_site_studio_reviews_archive_state_schema();
-lunara_test_assert( array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) === array_keys( $reviews_projection_schema ), 'Reviews projection schema must inventory every authoritative top-level provider key.' );
+lunara_test_assert( array( 'schema_version', 'selection_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) === array_keys( $reviews_projection_schema ), 'Reviews projection schema must inventory every authoritative top-level provider key.' );
 lunara_test_assert( array( 'debrief_kicker', 'debrief_depth', 'debrief_visible', 'debrief_latest', 'debrief_order', 'hero_action_run', 'hero_action_oscars', 'hero_action_journal', 'toolbar_kicker', 'toolbar_title', 'sort_label', 'sort_release_desc', 'sort_release_asc', 'sort_modified_desc', 'year_label', 'year_all', 'year_filter', 'support_kicker', 'support_title', 'run_kicker', 'run_title', 'retention_kicker', 'retention_title', 'retention_copy', 'pagination_prev', 'pagination_next' ) === array_keys( $reviews_projection_schema['labels'] ), 'Reviews projection schema must inventory every authoritative label key.' );
 lunara_test_assert( array( 'hero', 'grid', 'pagination', 'pairing-desk' ) === array_keys( $reviews_projection_schema['section_visibility'] ), 'Reviews projection schema must inventory every authoritative visibility key.' );
 lunara_test_assert( array( 'kicker', 'title', 'copy', 'items' ) === array_keys( $reviews_projection_schema['gallery'] ), 'Reviews projection schema must inventory the exact gallery container.' );
@@ -589,7 +589,7 @@ $wrong_gallery_items = $defaults;
 $wrong_gallery_items['gallery']['items'] = 'not-an-array';
 lunara_test_assert( is_wp_error( lunara_reviews_archive_studio_validate_config( $wrong_gallery_items ) ), 'Strict validation must reject a wrong-shaped gallery item collection.' );
 $wrong_scalar_candidates = array();
-foreach ( array( 'schema_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'item_count' ) as $scalar_key ) {
+foreach ( array( 'schema_version', 'selection_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'item_count' ) as $scalar_key ) {
 	$candidate = $defaults;
 	$candidate[ $scalar_key ] = array( 'malformed' );
 	$wrong_scalar_candidates[] = $candidate;
@@ -1209,5 +1209,8 @@ $director_sql_query->review_archive = false;
 lunara_test_assert( 'wp_posts.menu_order ASC' === lunara_reviews_archive_studio_priority_orderby( 'wp_posts.menu_order ASC', $director_sql_query ), 'A director query without priority IDs must keep its native term ordering byte-for-byte.' );
 lunara_test_assert( 'wp_posts.menu_order ASC' === lunara_reviews_archive_pinned_orderby( 'wp_posts.menu_order ASC', $director_sql_query ), 'The pin filter must also leave a director query untouched.' );
 lunara_test_assert( serialize( $pristine_defaults ) === serialize( lunara_reviews_archive_studio_defaults() ), 'Nothing in the run may have mutated the pure defaults the director path depends on.' );
+
+$archive_selection_kind = 'reviews';
+require __DIR__ . '/archive-selection-provider-cases.php';
 
 fwrite( STDOUT, "reviews-archive-studio-runtime: all assertions passed.\n" );

@@ -11,6 +11,29 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-12 — Theme 3.2.70 Archive Story Selection
+
+Reviews and Journal gain a shared Stories inspector in Site Studio. Editors can
+choose a published lead, search by title or ID, and drag or keyboard-order up to
+24 priority stories. The remaining archive stays available. Automatic uses
+publication dates; Reviews' automatic opening no longer lets an older curated
+story displace the newest review. Journal's existing shared-homepage-pin mode
+is explicitly identified as legacy behavior.
+
+Manual choices survive mode changes. Unavailable priority stories stay visible
+as warnings in the editor and are skipped publicly. A missing or unavailable
+manual lead blocks Preview and Apply until replaced or switched to Automatic.
+Existing story rules remain active until the editor explicitly adopts the new
+controls; changing only Content or Layout does not change selection behavior.
+Existing query filters and sort scopes remain intact.
+
+The shared inspector uses canonical archive configuration, review pin ownership,
+private Preview, Apply, Discard and revision transactions. Selection metadata
+respects the same permission boundary and avoids disclosing unpublished content.
+The mobile inspector uses the existing shared controls and busy-state guards.
+Home and Oscars retain their existing editors; archive artwork/gallery controls
+and the broader public layout pass remain separate work.
+
 ## 2026-09-12 — Theme 3.2.69 Page Workspaces
 
 Site Studio now starts with Home, Reviews, Journal and Oscars. Contextual links

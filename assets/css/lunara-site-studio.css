@@ -57,6 +57,19 @@
 .lunara-site-studio-error { color:#b32d2e; display:block; font-weight:600; }
 .lunara-site-studio-error[hidden] { display:none; }
 .lunara-site-studio-order-row { align-items:center; border:1px solid var(--studio-line); border-radius:8px; display:grid; gap:6px; grid-template-columns:minmax(0,1fr) 44px 44px; margin:7px 0; min-width:0; padding:7px; }
+[data-archive-editor] fieldset { border:0; margin:18px 0 0; min-width:0; padding:0; }
+[data-archive-editor] legend { font-weight:650; margin-bottom:8px; }
+[data-archive-legacy], [data-archive-lead-selected], .lunara-archive-search-result { border:1px solid var(--studio-line); border-radius:8px; margin:12px 0; padding:12px; }
+[data-archive-priority-list] { list-style:none; margin:12px 0; padding:0; }
+[data-archive-priority-list] > .lunara-archive-story { display:block; padding:12px; }
+.lunara-archive-story-heading { align-items:center; display:flex; gap:12px; min-width:0; }
+.lunara-archive-story-copy { min-width:0; overflow-wrap:anywhere; }
+.lunara-archive-story-copy strong { display:block; }
+.lunara-archive-story-copy p { margin:5px 0 0; }
+.lunara-archive-search-result > button { margin-top:10px; max-width:100%; overflow-wrap:anywhere; white-space:normal; }
+.lunara-archive-story .lunara-editor-actions { margin-top:10px; }
+.lunara-archive-warning { color:#8a3510; font-weight:600; }
+[data-archive-lane-mode] { margin-top:20px; }
 .lunara-site-studio-order-row > span { grid-column:1 / -1; overflow-wrap:anywhere; }
 [data-oscars-lineup] { padding:0; list-style:none; }
 [data-oscars-lineup] > .lunara-site-studio-order-row { display:block; padding:14px; overflow:hidden; }

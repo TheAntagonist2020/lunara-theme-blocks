@@ -28,6 +28,7 @@ Assert-True (($runtime -join "`n") -match 'reviews-archive-studio-runtime: all a
 
 $loader          = Read-ThemeFile 'functions-loader.php'
 $studio          = Read-ThemeFile 'inc/reviews-archive-studio.php'
+$selectionHelper = Read-ThemeFile 'inc/site-studio-archive-selection.php'
 $control         = Read-ThemeFile 'inc/control-desk.php'
 $helpers         = Read-ThemeFile 'inc/helpers.php'
 $rendering       = Read-ThemeFile 'inc/review-rendering.php'
@@ -179,9 +180,9 @@ foreach ($setting in @(
 }
 $reviewsUi = $studio + $control
 Assert-True ($studio -match 'lunara_set_pinned_review_id') 'The Studio must write the lead only through the canonical pin helper.'
-Assert-True ($studio -notmatch "'lead_id'\s*=>\s*\`$config\['lead_id'\]") 'The Studio option payload must never store a lead ID; the pin meta is the whole lead state.'
+Assert-True ($studio -match 'if\s*\(\s*lunara_archive_selection_enabled\(\s*\$config\s*\)\s*\)\s*\{\s*\$new_fields\[''lead_id''\]\s*=\s*\$config\[''lead_id''\]') 'Only explicit selection adoption may remember an inactive lead in the provider option; the canonical pin remains the active owner.'
 Assert-True ($reviewsUi -match 'name="lunara_reviews_archive_item_count"[\s\S]{0,200}min="4"[\s\S]{0,60}max="24"') 'Reviews page count must be bounded locally from four to twenty-four.'
-Assert-True ($reviewsUi -match 'name="lunara_reviews_archive_curated_ids\[\]"') 'Curated entries must be chosen from published posts without raw ID entry.'
+Assert-True (($studio -match 'lunara_archive_selection_classic_rows\(\s*\$config,\s*''reviews''\s*\)') -and ($selectionHelper -match 'type="hidden"[\s\S]*?_archive_curated_ids\[\]')) 'Reviews must render its hidden curated selection fields through the shared, runtime-tested row helper.'
 Assert-True ($reviewsUi -match "lunara_reviews_archive_retention\[%d\]\[image_id\]") 'Retention cards must use Media Library attachment IDs.'
 Assert-True ($reviewsUi -match 'data-lunara-brand-media-picker') 'Retention media must use the existing WordPress Media Library picker.'
 foreach ($galleryField in @('alt','caption','link_url','credit','source','source_url','focal_x','focal_y')) {
@@ -243,8 +244,8 @@ Assert-True ($browserRuntime -match 'lunara-review-archive-page lra is-label-fon
 Assert-True ($browserRuntime -match 'showRetention:\s*false') 'The director first-paint fixture must omit the Studio-exempt retention lane.'
 
 # Version lock: this intentionally asserts the NEXT reissue identity. It is
-# EXPECTED to fail until the 3.2.69 version migration lands as its own step;
+# EXPECTED to fail until the 3.2.70 version migration lands as its own step;
 # every assertion above it must already pass on the pre-migration tree.
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.69\s*$') 'Theme version must be 3.2.69.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.70\s*$') 'Theme version must be 3.2.70.'
 
 Write-Host 'reviews-archive-studio: all assertions passed.'

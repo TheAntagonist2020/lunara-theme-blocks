@@ -1236,7 +1236,12 @@ if ( ! function_exists( 'lunara_get_review_archive_query_args' ) ) {
         }
 
         if ( 'release_desc' === $sort && '' === $year && function_exists( 'lunara_get_pinned_review_id' ) ) {
-            $pinned_id = lunara_get_pinned_review_id();
+            // Explicit adoption makes the resolved lead first, including
+            // unsaved private previews. The public pin remains the active
+            // manual owner; Automatic places newest publication before curation.
+            $pinned_id = function_exists( 'lunara_archive_selection_enabled' ) && lunara_archive_selection_enabled( $studio_config )
+                ? lunara_reviews_archive_studio_get_lead_id( $studio_config )
+                : lunara_get_pinned_review_id();
             if ( $pinned_id > 0 ) {
                 $query_args['lunara_reviews_archive_pinned_orderby'] = $pinned_id;
             }
@@ -1250,10 +1255,15 @@ if ( ! function_exists( 'lunara_get_review_archive_query_args' ) ) {
             && is_array( $studio_config )
             && isset( $studio_config['lane_mode'] ) && 'curated' === $studio_config['lane_mode']
             && function_exists( 'lunara_reviews_archive_studio_priority_orderby' ) ) {
-            $studio_pinned_id = function_exists( 'lunara_get_pinned_review_id' ) ? absint( lunara_get_pinned_review_id() ) : 0;
+            $studio_pinned_id = function_exists( 'lunara_archive_selection_enabled' ) && lunara_archive_selection_enabled( $studio_config )
+                ? lunara_reviews_archive_studio_get_lead_id( $studio_config )
+                : ( function_exists( 'lunara_get_pinned_review_id' ) ? absint( lunara_get_pinned_review_id() ) : 0 );
             $priority_ids     = array();
             foreach ( (array) ( isset( $studio_config['curated_ids'] ) ? $studio_config['curated_ids'] : array() ) as $curated_id ) {
                 $curated_id = is_scalar( $curated_id ) ? absint( $curated_id ) : 0;
+                if ( function_exists( 'lunara_archive_selection_enabled' ) && lunara_archive_selection_enabled( $studio_config ) ) {
+                    $curated_id = lunara_reviews_archive_studio_validate_post_id( $curated_id );
+                }
                 if ( $curated_id && $curated_id !== $studio_pinned_id && ! in_array( $curated_id, $priority_ids, true ) ) {
                     $priority_ids[] = $curated_id;
                 }

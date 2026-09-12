@@ -24,6 +24,7 @@ function fixture(surface, controllerSource, controlsSource) {
   .replace('</body>', '</div></div></div></div>'
    + (usesOrderedList ? '<script>' + sharedSource + '</script>' : '')
    + (surface === 'lunara-method' ? '<script>' + fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio-method.js'), 'utf8') + '</script>' : '')
+   + (surface === 'reviews-archive' || surface === 'journal-archive' ? '<script>' + fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio-archive-selection.js'), 'utf8') + '</script>' : '')
    + '<script>' + (controllerSource || controller) + '</script></body>');
 }
 

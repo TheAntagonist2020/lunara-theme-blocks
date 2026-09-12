@@ -57,18 +57,40 @@ The September 12 inspection still served build `3.2.67+20260911-195706` in
 anonymous canary requests and the signed-in browser, despite the reported
 3.2.68 deployment. Observations below describe that measured build.
 
+Later September 12 acceptance verified `3.2.69+20260912-151630` on all three
+anonymous reads, with both canonical canaries reporting `LIVE_COHERENT`.
+The real Site Studio page navigation loads; the Journal preview uses a stable
+390 by 844 mobile frame. The public composition findings below remain open.
+
 | Area | Observed gap | Next implementation / acceptance |
 | --- | --- | --- |
-| Site Studio entry | Flat directory of page, section and utility destinations above every editor | 3.2.69 candidate: four primary pages, contextual editors, collapsible searchable directory, guarded navigation. Home opens by default. |
-| Inspector groups | Archive-wide geometry filed under Mobile; inconsistent task labels | 3.2.69 candidate: archive Content/Layout groups, aligned Method and homepage Oscar labels, shared History. This does not add missing capabilities. |
-| Reviews and Journal editing | Lead and curated-order controls excluded from shared adapters | Next functional migration: existing provider `lead_mode`, `lead_id`, `lane_mode`, `curated_ids`; use shared list controls and canonical query/save/preview owners. Cover filters, unavailable selections, zero/one/many results and old revisions. |
+| Site Studio entry | Flat directory of page, section and utility destinations above every editor | Verified live in 3.2.69: four primary pages, contextual editors, collapsible searchable directory, guarded navigation. Home opens by default. |
+| Inspector groups | Archive-wide geometry filed under Mobile; inconsistent task labels | Verified live in 3.2.69: archive Content/Layout groups, aligned Method and homepage Oscar labels, shared History. This does not add missing capabilities. |
+| Reviews and Journal editing | Lead and curated-order controls excluded from shared adapters | 3.2.70 candidate: explicit Stories activation, retained lead and priority choices, shared search/drag/keyboard controls and canonical query/save/preview owners. Remaining artwork/gallery and retention migration stays open. |
 | Oscars editing | Some buttons, Quick Start cards and winner tools still live in Classic controls | Map each live portal placement to its canonical owner; migrate related controls in complete groups. Homepage Picks/Facts controls do not substitute for portal editing. |
 | Reviews opening | Large introductory/statistics panel precedes the lead review | Bring the current criticism into the opening composition, retain archive depth in a compact supporting position. Review desktop and phone together. |
 | Journal opening | Title, counters and filter panels precede visible story artwork | Bring current stories forward and condense supporting controls. Retain useful filtering and publication dates. |
 | Shared header | Home/Oscars omit the textual Search item present on Reviews/Journal | Resolve the live header/menu ownership and make navigation consistent without duplicating search controls. |
 | Oscars mobile | Heading hyphenates ordinary words such as history and living | Correct display-heading wrap rules; verify long titles at 320/390/768px with real content. |
 
-### Archive migration traps to resolve first
+### Archive migration findings and resolution
+
+The 3.2.70 candidate adds `selection_version` inside each existing provider;
+zero retains the old behavior, one enables the shared story rules. Merely
+opening Stories or applying unrelated Content/Layout changes does not adopt
+those rules. Reviews keeps its canonical pin as the active owner and remembers
+an inactive manual ID in the same provider option. Automatic resolves the newest
+publication before priority stories; private previews resolve their candidate
+lead without changing the public pin.
+
+Unavailable priority IDs remain recorded and are skipped publicly. Active
+Manual candidates need a published lead before Preview or Apply. If an already
+saved lead becomes unavailable, the read path recovers to Automatic, retains
+the remembered ID and reports a warning. Empty priority lists mean no priority,
+with the full archive still available. Classic controls must preserve unavailable
+IDs without revealing unpublished metadata. Old revisions retain their original
+selection semantics; restoring a newer revision can recover an unavailable lead
+to Automatic. The findings below retain the original audit context.
 
 The September 12 provider audit found behavioral differences that must be
 resolved before making the controls look interchangeable:

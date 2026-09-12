@@ -59,6 +59,7 @@ try {
 
 $loader   = Read-ThemeFile 'functions-loader.php'
 $studio   = Read-ThemeFile 'inc/journal-archive-studio.php'
+$selectionHelper = Read-ThemeFile 'inc/site-studio-archive-selection.php'
 $control  = Read-ThemeFile 'inc/control-desk.php'
 $helpers  = Read-ThemeFile 'inc/helpers.php'
 $archive  = Read-ThemeFile 'archive-journal.php'
@@ -165,7 +166,7 @@ Assert-True ($journalUi -match 'Shared homepage lead[\s\S]*?Automatic newest[\s\
 Assert-True ($journalUi -match 'post_status[\s\S]*?publish') 'The lead and curated selectors must only list published Journal entries.'
 Assert-True ($journalUi -match 'Validator[\s\S]*?Featured image[\s\S]*?Visual File Manager') 'The focused Studio must show validation/media status and link to the existing post-owned media tools.'
 Assert-True ($journalUi -match 'name="lunara_journal_archive_item_count"[\s\S]*?min="4"[\s\S]*?max="24"') 'Journal page count must be bounded locally from four to twenty-four.'
-Assert-True ($journalUi -match 'name="lunara_journal_archive_curated_ids\[\]"') 'Curated entries must be chosen from published posts without raw ID entry.'
+Assert-True (($studio -match 'lunara_archive_selection_classic_rows\(\s*\$config,\s*''journal''\s*\)') -and ($selectionHelper -match 'type="hidden"[\s\S]*?_archive_curated_ids\[\]')) 'Journal must render its hidden curated selection fields through the shared, runtime-tested row helper.'
 Assert-True ($studio -notmatch "'posts_per_page'\s*=>\s*-1") 'The private Journal picker must never load the complete archive in one query.'
 Assert-True (($searchFunction -match 'min\(\s*20\s*,\s*\$limit\s*\)') -and ($searchFunction -match '''posts_per_page''\s*=>\s*\$limit')) 'Journal post search must clamp and pass an explicit maximum of twenty results.'
 Assert-True (($searchFunction -match "'cache_results'\s*=>\s*false") -and ($searchFunction -match "'update_post_meta_cache'\s*=>\s*false") -and ($searchFunction -match "'update_post_term_cache'\s*=>\s*false")) 'Journal post search must not warm result, meta, or taxonomy caches.'
@@ -270,6 +271,6 @@ Assert-True ($studio -match "'/journal/'[\s\S]*?'/journal_section/'[\s\S]*?'/jou
 Assert-True ($studio -match 'get_terms\([\s\S]*?get_term_link\([\s\S]*?rocket_clean_files\(\s*\$urls\s*\)') 'The bounded cleaner must resolve actual term URLs and use a supported per-URL cache API when available.'
 Assert-True ($studio -notmatch 'rocket_clean_domain') 'Journal saves must never purge the full WP Rocket domain cache.'
 Assert-True ($studio -match "'validator_result'\s*=>[\s\S]*?'prior_public'\s*=>") 'Every revision must record validation and prior-public audit semantics.'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.69\s*$') 'Theme version must be 3.2.69.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.70\s*$') 'Theme version must be 3.2.70.'
 
 Write-Host 'journal-archive-studio: all assertions passed.'

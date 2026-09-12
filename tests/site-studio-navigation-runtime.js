@@ -10,6 +10,7 @@ const themeRoot = path.resolve(__dirname, '..');
 const css = fs.readFileSync(path.join(themeRoot, 'assets/css/lunara-site-studio.css'), 'utf8');
 const editorCss = fs.readFileSync(path.join(themeRoot, 'assets/css/lunara-editor-controls.css'), 'utf8');
 const editorControls = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-editor-controls.js'), 'utf8');
+const archiveEditor = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio-archive-selection.js'), 'utf8');
 const mainPages = { home: 'homepage-structure', reviews: 'reviews-archive', journal: 'journal-archive', oscars: 'oscars-portal' };
 const contextPages = {
  home: ['homepage-structure', 'hero-carousel', 'journal-carousel', 'lunara-method', 'home-oscar-picks', 'home-oscar-facts'],
@@ -25,7 +26,7 @@ function fixture(surface, options = {}) {
  if (result.error || result.status !== 0) throw result.error || new Error(result.stderr);
  return result.stdout.replace('</head>', `<style>${css}\n${editorCss}</style><style>#wpcontent{margin-left:160px}#wpbody-content{min-width:0;padding-bottom:40px}@media(max-width:782px){#wpcontent{margin-left:0}}</style></head>`)
   .replace('<body class="wp-admin">', '<body class="wp-admin"><div id="wpcontent"><div id="wpbody-content">')
-  .replace('</body>', `</div></div><script>${editorControls}</script><script>${controller}</script></body>`);
+  .replace('</body>', `</div></div><script>${editorControls}</script><script>${archiveEditor}</script><script>${controller}</script></body>`);
 }
 function barrier() { let enter, release; const entered = new Promise(resolve => { enter = resolve; }); const held = new Promise(resolve => { release = resolve; }); return { entered, release, wait: () => { enter(); return held; } }; }
 async function within(promise, label) {
@@ -90,11 +91,12 @@ async function navigationSnapshot(page) {
     }
     if (surface === 'reviews-archive' || surface === 'journal-archive') {
      const groups = await page.locator('.lunara-site-studio-inspector details').evaluateAll(nodes => nodes.map(node => ({ id: node.dataset.section, label: node.querySelector('summary').textContent.trim(), open: node.open, fields: [...node.querySelectorAll('[data-field-path]')].map(field => field.dataset.fieldPath) })));
-     equal(groups.map(group => group.id), ['essentials', 'fine-tune', 'advanced', 'revision-history'], `${surface}: shared inspector groups without false Mobile category`);
+     equal(groups.map(group => group.id), ['essentials', 'stories', 'fine-tune', 'advanced', 'revision-history'], `${surface}: shared inspector groups without false Mobile category`);
      equal(groups.filter(group => group.open).map(group => group.id), ['essentials'], `${surface}: Content opens first`);
-     equal(groups.map(group => group.label), ['Content', 'Layout', 'Advanced', 'History'], `${surface}: shared plain-language inspector labels`);
+     equal(groups.map(group => group.label), ['Content', 'Stories', 'Layout', 'Advanced', 'History'], `${surface}: shared plain-language inspector labels`);
      equal(groups[0].fields, ['kicker', 'title', 'deck', 'supporting_copy'], `${surface}: editorial copy is in Content`);
-     assert(groups[1].fields.length >= 7 && groups[1].fields.every(field => field === 'item_count' || field.startsWith('presentation.')), `${surface}: geometry and presentation stay together under Layout`, groups);
+     const layout = groups.find(group => group.id === 'fine-tune');
+     assert(layout.fields.length >= 7 && layout.fields.every(field => field === 'item_count' || field.startsWith('presentation.')), `${surface}: geometry and presentation stay together under Layout`, groups);
     }
     const requestCount = requests.length, loadCount = loads.length;
     await page.locator('[data-studio-tool-directory] > summary').click();
