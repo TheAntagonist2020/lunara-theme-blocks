@@ -13,6 +13,7 @@ const editorControls = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-ed
 const archiveMediaEditor = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio-archive-media.js'), 'utf8');
 const archiveEditor = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio-archive-selection.js'), 'utf8');
 const mainPages = { home: 'homepage-structure', reviews: 'reviews-archive', journal: 'journal-archive', oscars: 'oscars-portal' };
+const directorySurfaces = ['lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger', 'global-design', 'review-single', 'journal-single', 'utility-search', 'utility-404', 'site-footer', 'hero-carousel', 'journal-carousel', 'reviews-carousel', 'home-oscar-picks', 'home-oscar-facts'];
 const contextPages = {
  home: ['homepage-structure', 'hero-carousel', 'reviews-carousel', 'journal-carousel', 'lunara-method', 'home-oscar-picks', 'home-oscar-facts'],
  reviews: ['reviews-archive', 'review-single'], journal: ['journal-archive', 'journal-single'], oscars: ['oscars-portal', 'oscars-ledger']
@@ -83,7 +84,8 @@ async function navigationSnapshot(page) {
      const expected = mainPages[link.id] || link.id;
      assert(new URL(link.href).searchParams.get('surface') === expected && link.guarded, `${surface}: canonical guarded destination ${link.id}`, link);
     }
-    assert(!snapshot.directoryOpen && snapshot.searchInside && new Set(snapshot.cards).size === snapshot.cards.length && snapshot.cards.length === 16, `${surface}: secondary directory starts closed and retains all 16 registered destinations`, snapshot);
+    assert(!snapshot.directoryOpen && snapshot.searchInside && new Set(snapshot.cards).size === snapshot.cards.length, `${surface}: secondary directory starts closed with unique destinations`, snapshot);
+    equal(snapshot.cards, directorySurfaces, `${surface}: secondary directory retains all 17 destinations including 404 Recovery`);
     assert(snapshot.doc[1] <= snapshot.doc[0] + 1, `${surface}/${width}: document must not overflow`, snapshot);
     const targets = page.locator('[data-studio-page], [data-studio-editor]');
     for (let index = 0; index < await targets.count(); index += 1) {
@@ -125,7 +127,7 @@ async function navigationSnapshot(page) {
    for (const row of rows) assert(row.surface === homeEditors[row.section] && row.row === row.section && row.guarded, 'Section edit link must belong to the matching live row', row);
    await page.locator('[data-studio-tool-directory] > summary').focus();
    await page.keyboard.press('Enter');
-   assert(await page.locator('[data-studio-tool-directory]').getAttribute('open') !== null && await page.locator('[data-lunara-surface-card]:visible').count() === 16, `No JS/${width}: native disclosure exposes the full directory`);
+   assert(await page.locator('[data-studio-tool-directory]').getAttribute('open') !== null && await page.locator('[data-lunara-surface-card]:visible').count() === directorySurfaces.length, `No JS/${width}: native disclosure exposes the full directory`);
    await page.locator('[data-studio-page="reviews"]').focus();
    const focus = await page.locator('[data-studio-page="reviews"]').evaluate(node => ({ focused: document.activeElement === node, outline: getComputedStyle(node).outlineStyle }));
    assert(focus.focused && focus.outline !== 'none', 'Page links must retain visible keyboard focus.');

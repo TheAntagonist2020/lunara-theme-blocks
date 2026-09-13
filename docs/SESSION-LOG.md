@@ -25,6 +25,78 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Theme 3.2.77 footer and recovery release candidate
+
+### Headline
+
+Dalton confirms Academy 2.7.84 and Theme 3.2.76 are verified published live.
+The next batch implements Footer links, Search copy and 404 Recovery in Site
+Studio and corrects the reproduced Pick/Fact category rewrite collision.
+The seven-step goal remains active. See docs/CHANGELOG.md for behavior.
+
+### Verified live state
+
+| Check | Result |
+| --- | --- |
+| Fresh Theme 3.2.76 canary | Exit 0; three anonymous reads agree on `3.2.76+20260913-225857`; Journal and Oscars both `LIVE_COHERENT`. |
+| Academy 2.7.84 | Dalton confirms deployed and verified live; no new agent plugin identity probe in this batch. |
+
+### What shipped and why
+
+Implementation is on the follow-up topic branch. The Footer, Search and 404
+controls preserve existing presentation until explicit adoption where required.
+No agent deployment or manual cache purge occurred. Theme 3.2.77 is not
+deployed; its live canary is pending.
+
+### Commit ledger
+
+| Repo / reference | Meaning |
+| --- | --- |
+| Theme main `6c6b17c6b32af59d6794d14d0b324cdbbc329ed8` / PR #196 | Previous live 3.2.76 release. |
+| Academy main `2fea87341f1865142c253395064913c5cccb611c` / PR #29 | Previous live 2.7.84 release. |
+| `codex/footer-recovery-3.2.77` | Current functional candidate; release checks and merge receipt follow below when complete. |
+
+### Gate ledger
+
+Focused checks pass: Footer provider 114, Search/404 provider/templates 236,
+HTTP lifecycle 90, shared Footer/Search/404 browser 82, raw snapshot helper 22,
+and generic-page landmarks 4. Actual public templates pass 236 assertions over
+32 scenarios at 320/390/768/1440px with JavaScript disabled. Independent review
+found and resolved the Footer raw-copy Preview/Apply mismatch. Twelve isolated
+Footer/Search/UI/layout/routing mutations fail the intended behavior checks;
+canonical reruns pass. Routing passes 373 assertions against documented core-
+generated fixtures and its required seasonal-forecast gate passes.
+
+All 95 required gates were run locally: 93 passed initially. The SQL census
+counted a local backup inside the checkout; moving release artifacts to the
+workspace artifact directory restored the unchanged 22-reference ratchet.
+The workspace gate reached its final navigation test and exposed the obsolete
+16-destination expectation. It now asserts all 17 exact destinations including
+404 Recovery; the corrected navigation runtime passes 292 assertions. All
+earlier workspace subtests passed in that full run. Both failures have targeted
+passing reruns. PHP/JS syntax and all 27 CSS brace checks pass; final GitHub CI
+will rerun the complete suite on the committed candidate before merge.
+The Theme 3.2.77 public canary has not run because this is a local candidate.
+
+### Corrections / logged, not fixed
+
+This entry supersedes the previous pending-deployment status for 3.2.76 and
+Academy 2.7.84. The older entries remain historical records. The earlier
+stale-rewrite speculation is superseded by a local reproduction with the actual
+WordPress rewrite generator. The correction preserves unknown custom rules and
+does not flush or write the saved option. Its public route acceptance, Critical
+CSS regeneration, controlled performance comparison and editorial curation
+remain open in SITE-COMPLETION-PLAN.md. Public rendering checks across
+all article and Academy variants remain distinct from deployment confirmation.
+
+### Punch-list and whose move is next
+
+Agent completes review, required gates, PR/merge and exact rollback rebuild.
+Dalton then uses manual WordPress.com deployment for Theme 3.2.77. Continue
+the remaining public route matrix, measured performance and editorial readiness.
+
+---
+
 ## 2026-09-13 — Theme 3.2.76 merged; deployment handoff and next editor batch
 
 ### Headline

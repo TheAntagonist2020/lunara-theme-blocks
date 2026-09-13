@@ -1458,11 +1458,7 @@ if ( ! function_exists( 'lunara_render_footer_link_list' ) ) {
 }
 
 /**
- * Optional legacy Lunara footer output.
- *
- * Blocksy should own the live footer shell by default. This renderer remains as
- * a fallback path that can be re-enabled through a filter if needed during the
- * transition.
+ * The active Lunara footer shell and its canonical shared-editor link lists.
  */
 function lunara_render_custom_footer() {
     $show_logo  = get_theme_mod( 'lunara_footer_show_logo', true );
@@ -1471,6 +1467,7 @@ function lunara_render_custom_footer() {
     $col2_head  = get_theme_mod( 'lunara_footer_col2_heading', 'Oscar Ledger' );
     $col3_head  = get_theme_mod( 'lunara_footer_col3_heading', 'Utility' );
     $copyright  = get_theme_mod( 'lunara_footer_copyright', 'Lunara Film' );
+    $navigation = lunara_site_studio_footer_navigation_resolved_columns();
     ?>
     <footer class="lunara-site-footer" data-lunara-site-studio-section="footer" role="contentinfo">
         <div class="lunara-footer-inner">
@@ -1501,13 +1498,7 @@ function lunara_render_custom_footer() {
                         <h4 class="lunara-footer-col-heading"><?php echo esc_html( $col1_head ); ?></h4>
                     <?php endif; ?>
                     <?php
-                    lunara_render_footer_link_list( array(
-                        array( 'label' => __( 'Home', 'lunara-film' ), 'url' => home_url( '/' ) ),
-                        array( 'label' => __( 'Reviews', 'lunara-film' ), 'url' => get_post_type_archive_link( 'review' ) ?: home_url( '/reviews/' ) ),
-                        array( 'label' => __( 'Journal', 'lunara-film' ), 'url' => get_post_type_archive_link( 'journal' ) ?: home_url( '/journal/' ) ),
-                        array( 'label' => __( 'About', 'lunara-film' ), 'url' => home_url( '/about/' ) ),
-                        array( 'label' => __( 'Editorial Policy', 'lunara-film' ), 'url' => home_url( '/editorial-policy/' ) ),
-                    ) );
+                    lunara_render_footer_link_list( $navigation['editorial'] );
                     ?>
                 </div>
                 <div class="lunara-footer-nav-col">
@@ -1515,12 +1506,7 @@ function lunara_render_custom_footer() {
                         <h4 class="lunara-footer-col-heading"><?php echo esc_html( $col2_head ); ?></h4>
                     <?php endif; ?>
                     <?php
-                    lunara_render_footer_link_list( array(
-                        array( 'label' => __( 'Oscars', 'lunara-film' ), 'url' => home_url( '/oscars/' ) ),
-                        array( 'label' => __( 'Categories', 'lunara-film' ), 'url' => home_url( '/oscars/categories/' ) ),
-                        array( 'label' => __( 'Ceremonies', 'lunara-film' ), 'url' => home_url( '/oscars/ceremonies/' ) ),
-                        array( 'label' => __( 'Full Ledger', 'lunara-film' ), 'url' => home_url( '/oscars/?view=table#oscars-research' ) ),
-                    ) );
+                    lunara_render_footer_link_list( $navigation['oscars'] );
                     ?>
                 </div>
                 <div class="lunara-footer-nav-col">
@@ -1528,16 +1514,7 @@ function lunara_render_custom_footer() {
                         <h4 class="lunara-footer-col-heading"><?php echo esc_html( $col3_head ); ?></h4>
                     <?php endif; ?>
                     <?php
-                    $utility_links = array(
-                        array( 'label' => __( 'Search', 'lunara-film' ), 'url' => function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/?s=' ) ),
-                        array( 'label' => __( 'Contact', 'lunara-film' ), 'url' => home_url( '/contact/' ) ),
-                        array( 'label' => __( 'RSS Feed', 'lunara-film' ), 'url' => get_bloginfo( 'rss2_url' ) ),
-                    );
-                    $privacy_url = get_privacy_policy_url();
-                    if ( $privacy_url ) {
-                        $utility_links[] = array( 'label' => __( 'Privacy', 'lunara-film' ), 'url' => $privacy_url );
-                    }
-                    lunara_render_footer_link_list( $utility_links );
+                    lunara_render_footer_link_list( $navigation['utility'] );
                     ?>
                 </div>
             </nav>
@@ -5477,11 +5454,7 @@ function lunara_output_utility_search_studio_css() {
     body.search .lunara-review-grid-card p,
     body.search .lunara-dispatch-archive-card p,
     body.error404 .lunara-404-panel p {
-        display: -webkit-box;
-        -webkit-line-clamp: var(--lunara-utility-result-copy-lines);
-        line-clamp: var(--lunara-utility-result-copy-lines);
-        overflow: hidden;
-        -webkit-box-orient: vertical;
+        overflow-wrap: anywhere;
     }
 
     <?php if ( 'list' === $result_treatment ) : ?>

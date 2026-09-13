@@ -17,6 +17,7 @@
 		'review-single': ['hero', 'criticism', 'debrief', 'pair-it-with'],
 		'journal-single': ['hero', 'article', 'gallery'],
 		'utility-search': ['search-command', 'direct-matches', 'result-run', 'recovery'],
+		'utility-404': ['search-command', 'recovery'],
 		'site-footer': ['footer']
 	};
 	function ownDataObject(value, keys) {

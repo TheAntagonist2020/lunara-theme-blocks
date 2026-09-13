@@ -72,7 +72,7 @@ const cases = [
 		value: 'compact',
 		marker: 'search-command',
 		markers: ['search-command', 'direct-matches', 'result-run', 'recovery'],
-		handoff: 'Open Classic controls'
+		handoff: 'Edit missing-page recovery'
 	},
 	{
 		surface: 'site-footer',
@@ -84,7 +84,7 @@ const cases = [
 		value: 'A sharper closing line.',
 		marker: 'footer',
 		markers: ['footer'],
-		handoff: 'Open Classic controls',
+		handoff: 'Use these lists',
 		booleanRemoval: 'brand.show_logo'
 	}
 ];
@@ -129,7 +129,7 @@ function fixture(surface) {
 		throw result.error || new Error(result.stderr);
 	}
 	const adminCss = '<style>#wpcontent{margin-left:160px}#wpbody-content{min-width:0;padding-bottom:40px}@media(max-width:782px){#wpcontent{margin-left:0}}</style>';
-	const usesOrderedList = surface === 'reviews-archive' || surface === 'journal-archive';
+	const usesOrderedList = surface === 'reviews-archive' || surface === 'journal-archive' || surface === 'site-footer';
 	return result.stdout
 		.replace('</head>', `<style>${css}</style>${usesOrderedList ? `<style>${editorCss}</style>` : ''}${adminCss}</head>`)
 		.replace('<body class="wp-admin">', '<body class="wp-admin"><div id="wpwrap"><div id="wpcontent"><div id="wpbody"><div id="wpbody-content">')
@@ -290,12 +290,13 @@ async function waitForFrame(page, expectedUrl) {
 				};
 			});
 			const expectedColumns = testCase.outerWidth > 1280 ? 3 : testCase.outerWidth > 782 ? 2 : 1;
-			assert(initial.cards === 11 && initial.iframes === 1, `${testCase.surface} must render the complete map and exactly one preview.`, initial);
-			assert(JSON.stringify(initial.open) === '["essentials"]', `${testCase.surface} must open only its first inspector group.`, initial);
+			assert(initial.cards === 12 && initial.iframes === 1, `${testCase.surface} must render the complete map and exactly one preview.`, initial);
+			assert(JSON.stringify(initial.open) === JSON.stringify([testCase.surface==='utility-search'?'content':testCase.surface==='site-footer'?'navigation':'essentials']), `${testCase.surface} must open only its first inspector group.`, initial);
 			assert(initial.doc[1] <= initial.doc[0] + 1 && initial.columns === expectedColumns, `${testCase.surface} responsive shell failed at ${testCase.outerWidth}px.`, initial);
 			assert(!initial.technicalText && initial.labels && initial.handoffText.includes(testCase.handoff), `${testCase.surface} controls must remain plain-language, labeled, and provide the canonical handoff.`, initial);
 
 			const field = `[data-field-path="${testCase.field}"]`;
+			await page.locator(field).evaluate(node=>{const group=node.closest('details');if(group){group.open=true;}});
 			const initialRequestCount = requests.length;
 			const initialLoadCount = frontendLoads;
 			if (await page.locator(field).evaluate(node => node.tagName === 'SELECT')) {

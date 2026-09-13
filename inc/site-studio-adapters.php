@@ -203,6 +203,22 @@ if ( ! function_exists( 'lunara_site_studio_valid_mod_snapshot' ) ) {
 		return true;
 	}
 }
+if ( ! function_exists( 'lunara_site_studio_merge_legacy_mod_snapshot' ) ) {
+	/** Expand only a named historical snapshot; newly owned raw entries stay current. */
+	function lunara_site_studio_merge_legacy_mod_snapshot( $snapshot, $current, $current_keys, $legacy_keys ) {
+		if ( ! is_array( $current_keys ) || ! is_array( $legacy_keys ) || ! $legacy_keys || count( $legacy_keys ) >= count( $current_keys ) ) { return false; }
+		foreach ( array( $current_keys, $legacy_keys ) as $keys ) {
+			if ( array_values( $keys ) !== $keys || count( array_unique( $keys, SORT_REGULAR ) ) !== count( $keys ) ) { return false; }
+			foreach ( $keys as $key ) { if ( ! is_string( $key ) || '' === $key ) { return false; } }
+		}
+		if ( array_values( array_intersect( $current_keys, $legacy_keys ) ) !== $legacy_keys || ! lunara_site_studio_valid_mod_snapshot( $current, $current_keys ) ) { return false; }
+		if ( lunara_site_studio_valid_mod_snapshot( $snapshot, $current_keys ) ) { return $snapshot; }
+		if ( ! lunara_site_studio_valid_mod_snapshot( $snapshot, $legacy_keys ) ) { return false; }
+		$merged = array();
+		foreach ( $current_keys as $key ) { $merged[ $key ] = array_key_exists( $key, $snapshot ) ? $snapshot[ $key ] : $current[ $key ]; }
+		return $merged;
+	}
+}
 if ( ! function_exists( 'lunara_site_studio_private_revision' ) ) {
 	/** Store one private snapshot and restore the revision option if creation is not durable. */
 	function lunara_site_studio_private_revision( $surface, $snapshot, $action ) {
@@ -955,6 +971,7 @@ if ( ! function_exists( 'lunara_site_studio_review_single_spec' ) ) {
 if ( ! function_exists( 'lunara_site_studio_utility_search_spec' ) ) {
 	/** @return array<string,array<string,array<string,mixed>>> */
 	function lunara_site_studio_utility_search_spec() {
+		if ( function_exists( 'lunara_site_studio_utility_search_extended_spec' ) ) { return lunara_site_studio_utility_search_extended_spec(); }
 		return array(
 			'presentation' => array(
 				'density' => array( 'mod' => 'lunara_utility_search_density', 'type' => 'select', 'default' => 'editorial', 'allowed' => array( 'compact', 'editorial', 'showcase' ) ),
@@ -1013,7 +1030,7 @@ if ( ! function_exists( 'lunara_site_studio_utility_search_keys' ) ) {
 	function lunara_site_studio_utility_search_keys() { return lunara_site_studio_mod_surface_keys( lunara_site_studio_utility_search_spec() ); }
 }
 if ( ! function_exists( 'lunara_site_studio_footer_keys' ) ) {
-	function lunara_site_studio_footer_keys() { return lunara_site_studio_mod_surface_keys( lunara_site_studio_footer_spec() ); }
+	function lunara_site_studio_footer_keys() { return function_exists( 'lunara_site_studio_footer_navigation_keys' ) ? lunara_site_studio_footer_navigation_keys() : lunara_site_studio_mod_surface_keys( lunara_site_studio_footer_spec() ); }
 }
 
 if ( ! function_exists( 'lunara_site_studio_mod_surface_schema' ) ) {
@@ -1031,7 +1048,7 @@ if ( ! function_exists( 'lunara_site_studio_utility_search_state_schema' ) ) {
 	function lunara_site_studio_utility_search_state_schema() { return lunara_site_studio_mod_surface_schema( lunara_site_studio_utility_search_spec() ); }
 }
 if ( ! function_exists( 'lunara_site_studio_footer_state_schema' ) ) {
-	function lunara_site_studio_footer_state_schema() { return lunara_site_studio_mod_surface_schema( lunara_site_studio_footer_spec() ); }
+	function lunara_site_studio_footer_state_schema() { return function_exists( 'lunara_site_studio_footer_navigation_schema' ) ? lunara_site_studio_footer_navigation_schema() : lunara_site_studio_mod_surface_schema( lunara_site_studio_footer_spec() ); }
 }
 
 if ( ! function_exists( 'lunara_site_studio_mod_surface_read_state' ) ) {
@@ -1180,32 +1197,32 @@ if ( ! function_exists( 'lunara_site_studio_review_single_adapter' ) ) {
 }
 
 if ( ! function_exists( 'lunara_site_studio_utility_search_read_state' ) ) {
-	function lunara_site_studio_utility_search_read_state() { return lunara_site_studio_mod_surface_read_state( lunara_site_studio_utility_search_spec() ); }
+	function lunara_site_studio_utility_search_read_state() { return function_exists( 'lunara_site_studio_utility_search_extended_read_state' ) ? lunara_site_studio_utility_search_extended_read_state() : lunara_site_studio_mod_surface_read_state( lunara_site_studio_utility_search_spec() ); }
 }
 if ( ! function_exists( 'lunara_site_studio_utility_search_validate_state' ) ) {
-	function lunara_site_studio_utility_search_validate_state( $candidate ) { return lunara_site_studio_mod_surface_validate_state( $candidate, lunara_site_studio_utility_search_spec(), 'site_studio_utility_search' ); }
+	function lunara_site_studio_utility_search_validate_state( $candidate ) { return function_exists( 'lunara_site_studio_utility_search_extended_validate_state' ) ? lunara_site_studio_utility_search_extended_validate_state( $candidate ) : lunara_site_studio_mod_surface_validate_state( $candidate, lunara_site_studio_utility_search_spec(), 'site_studio_utility_search' ); }
 }
 if ( ! function_exists( 'lunara_site_studio_utility_search_save_state' ) ) {
-	function lunara_site_studio_utility_search_save_state( $candidate ) { return lunara_site_studio_mod_surface_save_state( $candidate, 'utility-search', lunara_site_studio_utility_search_spec(), array( 'search-command', 'direct-matches', 'result-run', 'recovery' ), 'site_studio_utility_search' ); }
+	function lunara_site_studio_utility_search_save_state( $candidate ) { return function_exists( 'lunara_site_studio_utility_search_extended_save_state' ) ? lunara_site_studio_utility_search_extended_save_state( $candidate ) : lunara_site_studio_mod_surface_save_state( $candidate, 'utility-search', lunara_site_studio_utility_search_spec(), array( 'search-command', 'direct-matches', 'result-run', 'recovery' ), 'site_studio_utility_search' ); }
 }
 if ( ! function_exists( 'lunara_site_studio_utility_search_restore_revision' ) ) {
-	function lunara_site_studio_utility_search_restore_revision( $revision_id ) { return lunara_site_studio_mod_surface_restore_revision( $revision_id, 'utility-search', lunara_site_studio_utility_search_spec(), 'site_studio_utility_search' ); }
+	function lunara_site_studio_utility_search_restore_revision( $revision_id ) { return function_exists( 'lunara_site_studio_utility_search_extended_restore_revision' ) ? lunara_site_studio_utility_search_extended_restore_revision( $revision_id ) : lunara_site_studio_mod_surface_restore_revision( $revision_id, 'utility-search', lunara_site_studio_utility_search_spec(), 'site_studio_utility_search' ); }
 }
 if ( ! function_exists( 'lunara_site_studio_utility_search_adapter' ) ) {
 	function lunara_site_studio_utility_search_adapter() { return new Lunara_Site_Studio_Theme_Adapter( 'utility-search', 'theme:utility-search', array( 'read' => 'lunara_site_studio_utility_search_read_state', 'validate' => 'lunara_site_studio_utility_search_validate_state', 'save' => 'lunara_site_studio_utility_search_save_state', 'restore' => 'lunara_site_studio_utility_search_restore_revision' ) ); }
 }
 
 if ( ! function_exists( 'lunara_site_studio_footer_read_state' ) ) {
-	function lunara_site_studio_footer_read_state() { return lunara_site_studio_mod_surface_read_state( lunara_site_studio_footer_spec() ); }
+	function lunara_site_studio_footer_read_state() { return function_exists( 'lunara_site_studio_footer_navigation_read_state' ) ? lunara_site_studio_footer_navigation_read_state() : lunara_site_studio_mod_surface_read_state( lunara_site_studio_footer_spec() ); }
 }
 if ( ! function_exists( 'lunara_site_studio_footer_validate_state' ) ) {
-	function lunara_site_studio_footer_validate_state( $candidate ) { return lunara_site_studio_mod_surface_validate_state( $candidate, lunara_site_studio_footer_spec(), 'site_studio_footer' ); }
+	function lunara_site_studio_footer_validate_state( $candidate ) { return function_exists( 'lunara_site_studio_footer_navigation_validate_state' ) ? lunara_site_studio_footer_navigation_validate_state( $candidate ) : lunara_site_studio_mod_surface_validate_state( $candidate, lunara_site_studio_footer_spec(), 'site_studio_footer' ); }
 }
 if ( ! function_exists( 'lunara_site_studio_footer_save_state' ) ) {
-	function lunara_site_studio_footer_save_state( $candidate ) { return lunara_site_studio_mod_surface_save_state( $candidate, 'site-footer', lunara_site_studio_footer_spec(), array( 'footer' ), 'site_studio_footer' ); }
+	function lunara_site_studio_footer_save_state( $candidate ) { return function_exists( 'lunara_site_studio_footer_navigation_save_state' ) ? lunara_site_studio_footer_navigation_save_state( $candidate ) : lunara_site_studio_mod_surface_save_state( $candidate, 'site-footer', lunara_site_studio_footer_spec(), array( 'footer' ), 'site_studio_footer' ); }
 }
 if ( ! function_exists( 'lunara_site_studio_footer_restore_revision' ) ) {
-	function lunara_site_studio_footer_restore_revision( $revision_id ) { return lunara_site_studio_mod_surface_restore_revision( $revision_id, 'site-footer', lunara_site_studio_footer_spec(), 'site_studio_footer' ); }
+	function lunara_site_studio_footer_restore_revision( $revision_id ) { return function_exists( 'lunara_site_studio_footer_navigation_restore_revision' ) ? lunara_site_studio_footer_navigation_restore_revision( $revision_id ) : lunara_site_studio_mod_surface_restore_revision( $revision_id, 'site-footer', lunara_site_studio_footer_spec(), 'site_studio_footer' ); }
 }
 if ( ! function_exists( 'lunara_site_studio_footer_adapter' ) ) {
 	function lunara_site_studio_footer_adapter() { return new Lunara_Site_Studio_Theme_Adapter( 'site-footer', 'theme:site-footer', array( 'read' => 'lunara_site_studio_footer_read_state', 'validate' => 'lunara_site_studio_footer_validate_state', 'save' => 'lunara_site_studio_footer_save_state', 'restore' => 'lunara_site_studio_footer_restore_revision' ) ); }

@@ -70,13 +70,13 @@ the archives have compact filters and readable full titles; Oscars retains
 ordinary word wrapping and two portrait board columns. Physical-device testing
 is not claimed.
 
-September 13 acceptance now verifies `3.2.75+20260913-211752`: three anonymous
-reads agree, both canaries are `LIVE_COHERENT`, and the seven Winner sections
-controls load the saved values in Site Studio. Theme 3.2.76 is the next tested
-candidate, covering Home Latest Reviews, Journal article and Academy dossier
-editors, article layouts, shared navigation and Journal stylesheet delivery.
-Academy 2.7.84 is merged in plugin PR #29. Both new releases still require
-Dalton's manual deployment and public acceptance. The current acceptance
+September 13 acceptance now verifies `3.2.76+20260913-225857`: three anonymous
+reads agree and both canaries are `LIVE_COHERENT`. Dalton confirms this theme
+and Academy 2.7.84 are verified published live. This release covers Home Latest
+Reviews, Journal article and Academy dossier editors, article layouts, shared
+navigation and Journal stylesheet delivery. Detailed public route checks remain
+recorded individually. Theme 3.2.77 adds Footer, Search and 404 controls as the
+next candidate; it has not been deployed. The current acceptance
 checklist is [SITE-COMPLETION-PLAN.md](SITE-COMPLETION-PLAN.md); remaining footer,
 Search and 404 ownership gaps are mapped in
 [FOOTER-RECOVERY-FOLLOWUP.md](FOOTER-RECOVERY-FOLLOWUP.md).

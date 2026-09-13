@@ -6,6 +6,12 @@ are complete. A candidate, passing local test or merged PR is not a live result.
 Manual WordPress.com deployment remains Dalton's action; independent work can
 continue while a release awaits deployment.
 
+September 13 update: Dalton confirms Academy 2.7.84 and Theme 3.2.76 are
+verified published live. A fresh agent canary also passes for
+`3.2.76+20260913-225857`: three anonymous reads agree and Journal/Oscars both
+report `LIVE_COHERENT`. Detailed route acceptance below stays explicit;
+deployment confirmation does not imply every remaining reader-journey check ran.
+
 ## 1. Oscars cleanup
 
 - [x] Theme 3.2.75 public canary: all three anonymous reads agree on
@@ -15,21 +21,22 @@ continue while a release awaits deployment.
 - [x] Academy 2.7.84 implements current Production Design / Sound labels and
   modern aliases while retaining historical ceremony names and canonical IDs.
   Plugin PR #29 passed CI and merged as `2fea87341f1865142c253395064913c5cccb611c`.
-- [ ] Dalton deploys Academy 2.7.84; verify modern aliases, old links, historical
-  ceremony output and actual public plugin identity.
+- [x] Dalton confirms Academy 2.7.84 deployed and verified live.
+- [ ] Complete the recorded public matrix for modern aliases, old links and
+  historical ceremony output.
 
 ## 2. One editing experience
 
 - [x] Live Home, Review/Journal archives and Oscars portal share the established
   navigation, controls and canonical transaction system through Theme 3.2.75.
-- [ ] Release and accept Journal article presentation controls. The current
-  candidate uses seven canonical mods and the shared Preview/Apply/History
+- [x] Release Journal article presentation controls in live Theme 3.2.76.
+  The implementation uses seven canonical mods and the shared Preview/Apply/History
   transaction; article text, featured artwork and galleries retain their
   clearly named article-editor owner.
-- [ ] Complete Home Latest Reviews selection and artwork controls using the
+- [x] Complete Home Latest Reviews selection and artwork controls using the
   existing carousel editor. Preserve legacy presentation until explicit Apply;
   use published review dates and canonical poster metadata after adoption.
-- [ ] Complete Academy dossier presentation controls for ceremony, category,
+- [x] Complete Academy dossier presentation controls for ceremony, category,
   film and person previews. Retire old writers after equivalent behavior works.
 - [ ] Finish footer link ownership and 404 recovery controls. Six existing
   footer presentation fields and nine Search fields do not cover these gaps.
@@ -39,7 +46,7 @@ continue while a release awaits deployment.
 
 ## 3. Review and Journal articles
 
-- [ ] Release current typography/spacing/artwork corrections. Actual-template
+- [x] Release typography/spacing/artwork corrections in live Theme 3.2.76. Actual-template
   fixtures currently pass 412 assertions across 32 cases at 320, 390, 768 and
   1440px with JavaScript disabled; full-image Journal framing now requests the
   uncropped source rather than a hard-cropped derivative.
@@ -59,7 +66,7 @@ continue while a release awaits deployment.
 
 ## 5. Shared site experience
 
-- [ ] Release Header Command navigation correction: one Search action,
+- [x] Release Header Command navigation correction in live Theme 3.2.76: one Search action,
   meaningful current-page state, 44px controls and usable no-JavaScript links.
   Current candidate passes 64 PHP and 55 browser assertions; review fixes landed.
 - [ ] Finish footer/search/recovery navigation and content ownership.
@@ -77,11 +84,12 @@ continue while a release awaits deployment.
 - [ ] Resolve Critical CSS targets that redirect or 404 under old
   `/oscar-picks/category/` and `/oscar-facts/category/` routes; identify their
   actual owner before changing taxonomy behavior or suppressing failures.
-  Registrations are in functions.php (no inc/ replacements); ordinary anonymous
-  reads confirm Best Director pick and Genre Breakthroughs fact archives are 404.
-  Best Picture redirects to a singular Pick. Missing or stale stored rewrite
-  rules remain an inference; inspect the saved rules and matched query variables
-  before a fix. Probes stopped at HTTP 429; no rewrite flush was performed.
+  Registrations are in functions.php. The current public failures were reproduced
+  locally using WordPress's real rewrite generator: attachment rules precede and
+  shadow the category rules. Theme 3.2.77 corrects registration order and narrowly
+  promotes affected already-saved rules without a rewrite flush or option writes.
+  Public acceptance of all affected category/feed/pagination routes remains open;
+  missing saved rules are intentionally not synthesized by the compatibility fix.
 - [ ] Regenerate valid Critical CSS after the final structural release through
   the authorized owner workflow, then verify coverage and failure state.
 - [ ] Implement a measured stylesheet/image-loading improvement with unchanged

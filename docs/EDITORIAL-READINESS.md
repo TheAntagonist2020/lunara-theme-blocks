@@ -70,6 +70,11 @@ screening attendance or association eligibility. The site's About page reports
   named bylines, a bio/headshot, social distribution and Letterboxd activity.
   Prepare that evidence independently of the archive count; confirm ambiguous
   thresholds and repost treatment with the committee before claiming readiness.
+  A bounded follow-up on September 13 again found both conflicting official
+  texts in the search index; fresh page requests timed out or returned HTTP 406.
+  No effective amendment date or governing-version confirmation was found.
+  The audience wording also varies between monthly visitors and subscribers.
+  No committee message or membership application has been sent.
 - About, editorial policy and Contact are readable. Initial policy/contact HTTP
   fetches were rate-limited; subsequent normal-browser reads succeeded. Contact
   exposes the intended email link; no message was sent or inbox delivery tested.

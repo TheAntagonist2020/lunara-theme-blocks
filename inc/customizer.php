@@ -3084,3 +3084,15 @@ function lunara_output_runtime_customizer_css() {
     echo '<style id="lunara-runtime-customizer-css">' . $css . '</style>' . "\n";
 }
 add_action( 'wp_head', 'lunara_output_runtime_customizer_css', 99 );
+
+/** Retire migrated controls and stale Customizer writers without deleting saved mods. */
+function lunara_retire_search_recovery_customizer_controls( $customizer ) {
+    $keys = array(
+        'lunara_search_kicker', 'lunara_search_no_query_title', 'lunara_search_excerpt_words',
+        'lunara_404_kicker', 'lunara_404_title', 'lunara_404_explanation',
+        'lunara_404_reset_label', 'lunara_404_reset_desc', 'lunara_404_fastest_label', 'lunara_404_fastest_desc',
+        'lunara_404_hubs_label', 'lunara_404_hubs_desc', 'lunara_404_reentry_title',
+    );
+    foreach ( $keys as $key ) { $customizer->remove_control( $key ); $customizer->remove_setting( $key ); }
+}
+add_action( 'customize_register', 'lunara_retire_search_recovery_customizer_controls', 100 );

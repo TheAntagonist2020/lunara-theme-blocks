@@ -35,7 +35,7 @@ if ( ! function_exists( 'lunara_site_studio_workspace_surface' ) ) {
 if ( ! function_exists( 'lunara_site_studio_workspace_editable_surfaces' ) ) {
 	/** @return array<int,string> */
 	function lunara_site_studio_workspace_editable_surfaces() {
-		return array( 'home-oscar-picks', 'home-oscar-facts', 'global-design', 'homepage-structure', 'lunara-method', 'reviews-archive', 'review-single', 'journal-archive', 'journal-single', 'utility-search', 'site-footer', 'hero-carousel', 'journal-carousel', 'reviews-carousel', 'oscars-portal', 'oscars-ledger' );
+		return array( 'home-oscar-picks', 'home-oscar-facts', 'global-design', 'homepage-structure', 'lunara-method', 'reviews-archive', 'review-single', 'journal-archive', 'journal-single', 'utility-search', 'utility-404', 'site-footer', 'hero-carousel', 'journal-carousel', 'reviews-carousel', 'oscars-portal', 'oscars-ledger' );
 	}
 }
 
@@ -95,6 +95,7 @@ if ( ! function_exists( 'lunara_site_studio_workspace_config' ) ) {
 			),
 		);
 		if ( 'oscars-ledger' === $surface_id ) { $config['previewRoutes'] = lunara_site_studio_workspace_ledger_routes(); }
+		if ( 'utility-search' === $surface_id ) { $config['previewCases'] = array( 'results' => (object) array( 'q' => 'Lunara' ), 'start' => (object) array() ); }
 		return $config;
 	}
 }
@@ -131,6 +132,10 @@ if ( ! function_exists( 'lunara_site_studio_origin_key' ) ) {
 			$top_keys[] = 'previewRoutes';
 			if ( ! isset( $config['previewRoutes'] ) || ! is_array( $config['previewRoutes'] ) || array( 'ceremony', 'category', 'film', 'person' ) !== array_keys( $config['previewRoutes'] ) || $config['previewRoutes'] !== lunara_site_studio_workspace_ledger_routes() ) { return false; }
 		}
+		if ( isset( $config['surface'] ) && 'utility-search' === $config['surface'] ) {
+			$top_keys[] = 'previewCases';
+			if ( ! isset( $config['previewCases'] ) || wp_json_encode( $config['previewCases'] ) !== wp_json_encode( array( 'results' => (object) array( 'q' => 'Lunara' ), 'start' => (object) array() ) ) ) { return false; }
+		}
 		$actual_top_keys = array_keys( $config ); sort( $actual_top_keys ); $expected_top_keys = $top_keys; sort( $expected_top_keys );
 		if ( $actual_top_keys !== $expected_top_keys || 'lunara-site-studio/v1' !== $config['protocol'] || 1 !== $config['clientVersion'] || empty( $config['surface'] ) || ! is_string( $config['surface'] ) || ! is_string( $config['pageUuid'] ) || 1 !== preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/D', $config['pageUuid'] ) || lunara_site_studio_preview_instance_query_arg() !== $config['previewInstanceArg'] || ! is_array( $config['endpoints'] ) || ! is_string( $config['nonce'] ) || '' === $config['nonce'] || ! is_string( $config['previewOrigin'] ) || ! is_string( $config['previewRoute'] ) || ! is_string( $config['previewQueryArg'] ) || ! ( $config['previewParams'] instanceof stdClass ) || ! is_array( $config['stateSchema'] ) || ! is_array( $config['widths'] ) || array( 'desktop' => 1440, 'tablet' => 768, 'mobile' => 390 ) !== $config['widths'] || ! is_array( $config['markers'] ) || ! is_array( $config['strings'] ) ) { return false; }
 		$surface = lunara_site_studio_get_surface( $config['surface'] ); $urls = lunara_site_studio_workspace_urls( $surface ); if ( ! is_array( $surface ) || ! $urls ) { return false; }
@@ -161,7 +166,7 @@ if ( ! function_exists( 'lunara_enqueue_site_studio_assets' ) ) {
 		$is_carousel = in_array( $surface_id, array( 'hero-carousel', 'journal-carousel', 'reviews-carousel' ), true );
 		$uses_ordered_list = in_array( $surface_id, array( 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal' ), true );
 		$uses_home_oscars = in_array( $surface_id, array( 'home-oscar-picks', 'home-oscar-facts' ), true );
-		$uses_editor_controls = $uses_home_oscars || $is_carousel || $uses_ordered_list || in_array( $surface_id, array( 'lunara-method', 'journal-single' ), true );
+		$uses_editor_controls = $uses_home_oscars || $is_carousel || $uses_ordered_list || in_array( $surface_id, array( 'lunara-method', 'journal-single', 'site-footer' ), true );
 		$script_dependencies = array();
 		if ( $uses_editor_controls ) {
 			$asset = lunara_resolve_theme_asset( 'assets/css/lunara-editor-controls.css' );
@@ -248,18 +253,20 @@ if ( ! function_exists( 'lunara_site_studio_render_control' ) ) {
 	function lunara_site_studio_render_control( $path, $value, $definition, $label = '' ) {
 		$parts = explode( '.', $path ); $field = end( $parts ); $label = $label ? $label : ( isset( $definition['label'] ) ? $definition['label'] : lunara_site_studio_control_label( $field ) );
 		$id = 'lunara-site-studio-' . sanitize_html_class( str_replace( array( '.', '_' ), '-', $path ) ); $help_id = $id . '-help'; $error_id = $id . '-error';
+		$legacy = ! empty( $definition['preserve_legacy_read'] ) ? ' data-preserve-legacy-read="true"' : '';
+		$legacy_text = $legacy && isset( $definition['max_length'] ) ? $legacy . ' data-text-limit="' . esc_attr( $definition['max_length'] ) . '"' : $legacy;
 		echo '<div class="lunara-site-studio-field"><label for="' . esc_attr( $id ) . '">' . esc_html( $label ) . '</label>';
 		if ( 'select' === $definition['type'] ) {
 			echo '<select id="' . esc_attr( $id ) . '" data-field-path="' . esc_attr( $path ) . '" data-value-type="string" data-error-key="' . esc_attr( $path ) . '" aria-describedby="' . esc_attr( $help_id . ' ' . $error_id ) . '">'; foreach ( $definition['allowed'] as $choice ) { echo '<option value="' . esc_attr( $choice ) . '"' . ( $choice === $value ? ' selected' : '' ) . '>' . esc_html( lunara_site_studio_choice_label( $choice ) ) . '</option>'; } echo '</select>';
 		} elseif ( 'int' === $definition['type'] ) {
 			$scale = isset( $definition['value_scale'] ) ? max( 1, (int) $definition['value_scale'] ) : 1;
-			echo '<input id="' . esc_attr( $id ) . '" type="number" min="' . esc_attr( $definition['min'] / $scale ) . '" max="' . esc_attr( $definition['max'] / $scale ) . '" step="' . esc_attr( 1 / $scale ) . '" value="' . esc_attr( $value / $scale ) . '"' . ( isset( $definition['value_scale'] ) ? ' data-value-scale="' . esc_attr( $scale ) . '" required' : '' ) . ' data-field-path="' . esc_attr( $path ) . '" data-value-type="integer" data-error-key="' . esc_attr( $path ) . '" aria-describedby="' . esc_attr( $help_id . ' ' . $error_id ) . '" />';
+			echo '<input' . $legacy . ' id="' . esc_attr( $id ) . '" type="number" min="' . esc_attr( $definition['min'] / $scale ) . '" max="' . esc_attr( $definition['max'] / $scale ) . '" step="' . esc_attr( 1 / $scale ) . '" value="' . esc_attr( $value / $scale ) . '"' . ( isset( $definition['value_scale'] ) ? ' data-value-scale="' . esc_attr( $scale ) . '" required' : '' ) . ' data-field-path="' . esc_attr( $path ) . '" data-value-type="integer" data-error-key="' . esc_attr( $path ) . '" aria-describedby="' . esc_attr( $help_id . ' ' . $error_id ) . '" />';
 		} elseif ( 'bool' === $definition['type'] ) {
 			echo '<input id="' . esc_attr( $id ) . '" type="checkbox"' . ( $value ? ' checked' : '' ) . ' data-field-path="' . esc_attr( $path ) . '" data-value-type="boolean" data-error-key="' . esc_attr( $path ) . '" aria-describedby="' . esc_attr( $help_id . ' ' . $error_id ) . '" />';
 		} elseif ( 'textarea' === $definition['type'] ) {
-			echo '<textarea id="' . esc_attr( $id ) . '" rows="3" maxlength="' . esc_attr( $definition['max_length'] ) . '" data-field-path="' . esc_attr( $path ) . '" data-value-type="string" data-error-key="' . esc_attr( $path ) . '" aria-describedby="' . esc_attr( $help_id . ' ' . $error_id ) . '">' . esc_html( $value ) . '</textarea>';
+			echo '<textarea' . $legacy_text . ' id="' . esc_attr( $id ) . '" rows="3" maxlength="' . esc_attr( $definition['max_length'] ) . '" data-field-path="' . esc_attr( $path ) . '" data-value-type="string" data-error-key="' . esc_attr( $path ) . '" aria-describedby="' . esc_attr( $help_id . ' ' . $error_id ) . '">' . esc_html( $value ) . '</textarea>';
 		} else {
-			echo '<input id="' . esc_attr( $id ) . '" type="text" maxlength="' . esc_attr( $definition['max_length'] ) . '" value="' . esc_attr( $value ) . '" data-field-path="' . esc_attr( $path ) . '" data-value-type="string" data-error-key="' . esc_attr( $path ) . '" aria-describedby="' . esc_attr( $help_id . ' ' . $error_id ) . '" />';
+			echo '<input' . $legacy_text . ' id="' . esc_attr( $id ) . '" type="text" maxlength="' . esc_attr( $definition['max_length'] ) . '" value="' . esc_attr( $value ) . '" data-field-path="' . esc_attr( $path ) . '" data-value-type="string" data-error-key="' . esc_attr( $path ) . '" aria-describedby="' . esc_attr( $help_id . ' ' . $error_id ) . '" />';
 		}
 		echo '<span class="description" id="' . esc_attr( $help_id ) . '">' . esc_html( isset( $definition['help'] ) ? $definition['help'] : __( 'Changes stay local until Preview changes or Apply changes.', 'lunara-film' ) ) . '</span><span class="lunara-site-studio-error" id="' . esc_attr( $error_id ) . '" hidden></span></div>';
 	}
@@ -295,19 +302,32 @@ if ( ! function_exists( 'lunara_site_studio_render_mod_surface_inspector' ) ) {
 			lunara_site_studio_render_details_close();
 		} elseif ( 'utility-search' === $surface_id ) {
 			$spec = lunara_site_studio_utility_search_spec();
-			lunara_site_studio_render_details_open( 'essentials', __( 'Essentials', 'lunara-film' ), true, array( 'search-command', 'direct-matches', 'result-run', 'recovery' ) ); lunara_site_studio_render_spec_paths( $state, $spec, array( 'presentation.density', 'presentation.result_treatment', 'presentation.result_media', 'presentation.recovery_prominence', 'focus.lead', 'focus.spotlight' ) ); lunara_site_studio_render_details_close();
+			echo '<div data-search-preview-cases><button type="button" class="button" data-search-preview-case="results" aria-pressed="true">' . esc_html__( 'Results', 'lunara-film' ) . '</button> <button type="button" class="button" data-search-preview-case="start" aria-pressed="false">' . esc_html__( 'Search start', 'lunara-film' ) . '</button></div>';
+			lunara_site_studio_render_details_open( 'content', __( 'Search copy', 'lunara-film' ), true, array( 'search-command', 'result-run' ) ); lunara_site_studio_render_spec_paths( $state, $spec, array( 'content.kicker', 'content.no_query_title', 'content.excerpt_words', 'content.use_empty_title' ) ); lunara_site_studio_render_details_close();
+			lunara_site_studio_render_details_open( 'essentials', __( 'Essentials', 'lunara-film' ), false, array( 'search-command', 'direct-matches', 'result-run', 'recovery' ) ); lunara_site_studio_render_spec_paths( $state, $spec, array( 'presentation.density', 'presentation.result_treatment', 'presentation.result_media', 'presentation.recovery_prominence', 'focus.lead', 'focus.spotlight' ) ); lunara_site_studio_render_details_close();
 			lunara_site_studio_render_details_open( 'fine-tune', __( 'Fine Tune', 'lunara-film' ), false, array( 'result-run', 'recovery' ) ); lunara_site_studio_render_spec_paths( $state, $spec, array( 'geometry.section_gap', 'geometry.result_min_height', 'geometry.card_grid_min' ) ); lunara_site_studio_render_details_close();
 			lunara_site_studio_render_details_open( 'mobile', __( 'Mobile', 'lunara-film' ), false, array( 'search-command', 'result-run', 'recovery' ) ); echo '<p>' . esc_html__( 'The same bounded geometry is previewed at the real 390px mobile width.', 'lunara-film' ) . '</p>'; lunara_site_studio_render_details_close();
+		} elseif ( 'utility-404' === $surface_id ) {
+			$spec = lunara_site_studio_utility_404_spec();
+			foreach ( array( 'hero' => __( 'Missing page message', 'lunara-film' ), 'guidance' => __( 'Helpful directions', 'lunara-film' ), 'recovery' => __( 'Where to go next', 'lunara-film' ) ) as $group => $label ) { lunara_site_studio_render_details_open( $group, $label, true, array( 'search-command', 'recovery' ) ); foreach ( $spec[ $group ] as $field => $definition ) { lunara_site_studio_render_control( $group . '.' . $field, $state[ $group ][ $field ], $definition ); } lunara_site_studio_render_details_close(); }
+			echo '<p>' . esc_html__( 'Shared appearance settings for Search and missing pages are in the Search editor.', 'lunara-film' ) . '</p><a class="button" data-workspace-navigation href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=utility-search' ) ) . '">' . esc_html__( 'Search appearance', 'lunara-film' ) . '</a>';
 		} else {
 			$spec = lunara_site_studio_footer_spec();
-			lunara_site_studio_render_details_open( 'essentials', __( 'Essentials', 'lunara-film' ), true, array( 'footer' ) ); lunara_site_studio_render_spec_paths( $state, $spec, array( 'brand.show_logo', 'brand.tagline', 'copyright.name' ) ); lunara_site_studio_render_details_close();
+			lunara_site_studio_render_details_open( 'navigation', __( 'Footer links', 'lunara-film' ), true, array( 'footer' ) );
+			echo '<p>' . esc_html__( 'The inherited lists stay live until you edit or adopt these lists and Apply. Built-in destinations always use their current site URLs.', 'lunara-film' ) . '</p>';
+			$status = lunara_site_studio_footer_navigation_status(); if ( ! empty( $status['invalid'] ) ) { echo '<p class="notice notice-warning">' . esc_html( $status['message'] ) . '</p>'; }
+			echo '<div data-footer-navigation data-footer-destinations="' . esc_attr( wp_json_encode( lunara_site_studio_footer_navigation_destinations() ) ) . '"><p data-footer-mode-status></p><button type="button" class="button" data-footer-command="adopt">' . esc_html__( 'Use these lists', 'lunara-film' ) . '</button> <button type="button" class="button" data-footer-command="inherit">' . esc_html__( 'Use inherited links', 'lunara-film' ) . '</button><span data-error-key="navigation.mode" tabindex="-1" aria-describedby="lunara-footer-mode-error"></span><span class="lunara-site-studio-error" id="lunara-footer-mode-error" hidden></span>';
+			foreach ( array( 'editorial' => __( 'Editorial', 'lunara-film' ), 'oscars' => __( 'Oscars', 'lunara-film' ), 'utility' => __( 'Utility', 'lunara-film' ) ) as $column => $label ) { echo '<section class="lunara-footer-editor-column" data-footer-column="' . esc_attr( $column ) . '"><h3>' . esc_html( $label ) . '</h3><div data-footer-list="' . esc_attr( $column ) . '" data-error-key="navigation.columns.' . esc_attr( $column ) . '" tabindex="-1" aria-describedby="lunara-footer-' . esc_attr( $column ) . '-error"></div><span class="lunara-site-studio-error" id="lunara-footer-' . esc_attr( $column ) . '-error" hidden></span><button type="button" class="button" data-footer-command="add" data-footer-target="' . esc_attr( $column ) . '">' . esc_html__( 'Add link', 'lunara-film' ) . '</button></section>'; }
+			echo '</div>'; lunara_site_studio_render_details_close();
+
+			lunara_site_studio_render_details_open( 'essentials', __( 'Essentials', 'lunara-film' ), false, array( 'footer' ) ); lunara_site_studio_render_spec_paths( $state, $spec, array( 'brand.show_logo', 'brand.tagline', 'copyright.name' ) ); lunara_site_studio_render_details_close();
 			lunara_site_studio_render_details_open( 'fine-tune', __( 'Fine Tune', 'lunara-film' ), false, array( 'footer' ) ); lunara_site_studio_render_spec_paths( $state, $spec, array( 'columns.editorial', 'columns.oscars', 'columns.utility' ) ); lunara_site_studio_render_details_close();
 			lunara_site_studio_render_details_open( 'mobile', __( 'Mobile', 'lunara-film' ), false, array( 'footer' ) ); echo '<p>' . esc_html__( 'Footer columns collapse automatically in the mobile preview.', 'lunara-film' ) . '</p>'; lunara_site_studio_render_details_close();
 		}
 		lunara_site_studio_render_details_open( 'advanced', __( 'Advanced', 'lunara-film' ) ); echo '<button type="button" data-action="reset-candidate" disabled>' . esc_html__( 'Reset candidate', 'lunara-film' ) . '</button>';
 		if ( 'review-single' === $surface_id ) { $review_url = function_exists( 'lunara_core_review_studio_admin_url' ) ? lunara_core_review_studio_admin_url() : admin_url( 'edit.php?post_type=review' ); $review_url = lunara_site_studio_safe_admin_destination( $review_url ); if ( $review_url ) { echo '<a class="button" data-workspace-navigation href="' . esc_url( $review_url ) . '">' . esc_html__( 'Open Review Studio', 'lunara-film' ) . '</a>'; } }
-		if ( 'utility-search' === $surface_id ) { echo '<p>' . esc_html__( 'The 404 recovery destination remains in Classic controls because this Search preview cannot show that route.', 'lunara-film' ) . '</p>'; }
-		$classic = 'journal-single' !== $surface_id && $classic_url ? lunara_site_studio_safe_admin_destination( admin_url( $classic_url ) ) : ''; if ( $classic ) { echo '<a class="button" data-workspace-navigation href="' . esc_url( $classic ) . '">' . esc_html__( 'Open Classic controls', 'lunara-film' ) . '</a>'; } lunara_site_studio_render_details_close(); lunara_site_studio_render_revisions( $revisions );
+		if ( 'utility-search' === $surface_id ) { echo '<a class="button" data-workspace-navigation href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=utility-404' ) ) . '">' . esc_html__( 'Edit missing-page recovery', 'lunara-film' ) . '</a>'; }
+		$classic = ! in_array( $surface_id, array( 'journal-single', 'utility-search', 'utility-404', 'site-footer' ), true ) && $classic_url ? lunara_site_studio_safe_admin_destination( admin_url( $classic_url ) ) : ''; if ( $classic ) { echo '<a class="button" data-workspace-navigation href="' . esc_url( $classic ) . '">' . esc_html__( 'Open Classic controls', 'lunara-film' ) . '</a>'; } lunara_site_studio_render_details_close(); lunara_site_studio_render_revisions( $revisions );
 	}
 }
 

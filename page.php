@@ -9,7 +9,7 @@
 get_header();
 ?>
 
-<main id="primary" class="site-main lunara-archive-page">
+<div id="primary" class="site-main lunara-archive-page">
     <?php while ( have_posts() ) : the_post(); ?>
         <article <?php post_class( 'lunara-page-single' ); ?>>
             <section class="lunara-home-section lunara-archive-hero">
@@ -26,7 +26,7 @@ get_header();
             </section>
         </article>
     <?php endwhile; ?>
-</main>
+</div>
 
 <?php
 get_footer();
