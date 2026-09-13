@@ -173,6 +173,9 @@ function remove_theme_mod( $key ) {
 	if ( 'fail' === $mode ) { return; }
 	unset( $lunara_pilot_theme_mods[ $key ] );
 }
+function post_type_exists( $type ) { return in_array( $type, array( 'journal', 'review' ), true ); }
+if ( ! function_exists( 'get_posts' ) ) { function get_posts( $args ) { $GLOBALS['lunara_pilot_journal_query'] = $args; return isset( $GLOBALS['lunara_pilot_journal_posts'] ) ? $GLOBALS['lunara_pilot_journal_posts'] : array( (object) array( 'ID' => 301, 'post_type' => 'journal', 'post_status' => 'publish', 'post_password' => '' ) ); } }
+if ( ! function_exists( 'get_permalink' ) ) { function get_permalink( $id ) { return isset( $GLOBALS['lunara_pilot_journal_url'] ) ? $GLOBALS['lunara_pilot_journal_url'] : home_url( '/journal/angel-finally-gets-a-face-that-can-fly/' ); } }
 function get_post( $id ) { global $lunara_pilot_posts; return isset( $lunara_pilot_posts[ absint( $id ) ] ) ? $lunara_pilot_posts[ absint( $id ) ] : null; }
 function get_post_field( $field, $id ) { global $lunara_pilot_post_read_fault; $mode = is_array( $lunara_pilot_post_read_fault ) ? lunara_pilot_consume_fault( $lunara_pilot_post_read_fault, 'post_content' ) : $lunara_pilot_post_read_fault; if ( ! is_array( $lunara_pilot_post_read_fault ) ) { $lunara_pilot_post_read_fault = ''; } if ( 'throw' === $mode ) { throw new RuntimeException( 'injected post read exception' ); } $post = get_post( $id ); return $post && isset( $post->{$field} ) ? $post->{$field} : ''; }
 function get_post_mime_type( $id ) { global $lunara_pilot_mimes; return isset( $lunara_pilot_mimes[ absint( $id ) ] ) ? $lunara_pilot_mimes[ absint( $id ) ] : ''; }
@@ -269,6 +272,7 @@ require $theme_root . '/inc/home-blocks.php';
 require $theme_root . '/inc/design-tokens.php';
 require $theme_root . '/inc/site-studio-registry.php';
 require $theme_root . '/inc/site-studio-adapters.php';
+require $theme_root . '/inc/site-studio-journal-single.php';
 require $theme_root . '/inc/site-studio-rest.php';
 if ( defined( 'LUNARA_METHOD_BOOTSTRAP_ONLY' ) ) { return; }
 

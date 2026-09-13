@@ -9,7 +9,7 @@ function lunara_site_studio_carousel_schema() {
 }
 
 function lunara_site_studio_carousel_surfaces( $surfaces ) {
-	foreach ( array( 'hero' => 'Hero Carousel', 'journal' => 'Journal Carousel' ) as $kind => $label ) {
+	foreach ( array( 'hero' => 'Hero Carousel', 'journal' => 'Journal Carousel', 'reviews' => 'Latest Reviews' ) as $kind => $label ) {
 		$id = $kind . '-carousel';
 		$surfaces[ $id ] = array(
 			'id' => $id, 'group' => __( 'Homepage', 'lunara-film' ), 'label' => $label,
@@ -21,7 +21,7 @@ function lunara_site_studio_carousel_surfaces( $surfaces ) {
 			'state_schema_callback' => 'lunara_site_studio_carousel_schema',
 			'admin_url' => 'admin.php?page=lunara-site-studio&surface=' . $id,
 			'dependency_callback' => 'lunara_site_studio_dependency_available', 'status_callback' => 'lunara_site_studio_status_ready',
-			'danger_level' => 'none', 'sections' => array( 'hero' === $kind ? 'hero' : 'dispatch' ),
+			'danger_level' => 'none', 'sections' => array( lunara_home_carousel_section( $kind ) ),
 			'classic_url' => 'admin.php?page=lunara-site-studio&surface=' . $id,
 		);
 	}
@@ -52,7 +52,7 @@ function lunara_site_studio_carousel_write( $kind, $target, $action = 'save' ) {
 	if ( 'restore-safety' === $action ) {
 		$result['safety_revision_id'] = $revision;
 	} else {
-		$result['changed_sections'] = array( 'hero' === $kind ? 'hero' : 'dispatch' );
+		$result['changed_sections'] = array( lunara_home_carousel_section( $kind ) );
 		$result['revision_id']      = $revision;
 	}
 	$result['timestamp'] = current_time( 'mysql' );
@@ -95,9 +95,10 @@ function lunara_site_studio_carousel_adapter( $kind ) {
 }
 function lunara_site_studio_hero_carousel_adapter() { return lunara_site_studio_carousel_adapter( 'hero' ); }
 function lunara_site_studio_journal_carousel_adapter() { return lunara_site_studio_carousel_adapter( 'journal' ); }
+function lunara_site_studio_reviews_carousel_adapter() { return lunara_site_studio_carousel_adapter( 'reviews' ); }
 
 function lunara_site_studio_carousel_kind_from_request( $request ) {
-	return 'journal-carousel' === $request->get_param( 'surface' ) ? 'journal' : 'hero';
+	return lunara_home_carousel_kind( str_replace( '-carousel', '', (string) $request->get_param( 'surface' ) ) );
 }
 
 /** Return one exact editor record, including unavailable retained selections. */
@@ -126,7 +127,7 @@ function lunara_site_studio_carousel_item_metadata( $post_id, $kind ) {
 
 /** Build the exact metadata envelope shared by initial markup and refreshes. */
 function lunara_site_studio_carousel_metadata( $kind, $post_ids = array(), $image_ids = array() ) {
-	$kind      = 'journal' === $kind ? 'journal' : 'hero';
+	$kind      = lunara_home_carousel_kind( $kind );
 	$automatic = lunara_home_carousel_automatic_posts( $kind );
 	$all_ids   = array();
 	foreach ( array_merge( is_array( $post_ids ) ? $post_ids : array(), wp_list_pluck( $automatic, 'ID' ) ) as $post_id ) {
@@ -193,20 +194,21 @@ function lunara_site_studio_carousel_metadata_response( $request ) {
 }
 
 function lunara_site_studio_register_carousel_routes() {
-	$route = '/surfaces/(?P<surface>hero-carousel|journal-carousel)';
+	$route = '/surfaces/(?P<surface>hero-carousel|journal-carousel|reviews-carousel)';
 	register_rest_route( 'lunara-site-studio/v1', $route . '/search', array( 'methods' => 'GET', 'callback' => 'lunara_site_studio_carousel_search', 'permission_callback' => 'lunara_site_studio_rest_route_permission' ) );
 	register_rest_route( 'lunara-site-studio/v1', $route . '/metadata', array( 'methods' => 'GET', 'callback' => 'lunara_site_studio_carousel_metadata_response', 'permission_callback' => 'lunara_site_studio_rest_route_permission' ) );
 }
 add_action( 'rest_api_init', 'lunara_site_studio_register_carousel_routes' );
 
 function lunara_site_studio_render_carousel_inspector( $surface, $state, $revisions ) {
-	$kind      = 'journal-carousel' === $surface ? 'journal' : 'hero';
+	$kind      = lunara_home_carousel_kind( str_replace( '-carousel', '', $surface ) );
 	$post_ids  = wp_list_pluck( $state['slides'], 'post_id' );
 	$image_ids = wp_list_pluck( $state['slides'], 'image_id' );
 	$metadata  = lunara_site_studio_carousel_metadata( $kind, $post_ids, $image_ids );
 	?>
 	<p>Automatic uses the six newest published items by publication date. Manual keeps your selection when switching modes. Unavailable items stay listed but are skipped on the homepage.</p>
 	<?php if ( ! $state['adopted'] ) : ?><p data-carousel-adoption-notice><strong>Your existing homepage presentation stays active until you Apply this carousel.</strong></p><?php endif; ?>
+	<?php if ( 'reviews' === $kind ) : ?><p>Reviews use portrait artwork from each review’s Card / Poster settings. Image and text overrides here affect this homepage carousel only.</p><?php endif; ?>
 	<div data-carousel-editor>
 		<label>Mode <select data-carousel-field="mode"><option value="auto">Automatic — six newest</option><option value="manual">Manual selection</option></select></label>
 		<label>Section heading <input data-carousel-field="heading" maxlength="160" type="text"></label>
@@ -215,7 +217,7 @@ function lunara_site_studio_render_carousel_inspector( $surface, $state, $revisi
 		<?php if ( 'hero' === $kind ) : ?><label>Overlay strength <input data-carousel-field="overlay" type="range" min="20" max="100"></label><?php endif; ?>
 		<div data-carousel-automatic></div>
 		<div data-carousel-manual>
-			<label>Search published <?php echo 'journal' === $kind ? 'Journal entries' : 'Reviews and Journal entries'; ?> <input type="search" data-carousel-search></label>
+			<label>Search published <?php echo 'reviews' === $kind ? 'Reviews' : ( 'journal' === $kind ? 'Journal entries' : 'Reviews and Journal entries' ); ?> <input type="search" data-carousel-search></label>
 			<button type="button" data-carousel-search-button>Search</button>
 			<div data-carousel-results aria-live="polite"></div>
 			<p data-carousel-empty hidden>An empty manual carousel is hidden on the homepage. Add an item or choose Automatic.</p>

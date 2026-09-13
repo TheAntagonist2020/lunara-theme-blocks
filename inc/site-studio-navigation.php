@@ -8,6 +8,7 @@ function lunara_site_studio_page_groups() {
 		'home' => array( 'label' => __( 'Home', 'lunara-film' ), 'surface' => 'homepage-structure', 'editors' => array(
 			'homepage-structure' => __( 'Page layout', 'lunara-film' ),
 			'hero-carousel' => __( 'Hero stories', 'lunara-film' ),
+			'reviews-carousel' => __( 'Latest Reviews', 'lunara-film' ),
 			'journal-carousel' => __( 'Journal stories', 'lunara-film' ),
 			'lunara-method' => __( 'Lunara Method', 'lunara-film' ),
 			'home-oscar-picks' => __( 'Oscar Picks', 'lunara-film' ),
@@ -19,6 +20,7 @@ function lunara_site_studio_page_groups() {
 		) ),
 		'journal' => array( 'label' => __( 'Journal', 'lunara-film' ), 'surface' => 'journal-archive', 'editors' => array(
 			'journal-archive' => __( 'Journal page', 'lunara-film' ),
+			'journal-single' => __( 'Journal article layout', 'lunara-film' ),
 		) ),
 		'oscars' => array( 'label' => __( 'Oscars', 'lunara-film' ), 'surface' => 'oscars-portal', 'editors' => array(
 			'oscars-portal' => __( 'Oscars page', 'lunara-film' ),
@@ -70,7 +72,7 @@ function lunara_site_studio_render_page_navigation( $surfaces, $active_id ) {
 
 /** Section composition and section content share a direct, guarded path. */
 function lunara_site_studio_render_home_section_editor( $section ) {
-	$editors = array( 'hero' => 'hero-carousel', 'dispatch' => 'journal-carousel', 'pairing-desk' => 'lunara-method', 'oscar-picks' => 'home-oscar-picks', 'oscar-facts' => 'home-oscar-facts' );
+	$editors = array( 'hero' => 'hero-carousel', 'latest-reviews' => 'reviews-carousel', 'dispatch' => 'journal-carousel', 'pairing-desk' => 'lunara-method', 'oscar-picks' => 'home-oscar-picks', 'oscar-facts' => 'home-oscar-facts' );
 	if ( ! isset( $editors[ $section ] ) ) { return; }
 	$destination = lunara_site_studio_navigation_destination( $editors[ $section ], lunara_site_studio_authorized_surfaces() );
 	if ( ! $destination ) { return; }

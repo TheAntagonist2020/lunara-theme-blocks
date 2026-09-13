@@ -16,7 +16,7 @@ function fixture(surface, controllerSource, controlsSource) {
  const result = spawnSync('php', [path.join(__dirname, 'site-studio-runtime.php'), `--fixture=${surface}`], { encoding: 'utf8' });
  if (result.error || result.status !== 0) throw result.error || new Error(result.stderr);
  const adminCss = '<style>#wpcontent{margin-left:160px}#wpbody-content{min-width:0;padding-bottom:40px}@media(max-width:782px){#wpcontent{margin-left:0}}</style>';
- const usesOrderedList = ['homepage-structure', 'reviews-archive', 'journal-archive', 'lunara-method', 'oscars-portal'].includes(surface);
+ const usesOrderedList = ['homepage-structure', 'reviews-archive', 'journal-archive', 'journal-single', 'lunara-method', 'oscars-portal'].includes(surface);
  const sharedSource = typeof controlsSource === 'undefined' ? editorControls : controlsSource;
  return result.stdout
   .replace('</head>', `<style>${css}</style>${usesOrderedList ? `<style>${editorCss}</style>` : ''}${adminCss}</head>`)

@@ -1,5 +1,11 @@
 $ErrorActionPreference = 'Stop'
 
+# Academy presentation shares the same editor and private transaction boundary.
+& php (Join-Path $PSScriptRoot 'site-studio-oscars-ledger-runtime.php')
+if ($LASTEXITCODE -ne 0) { throw 'Academy Ledger provider contracts failed.' }
+& node (Join-Path $PSScriptRoot 'site-studio-oscars-ledger-browser-runtime.js')
+if ($LASTEXITCODE -ne 0) { throw 'Academy Ledger editor browser contracts failed.' }
+
 $themeRoot = Split-Path -Parent $PSScriptRoot
 
 function Assert-True {
@@ -12,7 +18,7 @@ Assert-True ($LASTEXITCODE -eq 0) ("Site Studio editorial runtime failed:`n" + (
 Assert-True (($runtime -join "`n") -match 'site-studio editorial runtime: all assertions passed') 'Editorial runtime did not reach its completion marker.'
 
 $registry = Get-Content -Raw (Join-Path $themeRoot 'inc/site-studio-registry.php')
-$adapters = Get-Content -Raw (Join-Path $themeRoot 'inc/site-studio-adapters.php')
+$adapters = (Get-Content -Raw (Join-Path $themeRoot 'inc/site-studio-adapters.php')) + (Get-Content -Raw (Join-Path $themeRoot 'inc/site-studio-journal-single.php'))
 $preview = Get-Content -Raw (Join-Path $themeRoot 'inc/site-studio-preview.php')
 $workspace = Get-Content -Raw (Join-Path $themeRoot 'inc/site-studio.php')
 $controller = Get-Content -Raw (Join-Path $themeRoot 'assets/js/lunara-site-studio.js')
@@ -24,7 +30,7 @@ $search = Get-Content -Raw (Join-Path $themeRoot 'search.php')
 $notFound = Get-Content -Raw (Join-Path $themeRoot '404.php')
 $frontend = Get-Content -Raw (Join-Path $themeRoot 'inc/frontend.php')
 
-foreach ($surface in @('review-single', 'utility-search', 'site-footer')) {
+foreach ($surface in @('review-single', 'journal-single', 'utility-search', 'site-footer')) {
     Assert-True ($registry -match [regex]::Escape("'$surface'")) "Registry is missing $surface."
 }
 Assert-True ($registry -match "'reviews-archive'[\s\S]+?'sections'\s*=>\s*array\(\s*'hero'\s*,\s*'grid'\s*,\s*'pagination'\s*,\s*'pairing-desk'\s*\)") 'Reviews registry order must remain exactly canonical.'
@@ -32,6 +38,7 @@ Assert-True ($registry -match "'journal-archive'[\s\S]+?'sections'\s*=>\s*array\
 
 foreach ($factory in @(
     'lunara_site_studio_review_single_adapter',
+    'lunara_site_studio_journal_single_adapter',
     'lunara_site_studio_utility_search_adapter',
     'lunara_site_studio_footer_adapter'
 )) {
@@ -40,7 +47,7 @@ foreach ($factory in @(
 Assert-True ($adapters -notmatch "lunara_site_studio_utility_search_keys[\s\S]{0,2500}lunara_utility_search_preset") 'Utility Search adapter allowlist must not include the compatibility-only preset marker.'
 Assert-True ($adapters -notmatch 'lunara_footer_show_social') 'Footer adapter must not expose the phantom social control.'
 
-foreach ($surface in @('reviews-archive', 'journal-archive', 'review-single', 'utility-search', 'site-footer')) {
+foreach ($surface in @('reviews-archive', 'journal-archive', 'review-single', 'journal-single', 'utility-search', 'site-footer')) {
     Assert-True ($preview -match [regex]::Escape("'$surface'")) "Private preview resolver is missing $surface."
     Assert-True ($controller -match [regex]::Escape("'$surface'")) "Workspace controller is missing $surface."
     Assert-True ($bridge -match [regex]::Escape("'$surface'")) "Preview bridge is missing $surface."
@@ -66,4 +73,7 @@ foreach ($source in @($registry, $adapters, $preview, $workspace)) {
     Assert-True ($source -notmatch '(?i)cache[_ -]?(purge|flush|clear)|rocket_clean_[a-z0-9_]+|wp_cache_flush') 'Site Studio editorial code must not add cache purge behavior or instructions.'
 }
 
+$journalArticle = Get-Content -Raw (Join-Path $themeRoot 'single-journal.php')
+foreach ($section in @('hero', 'article', 'gallery')) { Assert-True ($journalArticle -match [regex]::Escape(('data-lunara-site-studio-section="{0}"' -f $section))) "Journal article needs an actual $section preview marker." }
+Assert-True ($adapters -match 'function lunara_site_studio_journal_single_preview_article' -and $adapters -match "'has_password' => false") 'Journal article previews must resolve eligible published content without a fixed story slug.'
 Write-Host 'site-studio-editorial: all assertions passed.'

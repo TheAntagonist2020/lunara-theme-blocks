@@ -58,15 +58,17 @@ if ( in_array( '--fixture', $argv ?? array(), true ) ) {
  function wp_json_encode( $value, $flags = 0 ) { return json_encode( $value, $flags ); }
  require dirname( __DIR__ ) . '/inc/site-studio.php';
  $state = lunara_home_carousel_sanitize( array( 'mode' => 'manual', 'slides' => array( array( 'post_id' => 99 ) ) ) );
- $surface = in_array( '--journal', $argv, true ) ? 'journal-carousel' : 'hero-carousel';
+ $surface = in_array( '--reviews', $argv, true ) ? 'reviews-carousel' : ( in_array( '--journal', $argv, true ) ? 'journal-carousel' : 'hero-carousel' );
+ $fixture_kind = lunara_home_carousel_kind( str_replace( '-carousel', '', $surface ) );
+ $state = lunara_home_carousel_sanitize( array( 'mode' => 'manual', 'slides' => array( array( 'post_id' => 99 ) ) ), $fixture_kind );
  $base = 'https://example.test/wp-json/lunara-site-studio/v1/surfaces/' . $surface;
  $config = array(
   'protocol' => 'lunara-site-studio/v1', 'clientVersion' => 1, 'surface' => $surface,
   'nonce' => 'test-nonce', 'pageUuid' => '123e4567-e89b-42d3-a456-426614174000',
   'previewInstanceArg' => 'lunara_site_studio_instance', 'previewOrigin' => 'https://example.test', 'previewRoute' => '/',
-  'previewQueryArg' => 'lunara_' . ( 'hero-carousel' === $surface ? 'hero' : 'journal' ) . '_carousel_preview', 'previewParams' => (object) array(),
+  'previewQueryArg' => 'lunara_' . $fixture_kind . '_carousel_preview', 'previewParams' => (object) array(),
   'stateSchema' => lunara_site_studio_carousel_schema(), 'widths' => array( 'desktop' => 1440, 'tablet' => 768, 'mobile' => 390 ),
-  'markers' => array( 'hero-carousel' === $surface ? 'hero' : 'dispatch' ),
+  'markers' => array( lunara_home_carousel_section( $fixture_kind ) ),
   'strings' => array(
    'live' => 'Live settings loaded.', 'dirty' => 'Unsaved changes.', 'previewCurrent' => 'Preview is current.', 'previewStale' => 'Preview is out of date.',
    'saving' => 'Applying changes…', 'saved' => 'Changes applied.', 'restored' => 'Revision restored.', 'failed' => 'The request could not be completed. Your changes are still here.',
@@ -79,7 +81,7 @@ if ( in_array( '--fixture', $argv ?? array(), true ) ) {
   ),
  );
  foreach ( array( 'state', 'preview', 'save', 'restore', 'revisions' ) as $endpoint ) { $config['endpoints'][ $endpoint ] = $base . '/' . $endpoint; }
- echo '<!doctype html><html><head><meta charset="utf-8"></head><body><div class="wrap lunara-site-studio" data-lunara-site-studio data-surface="' . $surface . '" data-workspace-state="recovery" data-dirty="false"><a class="lunara-site-studio-card" href="/other" data-lunara-surface-card>Other surface</a><div class="lunara-site-studio-workspace"><aside class="lunara-site-studio-section-rail"><ol><li data-section-control="' . ( 'hero-carousel' === $surface ? 'hero' : 'dispatch' ) . '">Carousel</li></ol></aside><section class="lunara-site-studio-preview"><div class="lunara-site-studio-widths"><button data-preview-width="desktop">Desktop</button><button data-preview-width="tablet">Tablet</button><button data-preview-width="mobile">Mobile</button></div><div class="lunara-site-studio-preview-viewport"><div class="lunara-site-studio-preview-flow"><div class="lunara-site-studio-preview-canvas"><iframe src="https://example.test/" width="1440" height="900"></iframe></div></div></div></section><aside class="lunara-site-studio-inspector" aria-busy="false">';
+ echo '<!doctype html><html><head><meta charset="utf-8"></head><body><div class="wrap lunara-site-studio" data-lunara-site-studio data-surface="' . $surface . '" data-workspace-state="recovery" data-dirty="false"><a class="lunara-site-studio-card" href="/other" data-lunara-surface-card>Other surface</a><div class="lunara-site-studio-workspace"><aside class="lunara-site-studio-section-rail"><ol><li data-section-control="' . lunara_home_carousel_section( $fixture_kind ) . '">Carousel</li></ol></aside><section class="lunara-site-studio-preview"><div class="lunara-site-studio-widths"><button data-preview-width="desktop">Desktop</button><button data-preview-width="tablet">Tablet</button><button data-preview-width="mobile">Mobile</button></div><div class="lunara-site-studio-preview-viewport"><div class="lunara-site-studio-preview-flow"><div class="lunara-site-studio-preview-canvas"><iframe src="https://example.test/" width="1440" height="900"></iframe></div></div></div></section><aside class="lunara-site-studio-inspector" aria-busy="false">';
  lunara_site_studio_render_carousel_inspector( $surface, $state, array() );
  echo '<div class="lunara-site-studio-actions"><button type="button" class="button" data-action="preview" disabled>Preview changes</button><button type="button" class="button button-primary" data-action="save" disabled>Apply changes</button><button type="button" class="button" data-action="discard" disabled>Discard changes</button></div><p data-workspace-status>Loading editor…</p></aside></div><script id="lunara-site-studio-state" type="application/json">' . json_encode( $state ) . '</script></div><script>window.LunaraSiteStudioWorkspaceConfig=' . json_encode( $config ) . ';</script><script src="/controller.js"></script></body></html>';
  exit;
@@ -163,4 +165,39 @@ $options['lunara_hero_command'] = $legacy; unset( $_POST['lunara_hero_featured']
 check( '' === get_post_meta( 55, '_lunara_hero_featured' ), 'Pre-adoption legacy uncheck behavior is preserved.' );
 $_POST['lunara_hero_featured'] = '1'; lunara_save_hero_feature_meta( 56 );
 check( get_post_meta( 56, '_lunara_hero_featured' ) > 0, 'Pre-adoption legacy feature behavior is preserved.' );
+// Latest Reviews extends the same canonical provider and remains isolated from both existing decks.
+$before_reviews = $options;
+$reviews_adapter = lunara_site_studio_reviews_carousel_adapter();
+$reviews = $reviews_adapter->read_state();
+check( 'lunara_home_reviews_carousel' === lunara_home_carousel_option( 'reviews' ) && 'latest-reviews' === lunara_home_carousel_section( 'reviews' ), 'Latest Reviews has its own canonical option and homepage marker.' );
+check( false === $reviews['adopted'] && 'auto' === $reviews['mode'] && 'Latest Reviews' === $reviews['heading'] && 7 === $reviews['interval'] && $before_reviews === $options, 'Reading the new Latest Reviews editor does not adopt it or change any legacy owner.' );
+$review_metadata = lunara_site_studio_carousel_metadata( 'reviews', array( 202, 201, 209, 999 ), array() );
+check( array( 208, 206, 204, 202 ) === $review_metadata['automatic'], 'Latest Reviews metadata includes only the newest published Reviews, excluding Journal articles, drafts and pages.' );
+check( false === $review_metadata['items']->{201}['available'] && false === $review_metadata['items']->{209}['available'] && false === $review_metadata['items']->{999}['available'], 'Wrong-type, unpublished and deleted manual Reviews are flagged without substitution.' );
+check( 'reviews' === lunara_site_studio_carousel_kind_from_request( new Carousel_Request( array( 'surface' => 'reviews-carousel' ) ) ), 'Latest Reviews requests never collapse into the Hero kind.' );
+$reviews['mode'] = 'manual';
+$reviews['slides'] = array( array( 'post_id' => 204, 'headline' => 'Homepage review headline', 'image_id' => 90, 'fit' => 'full', 'focal_x' => 17, 'focal_y' => 83 ), array( 'post_id' => 202 ), array( 'post_id' => 209 ), array( 'post_id' => 999 ) );
+$reviews = lunara_site_studio_carousel_validate( $reviews, 'reviews' );
+$reviews_preview = $reviews_adapter->create_preview( $reviews );
+check( ! is_wp_error( $reviews_preview ) && $before_reviews === $options, 'Latest Reviews Preview creates only a private token and preserves all public options.' );
+check( false === lunara_site_studio_get_private_preview( 'hero-carousel', 'theme:hero-carousel', '/', $reviews_preview['token'] ), 'Hero cannot consume a private Latest Reviews candidate.' );
+check( lunara_site_studio_preview_install_state( 'reviews-carousel', $reviews, 42 ) && true === lunara_home_carousel_settings( 'reviews' )['adopted'] && ! isset( $GLOBALS['lunara_home_carousel_preview']['hero'] ) && ! isset( $GLOBALS['lunara_home_carousel_preview']['journal'] ), 'Private Latest Reviews installs only its own request-local deck.' );
+unset( $GLOBALS['lunara_home_carousel_preview'] );
+$reviews_saved = $reviews_adapter->save_state( $reviews );
+check( ! is_wp_error( $reviews_saved ) && array( 'latest-reviews' ) === $reviews_saved['changed_sections'] && true === $reviews_saved['state']['adopted'], 'Apply explicitly adopts Latest Reviews and reports the correct section.' );
+$without_reviews = $options; unset( $without_reviews['lunara_home_reviews_carousel'], $without_reviews[lunara_site_studio_revision_option_name( 'reviews-carousel' )] );
+$before_without_history = $before_reviews; unset( $before_without_history[lunara_site_studio_revision_option_name( 'reviews-carousel' )] );
+check( $without_reviews === $before_without_history, 'Latest Reviews Apply preserves Hero, Journal and legacy current-release options.' );
+$remembered = $reviews_saved['state']; $remembered['mode'] = 'auto';
+$automatic_saved = $reviews_adapter->save_state( $remembered );
+check( $reviews_saved['state']['slides'] === $automatic_saved['state']['slides'], 'Automatic mode retains the exact manual order, unavailable IDs and per-story overrides.' );
+$empty_reviews = $automatic_saved['state']; $empty_reviews['mode'] = 'manual'; $empty_reviews['slides'] = array();
+$empty_saved = $reviews_adapter->save_state( $empty_reviews );
+check( true === $empty_saved['state']['adopted'] && 'manual' === $empty_saved['state']['mode'] && array() === $empty_saved['state']['slides'], 'An empty manual Latest Reviews remains explicitly empty after Apply.' );
+$reviews_restored = $reviews_adapter->restore_revision( $reviews_saved['revision_id'] );
+check( ! is_wp_error( $reviews_restored ) && ! array_key_exists( 'lunara_home_reviews_carousel', $options ) && false === $reviews_restored['state']['adopted'], 'Restoring the first history entry reinstates the original legacy presentation and option absence.' );
+$fail_option = 'lunara_home_reviews_carousel'; $reviews_failed = $reviews_adapter->save_state( $reviews ); $fail_option = '';
+check( is_wp_error( $reviews_failed ) && ! array_key_exists( 'lunara_home_reviews_carousel', $options ), 'Failed Latest Reviews adoption leaves the legacy public owner active.' );
+$review_bad = $reviews; $review_bad['mode'] = 'unknown';
+check( is_wp_error( $reviews_adapter->save_state( $review_bad ) ) && ! array_key_exists( 'lunara_home_reviews_carousel', $options ), 'Invalid Latest Reviews selection mode makes no adoption write.' );
 echo "PASS {$checks} carousel settings and preview contracts\n";

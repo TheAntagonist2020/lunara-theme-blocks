@@ -141,6 +141,8 @@ require_once $lunara_inc . 'design-tokens.php';
 require_once $lunara_inc . 'site-studio-registry.php';
 require_once $lunara_inc . 'site-studio-method.php';
 require_once $lunara_inc . 'site-studio-adapters.php';
+require_once $lunara_inc . 'site-studio-journal-single.php';
+require_once $lunara_inc . 'site-studio-oscars-ledger.php';
 require_once $lunara_inc . 'site-studio-carousels.php';
 require_once $lunara_inc . 'site-studio-home-oscars.php';
 require_once $lunara_inc . 'site-studio-rest.php';

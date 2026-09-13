@@ -418,6 +418,17 @@
         },
         supports: { html: false, reusable: false, multiple: false },
         edit: function ( props ) {
+            if ( homepageEditor.reviewsCarouselAdopted === true ) {
+                return [
+                    el( InspectorControls, {},
+                        el( PanelBody, { title: __( 'Latest Reviews', 'lunara-film' ) },
+                            el( 'p', {}, __( 'Stories, images, order and rotation are managed in Site Studio. Your earlier block settings are retained.', 'lunara-film' ) ),
+                            homepageEditor.reviewsCarouselUrl ? el( 'a', { href: homepageEditor.reviewsCarouselUrl, className: 'button button-primary' }, __( 'Edit Latest Reviews', 'lunara-film' ) ) : el( 'p', {}, __( 'Ask a site administrator to update this carousel.', 'lunara-film' ) )
+                        )
+                    ),
+                    homepageSectionCard( 'lunara/latest-reviews', __( 'Homepage: Latest Reviews', 'lunara-film' ), __( 'The portrait Reviews carousel, managed in Site Studio.', 'lunara-film' ) )
+                ];
+            }
             return [
                 el( InspectorControls, {},
                     el( PanelBody, { title: __( 'Latest Reviews Settings', 'lunara-film' ) },

@@ -11,7 +11,7 @@ function Assert-True {
     }
 }
 
-# Theme 3.2.75 — Journal single lede parity.
+# Theme 3.2.76 — Journal single lede parity.
 #
 # On a journal entry the first body paragraph is the hero deck repeated, so the
 # enlarged opening-paragraph treatment that reviews keep produced a 28% size
@@ -22,9 +22,10 @@ function Assert-True {
 $root = Split-Path -Parent $PSScriptRoot
 $style = Get-Content -LiteralPath (Join-Path $root 'style.css') -Raw
 $shell = Get-Content -LiteralPath (Join-Path $root 'assets\css\lunara-shell.css') -Raw
+$journalSingle = Get-Content -LiteralPath (Join-Path $root 'assets/css/lunara-journal-single.css') -Raw
 $frontend = Get-Content -LiteralPath (Join-Path $root 'inc\frontend.php') -Raw
 
-Assert-True ($style -match 'Version:\s*3\.2\.75') 'Journal lede parity must ship in Theme 3.2.75.'
+Assert-True ($style -match 'Version:\s*3\.2\.76') 'Journal lede parity must ship in Theme 3.2.76.'
 
 # The review lede survives, on its own, with the size it always had.
 $reviewLede = [regex]::Matches($style, '(?m)^body\.single-review \.lunara-review-single-content > p:first-of-type \{[^}]*?font-size:\s*clamp\(1\.1rem, 0\.98rem \+ 0\.4vw, 1\.28rem\) !important;[^}]*\}')
@@ -37,12 +38,20 @@ Assert-True ($style -notmatch $journalLedePattern) 'style.css must not single ou
 Assert-True ($shell -notmatch $journalLedePattern) 'lunara-shell.css must not single out the first journal paragraph.'
 Assert-True ($frontend -notmatch $journalLedePattern) 'inc/frontend.php inline guardrails must not single out the first journal paragraph.'
 
-# The rule every journal paragraph now shares must still exist in the inline guardrail, with its !important clamp.
-Assert-True ($frontend -match 'body\.single-journal \.lunara-review-single-content p\{[^}]*?font-size:clamp\(1rem,1\.05vw,1\.12rem\)!important;') 'The single-journal guardrail must keep the shared body paragraph clamp.'
+Assert-True ($journalSingle -notmatch $journalLedePattern) 'Journal route CSS must not single out the first paragraph.'
+
+# The rule every journal paragraph now shares must still exist in the synchronous route asset, with its !important clamp.
+Assert-True ($journalSingle -match 'body\.single-journal \.lunara-review-single-content p\{[^}]*?font-size:clamp\(1rem,1\.05vw,1\.12rem\)!important;') 'The single-journal guardrail must keep the shared body paragraph clamp.'
 
 # The only remaining generic first-paragraph rule is not !important, so the guardrail clamp wins it for journal entries.
 $genericLede = [regex]::Match($style, '(?m)^\.lunara-review-single-content > p:first-of-type \{[^}]*\}')
 Assert-True ($genericLede.Success) 'The shared non-important opening-paragraph rule must remain for reviews.'
 Assert-True ($genericLede.Value -notmatch '!important') 'The shared opening-paragraph rule must stay non-important so the journal guardrail clamp outranks it.'
 
-Write-Host 'Theme 3.2.75 journal single lede parity contract passed: reviews keep the lede, journal paragraphs share one body clamp.'
+Write-Host 'Theme 3.2.76 journal single lede parity contract passed: reviews keep the lede, journal paragraphs share one body clamp.'
+
+& node (Join-Path $PSScriptRoot 'article-layout-browser-runtime.js')
+if ($LASTEXITCODE -ne 0) { throw 'Review and Journal actual-template layout contracts failed.' }
+
+& php (Join-Path $PSScriptRoot 'journal-single-delivery-runtime.php')
+if ($LASTEXITCODE -ne 0) { throw 'Journal article stylesheet delivery contracts failed.' }

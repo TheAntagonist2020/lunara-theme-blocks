@@ -149,7 +149,10 @@ function lunara_homepage_editor_section_config() {
         $is_hero_fixed = 'hero' === $slug
             && function_exists( 'lunara_home_cinematic_front_door_is_enabled' )
             && lunara_home_cinematic_front_door_is_enabled();
-        $edit_surface  = 'pairing-desk' === $slug ? 'lunara-method' : 'homepage-structure';
+        $is_reviews_carousel = 'latest-reviews' === $slug
+            && function_exists( 'lunara_home_carousel_is_adopted' )
+            && lunara_home_carousel_is_adopted( 'reviews' );
+        $edit_surface  = $is_reviews_carousel ? 'reviews-carousel' : ( 'pairing-desk' === $slug ? 'lunara-method' : 'homepage-structure' );
         $edit_url      = $can_edit && function_exists( 'lunara_site_studio_admin_url' )
             ? lunara_site_studio_admin_url( $edit_surface )
             : '';
@@ -160,6 +163,8 @@ function lunara_homepage_editor_section_config() {
 
         if ( $is_hero_fixed ) {
             $edit_label = __( 'Edit in Hero Command', 'lunara-film' );
+        } elseif ( $is_reviews_carousel ) {
+            $edit_label = __( 'Edit Latest Reviews', 'lunara-film' );
         } elseif ( 'pairing-desk' === $slug ) {
             $edit_label = __( 'Edit Lunara Method', 'lunara-film' );
         } else {
@@ -176,7 +181,9 @@ function lunara_homepage_editor_section_config() {
             'fixed'       => $is_hero_fixed,
             'status'      => $is_hero_fixed
                 ? __( 'The public front-door hero is currently owned by Hero Command. This block remains stored, but its presence does not hide that live hero.', 'lunara-film' )
-                : __( 'Public output renders only when WordPress displays the page; this compact card makes no content query.', 'lunara-film' ),
+                : ( $is_reviews_carousel
+                    ? __( 'Latest Reviews is controlled in Site Studio. This block keeps its position and its prior settings for History restoration.', 'lunara-film' )
+                    : __( 'Public output renders only when WordPress displays the page; this compact card makes no content query.', 'lunara-film' ) ),
         );
     }
 
@@ -199,6 +206,10 @@ function lunara_enqueue_homepage_editor_card_assets() {
         array(
             'siteStudioUrl' => current_user_can( 'edit_theme_options' ) && function_exists( 'lunara_site_studio_admin_url' )
                 ? esc_url_raw( lunara_site_studio_admin_url( 'lunara-method' ) )
+                : '',
+            'reviewsCarouselAdopted' => function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'reviews' ),
+            'reviewsCarouselUrl' => current_user_can( 'edit_theme_options' ) && function_exists( 'lunara_site_studio_admin_url' )
+                ? esc_url_raw( lunara_site_studio_admin_url( 'reviews-carousel' ) )
                 : '',
             'sections'      => lunara_homepage_editor_section_config(),
         )
