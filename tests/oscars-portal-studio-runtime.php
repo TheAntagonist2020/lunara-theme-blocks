@@ -221,7 +221,7 @@ require dirname( __DIR__ ) . '/inc/site-studio-registry.php';
 require dirname( __DIR__ ) . '/inc/site-studio-adapters.php';
 
 $oscars_projection_schema = lunara_site_studio_oscars_portal_state_schema();
-lunara_test_assert( array( 'schema_version', 'identity', 'section_order', 'section_visibility', 'presentation', 'buttons', 'quick_start' ) === array_keys( $oscars_projection_schema ), 'Oscars projection schema must inventory every authoritative top-level provider key.' );
+lunara_test_assert( array( 'schema_version', 'identity', 'section_order', 'section_visibility', 'presentation', 'buttons', 'quick_start', 'winners', 'rotating_winners' ) === array_keys( $oscars_projection_schema ), 'Oscars projection schema must inventory every authoritative top-level provider key.' );
 lunara_test_assert( array( 'kicker', 'title', 'explore_kicker', 'explore_heading', 'spotlights_heading', 'titles_kicker', 'titles_heading', 'research_kicker', 'research_heading', 'reviews_heading', 'deep_cuts_heading' ) === array_keys( $oscars_projection_schema['identity'] ), 'Oscars projection schema must inventory every authoritative identity key.' );
 lunara_test_assert( array( 'hero', 'navigator', 'board', 'doors', 'spotlights', 'titles', 'research', 'linked-reviews', 'winners', 'deep-cuts', 'rotating-winners' ) === array_keys( $oscars_projection_schema['section_visibility'] ), 'Oscars projection schema must inventory every authoritative visibility key.' );
 lunara_test_assert( array( 'section_gap', 'hero_min_height', 'card_min_height', 'winners_min_width', 'density', 'lead_prominence', 'board_rhythm' ) === array_keys( $oscars_projection_schema['presentation'] ), 'Oscars projection schema must inventory every authoritative presentation key.' );
@@ -909,4 +909,5 @@ if ( 'accessors' === $lunara_test_mode ) {
 }
 
 require __DIR__ . '/oscars-portal-navigation-cases.php';
+require __DIR__ . '/oscars-portal-winner-cases.php';
 fwrite( STDOUT, 'oscars-portal-studio-runtime: all assertions passed (' . $lunara_test_mode . " mode).\n" );

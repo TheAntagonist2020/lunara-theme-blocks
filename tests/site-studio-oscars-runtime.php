@@ -142,6 +142,7 @@ $saved = $adapter->save_state( $draft );
 lunara_test_assert( ! is_wp_error( $saved ) && $adapter->read_state() === $draft, 'Apply and reload preserve the exact Portal candidate.' );
 $restored = $adapter->restore_revision( $saved['revision_id'] );
 lunara_test_assert( ! is_wp_error( $restored ) && $adapter->read_state() === $initial, 'Restore returns the exact prior public Portal snapshot.' );
+require __DIR__ . '/site-studio-oscars-winner-cases.php';
 foreach ( $pilot['markers'] as $marker ) { lunara_test_assert( false !== strpos( $source, 'data-lunara-site-studio-section="' . $marker . '"' ), 'Active Portal exposes marker ' . $marker ); }
 ob_start(); lunara_control_desk_render_oscars_portal_studio(); $legacy = ob_get_clean();
 lunara_test_assert( false === strpos( $legacy, '<form' ) && false !== strpos( $legacy, 'surface=oscars-portal' ), 'Covered legacy Portal form redirects to the shared editor.' );
@@ -156,13 +157,16 @@ $manager = new class {
     public function get_section( $key ) { return false; }
     public function stale_save( $values ) { foreach ( $values as $key => $value ) { if ( isset( $this->registered[$key] ) ) { set_theme_mod( $key, $value ); } } }
 };
-$manager->registered = array_fill_keys( array_merge( $navigation_settings, array( 'lunara_oscars_rotating_winners_count' ) ), true );
+$winner_settings = array();
+foreach ( lunara_oscars_portal_studio_winner_specs() as $fields ) { foreach ( $fields as $spec ) { $winner_settings[] = $spec['setting']; } }
+$manager->registered = array_fill_keys( array_merge( $navigation_settings, $winner_settings, array( 'lunara_home_hero_autoplay' ) ), true );
 $before_retirement = $lunara_test_theme_mods;
 lunara_customize_retire_portal_studio_controls( $manager );
 lunara_test_assert( 23 === count( $navigation_settings ) && ! array_diff( $navigation_settings, $manager->removed ) && ! array_diff( $navigation_settings, $manager->removed_settings ) && $before_retirement === $lunara_test_theme_mods, 'All 23 migrated Customizer controls and registrations retire without touching their saved canonical mods.' );
-$manager->stale_save( array_fill_keys( $navigation_settings, 'Stale Customizer value' ) );
-lunara_test_assert( $before_retirement === $lunara_test_theme_mods && isset( $manager->registered['lunara_oscars_rotating_winners_count'] ), 'A stale Customizer submission cannot overwrite migrated navigation, while supplemental settings stay registered.' );
+lunara_test_assert( 7 === count( $winner_settings ) && ! array_diff( $winner_settings, $manager->removed ) && ! array_diff( $winner_settings, $manager->removed_settings ), 'All seven migrated winner controls and stale write registrations must be retired.' );
+$manager->stale_save( array_fill_keys( array_merge( $navigation_settings, $winner_settings ), 'Stale Customizer value' ) );
+lunara_test_assert( $before_retirement === $lunara_test_theme_mods && isset( $manager->registered['lunara_home_hero_autoplay'] ), 'A stale Customizer submission cannot overwrite migrated navigation or winner settings; unrelated controls remain registered.' );
 foreach ( lunara_oscars_portal_studio_identity_specs() as $spec ) { lunara_test_assert( in_array( $spec['setting'], $manager->removed, true ), 'Covered copy writer is retired.' ); }
 foreach ( lunara_oscars_portal_studio_visibility_owners() as $owner ) { if ( $owner['setting'] ) { lunara_test_assert( in_array( $owner['setting'], $manager->removed, true ), 'Covered visibility writer is retired.' ); } }
-lunara_test_assert( in_array( 'lunara_oscars_portal_section_order', $manager->removed, true ) && ! in_array( 'lunara_oscars_rotating_winners_count', $manager->removed, true ) && ! in_array( 'lunara_oscars_portal_hero_primary_label', $manager->removed, true ), 'No-op legacy order is retired while supplemental Classic controls remain.' );
+lunara_test_assert( in_array( 'lunara_oscars_portal_section_order', $manager->removed, true ) && in_array( 'lunara_oscars_rotating_winners_count', $manager->removed, true ) && ! in_array( 'lunara_oscars_portal_hero_primary_label', $manager->removed, true ), 'Legacy order and migrated winner controls retire without broad unrelated Customizer removals.' );
 fwrite( STDOUT, "site-studio Oscars runtime: provider isolation, active renderer, errors, failed save, exact Apply/reload/Restore and legacy redirect passed.\n" );

@@ -70,9 +70,9 @@ if ($LASTEXITCODE -ne 0) { throw ($nodeRuntime -join "`n") }
 Write-Host ($nodeRuntime -join "`n")
 
 # Version lock: this intentionally asserts the NEXT reissue identity. It is
-# EXPECTED to fail until the 3.2.74 version migration lands as its own step;
+# EXPECTED to fail until the 3.2.75 version migration lands as its own step;
 # every assertion above it must already pass on the pre-migration tree.
 $style = Read-ThemeFile 'style.css'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.74\s*$') 'Theme version must be 3.2.74.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.75\s*$') 'Theme version must be 3.2.75.'
 
 Write-Host 'Oscars canonical cache-coherency sentinel contract passed.'

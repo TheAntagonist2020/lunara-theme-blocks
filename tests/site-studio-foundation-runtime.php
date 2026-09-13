@@ -1,6 +1,6 @@
 <?php
 /**
- * Behavioral contract for the Site Studio 3.2.74 foundation.
+ * Behavioral contract for the Site Studio 3.2.75 foundation.
  *
  * This deliberately boots the production registry, adapter/service, REST, and
  * Design Token modules against a small WordPress stub. It exercises behavior;
@@ -101,6 +101,8 @@ $lunara_test_provider_defaults = array(
 			'ledger' => array( 'enabled' => true, 'kicker' => 'Ledger', 'title' => 'Full Ledger', 'copy' => '', 'url' => '' ),
 			'method' => array( 'enabled' => true, 'kicker' => 'About', 'title' => 'Ledger Method', 'copy' => '', 'url' => '' ),
 		),
+		'winners' => array( 'fallback_heading' => 'Latest Ceremony Winners', 'link_label' => 'Full Ceremony' ),
+		'rotating_winners' => array( 'kicker' => 'Oscars Deep Dive', 'heading' => 'Ceremony Winners in Rotation', 'link_label' => 'Open This Ceremony', 'count' => 10, 'autoplay_ms' => 7200 ),
 	),
 );
 $lunara_test_provider_state = $lunara_test_provider_defaults;
@@ -1295,7 +1297,7 @@ function lunara_review_case_state_projection() {
 			'presentation' => array( 'density', 'lead_prominence', 'desk_rhythm', 'section_gap', 'hero_min_height', 'card_min_height', 'media_min_height' ),
 		),
 		'oscars' => array(
-			'top' => array( 'schema_version', 'identity', 'section_order', 'section_visibility', 'presentation', 'buttons', 'quick_start' ),
+			'top' => array( 'schema_version', 'identity', 'section_order', 'section_visibility', 'presentation', 'buttons', 'quick_start', 'winners', 'rotating_winners' ),
 			'identity' => array( 'kicker', 'title', 'explore_kicker', 'explore_heading', 'spotlights_heading', 'titles_kicker', 'titles_heading', 'research_kicker', 'research_heading', 'reviews_heading', 'deep_cuts_heading' ),
 			'section_visibility' => array( 'hero', 'navigator', 'board', 'doors', 'spotlights', 'titles', 'research', 'linked-reviews', 'winners', 'deep-cuts', 'rotating-winners' ),
 			'presentation' => array( 'section_gap', 'hero_min_height', 'card_min_height', 'winners_min_width', 'density', 'lead_prominence', 'board_rhythm' ),

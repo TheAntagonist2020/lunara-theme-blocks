@@ -261,6 +261,70 @@ function lunara_oscars_portal_studio_validate_navigation( $raw ) {
 	return $navigation;
 }
 
+/** Existing winner-section owners; live defaults take precedence over old Customizer defaults. */
+function lunara_oscars_portal_studio_winner_specs() {
+	return array(
+		'winners' => array(
+			'fallback_heading' => array( 'setting' => 'lunara_oscars_latest_winners_heading', 'default' => 'Latest Ceremony Winners', 'type' => 'text', 'max' => 220 ),
+			'link_label' => array( 'setting' => 'lunara_oscars_latest_winners_link_label', 'default' => 'Full Ceremony', 'type' => 'text', 'max' => 120 ),
+		),
+		'rotating_winners' => array(
+			'kicker' => array( 'setting' => 'lunara_oscars_rotating_winners_kicker', 'default' => 'Oscars Deep Dive', 'type' => 'text', 'max' => 140 ),
+			'heading' => array( 'setting' => 'lunara_oscars_rotating_winners_heading', 'default' => 'Ceremony Winners in Rotation', 'type' => 'text', 'max' => 220 ),
+			'link_label' => array( 'setting' => 'lunara_oscars_rotating_winners_link_label', 'default' => 'Open This Ceremony', 'type' => 'text', 'max' => 120 ),
+			'count' => array( 'setting' => 'lunara_oscars_rotating_winners_count', 'default' => 10, 'type' => 'int', 'min' => 4, 'max' => 16 ),
+			'autoplay_ms' => array( 'setting' => 'lunara_oscars_rotating_winners_autoplay', 'default' => 7200, 'type' => 'int', 'min' => 0, 'max' => 12000 ),
+		),
+	);
+}
+
+function lunara_oscars_portal_studio_winner_defaults() {
+	$defaults = array();
+	foreach ( lunara_oscars_portal_studio_winner_specs() as $family => $fields ) {
+		foreach ( $fields as $field => $spec ) { $defaults[$family][$field] = $spec['default']; }
+	}
+	return $defaults;
+}
+
+/** Pure reads retain uncapped legacy copy and the actual public numeric clamp semantics. */
+function lunara_oscars_portal_studio_read_winners() {
+	$winners = lunara_oscars_portal_studio_winner_defaults();
+	foreach ( lunara_oscars_portal_studio_winner_specs() as $family => $fields ) {
+		foreach ( $fields as $field => $spec ) {
+			$value = get_theme_mod( $spec['setting'], $spec['default'] );
+			$value = is_scalar( $value ) ? $value : $spec['default'];
+			if ( 'int' === $spec['type'] ) { $value = max( $spec['min'], min( $spec['max'], absint( $value ) ) ); }
+			else { $value = trim( (string) $value ); $value = '' === $value ? $spec['default'] : $value; }
+			$winners[$family][$field] = $value;
+		}
+	}
+	return $winners;
+}
+
+function lunara_oscars_portal_studio_winner_error( $path ) {
+	return new WP_Error( 'oscars_portal_winners_invalid', '', array( 'fields' => array( $path => __( 'Review this control and try again.', 'lunara-film' ) ) ) );
+}
+
+function lunara_oscars_portal_studio_validate_winners( $raw ) {
+	$winners = lunara_oscars_portal_studio_winner_defaults();
+	foreach ( lunara_oscars_portal_studio_winner_specs() as $family => $fields ) {
+		if ( ! array_key_exists( $family, $raw ) ) { continue; }
+		if ( ! is_array( $raw[$family] ) || array_diff_key( $raw[$family], $fields ) || array_diff_key( $fields, $raw[$family] ) ) { return lunara_oscars_portal_studio_winner_error( $family ); }
+		foreach ( $fields as $field => $spec ) {
+			$value = $raw[$family][$field]; $path = $family . '.' . $field;
+			if ( 'int' === $spec['type'] ) {
+				if ( ! is_int( $value ) || $value < $spec['min'] || $value > $spec['max'] ) { return lunara_oscars_portal_studio_winner_error( $path ); }
+			} else {
+				if ( ! is_string( $value ) ) { return lunara_oscars_portal_studio_winner_error( $path ); }
+				$value = lunara_oscars_portal_studio_text( $value, $spec['max'] );
+				$value = '' === $value ? $spec['default'] : $value;
+			}
+			$winners[$family][$field] = $value;
+		}
+	}
+	return $winners;
+}
+
 /** Complete fallback state matching the live portal's copy, order, visibility and geometry. */
 function lunara_oscars_portal_studio_defaults() {
 	$identity = array();
@@ -289,6 +353,8 @@ function lunara_oscars_portal_studio_defaults() {
 		'presentation'       => $presentation,
 		'buttons'            => lunara_oscars_portal_studio_navigation_defaults()['buttons'],
 		'quick_start'        => lunara_oscars_portal_studio_navigation_defaults()['quick_start'],
+		'winners'            => lunara_oscars_portal_studio_winner_defaults()['winners'],
+		'rotating_winners'   => lunara_oscars_portal_studio_winner_defaults()['rotating_winners'],
 	);
 }
 
@@ -563,6 +629,7 @@ function lunara_oscars_portal_studio_get_public_config( $allow_preview = true ) 
 	if ( is_array( $validated ) ) {
 		$validated['identity'] = $verbatim_identity;
 		$validated = array_replace( $validated, lunara_oscars_portal_studio_read_navigation() );
+		$validated = array_replace( $validated, lunara_oscars_portal_studio_read_winners() );
 	}
 
 	return $validated;
@@ -589,6 +656,8 @@ function lunara_oscars_portal_studio_validate_config( $raw ) {
 	$defaults     = lunara_oscars_portal_studio_defaults();
 	$navigation = lunara_oscars_portal_studio_validate_navigation( $raw );
 	if ( is_wp_error( $navigation ) ) { return $navigation; }
+	$winners = lunara_oscars_portal_studio_validate_winners( $raw );
+	if ( is_wp_error( $winners ) ) { return $winners; }
 	$shape_errors = array(
 		'identity'           => 'oscars_portal_identity_invalid',
 		'section_order'      => 'oscars_portal_section_order_invalid',
@@ -616,7 +685,7 @@ function lunara_oscars_portal_studio_validate_config( $raw ) {
 
 	$config                   = array_replace_recursive( $defaults, $raw );
 	$config['schema_version'] = 1;
-	$config = array_replace( $config, $navigation );
+	$config = array_replace( $config, $navigation, $winners );
 
 	// Identity: bounded text; an explicitly empty field folds to its shipped
 	// literal — the same "empty inherits the default" semantic the
@@ -681,6 +750,8 @@ function lunara_oscars_portal_studio_validate_config( $raw ) {
 		'presentation'       => $config['presentation'],
 		'buttons'            => $config['buttons'],
 		'quick_start'        => $config['quick_start'],
+		'winners'            => $config['winners'],
+		'rotating_winners'   => $config['rotating_winners'],
 	);
 }
 
@@ -756,7 +827,7 @@ function lunara_oscars_portal_studio_config_from_request( $request ) {
  * @param array<string,mixed> $config Valid configuration.
  * @return void
  */
-function lunara_oscars_portal_studio_apply_config( $config, $navigation_families = array( 'buttons', 'quick_start' ) ) {
+function lunara_oscars_portal_studio_apply_config( $config, $navigation_families = array( 'buttons', 'quick_start', 'winners', 'rotating_winners' ) ) {
 	if ( in_array( 'buttons', $navigation_families, true ) ) {
 		foreach ( lunara_oscars_portal_studio_button_specs() as $key => $spec ) { set_theme_mod( $spec['setting'], $config['buttons'][$key] ); }
 	}
@@ -764,6 +835,10 @@ function lunara_oscars_portal_studio_apply_config( $config, $navigation_families
 		foreach ( lunara_oscars_portal_studio_quick_start_specs() as $key => $spec ) {
 			foreach ( $config['quick_start'][$key] as $field => $value ) { set_theme_mod( 'lunara_oscars_portal_card_' . $spec['slot'] . '_' . $field, $value ); }
 		}
+	}
+	foreach ( lunara_oscars_portal_studio_winner_specs() as $family => $fields ) {
+		if ( ! in_array( $family, $navigation_families, true ) ) { continue; }
+		foreach ( $fields as $field => $spec ) { set_theme_mod( $spec['setting'], $config[$family][$field] ); }
 	}
 	foreach ( lunara_oscars_portal_studio_identity_specs() as $field => $spec ) {
 		set_theme_mod( $spec['setting'], (string) $config['identity'][ $field ] );
@@ -884,9 +959,9 @@ function lunara_oscars_portal_studio_restore_revision_transaction( $revision_id 
 		if ( is_wp_error( $validated ) ) {
 			return $validated;
 		}
-		$navigation_families = array_intersect( array( 'buttons', 'quick_start' ), array_keys( $target ) );
+		$navigation_families = array_intersect( array( 'buttons', 'quick_start', 'winners', 'rotating_winners' ), array_keys( $target ) );
 		$current = lunara_oscars_portal_studio_get_public_config( false );
-		foreach ( array_diff( array( 'buttons', 'quick_start' ), $navigation_families ) as $family ) { $validated[$family] = $current[$family]; }
+		foreach ( array_diff( array( 'buttons', 'quick_start', 'winners', 'rotating_winners' ), $navigation_families ) as $family ) { $validated[$family] = $current[$family]; }
 		$safety_id = lunara_oscars_portal_studio_push_revision( $current, 'restore', 'passed', true );
 		if ( is_wp_error( $safety_id ) ) {
 			return $safety_id;
@@ -1002,7 +1077,7 @@ function lunara_oscars_portal_studio_get_preview_config( $token ) {
 	if ( is_wp_error( $validated ) ) { return false; }
 	// A still-valid token created before these controls existed never owned them.
 	// Resolve its missing families from today's canonical mods without writing.
-	foreach ( lunara_oscars_portal_studio_read_navigation() as $family => $current ) {
+	foreach ( array_merge( lunara_oscars_portal_studio_read_navigation(), lunara_oscars_portal_studio_read_winners() ) as $family => $current ) {
 		if ( ! array_key_exists( $family, $config ) ) { $validated[$family] = $current; }
 	}
 	return $validated;

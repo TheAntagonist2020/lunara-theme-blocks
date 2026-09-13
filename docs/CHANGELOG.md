@@ -11,6 +11,30 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-13 — Theme 3.2.75 Oscars Winner Controls
+
+The Oscars inspector adds Winner sections for the latest ceremony and rotating
+winner cards. Seven existing settings join the shared Preview, Apply, Discard
+and History workflow, with desktop and mobile controls.
+
+- Edit the latest-winners fallback heading and ceremony link text. The ceremony
+  name normally supplies that section's heading; the control explains when the
+  fallback appears.
+- Edit the rotating-winners kicker, heading, ceremony link text, card count and
+  time between advances. The editor shows seconds, including the live default
+  of 7.2; storage remains exactly 7200 milliseconds. Zero turns automatic
+  advancing off. Count remains bounded from 4 to 16.
+- Private preview candidates reach the actual page reader, including the card
+  count and carousel timing. Saved theme mods remain the only storage owners.
+  Reads preserve existing presentation; old revisions and preview tokens retain
+  current values for fields they never owned.
+- Retire the seven equivalent Customizer controls and registrations without
+  deleting stored values. Remove the obsolete Portal inspector Classic shortcut.
+
+The existing ceremony data, category membership, visibility controls, artwork
+and responsive carousel behavior remain with their current owners. Automatic
+advancing still respects the existing desktop and reduced-motion conditions.
+
 ## 2026-09-13 — Theme 3.2.74 Oscars Navigation Editor
 
 The Oscars portal brings its three Hero button labels and four Quick Start

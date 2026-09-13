@@ -2818,8 +2818,11 @@ function lunara_customize_retire_portal_studio_controls( $wp_customize ) {
     foreach ( lunara_oscars_portal_studio_quick_start_specs() as $spec ) {
         foreach ( array( 'enabled', 'kicker', 'title', 'copy', 'url' ) as $field ) { $setting = 'lunara_oscars_portal_card_' . $spec['slot'] . '_' . $field; $wp_customize->remove_control( $setting ); $wp_customize->remove_setting( $setting ); }
     }
+    foreach ( lunara_oscars_portal_studio_winner_specs() as $fields ) {
+        foreach ( $fields as $spec ) { $wp_customize->remove_control( $spec['setting'] ); $wp_customize->remove_setting( $spec['setting'] ); }
+    }
     $section = $wp_customize->get_section( 'lunara_oscars_portal_options' );
-    if ( $section ) { $section->description = '<a href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-portal' ) ) . '">' . esc_html__( 'Open Site Studio for Portal copy, hero buttons, Quick Start cards, visibility, order and presentation.', 'lunara-film' ) . '</a>'; }
+    if ( $section ) { $section->description = '<a href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-portal' ) ) . '">' . esc_html__( 'Open Site Studio for Portal copy, hero buttons, Quick Start cards, winner sections, visibility, order and presentation.', 'lunara-film' ) . '</a>'; }
 }
 add_action( 'customize_register', 'lunara_customize_retire_portal_studio_controls', 100 );
 
