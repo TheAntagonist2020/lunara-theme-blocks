@@ -2835,6 +2835,10 @@ function lunara_control_desk_oscars_dossier_active_preset_key() {
 }
 
 function lunara_control_desk_apply_oscars_dossier_values( $values ) {
+    // Shared transactions own these mods once the equivalent inspector exists.
+    if ( function_exists( 'lunara_site_studio_oscars_ledger_adapter' ) ) {
+        return;
+    }
     if ( ! is_array( $values ) ) {
         return;
     }
@@ -2871,6 +2875,11 @@ function lunara_control_desk_save_oscars_dossier_studio() {
     }
 
     check_admin_referer( 'lunara_save_oscars_dossier_studio', 'lunara_oscars_dossier_nonce' );
+
+    if ( function_exists( 'lunara_site_studio_oscars_ledger_adapter' ) ) {
+        wp_safe_redirect( admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-ledger' ) );
+        exit;
+    }
 
     $presets    = lunara_control_desk_oscars_dossier_preset_specs();
     $preset_key = isset( $_POST['lunara_oscars_dossier_preset'] ) ? sanitize_key( wp_unslash( $_POST['lunara_oscars_dossier_preset'] ) ) : '';
@@ -10079,6 +10088,10 @@ function lunara_control_desk_render_oscars_dossier_preset_card( $preset_key, $pr
 }
 
 function lunara_control_desk_render_oscars_dossier_studio( $context = 'control-desk' ) {
+    if ( current_user_can( 'edit_theme_options' ) && function_exists( 'lunara_site_studio_oscars_ledger_adapter' ) ) {
+        echo '<section id="lunara-theme-studio-oscars-dossier-studio" class="lunara-control-desk-homepage-card"><h3>' . esc_html__( 'Academy page presentation', 'lunara-film' ) . '</h3><p>' . esc_html__( 'Edit ceremony, category, film and person layouts with the shared Preview, Apply and History controls.', 'lunara-film' ) . '</p><a class="button" href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-ledger' ) ) . '">' . esc_html__( 'Open Academy page editor', 'lunara-film' ) . '</a></section>';
+        return;
+    }
     if ( ! current_user_can( 'edit_theme_options' ) ) {
         ?>
         <section id="lunara-theme-studio-oscars-dossier-studio" class="lunara-control-desk-homepage-studio lunara-control-desk-oscars-dossier-studio">

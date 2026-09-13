@@ -1,9 +1,11 @@
 <?php
 /** Canonical homepage carousel configuration. Reads never adopt or rewrite legacy settings. */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
-function lunara_home_carousel_option( $kind ) { return 'journal' === $kind ? 'lunara_home_journal_carousel' : 'lunara_hero_command'; }
+function lunara_home_carousel_kind( $kind ) { return in_array( $kind, array( 'hero', 'journal', 'reviews' ), true ) ? $kind : 'hero'; }
+function lunara_home_carousel_section( $kind ) { $sections = array( 'hero' => 'hero', 'journal' => 'dispatch', 'reviews' => 'latest-reviews' ); return $sections[ lunara_home_carousel_kind( $kind ) ]; }
+function lunara_home_carousel_option( $kind ) { $options = array( 'hero' => 'lunara_hero_command', 'journal' => 'lunara_home_journal_carousel', 'reviews' => 'lunara_home_reviews_carousel' ); return $options[ lunara_home_carousel_kind( $kind ) ]; }
 function lunara_home_carousel_defaults( $kind = 'hero' ) {
- return array( 'adopted' => false, 'mode' => 'auto', 'heading' => 'journal' === $kind ? 'The Journal' : '', 'autoplay' => 1, 'interval' => 7, 'overlay' => 100, 'slides' => array() );
+ return array( 'adopted' => false, 'mode' => 'auto', 'heading' => 'reviews' === $kind ? 'Latest Reviews' : ( 'journal' === $kind ? 'The Journal' : '' ), 'autoplay' => 1, 'interval' => 7, 'overlay' => 100, 'slides' => array() );
 }
 function lunara_home_carousel_sanitize( $raw, $kind = 'hero' ) {
  $clean = lunara_home_carousel_defaults( $kind ); if ( ! is_array( $raw ) ) { return $clean; }
@@ -25,7 +27,7 @@ function lunara_home_carousel_sanitize( $raw, $kind = 'hero' ) {
  return $clean;
 }
 function lunara_home_carousel_settings( $kind = 'hero' ) {
- $kind = 'journal' === $kind ? 'journal' : 'hero';
+ $kind = lunara_home_carousel_kind( $kind );
  if ( isset( $GLOBALS['lunara_home_carousel_preview'][ $kind ] ) ) { return $GLOBALS['lunara_home_carousel_preview'][ $kind ]; }
  $raw = get_option( lunara_home_carousel_option( $kind ), array() );
  if ( 'hero' === $kind ) {

@@ -112,6 +112,7 @@ function lunara_preview_surface_specs() {
 		'lunara-method'      => array( 'owner' => 'theme:lunara-method', 'route' => '/', 'query' => 'lunara_method_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'pairing-desk' ) ),
 		'reviews-archive'    => array( 'owner' => 'theme:reviews-archive', 'route' => '/reviews/', 'query' => 'lunara_reviews_preview', 'params' => array(), 'storage' => 'provider', 'markers' => array( 'hero', 'grid', 'pagination', 'pairing-desk' ) ),
 		'journal-archive'    => array( 'owner' => 'theme:journal-archive', 'route' => '/journal/', 'query' => 'lunara_journal_preview', 'params' => array(), 'storage' => 'provider', 'markers' => array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ) ),
+		'journal-single'     => array( 'owner' => 'theme:journal-single', 'route' => '/journal/angel-finally-gets-a-face-that-can-fly/', 'query' => 'lunara_journal_single_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'article', 'gallery' ) ),
 		'review-single'      => array( 'owner' => 'theme:review-single', 'route' => '/reviews/sinners-2025/', 'query' => 'lunara_review_single_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'criticism', 'debrief', 'pair-it-with' ) ),
 		'utility-search'     => array( 'owner' => 'theme:utility-search', 'route' => '/search/', 'query' => 'lunara_utility_search_preview', 'params' => array( 'q' => 'Lunara' ), 'storage' => 'site-studio', 'markers' => array( 'search-command', 'direct-matches', 'result-run', 'recovery' ) ),
 		'site-footer'        => array( 'owner' => 'theme:site-footer', 'route' => '/', 'query' => 'lunara_footer_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'footer' ) ),
@@ -123,6 +124,7 @@ function lunara_preview_candidate( $surface ) {
 	$state = lunara_preview_state( $surface );
 	if ( 'reviews-archive' === $surface ) { $state['kicker'] = 'Private Reviews Preview'; }
 	if ( 'journal-archive' === $surface ) { $state['kicker'] = 'Private Journal Preview'; }
+	if ( 'journal-single' === $surface ) { $state['hero']['image_fit'] = 'contain'; $state['hero']['image_position_x'] = 17; $state['hero']['title_size'] = 100; $state['metadata']['show_byline'] = false; }
 	if ( 'review-single' === $surface ) { $state['review']['density'] = 'compact'; $state['pairing']['columns'] = 2; }
 	if ( 'utility-search' === $surface ) { $state['presentation']['density'] = 'compact'; $state['focus']['lead'] = 'journal'; $state['geometry']['section_gap'] = 34; }
 	if ( 'site-footer' === $surface ) { $state['brand']['show_logo'] = false; $state['brand']['tagline'] = 'Private footer preview'; }
@@ -141,7 +143,7 @@ function lunara_preview_provider_config( $surface, $token ) {
 function lunara_reviews_archive_studio_get_preview_config( $token ) { return lunara_preview_provider_config( 'reviews-archive', $token ); }
 function lunara_journal_archive_studio_get_preview_config( $token ) { return lunara_preview_provider_config( 'journal-archive', $token ); }
 
-/** Trace every real projection callback, including the five 3.2.75 surfaces. */
+/** Trace every real projection callback, including the five 3.2.76 surfaces. */
 function lunara_preview_trace_schema( $surface ) {
 	global $lunara_test_trace_callbacks, $lunara_preview_events;
 	if ( $lunara_test_trace_callbacks ) { $lunara_preview_events[] = 'projection'; }
@@ -152,12 +154,13 @@ function lunara_preview_trace_schema( $surface ) {
 		'reviews-archive'    => 'lunara_site_studio_reviews_archive_state_schema',
 		'journal-archive'    => 'lunara_site_studio_journal_archive_state_schema',
 		'review-single'      => 'lunara_site_studio_review_single_state_schema',
+		'journal-single'     => 'lunara_site_studio_journal_single_state_schema',
 		'utility-search'     => 'lunara_site_studio_utility_search_state_schema',
 		'site-footer'        => 'lunara_site_studio_footer_state_schema',
 	);
 	return isset( $callbacks[ $surface['id'] ] ) ? call_user_func( $callbacks[ $surface['id'] ] ) : array();
 }
-add_filter( 'lunara_site_studio_surfaces', static function ( $surfaces ) { foreach ( array( 'reviews-archive', 'journal-archive', 'review-single', 'utility-search', 'site-footer' ) as $surface_id ) { if ( isset( $surfaces[ $surface_id ] ) ) { $surfaces[ $surface_id ]['state_schema_callback'] = 'lunara_preview_trace_schema'; } } return $surfaces; }, 30 );
+add_filter( 'lunara_site_studio_surfaces', static function ( $surfaces ) { foreach ( array( 'reviews-archive', 'journal-archive', 'review-single', 'journal-single', 'utility-search', 'site-footer' ) as $surface_id ) { if ( isset( $surfaces[ $surface_id ] ) ) { $surfaces[ $surface_id ]['state_schema_callback'] = 'lunara_preview_trace_schema'; } } return $surfaces; }, 30 );
 
 function lunara_preview_callback_event( $name ) { global $lunara_preview_callback_events, $lunara_preview_collision; $lunara_preview_callback_events[] = $name; if ( $name === $lunara_preview_collision ) { throw new RuntimeException( 'Earlier callback escaped private guard: ' . $name ); } }
 function lunara_handle_festival_qr_redirect() { lunara_preview_callback_event( 'festival-qr' ); }
@@ -277,7 +280,7 @@ foreach ( array( 'dependency-throw', 'factory-throw', 'adapter-absent', 'adapter
 	lunara_test_assert( ! $result['ok'] && 403 === $result['status'] && array( 'response' => 403 ) === $result['die_args'] && $generic === $result['message'] && array_slice( $lunara_preview_events, 0, 2 ) === array( 'headers', 'private' ) && $denied_order && array() === $lunara_preview_callback_events && array() === $lunara_test_enqueued_scripts && array() === $lunara_test_localized && array() === $lunara_preview_admin_bar_calls, $kind . ' dependency/adapter denial must be indistinguishable, private-first, live-inert, child-inert, and admin-bar-inert.' );
 }
 
-foreach ( array( 'global-design', 'homepage-structure', 'lunara-method', 'reviews-archive', 'journal-archive', 'review-single', 'utility-search', 'site-footer' ) as $surface ) {
+foreach ( array( 'global-design', 'homepage-structure', 'lunara-method', 'reviews-archive', 'journal-archive', 'review-single', 'journal-single', 'utility-search', 'site-footer' ) as $surface ) {
 	$surface_specs = lunara_preview_surface_specs(); $surface_spec = $surface_specs[ $surface ]; lunara_preview_reset( $surface, $token, $instance ); $candidate = lunara_preview_candidate( $surface );
 	lunara_preview_reset( $surface, $token, $instance, null, null, $candidate ); $canonical_before = serialize( array( $lunara_preview_options, $lunara_preview_mods, $lunara_preview_posts, $lunara_preview_transients ) ); $lunara_test_trace_callbacks = true; $accepted = lunara_preview_dispatch();
 	lunara_test_assert( array( false ) === $lunara_preview_admin_bar_calls && array() === $lunara_preview_core_admin_bar_events, $surface . ' must suppress the admin bar before Core initialization can install or emit its bump.' );
@@ -299,6 +302,7 @@ foreach ( array( 'global-design', 'homepage-structure', 'lunara-method', 'review
 	}
 	if ( 'reviews-archive' === $surface ) { lunara_test_assert( $candidate === lunara_reviews_archive_studio_get_preview_config( $token ) && 'Private Reviews Preview' === lunara_reviews_archive_studio_get_preview_config( $token )['kicker'], 'Reviews preview must remain available through its provider-owned request-local read seam.' ); }
 	if ( 'journal-archive' === $surface ) { lunara_test_assert( $candidate === lunara_journal_archive_studio_get_preview_config( $token ) && 'Private Journal Preview' === lunara_journal_archive_studio_get_preview_config( $token )['kicker'], 'Journal preview must remain available through its provider-owned request-local read seam.' ); }
+	if ( 'journal-single' === $surface ) { lunara_test_assert( 'contain' === get_theme_mod( 'lunara_journal_single_image_fit' ) && 17 === get_theme_mod( 'lunara_journal_single_image_position_x' ) && 100 === get_theme_mod( 'lunara_journal_single_hero_title_size' ) && false === get_theme_mod( 'lunara_journal_show_byline' ), 'Journal article preview installs framing, title and metadata only in the authorized request.' ); }
 	if ( 'review-single' === $surface ) { lunara_test_assert( 'compact' === get_theme_mod( 'lunara_review_single_density', 'editorial' ) && 2 === get_theme_mod( 'lunara_review_pair_with_columns', 1 ), 'Review Single must install its candidate mods only for the authorized request.' ); }
 	if ( 'utility-search' === $surface ) { lunara_test_assert( 'compact' === get_theme_mod( 'lunara_utility_search_density', 'editorial' ) && 'journal' === get_theme_mod( 'lunara_utility_search_lead_focus', 'balanced' ) && 34 === get_theme_mod( 'lunara_utility_section_gap', 42 ), 'Utility Search must install its candidate mods only for the authorized exact Search request.' ); }
 	if ( 'site-footer' === $surface ) { lunara_test_assert( false === get_theme_mod( 'lunara_footer_show_logo', true ) && 'Private footer preview' === get_theme_mod( 'lunara_footer_tagline', '' ), 'Footer must install its candidate mods only for the authorized front-page request.' ); }
@@ -311,7 +315,7 @@ foreach ( array_keys( lunara_preview_surface_specs() ) as $surface ) {
 }
 
 // Site-Studio-owned records must also remain bound to their stored owner.
-foreach ( array( 'global-design', 'homepage-structure', 'lunara-method', 'review-single', 'utility-search', 'site-footer' ) as $surface ) {
+foreach ( array( 'global-design', 'homepage-structure', 'lunara-method', 'review-single', 'journal-single', 'utility-search', 'site-footer' ) as $surface ) {
 	lunara_preview_reset( $surface, $token, $instance ); $specs = lunara_preview_surface_specs(); $spec = $specs[ $surface ]; $key = 'lunara_site_studio_preview_' . hash( 'sha256', $token ); $lunara_preview_transients[ $key ]['owner'] = 'theme:foreign'; $lunara_preview_transients[ $key ]['token_hash'] = wp_hash( $token . '|' . get_current_user_id() . '|' . $surface . '|theme:foreign|' . $spec['route'] ); $stored_owner_denial = lunara_preview_run();
 	lunara_test_assert( ! $stored_owner_denial['ok'] && 403 === $stored_owner_denial['status'] && $generic === $stored_owner_denial['message'] && array() === $lunara_preview_admin_bar_calls && array() === $lunara_test_localized, $surface . ' must deny a self-consistent token record owned by another canonical owner.' );
 }

@@ -33,13 +33,16 @@ body.home .lunara-home-curated-hero .lunara-cinematic-hero-title {
 /* Keep all editorial copy visible before the visitor scrolls. */
 .lunara-home-curated-hero .lunara-cinematic-hero-track::before,
 .lunara-home-curated-hero .lunara-cinematic-hero-track::after { content: none; }
-.lunara-home-curated-journal { min-width: 0; }
+.lunara-home-curated-journal, .lunara-home-curated-reviews { min-width: 0; }
+.lunara-home-curated-reviews .lunara-home-section-title { max-width: 100%; min-width: 0; overflow-wrap: anywhere; }
+.lunara-home-curated-reviews .lunara-section-link { box-sizing: border-box; max-width: 100%; }
 .lunara-home-journal-carousel { position: relative; padding-bottom: 64px; }
 .lunara-home-journal-carousel .splide__list { align-items: stretch; }
 .lunara-home-journal-carousel .splide__slide { min-width: 0; height: auto; }
 .lunara-home-news-card { height: 100%; border: 1px solid rgba(201,169,97,.22); border-radius: 14px; overflow: hidden; background: #0c1b29; }
 .lunara-home-news-card > a { display: flex; flex-direction: column; height: 100%; color: inherit; text-decoration: none; }
 .lunara-home-news-media { aspect-ratio: 16 / 10; overflow: hidden; flex: none; background: #07111b; }
+.lunara-home-review-media { aspect-ratio: 2 / 3; }
 .lunara-home-news-media img { display: block; width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: var(--carousel-focal-x,50%) var(--carousel-focal-y,30%); transform: scale(var(--carousel-zoom,1)); }
 .lunara-home-news-media.is-full-frame img { object-fit: contain; transform: none; }
 .lunara-home-news-copy { display: flex; flex: 1; flex-direction: column; padding: 22px; gap: 14px; }
@@ -187,7 +190,7 @@ body.home .lunara-home-curated-hero .lunara-cinematic-hero-title {
     }
     body.home .lunara-home-curated-hero .lunara-hero-page.is-active::after { background: #c9a961; }
 }
-/* Journal navigation follows the same mobile separation without changing card artwork. */
+/* Story-card navigation keeps controls separate from artwork and copy. */
 @media (max-width: 900px) {
     .lunara-home-journal-carousel.is-initialized:not(.is-journal-static) {
         display: grid;

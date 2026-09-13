@@ -40,7 +40,7 @@ continue while a release awaits deployment.
 ## 3. Review and Journal articles
 
 - [ ] Release current typography/spacing/artwork corrections. Actual-template
-  fixtures currently pass 360 assertions across 32 cases at 320, 390, 768 and
+  fixtures currently pass 412 assertions across 32 cases at 320, 390, 768 and
   1440px with JavaScript disabled; full-image Journal framing now requests the
   uncropped source rather than a hard-cropped derivative.
 - [ ] Verify representative public articles after deployment: long headlines,
@@ -77,11 +77,19 @@ continue while a release awaits deployment.
 - [ ] Resolve Critical CSS targets that redirect or 404 under old
   `/oscar-picks/category/` and `/oscar-facts/category/` routes; identify their
   actual owner before changing taxonomy behavior or suppressing failures.
+  Registrations are in functions.php (no inc/ replacements); ordinary anonymous
+  reads confirm Best Director pick and Genre Breakthroughs fact archives are 404.
+  Best Picture redirects to a singular Pick. Missing or stale stored rewrite
+  rules remain an inference; inspect the saved rules and matched query variables
+  before a fix. Probes stopped at HTTP 429; no rewrite flush was performed.
 - [ ] Regenerate valid Critical CSS after the final structural release through
   the authorized owner workflow, then verify coverage and failure state.
 - [ ] Implement a measured stylesheet/image-loading improvement with unchanged
   visual output and safe route/cache behavior. Conservative route pruning alone
   saves only roughly 4-6KB gzip; do not overstate it as the full solution.
+  Current candidate extracts 16,115 bytes of unchanged static Journal geometry
+  into a synchronous route asset. Public acceptance and overall loading impact
+  remain pending; 34 delivery and 412 article checks pass locally.
 - [ ] Compare loading and layout shift on identical representative pages and
   conditions, including image and font requests. Stored Boost scores are not a
   controlled before/after benchmark.
@@ -94,6 +102,8 @@ continue while a release awaits deployment.
   window. This does not establish association eligibility or screening access.
 - [ ] Prepare and review concrete Home hero / Journal / review lineups using
   real published work and actual artwork, then apply through the agreed owner.
+  Proposed published-story lineups are recorded in EDITORIAL-READINESS.md;
+  they have not been applied.
 - [ ] Verify About, editorial policy, contact and archive discovery as a reader.
 - [ ] Resolve the discrepancy between the association's currently retrievable
   requirements and older bylaws before presenting membership criteria as final.

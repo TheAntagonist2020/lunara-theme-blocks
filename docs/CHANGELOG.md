@@ -11,6 +11,39 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-13 — Theme 3.2.76 shared editors and article presentation
+
+Latest Reviews joins the existing Home carousel editor with independent
+Automatic/Manual selection, portrait artwork, overrides and the shared Preview,
+Apply and History workflow. Automatic uses six newest published reviews by
+publication date. Existing block presentation remains active until Apply; then
+the old block inspector hands off to Site Studio. Restoring the original missing
+option restores that legacy presentation. Poster artwork uses the canonical
+Review Card / Poster owner, including `_lunara_tmdb_poster_url`.
+
+Journal article presentation adds headline size, image fit/focal point and three
+metadata switches through seven canonical settings. Its private preview resolves
+a current published Journal article. Full-image framing receives the uncropped
+attachment with responsive sizes/srcset, not a hard-cropped hero derivative.
+Article writing and image selection retain their article-editor owner.
+
+Academy pages gain all 14 existing dossier controls, including complete preset
+packages, with representative Ceremony, Category, Film and Person previews.
+Private preview tokens allow only those fixed public routes. Old save forms and
+preset helpers cannot compete with the shared transaction owner.
+
+Review and Journal articles use their available mobile reading width, stable
+artwork and consistent spacing. Long headlines/links wrap; gallery controls have
+44px targets and metadata no longer displays duplicate separators. Journal's
+16KB of static article geometry moves from repeated HTML into a synchronous,
+versioned route stylesheet at the same cascade position. Private presentation
+variables stay inline; Boost/Rocket exclusions preserve delivery.
+
+Header Command now owns one Search action, accurate current-page/section state,
+44px controls and a visible no-JavaScript navigation fallback. It no longer
+rewrites unrelated menus by route. Search keeps a usable canonical link if its
+overlay cannot load. Public acceptance follows Dalton's manual deployment.
+
 ## 2026-09-13 — Academy 2.7.84 category names and mobile dossiers
 
 Category discovery displays Production Design and Sound, including modern slug

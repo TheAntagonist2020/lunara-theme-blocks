@@ -1909,6 +1909,9 @@ function lunara_get_home_deep_cuts() {
  */
 if ( ! function_exists( 'lunara_render_homepage_latest_reviews' ) ) {
     function lunara_render_homepage_latest_reviews( $attrs = array() ) {
+        if ( function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'reviews' ) ) {
+            return lunara_render_home_reviews_carousel();
+        }
         $attrs = is_array( $attrs ) ? $attrs : array();
 
         $count     = isset( $attrs['count'] ) ? max( 1, min( 24, (int) $attrs['count'] ) ) : 8;

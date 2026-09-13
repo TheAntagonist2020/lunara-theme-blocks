@@ -3,6 +3,28 @@ const fs = require('fs'), path = require('path'), {spawnSync} = require('child_p
 let checks = 0;
 function check(value, message) { checks++; if (!value) { throw new Error(message); } }
 function barrier() { let release; const wait = new Promise(resolve => { release = resolve; }); return {wait,release}; }
+// Execute the actual registered block's edit callback with a minimal element tree.
+// No React rendering is needed to verify which controls can write block attrs.
+function latestReviewsBlock(config) {
+ const registered={};
+ const wp={blocks:{registerBlockType:(name,definition)=>{registered[name]=definition;}},blockEditor:{InspectorControls:'InspectorControls',MediaUpload:'MediaUpload'},components:Object.fromEntries(['PanelBody','Button','TextControl','TextareaControl','SelectControl','RangeControl','ToggleControl'].map(name=>[name,name])),element:{createElement:(type,props,...children)=>({type,props:props||{},children})},i18n:{__:text=>text},serverSideRender:'ServerSideRender'};
+ require('vm').runInNewContext(fs.readFileSync(path.join(__dirname,'../assets/js/lunara-blocks.js'),'utf8'),{window:{wp,LunaraHomepageEditorConfig:config},Number});
+ return registered['lunara/latest-reviews'];
+}
+function elementNodes(tree) { if(Array.isArray(tree)) return tree.flatMap(elementNodes); if(!tree||typeof tree!=='object') return []; return [tree,...elementNodes(tree.children||[])]; }
+const blockAttrs={source:'curated',count:8,heading:'Remembered heading',kicker:'Remembered kicker',ctaLabel:'Browse',ctaUrl:'/reviews/'};
+for(const adopted of [false,true,false]) {
+ const url='/wp-admin/admin.php?page=lunara-site-studio&surface=reviews-carousel';
+ const definition=latestReviewsBlock({reviewsCarouselAdopted:adopted,reviewsCarouselUrl:url,sections:{'lunara/latest-reviews':{editUrl:adopted?url:'/wp-admin/admin.php?page=lunara-site-studio&surface=homepage-structure'}}});
+ let writes=0;const nodes=elementNodes(definition.edit({attributes:blockAttrs,setAttributes:()=>{writes++;}}));
+ const fields=nodes.filter(node=>['TextControl','SelectControl'].includes(node.type));
+ check(fields.length===(adopted?0:6),'Latest Reviews block exposes legacy fields only before carousel adoption or after exact restoration.');
+ check(!adopted||nodes.some(node=>node.type==='a'&&node.props.href===url),'Applied Reviews block points directly to its canonical Site Studio owner.');
+ check(writes===0&&blockAttrs.heading==='Remembered heading'&&blockAttrs.source==='curated','Opening or handing off the block preserves all saved legacy attributes.');
+}
+const restricted=elementNodes(latestReviewsBlock({reviewsCarouselAdopted:true,reviewsCarouselUrl:'',sections:{}}).edit({attributes:blockAttrs,setAttributes:()=>{throw new Error('Unrequested block write');}}));
+check(!restricted.some(node=>node.type==='a'),'An author without layout capability receives guidance without an unavailable editor link.');
+
 (async () => {
  const executablePath = process.env.LUNARA_BROWSER_EXECUTABLE || ['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe','/usr/bin/chromium','/usr/bin/chromium-browser','/usr/bin/google-chrome'].find(fs.existsSync);
  check(executablePath && fs.existsSync(executablePath), 'A real Chromium executable is required.');
@@ -11,16 +33,16 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
  const css = ['lunara-site-studio.css','lunara-editor-controls.css','lunara-site-studio-carousels.css'].map(file => fs.readFileSync(path.join(__dirname,'../assets/css',file),'utf8')).join('\n');
  const art = fs.readFileSync(path.join(__dirname,'fixtures/home-carousel-art.svg'),'utf8');
  try {
-  for (const kind of ['hero','journal']) {
-   const rendered = spawnSync('php',[path.join(__dirname,'home-carousel-settings-runtime.php'),'--fixture', ...(kind === 'journal' ? ['--journal'] : [])],{encoding:'utf8'});
+  for (const kind of ['hero','journal','reviews']) {
+   const rendered = spawnSync('php',[path.join(__dirname,'home-carousel-settings-runtime.php'),'--fixture', ...(kind === 'hero' ? [] : ['--'+kind])],{encoding:'utf8'});
    check(rendered.status === 0,'Real PHP inspector fixture renders: ' + rendered.stderr);
    const page = await browser.newPage({viewport:{width:1440,height:1000}});
    page.setDefaultTimeout(12000);
    const errors=[]; page.on('pageerror',error=>errors.push(error.message));
    let submitted, saved, saves = 0, failure = false, previewBarrier, searchBarrier, metadataBarrier, metadataFailure = false, metadataOmit = false, restores = 0;
    const items = [
-    {id:10,title:'Published first',type:kind === 'hero' ? 'review' : 'journal',available:true,date_label:'Sep 8, 2026',image_url:'https://example.test/art.svg',image_source:'Review artwork',excerpt:'Inherited first excerpt',kicker:'Film',cta:'Read the review'},
-    {id:20,title:'Published second',type:'journal',available:true,date_label:'Sep 7, 2026',image_url:'',image_source:'No source artwork',excerpt:'Inherited second excerpt',kicker:'Journal',cta:'Read the story'}
+    {id:10,title:'Published first',type:kind === 'journal' ? 'journal' : 'review',available:true,date_label:'Sep 8, 2026',image_url:'https://example.test/art.svg',image_source:'Review artwork',excerpt:'Inherited first excerpt',kicker:'Film',cta:'Read the review'},
+    {id:20,title:'Published second',type:kind === 'reviews' ? 'review' : 'journal',available:true,date_label:'Sep 7, 2026',image_url:'',image_source:'No source artwork',excerpt:'Inherited second excerpt',kicker:'Journal',cta:'Read the story'}
    ];
    await page.route('https://example.test/**',async route => {
     const request = route.request(), url = new URL(request.url()), endpoint = url.searchParams.get('rest_route') || url.pathname;
@@ -48,7 +70,7 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
     }
     if (endpoint.endsWith('/save')) {
      submitted = request.postDataJSON().state; saves++; if(failure){return route.fulfill({status:422,json:{message:'Simulated rejected settings'}});}
-     saved={...submitted,adopted:true}; return route.fulfill({json:{state:saved,revision_id:'safe-revision',timestamp:'2026-09-08 12:00:00',changed_sections:[kind==='hero'?'hero':'dispatch']}});
+     saved={...submitted,adopted:true}; return route.fulfill({json:{state:saved,revision_id:'safe-revision',timestamp:'2026-09-08 12:00:00',changed_sections:[kind==='hero'?'hero':kind==='reviews'?'latest-reviews':'dispatch']}});
     }
     if (endpoint.endsWith('/restore')) {
      check(request.postDataJSON().confirm===true,'Restore uses shared explicit confirmation'); restores++;
@@ -56,8 +78,8 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
      return route.fulfill({json:{state:saved,safety_revision_id:'safety-restore',timestamp:'2026-09-08 12:05:00'}});
     }
     if (endpoint.endsWith('/revisions')) { return route.fulfill({json:{revisions:[{id:'safe-revision',timestamp:'2026-09-08 12:00:00',action:'save'}]}}); }
-    const mediaClass = kind==='hero' ? 'lunara-cinematic-hero-bg' : 'lunara-home-news-media';
-    return route.fulfill({contentType:'text/html',body:'<html><head><style>body{margin:0}.lunara-cinematic-hero-bg{width:100%;height:600px}.lunara-home-news-media{width:400px;height:250px}@media(max-width:600px){.lunara-cinematic-hero-bg{height:420px}.lunara-home-news-media{width:360px;height:225px}}</style></head><body><main style="min-height:1200px;background:#091926;color:#ddbe72"><div class="'+mediaClass+'">Page preview fixture</div></main></body></html>'});
+    const mediaClass = kind==='hero' ? 'lunara-cinematic-hero-bg' : kind==='reviews' ? 'lunara-home-review-media' : 'lunara-home-news-media';
+    return route.fulfill({contentType:'text/html',body:'<html><head><style>body{margin:0}.lunara-cinematic-hero-bg{width:100%;height:600px}.lunara-home-news-media{width:400px;height:250px}.lunara-home-review-media{width:300px;height:450px}@media(max-width:600px){.lunara-cinematic-hero-bg{height:420px}.lunara-home-news-media{width:360px;height:225px}.lunara-home-review-media{width:240px;height:360px}}</style></head><body><main style="min-height:1200px;background:#091926;color:#ddbe72"><div class="'+mediaClass+'">Page preview fixture</div></main></body></html>'});
    });
    await page.goto('https://example.test/wp-admin/admin.php'); await page.waitForSelector('[data-lunara-site-studio-ready="true"]');
    check((await page.locator('[data-carousel-items]').innerText()).toLowerCase().includes('unavailable'),'Unavailable selections visibly flagged');
@@ -103,7 +125,7 @@ function barrier() { let release; const wait = new Promise(resolve => { release 
    const geometry=await page.waitForFunction(expected=>{
     const frame=document.querySelector('.lunara-editor-image-stage'), ratio=frame.style.aspectRatio.split('/').map(Number);
     return Math.abs(ratio[0]/ratio[1]-expected)<0.001;
-   },kind==='hero'?390/420:360/225);
+   },kind==='hero'?390/420:kind==='reviews'?2/3:360/225);
    check(await geometry.jsonValue(),'Image framing follows the destination preview geometry');
    failure=true;await page.locator('[data-action="save"]').click();await page.waitForFunction(()=>document.querySelector('[data-workspace-status]').textContent.includes('Simulated'));
    check(await rows.first().getByLabel('Headline',{exact:true}).inputValue()==='Override headline revised','Failed save preserves candidate');

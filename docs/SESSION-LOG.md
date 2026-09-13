@@ -25,6 +25,114 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Theme 3.2.75 acceptance and 3.2.76 site experience
+
+### Headline
+
+The next theme candidate combines the remaining Latest Reviews and Journal
+article editors, Academy dossier presentation controls, article/mobile layout
+corrections and consistent Header Command navigation. It also removes repeated
+Journal layout CSS from article HTML. All seven goal steps remain tracked in
+[SITE-COMPLETION-PLAN.md](SITE-COMPLETION-PLAN.md); this is a release batch within
+that goal, not the end of the site work.
+
+### Verified live state
+
+Theme 3.2.75 public and read-only editor acceptance remains the measured state in
+the preceding entries. Academy 2.7.84 merged in plugin PR #29 and awaits Dalton's
+manual WordPress.com deployment. No new production settings were applied.
+
+### What changed and why
+
+See `docs/CHANGELOG.md` for the 3.2.76 implementation. Existing presentation is
+preserved until explicit adoption where a new owner replaces the old behavior.
+Journal full-image controls use the uncropped source; its static CSS keeps its
+original head position and synchronous loading after extraction.
+No agent deployment or manual cache purge occurred. Theme 3.2.76 is not
+deployed; its live canary is pending.
+
+### Commit ledger
+
+| Repo | Commit or reference | Meaning |
+| --- | --- | --- |
+| Theme | `414443be348be83c31f8de24cdee9c039675ab1b` / PR #195 | Current main and last verified live theme. |
+| Theme | `530623a` | Pushed seven-step checklist and plugin handoff documentation. |
+| Theme | `codex/site-experience-3.2.76` | Functional candidate; all 95 required gates pass after fixture repairs. CI and merge pending at this entry. |
+| Academy plugin | `2fea87341f1865142c253395064913c5cccb611c` / PR #29 | Tested 2.7.84 merge, public acceptance pending. |
+
+### Gate ledger
+
+- Latest Reviews: 55 settings/transaction and 43 actual delivery checks; 233
+  shared editor checks, 78 public carousel browser checks and 284 navigation
+  checks. Kind-isolation and publication-eligibility mutations fail and restore
+  byte-exactly. The actual registered Gutenberg block hands off after adoption.
+- Articles: 32 actual-template scenarios at 320/390/768/1440px, 412 assertions
+  after stylesheet extraction. Layouts remain readable with JavaScript disabled;
+  complete responsive image sources, fit/focal and private metadata are checked.
+- Journal stylesheet delivery: 34 runtime checks; the extracted static rules
+  match the prior candidate byte-for-byte. Removing the synchronous Boost hook
+  fails the delivery test; the source restores byte-exactly.
+- Header: 64 PHP and 55 browser assertions; independent review fixed the close
+  target and removed reliance on an undeclared browser package. Fixtures use
+  the declared playwright-core dependency.
+- Journal article editor: 37 provider and 55 browser checks with canonical
+  transaction/preview coverage. Independent review fixed invalid-input loss and
+  the cropped/full-image source mismatch.
+- Academy: 97 PHP and 70 browser checks cover all 14 controls, complete preset
+  packages, four allowlisted private preview routes, wrong-host/user/owner/token
+  rejection, no-store, actual public readers, raw History restoration and stale
+  legacy forms. Missing preview installation and missing package dispatch
+  mutations fail. Final UI review caught an optional-script failure that could
+  apply only a preset name. Preset handling now lives in the required main
+  controller, updates all 14 fields atomically and fails closed for malformed
+  package data. Eight independent failure probes pass; partial-package mutation
+  fails. The optional script was removed. Independent review is clean.
+- All 95 required theme gates pass. The initial full run passed 91/95; four
+  failures exposed three stale test integrations: the added Journal stylesheet
+  hook pair, the Journal article registry position and duplicate shared-fixture
+  helpers. Exact expectations and conditional fallback helpers were repaired
+  without production changes. All four affected gates and the two additional
+  shared-fixture consumers pass on rerun. The original failures and final
+  resolved results are retained in the local release-gates receipt.
+- Syntax validation passes for 142 PHP and 71 JavaScript files; all 27 CSS files
+  have balanced braces. Packaging review confirms the new shipped files and
+  required test wiring; no accidental artifacts or credential values found.
+- GitHub CI and merge proof remain pending at this commit and will be recorded
+  in the pull request and release receipt before deployment handoff.
+- No theme merge occurred yet; the standing rollback still matches current
+  main and must be rebuilt immediately after the next theme merge.
+
+### Corrections
+
+The earlier inventory called Academy presentation 13 controls; the real specs
+contain 14 (nine selections including the preset and five numeric values).
+The implementation preserves every existing setting and its actual read default.
+
+### Logged, not fixed / punch-list carried forward
+
+Footer link ownership, Search/404 recovery coverage, public acceptance of this
+batch, remaining Critical CSS failures and controlled loading/layout-shift
+measurement remain open. Read-only investigation locates the pick/fact taxonomy
+registrations in functions.php; these registrations have no replacement in inc/
+and must not be assumed dead. Ordinary anonymous requests confirm two of Boost's
+reported category URLs still return 404. No taxonomy or rewrite change was made.
+Best Picture also redirects to a singular Pick. Source inspection found no
+intentional replacement for these editorial taxonomy archives; the one-time
+rewrite installer does not run again merely because the theme is redeployed.
+Missing or stale stored rules and WordPress 404 guessing are the leading
+inference, not a verified cause. Further network probes stopped at HTTP 429.
+The next diagnostic is the saved rewrite rules and matched query variables.
+
+### Whose move is next
+
+Agent submits the reviewed candidate to CI, then merges the tested commit and
+rebuilds the theme rollback hatch. Dalton deploys the
+Academy plugin first and theme second through the manual WordPress.com flow.
+Agent then verifies public canaries and the real changed surfaces. Continue
+the footer/recovery batch and remaining checklist; do not narrow the full goal.
+
+---
+
 ## 2026-09-13 — Academy 2.7.84 merged; full completion goal in progress
 
 ### Headline

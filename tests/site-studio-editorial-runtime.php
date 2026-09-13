@@ -1,5 +1,5 @@
 <?php
-/** Behavioral contract for Theme 3.2.75 editorial and utility adapters. */
+/** Behavioral contract for Theme 3.2.76 editorial and utility adapters. */
 
 require __DIR__ . '/site-studio-pilot-runtime.php';
 
@@ -209,4 +209,5 @@ foreach ( array( 'reviews', 'journal' ) as $kind ) {
 	}
 }
 
+require __DIR__ . '/site-studio-journal-single-cases.php';
 echo "site-studio editorial runtime: all assertions passed.\n";

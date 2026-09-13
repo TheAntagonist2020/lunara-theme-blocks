@@ -47,7 +47,7 @@
   var source = node('p', '', root, 'lunara-editor-image-source');
   var actions = node('div', '', root, 'lunara-editor-actions');
   var choose = button('Choose image', actions, function () {
-   if (!options.enabled()) { return; }
+   if (!options.enabled() || options.allowChoose === false) { return; }
    if (!window.wp || typeof window.wp.media !== 'function') { options.announce('The Media Library could not load. Your changes are still here.'); return; }
    var ticket = options.ticket();
    var frame = window.wp.media({title:'Choose display image', library:{type:'image'}, multiple:false});
@@ -59,6 +59,7 @@
     options.selectedImage(id, url); options.change(options.allowHidden ? {image_id:id,hidden:false} : {image_id:id}); render();
    }); frame.open();
   });
+  choose.hidden = options.allowChoose === false;
   var reset = options.allowReset === false ? null : button(options.resetLabel || 'Use source image', actions, function () { if (options.enabled()) { options.change(options.allowHidden ? {image_id:0,hidden:false} : {image_id:0}); render(); } });
   var remove = options.allowHidden ? button('Remove image', actions, function () { if (options.enabled()) { options.change({hidden:true}); render(); } }) : null;
   var fitLabel = node('label', 'Image fit', root, 'lunara-editor-field'), fit = node('select', '', fitLabel);

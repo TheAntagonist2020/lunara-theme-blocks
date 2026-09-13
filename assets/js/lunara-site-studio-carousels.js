@@ -129,7 +129,7 @@
     previewButton.textContent = slide.cta || meta.cta || 'Read the story';
    }
    imageRenders.push(update);
-   var image = controls.image({parent:details,aspect:config.surface === 'journal-carousel' ? '16 / 10' : '16 / 9',getValue:function () { return slide; },
+   var image = controls.image({parent:details,aspect:config.surface === 'reviews-carousel' ? '2 / 3' : config.surface === 'journal-carousel' ? '16 / 10' : '16 / 9',getValue:function () { return slide; },
     enabled:function () { return enabled() && currentSlide(slide); },ticket:function () { return version; },announce:context.announce,
     source:function () { var meta = itemMeta(slide.post_id); return {url:meta.image_url,label:meta.image_source}; },image:function (id) { return metadata.images[id] || ''; },
     selectedImage:function (id, url) { if (url) { metadata.images[id] = url; } },
@@ -144,7 +144,7 @@
   function syncFraming() {
    if (!previewFrame) { return; }
    try {
-    var media = previewFrame.contentDocument.querySelector(config.surface === 'hero-carousel' ? '.lunara-cinematic-hero-bg' : '.lunara-home-news-media');
+    var media = previewFrame.contentDocument.querySelector(config.surface === 'hero-carousel' ? '.lunara-cinematic-hero-bg' : config.surface === 'reviews-carousel' ? '.lunara-home-review-media' : '.lunara-home-news-media');
     if (media) { var rect = media.getBoundingClientRect(); imageEditors.forEach(function (editor) { editor.setAspect(rect.width, rect.height); }); }
    } catch (error) { /* Keep the framing guide until the same-origin preview is ready. */ }
   }

@@ -70,16 +70,27 @@ the archives have compact filters and readable full titles; Oscars retains
 ordinary word wrapping and two portrait board columns. Physical-device testing
 is not claimed.
 
+September 13 acceptance now verifies `3.2.75+20260913-211752`: three anonymous
+reads agree, both canaries are `LIVE_COHERENT`, and the seven Winner sections
+controls load the saved values in Site Studio. Theme 3.2.76 is the next tested
+candidate, covering Home Latest Reviews, Journal article and Academy dossier
+editors, article layouts, shared navigation and Journal stylesheet delivery.
+Academy 2.7.84 is merged in plugin PR #29. Both new releases still require
+Dalton's manual deployment and public acceptance. The current acceptance
+checklist is [SITE-COMPLETION-PLAN.md](SITE-COMPLETION-PLAN.md); remaining footer,
+Search and 404 ownership gaps are mapped in
+[FOOTER-RECOVERY-FOLLOWUP.md](FOOTER-RECOVERY-FOLLOWUP.md).
+
 | Area | Observed gap | Next implementation / acceptance |
 | --- | --- | --- |
 | Site Studio entry | Flat directory of page, section and utility destinations above every editor | Verified live in 3.2.69: four primary pages, contextual editors, collapsible searchable directory, guarded navigation. Home opens by default. |
 | Inspector groups | Archive-wide geometry filed under Mobile; inconsistent task labels | Verified live in 3.2.69: archive Content/Layout groups, aligned Method and homepage Oscar labels, shared History. This does not add missing capabilities. |
 | Reviews and Journal editing | Gallery and continuation artwork required Classic controls | Verified live in 3.2.73: Gallery and Continue reading panels load existing settings. Shared image selection, focal points, drag/keyboard order and canonical Preview/Apply/History have local contract coverage. Individual article artwork remains with its article owner. |
-| Oscars editing | Hero buttons, Quick Start cards and winner tools required Classic controls | 3.2.74 verified live: Hero labels and Quick Start panels load existing settings. 3.2.75 candidate adds the seven winner controls with the same workflow and retires equivalent Classic writers. Homepage Picks/Facts controls do not substitute for portal editing. |
-| Category coverage | Historical category labels obscure two current names | All 24 competitive categories for the 98th Oscars are present. Next: display Production Design and Sound using their current names and add modern route aliases while preserving historical identities. |
+| Oscars editing | Hero buttons, Quick Start cards and winner tools required Classic controls | Verified live through 3.2.75: Hero labels, Quick Start and seven Winner sections controls load existing settings. The 3.2.76 candidate adds the 14 Academy dossier controls and retires their equivalent old writer. Homepage Picks/Facts controls do not substitute for portal editing. |
+| Category coverage | Historical category labels obscure two current names | All 24 competitive categories for the 98th Oscars are present. Academy 2.7.84 merged: Production Design and Sound display names and modern route aliases preserve historical identities. Public acceptance is pending. |
 | Reviews opening | Large introductory/statistics panel preceded the lead review | Verified live through 3.2.72: compact introduction and filters, no public Reviews Command panel, visible portrait art and complete phone titles. |
 | Journal opening | Title, counters and filter panels delayed visible story artwork | Verified live through 3.2.72: compact wrapping controls, stable 16:10 phone artwork and complete headlines. |
-| Shared header | Home/Oscars omit the textual Search item present on Reviews/Journal | Resolve the live header/menu ownership and make navigation consistent without duplicating search controls. |
+| Shared header | Home/Oscars omit the textual Search item present on Reviews/Journal | The 3.2.76 candidate gives Header Command one consistent Search action, current-page state, 44px controls and usable links without JavaScript. Public acceptance is pending. |
 | Oscars mobile | Heading hyphenated ordinary words and nested gutters narrowed cards | Verified live at 390px in 3.2.72: intact words, compact navigation and two portrait board columns. Wider local matrix evidence remains in the release record. |
 
 ### Archive migration findings and resolution

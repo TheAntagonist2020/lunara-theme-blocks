@@ -1,10 +1,10 @@
-/* Independently mounted Journal carousel; the cinematic hero keeps its own runtime. */
+/* Independently mounted Journal and Reviews carousels; the cinematic hero keeps its own runtime. */
 (function () {
 	'use strict';
 	function start() {
 		var motion = window.matchMedia('(prefers-reduced-motion: reduce)');
 		// Failed remote artwork receives the same treatment as an absent image.
-		document.querySelectorAll('.lunara-home-curated-journal img, .lunara-home-curated-hero img').forEach(function (img) {
+		document.querySelectorAll('.lunara-home-curated-journal img, .lunara-home-curated-reviews img, .lunara-home-curated-hero img').forEach(function (img) {
 			function fallback() {
 				var placeholder = document.createElement('span');
 				placeholder.className = 'lunara-home-carousel-placeholder';
@@ -16,7 +16,7 @@
 			if (img.complete && img.naturalWidth === 0) { fallback(); }
 		});
 		if (!window.Splide) { return; }
-		document.querySelectorAll('[data-lunara-journal-carousel]').forEach(function (root) {
+		document.querySelectorAll('[data-lunara-journal-carousel], [data-lunara-reviews-carousel]').forEach(function (root) {
 			if (root.classList.contains('is-initialized')) { return; }
 			var count = root.querySelectorAll('.splide__slide').length;
 			if (count < 2) { root.classList.add('is-journal-static'); return; }
