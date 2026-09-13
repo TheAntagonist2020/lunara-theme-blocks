@@ -287,7 +287,7 @@ if ( ! function_exists( 'lunara_render_journal_image_carousel' ) ) {
 
 		ob_start();
 		?>
-		<section class="lunara-journal-image-carousel" data-lunara-journal-carousel data-lunara-site-studio-section="gallery">
+		<section class="lunara-journal-image-carousel" data-lunara-journal-carousel>
 			<div class="lunara-journal-image-carousel-head">
 				<div>
 					<p class="lunara-home-section-kicker"><?php esc_html_e( 'Visual File', 'lunara-film' ); ?></p>
@@ -423,7 +423,7 @@ if ( have_posts() ) :
 		<main class="lunara-editorial-single-page lunara-journal-single-page">
 		<article <?php post_class( 'lunara-journal-single lunara-review-single' ); ?>>
 
-			<section class="lunara-journal-single-hero lunara-journal-cinematic-hero<?php echo $has_thumb ? ' has-hero-image' : ' has-no-hero-image'; ?>" data-lunara-site-studio-section="hero">
+			<section class="lunara-journal-single-hero lunara-journal-cinematic-hero<?php echo $has_thumb ? ' has-hero-image' : ' has-no-hero-image'; ?>">
 				<div class="lunara-journal-cinematic-hero-header">
 					<div class="lunara-journal-cinematic-hero-inner">
 						<p class="lunara-review-single-kicker"><?php echo esc_html( $kicker ); ?></p>
@@ -466,13 +466,13 @@ if ( have_posts() ) :
 							<?php
 							echo get_the_post_thumbnail(
 								$post_id,
-								'full',
+								'lunara-hero-spotlight',
 								array(
 									'class'         => 'lunara-journal-cinematic-hero-image',
 									'loading'       => 'eager',
 									'fetchpriority' => 'high',
 									'decoding'      => 'async',
-									'sizes'         => '(max-width: 640px) calc(100vw - 32px), (max-width: 1174px) 92vw, 1080px',
+									'sizes'         => '100vw',
 									'alt'           => $hero_alt,
 								)
 							);
@@ -506,7 +506,7 @@ if ( have_posts() ) :
 			}
 			?>
 
-			<section class="lunara-journal-single-body lunara-review-single-body" data-lunara-site-studio-section="article">
+			<section class="lunara-journal-single-body lunara-review-single-body">
 				<div class="lunara-review-single-body-grid">
 
 					<div class="lunara-review-single-content">
