@@ -45,15 +45,6 @@ if ( ! function_exists( 'lunara_home_front_page_id' ) ) {
 	}
 }
 
-if ( ! function_exists( 'lunara_home_front_page_content' ) ) {
-	/** Read public front-page content through the request-local preview seam. */
-	function lunara_home_front_page_content( $page_id ) {
-		$page_id = (int) $page_id;
-		$content = (string) get_post_field( 'post_content', $page_id );
-		return (string) apply_filters( 'lunara_home_front_page_content', $content, $page_id );
-	}
-}
-
 if ( ! function_exists( 'lunara_home_uses_block_composition' ) ) {
 	/**
 	 * True when the front page's content carries at least one Lunara section
@@ -65,7 +56,7 @@ if ( ! function_exists( 'lunara_home_uses_block_composition' ) ) {
 			return false;
 		}
 
-		$content = lunara_home_front_page_content( $page_id );
+		$content = (string) get_post_field( 'post_content', $page_id );
 		if ( '' === trim( $content ) ) {
 			return false;
 		}
@@ -92,7 +83,7 @@ if ( ! function_exists( 'lunara_render_home_block_composition' ) ) {
 			return '';
 		}
 
-		$content = lunara_home_front_page_content( $page_id );
+		$content = (string) get_post_field( 'post_content', $page_id );
 		if ( '' === trim( $content ) ) {
 			return '';
 		}
@@ -116,25 +107,25 @@ if ( ! function_exists( 'lunara_render_home_block_composition' ) ) {
 	}
 }
 
-if ( ! function_exists( 'lunara_compose_home_section_blocks' ) ) {
+if ( ! function_exists( 'lunara_write_home_section_blocks' ) ) {
 	/**
-	 * Purely compose Home page content from the given ordered slug list.
+	 * Rewrite the Home page's content as the given ordered slug list.
 	 * Existing per-block attributes are preserved: if the current content
 	 * already holds an instance of a section's block, that exact block
 	 * markup is reused (so Latest Reviews overrides, hero fallback fields,
 	 * etc. survive reordering).
 	 *
-	 * @param string   $content Existing post content.
 	 * @param string[] $slugs Ordered registry slugs to compose.
-	 * @return string|WP_Error Composed candidate content.
+	 * @return bool Whether the page content changed.
 	 */
-	function lunara_compose_home_section_blocks( $content, $slugs ) {
-		if ( ! is_string( $content ) || ! is_array( $slugs ) ) {
-			return new WP_Error( 'lunara_home_composition_invalid', __( 'The Homepage section order could not be composed.', 'lunara-film' ) );
+	function lunara_write_home_section_blocks( $slugs ) {
+		$page_id = lunara_home_front_page_id();
+		if ( $page_id <= 0 ) {
+			return false;
 		}
 
 		$map     = lunara_home_section_block_map();
-		$current = $content;
+		$current = (string) get_post_field( 'post_content', $page_id );
 
 		// Harvest existing instances so their attributes survive.
 		$existing = array();
@@ -180,45 +171,17 @@ if ( ! function_exists( 'lunara_compose_home_section_blocks' ) ) {
 			++$desired_index;
 		}
 
-		return implode( "\n\n", $pieces );
-	}
-}
-
-if ( ! function_exists( 'lunara_write_home_section_blocks' ) ) {
-	/**
-	 * Rewrite the current Home page through the pure composer.
-	 *
-	 * @param string[] $slugs Ordered registry slugs to compose.
-	 * @return bool|WP_Error Whether content changed, or the exact write error.
-	 */
-	function lunara_write_home_section_blocks( $slugs ) {
-		$page_id = lunara_home_front_page_id();
-		if ( $page_id <= 0 ) {
+		$new_content = implode( "\n\n", $pieces );
+		if ( trim( $new_content ) === trim( $current ) ) {
 			return false;
 		}
 
-		$current     = (string) get_post_field( 'post_content', $page_id );
-		$new_content = lunara_compose_home_section_blocks( $current, is_array( $slugs ) ? $slugs : array() );
-		if ( is_wp_error( $new_content ) ) {
-			return $new_content;
-		}
-		if ( $new_content === $current ) {
-			return false;
-		}
-
-		$updated = wp_update_post(
+		wp_update_post(
 			array(
 				'ID'           => $page_id,
-				'post_content' => wp_slash( $new_content ),
-			),
-			true
+				'post_content' => $new_content,
+			)
 		);
-		if ( is_wp_error( $updated ) ) {
-			return $updated;
-		}
-		if ( $new_content !== (string) get_post_field( 'post_content', $page_id ) ) {
-			return new WP_Error( 'lunara_home_composition_readback_failed', __( 'The Homepage content could not be verified.', 'lunara-film' ) );
-		}
 
 		return true;
 	}
@@ -233,7 +196,7 @@ if ( ! function_exists( 'lunara_sync_home_section_blocks_from_settings' ) ) {
 	 */
 	function lunara_sync_home_section_blocks_from_settings() {
 		if ( ! lunara_home_uses_block_composition() ) {
-			return false;
+			return;
 		}
 
 		$map   = lunara_home_section_block_map();
@@ -257,6 +220,6 @@ if ( ! function_exists( 'lunara_sync_home_section_blocks_from_settings' ) ) {
 			}
 		}
 
-		return lunara_write_home_section_blocks( $enabled );
+		lunara_write_home_section_blocks( $enabled );
 	}
 }
