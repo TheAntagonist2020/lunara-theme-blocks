@@ -1,5 +1,5 @@
 <?php
-/** Behavioral contract for Theme 3.2.72 editorial and utility adapters. */
+/** Behavioral contract for Theme 3.2.73 editorial and utility adapters. */
 
 require __DIR__ . '/site-studio-pilot-runtime.php';
 
@@ -192,5 +192,21 @@ lunara_editorial_assert( 12 === count( $footer_revisions ), 'Footer history must
 $restore_id = $footer_revisions[11]['id'];
 $restored = $footer_adapter->restore_revision( $restore_id );
 lunara_editorial_assert( ! is_wp_error( $restored ) && ! empty( $restored['safety_revision_id'] ) && 'restore-safety' === $footer_adapter->list_revisions()[0]['action'], 'Footer restore must create and retain a safety revision before applying the target.' );
+
+// Artwork ownership adds only canonical media families and the continuation heading leaves.
+foreach ( array( 'reviews', 'journal' ) as $kind ) {
+	$paths = call_user_func( 'lunara_site_studio_' . $kind . '_archive_managed_paths' );
+	foreach ( array( 'gallery', 'retention', 'labels.retention_kicker', 'labels.retention_title' ) as $path ) {
+		lunara_editorial_assert( in_array( $path, $paths, true ), 'Both shared archives must own ' . $path . '.' );
+	}
+	lunara_editorial_assert( ! in_array( 'labels', $paths, true ) && ! in_array( 'filter_caps', $paths, true ), 'Artwork editing must not assume ownership of unrelated Classic controls.' );
+	lunara_editorial_assert( ( 'reviews' === $kind ) === in_array( 'labels.retention_copy', $paths, true ), 'Only Reviews owns a continuation introduction.' );
+	$maps = call_user_func( 'lunara_site_studio_' . $kind . '_archive_validation_fields' );
+	foreach ( lunara_site_studio_archive_media_validation_fields( $kind ) as $code => $expected ) {
+		lunara_editorial_assert( $expected === $maps[$code], 'Canonical artwork failures must map to their shared fields.' );
+		$error = new WP_Error( $code, '', array( 'fields' => array_fill_keys( $expected, 'Review this control.' ) ) );
+		lunara_editorial_assert( $expected === array_keys( lunara_site_studio_safe_validation_fields( $error ) ), 'Artwork error anchors must survive safe REST projection.' );
+	}
+}
 
 echo "site-studio editorial runtime: all assertions passed.\n";

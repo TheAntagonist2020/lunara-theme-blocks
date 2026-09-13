@@ -1317,6 +1317,7 @@ if ( ! function_exists( 'lunara_site_studio_reviews_archive_managed_paths' ) ) {
 			'section_visibility.hero', 'section_visibility.grid', 'section_visibility.pagination', 'section_visibility.pairing-desk',
 			'presentation.density', 'presentation.lead_prominence', 'presentation.rail_density', 'presentation.section_gap',
 			'presentation.lead_min_height', 'presentation.card_min_height', 'presentation.compact_media_width',
+			'gallery', 'retention', 'labels.retention_kicker', 'labels.retention_title', 'labels.retention_copy',
 		);
 	}
 }
@@ -1330,14 +1331,31 @@ if ( ! function_exists( 'lunara_site_studio_journal_archive_managed_paths' ) ) {
 			'section_visibility.grid', 'section_visibility.retention', 'section_visibility.pagination',
 			'presentation.density', 'presentation.lead_prominence', 'presentation.desk_rhythm', 'presentation.section_gap',
 			'presentation.hero_min_height', 'presentation.card_min_height', 'presentation.media_min_height',
+			'gallery', 'retention', 'labels.retention_kicker', 'labels.retention_title',
 		);
+	}
+}
+
+if ( ! function_exists( 'lunara_site_studio_archive_media_validation_fields' ) ) {
+	/** Map canonical artwork errors to the shared inspector without exposing internal fields. */
+	function lunara_site_studio_archive_media_validation_fields( $kind ) {
+		$fields = array();
+		foreach ( array( 'copy_required', 'count_invalid', 'order_invalid', 'image_invalid', 'duplicate', 'provenance_required', 'source_invalid', 'link_invalid' ) as $suffix ) {
+			$fields[ $kind . '_archive_gallery_' . $suffix ] = array( 'gallery' );
+		}
+		foreach ( array( 'order_invalid', 'copy_required', 'destination_invalid', 'url_invalid', 'image_invalid', 'image_provenance_required', 'image_source_invalid' ) as $suffix ) {
+			$fields[ $kind . '_archive_retention_' . $suffix ] = array( 'retention' );
+		}
+		$fields[ $kind . '_archive_label_required' ] = array( 'labels.retention_kicker', 'labels.retention_title' );
+		if ( 'reviews' === $kind ) { $fields[ $kind . '_archive_label_required' ][] = 'labels.retention_copy'; }
+		return $fields;
 	}
 }
 
 if ( ! function_exists( 'lunara_site_studio_reviews_archive_validation_fields' ) ) {
 	/** Map mature provider codes to the exact safe controls Site Studio owns. */
 	function lunara_site_studio_reviews_archive_validation_fields() {
-		return array(
+		return array_merge( lunara_site_studio_archive_media_validation_fields( 'reviews' ), array(
 			'reviews_archive_selection_version_invalid' => array( 'lead_mode' ),
 			'reviews_archive_lead_mode_invalid' => array( 'lead_mode' ),
 			'reviews_archive_lead_invalid' => array( 'lead_id' ),
@@ -1353,13 +1371,13 @@ if ( ! function_exists( 'lunara_site_studio_reviews_archive_validation_fields' )
 			'reviews_archive_primary_sections_hidden' => array( 'section_visibility' ),
 			'reviews_archive_presentation_invalid' => array( 'presentation.density', 'presentation.lead_prominence', 'presentation.rail_density' ),
 			'reviews_archive_geometry_invalid' => array( 'presentation.section_gap', 'presentation.lead_min_height', 'presentation.card_min_height', 'presentation.compact_media_width' ),
-		);
+		) );
 	}
 }
 if ( ! function_exists( 'lunara_site_studio_journal_archive_validation_fields' ) ) {
 	/** Map mature provider codes to the exact safe controls Site Studio owns. */
 	function lunara_site_studio_journal_archive_validation_fields() {
-		return array(
+		return array_merge( lunara_site_studio_archive_media_validation_fields( 'journal' ), array(
 			'journal_archive_selection_version_invalid' => array( 'lead_mode' ),
 			'journal_archive_lead_mode_invalid' => array( 'lead_mode' ),
 			'journal_archive_lead_invalid' => array( 'lead_id' ),
@@ -1375,7 +1393,7 @@ if ( ! function_exists( 'lunara_site_studio_journal_archive_validation_fields' )
 			'journal_archive_primary_sections_hidden' => array( 'section_visibility' ),
 			'journal_archive_presentation_invalid' => array( 'presentation.density', 'presentation.lead_prominence', 'presentation.desk_rhythm' ),
 			'journal_archive_geometry_invalid' => array( 'presentation.section_gap', 'presentation.hero_min_height', 'presentation.card_min_height', 'presentation.media_min_height' ),
-		);
+		) );
 	}
 }
 

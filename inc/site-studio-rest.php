@@ -94,6 +94,7 @@ if ( ! function_exists( 'lunara_site_studio_safe_validation_fields' ) ) {
 			'presentation.density', 'presentation.lead_prominence', 'presentation.rail_density', 'presentation.desk_rhythm', 'presentation.section_gap', 'presentation.lead_min_height', 'presentation.hero_min_height', 'presentation.card_min_height', 'presentation.compact_media_width', 'presentation.media_min_height', 'presentation.result_treatment', 'presentation.result_media', 'presentation.recovery_prominence',
 			'identity.kicker', 'identity.title', 'identity.explore_kicker', 'identity.explore_heading', 'identity.spotlights_heading', 'identity.titles_kicker', 'identity.titles_heading', 'identity.research_kicker', 'identity.research_heading', 'identity.reviews_heading', 'identity.deep_cuts_heading',
 			'presentation.winners_min_width', 'presentation.board_rhythm',
+			'labels.retention_kicker', 'labels.retention_title', 'labels.retention_copy',
 			'review.density', 'review.hero_scale', 'review.rail_mode', 'review.debrief_prominence', 'review.pairing_density', 'review.spoiler_treatment', 'review.trailer_prominence', 'review.section_gap', 'review.debrief_poster_width', 'review.related_count',
 			'pairing.layout', 'pairing.text_depth', 'pairing.mobile_stack', 'pairing.image_focus', 'pairing.columns', 'pairing.thumb_width',
 			'focus.lead', 'focus.spotlight', 'geometry.section_gap', 'geometry.result_min_height', 'geometry.card_grid_min',

@@ -1,6 +1,6 @@
 <?php
 /**
- * Behavioral contract for the Site Studio 3.2.72 foundation.
+ * Behavioral contract for the Site Studio 3.2.73 foundation.
  *
  * This deliberately boots the production registry, adapter/service, REST, and
  * Design Token modules against a small WordPress stub. It exercises behavior;
@@ -1601,12 +1601,14 @@ function lunara_review_case_provider_managed_merge() {
 	$reviews_candidate['section_order'] = array( 'pairing-desk', 'hero', 'grid', 'pagination' );
 	$reviews_candidate['section_visibility']['pagination'] = false;
 	$reviews_candidate['presentation']['density'] = 'compact';
+	$reviews_candidate['gallery']['copy'] = 'Shared Reviews gallery';
 	$reviews_save = $reviews_adapter->save_state( $reviews_candidate );
 	if ( is_wp_error( $reviews_save ) ) { $failures[] = 'Reviews managed save must succeed.'; }
 	else {
 		$reviews_state = $reviews_save['state'];
 		if ( 'Managed Reviews title' !== $reviews_state['title'] || array( 'pairing-desk', 'hero', 'grid', 'pagination' ) !== $reviews_state['section_order'] || false !== $reviews_state['section_visibility']['pagination'] || 'compact' !== $reviews_state['presentation']['density'] ) { $failures[] = 'Reviews must publish every managed candidate value in exact requested section order.'; }
-		if ( 'manual' !== $reviews_state['lead_mode'] || 44 !== $reviews_state['lead_id'] || 'Advanced Reviews command' !== $reviews_state['labels']['run_title'] || 'Advanced Reviews gallery' !== $reviews_state['gallery']['copy'] ) { $failures[] = 'Reviews must preserve fresh provider-owned fields that were absent from the Site Studio inspector.'; }
+		if ( 'manual' !== $reviews_state['lead_mode'] || 44 !== $reviews_state['lead_id'] || 'Advanced Reviews command' !== $reviews_state['labels']['run_title'] ) { $failures[] = 'Reviews must preserve fresh provider-owned fields that remain absent from the Site Studio inspector.'; }
+		if ( 'Shared Reviews gallery' !== $reviews_state['gallery']['copy'] ) { $failures[] = 'Reviews artwork is now managed by the shared inspector.'; }
 		if ( array( 'schema_version', 'selection_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) !== array_keys( $reviews_state ) || array( 'hero', 'grid', 'pagination', 'pairing-desk' ) !== array_keys( $reviews_state['section_visibility'] ) ) { $failures[] = 'Reviews managed merge must retain canonical top-level and visibility key order.'; }
 		$reviews_revision = isset( $lunara_test_provider_revisions['reviews'][0] ) ? $lunara_test_provider_revisions['reviews'][0] : array();
 		if ( $fresh_reviews !== ( isset( $reviews_revision['config'] ) ? $reviews_revision['config'] : null ) || 'site-studio-save' !== ( isset( $reviews_revision['action'] ) ? $reviews_revision['action'] : '' ) || $reviews_save['revision_id'] !== ( isset( $reviews_revision['id'] ) ? $reviews_revision['id'] : '' ) ) { $failures[] = 'Reviews provider transaction must snapshot the exact fresh state with its verified Site Studio revision ID.'; }
@@ -1647,13 +1649,15 @@ function lunara_review_case_provider_managed_merge() {
 	$journal_candidate['section_order'] = array( 'retention', 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'pagination' );
 	$journal_candidate['section_visibility']['pagination'] = false;
 	$journal_candidate['presentation']['density'] = 'showcase';
+	$journal_candidate['retention'][0]['copy'] = 'Shared Journal route';
 	$journal_save = $journal_adapter->save_state( $journal_candidate );
 	if ( is_wp_error( $journal_save ) ) { $failures[] = 'Journal managed save must succeed.'; }
 	else {
 		$journal_state = $journal_save['state'];
 		if ( 1 !== $journal_state['selection_version'] || 'manual' !== $journal_state['lead_mode'] || 65 !== $journal_state['lead_id'] || array( 66, 67 ) !== $journal_state['curated_ids'] ) { $failures[] = 'Unactivated stale Journal controls must preserve newer canonical selection and activation during a copy-only save.'; }
 		if ( 'Managed Journal title' !== $journal_state['title'] || array( 'retention', 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'pagination' ) !== $journal_state['section_order'] || false !== $journal_state['section_visibility']['pagination'] || 'showcase' !== $journal_state['presentation']['density'] ) { $failures[] = 'Journal must publish every managed candidate value in exact requested section order.'; }
-		if ( 17 !== $journal_state['filter_caps']['journal_topic'] || 'Advanced Journal command' !== $journal_state['labels']['toolbar_title'] || 'Advanced Journal route' !== $journal_state['retention'][0]['copy'] ) { $failures[] = 'Journal must preserve fresh provider-owned workflow fields that were absent from the Site Studio inspector.'; }
+		if ( 17 !== $journal_state['filter_caps']['journal_topic'] || 'Advanced Journal command' !== $journal_state['labels']['toolbar_title'] ) { $failures[] = 'Journal must preserve fresh provider-owned workflow fields that remain absent from the Site Studio inspector.'; }
+		if ( 'Shared Journal route' !== $journal_state['retention'][0]['copy'] ) { $failures[] = 'Journal continuation copy is now managed by the shared inspector.'; }
 		if ( array( 'schema_version', 'selection_version', 'kicker', 'title', 'deck', 'supporting_copy', 'lead_mode', 'lead_id', 'lane_mode', 'curated_ids', 'item_count', 'filter_caps', 'section_order', 'section_visibility', 'labels', 'gallery', 'retention', 'presentation' ) !== array_keys( $journal_state ) || array( 'hero', 'deskbar', 'filters', 'toolbar', 'grid', 'retention', 'pagination' ) !== array_keys( $journal_state['section_visibility'] ) ) { $failures[] = 'Journal managed merge must retain canonical top-level and visibility key order.'; }
 		$journal_revision = isset( $lunara_test_provider_revisions['journal'][0] ) ? $lunara_test_provider_revisions['journal'][0] : array();
 		if ( $fresh_journal !== ( isset( $journal_revision['config'] ) ? $journal_revision['config'] : null ) || 'site-studio-save' !== ( isset( $journal_revision['action'] ) ? $journal_revision['action'] : '' ) || $journal_save['revision_id'] !== ( isset( $journal_revision['id'] ) ? $journal_revision['id'] : '' ) ) { $failures[] = 'Journal provider transaction must snapshot the exact fresh state with its verified Site Studio revision ID.'; }

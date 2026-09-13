@@ -60,28 +60,36 @@ anonymous canary requests and the signed-in browser, despite the reported
 Later September 12 acceptance verified `3.2.69+20260912-151630` on all three
 anonymous reads, with both canonical canaries reporting `LIVE_COHERENT`.
 The real Site Studio page navigation loads; the Journal preview uses a stable
-390 by 844 mobile frame. The public composition findings below remain open.
+390 by 844 mobile frame. Those observations are superseded where noted below.
+
+The next acceptance verified `3.2.72+20260913-013957`: three anonymous build
+reads agree and both canonical canaries report `LIVE_COHERENT`. Real Home,
+Reviews, Journal and Oscars pages were inspected at 390 by 844 with no
+horizontal document overflow. Home has separate artwork, copy and controls;
+the archives have compact filters and readable full titles; Oscars retains
+ordinary word wrapping and two portrait board columns. Physical-device testing
+is not claimed.
 
 | Area | Observed gap | Next implementation / acceptance |
 | --- | --- | --- |
 | Site Studio entry | Flat directory of page, section and utility destinations above every editor | Verified live in 3.2.69: four primary pages, contextual editors, collapsible searchable directory, guarded navigation. Home opens by default. |
 | Inspector groups | Archive-wide geometry filed under Mobile; inconsistent task labels | Verified live in 3.2.69: archive Content/Layout groups, aligned Method and homepage Oscar labels, shared History. This does not add missing capabilities. |
-| Reviews and Journal editing | Lead and curated-order controls excluded from shared adapters | 3.2.70 candidate: explicit Stories activation, retained lead and priority choices, shared search/drag/keyboard controls and canonical query/save/preview owners. Remaining artwork/gallery and retention migration stays open. |
+| Reviews and Journal editing | Gallery and continuation artwork still require Classic controls | 3.2.70 story controls are shipped. 3.2.73 candidate adds Gallery and Continue reading with shared image selection, focal points, drag/keyboard order and canonical Preview/Apply/History. Individual article artwork remains with its article owner. |
 | Oscars editing | Some buttons, Quick Start cards and winner tools still live in Classic controls | Map each live portal placement to its canonical owner; migrate related controls in complete groups. Homepage Picks/Facts controls do not substitute for portal editing. |
-| Reviews opening | Large introductory/statistics panel precedes the lead review | Bring the current criticism into the opening composition, retain archive depth in a compact supporting position. Review desktop and phone together. |
-| Journal opening | Title, counters and filter panels precede visible story artwork | Bring current stories forward and condense supporting controls. Retain useful filtering and publication dates. |
+| Reviews opening | Large introductory/statistics panel preceded the lead review | Verified live through 3.2.72: compact introduction and filters, no public Reviews Command panel, visible portrait art and complete phone titles. |
+| Journal opening | Title, counters and filter panels delayed visible story artwork | Verified live through 3.2.72: compact wrapping controls, stable 16:10 phone artwork and complete headlines. |
 | Shared header | Home/Oscars omit the textual Search item present on Reviews/Journal | Resolve the live header/menu ownership and make navigation consistent without duplicating search controls. |
-| Oscars mobile | Heading hyphenates ordinary words such as history and living | Correct display-heading wrap rules; verify long titles at 320/390/768px with real content. |
+| Oscars mobile | Heading hyphenated ordinary words and nested gutters narrowed cards | Verified live at 390px in 3.2.72: intact words, compact navigation and two portrait board columns. Wider local matrix evidence remains in the release record. |
 
 ### Archive migration findings and resolution
 
-September 12 mobile correction, Theme 3.2.72 candidate: the four landing pages
+September 12 mobile correction, Theme 3.2.72: the four landing pages
 now share deliberate phone spacing and readable controls. Home separates
 landscape artwork from its reading panel; Reviews and Journal compact their
 filters and retain full headlines; Oscars keeps a two-column poster wall with
 readable headings and compact supporting navigation. Route and critical CSS
-agree on archive widths. These are locally verified changes pending manual
-deployment and public acceptance. They do not complete the remaining editor
+agree on archive widths. These changes are deployed with the public acceptance
+described above. They do not complete the remaining editor
 capabilities or article and dossier layout work.
 
 The 3.2.70 candidate adds `selection_version` inside each existing provider;
@@ -135,8 +143,9 @@ need to describe the real behavior. These are source-code findings, not claims
 that a particular current live setting is broken. The observed Journal first
 story was "Angel Finally Gets a Face That Can Fly."
 
-Artwork/gallery/retention controls in archive providers still need migration
-after lead and ordering. Journal article and Review article presentation, site
+Theme 3.2.73 migrates Gallery and Continue reading controls using the existing
+archive providers. It remains a candidate until the separate release and live
+acceptance steps are complete. Journal article and Review article presentation, site
 footer, search/recovery, and Academy dossier routes also belong to the broader
 site standard. Their inclusion here is an open work list, not evidence of parity.
 

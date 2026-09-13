@@ -24,4 +24,19 @@ button.lunara-editor-image-stage { position:relative; display:block; width:100%;
 .lunara-editor-field input[type=range] { min-height:44px; accent-color:#9b741d; }
 .lunara-site-studio-order-row[data-editor-key] { cursor:grab; }
 .lunara-site-studio-order-row[data-editor-key].is-dragging { cursor:grabbing; opacity:.58; }
+.lunara-archive-media-editor, .lunara-archive-media-editor fieldset { min-width:0; }
+.lunara-archive-media-editor fieldset { border:0; padding:0; margin:0; }
+.lunara-archive-media-editor ol { list-style:none; margin:16px 0; padding:0; }
+.lunara-archive-media-editor .lunara-archive-media-row { display:block; min-width:0; margin:12px 0; padding:12px; border:1px solid #c4cdd6; border-radius:10px; background:#fff; }
+.lunara-archive-media-row > .lunara-editor-actions { align-items:center; margin:0 0 10px; }
+.lunara-archive-media-row > .lunara-editor-actions strong { flex:1 0 100%; }
+.lunara-archive-media-card > summary { padding:10px 0; cursor:pointer; overflow-wrap:anywhere; }
+.lunara-archive-media-body { min-width:0; padding-top:8px; }
+.lunara-archive-media-editor .lunara-archive-media-row .lunara-editor-field { display:grid; align-items:stretch; gap:7px; padding:0; }
+.lunara-archive-media-editor input, .lunara-archive-media-editor select, .lunara-archive-media-editor textarea { box-sizing:border-box; min-width:0; max-width:100%; }
+.lunara-archive-media-editor input[type=checkbox] { width:20px; height:20px; }
+.lunara-archive-media-editor button { overflow-wrap:anywhere; }
+.lunara-archive-media-editor .lunara-editor-framing > :last-child { grid-column:auto; }
+.lunara-archive-media-editor .lunara-archive-media-row [hidden] { display:none; }
+.lunara-archive-media-editor :focus-visible { outline:3px solid #005fcc; outline-offset:3px; }
 @media(max-width:480px) { .lunara-editor-framing { grid-template-columns:minmax(0,1fr); } }

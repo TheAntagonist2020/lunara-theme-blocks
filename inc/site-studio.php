@@ -175,8 +175,10 @@ if ( ! function_exists( 'lunara_enqueue_site_studio_assets' ) ) {
 			$script_dependencies = array( 'lunara-site-studio-home-oscars' );
 		}
 		if ( in_array( $surface_id, array( 'reviews-archive', 'journal-archive' ), true ) ) {
+			$asset = lunara_resolve_theme_asset( 'assets/js/lunara-site-studio-archive-media.js' );
+			if ( ! empty( $asset['uri'] ) ) { wp_enqueue_script( 'lunara-site-studio-archive-media', $asset['uri'], array( 'lunara-editor-controls' ), lunara_theme_asset_version( $asset['path'] ), true ); }
 			$asset = lunara_resolve_theme_asset( 'assets/js/lunara-site-studio-archive-selection.js' );
-			if ( ! empty( $asset['uri'] ) ) { wp_enqueue_script( 'lunara-site-studio-archive-selection', $asset['uri'], array( 'lunara-editor-controls' ), lunara_theme_asset_version( $asset['path'] ), true ); }
+			if ( ! empty( $asset['uri'] ) ) { wp_enqueue_script( 'lunara-site-studio-archive-selection', $asset['uri'], array( 'lunara-editor-controls', 'lunara-site-studio-archive-media' ), lunara_theme_asset_version( $asset['path'] ), true ); }
 			$script_dependencies = array( 'lunara-site-studio-archive-selection' );
 		}
 		$asset = lunara_resolve_theme_asset( 'assets/js/lunara-site-studio.js' );
@@ -186,7 +188,7 @@ if ( ! function_exists( 'lunara_enqueue_site_studio_assets' ) ) {
 			// Localization stringifies top-level numbers; the workspace protocol is typed.
 			wp_add_inline_script( 'lunara-site-studio', 'window.LunaraSiteStudioWorkspaceConfig = ' . wp_json_encode( lunara_site_studio_workspace_config_is_safe( $config ) ? $config : array(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) . ';', 'before' );
 		}
-		if ( 'lunara-method' === $surface_id || $is_carousel || $uses_home_oscars ) { wp_enqueue_media(); }
+		if ( 'lunara-method' === $surface_id || $is_carousel || $uses_home_oscars || in_array( $surface_id, array( 'reviews-archive', 'journal-archive' ), true ) ) { wp_enqueue_media(); }
 	}
 	add_action( 'admin_enqueue_scripts', 'lunara_enqueue_site_studio_assets' );
 }
@@ -319,11 +321,27 @@ if ( ! function_exists( 'lunara_site_studio_render_archive_selection' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lunara_site_studio_render_archive_media' ) ) {
+	function lunara_site_studio_render_archive_media( $surface_id ) {
+		foreach ( array( 'gallery' => __( 'Gallery', 'lunara-film' ), 'retention' => __( 'Continue reading', 'lunara-film' ) ) as $group => $label ) {
+			lunara_site_studio_render_details_open( $group, $label );
+			echo '<div class="lunara-archive-media-editor" data-archive-media-group="' . esc_attr( $group ) . '" data-error-key="' . esc_attr( $group ) . '" tabindex="-1" aria-describedby="lunara-archive-media-' . esc_attr( $group ) . '-error"><span class="lunara-site-studio-error" id="lunara-archive-media-' . esc_attr( $group ) . '-error" hidden></span><fieldset data-archive-media-controls="' . esc_attr( $group ) . '"><div data-archive-media-heading="' . esc_attr( $group ) . '"></div>';
+			if ( 'gallery' === $group ) { echo '<p>' . esc_html__( 'The gallery appears on the first archive page. Choose up to 12 images. Each image needs alt text, a credit, a source name and an HTTPS source link before Preview or Apply.', 'lunara-film' ) . '</p>'; }
+			else { echo '<p>' . esc_html( 'reviews-archive' === $surface_id ? __( 'Show, hide and reorder these three cards. Image cards appear after the review grid when an image is chosen. Removing an image hides its image card and retains the saved link and text.', 'lunara-film' ) : __( 'Show, hide and reorder these three cards. Journal cards can display without an image.', 'lunara-film' ) ) . '</p><p>' . esc_html__( 'Selected images need a credit, source name and HTTPS source link.', 'lunara-film' ) . '</p>'; }
+			echo '<p>' . esc_html__( 'Drag cards to reorder, or use Move earlier and Move later. Images use the same 16:9 frame as the public page; click the image or use its arrow keys to adjust the focal point.', 'lunara-film' ) . '</p><ol data-archive-media-list="' . esc_attr( $group ) . '"></ol>';
+			if ( 'gallery' === $group ) { echo '<button type="button" class="button" data-archive-gallery-add>' . esc_html__( 'Add image', 'lunara-film' ) . '</button>'; }
+			echo '</fieldset><p data-archive-media-status="' . esc_attr( $group ) . '" aria-live="polite"></p><button type="button" class="button" data-archive-media-retry="' . esc_attr( $group ) . '" hidden>' . esc_html__( 'Retry image details', 'lunara-film' ) . '</button></div>';
+			lunara_site_studio_render_details_close();
+		}
+	}
+}
+
 if ( ! function_exists( 'lunara_site_studio_render_archive_inspector' ) ) {
 	function lunara_site_studio_render_archive_inspector( $surface_id, $state, $revisions, $classic_url ) {
 		lunara_site_studio_render_details_open( 'essentials', __( 'Content', 'lunara-film' ), true, 'reviews-archive' === $surface_id ? array( 'hero' ) : array( 'hero', 'deskbar' ) );
 		lunara_site_studio_render_field( 'kicker', __( 'Kicker', 'lunara-film' ), $state['kicker'] ); lunara_site_studio_render_field( 'title', __( 'Title', 'lunara-film' ), $state['title'] ); lunara_site_studio_render_field( 'deck', __( 'Introduction', 'lunara-film' ), $state['deck'], 'textarea' ); lunara_site_studio_render_field( 'supporting_copy', __( 'Supporting copy', 'lunara-film' ), $state['supporting_copy'], 'textarea' ); lunara_site_studio_render_details_close();
 		lunara_site_studio_render_archive_selection( $surface_id, $state );
+		lunara_site_studio_render_archive_media( $surface_id );
 		$specs = lunara_site_studio_archive_control_specs( $surface_id );
 		lunara_site_studio_render_details_open( 'fine-tune', __( 'Layout', 'lunara-film' ), false, 'reviews-archive' === $surface_id ? array( 'grid', 'pagination', 'pairing-desk' ) : array( 'filters', 'toolbar', 'grid' ) );
 		echo '<p>' . esc_html__( 'These settings shape the whole page. Check Desktop, Tablet and Mobile above the preview before applying.', 'lunara-film' ) . '</p>';

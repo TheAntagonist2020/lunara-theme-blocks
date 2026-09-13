@@ -25,6 +25,101 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-12 — Theme 3.2.72 acceptance and 3.2.73 archive artwork
+
+### Headline
+
+Theme 3.2.72 is verified live. The public Home, Reviews, Journal and Oscars
+phone compositions now agree with the intended mobile correction. Theme
+3.2.73 continues editor uniformity by bringing archive galleries and Continue
+reading cards into Site Studio on Reviews and Journal.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| Explicit-version 3.2.72 canary | Three anonymous reads agree on `3.2.72+20260913-013957`; Journal and Oscars both `LIVE_COHERENT`, exit 0 / GO. |
+| Public Home at 390 by 844 | Document width 390px; landscape artwork above a solid reading panel, separate 44px controls, full headline and copy. |
+| Public Reviews at 390 by 844 | Document width 390px; compact 197px toolbar, loaded TMDB poster at 118 by 157px, readable full title, no Reviews Command opening. |
+| Public Journal at 390 by 844 | Document width 390px; wrapping filters and 357 by 223px lead artwork, with a readable full headline. |
+| Public Oscars at 390 by 844 | Document width 390px; ordinary heading words remain intact, compact links, and two 158px portrait board columns. |
+
+Browser observations used the real signed-in public pages with the WordPress
+toolbar. Anonymous delivery is separately established by the versioned canary.
+Physical phone testing and a new live cross-engine matrix are not claimed.
+
+### What shipped and why
+
+See `docs/CHANGELOG.md` for the archive artwork candidate. It connects controls
+to existing provider fields and preserves their save, preview and revision
+ownership. No agent deployment or manual cache purge occurred. Theme 3.2.73 is not
+deployed; its live canary is pending.
+
+### Commit ledger
+
+| Repo | Commit or release reference | Meaning |
+| --- | --- | --- |
+| Theme | `3682a93799996e1703bc6fd41c76ef673d9f2282` / PR #192 | Theme 3.2.72 merged on main and now verified live. |
+| Theme | `codex/archive-artwork-3.2.73` | Gallery and Continue reading migration based on that main commit. |
+
+### Gate ledger
+
+- Versioned production canary for 3.2.72: exit 0 / GO.
+- Real public phone browser inspection: four landing pages at 390 by 844.
+- Full required theme contracts: 95/95 final passing results. The first run
+  passed 94/95; the navigation test still counted nested card disclosures and
+  expected the old archive group list. It now checks exact top-level groups,
+  including Gallery and Continue reading; all 264 navigation assertions pass.
+- A workspace rerun exposed an existing test race: waiting for response headers
+  did not wait for Home validation errors to render. The test now waits for the
+  controller's terminal validation state and idle flag, retaining strict focus,
+  visibility and error-message assertions. The final complete workspace gate
+  passes. Original failure logs and the final rerun remain in release artifacts.
+- Syntax/structure: 131 PHP, 67 JavaScript and 26 CSS files; zero failures.
+- Both archive providers pass 88 new artwork assertions each, covering private
+  metadata, canonical Preview/Apply/History, field ownership and invalid
+  candidates causing no writes. Their existing story-selection checks pass.
+- Artwork browser workflow: 116 checks across Reviews and Journal at 1440 and
+  390px; existing archive story selection: 123 checks. Eight actual-markup
+  fixture screenshots cover Gallery and Continue reading. Visual review caught
+  and corrected a legacy flex-label collision that squeezed controls sideways.
+- Mutation checks catch missing gallery ownership and unreadable attachment
+  metadata leakage. Restored files match backups and the runtime passes again.
+- Independent review is clean after correcting editor text limits to match
+  canonical provider limits. Release identity and diff checks pass.
+- Theme 3.2.73 CI, merge and exact rollback proof are recorded in the release
+  PR and receipt after this candidate commit. Manual deployment and its public
+  acceptance remain separate; physical-device testing is not claimed.
+
+### Corrections
+
+None. The previous entry's deployment-pending state is superseded by the
+3.2.72 live checks above. The earlier local cross-engine evidence remains a
+local result and is not relabeled as physical-device testing.
+
+### Logged, not fixed
+
+Shared header ownership, article/dossier layouts, remaining Oscars portal
+controls and broader stylesheet reduction remain on the site experience work
+list. This migration does not replace article artwork controls or add image
+fit/zoom behavior the canonical archive renderer does not support.
+
+### Punch-list carried forward
+
+- Local 3.2.73 checks complete; finish CI/merge and exact rollback hatch: agent.
+- Deploy the theme from main through the existing connection: Dalton.
+- Verify the live version/canary and shared archive controls after deployment:
+  agent, using read-only production inspection.
+- Continue Oscars portal editor parity, shared navigation and article layouts.
+- Curate opening stories and publish current criticism/news: separate editorial
+  work, with Dalton choosing the lineups.
+
+### Whose move it is next
+
+The agent completes validation and the merge handoff. Dalton performs the
+manual WordPress.com deployment of `lunara-theme-blocks` from `main`; then the
+agent verifies the public version and canary without a cache purge.
+
 ## 2026-09-12 — Theme 3.2.71 acceptance and 3.2.72 mobile layouts
 
 ### Headline
