@@ -86,7 +86,9 @@ its public canary/editor acceptance are pending; last verified live theme is 3.2
   merged Theme 3.2.77; deployment acceptance remains open above.
 - [ ] Replace twelve live inner main wrappers while keeping header.php's main
   landmark. Nested landmarks were confirmed on both sampled public articles;
-  the next correction is isolated from the merged 3.2.77 release.
+  the correction is prepared on `codex/shared-landmarks-3.2.78`, isolated from
+  merged 3.2.77. Focused actual-template and geometry checks pass; formal release
+  identity, full suite/CI, merge and public acceptance remain open.
 - [ ] Complete a public route matrix covering landing pages, articles, Academy
   records, search results, no results and 404; verify keyboard access, focus,
   reduced motion, readable narrow layouts and no horizontal overflow.

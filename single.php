@@ -385,7 +385,7 @@ if ( 'review' === $post_type ) {
                 )
                 : '';
             ?>
-            <main id="primary" class="site-main lunara-archive-page lunara-review-single-page">
+            <div id="primary" class="site-main lunara-archive-page lunara-review-single-page">
                 <article <?php post_class( 'lunara-journal-single lunara-review-single' ); ?>>
                     <section class="lunara-review-single-hero">
                         <div class="lunara-review-single-hero-inner">
@@ -532,7 +532,7 @@ if ( 'review' === $post_type ) {
                         </section>
                     <?php endif; ?>
                 </article>
-            </main>
+            </div>
             <?php
         endwhile;
     endif;
@@ -684,7 +684,7 @@ if ( have_posts() ) :
             $article_classes[] = 'has-no-rail-cards';
         }
         ?>
-        <main id="primary" class="site-main lunara-archive-page lunara-editorial-single-page">
+        <div id="primary" class="site-main lunara-archive-page lunara-editorial-single-page">
             <article <?php post_class( implode( ' ', $article_classes ) ); ?>>
                 <section class="lunara-home-section lunara-journal-single-hero">
                     <div class="lunara-journal-single-grid">
@@ -819,7 +819,7 @@ if ( have_posts() ) :
                     </section>
                 <?php endif; ?>
             </article>
-        </main>
+        </div>
         <?php
     endwhile;
 endif;

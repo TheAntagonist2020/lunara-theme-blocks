@@ -9,6 +9,10 @@ require __DIR__ . '/reviews-archive-studio-runtime.php';
 // Additional core doubles are installed AFTER the provider suite so they
 // cannot change the behavior of its existing function_exists branches.
 if ( ! function_exists( 'paginate_links' ) ) { function paginate_links() { return ''; } }
+if ( ! function_exists( 'number_format_i18n' ) ) { function number_format_i18n( $value ) { return number_format( $value ); } }
+if ( ! function_exists( 'get_post_type' ) ) { function get_post_type( $id ) { return get_post( $id )->post_type; } }
+if ( ! function_exists( 'get_the_terms' ) ) { function get_the_terms() { return false; } }
+if ( ! function_exists( 'sanitize_html_class' ) ) { function sanitize_html_class( $value ) { return preg_replace( '/[^a-zA-Z0-9_-]/', '', $value ); } }
 if ( ! function_exists( 'get_pagenum_link' ) ) { function get_pagenum_link( $page ) { return home_url( '/reviews/' ); } }
 if ( ! function_exists( 'remove_query_arg' ) ) { function remove_query_arg( $keys, $url ) { return strtok( $url, '?' ); } }
 if ( ! function_exists( 'add_query_arg' ) ) { function add_query_arg( $key, $value, $url ) { return $url . ( false === strpos( $url, '?' ) ? '?' : '&' ) . rawurlencode( $key ) . '=' . rawurlencode( $value ); } }
@@ -23,6 +27,19 @@ if ( ! function_exists( 'wp_get_theme' ) ) { function wp_get_theme() { return ne
 
 $opening_checks = 0;
 $opening_assert = static function ( $condition, $message ) use ( &$opening_checks ) { ++$opening_checks; lunara_test_assert( $condition, $message ); };
+$assert_archive_landmark = static function ( $html, $label ) use ( $opening_assert ) {
+	$source = file_get_contents( dirname( __DIR__ ) . '/header.php' );
+	$opening_assert( 1 === preg_match( '/<main <\?php.*?\?>>/s', $source, $match ), 'Use the actual shared header landmark.' );
+	ob_start(); eval( '?>' . $match[0] ); $opening = ob_get_clean();
+	$closing = file_get_contents( dirname( __DIR__ ) . '/footer.php' );
+	$opening_assert( 1 === preg_match( '/<\/main>/', $closing, $end ), 'Use the actual shared footer landmark.' );
+	$document = $opening . $html . $end[0];
+	$opening_assert( 1 === preg_match_all( '/<main\b/i', $document ) && 1 === substr_count( $document, '</main>' ), $label . ': one server-rendered main pair.' );
+	$dom = new DOMDocument(); $previous = libxml_use_internal_errors( true ); $dom->loadHTML( $document ); libxml_clear_errors(); libxml_use_internal_errors( $previous );
+	$xpath = new DOMXPath( $dom );
+	$opening_assert( 1 === $xpath->query( '//main' )->length && 1 === $xpath->query( '//main/div[@id="primary"]' )->length, $label . ': the route is a neutral child of the only main landmark.' );
+	$opening_assert( 1 === $xpath->query( '//main//h1' )->length, $label . ': the archive heading remains inside main.' );
+};
 $opening_fixtures = array();
 $frontend_source = file_get_contents( dirname( __DIR__ ) . '/inc/frontend.php' );
 $authority_start = strpos( $frontend_source, 'function lunara_output_review_archive_authority_css()' );
@@ -68,6 +85,7 @@ foreach ( array( 'normal', 'empty', 'director', 'hero-off', 'long-copy' ) as $sc
 		'pagination' => '<a href="?paged=2">Next reviews</a>',
 	);
 	$html = lunara_render_review_archive_shell( $args );
+	$assert_archive_landmark( $html, 'Reviews ' . $scenario );
 	$opening_assert( ( 'director' !== $scenario ) === ( false !== strpos( $html, 'lunara-review-archive-year-filter' ) ), $scenario . ': published years provide a usable filter outside director routes.' );
 	$opening_assert( 1 === preg_match_all( '/<h1\b/i', $html ), $scenario . ': exactly one H1 survives.' );
 	foreach ( array( 'Reviews Command', 'Archive Depth', 'Visible File', 'Latest Update', 'Current Order', 'lunara-review-archive-debrief', 'lunara-review-archive-hero-actions' ) as $removed ) {
@@ -118,5 +136,13 @@ $legacy_revision = lunara_reviews_archive_studio_push_revision( $legacy_snapshot
 $restored = lunara_reviews_archive_studio_restore_revision_transaction( $legacy_revision );
 $opening_assert( ! is_wp_error( $restored ) && $config['labels'] === $restored['state']['labels'], 'An old revision restores retained labels without migration loss.' );
 
+foreach ( array( 'populated', 'empty' ) as $scenario ) {
+	$html = lunara_render_editorial_archive_shell( array(
+		'title' => 'Journal archive',
+		'posts' => 'empty' === $scenario ? array() : array( new WP_Post( get_post( 12 ) ), new WP_Post( get_post( 11 ) ) ),
+		'pagination' => '<a href="?paged=2">Next page</a>',
+	) );
+	$assert_archive_landmark( $html, 'Editorial ' . $scenario );
+}
 fwrite( STDOUT, 'reviews-opening-runtime: ' . $opening_checks . " assertions passed.\n" );
 if ( in_array( '--fixtures', $argv, true ) ) { echo "LUNARA_OPENING_FIXTURES\n" . json_encode( $opening_fixtures ); }

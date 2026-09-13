@@ -420,7 +420,7 @@ if ( have_posts() ) :
 		$topic_terms = get_the_terms( $post_id, 'journal_topic' );
 		?>
 
-		<main class="lunara-editorial-single-page lunara-journal-single-page">
+		<div class="lunara-editorial-single-page lunara-journal-single-page">
 		<article <?php post_class( 'lunara-journal-single lunara-review-single' ); ?>>
 
 			<section class="lunara-journal-single-hero lunara-journal-cinematic-hero<?php echo $has_thumb ? ' has-hero-image' : ' has-no-hero-image'; ?>" data-lunara-site-studio-section="hero">
@@ -658,7 +658,7 @@ if ( have_posts() ) :
 			echo lunara_render_newsletter_signup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 		?>
-		</main>
+		</div>
 
 	<?php endwhile; ?>
 <?php endif; ?>

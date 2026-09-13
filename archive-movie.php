@@ -10,7 +10,7 @@ $base    = get_post_type_archive_link( 'movie' );
 $total   = wp_count_posts( 'movie' );
 $total   = isset( $total->publish ) ? (int) $total->publish : 0;
 ?>
-<main id="primary" class="site-main lunara-entity-page lunara-entity-archive">
+<div id="primary" class="site-main lunara-entity-page lunara-entity-archive">
     <header class="lunara-entity-archive-head">
         <p class="lunara-home-section-kicker"><?php esc_html_e( 'The Film Index', 'lunara-film' ); ?></p>
         <h1 class="lunara-entity-title"><?php esc_html_e( 'Every Film in the Record', 'lunara-film' ); ?></h1>
@@ -38,6 +38,6 @@ $total   = isset( $total->publish ) ? (int) $total->publish : 0;
     <?php else : ?>
         <p class="lunara-entity-archive-copy"><?php esc_html_e( 'The film record is being built — check back shortly.', 'lunara-film' ); ?></p>
     <?php endif; ?>
-</main>
+</div>
 <?php
 get_footer();

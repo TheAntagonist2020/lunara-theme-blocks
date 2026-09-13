@@ -25,6 +25,39 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Shared landmark cleanup prepared on the next branch
+
+### Headline / what changed
+
+The next bounded accessibility correction is prepared on
+`codex/shared-landmarks-3.2.78`, based on merged main `72a0ea1`. Twelve inner
+main wrapper pairs across ten live article/archive/Hub templates are now neutral
+divs; header.php remains the single main owner. Every existing attribute is
+preserved. No CSS, settings, cache or editorial content changed. This source is
+unreleased; the version remains 3.2.77 until formal next-release preparation.
+
+### Live state and gates
+
+No new production checks, deployment or cache purge occurred. The preceding
+entry records the verified live 3.2.76 state and merged, ready-to-deploy 3.2.77.
+Focused preparation passes: landmark runtime 75, archive PHP 157, article
+layouts 444 assertions over 32 scenarios, Journal delivery 34, and the existing
+30-case archive geometry gate. Eight Hub before/after contexts preserve geometry.
+An old-index-wrapper mutation fails as intended and canonical restoration passes.
+Root independently reran the 75-check runtime after applying the reviewed patch.
+The full 95-gate suite and GitHub CI have not run for this unreleased change.
+
+### Commit ledger / punch-list / whose move is next
+
+The branch contains the 3.2.77 merge receipt and this follow-up source work;
+both are committed and pushed without another PR or main merge. The standing
+rollback hatch still matches main as verified below. Dalton can deploy 3.2.77
+from main. Agent continues next-release preparation, full gates and review for
+this cleanup, then the remaining route, performance and editorial work. Keep
+live acceptance separate from these local fixture results.
+
+---
+
 ## 2026-09-13 — Theme 3.2.77 merged; public acceptance advanced
 
 ### Headline

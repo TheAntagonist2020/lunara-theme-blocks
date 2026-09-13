@@ -29,7 +29,7 @@ while ( have_posts() ) :
     $cast      = get_post_meta( $movie_id, 'principal_cast', true );
     $cast      = array_filter( array_map( 'intval', is_array( $cast ) ? $cast : (array) maybe_unserialize( $cast ) ) );
     ?>
-    <main id="primary" class="site-main lunara-entity-page lunara-film-dossier">
+    <div id="primary" class="site-main lunara-entity-page lunara-film-dossier">
         <header class="lunara-entity-hero<?php echo '' !== $backdrop ? ' has-backdrop' : ''; ?>">
             <?php if ( '' !== $backdrop ) : ?>
                 <div class="lunara-entity-hero-backdrop" style="background-image:url('<?php echo esc_url( $backdrop ); ?>');" aria-hidden="true"></div>
@@ -126,7 +126,7 @@ while ( have_posts() ) :
                 </section>
             <?php endif; ?>
         </div>
-    </main>
+    </div>
     <?php
 endwhile;
 

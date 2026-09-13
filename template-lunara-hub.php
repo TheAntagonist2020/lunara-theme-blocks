@@ -21,14 +21,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 get_header();
 ?>
 
-<main id="primary" class="site-main lunara-front-page lunara-hub-page">
+<div id="primary" class="site-main lunara-front-page lunara-hub-page">
 	<?php
 	while ( have_posts() ) :
 		the_post();
 		the_content();
 	endwhile;
 	?>
-</main>
+</div>
 
 <?php
 get_footer();

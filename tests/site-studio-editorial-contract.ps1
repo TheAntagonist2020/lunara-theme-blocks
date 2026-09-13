@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-foreach ($runtime in @('site-studio-legacy-snapshot-runtime.php', 'site-studio-footer-navigation-runtime.php', 'generic-page-landmark-runtime.php')) {
+foreach ($runtime in @('site-studio-legacy-snapshot-runtime.php', 'site-studio-footer-navigation-runtime.php', 'generic-page-landmark-runtime.php', 'template-main-landmarks-runtime.php')) {
     & php (Join-Path $PSScriptRoot $runtime)
     if ($LASTEXITCODE -ne 0) { throw "$runtime failed." }
 }
