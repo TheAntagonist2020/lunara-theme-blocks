@@ -101,6 +101,7 @@ if ( ! function_exists( 'lunara_site_studio_safe_validation_fields' ) ) {
 			'brand.show_logo', 'brand.tagline', 'columns.editorial', 'columns.oscars', 'columns.utility', 'copyright.name',
 		);
 		$data    = is_wp_error( $error ) ? $error->get_error_data() : array();
+		$allowed = array_merge( $allowed, array( 'buttons', 'quick_start', 'quick_start.ceremonies', 'quick_start.categories', 'quick_start.ledger', 'quick_start.method' ), lunara_site_studio_oscars_navigation_paths() );
 		$fields  = is_array( $data ) && isset( $data['fields'] ) && is_array( $data['fields'] ) ? $data['fields'] : array();
 		$safe    = array();
 		foreach ( $allowed as $field ) {

@@ -23,6 +23,12 @@ $linked_reviews     = function_exists( 'lunara_oscars_linked_reviews_query' ) ? 
  */
 $oscars_studio_config     = function_exists( 'lunara_oscars_portal_studio_get_public_config' ) ? lunara_oscars_portal_studio_get_public_config() : array();
 $oscars_portal_identity   = isset( $oscars_studio_config['identity'] ) && is_array( $oscars_studio_config['identity'] ) ? $oscars_studio_config['identity'] : array();
+$oscars_portal_buttons = isset( $oscars_studio_config['buttons'] ) ? $oscars_studio_config['buttons'] : array(
+    'ceremony' => get_theme_mod( 'lunara_oscars_ceremony_btn', 'Latest Ceremony' ),
+    'ledger' => get_theme_mod( 'lunara_oscars_ledger_btn', 'Open Full Ledger' ),
+    'categories' => get_theme_mod( 'lunara_oscars_categories_btn', 'Browse Categories' ),
+);
+$oscars_quick_start = isset( $oscars_studio_config['quick_start'] ) ? $oscars_studio_config['quick_start'] : array();
 $oscars_portal_visibility = isset( $oscars_studio_config['section_visibility'] ) && is_array( $oscars_studio_config['section_visibility'] ) ? $oscars_studio_config['section_visibility'] : array();
 $oscars_portal_order      = isset( $oscars_studio_config['section_order'] ) && is_array( $oscars_studio_config['section_order'] ) && ! empty( $oscars_studio_config['section_order'] )
     ? array_values( $oscars_studio_config['section_order'] )
@@ -281,11 +287,13 @@ $portal_link_defaults = array(
 $portal_links = array();
 
 foreach ( $portal_link_defaults as $slot => $defaults ) {
-    if ( ! get_theme_mod( 'lunara_oscars_portal_card_' . $slot . '_enabled', true ) ) {
+    $card_key = array( 1 => 'ceremonies', 2 => 'categories', 3 => 'ledger', 4 => 'method' )[$slot];
+    $card = isset( $oscars_quick_start[$card_key] ) ? $oscars_quick_start[$card_key] : array();
+    if ( ! ( array_key_exists( 'enabled', $card ) ? $card['enabled'] : get_theme_mod( 'lunara_oscars_portal_card_' . $slot . '_enabled', true ) ) ) {
         continue;
     }
 
-    $card_url = trim( (string) get_theme_mod( 'lunara_oscars_portal_card_' . $slot . '_url', $defaults['url'] ) );
+    $card_url = trim( (string) ( isset( $card['url'] ) ? $card['url'] : get_theme_mod( 'lunara_oscars_portal_card_' . $slot . '_url', $defaults['url'] ) ) );
     if ( '' === $card_url ) {
         $card_url = $defaults['url'];
     }
@@ -300,9 +308,9 @@ foreach ( $portal_link_defaults as $slot => $defaults ) {
     }
 
     $portal_links[] = array(
-        'kicker'   => function_exists( 'lunara_theme_mod_text' ) ? lunara_theme_mod_text( 'lunara_oscars_portal_card_' . $slot . '_kicker', $defaults['kicker'] ) : $defaults['kicker'],
-        'title'    => function_exists( 'lunara_theme_mod_text' ) ? lunara_theme_mod_text( 'lunara_oscars_portal_card_' . $slot . '_title', $defaults['title'] ) : $defaults['title'],
-        'copy'     => function_exists( 'lunara_theme_mod_text' ) ? lunara_theme_mod_text( 'lunara_oscars_portal_card_' . $slot . '_copy', $defaults['copy'] ) : $defaults['copy'],
+        'kicker'   => isset( $card['kicker'] ) ? $card['kicker'] : ( function_exists( 'lunara_theme_mod_text' ) ? lunara_theme_mod_text( 'lunara_oscars_portal_card_' . $slot . '_kicker', $defaults['kicker'] ) : $defaults['kicker'] ),
+        'title'    => isset( $card['title'] ) ? $card['title'] : ( function_exists( 'lunara_theme_mod_text' ) ? lunara_theme_mod_text( 'lunara_oscars_portal_card_' . $slot . '_title', $defaults['title'] ) : $defaults['title'] ),
+        'copy'     => isset( $card['copy'] ) ? $card['copy'] : ( function_exists( 'lunara_theme_mod_text' ) ? lunara_theme_mod_text( 'lunara_oscars_portal_card_' . $slot . '_copy', $defaults['copy'] ) : $defaults['copy'] ),
         'url'      => $card_url,
         'backdrop' => $defaults['backdrop'],
     );
@@ -398,9 +406,9 @@ $command_cards = array(
                     <?php endif; ?>
 
                     <div class="lunara-oscars-portal-actions">
-                        <a class="lunara-button lunara-button-primary" href="<?php echo esc_url( $ceremony_url ); ?>"><?php echo esc_html( get_theme_mod( 'lunara_oscars_ceremony_btn', __( 'Latest Ceremony', 'lunara-film' ) ) ); ?></a>
-                        <a class="lunara-button lunara-button-secondary" href="<?php echo esc_url( $database_table_url ); ?>"><?php echo esc_html( get_theme_mod( 'lunara_oscars_ledger_btn', __( 'Open Full Ledger', 'lunara-film' ) ) ); ?></a>
-                        <a class="lunara-button-ghost" href="<?php echo esc_url( $categories_url ); ?>"><?php echo esc_html( get_theme_mod( 'lunara_oscars_categories_btn', __( 'Browse Categories', 'lunara-film' ) ) ); ?></a>
+                        <a class="lunara-button lunara-button-primary" href="<?php echo esc_url( $ceremony_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['ceremony'] ); ?></a>
+                        <a class="lunara-button lunara-button-secondary" href="<?php echo esc_url( $database_table_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['ledger'] ); ?></a>
+                        <a class="lunara-button-ghost" href="<?php echo esc_url( $categories_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['categories'] ); ?></a>
                     </div>
 
                     <div class="lunara-oscars-portal-stat-grid">

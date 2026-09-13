@@ -90,12 +90,13 @@ async function navigationSnapshot(page) {
      const geometry = await targets.nth(index).evaluate(node => { const box = node.getBoundingClientRect(); return { width: box.width, height: box.height, left: box.left, right: box.right, viewport: innerWidth }; });
      assert(geometry.height >= 44 && geometry.left >= -1 && geometry.right <= geometry.viewport + 1, `${surface}/${width}: visible 44px navigation target`, geometry);
     }
-    if (surface === 'reviews-archive' || surface === 'journal-archive') {
+    if (surface === 'reviews-archive' || surface === 'journal-archive' || surface === 'oscars-portal') {
+     const portal = surface === 'oscars-portal';
      const groups = await page.locator('.lunara-site-studio-inspector > details').evaluateAll(nodes => nodes.map(node => ({ id: node.dataset.section, label: node.querySelector(':scope > summary').textContent.trim(), open: node.open, fields: [...node.querySelectorAll('[data-field-path]')].map(field => field.dataset.fieldPath) })));
-     equal(groups.map(group => group.id), ['essentials', 'stories', 'gallery', 'retention', 'fine-tune', 'advanced', 'revision-history'], `${surface}: shared inspector groups without false Mobile category`);
+     equal(groups.map(group => group.id), portal ? ['essentials', 'hero-buttons', 'quick-start', 'fine-tune', 'advanced', 'revision-history'] : ['essentials', 'stories', 'gallery', 'retention', 'fine-tune', 'advanced', 'revision-history'], `${surface}: shared inspector groups without false Mobile category`);
      equal(groups.filter(group => group.open).map(group => group.id), ['essentials'], `${surface}: Content opens first`);
-     equal(groups.map(group => group.label), ['Content', 'Stories', 'Gallery', 'Continue reading', 'Layout', 'Advanced', 'History'], `${surface}: shared plain-language inspector labels`);
-     equal(groups[0].fields, ['kicker', 'title', 'deck', 'supporting_copy'], `${surface}: editorial copy is in Content`);
+     equal(groups.map(group => group.label), portal ? ['Content', 'Hero buttons', 'Quick Start', 'Layout', 'Advanced', 'History'] : ['Content', 'Stories', 'Gallery', 'Continue reading', 'Layout', 'Advanced', 'History'], `${surface}: shared plain-language inspector labels`);
+     equal(groups[0].fields, portal ? ['kicker', 'title', 'explore_kicker', 'explore_heading', 'spotlights_heading', 'titles_kicker', 'titles_heading', 'research_kicker', 'research_heading', 'reviews_heading', 'deep_cuts_heading'].map(key => 'identity.' + key) : ['kicker', 'title', 'deck', 'supporting_copy'], `${surface}: editorial copy is in Content`);
      const layout = groups.find(group => group.id === 'fine-tune');
      assert(layout.fields.length >= 7 && layout.fields.every(field => field === 'item_count' || field.startsWith('presentation.')), `${surface}: geometry and presentation stay together under Layout`, groups);
     }

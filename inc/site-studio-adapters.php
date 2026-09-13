@@ -1426,8 +1426,15 @@ if ( ! function_exists( 'lunara_site_studio_journal_archive_adapter' ) ) {
 	}
 }
 if ( ! function_exists( 'lunara_site_studio_oscars_portal_managed_paths' ) ) {
+	function lunara_site_studio_oscars_navigation_paths() {
+		$paths = array( 'buttons.ceremony', 'buttons.ledger', 'buttons.categories' );
+		foreach ( array( 'ceremonies', 'categories', 'ledger', 'method' ) as $slot ) {
+			foreach ( array( 'enabled', 'kicker', 'title', 'copy', 'url' ) as $field ) { $paths[] = 'quick_start.' . $slot . '.' . $field; }
+		}
+		return $paths;
+	}
 	function lunara_site_studio_oscars_portal_managed_paths() {
-		return array( 'section_order', 'identity.kicker', 'identity.title', 'identity.explore_kicker', 'identity.explore_heading', 'identity.spotlights_heading', 'identity.titles_kicker', 'identity.titles_heading', 'identity.research_kicker', 'identity.research_heading', 'identity.reviews_heading', 'identity.deep_cuts_heading', 'section_visibility.hero', 'section_visibility.doors', 'section_visibility.spotlights', 'section_visibility.titles', 'section_visibility.research', 'section_visibility.linked-reviews', 'section_visibility.winners', 'section_visibility.deep-cuts', 'section_visibility.rotating-winners', 'presentation.section_gap', 'presentation.hero_min_height', 'presentation.card_min_height', 'presentation.winners_min_width', 'presentation.density', 'presentation.lead_prominence', 'presentation.board_rhythm' );
+		return array_merge( array( 'section_order', 'identity.kicker', 'identity.title', 'identity.explore_kicker', 'identity.explore_heading', 'identity.spotlights_heading', 'identity.titles_kicker', 'identity.titles_heading', 'identity.research_kicker', 'identity.research_heading', 'identity.reviews_heading', 'identity.deep_cuts_heading', 'section_visibility.hero', 'section_visibility.doors', 'section_visibility.spotlights', 'section_visibility.titles', 'section_visibility.research', 'section_visibility.linked-reviews', 'section_visibility.winners', 'section_visibility.deep-cuts', 'section_visibility.rotating-winners', 'presentation.section_gap', 'presentation.hero_min_height', 'presentation.card_min_height', 'presentation.winners_min_width', 'presentation.density', 'presentation.lead_prominence', 'presentation.board_rhythm' ), lunara_site_studio_oscars_navigation_paths() );
 	}
 	function lunara_site_studio_oscars_portal_validation_fields() {
 		$identity = array(); $presentation = array();

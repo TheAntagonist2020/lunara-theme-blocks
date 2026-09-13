@@ -174,14 +174,94 @@ function lunara_oscars_portal_studio_rhythm_specs() {
 	);
 }
 
-/**
- * Complete fallback state. Defaults intentionally reproduce the current
- * public portal output byte-for-byte: template emission order, the shipped
- * theme-mod visibility defaults (Linked Reviews ships hidden), the
- * untranslated copy fallbacks, and the shipped geometry.
- *
- * @return array<string,mixed>
- */
+/** Canonical Hero label owners, live defaults and save-time bounds. */
+function lunara_oscars_portal_studio_button_specs() {
+	return array(
+		'ceremony' => array( 'setting' => 'lunara_oscars_ceremony_btn', 'default' => 'Latest Ceremony', 'max' => 120 ),
+		'ledger' => array( 'setting' => 'lunara_oscars_ledger_btn', 'default' => 'Open Full Ledger', 'max' => 120 ),
+		'categories' => array( 'setting' => 'lunara_oscars_categories_btn', 'default' => 'Browse Categories', 'max' => 120 ),
+	);
+}
+
+/** Fixed live card slots; their automatic backdrops and destinations remain renderer-owned. */
+function lunara_oscars_portal_studio_quick_start_specs() {
+	return array(
+		'ceremonies' => array( 'slot' => 1, 'kicker' => 'Ceremonies', 'title' => 'Ceremony Archive' ),
+		'categories' => array( 'slot' => 2, 'kicker' => 'Categories', 'title' => 'Category History' ),
+		'ledger' => array( 'slot' => 3, 'kicker' => 'Ledger', 'title' => 'Full Ledger' ),
+		'method' => array( 'slot' => 4, 'kicker' => 'About', 'title' => 'Ledger Method' ),
+	);
+}
+
+function lunara_oscars_portal_studio_navigation_defaults() {
+	$buttons = array(); $cards = array();
+	foreach ( lunara_oscars_portal_studio_button_specs() as $key => $spec ) { $buttons[$key] = $spec['default']; }
+	foreach ( lunara_oscars_portal_studio_quick_start_specs() as $key => $spec ) {
+		$cards[$key] = array( 'enabled' => true, 'kicker' => $spec['kicker'], 'title' => $spec['title'], 'copy' => '', 'url' => '' );
+	}
+	return array( 'buttons' => $buttons, 'quick_start' => $cards );
+}
+
+/** Pure reads preserve existing public copy without applying new save-time limits. */
+function lunara_oscars_portal_studio_read_navigation() {
+	$navigation = lunara_oscars_portal_studio_navigation_defaults();
+	foreach ( lunara_oscars_portal_studio_button_specs() as $key => $spec ) {
+		$value = get_theme_mod( $spec['setting'], $spec['default'] );
+		$navigation['buttons'][$key] = is_scalar( $value ) ? (string) $value : $spec['default'];
+	}
+	foreach ( lunara_oscars_portal_studio_quick_start_specs() as $key => $spec ) {
+		foreach ( $navigation['quick_start'][$key] as $field => $fallback ) {
+			$value = get_theme_mod( 'lunara_oscars_portal_card_' . $spec['slot'] . '_' . $field, $fallback );
+			$value = is_scalar( $value ) ? ( 'enabled' === $field ? (bool) $value : trim( (string) $value ) ) : $fallback;
+			$navigation['quick_start'][$key][$field] = in_array( $field, array( 'kicker', 'title' ), true ) && '' === $value ? $fallback : $value;
+		}
+	}
+	return $navigation;
+}
+
+function lunara_oscars_portal_studio_navigation_error( $path ) {
+	return new WP_Error( 'oscars_portal_navigation_invalid', '', array( 'fields' => array( $path => __( 'Review this control and try again.', 'lunara-film' ) ) ) );
+}
+
+/** Existing links may be root-relative or public HTTP(S); an empty URL inherits its dynamic destination. */
+function lunara_oscars_portal_studio_navigation_url( $value ) {
+	if ( ! is_string( $value ) || strlen( $value ) > 2048 || preg_match( '/[\x00-\x20\x7f\\\\]/', $value ) ) { return false; }
+	if ( '' === $value ) { return ''; }
+	if ( '/' === substr( $value, 0, 1 ) && '/' !== substr( $value, 1, 1 ) ) { return $value; }
+	$parts = wp_parse_url( $value );
+	if ( ! is_array( $parts ) || empty( $parts['host'] ) || empty( $parts['scheme'] ) || ! in_array( strtolower( $parts['scheme'] ), array( 'https', 'http' ), true ) || isset( $parts['user'] ) || isset( $parts['pass'] ) ) { return false; }
+	return function_exists( 'wp_http_validate_url' ) && false === wp_http_validate_url( $value ) ? false : esc_url_raw( $value );
+}
+
+function lunara_oscars_portal_studio_validate_navigation( $raw ) {
+	$navigation = lunara_oscars_portal_studio_navigation_defaults();
+	foreach ( $navigation as $family => $defaults ) {
+		if ( ! array_key_exists( $family, $raw ) ) { continue; }
+		if ( ! is_array( $raw[$family] ) || array_diff_key( $raw[$family], $defaults ) || array_diff_key( $defaults, $raw[$family] ) ) { return lunara_oscars_portal_studio_navigation_error( $family ); }
+		foreach ( $defaults as $key => $fallback ) {
+			if ( 'buttons' === $family ) {
+				if ( ! is_string( $raw[$family][$key] ) ) { return lunara_oscars_portal_studio_navigation_error( $family . '.' . $key ); }
+				$value = lunara_oscars_portal_studio_text( $raw[$family][$key], 120 );
+				$navigation[$family][$key] = '' === $value ? $fallback : $value;
+				continue;
+			}
+			$card = $raw[$family][$key];
+			if ( ! is_array( $card ) || array_diff_key( $card, $fallback ) || array_diff_key( $fallback, $card ) ) { return lunara_oscars_portal_studio_navigation_error( $family . '.' . $key ); }
+			foreach ( $fallback as $field => $default ) {
+				$value = $card[$field]; $path = $family . '.' . $key . '.' . $field;
+				if ( 'enabled' === $field ) { if ( ! is_bool( $value ) ) { return lunara_oscars_portal_studio_navigation_error( $path ); } }
+				elseif ( ! is_string( $value ) ) { return lunara_oscars_portal_studio_navigation_error( $path ); }
+				elseif ( 'url' === $field ) { $value = lunara_oscars_portal_studio_navigation_url( $value ); if ( false === $value ) { return lunara_oscars_portal_studio_navigation_error( $path ); } }
+				elseif ( 'copy' === $field ) { $value = sanitize_textarea_field( $value ); $value = function_exists( 'mb_substr' ) ? mb_substr( $value, 0, 600 ) : substr( $value, 0, 600 ); }
+				else { $value = lunara_oscars_portal_studio_text( $value, 'title' === $field ? 220 : 140 ); if ( '' === $value ) { $value = $default; } }
+				$navigation[$family][$key][$field] = $value;
+			}
+		}
+	}
+	return $navigation;
+}
+
+/** Complete fallback state matching the live portal's copy, order, visibility and geometry. */
 function lunara_oscars_portal_studio_defaults() {
 	$identity = array();
 	foreach ( lunara_oscars_portal_studio_identity_specs() as $field => $spec ) {
@@ -207,6 +287,8 @@ function lunara_oscars_portal_studio_defaults() {
 		'section_order'      => lunara_oscars_portal_studio_slots(),
 		'section_visibility' => $visibility,
 		'presentation'       => $presentation,
+		'buttons'            => lunara_oscars_portal_studio_navigation_defaults()['buttons'],
+		'quick_start'        => lunara_oscars_portal_studio_navigation_defaults()['quick_start'],
 	);
 }
 
@@ -480,6 +562,7 @@ function lunara_oscars_portal_studio_get_public_config( $allow_preview = true ) 
 	// unsaved site loses byte-parity with today's trim-then-esc_html render.
 	if ( is_array( $validated ) ) {
 		$validated['identity'] = $verbatim_identity;
+		$validated = array_replace( $validated, lunara_oscars_portal_studio_read_navigation() );
 	}
 
 	return $validated;
@@ -504,6 +587,8 @@ function lunara_oscars_portal_studio_validate_config( $raw ) {
 	}
 
 	$defaults     = lunara_oscars_portal_studio_defaults();
+	$navigation = lunara_oscars_portal_studio_validate_navigation( $raw );
+	if ( is_wp_error( $navigation ) ) { return $navigation; }
 	$shape_errors = array(
 		'identity'           => 'oscars_portal_identity_invalid',
 		'section_order'      => 'oscars_portal_section_order_invalid',
@@ -531,6 +616,7 @@ function lunara_oscars_portal_studio_validate_config( $raw ) {
 
 	$config                   = array_replace_recursive( $defaults, $raw );
 	$config['schema_version'] = 1;
+	$config = array_replace( $config, $navigation );
 
 	// Identity: bounded text; an explicitly empty field folds to its shipped
 	// literal — the same "empty inherits the default" semantic the
@@ -593,6 +679,8 @@ function lunara_oscars_portal_studio_validate_config( $raw ) {
 		'section_order'      => $config['section_order'],
 		'section_visibility' => $config['section_visibility'],
 		'presentation'       => $config['presentation'],
+		'buttons'            => $config['buttons'],
+		'quick_start'        => $config['quick_start'],
 	);
 }
 
@@ -668,7 +756,15 @@ function lunara_oscars_portal_studio_config_from_request( $request ) {
  * @param array<string,mixed> $config Valid configuration.
  * @return void
  */
-function lunara_oscars_portal_studio_apply_config( $config ) {
+function lunara_oscars_portal_studio_apply_config( $config, $navigation_families = array( 'buttons', 'quick_start' ) ) {
+	if ( in_array( 'buttons', $navigation_families, true ) ) {
+		foreach ( lunara_oscars_portal_studio_button_specs() as $key => $spec ) { set_theme_mod( $spec['setting'], $config['buttons'][$key] ); }
+	}
+	if ( in_array( 'quick_start', $navigation_families, true ) ) {
+		foreach ( lunara_oscars_portal_studio_quick_start_specs() as $key => $spec ) {
+			foreach ( $config['quick_start'][$key] as $field => $value ) { set_theme_mod( 'lunara_oscars_portal_card_' . $spec['slot'] . '_' . $field, $value ); }
+		}
+	}
 	foreach ( lunara_oscars_portal_studio_identity_specs() as $field => $spec ) {
 		set_theme_mod( $spec['setting'], (string) $config['identity'][ $field ] );
 	}
@@ -783,16 +879,19 @@ function lunara_oscars_portal_studio_restore_revision_transaction( $revision_id 
 		if ( empty( $revision['id'] ) || ! hash_equals( (string) $revision['id'], $revision_id ) || empty( $revision['prior_public'] ) ) {
 			continue;
 		}
-		$validated = lunara_oscars_portal_studio_validate_config( isset( $revision['config'] ) ? $revision['config'] : array() );
+		$target = isset( $revision['config'] ) ? $revision['config'] : array();
+		$validated = lunara_oscars_portal_studio_validate_config( $target );
 		if ( is_wp_error( $validated ) ) {
 			return $validated;
 		}
+		$navigation_families = array_intersect( array( 'buttons', 'quick_start' ), array_keys( $target ) );
 		$current = lunara_oscars_portal_studio_get_public_config( false );
+		foreach ( array_diff( array( 'buttons', 'quick_start' ), $navigation_families ) as $family ) { $validated[$family] = $current[$family]; }
 		$safety_id = lunara_oscars_portal_studio_push_revision( $current, 'restore', 'passed', true );
 		if ( is_wp_error( $safety_id ) ) {
 			return $safety_id;
 		}
-		lunara_oscars_portal_studio_apply_config( $validated );
+		lunara_oscars_portal_studio_apply_config( $validated, $navigation_families );
 		lunara_oscars_portal_studio_flush_route_cache();
 		return array( 'state' => $validated, 'safety_revision_id' => $safety_id );
 	}
@@ -898,8 +997,15 @@ function lunara_oscars_portal_studio_get_preview_config( $token ) {
 	if ( empty( $record['token_hash'] ) || ! hash_equals( (string) $record['token_hash'], $expected ) || empty( $record['expires'] ) || absint( $record['expires'] ) <= lunara_oscars_portal_studio_timestamp() ) {
 		return false;
 	}
-	$validated = lunara_oscars_portal_studio_validate_config( isset( $record['config'] ) ? $record['config'] : array() );
-	return is_wp_error( $validated ) ? false : $validated;
+	$config = isset( $record['config'] ) ? $record['config'] : array();
+	$validated = lunara_oscars_portal_studio_validate_config( $config );
+	if ( is_wp_error( $validated ) ) { return false; }
+	// A still-valid token created before these controls existed never owned them.
+	// Resolve its missing families from today's canonical mods without writing.
+	foreach ( lunara_oscars_portal_studio_read_navigation() as $family => $current ) {
+		if ( ! array_key_exists( $family, $config ) ) { $validated[$family] = $current; }
+	}
+	return $validated;
 }
 
 /**

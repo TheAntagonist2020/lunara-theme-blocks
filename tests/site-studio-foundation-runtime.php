@@ -1,6 +1,6 @@
 <?php
 /**
- * Behavioral contract for the Site Studio 3.2.73 foundation.
+ * Behavioral contract for the Site Studio 3.2.74 foundation.
  *
  * This deliberately boots the production registry, adapter/service, REST, and
  * Design Token modules against a small WordPress stub. It exercises behavior;
@@ -94,6 +94,13 @@ $lunara_test_provider_defaults = array(
 		'section_order' => array( 'hero', 'navigator', 'board', 'doors', 'spotlights', 'titles', 'research', 'linked-reviews', 'winners', 'deep-cuts', 'rotating-winners' ),
 		'section_visibility' => array( 'hero' => true, 'navigator' => true, 'board' => true, 'doors' => true, 'spotlights' => true, 'titles' => true, 'research' => true, 'linked-reviews' => false, 'winners' => true, 'deep-cuts' => true, 'rotating-winners' => true ),
 		'presentation' => array( 'section_gap' => 40, 'hero_min_height' => 360, 'card_min_height' => 360, 'winners_min_width' => 200, 'density' => 'standard', 'lead_prominence' => 'balanced', 'board_rhythm' => 'standard' ),
+		'buttons' => array( 'ceremony' => 'Latest Ceremony', 'ledger' => 'Open Full Ledger', 'categories' => 'Browse Categories' ),
+		'quick_start' => array(
+			'ceremonies' => array( 'enabled' => true, 'kicker' => 'Ceremonies', 'title' => 'Ceremony Archive', 'copy' => '', 'url' => '' ),
+			'categories' => array( 'enabled' => true, 'kicker' => 'Categories', 'title' => 'Category History', 'copy' => '', 'url' => '' ),
+			'ledger' => array( 'enabled' => true, 'kicker' => 'Ledger', 'title' => 'Full Ledger', 'copy' => '', 'url' => '' ),
+			'method' => array( 'enabled' => true, 'kicker' => 'About', 'title' => 'Ledger Method', 'copy' => '', 'url' => '' ),
+		),
 	),
 );
 $lunara_test_provider_state = $lunara_test_provider_defaults;
@@ -1288,7 +1295,7 @@ function lunara_review_case_state_projection() {
 			'presentation' => array( 'density', 'lead_prominence', 'desk_rhythm', 'section_gap', 'hero_min_height', 'card_min_height', 'media_min_height' ),
 		),
 		'oscars' => array(
-			'top' => array( 'schema_version', 'identity', 'section_order', 'section_visibility', 'presentation' ),
+			'top' => array( 'schema_version', 'identity', 'section_order', 'section_visibility', 'presentation', 'buttons', 'quick_start' ),
 			'identity' => array( 'kicker', 'title', 'explore_kicker', 'explore_heading', 'spotlights_heading', 'titles_kicker', 'titles_heading', 'research_kicker', 'research_heading', 'reviews_heading', 'deep_cuts_heading' ),
 			'section_visibility' => array( 'hero', 'navigator', 'board', 'doors', 'spotlights', 'titles', 'research', 'linked-reviews', 'winners', 'deep-cuts', 'rotating-winners' ),
 			'presentation' => array( 'section_gap', 'hero_min_height', 'card_min_height', 'winners_min_width', 'density', 'lead_prominence', 'board_rhythm' ),
