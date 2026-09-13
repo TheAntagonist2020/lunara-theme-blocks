@@ -79,8 +79,10 @@ screening attendance or association eligibility. The site's About page reports
   fetches were rate-limited; subsequent normal-browser reads succeeded. Contact
   exposes the intended email link; no message was sent or inbox delivery tested.
   The policy states the site's watching, scoring, independence, tools and
-  corrections standards. Policy and Contact both expose nested main landmarks;
-  correct that template accessibility issue during the shared-site pass.
+  corrections standards. Policy and Contact exposed nested main landmarks;
+  merged Theme 3.2.77 corrects their generic page template, pending deployment
+  acceptance. The sampled Review and Journal articles still have nested main
+  landmarks and are queued for the following shared-template correction.
 - Test archive search/filter/pagination from a current review through an older
   review and into the Oscars ledger; existing content should be easy to find.
 - Review the proposed hero and Journal lineups with Dalton, apply through the

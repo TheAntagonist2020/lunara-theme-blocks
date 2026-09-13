@@ -25,6 +25,70 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Theme 3.2.77 merged; public acceptance advanced
+
+### Headline
+
+Footer, Search and 404 Recovery editors and the Pick/Fact category route fix
+merged through PR #197 after green GitHub CI. Theme 3.2.77 is ready for Dalton's
+manual WordPress.com deployment. It has not been deployed by the agent or
+verified live. The seven-step completion goal remains active.
+
+### Verified live state
+
+| Check | Result |
+| --- | --- |
+| Last theme canary | Theme `3.2.76+20260913-225857`; three anonymous reads agree; Journal/Oscars `LIVE_COHERENT`. |
+| Academy category acceptance, 23:33:45–23:34:00 UTC | Seven anonymous URLs return 200. Modern Production Design/Sound aliases and old category URLs resolve directly; ceremony 84 preserves old labels and ceremony 98 uses modern labels. Fifteen saved-response assertions pass. These aliases are not redirects. |
+| Published Review/Journal sample | Dog Stars and Angel at measured 390/1440 CSS pixels: readable headlines, loaded artwork, metadata and no horizontal overflow. Journal/archive and related-story links work. Browser session was signed in; two separate anonymous GETs independently confirm the same build/headings without admin-bar markup. |
+
+### What shipped and why
+
+See CHANGELOG.md's Theme 3.2.77 entry. Shared Preview/Apply/History now cover
+Footer links and Search/404 copy while preserving inherited and historical
+settings. Narrow native search inputs cannot enlarge recovery panels. The
+category routing correction uses existing saved rules without option writes
+or a rewrite flush. No agent deployment or manual cache purge occurred.
+
+### Commit and gate ledger
+
+| Reference | Meaning |
+| --- | --- |
+| Theme candidate `0948a69d235d2c59dce7ac31f159b1a41c43cfea` | Final reviewed and tested PR #197 head. |
+| Theme main `72a0ea167da8137ab082b9710c47bb45dacd38b5` | PR #197 merge; tree `fbbc75fb4963dbd0ea6d422efff872e6dd02a859` equals the candidate tree. |
+| CI run `34790158794`, job `103812762386` | All 95 required theme gates plus PHP/JS syntax and CSS checks pass. |
+| Rollback branch `claude/rollback-exact-theme-3.2.43` / PR #159 | Rebuilt after merge; remote first parent equals current main; remote tree and simulated merge both equal `c55bf394594149db2888295c5d51f85f47b2b520`. Verified 23:42:14 UTC. |
+
+The first CI run exposed native-input intrinsic sizing differences missed by
+the Windows baseline. Eight added phone stress cases fail with the old CSS;
+the correction passes 40 actual-template scenarios / 330 assertions with
+JavaScript disabled. Strict overflow assertions remain intact. Earlier focused
+provider, HTTP, editor, routing and twelve mutation checks are recorded below.
+The Theme 3.2.77 canary and production editor acceptance remain pending deployment.
+
+### Corrections / logged, not fixed
+
+This entry supersedes the preceding candidate/CI-pending state. Public article
+checks confirm nested main landmarks on both sampled articles. A source audit
+finds twelve live inner main openings across ten theme files; a separate
+detached worktree is preparing the next bounded correction. It is not part of
+PR #197. The Journal comparison image has empty alt text; editorial intent
+needs review before treating it as decorative or adding a description.
+The public article sample does not cover all galleries, missing-art variants,
+anonymous visual rendering or every Academy detail layout.
+
+### Punch-list carried forward / whose move is next
+
+Dalton deploys `lunara-theme-blocks` main through the existing WordPress.com
+connection. Agent then runs the explicit 3.2.77 canary and checks repaired
+Pick/Fact category routes and new editors. Continue the isolated landmark
+cleanup, remaining public route matrix, measured performance/Critical CSS and
+editorial lineups in SITE-COMPLETION-PLAN.md. No new editorial content or
+homepage curation was applied. This record is committed and pushed on a fresh
+topic branch from merged main, ready to accompany the next functional batch.
+
+---
+
 ## 2026-09-13 — Theme 3.2.77 footer and recovery release candidate
 
 ### Headline

@@ -12,6 +12,10 @@ verified published live. A fresh agent canary also passes for
 report `LIVE_COHERENT`. Detailed route acceptance below stays explicit;
 deployment confirmation does not imply every remaining reader-journey check ran.
 
+Theme 3.2.77 is now merged through PR #197 at `72a0ea1`, with all 95 required
+GitHub gates green and the exact rollback hatch rebuilt. Manual deployment and
+its public canary/editor acceptance are pending; last verified live theme is 3.2.76.
+
 ## 1. Oscars cleanup
 
 - [x] Theme 3.2.75 public canary: all three anonymous reads agree on
@@ -22,8 +26,11 @@ deployment confirmation does not imply every remaining reader-journey check ran.
   modern aliases while retaining historical ceremony names and canonical IDs.
   Plugin PR #29 passed CI and merged as `2fea87341f1865142c253395064913c5cccb611c`.
 - [x] Dalton confirms Academy 2.7.84 deployed and verified live.
-- [ ] Complete the recorded public matrix for modern aliases, old links and
-  historical ceremony output.
+- [x] Complete the sampled public matrix for modern aliases, old links and
+  historical ceremony output: seven anonymous URLs return 200; category index,
+  modern/old Production Design and Sound paths, and ceremonies 84/98 agree.
+  Aliases resolve directly rather than redirecting. Exact cutoff boundaries
+  remain covered by source tests; this was a bounded public sample.
 
 ## 2. One editing experience
 
@@ -38,8 +45,10 @@ deployment confirmation does not imply every remaining reader-journey check ran.
   use published review dates and canonical poster metadata after adoption.
 - [x] Complete Academy dossier presentation controls for ceremony, category,
   film and person previews. Retire old writers after equivalent behavior works.
-- [ ] Finish footer link ownership and 404 recovery controls. Six existing
-  footer presentation fields and nine Search fields do not cover these gaps.
+- [x] Implement footer link ownership and Search/404 recovery controls in
+  merged Theme 3.2.77. Footer inherits existing navigation until explicit Apply;
+  all three editors use shared private Preview, Apply and History.
+- [ ] Accept the new Footer/Search/404 editors after Theme 3.2.77 deployment.
 - [ ] Verify zero/one/many selections, unavailable stories, long labels, image
   fit/focal points, independent modes, private previews, restore and dirty-state
   protection for every newly covered surface.
@@ -52,6 +61,10 @@ deployment confirmation does not imply every remaining reader-journey check ran.
   uncropped source rather than a hard-cropped derivative.
 - [ ] Verify representative public articles after deployment: long headlines,
   full/cover artwork, missing artwork, metadata, galleries and related stories.
+  Dog Stars and Angel pass the sampled 390/1440px browser checks for complete
+  headings, loaded artwork, metadata, no horizontal overflow and related links.
+  Two anonymous GETs separately confirm current build/headings. Missing artwork,
+  gallery variants and anonymous visual acceptance remain outside that sample.
 - [ ] Resolve any remaining reader-journey defects exposed by that acceptance.
 
 ## 4. Academy detail pages
@@ -69,7 +82,11 @@ deployment confirmation does not imply every remaining reader-journey check ran.
 - [x] Release Header Command navigation correction in live Theme 3.2.76: one Search action,
   meaningful current-page state, 44px controls and usable no-JavaScript links.
   Current candidate passes 64 PHP and 55 browser assertions; review fixes landed.
-- [ ] Finish footer/search/recovery navigation and content ownership.
+- [x] Implement footer/search/recovery navigation and content ownership in
+  merged Theme 3.2.77; deployment acceptance remains open above.
+- [ ] Replace twelve live inner main wrappers while keeping header.php's main
+  landmark. Nested landmarks were confirmed on both sampled public articles;
+  the next correction is isolated from the merged 3.2.77 release.
 - [ ] Complete a public route matrix covering landing pages, articles, Academy
   records, search results, no results and 404; verify keyboard access, focus,
   reduced motion, readable narrow layouts and no horizontal overflow.
