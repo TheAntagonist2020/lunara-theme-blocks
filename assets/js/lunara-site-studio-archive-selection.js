@@ -1,18 +1,18 @@
 /* Shared Reviews / Journal story selection. The workspace owns persistence. */
 (function () {
  'use strict';
- var controls = window.LunaraEditorControls;
+ var controls = window.LunaraEditorControls, mediaEditor = window.LunaraSiteStudioArchiveMediaEditor;
  function keys(value, names) { return !!value && typeof value === 'object' && !Array.isArray(value) && JSON.stringify(Object.keys(value).sort()) === JSON.stringify(names.slice().sort()); }
  function id(value, allowZero) { return Number.isSafeInteger(value) && value >= (allowZero ? 0 : 1) && value <= 9999999999; }
  function validState(state) {
   var surface = window.LunaraSiteStudioWorkspaceConfig && window.LunaraSiteStudioWorkspaceConfig.surface;
-  return !!state && [0,1].indexOf(state.selection_version) >= 0 && (surface === 'journal-archive' ? ['automatic','manual','shared'] : ['automatic','manual']).indexOf(state.lead_mode) >= 0 && id(state.lead_id,true) && ['query','curated'].indexOf(state.lane_mode) >= 0 && Array.isArray(state.curated_ids) && state.curated_ids.length <= 24 && state.curated_ids.every(function (value) { return id(value,false); }) && new Set(state.curated_ids).size === state.curated_ids.length;
+  return !!mediaEditor && mediaEditor.validateState(state) && !!state && [0,1].indexOf(state.selection_version) >= 0 && (surface === 'journal-archive' ? ['automatic','manual','shared'] : ['automatic','manual']).indexOf(state.lead_mode) >= 0 && id(state.lead_id,true) && ['query','curated'].indexOf(state.lane_mode) >= 0 && Array.isArray(state.curated_ids) && state.curated_ids.length <= 24 && state.curated_ids.every(function (value) { return id(value,false); }) && new Set(state.curated_ids).size === state.curated_ids.length;
  }
  function validDom(root) {
-  return !!controls && typeof controls.orderedList === 'function' && ['editor','legacy','activate','controls','lead-mode','lead-manual','lead-search','lead-search-button','lead-results','lead-selected','lead-clear','lead-status','lane-mode','priority-manual','priority-search','priority-search-button','priority-results','priority-list','priority-status','status','retry'].every(function (name) { return root.querySelectorAll('[data-archive-'+name+']').length === 1; });
+  return !!mediaEditor && mediaEditor.validateDom(root) && !!controls && typeof controls.orderedList === 'function' && ['editor','legacy','activate','controls','lead-mode','lead-manual','lead-search','lead-search-button','lead-results','lead-selected','lead-clear','lead-status','lane-mode','priority-manual','priority-search','priority-search-button','priority-results','priority-list','priority-status','status','retry'].every(function (name) { return root.querySelectorAll('[data-archive-'+name+']').length === 1; });
  }
  function create(context) {
-  var root = context.root, node = controls.node, button = controls.button;
+  var root = context.root, node = controls.node, button = controls.button, media = mediaEditor.create(context);
   function find(name) { return root.querySelector('[data-archive-'+name+']'); }
   var container = find('editor'), leadMode = find('lead-mode'), laneMode = find('lane-mode'), listParent = find('priority-list');
   var metadata = {}, effectiveLead = 0, matches = [], resultTarget = '', pendingTarget = '', warnings = [];
@@ -166,7 +166,7 @@
   find('retry').addEventListener('click',function () { fetchItems(resultTarget); });
   function render() { invalidate(); metadata = {}; matches = []; effectiveLead = 0; warnings = []; loaded = false; loading = false; failed = false; resultTarget = pendingTarget = ''; draw(); fetchItems(); }
   function setBusy(value) { busy = value; find('controls').disabled = value || !active(); find('activate').disabled = value; find('retry').disabled = value || loading; if (!value) { loading = false; fetchItems(pendingTarget); } }
-  return {render:render,setBusy:setBusy,invalidate:invalidate};
+  return {render:function () { render(); media.render(); },setBusy:function (value) { setBusy(value); media.setBusy(value); },invalidate:function () { invalidate(); media.invalidate(); }};
  }
  window.LunaraSiteStudioArchiveSelectionEditor = {validateState:validState,validateDom:validDom,create:create};
 }());

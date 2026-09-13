@@ -94,8 +94,8 @@ $criticalHash = -join ($criticalHashBytes | ForEach-Object { $_.ToString('x2') }
 if ($criticalBytes.Count -ne 12142 -or $criticalHash -ne 'fda0ba41bbe1583fc7e7e27eef580f2b693afbcaa818d0ee124fbafa755bd8c1') {
     throw "The responsive Reviews opening must preserve the verified structural seed ($($criticalBytes.Count)B $criticalHash)."
 }
-if ($style -notmatch '(?m)^Version:\s*3\.2\.72\s*$') {
-    throw 'Theme version must preserve the mobile text-led card repair in 3.2.72.'
+if ($style -notmatch '(?m)^Version:\s*3\.2\.73\s*$') {
+    throw 'Theme version must preserve the mobile text-led card repair in 3.2.73.'
 }
 foreach ($viewport in @('375', '390', '782', '1440')) {
     if ($runtime -notmatch "(?m)for \(const viewportWidth of \[[^\]]*\b$viewport\b") {
@@ -117,4 +117,4 @@ foreach ($runtimeGate in @(
     }
 }
 
-Write-Host 'Theme 3.2.72 Reviews mobile card legibility contract passed.'
+Write-Host 'Theme 3.2.73 Reviews mobile card legibility contract passed.'

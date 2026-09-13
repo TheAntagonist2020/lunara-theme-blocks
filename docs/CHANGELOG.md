@@ -11,6 +11,30 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-12 — Theme 3.2.73 Archive Artwork
+
+Reviews and Journal bring Gallery and Continue reading into the shared Site
+Studio inspector. Both use the existing archive provider settings, revisions,
+private Preview and Apply. Opening the editor does not alter saved content.
+
+- Gallery: choose up to twelve Media Library images, drag or keyboard-order
+  them, and edit headings, alternate text, captions, links and attribution.
+- Continue reading: reorder the three existing cards, choose their destinations
+  and visibility, and adjust optional artwork and the supported card copy.
+- Image controls match the public 16:9 cover frame and focal point. Unsupported
+  fit and zoom settings are absent. Clearing a continuation image retains its
+  text and destination; removing a gallery image removes that gallery row.
+- Private metadata uses the same image derivative as the public archive.
+  Unavailable or unreadable attachments return a warning without private
+  metadata. Pending image requests and picker callbacks cannot restore stale
+  values after Preview, Discard or History changes the editor state.
+
+The canonical providers retain validation, cache invalidation and revision
+ownership. Existing article artwork and story-selection rules remain intact;
+this release adds archive artwork controls, not per-article image overrides.
+Home and Oscars remain on the shared-editor work list for their remaining
+capabilities. Verification covers both archive workflows and mobile inspectors.
+
 ## 2026-09-12 — Theme 3.2.72 Mobile Layouts
 
 Home, Reviews, Journal and Oscars now own their mobile geometry instead of

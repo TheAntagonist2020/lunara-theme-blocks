@@ -16,6 +16,7 @@ const css = fs.readFileSync(path.join(themeRoot, 'assets/css/lunara-site-studio.
 const editorCss = fs.readFileSync(path.join(themeRoot, 'assets/css/lunara-editor-controls.css'), 'utf8');
 const controller = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio.js'), 'utf8');
 const editorControls = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-editor-controls.js'), 'utf8');
+const archiveMediaEditor = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio-archive-media.js'), 'utf8');
 const archiveEditor = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio-archive-selection.js'), 'utf8');
 const previewBridge = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio-preview.js'), 'utf8');
 const token = '123e4567-e89b-42d3-a456-426614174111';
@@ -132,7 +133,7 @@ function fixture(surface) {
 	return result.stdout
 		.replace('</head>', `<style>${css}</style>${usesOrderedList ? `<style>${editorCss}</style>` : ''}${adminCss}</head>`)
 		.replace('<body class="wp-admin">', '<body class="wp-admin"><div id="wpwrap"><div id="wpcontent"><div id="wpbody"><div id="wpbody-content">')
-		.replace('</body>', `</div></div></div></div>${usesOrderedList ? `<script>${editorControls}</script><script>${archiveEditor}</script>` : ''}<script>${controller}</script></body>`);
+		.replace('</body>', `</div></div></div></div>${usesOrderedList ? `<script>${editorControls}</script><script>${archiveMediaEditor}</script><script>${archiveEditor}</script>` : ''}<script>${controller}</script></body>`);
 }
 
 function mutateFixtureState(html, mutate) {

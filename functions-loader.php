@@ -144,6 +144,7 @@ require_once $lunara_inc . 'site-studio-adapters.php';
 require_once $lunara_inc . 'site-studio-carousels.php';
 require_once $lunara_inc . 'site-studio-home-oscars.php';
 require_once $lunara_inc . 'site-studio-rest.php';
+require_once $lunara_inc . 'site-studio-archive-media.php';
 require_once $lunara_inc . 'site-studio-preview.php';
 if ( is_admin() ) {
     require_once $lunara_inc . 'site-studio.php';

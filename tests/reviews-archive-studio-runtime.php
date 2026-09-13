@@ -1,6 +1,6 @@
 <?php
 /**
- * Isolated behavioral contract for Theme 3.2.72 Reviews Archive Studio.
+ * Isolated behavioral contract for Theme 3.2.73 Reviews Archive Studio.
  *
  * Run: php tests/reviews-archive-studio-runtime.php
  */
@@ -57,9 +57,11 @@ function lunara_test_assert( $condition, $message ) {
 class WP_Error {
 	private $code;
 	private $message;
-	public function __construct( $code, $message = '' ) { $this->code = $code; $this->message = $message; }
+	private $data;
+	public function __construct( $code, $message = '', $data = null ) { $this->code = $code; $this->message = $message; $this->data = $data; }
 	public function get_error_code() { return $this->code; }
 	public function get_error_message() { return $this->message; }
+	public function get_error_data() { return $this->data; }
 }
 
 class WP_Post {
@@ -208,7 +210,7 @@ function wp_get_attachment_image( $id, $size, $icon, $attrs ) {
 function wp_cache_delete( $key, $group ) { global $lunara_test_cache_deletes; $lunara_test_cache_deletes[] = array( $key, $group ); return true; }
 function do_action( $hook, $payload = null, $extra = null ) { global $lunara_test_actions_fired; $lunara_test_actions_fired[] = array( $hook, $payload, $extra ); }
 function get_current_user_id() { global $lunara_test_user_id; return $lunara_test_user_id; }
-function current_user_can( $capability ) { global $lunara_test_can_edit; return $lunara_test_can_edit && 'edit_theme_options' === $capability; }
+function current_user_can( $capability, $id = 0 ) { global $lunara_test_can_edit; return $lunara_test_can_edit && ( 'edit_theme_options' === $capability || ( 'read_post' === $capability && ! in_array( $id, isset( $GLOBALS['archive_media_denied_ids'] ) ? $GLOBALS['archive_media_denied_ids'] : array(), true ) ) ); }
 function check_ajax_referer( $action, $field ) { global $lunara_test_ajax_nonce_valid, $lunara_test_ajax_nonce_checks; $lunara_test_ajax_nonce_checks++; if ( ! $lunara_test_ajax_nonce_valid || 'lunara_reviews_archive_studio_search' !== $action || 'nonce' !== $field ) { throw new RuntimeException( 'Invalid AJAX nonce.' ); } return true; }
 function wp_send_json_success( $data = null, $status = 200 ) { throw new Lunara_Test_JSON_Response( true, $data, $status ); }
 function wp_send_json_error( $data = null, $status = 400 ) { throw new Lunara_Test_JSON_Response( false, $data, $status ); }
@@ -1217,5 +1219,6 @@ lunara_test_assert( serialize( $pristine_defaults ) === serialize( lunara_review
 
 $archive_selection_kind = 'reviews';
 require __DIR__ . '/archive-selection-provider-cases.php';
+require __DIR__ . '/archive-media-provider-cases.php';
 
 fwrite( STDOUT, "reviews-archive-studio-runtime: all assertions passed.\n" );
