@@ -98,7 +98,7 @@ function lunara_journal_archive_studio_defaults() {
 
 // Read the real provider's pure specs without installing competing preview hooks in shared fixtures.
 $portal_source = file_get_contents( dirname( __DIR__ ) . '/inc/oscars-portal-studio.php' );
-foreach ( array( 'slots', 'visibility_owners', 'identity_specs', 'geometry_specs', 'rhythm_specs', 'defaults' ) as $suffix ) { $name = 'lunara_oscars_portal_studio_' . $suffix; if ( ! function_exists( $name ) && preg_match( '/^function ' . $name . '\(.*?^\}/ms', $portal_source, $match ) ) { eval( $match[0] ); } }
+foreach ( array( 'slots', 'visibility_owners', 'identity_specs', 'geometry_specs', 'rhythm_specs', 'button_specs', 'quick_start_specs', 'navigation_defaults', 'defaults' ) as $suffix ) { $name = 'lunara_oscars_portal_studio_' . $suffix; if ( ! function_exists( $name ) && preg_match( '/^function ' . $name . '\(.*?^\}/ms', $portal_source, $match ) ) { eval( $match[0] ); } }
 
 require dirname( __DIR__ ) . '/inc/site-studio-registry.php'; require dirname( __DIR__ ) . '/inc/site-studio-adapters.php';
 function lunara_test_site_studio_spec_state( $spec ) { $state = array(); foreach ( $spec as $group => $fields ) { $state[ $group ] = array(); foreach ( $fields as $field => $definition ) { $state[ $group ][ $field ] = $definition['default']; } } return $state; }

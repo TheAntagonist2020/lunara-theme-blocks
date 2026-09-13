@@ -74,8 +74,8 @@ is not claimed.
 | --- | --- | --- |
 | Site Studio entry | Flat directory of page, section and utility destinations above every editor | Verified live in 3.2.69: four primary pages, contextual editors, collapsible searchable directory, guarded navigation. Home opens by default. |
 | Inspector groups | Archive-wide geometry filed under Mobile; inconsistent task labels | Verified live in 3.2.69: archive Content/Layout groups, aligned Method and homepage Oscar labels, shared History. This does not add missing capabilities. |
-| Reviews and Journal editing | Gallery and continuation artwork still require Classic controls | 3.2.70 story controls are shipped. 3.2.73 candidate adds Gallery and Continue reading with shared image selection, focal points, drag/keyboard order and canonical Preview/Apply/History. Individual article artwork remains with its article owner. |
-| Oscars editing | Some buttons, Quick Start cards and winner tools still live in Classic controls | Map each live portal placement to its canonical owner; migrate related controls in complete groups. Homepage Picks/Facts controls do not substitute for portal editing. |
+| Reviews and Journal editing | Gallery and continuation artwork required Classic controls | Verified live in 3.2.73: Gallery and Continue reading panels load existing settings. Shared image selection, focal points, drag/keyboard order and canonical Preview/Apply/History have local contract coverage. Individual article artwork remains with its article owner. |
+| Oscars editing | Hero buttons, Quick Start cards and winner tools require Classic controls | 3.2.74 candidate migrates the three Hero labels and four Quick Start cards into the canonical provider and shared inspector. Seven winner presentation controls remain next. Homepage Picks/Facts controls do not substitute for portal editing. |
 | Reviews opening | Large introductory/statistics panel preceded the lead review | Verified live through 3.2.72: compact introduction and filters, no public Reviews Command panel, visible portrait art and complete phone titles. |
 | Journal opening | Title, counters and filter panels delayed visible story artwork | Verified live through 3.2.72: compact wrapping controls, stable 16:10 phone artwork and complete headlines. |
 | Shared header | Home/Oscars omit the textual Search item present on Reviews/Journal | Resolve the live header/menu ownership and make navigation consistent without duplicating search controls. |
@@ -143,9 +143,18 @@ need to describe the real behavior. These are source-code findings, not claims
 that a particular current live setting is broken. The observed Journal first
 story was "Angel Finally Gets a Face That Can Fly."
 
-Theme 3.2.73 migrates Gallery and Continue reading controls using the existing
-archive providers. It remains a candidate until the separate release and live
-acceptance steps are complete. Journal article and Review article presentation, site
+Theme 3.2.73 is verified live at `3.2.73+20260913-042625`, with both canonical
+canaries reporting `LIVE_COHERENT`. Gallery and Continue reading panels load
+existing settings in Reviews and Journal. Live inspection found a hidden retry
+button exposed by WordPress styling; the scoped correction is in 3.2.74.
+
+Theme 3.2.74 migrates 23 existing Oscars navigation theme mods, preserving the
+actual portal defaults, saved values, empty/relative URL behavior and old
+revisions. Quick Start cards retain their fixed order and existing artwork;
+the shared editor exposes only settings the renderer supports. This candidate
+still needs its own release and public acceptance.
+
+Journal article and Review article presentation, site
 footer, search/recovery, and Academy dossier routes also belong to the broader
 site standard. Their inclusion here is an open work list, not evidence of parity.
 

@@ -25,6 +25,96 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Theme 3.2.73 acceptance and 3.2.74 Oscars navigation
+
+### Headline
+
+Theme 3.2.73 is verified live. Reviews and Journal load the shared Gallery and
+Continue reading panels. Theme 3.2.74 continues the Oscars migration with the
+three Hero button labels and four Quick Start cards, using their existing
+saved settings and shared editor transactions.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| Explicit-version 3.2.73 canary | Three anonymous reads agree on `3.2.73+20260913-042625`; Journal and Oscars both `LIVE_COHERENT`, exit 0 / GO. |
+| Authenticated Reviews and Journal Site Studio | Both report Live settings loaded, expose Gallery and Continue reading, and retain a clean editor state during read-only inspection. |
+| Journal archive panels | Existing gallery heading and empty-image state load; Continue reading loads the three saved cards: Latest File, Trailer Lane and Review Desk. |
+| Archive image retry control | WordPress button styling overrides the hidden attribute. The 3.2.74 candidate corrects this scoped editor defect. |
+
+### What changed and why
+
+See `docs/CHANGELOG.md` for the Oscars navigation candidate. It migrates the
+complete existing field group before retiring duplicate Classic controls.
+No agent deployment or manual cache purge occurred. Theme 3.2.74 is not
+deployed; its live canary is pending.
+
+### Commit ledger
+
+| Repo | Commit or release reference | Meaning |
+| --- | --- | --- |
+| Theme | `b9ff5602e49d466a99ac664c94923078a3fa5249` / PR #193 | Theme 3.2.73 merged on main and now verified live. |
+| Theme | `codex/oscars-editor-3.2.74` | Oscars navigation migration based on that main commit. |
+
+### Gate ledger
+
+- Versioned production canary for 3.2.73: exit 0 / GO.
+- Live archive inspector acceptance is read-only; no production Preview, Apply
+  or History transaction was performed. Local contracts cover those writes.
+- Focused Oscars provider and shared-editor gates pass. The provider covers all
+  23 fields in accessors, degraded-plugin and no-plugin modes. Actual template
+  tests cover private Hero labels and Quick Start copy/visibility, inherited
+  and relative destinations, ledger table normalization, fixed artwork slots,
+  all cards hidden and unchanged public output during private previews.
+- Oscars browser: 102 assertions; shared navigation: 274; archive artwork: 120.
+  Desktop and mobile workflows cover Preview, Apply, Discard, History, nested
+  field errors and preserved hidden-card values. Four actual-markup fixture
+  screenshots were visually reviewed. They are local browser evidence.
+- Both targeted mutations are caught: omit a Quick Start managed field, or
+  bypass the private-aware live reader. Files were restored with matching
+  SHA256 hashes and the restored shared runtime passes.
+- Independent review is clean after correcting the validated navigation
+  return and removing the 23 retired Customizer setting registrations as well
+  as their controls. The stored mods remain intact; stale Customizer writes
+  are rejected by that registration boundary. Blank candidate Hero labels
+  receive default text without rewriting raw saved values during reads.
+- Full required theme contracts: 95/95 pass on the final release candidate.
+  Syntax/structure: 132 PHP, 67 JavaScript and 26 CSS files; zero failures.
+  Release identity and diff-whitespace checks pass. The mobile checkbox fixture
+  measures the associated 44px label target as well as WordPress's smaller
+  checkbox glyph; all field bounds and action reachability checks remain strict.
+- Theme 3.2.74 CI, merge and exact rollback proof are recorded in the release
+  PR and receipt after the candidate commit. Manual deployment and its public
+  acceptance remain separate; physical-device testing is not claimed.
+
+### Corrections
+
+None. The previous entry's 3.2.73 deployment-pending state is superseded by the
+live acceptance above. Prior local browser evidence remains a local result.
+
+### Logged, not fixed
+
+Seven winner presentation fields remain in the Classic Oscars controls.
+Shared header ownership, article/dossier layouts and broader stylesheet
+reduction remain on the site experience work list. Quick Start artwork and
+order have no existing saved owner and are not introduced by this migration.
+
+### Punch-list carried forward
+
+- Agent: publish the validated Oscars navigation candidate, verify CI and
+  merge, then rebuild the exact rollback hatch against the merged main tip.
+- Dalton: manual deployment through the existing WordPress.com theme repository
+  connection after the release is ready.
+- Agent after deployment: verify 3.2.74 publicly, then continue the remaining
+  Oscars winner controls and the shared site experience work list.
+
+### Whose move it is next
+
+Agent completes CI, merge and rollback proof for the validated candidate.
+Dalton's manual WordPress.com deployment follows; a merge alone does not
+establish the public version.
+
 ## 2026-09-12 — Theme 3.2.72 acceptance and 3.2.73 archive artwork
 
 ### Headline

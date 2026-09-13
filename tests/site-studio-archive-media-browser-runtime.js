@@ -17,7 +17,7 @@ async function open(browser,surface,width,start){
  await page.addInitScript(()=>{window.mediaFrames=[];window.wp={media:()=>{const callbacks={},frame={on:(name,fn)=>{callbacks[name]=fn;},open:()=>{},state:()=>({get:()=>({first:()=>({toJSON:()=>frame.item})})}),select:item=>{frame.item=item;callbacks.select();}};window.mediaFrames.push(frame);return frame;}};});
  await page.route('https://example.test/**',async route=>{
   const req=route.request(),url=new URL(req.url()),action=url.pathname.split('/').pop();
-  if(url.pathname==='/wp-admin/admin.php')return route.fulfill({contentType:'text/html',body:replaceState(html(surface),state.saved).replace('</head>','<style>body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}</style></head>')});
+  if(url.pathname==='/wp-admin/admin.php')return route.fulfill({contentType:'text/html',body:replaceState(html(surface),state.saved).replace('</head>','<style>body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}.button{display:inline-block}</style></head>')});
   if(url.pathname.endsWith('.svg'))return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080"><rect width="1920" height="1080" fill="#173648"/><circle cx="1200" cy="500" r="300" fill="#c9a859"/></svg>'});
   if(url.pathname.startsWith('/wp-json/')){
    const body=req.method()==='GET'?null:req.postDataJSON();state.requests.push({action,body,url:url.href,headers:req.headers()});
@@ -55,7 +55,7 @@ async function provenance(row){for(const [key,value]of Object.entries({alt:'A fr
  try{
   for(const surface of ['reviews-archive','journal-archive'])for(const width of [1440,390]){
    const{page,state}=await open(browser,surface,width),journal=surface==='journal-archive';
-   equal(await rows(page,'retention').count(),3,'Exactly three continuation cards are editable');equal(await page.locator('[data-archive-media-group] [data-field-path]').count(),0,'Media uses the shared candidate lifecycle without competing generic bindings');
+   equal(await rows(page,'retention').count(),3,'Exactly three continuation cards are editable');assert(!(await page.locator('[data-archive-media-retry="gallery"]').isVisible())&&!(await page.locator('[data-archive-media-retry="retention"]').isVisible()),'Successful image metadata hides retry buttons despite WordPress button display rules');equal(await page.locator('[data-archive-media-group] [data-field-path]').count(),0,'Media uses the shared candidate lifecycle without competing generic bindings');
    let gallery=rows(page,'gallery').first();await expand(gallery);
    equal(await gallery.locator('[aria-label="Image fit"]:visible').count(),0,'Unsupported image fit is hidden');equal(await gallery.locator('[data-editor-field="zoom"]').count(),0,'Unsupported zoom is absent');
    equal(await page.locator('[data-archive-media-heading="gallery"] [data-archive-media-field="title"]').getAttribute('maxlength'),'140','Gallery heading uses canonical limit');equal(await page.locator('[data-archive-media-heading="gallery"] [data-archive-media-field="copy"]').getAttribute('maxlength'),'500','Gallery copy uses canonical limit');

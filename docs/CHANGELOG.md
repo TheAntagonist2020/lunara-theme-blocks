@@ -11,6 +11,31 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-13 — Theme 3.2.74 Oscars Navigation Editor
+
+The Oscars portal brings its three Hero button labels and four Quick Start
+cards into Site Studio. These controls join the existing private Preview,
+Apply, Discard and History workflow, including desktop and mobile previews.
+
+- Hero buttons keep their existing destinations and expose their visible labels.
+  Blank candidate labels use the shipped text on Apply; reading existing saved
+  settings does not rewrite them.
+- Each named Quick Start card has visibility, kicker, title, copy and URL
+  controls. Empty URLs inherit their existing destination; hiding a card keeps
+  its saved text. The cards retain their established order and artwork.
+- The provider reads and writes the existing 23 theme mods. Opening the editor
+  does not save defaults over existing content. Older revisions that lack these
+  fields retain current navigation settings when restored.
+- The live Oscars template reads private preview candidates for these fields.
+  Field-specific validation opens the relevant card disclosure and focuses the
+  control that needs attention. Equivalent Classic controls and their write
+  registrations are retired; the existing stored theme mods remain intact.
+- Archive image metadata retry buttons now respect their hidden state even
+  when WordPress button styling supplies an explicit display rule.
+
+Winner presentation controls remain a separate Oscars migration. This release
+does not change public card layout, artwork ownership or published articles.
+
 ## 2026-09-12 — Theme 3.2.73 Archive Artwork
 
 Reviews and Journal bring Gallery and Continue reading into the shared Site

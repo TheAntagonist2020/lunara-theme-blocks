@@ -37,6 +37,6 @@ button.lunara-editor-image-stage { position:relative; display:block; width:100%;
 .lunara-archive-media-editor input[type=checkbox] { width:20px; height:20px; }
 .lunara-archive-media-editor button { overflow-wrap:anywhere; }
 .lunara-archive-media-editor .lunara-editor-framing > :last-child { grid-column:auto; }
-.lunara-archive-media-editor .lunara-archive-media-row [hidden] { display:none; }
+.lunara-archive-media-editor [hidden], .lunara-archive-media-editor .lunara-archive-media-row [hidden] { display:none; }
 .lunara-archive-media-editor :focus-visible { outline:3px solid #005fcc; outline-offset:3px; }
 @media(max-width:480px) { .lunara-editor-framing { grid-template-columns:minmax(0,1fr); } }

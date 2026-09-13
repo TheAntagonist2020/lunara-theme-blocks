@@ -2813,8 +2813,13 @@ function lunara_customize_retire_portal_studio_controls( $wp_customize ) {
     foreach ( lunara_oscars_portal_studio_identity_specs() as $spec ) { $covered[] = $spec['setting']; }
     foreach ( lunara_oscars_portal_studio_visibility_owners() as $owner ) { if ( $owner['setting'] ) { $covered[] = $owner['setting']; } }
     foreach ( $covered as $setting ) { $wp_customize->remove_control( $setting ); $wp_customize->remove_setting( $setting ); }
+    // Retiring registrations prevents stale Customizer saves; stored theme mods remain intact.
+    foreach ( lunara_oscars_portal_studio_button_specs() as $spec ) { $wp_customize->remove_control( $spec['setting'] ); $wp_customize->remove_setting( $spec['setting'] ); }
+    foreach ( lunara_oscars_portal_studio_quick_start_specs() as $spec ) {
+        foreach ( array( 'enabled', 'kicker', 'title', 'copy', 'url' ) as $field ) { $setting = 'lunara_oscars_portal_card_' . $spec['slot'] . '_' . $field; $wp_customize->remove_control( $setting ); $wp_customize->remove_setting( $setting ); }
+    }
     $section = $wp_customize->get_section( 'lunara_oscars_portal_options' );
-    if ( $section ) { $section->description = '<a href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-portal' ) ) . '">' . esc_html__( 'Open Site Studio for Portal copy, visibility, order and presentation.', 'lunara-film' ) . '</a>'; }
+    if ( $section ) { $section->description = '<a href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-portal' ) ) . '">' . esc_html__( 'Open Site Studio for Portal copy, hero buttons, Quick Start cards, visibility, order and presentation.', 'lunara-film' ) . '</a>'; }
 }
 add_action( 'customize_register', 'lunara_customize_retire_portal_studio_controls', 100 );
 
