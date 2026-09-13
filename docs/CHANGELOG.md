@@ -11,6 +11,20 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-13 — Academy 2.7.84 category names and mobile dossiers
+
+Category discovery displays Production Design and Sound, including modern slug
+aliases that retain the canonical Art Direction and Sound Mixing identities.
+Dated ceremony output keeps historical category names; category indexes use the
+current names. Ceremony rollups use a new cache version and retire both versions
+through the existing invalidation path.
+
+Ceremony, category, film and person pages gain readable phone titles, 44px
+actions, compact statistics and bounded portraits. Saved image fit and focal
+points continue to control artwork. Existing desktop composition and all
+canonical data remain intact. Plugin PR #29 merged; public acceptance follows
+Dalton's manual deployment.
+
 ## 2026-09-13 — Theme 3.2.75 Oscars Winner Controls
 
 The Oscars inspector adds Winner sections for the latest ceremony and rotating

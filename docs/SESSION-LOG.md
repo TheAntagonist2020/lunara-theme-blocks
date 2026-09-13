@@ -25,7 +25,93 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Academy 2.7.84 merged; full completion goal in progress
+
+### Headline
+
+Dalton authorized finishing all seven steps in the agreed delivery order.
+Academy 2.7.84 passed CI and merged in plugin PR #29. It awaits Dalton's manual
+deployment. Theme work is on `codex/site-experience-3.2.76`, still an unreleased
+candidate. The full acceptance checklist is [SITE-COMPLETION-PLAN.md](SITE-COMPLETION-PLAN.md).
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| Theme 3.2.75 versioned public canary | Three reads agree on `3.2.75+20260913-211752`; Journal and Oscars `LIVE_COHERENT`, exit 0 / GO. |
+| Authenticated Oscars Winner sections | Browser reconnected; Live settings loaded, no dirty state. Latest and rotating sections open with all seven saved fields, fallback-heading help and the 7.2-second timing value. |
+| Jetpack Boost settings, read-only | JPEG quality 82, PNG/WebP 80. Critical CSS last generated two days earlier; advanced view reports redirect/404 groups on old pick/fact taxonomy paths. No regeneration or settings write performed. |
+
+### What shipped and why
+
+See the Academy 2.7.84 changelog. Current category discovery gains Production
+Design and Sound names and modern aliases, while dated history retains the
+correct historical labels. Academy detail pages gain readable phone titles,
+44px actions and compact summary layouts. These changes are merged, not verified
+live. No agent deployment, cache purge or production settings write occurred.
+
+The theme candidate adds Journal article presentation ownership and article
+layout fixes, consistent Header Command navigation, and ongoing Latest Reviews
+and Academy dossier editor work. Do not deploy this working branch or equate
+focused candidate tests with release acceptance.
+
+### Commit ledger
+
+| Repo | Commit or reference | Meaning |
+| --- | --- | --- |
+| Theme | `414443be348be83c31f8de24cdee9c039675ab1b` / PR #195 | Main and verified live Theme 3.2.75. |
+| Theme | `codex/site-experience-3.2.76` | In-progress candidate, includes the prior acceptance documentation. |
+| Academy plugin | `26bf3c876ef683824f1c6b257af3598beda2f3af` | Reviewed and tested 2.7.84 candidate. |
+| Academy plugin | `2fea87341f1865142c253395064913c5cccb611c` / PR #29 | Merged on main; manual deployment pending. |
+
+### Gate ledger
+
+- Academy: 31 portable PHP contracts pass, including 48 category runtime checks.
+  The same two missing external-fixture provenance contracts excluded by CI are
+  not counted as passes. PHP syntax and diff checks pass.
+- Academy captured public-output browser matrix: 859 assertions, four actual
+  PHP-rendered route captures at 320/390/768/1440px, reduced motion and no JS.
+  Saved fit/focal behavior and missing/long content cases are covered. The manual
+  capture harness is not a CI browser job or local database-template fixture.
+- Alias, historical-label, action size, title width and summary-column mutations
+  fail as expected. Hub CSS remains within its unchanged budget at 6,976 bytes.
+- Plugin CI Lint run `34784815917` passed on the exact candidate SHA before merge.
+- Theme focused article matrix: 360 assertions across 32 scenarios. Header:
+  64 PHP and 55 browser checks. Journal article editor: 37 provider and 39
+  browser checks, shared transaction/preview tests and relevant mutations pass.
+  Full theme gates/version bump/release review await the completed candidate.
+- No theme merge occurred. The existing PR #159 rollback proof remains based
+  on current theme main; rebuild after the next theme merge.
+
+### Corrections
+
+The preceding entry's browser-unavailable statement was true at that point.
+The connection was restored and live Winner sections read-only acceptance is
+now complete. The old Boost JPEG-quality-100 task is also obsolete: current
+quality is already 82. Critical CSS remains an open, separately measured task.
+
+### Logged, not fixed
+
+Footer link and 404 editor ownership, full public route acceptance, Critical
+CSS failures, stylesheet weight, loading/layout-shift measurement and final
+editorial curation remain open. Approximate publication counts are inventory,
+not proof of NTFCA eligibility. See the complete checklist rather than narrowing
+the goal to this release batch.
+
+### Punch-list carried forward / whose move is next
+
+Dalton can deploy Academy 2.7.84 from the existing WordPress.com plugin repository
+connection. Agent continues the theme batch, resolves independent review and
+runs full release gates, then prepares its merge and exact rollback. After each
+manual deployment, agent verifies public identity and the changed reader/editor
+surfaces. All seven workstreams remain governed by the completion checklist.
+
+---
+
 ## 2026-09-13 — Theme 3.2.75 public acceptance and remaining delivery order
+
+**Later update:** browser acceptance and the authorized implementation goal are
+recorded in the newer Academy 2.7.84 / completion-goal entry above.
 
 ### Headline
 
