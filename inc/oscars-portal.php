@@ -49,9 +49,7 @@ function lunara_render_oscars_portal_markup() {
     $hero_style        = '';
 
     if ( '' !== $hero_backdrop_url ) {
-        // 3.2.62: the backdrop is meant to be seen. Dark enough on the left for
-        // the copy, open in the middle, dark again under the poster card.
-        $hero_style = "background-image: linear-gradient(112deg, rgba(7,16,27,.9) 0%, rgba(7,16,27,.66) 34%, rgba(7,16,27,.34) 58%, rgba(7,16,27,.9) 100%), url('" . esc_url( $hero_backdrop_url ) . "'); background-size: cover; background-position: center;";
+        $hero_style = "background-image: linear-gradient(120deg, rgba(7,16,27,.92) 0%, rgba(7,16,27,.86) 48%, rgba(7,16,27,.97) 100%), url('" . esc_url( $hero_backdrop_url ) . "'); background-size: cover; background-position: center;";
     }
 
     $hero_title_card = array();
@@ -95,7 +93,12 @@ function lunara_render_oscars_portal_markup() {
     );
 
     // Backdrop images keyed by portal card — iconic Oscar titles.
-    $portal_backdrop_map = function_exists( 'lunara_oscars_portal_door_backdrop_map' ) ? lunara_oscars_portal_door_backdrop_map() : array();
+    $portal_backdrop_map = array(
+        'Ceremonies' => 'tt7286456',  // Joker
+        'Categories' => 'tt1375666',  // Inception
+        'Ledger'     => 'tt0111161',  // The Shawshank Redemption
+        'About'      => 'tt0068646',  // The Godfather
+    );
     $portal_backdrops = array();
     if ( class_exists( 'Academy_Awards_Table' ) ) {
         $aat_inst = Academy_Awards_Table::get_instance();
@@ -147,7 +150,7 @@ function lunara_render_oscars_portal_markup() {
                 <h1 class="lunara-archive-hero-title"><?php echo esc_html( get_the_title() ); ?></h1>
             </section>
         <?php else : ?>
-            <section class="lunara-home-section lunara-oscars-portal-hero<?php echo '' !== $hero_style ? ' has-backdrop' : ''; ?>"<?php if ( '' !== $hero_style ) : ?> style="<?php echo esc_attr( $hero_style ); ?>"<?php endif; ?>>
+            <section class="lunara-home-section lunara-oscars-portal-hero"<?php if ( '' !== $hero_style ) : ?> style="<?php echo esc_attr( $hero_style ); ?>"<?php endif; ?>>
                 <div class="lunara-oscars-portal-hero-grid">
                     <div class="lunara-oscars-portal-copy">
                         <p class="lunara-home-section-kicker"><?php echo esc_html( $hero_kicker ); ?></p>
@@ -394,21 +397,9 @@ function lunara_render_oscars_portal_direct() {
 
 /**
  * Add a body class so the portal can be styled without relying on generic page shells.
- *
- * Gate parity: the route seed and stylesheet enqueue on the whole portal
- * family (lunara_is_oscars_portal_route — the resolved /oscars/ page OR any
- * page assigned page-oscars.php), so the class-scoped styling owner must
- * stamp on the same family or a template-assigned page renders half-styled
- * (seed only, no body.lunara-oscars-portal-page rules). The narrow
- * is_page('oscars') detector remains the fallback when the family module
- * is not loaded.
  */
 function lunara_oscars_portal_body_class( $classes ) {
-    $is_portal_route = function_exists( 'lunara_is_oscars_portal_route' )
-        ? ( ! is_admin() && lunara_is_oscars_portal_route() )
-        : lunara_is_oscars_portal_page();
-
-    if ( $is_portal_route ) {
+    if ( lunara_is_oscars_portal_page() ) {
         $classes[] = 'lunara-oscars-portal-page';
     }
 
@@ -446,8 +437,6 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 			$status   = sanitize_key( (string) get_post_meta( $pick_id, '_lunara_pick_status', true ) );
 			$url      = trim( (string) get_post_meta( $pick_id, '_lunara_pick_oscar_entity_url', true ) );
 			$year     = absint( get_post_meta( $pick_id, '_lunara_pick_ceremony_year', true ) );
-			$imdb_id  = strtolower( trim( (string) get_post_meta( $pick_id, '_lunara_pick_imdb_id', true ) ) );
-			$nm_id    = strtolower( trim( (string) get_post_meta( $pick_id, '_lunara_pick_person_id', true ) ) );
 			if ( $year > $ceremony_year ) {
 				$ceremony_year = $year;
 			}
@@ -456,27 +445,17 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 				$call = html_entity_decode( get_the_title( $pick_id ), ENT_QUOTES, 'UTF-8' );
 			}
 			$rows[] = array(
-				'id'        => $pick_id,
-				'category'  => $category,
-				'call'      => $call,
-				'film'      => ( '' !== $person && '' !== $film ) ? $film : '',
-				'film_raw'  => $film,
-				'person'    => $person,
-				'status'    => $status,
-				'url'       => $url,
-				'imdb_id'   => $imdb_id,
-				'person_id' => $nm_id,
+				'category' => $category,
+				'call'     => $call,
+				'film'     => ( '' !== $person && '' !== $film ) ? $film : '',
+				'status'   => $status,
+				'url'      => $url,
 			);
 		}
 
 		if ( empty( $rows ) ) {
 			return '';
 		}
-
-		// 3.2.62: the poster wall. Art per pick (the pick's own image, then a
-		// headshot, then the film's poster) is resolved and cached outside the
-		// renderer so this stays anonymous-cacheable and harness-extractable.
-		$visuals = function_exists( 'lunara_oscars_pick_visuals' ) ? (array) lunara_oscars_pick_visuals( $rows ) : array();
 
 		$heading = $ceremony_year
 			? sprintf( /* translators: %d: ceremony year */ __( 'The desk calls the %d ceremony, category by category.', 'lunara-film' ), $ceremony_year )
@@ -492,16 +471,8 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 				</div>
 			</div>
 			<ol class="lunara-oscars-board-list">
-				<?php foreach ( $rows as $row ) :
-					$art       = isset( $visuals[ $row['id'] ] ) && is_array( $visuals[ $row['id'] ] ) ? $visuals[ $row['id'] ] : array();
-					$art_src   = trim( (string) ( $art['src'] ?? '' ) );
-					$art_kind  = preg_replace( '/[^a-z]/', '', strtolower( (string) ( $art['kind'] ?? '' ) ) );
-					$row_class = 'lunara-oscars-board-row' . ( '' !== $row['status'] ? ' is-status-' . esc_attr( $row['status'] ) : '' ) . ( '' !== $art_src ? ' has-art' . ( '' !== $art_kind ? ' has-art-' . $art_kind : '' ) : '' );
-				?>
-					<li class="<?php echo esc_attr( $row_class ); ?>">
-						<?php if ( '' !== $art_src ) : ?>
-							<span class="lunara-oscars-board-art" aria-hidden="true"><img src="<?php echo esc_url( $art_src ); ?>" alt="" loading="lazy" decoding="async" /></span>
-						<?php endif; ?>
+				<?php foreach ( $rows as $row ) : ?>
+					<li class="lunara-oscars-board-row<?php echo '' !== $row['status'] ? ' is-status-' . esc_attr( $row['status'] ) : ''; ?>">
 						<span class="lunara-oscars-board-category"><?php echo esc_html( $row['category'] ); ?></span>
 						<span class="lunara-oscars-board-call">
 							<?php if ( '' !== $row['url'] ) : ?>
@@ -514,7 +485,7 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 							<?php endif; ?>
 						</span>
 						<?php if ( '' !== $row['status'] ) : ?>
-							<span class="lunara-oscars-board-status"><?php echo esc_html( strtoupper( str_replace( '_', ' ', $row['status'] ) ) ); ?></span>
+							<span class="lunara-oscars-board-status"><?php echo esc_html( strtoupper( $row['status'] ) ); ?></span>
 						<?php endif; ?>
 					</li>
 				<?php endforeach; ?>
@@ -525,423 +496,3 @@ if ( ! function_exists( 'lunara_render_oscars_prediction_board' ) ) {
 		return trim( ob_get_clean() );
 	}
 }
-
-if ( ! function_exists( 'lunara_oscars_portal_landing_sections' ) ) {
-	/**
-	 * One owner per block on the portal page (Theme 3.2.58).
-	 *
-	 * The Academy Awards plugin's landing hub renders inside the portal's
-	 * research shell. Two of its blocks restate what the portal already
-	 * shows above it: the Latest Ceremony marquee (the portal's spotlights
-	 * and latest-winners sections) and the Latest Winner Circle (the
-	 * ceremony winners grid). Drop those two here, on the portal page only,
-	 * through the plugin's `aat_landing_route_sections` composer. Every
-	 * other landing block (header, metrics, poster highlights, footer) is
-	 * untouched, and the hub is byte-identical everywhere else.
-	 *
-	 * @param array<string,string> $sections Landing sections keyed by slug.
-	 * @return array<string,string>
-	 */
-	function lunara_oscars_portal_landing_sections( $sections ) {
-		if ( ! is_array( $sections ) || ! function_exists( 'lunara_is_oscars_portal_page' ) || ! lunara_is_oscars_portal_page() ) {
-			return $sections;
-		}
-
-		unset( $sections['ceremony-marquee'], $sections['winner-circle'] );
-
-		return $sections;
-	}
-	add_filter( 'aat_landing_route_sections', 'lunara_oscars_portal_landing_sections' );
-}
-
-/* ---------------------------------------------------------------------------
- * Oscars portal, Theme 3.2.62: the poster wall's art and the backdrop warmer.
- *
- * Picks store a film title and a person's name, not ids, so the board could
- * never show a picture. Each pick's art is now resolved in this order:
- *   1. the pick's own featured image (the CPT was built for those);
- *   2. the person's ledger headshot, by pinned nm id, by an nm id in the
- *      ledger URL, or by matching the name against recent ceremony ballots;
- *   3. the film's poster, by pinned tt id, by a tt id in the ledger URL, or by
- *      matching the title against movie and review posts on this site.
- * Every lookup here is local; nothing on the anonymous render path calls out.
- * TMDB backdrops (hero, doors, rotation) only exist in the plugin's cache
- * when something fetched them, so a daily cron warms them off-request.
- * ------------------------------------------------------------------------ */
-
-if ( ! function_exists( 'lunara_oscars_portal_door_backdrop_map' ) ) {
-	function lunara_oscars_portal_door_backdrop_map() {
-		return array(
-			'Ceremonies' => 'tt7286456',  // Joker
-			'Categories' => 'tt1375666',  // Inception
-			'Ledger'     => 'tt0111161',  // The Shawshank Redemption
-			'About'      => 'tt0068646',  // The Godfather
-		);
-	}
-}
-
-if ( ! function_exists( 'lunara_oscars_pick_id_from_text' ) ) {
-	function lunara_oscars_pick_id_from_text( $text, $prefix = 'tt' ) {
-		$prefix = 'nm' === $prefix ? 'nm' : 'tt';
-		if ( ! is_scalar( $text ) ) {
-			return '';
-		}
-		if ( preg_match( '/\b(' . $prefix . '\d{5,9})\b/i', (string) $text, $m ) ) {
-			return strtolower( $m[1] );
-		}
-		return '';
-	}
-}
-
-if ( ! function_exists( 'lunara_oscars_person_key' ) ) {
-	function lunara_oscars_person_key( $name ) {
-		$name = (string) $name;
-		if ( function_exists( 'remove_accents' ) ) {
-			$name = remove_accents( $name );
-		}
-		$name = strtolower( trim( $name ) );
-		$name = preg_replace( '/[^a-z0-9]+/', ' ', $name );
-		return trim( (string) $name );
-	}
-}
-
-if ( ! function_exists( 'lunara_oscars_person_index_absorb' ) ) {
-	function lunara_oscars_person_index_absorb( &$index, $row ) {
-		if ( ! is_array( $row ) ) {
-			return;
-		}
-		$names = array_values( array_filter( array_map( 'trim', explode( '|', (string) ( $row['nominees'] ?? '' ) ) ), 'strlen' ) );
-		$ids   = array_values( array_filter( array_map( 'trim', explode( '|', (string) ( $row['nominee_ids'] ?? '' ) ) ), 'strlen' ) );
-		if ( ! empty( $names ) && count( $names ) === count( $ids ) ) {
-			foreach ( $names as $i => $name ) {
-				$nm  = lunara_oscars_pick_id_from_text( $ids[ $i ], 'nm' );
-				$key = lunara_oscars_person_key( $name );
-				if ( '' !== $nm && '' !== $key && ! isset( $index[ $key ] ) ) {
-					$index[ $key ] = $nm;
-				}
-			}
-		}
-		$winner = trim( (string) ( $row['name'] ?? '' ) );
-		if ( '' !== $winner && 1 === count( $ids ) ) {
-			$nm  = lunara_oscars_pick_id_from_text( $ids[0], 'nm' );
-			$key = lunara_oscars_person_key( $winner );
-			if ( '' !== $nm && '' !== $key && ! isset( $index[ $key ] ) ) {
-				$index[ $key ] = $nm;
-			}
-		}
-	}
-}
-
-if ( ! function_exists( 'lunara_oscars_person_name_index' ) ) {
-	/**
-	 * name-key => nm id for everyone on the last eight ceremony ballots.
-	 * Built only when $build is true (the warmer); the render path reads the
-	 * cached index or gets an empty array and falls back to the film poster.
-	 */
-	function lunara_oscars_person_name_index( $build = false ) {
-		$key    = 'lunara_oscars_person_index_v1';
-		$cached = get_transient( $key );
-		if ( is_array( $cached ) ) {
-			return $cached;
-		}
-		if ( ! $build ) {
-			return array();
-		}
-		$index = array();
-		$aat   = function_exists( 'lunara_get_oscars_plugin' ) ? lunara_get_oscars_plugin() : null;
-		if ( $aat && method_exists( $aat, 'get_max_ceremony' ) ) {
-			$max = (int) $aat->get_max_ceremony();
-			for ( $c = $max; $c > $max - 8 && $c > 0; $c-- ) {
-				$rows = array();
-				if ( method_exists( $aat, 'get_ceremony_rollup' ) ) {
-					$rollup = $aat->get_ceremony_rollup( $c );
-					$rows   = array_merge( $rows, is_array( $rollup['winner_rows'] ?? null ) ? $rollup['winner_rows'] : array() );
-				}
-				if ( method_exists( $aat, 'get_ceremony_ballot_ledger' ) ) {
-					$ledger = $aat->get_ceremony_ballot_ledger( $c );
-					foreach ( is_array( $ledger['categories'] ?? null ) ? $ledger['categories'] : array() as $group ) {
-						$rows = array_merge( $rows, is_array( $group['rows'] ?? null ) ? $group['rows'] : array() );
-					}
-				}
-				foreach ( $rows as $row ) {
-					lunara_oscars_person_index_absorb( $index, $row );
-				}
-			}
-		}
-		set_transient( $key, $index, 12 * HOUR_IN_SECONDS );
-		return $index;
-	}
-}
-
-if ( ! function_exists( 'lunara_oscars_find_post_for_film' ) ) {
-	/**
-	 * Exact-title match against movie posts (imdb_title_id) then reviews
-	 * (_lunara_imdb_title_id). Returns the tt id when the post carries one and
-	 * the post id either way, so its featured image can stand in for a poster.
-	 */
-	function lunara_oscars_find_post_for_film( $film ) {
-		$empty = array( 'tt' => '', 'post_id' => 0 );
-		$film  = trim( (string) $film );
-		if ( '' === $film || ! class_exists( 'WP_Query' ) ) {
-			return $empty;
-		}
-		foreach ( array( array( 'movie', 'imdb_title_id' ), array( 'review', '_lunara_imdb_title_id' ) ) as $target ) {
-			if ( function_exists( 'post_type_exists' ) && ! post_type_exists( $target[0] ) ) {
-				continue;
-			}
-			$query = new WP_Query(
-				array(
-					'post_type'              => $target[0],
-					'post_status'            => 'publish',
-					'title'                  => $film,
-					'fields'                 => 'ids',
-					'posts_per_page'         => 1,
-					'orderby'                => 'date',
-					'order'                  => 'DESC',
-					'no_found_rows'          => true,
-					'ignore_sticky_posts'    => true,
-					'update_post_term_cache' => false,
-				)
-			);
-			foreach ( (array) $query->posts as $post_id ) {
-				$post_id = (int) $post_id;
-				if ( $post_id <= 0 ) {
-					continue;
-				}
-				return array(
-					'tt'      => lunara_oscars_pick_id_from_text( get_post_meta( $post_id, $target[1], true ), 'tt' ),
-					'post_id' => $post_id,
-				);
-			}
-		}
-		return $empty;
-	}
-}
-
-if ( ! function_exists( 'lunara_oscars_board_visuals_stamp' ) ) {
-	function lunara_oscars_board_visuals_stamp() {
-		return (string) get_option( 'lunara_oscars_board_visuals_stamp', '0' );
-	}
-}
-
-if ( ! function_exists( 'lunara_oscars_board_art_invalidate' ) ) {
-	function lunara_oscars_board_art_invalidate() {
-		update_option( 'lunara_oscars_board_visuals_stamp', (string) time(), false );
-	}
-}
-
-if ( ! function_exists( 'lunara_oscars_pick_visuals' ) ) {
-	/**
-	 * pick id => array( 'src' => url, 'kind' => photo|portrait|poster ).
-	 * Cached for twelve hours against the picks' modified stamps and the
-	 * invalidation stamp, so a saved pick or a warm run rebuilds it.
-	 */
-	function lunara_oscars_pick_visuals( $rows ) {
-		if ( ! function_exists( 'get_transient' ) || ! is_array( $rows ) ) {
-			return array();
-		}
-		$stamp_parts = array();
-		foreach ( $rows as $row ) {
-			$id = (int) ( $row['id'] ?? 0 );
-			if ( $id > 0 ) {
-				$stamp_parts[] = $id . ':' . (string) get_post_field( 'post_modified_gmt', $id );
-			}
-		}
-		if ( empty( $stamp_parts ) ) {
-			return array();
-		}
-		$key    = 'lunara_oscars_board_art_' . md5( implode( '|', $stamp_parts ) . '|' . lunara_oscars_board_visuals_stamp() );
-		$cached = get_transient( $key );
-		if ( is_array( $cached ) ) {
-			return $cached;
-		}
-
-		$aat   = function_exists( 'lunara_get_oscars_plugin' ) ? lunara_get_oscars_plugin() : null;
-		$index = lunara_oscars_person_name_index( false );
-		$map   = array();
-
-		foreach ( $rows as $row ) {
-			$id = (int) ( $row['id'] ?? 0 );
-			if ( $id <= 0 ) {
-				continue;
-			}
-			$src    = '';
-			$kind   = '';
-			$person = trim( (string) ( $row['person'] ?? '' ) );
-			$url    = (string) ( $row['url'] ?? '' );
-
-			$thumb = get_the_post_thumbnail_url( $id, 'medium_large' );
-			if ( is_string( $thumb ) && '' !== $thumb ) {
-				$src  = $thumb;
-				$kind = 'photo';
-			}
-
-			if ( '' === $src && '' !== $person && $aat && method_exists( $aat, 'get_person_visual_package' ) ) {
-				$nm = lunara_oscars_pick_id_from_text( (string) ( $row['person_id'] ?? '' ), 'nm' );
-				if ( '' === $nm ) {
-					$nm = lunara_oscars_pick_id_from_text( $url, 'nm' );
-				}
-				if ( '' === $nm ) {
-					$pkey = lunara_oscars_person_key( $person );
-					$nm   = ( '' !== $pkey && isset( $index[ $pkey ] ) ) ? (string) $index[ $pkey ] : '';
-				}
-				if ( '' !== $nm ) {
-					$pv       = $aat->get_person_visual_package( $nm, 'medium_large' );
-					$portrait = is_array( $pv ) ? trim( (string) ( $pv['portrait_url'] ?? '' ) ) : '';
-					if ( '' !== $portrait ) {
-						$src  = $portrait;
-						$kind = 'portrait';
-					}
-				}
-			}
-
-			if ( '' === $src ) {
-				$film = trim( (string) ( $row['film_raw'] ?? '' ) );
-				if ( '' === $film && '' === $person ) {
-					$film = trim( (string) ( $row['call'] ?? '' ) );
-				}
-				$tt      = lunara_oscars_pick_id_from_text( (string) ( $row['imdb_id'] ?? '' ), 'tt' );
-				$post_id = 0;
-				if ( '' === $tt ) {
-					$tt = lunara_oscars_pick_id_from_text( $url, 'tt' );
-				}
-				if ( '' === $tt && '' !== $film ) {
-					$found   = lunara_oscars_find_post_for_film( $film );
-					$tt      = (string) $found['tt'];
-					$post_id = (int) $found['post_id'];
-				}
-				if ( '' !== $tt && $aat && method_exists( $aat, 'get_title_visual_package' ) ) {
-					$tv     = $aat->get_title_visual_package( $tt, 'medium_large' );
-					$poster = is_array( $tv ) ? trim( (string) ( $tv['poster_url'] ?? '' ) ) : '';
-					if ( '' === $poster && is_array( $tv ) && ! empty( $tv['poster_html'] ) && preg_match( '/\ssrc="([^"]+)"/i', (string) $tv['poster_html'], $m ) ) {
-						$poster = trim( (string) $m[1] );
-					}
-					if ( '' !== $poster ) {
-						$src  = $poster;
-						$kind = 'poster';
-					}
-				}
-				if ( '' === $src && $post_id > 0 ) {
-					$thumb = get_the_post_thumbnail_url( $post_id, 'medium_large' );
-					if ( is_string( $thumb ) && '' !== $thumb ) {
-						$src  = $thumb;
-						$kind = 'poster';
-					}
-				}
-			}
-
-			if ( '' !== $src ) {
-				$map[ $id ] = array( 'src' => $src, 'kind' => $kind );
-			}
-		}
-
-		set_transient( $key, $map, 12 * HOUR_IN_SECONDS );
-		return $map;
-	}
-}
-
-if ( ! function_exists( 'lunara_oscars_portal_collect_title_ids' ) ) {
-	/**
-	 * Every tt id the portal paints a backdrop or poster for: the door films,
-	 * the latest ceremony's best picture and spotlights, the board's picks and
-	 * the rotation's winners. Bounded so a warm run stays short.
-	 */
-	function lunara_oscars_portal_collect_title_ids() {
-		$ids = array();
-		foreach ( lunara_oscars_portal_door_backdrop_map() as $tt ) {
-			$ids[ $tt ] = true;
-		}
-		if ( function_exists( 'lunara_get_home_oscars_snapshot' ) ) {
-			$snapshot = lunara_get_home_oscars_snapshot();
-			$bp       = lunara_oscars_pick_id_from_text( (string) ( $snapshot['best_picture']['film_id'] ?? '' ), 'tt' );
-			if ( '' !== $bp ) {
-				$ids[ $bp ] = true;
-			}
-			foreach ( is_array( $snapshot['spotlights'] ?? null ) ? $snapshot['spotlights'] : array() as $spot ) {
-				$tt = lunara_oscars_pick_id_from_text( (string) ( $spot['film_id'] ?? '' ), 'tt' );
-				if ( '' !== $tt ) {
-					$ids[ $tt ] = true;
-				}
-			}
-			foreach ( is_array( $snapshot['rollup']['winner_rows'] ?? null ) ? $snapshot['rollup']['winner_rows'] : array() as $wrow ) {
-				$tt = lunara_oscars_pick_id_from_text( (string) ( $wrow['film_id'] ?? '' ), 'tt' );
-				if ( '' !== $tt ) {
-					$ids[ $tt ] = true;
-				}
-			}
-		}
-		if ( function_exists( 'lunara_get_rotating_oscars_ceremony_showcase' ) ) {
-			$showcase = lunara_get_rotating_oscars_ceremony_showcase( 10 );
-			foreach ( is_array( $showcase['winner_cards'] ?? null ) ? $showcase['winner_cards'] : array() as $card ) {
-				$tt = lunara_oscars_pick_id_from_text( (string) ( $card['film_id'] ?? '' ), 'tt' );
-				if ( '' !== $tt ) {
-					$ids[ $tt ] = true;
-				}
-			}
-		}
-		if ( function_exists( 'lunara_get_oscar_picks' ) ) {
-			$picks = lunara_get_oscar_picks( array( 'posts_per_page' => 30 ) );
-			$posts = ( $picks instanceof WP_Query ) ? $picks->posts : (array) $picks;
-			foreach ( $posts as $pick ) {
-				$pick_id = $pick instanceof WP_Post ? $pick->ID : absint( $pick );
-				$tt      = lunara_oscars_pick_id_from_text( get_post_meta( $pick_id, '_lunara_pick_imdb_id', true ), 'tt' );
-				if ( '' === $tt ) {
-					$tt = lunara_oscars_pick_id_from_text( get_post_meta( $pick_id, '_lunara_pick_oscar_entity_url', true ), 'tt' );
-				}
-				if ( '' === $tt ) {
-					$found = lunara_oscars_find_post_for_film( get_post_meta( $pick_id, '_lunara_pick_film', true ) );
-					$tt    = (string) $found['tt'];
-				}
-				if ( '' !== $tt ) {
-					$ids[ $tt ] = true;
-				}
-			}
-		}
-		return array_slice( array_keys( $ids ), 0, 60 );
-	}
-}
-
-if ( ! function_exists( 'lunara_oscars_portal_warm_visuals' ) ) {
-	/**
-	 * Daily, off the request path: fetch and cache TMDB packages for the
-	 * portal's films (the plugin caches them seven days), rebuild the person
-	 * index, and stamp the board art so the next render picks it all up.
-	 */
-	function lunara_oscars_portal_warm_visuals() {
-		$aat = function_exists( 'lunara_get_oscars_plugin' ) ? lunara_get_oscars_plugin() : null;
-		if ( ! $aat || ! method_exists( $aat, 'get_title_visual_package' ) ) {
-			return;
-		}
-		delete_transient( 'lunara_oscars_person_index_v1' );
-		lunara_oscars_person_name_index( true );
-		foreach ( lunara_oscars_portal_collect_title_ids() as $tt ) {
-			$aat->get_title_visual_package( $tt, 'large', true );
-		}
-		lunara_oscars_board_art_invalidate();
-		if ( function_exists( 'lunara_flush_oscars_home_transients' ) ) {
-			lunara_flush_oscars_home_transients();
-		}
-	}
-	add_action( 'lunara_oscars_portal_warm_visuals', 'lunara_oscars_portal_warm_visuals' );
-	add_action( 'lunara_oscars_portal_warm_visuals_now', 'lunara_oscars_portal_warm_visuals' );
-}
-
-if ( ! function_exists( 'lunara_oscars_portal_schedule_warm' ) ) {
-	function lunara_oscars_portal_schedule_warm() {
-		if ( function_exists( 'wp_next_scheduled' ) && ! wp_next_scheduled( 'lunara_oscars_portal_warm_visuals' ) ) {
-			wp_schedule_event( time() + 120, 'daily', 'lunara_oscars_portal_warm_visuals' );
-		}
-	}
-	add_action( 'init', 'lunara_oscars_portal_schedule_warm' );
-}
-
-if ( ! function_exists( 'lunara_oscars_pick_after_save' ) ) {
-	function lunara_oscars_pick_after_save( $post_id ) {
-		lunara_oscars_board_art_invalidate();
-		if ( function_exists( 'wp_next_scheduled' ) && ! wp_next_scheduled( 'lunara_oscars_portal_warm_visuals_now' ) ) {
-			wp_schedule_single_event( time() + 30, 'lunara_oscars_portal_warm_visuals_now' );
-		}
-	}
-	add_action( 'aat_after_data_import', 'lunara_oscars_board_art_invalidate' );
-}
-
