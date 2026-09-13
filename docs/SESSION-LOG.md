@@ -25,6 +25,97 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Theme 3.2.75 public acceptance and remaining delivery order
+
+### Headline
+
+Dalton reported the manual deployment of PR #195. Theme 3.2.75 is now verified
+live by the versioned public canary. This session records acceptance and the
+proposed order of remaining work; no new feature implementation has started.
+Dalton requested the sequence before continuing development.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| Three anonymous public build reads | All return HTTP 200 and `3.2.75+20260913-211752`. |
+| Journal canonical sentinel | `LIVE_COHERENT`, exit 0. |
+| Oscars canonical sentinel | `LIVE_COHERENT`, exit 0. |
+| Versioned 3.2.75 verifier | Exit 0 / GO. |
+
+### What shipped and why
+
+PR #195 adds the seven existing Oscars winner presentation controls to Site
+Studio. See the 3.2.75 changelog and preceding session entry for implementation
+and pre-release evidence. This session changes documentation only. No agent
+deployment, cache purge or production settings write occurred.
+
+### Commit ledger
+
+| Repo | Commit or release reference | Meaning |
+| --- | --- | --- |
+| Theme | `414443be348be83c31f8de24cdee9c039675ab1b` / PR #195 | Current main, containing the now-live 3.2.75 release. |
+| Theme | `codex/acceptance-roadmap-3.2.75` | Documentation-only live acceptance and proposed work order. |
+
+### Gate ledger
+
+- Versioned production canary: GO; local evidence is
+  `_carousel-artifacts/oscars-winners-3.2.75/live-canary-3.2.75.log` in the parent
+  workspace.
+- Existing browser connection is unavailable. Live Winner sections form and
+  visual acceptance remain pending; no new browser acceptance is claimed.
+- The unchanged release's full 95/95 theme contracts, syntax, browser and
+  mutation results remain in the preceding entry. They were not rerun for this
+  read-only production verification and documentation update.
+- No merge occurred in this session. The existing rollback proof for current
+  main records the exact tree, current first parent and simulated merge; a new
+  docs merge will require rebuilding the standing hatch again.
+
+### Corrections
+
+The preceding entry's deployment-pending statement is superseded by the public
+3.2.75 acceptance above. Its historical pre-deployment evidence is unchanged.
+
+### Logged, not fixed
+
+Production Design and Sound naming/routes, remaining editor ownership, article
+and Academy dossier presentation, shared Search navigation, and performance
+remain open. Current Jetpack Boost settings have not been rechecked; the older
+Critical CSS and image quality items require inspection before changing them.
+
+### Punch-list carried forward
+
+Recommended order, presented to Dalton before further implementation:
+
+1. Correct current Production Design and Sound display names and add modern
+   route aliases in the Academy plugin, retaining historical identities/links.
+2. Complete remaining editor coverage and ownership, with consistent artwork,
+   ordering and Preview/Apply/Discard/History where applicable. Article writing
+   and Academy data maintenance keep their appropriate owners.
+3. Refine individual Review and Journal article layouts: typography, reading
+   width, images, related stories and phone presentation.
+4. Refine Academy ceremony, category, film and person dossiers: readable
+   information, consistent artwork and reliable navigation between records.
+5. Finish the shared header, search, footer and sitewide responsive/accessibility
+   pass, including the known inconsistent textual Search navigation item.
+6. Measure and address image delivery, Critical CSS, stylesheet weight and
+   demonstrated loading/layout-shift problems on representative pages.
+7. Curate opening lineups and complete editorial readiness for the North Texas
+   Film Critics Association: current coverage, discoverable review archive and
+   a complete reader journey. Publishing coverage is separate editorial work.
+
+Each implementation receives focused acceptance as it ships; the later sitewide
+pass supplements those checks. The four landing pages' previous mobile fixes
+remain verified work, not a claim that all article/dossier routes are finished.
+
+### Whose move it is next
+
+Agent: present this order, then resume with the focused category plugin repair.
+Complete the live Winner sections UI acceptance when the browser connection is
+available. Dalton retains the manual deployment action for future releases.
+
+---
+
 ## 2026-09-13 — Theme 3.2.74 acceptance and 3.2.75 Oscars winners
 
 ### Headline
