@@ -364,6 +364,12 @@ async function assertStructure(page, scenario) {
         };
         return {
             lanes,
+            viewport: innerWidth,
+            outerPadding: [getComputedStyle(root).paddingLeft, getComputedStyle(root).paddingRight],
+            deskbarHidden: !root.querySelector('.lunara-journal-archive-slot-deskbar') || getComputedStyle(root.querySelector('.lunara-journal-archive-slot-deskbar')).display === 'none',
+            cardFrames: [...root.querySelectorAll('.lunara-journal-archive-card .lunara-review-grid-poster-wrap')].map(ratio),
+            titleReservations: [...root.querySelectorAll('.lunara-journal-archive-card .lunara-review-grid-title')].map(node => ({ min: getComputedStyle(node).minHeight, max: getComputedStyle(node).maxHeight, overflow: getComputedStyle(node).overflow })),
+            touchTargets: [...root.querySelectorAll('.lunara-journal-filter-pill,.lunara-archive-sort-link')].map(node => node.getBoundingClientRect().height),
             h1: root.querySelectorAll('h1').length,
             galleryCount: root.querySelectorAll('.lunara-journal-archive-gallery').length,
             overflow: document.documentElement.scrollWidth - window.innerWidth,
@@ -391,6 +397,12 @@ async function assertStructure(page, scenario) {
     const expectedGallery = scenario.gallery && !scenario.taxonomy ? 1 : 0;
     if (result.galleryCount !== expectedGallery) throw new Error(`Gallery scope mismatch: ${result.galleryCount} vs ${expectedGallery}`);
     if (result.overflow > 1) throw new Error(`Horizontal overflow ${result.overflow}px: ${JSON.stringify(result.overflowers)}`);
+    if (result.viewport <= 768) {
+        if (result.outerPadding.some(value => value !== '16px') || !result.deskbarHidden || result.titleReservations.some(title => title.min !== '0px' || title.max !== 'none' || title.overflow !== 'visible') || result.touchTargets.some(height => height < 44)) {
+            throw new Error(`Journal mobile reading controls failed: ${JSON.stringify(result)}`);
+        }
+        if (result.viewport <= 620 && result.cardFrames.some(value => Math.abs(value - 1.6) > 0.02)) throw new Error(`Journal phone artwork must remain16:10: ${JSON.stringify(result.cardFrames)}`);
+    }
     if (scenario.retentionMedia) {
         if (Math.abs(result.retentionRatio - 16 / 9) > 0.02 || result.retentionFill > 1 || result.retentionObjectPosition !== '31% 67%' || !result.retentionIntrinsic) {
             throw new Error(`Retention media geometry failed: ${JSON.stringify(result)}`);
@@ -762,7 +774,7 @@ async function assertLocalClsCohort(browser, headCss) {
     let labelFontCohort;
     try {
         for (const [scenarioName, scenario] of Object.entries(scenarios)) {
-            for (const width of [390, 768, 1440]) {
+            for (const width of scenarioName === 'default' ? [320, 390, 540, 768, 1440] : [390, 768, 1440]) {
                 const testPage = await openTestPage(browser, width);
                 const page = testPage.page;
                 await page.setContent(documentHtml(scenario, headCss), { waitUntil: 'load' });

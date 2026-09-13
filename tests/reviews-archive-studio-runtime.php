@@ -1,6 +1,6 @@
 <?php
 /**
- * Isolated behavioral contract for Theme 3.2.71 Reviews Archive Studio.
+ * Isolated behavioral contract for Theme 3.2.72 Reviews Archive Studio.
  *
  * Run: php tests/reviews-archive-studio-runtime.php
  */
@@ -266,7 +266,7 @@ function nocache_headers() { global $lunara_test_nocache_calls; $lunara_test_noc
 function status_header( $code ) { global $lunara_test_status_headers; $lunara_test_status_headers[] = $code; }
 function wp_die( $message = '', $title = '', $args = array() ) { throw new Lunara_Test_WP_Die( is_scalar( $message ) ? (string) $message : 'wp_die' ); }
 function taxonomy_exists( $taxonomy ) { return 'lunara_review_year' === $taxonomy; }
-function get_terms( $args ) { return array(); }
+function get_terms( $args ) { return isset( $GLOBALS['lunara_test_year_terms'] ) ? $GLOBALS['lunara_test_year_terms'] : array(); }
 function lunara_get_pinned_review_id() { global $lunara_test_pinned_id; return $lunara_test_pinned_id; }
 function lunara_set_pinned_review_id( $post_id = 0 ) {
 	global $lunara_test_pinned_id, $lunara_test_pin_writes, $lunara_test_posts;

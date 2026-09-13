@@ -25,6 +25,90 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-12 — Theme 3.2.71 acceptance and 3.2.72 mobile layouts
+
+### Headline
+
+Theme 3.2.71 is verified live. Dalton reports broken mobile formatting on both
+phone/browser families. Theme 3.2.72 corrects the phone composition across Home,
+Reviews, Journal and Oscars, including conflicts reproduced with published CSS.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| Explicit-version 3.2.71 canary | Three anonymous reads agree on `3.2.71+20260912-185926`; Journal and Oscars both `LIVE_COHERENT`, exit 0 / GO. |
+| Public phone browser inspection | Home controls overlap story copy; Reviews and Journal controls dominate the opening; Oscars headings hyphenate ordinary words and nested gutters squeeze its cards. |
+| Review artwork source | The live lead uses TMDB poster artwork, with the portrait dimensions preserved. The formatting problems are not evidence of a missing poster source. |
+
+### What shipped and why
+
+See `docs/CHANGELOG.md` for the four-route mobile candidate. It addresses image
+framing, full headlines, gutters, controls and first-paint ownership while
+retaining saved editorial choices. No agent deployment or manual cache purge occurred. Theme 3.2.72 is not
+deployed; its live canary is pending.
+
+### Commit ledger
+
+| Repo | Commit or release reference | Meaning |
+| --- | --- | --- |
+| Theme | `f98e9f08af8ef16a0b03722df7d0ee1c31a4b3df` / PR #191 | 3.2.71 merged on main and verified live. |
+| Theme | `codex/mobile-layouts-3.2.72` | Four-route mobile correction based on that main commit. |
+
+### Gate ledger
+
+- Versioned production canary for 3.2.71: exit 0 / GO.
+- Full required theme contract suite: 95/95 final passing results. The initial
+  run passed 92/95; three Journal checks still required the old scrolling layout
+  or twelve-case matrix. They now enforce wrapping 44px controls and exact
+  fourteen-case coverage, and all three focused reruns pass. Original failure
+  logs are retained. The Home gate was rerun after the arrow-direction repair.
+- Syntax/structure checks: 129 PHP files, 65 JavaScript files and 26 CSS files;
+  zero failures. Release identity and diff whitespace checks pass.
+- Home: 40 settings, 149 editor, 26 delivery and 46 browser checks pass,
+  including static/no-JavaScript layouts, saved focal/full-frame settings and
+  previous-arrow direction. Reviews: 30 opening browser cases and 36 first-paint
+  cases pass; maximum delivery delta is below 0.001px rounding noise.
+- The 40-case Chromium/WebKit snapshot matrix has no horizontal page overflow
+  and no clipped phone headings. Six additional Reviews cases at 320/768/900px
+  verify complete titles in both engines after the tablet correction.
+- Home mutation checks catch overlapping arrows and a transparent phone reading
+  panel, plus incorrect previous-arrow direction. Journal mutation catches loss
+  of landscape image proportions; Reviews reproduces and then fixes clipped
+  titles and the published scrollbar conflict.
+- Published markup is previewed locally with its original CSS and the candidate;
+  real imagery is visually inspected separately from automated geometry checks.
+- Final cross-engine matrix, syntax, CI, merge and rollback proofs will be
+  recorded in the release receipt alongside the local gate logs.
+- Physical iPhone/Android device testing and the 3.2.72 production canary are
+  not claimed; public acceptance follows Dalton's deployment.
+
+### Corrections
+
+None. The previous entry's deployment-pending state is superseded by the live
+probes above. Its documented mobile width conflict is addressed in this release.
+
+### Logged, not fixed
+
+The local visual mirror preserves published markup and cached styles, but does
+not emulate every CDN delivery condition. Separate first-paint tests exercise
+late and stale stylesheets. Shared header ownership, article/dossier layouts,
+remaining archive artwork/gallery controls, and broader stylesheet reduction
+remain on the site experience work list. Licensed fonts are not committed.
+
+### Punch-list carried forward
+
+- Finish 3.2.72 checks and merge, then rebuild the exact rollback hatch: agent.
+- Manual WordPress.com theme deployment from main: Dalton.
+- Verify the public phone layouts and versioned canary after deployment: agent.
+- Continue the remaining shared editor migrations after layout acceptance.
+
+### Whose move it is next
+
+The agent completes verification and the release handoff. Dalton then uses the
+manual deployment in WordPress.com for `lunara-theme-blocks` from `main`; the
+agent verifies the public site after the deployment is reported.
+
 ## 2026-09-12 — Theme 3.2.70 acceptance and 3.2.71 Reviews opening
 
 ### Headline

@@ -40,6 +40,10 @@ $lunara_test_is_director_tax = false;
 $lunara_test_is_paged = false;
 $lunara_test_paged_var = 0;
 Lunara_Review_Image_Studio::$mode = 'custom';
+$lunara_test_year_terms = array(
+	(object) array( 'slug' => '2026', 'name' => '2026' ),
+	(object) array( 'slug' => '2025', 'name' => '2025' ),
+);
 
 foreach ( array( 'normal', 'empty', 'director', 'hero-off', 'long-copy' ) as $scenario ) {
 	$lunara_test_is_director_tax = 'director' === $scenario;
@@ -64,6 +68,7 @@ foreach ( array( 'normal', 'empty', 'director', 'hero-off', 'long-copy' ) as $sc
 		'pagination' => '<a href="?paged=2">Next reviews</a>',
 	);
 	$html = lunara_render_review_archive_shell( $args );
+	$opening_assert( ( 'director' !== $scenario ) === ( false !== strpos( $html, 'lunara-review-archive-year-filter' ) ), $scenario . ': published years provide a usable filter outside director routes.' );
 	$opening_assert( 1 === preg_match_all( '/<h1\b/i', $html ), $scenario . ': exactly one H1 survives.' );
 	foreach ( array( 'Reviews Command', 'Archive Depth', 'Visible File', 'Latest Update', 'Current Order', 'lunara-review-archive-debrief', 'lunara-review-archive-hero-actions' ) as $removed ) {
 		$opening_assert( false === strpos( $html, $removed ), $scenario . ': no public statistics/action panel: ' . $removed );

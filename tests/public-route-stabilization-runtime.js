@@ -71,7 +71,7 @@ const routes = {
                 <nav class="lunara-journal-archive-filters"><span class="lunara-journal-filter-label">Filter</span>${'<a class="lunara-journal-filter-pill" href="#journal-filter">Long Journal Section</a>'.repeat(7)}</nav>
             </div>
             <section class="lunara-journal-archive-grid lunara-journal-archive-slot-grid"><a class="test-important-action" href="#journal-action">Open dispatch</a></section>`,
-        scroller: { selector: '.lunara-journal-archive-filters', widths: [390, 430] },
+        wrappingControls: { selector: '.lunara-journal-archive-filters', widths: [390, 430, 768] },
     },
     oscars: {
         source: 'page-oscars.php',
@@ -93,13 +93,13 @@ function htmlFor(route) {
         ${css}
         body.lunara-public-stabilization-fixture .lunara-review-archive-rail-item{flex:0 0 280px!important}
         body.lunara-public-stabilization-fixture.lunara-oscars-portal-page .lunara-oscars-winner-carousel-track{display:grid!important;grid-template-columns:none!important;grid-auto-flow:column!important;grid-auto-columns:260px!important}
-    </style></head><body class="lunara-public-stabilization-fixture ${route.bodyClass}"><div class="site"><main id="canonical-main" class="site-main"><i class="test-box-sizing-sentinel" aria-hidden="true"></i><${tag} id="primary" class="${route.rootClass}" data-lunara-theme-version="3.2.71">${route.content}</${tag}></main></div></body></html>`;
+    </style></head><body class="lunara-public-stabilization-fixture ${route.bodyClass}"><div class="site"><main id="canonical-main" class="site-main"><i class="test-box-sizing-sentinel" aria-hidden="true"></i><${tag} id="primary" class="${route.rootClass}" data-lunara-theme-version="3.2.72">${route.content}</${tag}></main></div></body></html>`;
 }
 
 async function inspect(page, routeName, route, width) {
     await page.setViewportSize({ width, height: 1000 });
     await page.setContent(htmlFor(route), { waitUntil: 'load' });
-    const snapshot = await page.evaluate(({ routeName, scroller }) => {
+    const snapshot = await page.evaluate(({ routeName, scroller, wrappingControls }) => {
         const mainCount = document.querySelectorAll('main').length;
         const documentOverflow = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth;
         const sentinelBoxSizing = getComputedStyle(document.querySelector('.test-box-sizing-sentinel')).boxSizing;
@@ -113,6 +113,8 @@ async function inspect(page, routeName, route, width) {
         }
         const rail = scroller && scroller.widths.includes(window.innerWidth) ? document.querySelector(scroller.selector) : null;
         const railStyle = rail ? getComputedStyle(rail) : null;
+        const controls = wrappingControls && wrappingControls.widths.includes(window.innerWidth) ? document.querySelector(wrappingControls.selector) : null;
+        const controlsStyle = controls ? getComputedStyle(controls) : null;
         return {
             routeName,
             width: window.innerWidth,
@@ -120,6 +122,17 @@ async function inspect(page, routeName, route, width) {
             documentOverflow,
             sentinelBoxSizing,
             masking,
+            controls: controls ? {
+                wrap: controlsStyle.flexWrap,
+                overflowX: controlsStyle.overflowX,
+                clientWidth: controls.clientWidth,
+                scrollWidth: controls.scrollWidth,
+                targets: [...controls.querySelectorAll('a')].map(node => {
+                    const rect = node.getBoundingClientRect();
+                    const parent = controls.getBoundingClientRect();
+                    return { height: rect.height, top: rect.top, contained: rect.left >= parent.left - 1 && rect.right <= parent.right + 1 };
+                }),
+            } : null,
             rail: rail ? {
                 selector: scroller.selector,
                 overflowX: railStyle.overflowX,
@@ -127,7 +140,7 @@ async function inspect(page, routeName, route, width) {
                 scrollWidth: rail.scrollWidth,
             } : null,
         };
-    }, { routeName, scroller: route.scroller || null });
+    }, { routeName, scroller: route.scroller || null, wrappingControls: route.wrappingControls || null });
 
     if (snapshot.mainCount !== 1) failures.push(`${routeName}@${width}: expected one main landmark, measured ${snapshot.mainCount}.`);
     if (snapshot.sentinelBoxSizing !== 'content-box') failures.push(`${routeName}@${width}: fixture globally rewrites box sizing to ${snapshot.sentinelBoxSizing}.`);
@@ -135,6 +148,9 @@ async function inspect(page, routeName, route, width) {
     if (snapshot.masking.length) failures.push(`${routeName}@${width}: important action is masked by ${snapshot.masking.join(', ')}.`);
     if (snapshot.rail && (!['auto', 'scroll'].includes(snapshot.rail.overflowX) || snapshot.rail.scrollWidth <= snapshot.rail.clientWidth)) {
         failures.push(`${routeName}@${width}: intentional scroller ${snapshot.rail.selector} is not locally scrollable (${snapshot.rail.overflowX}, ${snapshot.rail.clientWidth}/${snapshot.rail.scrollWidth}).`);
+    }
+    if (snapshot.controls && (snapshot.controls.wrap !== 'wrap' || snapshot.controls.overflowX !== 'visible' || snapshot.controls.scrollWidth > snapshot.controls.clientWidth + 1 || snapshot.controls.targets.length !== 7 || snapshot.controls.targets.some(target => target.height < 44 || !target.contained) || new Set(snapshot.controls.targets.map(target => Math.round(target.top))).size < 2)) {
+        failures.push(`${routeName}@${width}: mobile filters must wrap into visible rows with contained44px targets: ${JSON.stringify(snapshot.controls)}.`);
     }
 }
 
