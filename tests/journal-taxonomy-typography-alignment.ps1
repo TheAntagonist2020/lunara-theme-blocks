@@ -18,7 +18,7 @@ $guardrails = Get-Content -LiteralPath (Join-Path $root 'assets\css\lunara-publi
 $route = Get-Content -LiteralPath (Join-Path $root 'assets\css\lunara-journal-archive.css') -Raw
 $tokens = Get-Content -LiteralPath (Join-Path $root 'inc\design-tokens.php') -Raw
 
-Assert-True ($style -match 'Version:\s*3\.2\.71') 'Journal typography contract must remain intact in Theme 3.2.71.'
+Assert-True ($style -match 'Version:\s*3\.2\.72') 'Journal typography contract must remain intact in Theme 3.2.72.'
 Assert-True ($style -match '--lunara-font-body:\s*"Tiempos Text"') 'The shipped body token must remain Tiempos Text.'
 Assert-True ($tokens -match "'body'\s*=>\s*array\([\s\S]{0,300}?'default'\s*=>\s*'tiempos-text'") 'The editable body role must default to Tiempos Text.'
 Assert-True ($route -match '#primary\.lunara-journal-archive-page\s*\{[\s\S]{0,420}?font-family:\s*var\(--lunara-font-body') 'The route-owned Journal page must retain the editable body token.'
@@ -39,7 +39,14 @@ Assert-True ($shell -match 'body\.single-journal \.lunara-review-single-content 
 Assert-True ($shell -match 'body\.single-journal \.lunara-review-single-rail-actions \.lunara-btn[\s\S]*?font-family:\s*var\(--lunara-font-label') 'Journal single rail controls must use the Tiempos label token.'
 Assert-True ($route -match '#primary\.lunara-journal-archive-page \.lunara-journal-archive-retention-card-link > strong\s*\{[\s\S]{0,240}?font-family:\s*var\(--lunara-font-display[\s\S]{0,180}?font-weight:\s*700') 'Journal retention titles must reuse the editable display token and loaded bold face.'
 Assert-True ($guardrails -notmatch 'post-type-archive-journal|lunara-journal-archive') 'Late public guardrails must no longer own Journal route typography or geometry.'
-Assert-True ($route -match '@media \(max-width:\s*620px\)[\s\S]*?#primary\.lunara-journal-archive-page \.lunara-journal-archive-filters,[\s\S]*?flex-wrap:\s*nowrap\s*!important;[\s\S]*?overflow-x:\s*auto\s*!important;') 'Mobile Journal filters must remain an intentional bounded scroller.'
+$mobileRules = [regex]::Match($route, '@media \(max-width:\s*768px\)\s*\{(?<rules>[\s\S]*?)(?=@media \(max-width:\s*620px\))')
+Assert-True $mobileRules.Success 'Journal must define the shared mobile controls before its narrower single-card layout.'
+$mobileFilters = [regex]::Match($mobileRules.Groups['rules'].Value, '\.lunara-journal-archive-filters,[^{]*\.lunara-archive-sort\s*\{(?<rules>[^}]*)\}')
+Assert-True $mobileFilters.Success 'Mobile filter and sort controls must share their layout owner.'
+Assert-True ($mobileFilters.Groups['rules'].Value -match 'flex-wrap:\s*wrap\s*!important;' -and $mobileFilters.Groups['rules'].Value -match 'overflow:\s*visible\s*!important;') 'Mobile Journal filters and sorting must wrap visibly without a horizontal scroller.'
+$mobileTargets = [regex]::Match($mobileRules.Groups['rules'].Value, '\.lunara-journal-filter-pill,[^{]*\.lunara-archive-sort-link,[^{]*\{(?<rules>[^}]*)\}')
+Assert-True ($mobileTargets.Success -and $mobileTargets.Groups['rules'].Value -match 'min-height:\s*44px\s*!important;' -and $mobileTargets.Groups['rules'].Value -match 'max-width:\s*100%\s*!important;') 'Mobile filter and sort targets must remain at least 44px high and bounded by the available width.'
+Assert-True ($mobileRules.Groups['rules'].Value -notmatch 'flex-wrap:\s*nowrap|overflow-x:\s*auto') 'The mobile controls must not revert to the old horizontal scrolling layout.'
 Assert-True ($route -notmatch 'translateX\(-32px\)') 'The obsolete mobile Journal translation must not return.'
 
 Write-Output 'Journal taxonomy typography and alignment contract passed.'

@@ -452,7 +452,7 @@ function assertPairingCollisionFree(snapshot, label) {
             if (!criticalSeed || Buffer.byteLength(criticalSeed, 'utf8') > 12288) {
                 throw new Error(`${orderScenario} emitted an invalid critical seed (${Buffer.byteLength(criticalSeed || '', 'utf8')}B).`);
             }
-            for (const viewport of [{ width: 1440, height: 1000 }, { width: 782, height: 1000 }, { width: 390, height: 844 }]) {
+            for (const viewport of [{ width: 1440, height: 1000 }, { width: 782, height: 1000 }, { width: 768, height: 1000 }, { width: 540, height: 900 }, { width: 390, height: 844 }, { width: 320, height: 800 }]) {
                 const page = await browser.newPage();
                 await page.setViewport({ ...viewport, deviceScaleFactor: 1 });
                 const heroMarkup = orders.showHero === false

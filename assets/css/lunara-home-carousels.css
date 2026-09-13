@@ -24,6 +24,7 @@
 .lunara-home-curated-hero:not(.is-initialized) .lunara-home-carousel-toggle,
 .lunara-home-journal-carousel:not(.is-initialized) .lunara-home-carousel-toggle { display: none; }
 .lunara-home-curated-hero .lunara-hero-pagination { left: 90px; right: 110px; flex-wrap: wrap; }
+.lunara-home-curated-hero .lunara-hero-arrow-prev svg { transform: rotate(180deg); }
 body.home .lunara-home-curated-hero .lunara-cinematic-hero-title {
     display: block !important; -webkit-line-clamp: unset !important; max-height: none !important;
     overflow: visible; overflow-wrap: anywhere;
@@ -83,4 +84,184 @@ body.home .lunara-home-curated-hero .lunara-cinematic-hero-title {
 @media (prefers-reduced-motion: reduce) {
     .lunara-home-curated-hero *, .lunara-home-journal-carousel * { animation: none !important; transition: none !important; }
     .lunara-home-curated-hero .splide__toggle, .lunara-home-journal-carousel .splide__toggle { display: none !important; }
+}
+
+/* Mobile story and navigation occupy separate rows, so controls never cover copy. */
+@media (max-width: 900px) {
+    body.home .lunara-home-curated-hero {
+        --lunara-hero-height: clamp(360px, 54svh, 460px);
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr) 92px;
+        min-height: 0;
+        padding: 0 0 8px !important;
+        margin-bottom: 32px;
+        row-gap: 4px;
+    }
+    body.home .lunara-home-curated-hero::after { content: none; }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-track {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        width: 100%;
+        min-width: 0;
+    }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-shell,
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-slide .lunara-cinematic-hero-link {
+        min-height: var(--lunara-hero-height);
+    }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-content {
+        padding: 128px 20px 24px !important;
+    }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-title {
+        font-size: clamp(1.6rem, 7vw, 2.1rem) !important;
+        line-height: 1.14;
+        overflow-wrap: break-word;
+        word-break: normal;
+        hyphens: none;
+    }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-kicker {
+        max-width: 100%;
+        box-sizing: border-box;
+        letter-spacing: .18em !important;
+    }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-excerpt {
+        line-height: 1.5;
+        margin-bottom: 18px !important;
+    }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-cta {
+        min-height: 44px;
+        max-width: 100%;
+        box-sizing: border-box;
+        letter-spacing: .12em !important;
+        overflow-wrap: break-word;
+    }
+    body.home .lunara-home-curated-hero .lunara-hero-arrows {
+        position: static;
+        grid-column: 1;
+        grid-row: 2;
+        display: flex;
+        gap: 8px;
+        padding-left: 12px;
+        align-self: center;
+    }
+    body.home .lunara-home-curated-hero .lunara-hero-arrow {
+        position: static;
+        transform: none;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+    body.home .lunara-home-curated-hero .lunara-home-carousel-toggle {
+        position: static;
+        grid-column: 3;
+        grid-row: 2;
+        margin-right: 12px;
+        align-self: center;
+        justify-self: end;
+    }
+    body.home .lunara-home-curated-hero .lunara-hero-pagination {
+        position: static;
+        grid-column: 1 / -1;
+        grid-row: 3;
+        flex-wrap: wrap;
+        gap: 0;
+        padding: 0 12px;
+        min-width: 0;
+    }
+    body.home .lunara-home-curated-hero .lunara-hero-page {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        padding: 0 8px;
+        background: transparent;
+        transform: none;
+    }
+    body.home .lunara-home-curated-hero .lunara-hero-page::after {
+        content: '';
+        width: 100%;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(250, 251, 252, .32);
+    }
+    body.home .lunara-home-curated-hero .lunara-hero-page.is-active::after { background: #c9a961; }
+}
+/* Journal navigation follows the same mobile separation without changing card artwork. */
+@media (max-width: 900px) {
+    .lunara-home-journal-carousel.is-initialized:not(.is-journal-static) {
+        display: grid;
+        grid-template-columns: 104px minmax(0, 1fr) 80px;
+        gap: 8px 0;
+        padding-bottom: 0;
+    }
+    .lunara-home-journal-carousel.is-initialized > .splide__track {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        min-width: 0;
+        width: 100%;
+    }
+    .lunara-home-journal-carousel .splide__arrows {
+        position: static;
+        grid-column: 1;
+        grid-row: 2;
+        align-self: center;
+    }
+    .lunara-home-journal-carousel .lunara-home-carousel-toggle {
+        position: static;
+        grid-column: 3;
+        grid-row: 2;
+        justify-self: end;
+        align-self: center;
+    }
+    .lunara-home-journal-carousel .splide__pagination {
+        position: static;
+        grid-column: 1 / -1;
+        grid-row: 3;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0;
+        padding: 0;
+    }
+    .lunara-home-journal-carousel .splide__pagination__page {
+        box-sizing: border-box;
+        width: 44px;
+        height: 44px;
+        padding: 20px 8px;
+    }
+}
+/* Phones present landscape artwork above a solid reading panel. */
+@media (max-width: 540px) {
+    body.home .lunara-home-curated-hero { --lunara-hero-height: 0px; }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-slide .lunara-cinematic-hero-link {
+        display: flex;
+        flex-direction: column;
+    }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-bg {
+        position: relative !important;
+        inset: auto !important;
+        height: auto !important;
+        aspect-ratio: 16 / 10;
+        flex: none;
+        transform: none !important;
+        background: #07111b !important;
+    }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-bg .lunara-home-carousel-placeholder {
+        position: absolute;
+        inset: 0;
+    }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-overlay { display: none; }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-shell {
+        flex: 1;
+        align-items: flex-start;
+        background: #07111b;
+    }
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-content {
+        padding: 20px !important;
+        text-shadow: none;
+    }
+    body.home .lunara-home-curated-hero .lunara-home-carousel-heading {
+        padding: 6px 10px;
+        background: rgba(7, 17, 27, .94);
+    }
 }

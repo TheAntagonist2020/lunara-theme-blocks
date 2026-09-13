@@ -141,7 +141,7 @@ $openingBrowser = & node (Join-Path $PSScriptRoot 'reviews-opening-browser-runti
 Assert-True ($LASTEXITCODE -eq 0) ("Actual Reviews opening browser failed: " + ($openingBrowser -join [Environment]::NewLine))
 Assert-True (($openingBrowser -join "`n") -match '"result": "PASS"') 'Actual Reviews opening browser did not report success.'
 
-$versionLine = (Read-ThemeFile 'style.css' | Select-String -Pattern 'Version:\s*3\.2\.71').Matches.Count
-Assert-True ($versionLine -ge 1) 'Theme version must be 3.2.71.'
+$versionLine = (Read-ThemeFile 'style.css' | Select-String -Pattern 'Version:\s*3\.2\.72').Matches.Count
+Assert-True ($versionLine -ge 1) 'Theme version must be 3.2.72.'
 
-Write-Host 'Theme 3.2.71 Reviews Archive composition contract passed.'
+Write-Host 'Theme 3.2.72 Reviews Archive composition contract passed.'

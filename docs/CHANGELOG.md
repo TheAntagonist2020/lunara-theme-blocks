@@ -11,6 +11,32 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-12 — Theme 3.2.72 Mobile Layouts
+
+Home, Reviews, Journal and Oscars now own their mobile geometry instead of
+inheriting conflicting desktop or historic Boost rules. The saved story choices,
+editor transactions and artwork sources stay compatible.
+
+- Home: phone Hero artwork uses a stable 16:10 frame above a midnight reading
+  panel. Full headlines, excerpts and buttons stay readable. Arrows, Pause and
+  pagination occupy separate rows with 44px targets; Journal carousel controls
+  use the same separation. Tablet and desktop retain their cinematic overlays.
+- Reviews: one set of 16px gutters, compact wrapping filters and usable year
+  controls replace the oversized nested toolbar. Explicit root width prevents
+  the old critical CSS from narrowing the archive during first paint. Long
+  phone card titles can grow naturally. Retired public-command CSS is removed.
+- Journal: compact filters and a single spacing rhythm bring current stories
+  forward. Phone counters are hidden; full article headlines and natural card
+  heights accompany stable 16:10 artwork. The critical seed matches the route.
+- Oscars: ordinary words no longer hyphenate, prose cards stack, and the wider
+  two-column poster wall retains portrait art. Duplicate phone statistics are
+  hidden, while command links and actions use compact, readable groups.
+
+Verification uses actual published markup and its historic CSS alongside the
+candidate, real artwork visual review, browser geometry, no-JavaScript reading,
+late stylesheet delivery and targeted mutation checks. Local browser previews
+are candidate evidence; production acceptance follows manual deployment.
+
 ## 2026-09-12 — Theme 3.2.71 Reviews Opening
 
 The Reviews page opens with a compact title and introduction. The public

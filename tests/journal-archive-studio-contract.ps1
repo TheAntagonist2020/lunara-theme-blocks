@@ -37,7 +37,19 @@ Assert-True ($browserResult.aggregateBytes -eq 847152 -and $browserResult.aggreg
 Assert-True ($browserResult.routeBytes -le 40960) "Journal route CSS exceeds 40 KiB: $($browserResult.routeBytes)B."
 Assert-True ($browserResult.headBytes -le 8192) "Journal variables plus critical seed exceed 8 KiB: $($browserResult.headBytes)B."
 Assert-True ($browserResult.browserSkipped -ne $true) 'The exact Journal browser gate may never be skipped in CI or locally.'
-Assert-True (@($browserResult.results).Count -eq 12) 'The exact Journal browser gate must execute all four scenarios at all three viewports.'
+$expectedBrowserMatrix = @{
+    'default' = @(320, 390, 540, 768, 1440)
+    'custom-order' = @(390, 768, 1440)
+    'hero-hidden' = @(390, 768, 1440)
+    'taxonomy' = @(390, 768, 1440)
+}
+Assert-True (@($browserResult.results).Count -eq 14) 'The exact Journal browser gate must execute the fourteen required scenario and viewport combinations.'
+foreach ($scenarioName in $expectedBrowserMatrix.Keys) {
+    foreach ($viewportWidth in $expectedBrowserMatrix[$scenarioName]) {
+        $matchingCases = @($browserResult.results | Where-Object { $_.scenario -eq $scenarioName -and $_.width -eq $viewportWidth })
+        Assert-True ($matchingCases.Count -eq 1) "The Journal browser gate must execute $scenarioName at ${viewportWidth}px exactly once."
+    }
+}
 foreach ($browserCase in $browserResult.results) {
     Assert-True ($browserCase.exactAggregate -eq $true) "Browser case $($browserCase.scenario)/$($browserCase.width) did not use the exact aggregate."
     Assert-True ($browserCase.deliveryDelta.max -le 1) "Browser case $($browserCase.scenario)/$($browserCase.width) shifted $($browserCase.deliveryDelta.max)px during deferred delivery."
@@ -271,6 +283,6 @@ Assert-True ($studio -match "'/journal/'[\s\S]*?'/journal_section/'[\s\S]*?'/jou
 Assert-True ($studio -match 'get_terms\([\s\S]*?get_term_link\([\s\S]*?rocket_clean_files\(\s*\$urls\s*\)') 'The bounded cleaner must resolve actual term URLs and use a supported per-URL cache API when available.'
 Assert-True ($studio -notmatch 'rocket_clean_domain') 'Journal saves must never purge the full WP Rocket domain cache.'
 Assert-True ($studio -match "'validator_result'\s*=>[\s\S]*?'prior_public'\s*=>") 'Every revision must record validation and prior-public audit semantics.'
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.71\s*$') 'Theme version must be 3.2.71.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.72\s*$') 'Theme version must be 3.2.72.'
 
 Write-Host 'journal-archive-studio: all assertions passed.'

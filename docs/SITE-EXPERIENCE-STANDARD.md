@@ -75,6 +75,15 @@ The real Site Studio page navigation loads; the Journal preview uses a stable
 
 ### Archive migration findings and resolution
 
+September 12 mobile correction, Theme 3.2.72 candidate: the four landing pages
+now share deliberate phone spacing and readable controls. Home separates
+landscape artwork from its reading panel; Reviews and Journal compact their
+filters and retain full headlines; Oscars keeps a two-column poster wall with
+readable headings and compact supporting navigation. Route and critical CSS
+agree on archive widths. These are locally verified changes pending manual
+deployment and public acceptance. They do not complete the remaining editor
+capabilities or article and dossier layout work.
+
 The 3.2.70 candidate adds `selection_version` inside each existing provider;
 zero retains the old behavior, one enables the shared story rules. Merely
 opening Stories or applying unrelated Content/Layout changes does not adopt
