@@ -29,6 +29,13 @@ $oscars_portal_buttons = isset( $oscars_studio_config['buttons'] ) ? $oscars_stu
     'categories' => get_theme_mod( 'lunara_oscars_categories_btn', 'Browse Categories' ),
 );
 $oscars_quick_start = isset( $oscars_studio_config['quick_start'] ) ? $oscars_studio_config['quick_start'] : array();
+$oscars_rotating_winners = isset( $oscars_studio_config['rotating_winners'] ) ? $oscars_studio_config['rotating_winners'] : array();
+$oscars_winner_text = static function ( $family, $field, $setting, $default ) use ( $oscars_studio_config ) {
+    if ( isset( $oscars_studio_config[$family][$field] ) && is_scalar( $oscars_studio_config[$family][$field] ) && '' !== trim( (string) $oscars_studio_config[$family][$field] ) ) {
+        return trim( (string) $oscars_studio_config[$family][$field] );
+    }
+    return function_exists( 'lunara_theme_mod_text' ) ? lunara_theme_mod_text( $setting, $default ) : $default;
+};
 $oscars_portal_visibility = isset( $oscars_studio_config['section_visibility'] ) && is_array( $oscars_studio_config['section_visibility'] ) ? $oscars_studio_config['section_visibility'] : array();
 $oscars_portal_order      = isset( $oscars_studio_config['section_order'] ) && is_array( $oscars_studio_config['section_order'] ) && ! empty( $oscars_studio_config['section_order'] )
     ? array_values( $oscars_studio_config['section_order'] )
@@ -76,15 +83,15 @@ $titles_heading    = $oscars_portal_text( 'titles_heading', 'lunara_oscars_porta
 $research_kicker   = $oscars_portal_text( 'research_kicker', 'lunara_oscars_portal_research_kicker', 'Research Mode' );
 $research_heading  = $oscars_portal_text( 'research_heading', 'lunara_oscars_portal_research_heading', 'Open the ledger without leaving the portal.' );
 $research_copy     = '';
-$latest_winners_heading = function_exists( 'lunara_theme_mod_text' ) ? lunara_theme_mod_text( 'lunara_oscars_latest_winners_heading', 'Latest Ceremony Winners' ) : 'Latest Ceremony Winners';
-$latest_winners_link_label = function_exists( 'lunara_theme_mod_text' ) ? lunara_theme_mod_text( 'lunara_oscars_latest_winners_link_label', 'Full Ceremony' ) : 'Full Ceremony';
-$rotating_kicker   = function_exists( 'lunara_theme_mod_text' ) ? lunara_theme_mod_text( 'lunara_oscars_rotating_winners_kicker', 'Oscars Deep Dive' ) : 'Oscars Deep Dive';
-$rotating_heading  = function_exists( 'lunara_theme_mod_text' ) ? lunara_theme_mod_text( 'lunara_oscars_rotating_winners_heading', 'Ceremony Winners in Rotation' ) : 'Ceremony Winners in Rotation';
-$rotating_link_label = function_exists( 'lunara_theme_mod_text' ) ? lunara_theme_mod_text( 'lunara_oscars_rotating_winners_link_label', 'Open This Ceremony' ) : 'Open This Ceremony';
+$latest_winners_heading = $oscars_winner_text( 'winners', 'fallback_heading', 'lunara_oscars_latest_winners_heading', 'Latest Ceremony Winners' );
+$latest_winners_link_label = $oscars_winner_text( 'winners', 'link_label', 'lunara_oscars_latest_winners_link_label', 'Full Ceremony' );
+$rotating_kicker   = $oscars_winner_text( 'rotating_winners', 'kicker', 'lunara_oscars_rotating_winners_kicker', 'Oscars Deep Dive' );
+$rotating_heading  = $oscars_winner_text( 'rotating_winners', 'heading', 'lunara_oscars_rotating_winners_heading', 'Ceremony Winners in Rotation' );
+$rotating_link_label = $oscars_winner_text( 'rotating_winners', 'link_label', 'lunara_oscars_rotating_winners_link_label', 'Open This Ceremony' );
 
 $rotating_enabled  = $oscars_portal_show( 'rotating-winners', 'lunara_oscars_rotating_winners_enabled', true );
-$rotating_count    = max( 4, min( 16, absint( get_theme_mod( 'lunara_oscars_rotating_winners_count', 10 ) ) ) );
-$rotating_autoplay = max( 0, min( 12000, absint( get_theme_mod( 'lunara_oscars_rotating_winners_autoplay', 7200 ) ) ) );
+$rotating_count    = max( 4, min( 16, absint( isset( $oscars_rotating_winners['count'] ) ? $oscars_rotating_winners['count'] : get_theme_mod( 'lunara_oscars_rotating_winners_count', 10 ) ) ) );
+$rotating_autoplay = max( 0, min( 12000, absint( isset( $oscars_rotating_winners['autoplay_ms'] ) ? $oscars_rotating_winners['autoplay_ms'] : get_theme_mod( 'lunara_oscars_rotating_winners_autoplay', 7200 ) ) ) );
 $show_hero           = $oscars_portal_show( 'hero', 'lunara_oscars_show_hero', true );
 $show_portal_links   = $oscars_portal_show( 'doors', 'lunara_oscars_show_portal_links', true );
 $show_spotlights     = $oscars_portal_show( 'spotlights', 'lunara_oscars_show_spotlights', true );

@@ -25,6 +25,105 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Theme 3.2.74 acceptance and 3.2.75 Oscars winners
+
+### Headline
+
+Theme 3.2.74 is verified live. Its Hero buttons and Quick Start controls load
+existing Oscars settings in Site Studio. Theme 3.2.75 migrates the seven
+remaining winner presentation controls into the same inspector and canonical
+transactions. A separate category audit found naming/discovery issues rather
+than missing competitive categories.
+
+### Verified live state
+
+| Probe | Observed result |
+| --- | --- |
+| Explicit-version 3.2.74 canary | Three anonymous reads agree on `3.2.74+20260913-175607`; Journal and Oscars both `LIVE_COHERENT`, exit 0 / GO. |
+| Authenticated Oscars Site Studio | Live settings loaded; three Hero fields and twenty Quick Start fields present; editor stays clean during read-only inspection. |
+| Hero buttons | Live panel opens with Latest Ceremony, Open Full Ledger and Browse Categories labels, and default-label help. |
+| Quick Start | Live panel opens with Ceremonies, Categories, Full ledger and Ledger method card disclosures. |
+| Archive retry correction | Journal editor loads cleanly; both retry buttons retain `hidden` and compute to `display:none`, confirming the 3.2.74 fix against WordPress styling. |
+| Public category index | All 24 competitive categories for the 98th Oscars are represented within 66 current, historical and special entries, including Casting. Production Design displays as Art Direction and combined Sound as Sound Mixing. |
+
+### What changed and why
+
+See `docs/CHANGELOG.md` for the winner-controls candidate. It preserves the live
+7200ms missing-mod autoplay default rather than inheriting the old Customizer's
+different default and incompatible 500ms input step.
+No agent deployment or manual cache purge occurred. Theme 3.2.75 is not
+deployed; its live canary is pending.
+
+### Commit ledger
+
+| Repo | Commit or release reference | Meaning |
+| --- | --- | --- |
+| Theme | `2917ae81a8751e346db500c95eb5beac6fdbd307` / PR #194 | Theme 3.2.74 merged on main and now verified live. |
+| Theme | `codex/oscars-winners-3.2.75` | Seven winner controls, based on that main commit. |
+
+### Gate ledger
+
+- Versioned production canary for 3.2.74: exit 0 / GO.
+- Authenticated editor acceptance is read-only. No production Preview, Apply
+  or History writes were performed; local contracts cover those transactions.
+- Focused provider/shared PHP tests pass. The real page preamble calls the
+  count-scoped showcase helper against seeded canonical caches; its DOM proves
+  16-to-4 card changes, 7251-to-zero timing, all five text fields, ceremony-name
+  precedence, hidden sections and unchanged public 10-card/7200ms output.
+- Provider cases cover seven canonical theme mods, strict rejection without
+  writes, raw saved values, missing-mod defaults, pre-extension preview tokens,
+  old/new revisions and failed safety revisions. Shell/Foundation runtimes pass.
+- Oscars browser: 204 assertions; shared navigation: 274. The seconds input
+  round-trips 7.301 to 7301ms, accepts zero, preserves exact history and blocks
+  empty, out-of-range and submillisecond values before Preview/Apply. Invalid-only
+  drafts remain guarded and discardable. Desktop/mobile screenshots are reviewed.
+- Both deliberate mutations fail: fixing the live showcase count instead of
+  reading the candidate, and writing new winner families during an old restore.
+  Source hashes match the restored backups and the restored shared runtime passes.
+- Independent review is clean, including the optional seconds display scale;
+  unrelated numeric controls retain their prior behavior.
+- Full required theme contracts: 95/95 pass. Syntax/structure: 134 PHP,
+  67 JavaScript and 26 CSS files, zero failures. Release identity and
+  diff-whitespace checks pass.
+- Theme 3.2.75 CI, merge and exact rollback proof are recorded in the release
+  PR and receipt after the candidate commit. Manual deployment remains separate.
+  Physical-device testing is not claimed.
+
+### Corrections
+
+The previous entry's 3.2.74 deployment-pending state is superseded by the live
+checks above. Seven winner controls are presentation settings, not a limit on
+award categories; the public category audit is separate.
+
+### Logged, not fixed
+
+Current category names need display and route aliases in the Academy plugin:
+Production Design currently uses Art Direction, and Sound uses Sound Mixing.
+The corresponding modern-name routes return 404 while the historical-name
+routes return 200. Preserve historical identities when fixing those aliases.
+The complete index is at https://lunarafilm.com/oscars/categories/; the Academy
+reference is https://www.oscars.org/oscars/ceremonies/2026. Stunt Design begins
+with the 100th Oscars in 2028, so it is not missing from the current ceremony
+(https://press.oscars.org/news/academy-establishes-stunt-design-award-100th-oscarsr).
+The portal's six spotlights and prediction Board are editorial subsets.
+
+Shared header ownership, article/dossier layouts and stylesheet reduction
+remain on the site experience work list.
+
+### Punch-list carried forward
+
+- Agent: publish the validated winner-controls candidate, complete CI and merge, then
+  rebuild the exact rollback hatch against the new main tip.
+- Dalton: manual WordPress.com deployment from the existing theme connection
+  once the release is ready.
+- Agent after deployment: verify 3.2.75 and address current category naming and
+  modern route aliases in a separate focused plugin change.
+
+### Whose move it is next
+
+Agent completes this candidate and its release checks. Dalton's manual
+WordPress.com deployment follows; a merge alone does not prove production.
+
 ## 2026-09-13 — Theme 3.2.73 acceptance and 3.2.74 Oscars navigation
 
 ### Headline

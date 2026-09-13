@@ -239,7 +239,8 @@ if ( ! function_exists( 'lunara_site_studio_render_control' ) ) {
 		if ( 'select' === $definition['type'] ) {
 			echo '<select id="' . esc_attr( $id ) . '" data-field-path="' . esc_attr( $path ) . '" data-value-type="string" data-error-key="' . esc_attr( $path ) . '" aria-describedby="' . esc_attr( $help_id . ' ' . $error_id ) . '">'; foreach ( $definition['allowed'] as $choice ) { echo '<option value="' . esc_attr( $choice ) . '"' . ( $choice === $value ? ' selected' : '' ) . '>' . esc_html( lunara_site_studio_choice_label( $choice ) ) . '</option>'; } echo '</select>';
 		} elseif ( 'int' === $definition['type'] ) {
-			echo '<input id="' . esc_attr( $id ) . '" type="number" min="' . esc_attr( $definition['min'] ) . '" max="' . esc_attr( $definition['max'] ) . '" step="1" value="' . esc_attr( $value ) . '" data-field-path="' . esc_attr( $path ) . '" data-value-type="integer" data-error-key="' . esc_attr( $path ) . '" aria-describedby="' . esc_attr( $help_id . ' ' . $error_id ) . '" />';
+			$scale = isset( $definition['value_scale'] ) ? max( 1, (int) $definition['value_scale'] ) : 1;
+			echo '<input id="' . esc_attr( $id ) . '" type="number" min="' . esc_attr( $definition['min'] / $scale ) . '" max="' . esc_attr( $definition['max'] / $scale ) . '" step="' . esc_attr( 1 / $scale ) . '" value="' . esc_attr( $value / $scale ) . '"' . ( 1 !== $scale ? ' data-value-scale="' . esc_attr( $scale ) . '" required' : '' ) . ' data-field-path="' . esc_attr( $path ) . '" data-value-type="integer" data-error-key="' . esc_attr( $path ) . '" aria-describedby="' . esc_attr( $help_id . ' ' . $error_id ) . '" />';
 		} elseif ( 'bool' === $definition['type'] ) {
 			echo '<input id="' . esc_attr( $id ) . '" type="checkbox"' . ( $value ? ' checked' : '' ) . ' data-field-path="' . esc_attr( $path ) . '" data-value-type="boolean" data-error-key="' . esc_attr( $path ) . '" aria-describedby="' . esc_attr( $help_id . ' ' . $error_id ) . '" />';
 		} elseif ( 'textarea' === $definition['type'] ) {
@@ -378,12 +379,29 @@ if ( ! function_exists( 'lunara_site_studio_render_oscars_portal_inspector' ) ) 
 			lunara_site_studio_render_details_close();
 		}
 		lunara_site_studio_render_details_close();
+		lunara_site_studio_render_details_open( 'winner-sections', __( 'Winner sections', 'lunara-film' ), false, array( 'winners', 'rotating-winners' ) );
+		echo '<p>' . esc_html__( 'Edit the headings and ceremony links for the two winner sections. Their order and visibility are controlled in the section list.', 'lunara-film' ) . '</p>';
+		$winner_labels = array( 'winners' => __( 'Latest winners', 'lunara-film' ), 'rotating_winners' => __( 'Rotating winners', 'lunara-film' ) );
+		$winner_field_labels = array( 'fallback_heading' => __( 'Fallback heading', 'lunara-film' ), 'link_label' => __( 'Ceremony link text', 'lunara-film' ), 'kicker' => __( 'Kicker', 'lunara-film' ), 'heading' => __( 'Heading', 'lunara-film' ), 'count' => __( 'Number of winner cards', 'lunara-film' ), 'autoplay_ms' => __( 'Time between advances (seconds)', 'lunara-film' ) );
+		foreach ( lunara_oscars_portal_studio_winner_specs() as $group => $fields ) {
+			lunara_site_studio_render_details_open( str_replace( '_', '-', $group ) . '-settings', $winner_labels[ $group ] );
+			if ( 'winners' === $group ) { echo '<p>' . esc_html__( 'The ceremony name normally appears as the heading. The fallback heading is used when a ceremony name is unavailable.', 'lunara-film' ) . '</p>'; }
+			else { echo '<p>' . esc_html__( 'This section rotates through ceremony winners. Automatic advancing runs only on screens wider than 900 pixels and when the visitor has not requested reduced motion.', 'lunara-film' ) . '</p>'; }
+			foreach ( $fields as $field => $spec ) {
+				$definition = 'int' === $spec['type'] ? array( 'type' => 'int', 'min' => $spec['min'], 'max' => $spec['max'] ) : array( 'type' => 'text', 'max_length' => $spec['max'], 'help' => sprintf( __( 'Leave blank to use “%s”.', 'lunara-film' ), $spec['default'] ) );
+				if ( 'count' === $field ) { $definition['help'] = __( 'Choose 4–16 cards. The default is 10; a ceremony with fewer available winners may show fewer cards.', 'lunara-film' ); }
+				if ( 'autoplay_ms' === $field ) { $definition['value_scale'] = 1000; $definition['help'] = __( 'Set 0 for manual navigation. The default is 7.2 seconds; the maximum is 12 seconds. You can enter up to three decimal places.', 'lunara-film' ); }
+				lunara_site_studio_render_control( $group . '.' . $field, $state[ $group ][ $field ], $definition, $winner_field_labels[ $field ] );
+			}
+			lunara_site_studio_render_details_close();
+		}
+		lunara_site_studio_render_details_close();
 		lunara_site_studio_render_details_open( 'fine-tune', __( 'Layout', 'lunara-film' ), false, array( 'board', 'winners', 'rotating-winners' ) );
 		foreach ( lunara_oscars_portal_studio_rhythm_specs() as $field => $spec ) { lunara_site_studio_render_control( 'presentation.' . $field, $state['presentation'][ $field ], array( 'type' => 'select', 'allowed' => array_keys( $spec['choices'] ) ), $spec['label'] ); }
 		foreach ( lunara_oscars_portal_studio_geometry_specs() as $field => $spec ) { lunara_site_studio_render_control( 'presentation.' . $field, $state['presentation'][ $field ], array( 'type' => 'int', 'min' => $spec['min'], 'max' => $spec['max'] ), $spec['label'] ); }
 		lunara_site_studio_render_details_close();
 		lunara_site_studio_render_details_open( 'advanced', __( 'Advanced', 'lunara-film' ) );
-		echo '<button type="button" data-action="reset-candidate" disabled>' . esc_html__( 'Reset candidate', 'lunara-film' ) . '</button><p>' . esc_html__( 'Supplemental winner tools remain in Classic controls. Academy data and homepage Oscar selections are separate.', 'lunara-film' ) . '</p><a class="button" data-workspace-navigation href="' . esc_url( admin_url( 'customize.php?autofocus[panel]=lunara_oscars_panel' ) ) . '">' . esc_html__( 'Open Classic controls', 'lunara-film' ) . '</a>';
+		echo '<button type="button" data-action="reset-candidate" disabled>' . esc_html__( 'Reset candidate', 'lunara-film' ) . '</button><p>' . esc_html__( 'Academy data and homepage Oscar selections are separate.', 'lunara-film' ) . '</p>';
 		lunara_site_studio_render_details_close(); lunara_site_studio_render_revisions( $revisions );
 	}
 }

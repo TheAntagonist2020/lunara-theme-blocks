@@ -63,14 +63,14 @@ $bounded_navigation['buttons']['ledger'] = '';
 $bounded_navigation['quick_start']['method'] = array( 'enabled' => false, 'kicker' => '', 'title' => '', 'copy' => '<b>' . str_repeat( 'c', 700 ) . '</b>', 'url' => '' );
 $bounded_navigation = lunara_oscars_portal_studio_validate_config( $bounded_navigation );
 lunara_test_assert( 120 === strlen( $bounded_navigation['buttons']['ceremony'] ) && 'Open Full Ledger' === $bounded_navigation['buttons']['ledger'] && 'About' === $bounded_navigation['quick_start']['method']['kicker'] && 'Ledger Method' === $bounded_navigation['quick_start']['method']['title'] && 600 === strlen( $bounded_navigation['quick_start']['method']['copy'] ) && '' === $bounded_navigation['quick_start']['method']['url'], 'New navigation input uses bounded sanitized copy and inherits safe visible button/card labels and card destinations.' );
-$lunara_test_theme_mods['lunara_oscars_rotating_winners_count'] = 13;
+$lunara_test_theme_mods['lunara_home_hero_autoplay'] = 13;
 $saved_navigation = lunara_oscars_portal_studio_promote_config_transaction( $navigation_candidate );
 lunara_test_assert( ! is_wp_error( $saved_navigation ) && $navigation_candidate === lunara_oscars_portal_studio_get_public_config( false ), 'Apply must reload every navigation choice exactly, including hidden card copy.' );
 foreach ( lunara_oscars_portal_studio_button_specs() as $key => $spec ) { lunara_test_assert( $navigation_candidate['buttons'][$key] === $lunara_test_theme_mods[$spec['setting']], 'Button applies to its existing canonical theme mod: ' . $key ); }
 foreach ( lunara_oscars_portal_studio_quick_start_specs() as $key => $spec ) {
     foreach ( $navigation_candidate['quick_start'][$key] as $field => $value ) { lunara_test_assert( $value === $lunara_test_theme_mods['lunara_oscars_portal_card_' . $spec['slot'] . '_' . $field], 'Quick Start applies to its existing canonical theme mod: ' . $key . '.' . $field ); }
 }
-lunara_test_assert( array( 'schema_version', 'section_order', 'presentation' ) === array_keys( $lunara_test_options[LUNARA_OSCARS_PORTAL_STUDIO_OPTION] ) && 13 === $lunara_test_theme_mods['lunara_oscars_rotating_winners_count'], 'Navigation never creates a parallel option owner or changes supplemental winner controls.' );
+lunara_test_assert( array( 'schema_version', 'section_order', 'presentation' ) === array_keys( $lunara_test_options[LUNARA_OSCARS_PORTAL_STUDIO_OPTION] ) && 13 === $lunara_test_theme_mods['lunara_home_hero_autoplay'], 'Navigation never creates a parallel option owner or changes unrelated homepage controls.' );
 $next_navigation = $navigation_candidate; $next_navigation['buttons']['ceremony'] = 'Next button'; $next_navigation['quick_start']['method']['title'] = 'Next method';
 $next_navigation_result = lunara_oscars_portal_studio_promote_config_transaction( $next_navigation );
 $restored_navigation = lunara_oscars_portal_studio_restore_revision_transaction( $next_navigation_result['revision_id'] );
