@@ -3415,43 +3415,8 @@ function lunara_control_desk_utility_search_active_preset_key() {
 }
 
 function lunara_control_desk_apply_utility_search_values( $values ) {
-    $values       = is_array( $values ) ? $values : array();
-    $select_specs = lunara_control_desk_utility_search_select_specs();
-    $focus_specs  = lunara_control_desk_utility_search_focus_select_specs();
-    $number_specs = lunara_control_desk_utility_search_number_specs();
-    $presets      = lunara_control_desk_utility_search_preset_specs();
-
-    foreach ( $values as $key => $value ) {
-        if ( 'lunara_utility_search_preset' === $key ) {
-            $preset_key = sanitize_key( (string) $value );
-            if ( isset( $presets[ $preset_key ] ) ) {
-                set_theme_mod( $key, $preset_key );
-            }
-            continue;
-        }
-
-        if ( isset( $select_specs[ $key ] ) ) {
-            $value = sanitize_key( (string) $value );
-            if ( ! isset( $select_specs[ $key ]['options'][ $value ] ) ) {
-                $value = (string) $select_specs[ $key ]['default'];
-            }
-            set_theme_mod( $key, $value );
-            continue;
-        }
-
-        if ( isset( $focus_specs[ $key ] ) ) {
-            $value = sanitize_key( (string) $value );
-            if ( ! isset( $focus_specs[ $key ]['options'][ $value ] ) ) {
-                $value = (string) $focus_specs[ $key ]['default'];
-            }
-            set_theme_mod( $key, $value );
-            continue;
-        }
-
-        if ( isset( $number_specs[ $key ] ) ) {
-            set_theme_mod( $key, (string) lunara_control_desk_utility_search_clamp_number( $key, $value ) );
-        }
-    }
+    // Search and 404 now have separate Site Studio transactions. Old packages cannot write either.
+    return false;
 }
 
 function lunara_control_desk_utility_search_number_specs() {
@@ -3525,72 +3490,11 @@ function lunara_control_desk_utility_search_number_value( $key ) {
 }
 
 function lunara_control_desk_save_utility_search_studio() {
-    $redirect = lunara_control_desk_admin_url(
-        array(
-            'tab' => 'theme-studio',
-        )
-    ) . '#lunara-theme-studio-utility-search-studio';
-
     if ( ! current_user_can( 'edit_theme_options' ) ) {
-        wp_safe_redirect( add_query_arg( 'lunara_notice', 'utility_search_studio_forbidden', $redirect ) );
-        exit;
+        wp_die( esc_html__( 'You do not have permission to change these settings.', 'lunara-film' ), '', array( 'response' => 403 ) );
     }
-
     check_admin_referer( 'lunara_save_utility_search_studio', 'lunara_utility_search_nonce' );
-
-    $presets    = lunara_control_desk_utility_search_preset_specs();
-    $preset_key = isset( $_POST['lunara_utility_search_preset'] ) ? sanitize_key( wp_unslash( $_POST['lunara_utility_search_preset'] ) ) : '';
-
-    if ( '' !== $preset_key && isset( $presets[ $preset_key ] ) ) {
-        lunara_control_desk_apply_utility_search_values( $presets[ $preset_key ]['values'] );
-        wp_safe_redirect( add_query_arg( 'lunara_notice', 'utility_search_preset_applied', $redirect ) );
-        exit;
-    }
-
-    $raw_selects = isset( $_POST['lunara_utility_search_select'] ) && is_array( $_POST['lunara_utility_search_select'] )
-        ? wp_unslash( $_POST['lunara_utility_search_select'] )
-        : array();
-
-    foreach ( lunara_control_desk_utility_search_select_specs() as $key => $spec ) {
-        $value = isset( $raw_selects[ $key ] ) ? sanitize_key( $raw_selects[ $key ] ) : (string) $spec['default'];
-        if ( ! isset( $spec['options'][ $value ] ) ) {
-            $value = (string) $spec['default'];
-        }
-        set_theme_mod( $key, $value );
-    }
-
-    $raw_focus_selects = isset( $_POST['lunara_utility_search_focus_select'] ) && is_array( $_POST['lunara_utility_search_focus_select'] )
-        ? wp_unslash( $_POST['lunara_utility_search_focus_select'] )
-        : array();
-
-    foreach ( lunara_control_desk_utility_search_focus_select_specs() as $key => $spec ) {
-        $value = isset( $raw_focus_selects[ $key ] ) ? sanitize_key( $raw_focus_selects[ $key ] ) : (string) $spec['default'];
-        if ( ! isset( $spec['options'][ $value ] ) ) {
-            $value = (string) $spec['default'];
-        }
-        set_theme_mod( $key, $value );
-    }
-
-    $raw_numbers = isset( $_POST['lunara_utility_search_number'] ) && is_array( $_POST['lunara_utility_search_number'] )
-        ? wp_unslash( $_POST['lunara_utility_search_number'] )
-        : array();
-    $raw_resets  = isset( $_POST['lunara_utility_search_reset'] ) && is_array( $_POST['lunara_utility_search_reset'] )
-        ? wp_unslash( $_POST['lunara_utility_search_reset'] )
-        : array();
-    $resets      = array_map( 'sanitize_key', array_keys( $raw_resets ) );
-
-    foreach ( lunara_control_desk_utility_search_number_specs() as $key => $spec ) {
-        if ( in_array( $key, $resets, true ) ) {
-            remove_theme_mod( $key );
-            continue;
-        }
-
-        if ( array_key_exists( $key, $raw_numbers ) ) {
-            set_theme_mod( $key, (string) lunara_control_desk_utility_search_clamp_number( $key, $raw_numbers[ $key ] ) );
-        }
-    }
-
-    wp_safe_redirect( add_query_arg( 'lunara_notice', 'utility_search_studio_saved', $redirect ) );
+    wp_safe_redirect( admin_url( 'admin.php?page=lunara-site-studio&surface=utility-search' ) );
     exit;
 }
 add_action( 'admin_post_lunara_save_utility_search_studio', 'lunara_control_desk_save_utility_search_studio' );
@@ -9816,119 +9720,16 @@ function lunara_control_desk_render_utility_search_preset_card( $preset_key, $pr
 }
 
 function lunara_control_desk_render_utility_search_studio() {
-    if ( ! current_user_can( 'edit_theme_options' ) ) {
-        ?>
-        <section id="lunara-theme-studio-utility-search-studio" class="lunara-control-desk-homepage-studio">
-            <div class="lunara-control-desk-panel-header">
-                <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Utility Search Studio', 'lunara-film' ); ?></p>
-                <h3><?php esc_html_e( 'Utility route controls require theme editing permission', 'lunara-film' ); ?></h3>
-                <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Search and recovery routes remain visible, but direct utility rhythm changes are limited to administrators.', 'lunara-film' ); ?></p>
-            </div>
-        </section>
-        <?php
-        return;
-    }
-
-    $search_preview   = add_query_arg( 's', 'sinners', home_url( '/' ) );
-    $ledger_preview   = add_query_arg( 's', 'oscars', home_url( '/' ) );
-    $recovery_preview = home_url( '/definitely-not-a-real-lunara-route/' );
-    $presets          = lunara_control_desk_utility_search_preset_specs();
-    $active_preset_key = lunara_control_desk_utility_search_active_preset_key();
-    $active_label     = $active_preset_key && isset( $presets[ $active_preset_key ] )
-        ? $presets[ $active_preset_key ]['label']
-        : __( 'Custom utility route', 'lunara-film' );
+    if ( ! current_user_can( 'edit_theme_options' ) ) { return; }
     ?>
     <section id="lunara-theme-studio-utility-search-studio" class="lunara-control-desk-homepage-studio">
         <div class="lunara-control-desk-panel-header">
-            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Utility Search Studio', 'lunara-film' ); ?></p>
-            <h3><?php esc_html_e( 'Search and recovery routes without the dead utility-page feeling', 'lunara-film' ); ?></h3>
-            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Tune Search results, Oscar direct matches, no-results recovery, and 404 routing as a small but real publication surface. No URL, query, or content behavior changes.', 'lunara-film' ); ?></p>
+            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Search and recovery', 'lunara-film' ); ?></p>
+            <h3><?php esc_html_e( 'Edit Search and 404 in Site Studio', 'lunara-film' ); ?></h3>
+            <p><?php esc_html_e( 'Preview the page, apply your changes, or restore its history in the shared editor.', 'lunara-film' ); ?></p>
         </div>
-        <form class="lunara-control-desk-homepage-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-            <input type="hidden" name="action" value="lunara_save_utility_search_studio" />
-            <?php wp_nonce_field( 'lunara_save_utility_search_studio', 'lunara_utility_search_nonce' ); ?>
-
-            <div class="lunara-control-desk-homepage-grid">
-                <div class="lunara-control-desk-homepage-card">
-                    <div class="lunara-control-desk-card-head">
-                        <div>
-                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Utility Presets', 'lunara-film' ); ?></p>
-                            <h3><?php esc_html_e( 'Apply or preview a complete Search/recovery package', 'lunara-film' ); ?></h3>
-                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Presets save the same bounded controls below. Preview links are request-only and only affect admins with theme editing permission.', 'lunara-film' ); ?></p>
-                        </div>
-                        <div class="lunara-control-desk-status-pill">
-                            <strong><?php esc_html_e( 'Current package', 'lunara-film' ); ?></strong>
-                            <span><?php echo esc_html( $active_label ); ?></span>
-                        </div>
-                    </div>
-                    <?php lunara_control_desk_render_utility_search_preset_comparison_strip( $presets, $active_preset_key ); ?>
-                    <div class="lunara-control-desk-homepage-choice-grid">
-                        <?php foreach ( $presets as $preset_key => $preset ) : ?>
-                            <?php lunara_control_desk_render_utility_search_preset_card( $preset_key, $preset, $active_preset_key, $search_preview, $ledger_preview, $recovery_preview ); ?>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <div class="lunara-control-desk-homepage-card">
-                    <div class="lunara-control-desk-card-head">
-                        <div>
-                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Utility Rhythm', 'lunara-film' ); ?></p>
-                            <h3><?php esc_html_e( 'Search, direct matches, and recovery emphasis', 'lunara-film' ); ?></h3>
-                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'These controls keep the shared Lunara type system while giving utility pages their own route-family pulse.', 'lunara-film' ); ?></p>
-                        </div>
-                    </div>
-                    <div class="lunara-control-desk-homepage-choice-grid">
-                        <?php foreach ( lunara_control_desk_utility_search_select_specs() as $key => $spec ) : ?>
-                            <?php lunara_control_desk_render_utility_search_select_control( $key, $spec ); ?>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <div class="lunara-control-desk-homepage-card">
-                    <div class="lunara-control-desk-card-head">
-                        <div>
-                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Geometry', 'lunara-film' ); ?></p>
-                            <h3><?php esc_html_e( 'Spacing, result height, and grid width', 'lunara-film' ); ?></h3>
-                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'Values clamp server-side so Search and 404 can get denser without mobile overflow, empty chambers, or cramped copy.', 'lunara-film' ); ?></p>
-                        </div>
-                    </div>
-                    <div class="lunara-control-desk-homepage-number-grid">
-                        <?php foreach ( lunara_control_desk_utility_search_number_specs() as $key => $spec ) : ?>
-                            <?php lunara_control_desk_render_utility_search_number_control( $key, $spec ); ?>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <div class="lunara-control-desk-homepage-card">
-                    <div class="lunara-control-desk-card-head">
-                        <div>
-                            <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Search Focus', 'lunara-film' ); ?></p>
-                            <h3><?php esc_html_e( 'Lead route, spotlight type, and recovery priority', 'lunara-film' ); ?></h3>
-                            <p class="lunara-control-desk-subtle"><?php esc_html_e( 'These controls change presentation priority only. Search queries, URLs, and result eligibility stay untouched.', 'lunara-film' ); ?></p>
-                        </div>
-                    </div>
-                    <div class="lunara-control-desk-homepage-choice-grid">
-                        <?php foreach ( lunara_control_desk_utility_search_focus_select_specs() as $key => $spec ) : ?>
-                            <?php lunara_control_desk_render_utility_search_focus_select_control( $key, $spec ); ?>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lunara-control-desk-homepage-footer">
-                <div>
-                    <strong><?php esc_html_e( 'Preview after saving', 'lunara-film' ); ?></strong>
-                    <span><?php esc_html_e( 'Check a populated Search page, a 390px Search view, and the recovery route after each change.', 'lunara-film' ); ?></span>
-                </div>
-                <div class="lunara-control-desk-actions">
-                    <button type="submit" class="button button-primary"><?php esc_html_e( 'Save Utility Search Studio', 'lunara-film' ); ?></button>
-                    <a class="button" href="<?php echo esc_url( $search_preview ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Search Desktop', 'lunara-film' ); ?></a>
-                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', $search_preview ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Search 390px', 'lunara-film' ); ?></a>
-                    <a class="button" href="<?php echo esc_url( $recovery_preview ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '404 Recovery', 'lunara-film' ); ?></a>
-                    <a class="button" href="<?php echo esc_url( add_query_arg( 'lunara-width', '390', $recovery_preview ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '404 390px', 'lunara-film' ); ?></a>
-                </div>
-            </div>
-        </form>
+        <a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=utility-search' ) ); ?>"><?php esc_html_e( 'Edit Search', 'lunara-film' ); ?></a>
+        <a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=utility-404' ) ); ?>"><?php esc_html_e( 'Edit 404 recovery', 'lunara-film' ); ?></a>
     </section>
     <?php
 }

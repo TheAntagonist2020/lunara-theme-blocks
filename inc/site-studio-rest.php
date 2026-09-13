@@ -101,7 +101,18 @@ if ( ! function_exists( 'lunara_site_studio_safe_validation_fields' ) ) {
 			'pairing.layout', 'pairing.text_depth', 'pairing.mobile_stack', 'pairing.image_focus', 'pairing.columns', 'pairing.thumb_width',
 			'focus.lead', 'focus.spotlight', 'geometry.section_gap', 'geometry.result_min_height', 'geometry.card_grid_min',
 			'brand.show_logo', 'brand.tagline', 'columns.editorial', 'columns.oscars', 'columns.utility', 'copyright.name',
+			'content', 'content.kicker', 'content.no_query_title', 'content.excerpt_words', 'content.use_empty_title',
+			'hero.kicker', 'hero.title', 'hero.explanation', 'guidance', 'guidance.reset_label', 'guidance.reset_desc', 'guidance.fastest_label', 'guidance.fastest_desc', 'guidance.hubs_label', 'guidance.hubs_desc', 'recovery', 'recovery.title', 'recovery.primary',
+			'navigation', 'navigation.mode', 'navigation.columns',
 		);
+		foreach ( array( 'editorial', 'oscars', 'utility' ) as $column ) {
+			$path = 'navigation.columns.' . $column;
+			$allowed[] = $path;
+			for ( $row = 0; $row < 12; $row++ ) {
+				$allowed[] = $path . '.' . $row;
+				foreach ( array( 'id', 'enabled', 'label', 'destination', 'url' ) as $field ) { $allowed[] = $path . '.' . $row . '.' . $field; }
+			}
+		}
 		$data    = is_wp_error( $error ) ? $error->get_error_data() : array();
 		$allowed = array_merge( $allowed, array( 'buttons', 'quick_start', 'quick_start.ceremonies', 'quick_start.categories', 'quick_start.ledger', 'quick_start.method' ), lunara_site_studio_oscars_navigation_paths() );
 		$allowed = array_merge( $allowed, array( 'winners', 'rotating_winners' ), lunara_site_studio_oscars_winner_paths() );

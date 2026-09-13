@@ -1,5 +1,5 @@
 <?php
-/** Behavioral contract for Theme 3.2.76 editorial and utility adapters. */
+/** Behavioral contract for Theme 3.2.77 editorial and utility adapters. */
 
 require __DIR__ . '/site-studio-pilot-runtime.php';
 
@@ -57,6 +57,10 @@ function lunara_editorial_expected_utility_keys() {
 		'lunara_utility_section_gap',
 		'lunara_utility_result_min_height',
 		'lunara_utility_card_grid_min',
+		'lunara_search_kicker',
+		'lunara_search_no_query_title',
+		'lunara_search_excerpt_words',
+		'lunara_search_no_query_title_enabled',
 	);
 }
 
@@ -68,6 +72,7 @@ function lunara_editorial_expected_footer_keys() {
 		'lunara_footer_col2_heading',
 		'lunara_footer_col3_heading',
 		'lunara_footer_copyright',
+		'lunara_footer_navigation',
 	);
 }
 
@@ -96,8 +101,8 @@ lunara_editorial_assert( array( 'hero', 'criticism', 'debrief', 'pair-it-with' )
 lunara_pilot_reset();
 $utility_adapter = lunara_site_studio_utility_search_adapter();
 $utility_state   = $utility_adapter->read_state();
-lunara_editorial_assert( array( 'presentation', 'focus', 'geometry' ) === array_keys( $utility_state ), 'Utility Search state must use the exact three recognizable groups.' );
-lunara_editorial_assert( lunara_editorial_expected_utility_keys() === lunara_site_studio_utility_search_keys(), 'Utility Search must own exactly nine previewable theme mods.' );
+lunara_editorial_assert( array( 'presentation', 'focus', 'geometry', 'content' ) === array_keys( $utility_state ), 'Utility Search state must retain its three original groups and append Content.' );
+lunara_editorial_assert( lunara_editorial_expected_utility_keys() === lunara_site_studio_utility_search_keys(), 'Utility Search must own twelve existing mods plus its explicit empty-title adoption flag.' );
 lunara_editorial_assert( ! isset( $utility_state['focus']['reentry'] ) && ! in_array( 'lunara_utility_reentry_primary', lunara_site_studio_utility_search_keys(), true ), 'The Search preview must not claim control of the 404-only re-entry destination.' );
 lunara_editorial_assert( ! in_array( 'lunara_utility_search_preset', lunara_site_studio_utility_search_keys(), true ) && ! lunara_editorial_state_has_technical_keys( $utility_state ), 'Utility Search must exclude the legacy preset marker and all technical keys.' );
 
@@ -153,18 +158,18 @@ lunara_editorial_assert( 'The private preview could not be verified. Try Preview
 $unknown_adapter_response = lunara_site_studio_rest_adapter_error_response( new WP_Error( 'unknown_provider_failure', 'Secret internal detail.' ) );
 lunara_editorial_assert( 'The requested state was not accepted. Review the highlighted fields and try again.' === $unknown_adapter_response->get_data()['message'], 'Unknown adapter failures must retain the generic redacted message.' );
 
-// Footer exposes six real controls and no phantom social state.
+// Footer retains six scalar controls and adds one explicitly adopted links family.
 lunara_pilot_reset();
 $footer_adapter = lunara_site_studio_footer_adapter();
 $footer_state   = $footer_adapter->read_state();
-lunara_editorial_assert( array( 'brand', 'columns', 'copyright' ) === array_keys( $footer_state ), 'Footer state must use recognizable brand, columns, and copyright groups.' );
-lunara_editorial_assert( lunara_editorial_expected_footer_keys() === lunara_site_studio_footer_keys(), 'Footer must own exactly the six live theme mods.' );
+lunara_editorial_assert( array( 'brand', 'columns', 'copyright', 'navigation' ) === array_keys( $footer_state ), 'Footer state must retain scalar groups and append ordered navigation.' );
+lunara_editorial_assert( lunara_editorial_expected_footer_keys() === lunara_site_studio_footer_keys(), 'Footer must own its six scalar mods and one canonical navigation mod.' );
 lunara_editorial_assert( false === strpos( wp_json_encode( $footer_state ), 'social' ) && ! lunara_editorial_state_has_technical_keys( $footer_state ), 'Footer state must not expose phantom social or technical keys.' );
 $footer_state['brand']['show_logo'] = false;
 $footer_state['columns']['editorial'] = 'Criticism';
 $footer_save = $footer_adapter->save_state( $footer_state );
 lunara_editorial_assert( ! is_wp_error( $footer_save ) && false === get_theme_mod( 'lunara_footer_show_logo' ) && 'Criticism' === get_theme_mod( 'lunara_footer_col1_heading' ), 'Footer save must update its real live renderer values.' );
-lunara_editorial_assert( array() === array_diff( array_keys( $lunara_pilot_theme_mods ), lunara_editorial_expected_footer_keys() ), 'Footer save must remain inside the exact real-six allowlist.' );
+lunara_editorial_assert( array() === array_diff( array_keys( $lunara_pilot_theme_mods ), lunara_editorial_expected_footer_keys() ), 'Footer save must remain inside its exact seven-key allowlist.' );
 
 // Theme preview tokens must bind to each registered route instead of the old root-only path.
 lunara_pilot_reset();

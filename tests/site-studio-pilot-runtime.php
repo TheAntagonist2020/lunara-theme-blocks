@@ -173,6 +173,9 @@ function remove_theme_mod( $key ) {
 	if ( 'fail' === $mode ) { return; }
 	unset( $lunara_pilot_theme_mods[ $key ] );
 }
+if ( ! function_exists( 'get_post_type_archive_link' ) ) { function get_post_type_archive_link( $type ) { return isset( $GLOBALS['footer_archives'] ) && array_key_exists( $type, $GLOBALS['footer_archives'] ) ? $GLOBALS['footer_archives'][$type] : home_url( '/' . ( 'review' === $type ? 'reviews' : $type ) . '/' ); } }
+if ( ! function_exists( 'get_bloginfo' ) ) { function get_bloginfo( $show = '' ) { return 'rss2_url' === $show ? ( array_key_exists( 'footer_feed', $GLOBALS ) ? $GLOBALS['footer_feed'] : home_url( '/feed/' ) ) : 'Lunara Film'; } }
+if ( ! function_exists( 'get_privacy_policy_url' ) ) { function get_privacy_policy_url() { return array_key_exists( 'footer_privacy', $GLOBALS ) ? $GLOBALS['footer_privacy'] : home_url( '/privacy/' ); } }
 function post_type_exists( $type ) { return in_array( $type, array( 'journal', 'review' ), true ); }
 if ( ! function_exists( 'get_posts' ) ) { function get_posts( $args ) { $GLOBALS['lunara_pilot_journal_query'] = $args; return isset( $GLOBALS['lunara_pilot_journal_posts'] ) ? $GLOBALS['lunara_pilot_journal_posts'] : array( (object) array( 'ID' => 301, 'post_type' => 'journal', 'post_status' => 'publish', 'post_password' => '' ) ); } }
 if ( ! function_exists( 'get_permalink' ) ) { function get_permalink( $id ) { return isset( $GLOBALS['lunara_pilot_journal_url'] ) ? $GLOBALS['lunara_pilot_journal_url'] : home_url( '/journal/angel-finally-gets-a-face-that-can-fly/' ); } }
@@ -272,6 +275,8 @@ require $theme_root . '/inc/home-blocks.php';
 require $theme_root . '/inc/design-tokens.php';
 require $theme_root . '/inc/site-studio-registry.php';
 require $theme_root . '/inc/site-studio-adapters.php';
+require_once $theme_root . '/inc/site-studio-footer-navigation.php';
+require_once $theme_root . '/inc/site-studio-utility-recovery.php';
 require $theme_root . '/inc/site-studio-journal-single.php';
 require $theme_root . '/inc/site-studio-rest.php';
 if ( defined( 'LUNARA_METHOD_BOOTSTRAP_ONLY' ) ) { return; }

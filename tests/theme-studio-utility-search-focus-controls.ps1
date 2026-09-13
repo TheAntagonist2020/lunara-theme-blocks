@@ -25,13 +25,15 @@ $controlDesk = Read-ThemeFile 'inc/control-desk.php'
 $frontend = Read-ThemeFile 'inc/frontend.php'
 $search = Read-ThemeFile 'search.php'
 $notFound = Read-ThemeFile '404.php'
+$provider = Read-ThemeFile 'inc/site-studio-utility-recovery.php'
+$workspace = Read-ThemeFile 'inc/site-studio.php'
 
 foreach ($key in @(
     'lunara_utility_search_lead_focus',
     'lunara_utility_search_spotlight_type',
     'lunara_utility_reentry_primary'
 )) {
-    Assert-True ($controlDesk -match [regex]::Escape("'$key'")) "Utility Search Studio must define the $key focus control."
+    Assert-True ($provider -match [regex]::Escape("'$key'")) "Shared Search/404 provider must retain $key."
     Assert-True ($frontend -match [regex]::Escape("'$key'")) "Utility Search public CSS must read the $key focus value."
 }
 
@@ -47,13 +49,13 @@ foreach ($option in @(
     'oscars',
     'search'
 )) {
-    Assert-True ($controlDesk -match [regex]::Escape("'$option'")) "Utility Search focus controls must support the $option option."
+    Assert-True ($provider -match [regex]::Escape("'$option'")) "Shared Search/404 controls must retain $option."
 }
 
 Assert-True ($controlDesk -match 'function\s+lunara_control_desk_utility_search_focus_select_specs') 'Utility Search Studio must define focus select specs.'
-Assert-True ($controlDesk -match 'lunara_control_desk_utility_search_focus_select_specs\(\)') 'Utility Search save/render paths must use focus select specs.'
-Assert-True ($controlDesk -match 'lunara_utility_search_focus_select') 'Utility Search focus controls must save through the existing form.'
-Assert-True ($controlDesk -match 'Search Focus') 'Utility Search Studio must render a Search Focus control group.'
+Assert-True ($workspace.Contains("'focus.lead', 'focus.spotlight'")) 'Shared Search inspector must expose both focus controls.'
+Assert-True ($provider -match "'primary'\s*=>\s*array\(\s*'mod'\s*=>\s*'lunara_utility_reentry_primary'") 'The separate404 recovery group must own primary destination.'
+Assert-True ($workspace.Contains("'utility-404' === `$surface_id")) '404 must have its own inspector, including shared recovery controls.'
 Assert-True ($controlDesk -notmatch '<textarea[^>]+lunara_utility') 'Utility Search focus controls must not expose raw CSS textareas.'
 
 Assert-True ($search -match 'lunara_utility_search_lead_focus') 'Search template must read the lead focus control.'

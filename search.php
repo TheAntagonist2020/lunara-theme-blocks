@@ -297,9 +297,10 @@ if ( $result_count <= 0 ) {
     $result_count = count( $result_posts );
 }
 
+$use_empty_title = in_array( get_theme_mod( 'lunara_search_no_query_title_enabled', false ), array( true, 1, '1' ), true );
 $archive_title = '' !== $query_text
     ? __( 'Search Results', 'lunara-film' )
-    : __( 'Search Lunara Film', 'lunara-film' );
+    : ( $use_empty_title ? get_theme_mod( 'lunara_search_no_query_title', __( 'Search Lunara Film', 'lunara-film' ) ) : __( 'Search Lunara Film', 'lunara-film' ) );
 
 $archive_copy = __( 'A command surface for criticism, Journal entries, film dossiers, talent files, and the Oscar Ledger.', 'lunara-film' );
 
@@ -332,7 +333,7 @@ if ( empty( $result_posts ) && empty( $oscar_matches ) && ! empty( $recovery_hit
     );
 }
 ?>
-<main id="primary" class="<?php echo esc_attr( implode( ' ', $search_page_classes ) ); ?>">
+<div id="primary" class="<?php echo esc_attr( implode( ' ', $search_page_classes ) ); ?>">
     <section class="lunara-home-section lunara-archive-hero" data-lunara-site-studio-section="search-command">
         <div class="lunara-editorial-archive-hero-shell">
             <div class="lunara-editorial-archive-hero-copy-wrap">
@@ -458,7 +459,7 @@ if ( empty( $result_posts ) && empty( $oscar_matches ) && ! empty( $recovery_hit
                         <h3><?php esc_html_e( 'Open The Oscar Ledger', 'lunara-film' ); ?></h3>
                         <span class="lunara-section-link"><?php esc_html_e( 'Open The Ledger', 'lunara-film' ); ?></span>
                     </a>
-                    <a class="lunara-search-empty-route-card" href="<?php echo esc_url( home_url( '/news/' ) ); ?>">
+                    <a class="lunara-search-empty-route-card" href="<?php echo esc_url( ( get_post_type_archive_link( 'journal' ) ?: home_url( '/journal/' ) ) ); ?>">
                         <p class="lunara-home-section-kicker"><?php esc_html_e( 'Editorial', 'lunara-film' ); ?></p>
                         <h3><?php esc_html_e( 'Return To The Journal', 'lunara-film' ); ?></h3>
                         <span class="lunara-section-link"><?php esc_html_e( 'Open The Journal', 'lunara-film' ); ?></span>
@@ -471,6 +472,6 @@ if ( empty( $result_posts ) && empty( $oscar_matches ) && ! empty( $recovery_hit
     <?php if ( $oscar_after_results ) : ?>
         <?php lunara_search_render_oscar_matches( $oscar_matches ); ?>
     <?php endif; ?>
-</main>
+</div>
 <?php
 get_footer();

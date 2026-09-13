@@ -5,6 +5,13 @@ This work is **not implemented** in that release. Release and accept the current
 batch before extending these owners. Source findings below are not fresh public
 measurements.
 
+Implementation details are now recorded in
+[FOOTER-NAVIGATION-DESIGN.md](FOOTER-NAVIGATION-DESIGN.md) and
+[SEARCH-404-IMPLEMENTATION-DESIGN.md](SEARCH-404-IMPLEMENTATION-DESIGN.md).
+Use their final compatibility alignment: exact old History and authenticated
+tokens remain supported; stale partial save bodies are rejected. Storage and
+adoption choices are implementation decisions within Dalton's existing scope.
+
 ## Active owners
 
 - `inc/frontend.php`, `lunara_render_custom_footer()` (around line 1467), is

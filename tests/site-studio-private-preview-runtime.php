@@ -9,6 +9,8 @@ $lunara_preview_posts = array( 42 => '<!-- wp:lunara/cinematic-hero /--><!-- wp:
 $lunara_preview_status = 200;
 $lunara_preview_events = array();
 $lunara_preview_is_front = true;
+$lunara_preview_is_404 = false;
+function is_404() { return ! empty( $GLOBALS['lunara_preview_is_404'] ); }
 $lunara_preview_front_id = 42;
 $lunara_preview_now = 2000000000;
 $lunara_preview_callback_events = array();
@@ -115,6 +117,7 @@ function lunara_preview_surface_specs() {
 		'journal-single'     => array( 'owner' => 'theme:journal-single', 'route' => '/journal/angel-finally-gets-a-face-that-can-fly/', 'query' => 'lunara_journal_single_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'article', 'gallery' ) ),
 		'review-single'      => array( 'owner' => 'theme:review-single', 'route' => '/reviews/sinners-2025/', 'query' => 'lunara_review_single_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'criticism', 'debrief', 'pair-it-with' ) ),
 		'utility-search'     => array( 'owner' => 'theme:utility-search', 'route' => '/search/', 'query' => 'lunara_utility_search_preview', 'params' => array( 'q' => 'Lunara' ), 'storage' => 'site-studio', 'markers' => array( 'search-command', 'direct-matches', 'result-run', 'recovery' ) ),
+		'utility-404'        => array( 'owner' => 'theme:utility-404', 'route' => '/definitely-not-a-real-lunara-route/', 'query' => 'lunara_404_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'search-command', 'recovery' ) ),
 		'site-footer'        => array( 'owner' => 'theme:site-footer', 'route' => '/', 'query' => 'lunara_footer_preview', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'footer' ) ),
 	);
 }
@@ -143,7 +146,7 @@ function lunara_preview_provider_config( $surface, $token ) {
 function lunara_reviews_archive_studio_get_preview_config( $token ) { return lunara_preview_provider_config( 'reviews-archive', $token ); }
 function lunara_journal_archive_studio_get_preview_config( $token ) { return lunara_preview_provider_config( 'journal-archive', $token ); }
 
-/** Trace every real projection callback, including the five 3.2.76 surfaces. */
+/** Trace every real projection callback, including the five 3.2.77 surfaces. */
 function lunara_preview_trace_schema( $surface ) {
 	global $lunara_test_trace_callbacks, $lunara_preview_events;
 	if ( $lunara_test_trace_callbacks ) { $lunara_preview_events[] = 'projection'; }
@@ -156,6 +159,7 @@ function lunara_preview_trace_schema( $surface ) {
 		'review-single'      => 'lunara_site_studio_review_single_state_schema',
 		'journal-single'     => 'lunara_site_studio_journal_single_state_schema',
 		'utility-search'     => 'lunara_site_studio_utility_search_state_schema',
+		'utility-404'        => 'lunara_site_studio_utility_404_state_schema',
 		'site-footer'        => 'lunara_site_studio_footer_state_schema',
 	);
 	return isset( $callbacks[ $surface['id'] ] ) ? call_user_func( $callbacks[ $surface['id'] ] ) : array();
@@ -199,6 +203,8 @@ function lunara_preview_reset( $surface, $token, $instance, $query = null, $get 
 	$specs = lunara_preview_surface_specs(); $spec = $specs[ $surface ];
 	$lunara_test_filters = $lunara_preview_base_filters; $lunara_test_actions = $lunara_preview_base_actions;
 	$lunara_preview_events = array(); $lunara_preview_status = 200; $lunara_preview_user_id = 7; $lunara_test_can_edit = true; $lunara_test_dependency_ready = true; $lunara_test_adapter_failure = ''; $lunara_test_enqueued_scripts = array(); $lunara_test_localized = array(); $lunara_preview_is_front = '/' === $spec['route']; $lunara_preview_front_id = 42; $lunara_preview_surface_mutation = ''; $lunara_preview_surface_mutation_target = 'global-design'; $lunara_test_trace_callbacks = false; $lunara_test_wp_die_args = array(); $lunara_preview_callback_events = array(); $lunara_preview_collision = ''; $lunara_preview_consumer_mutation = ''; $lunara_preview_warnings = array(); $lunara_preview_admin_bar_calls = array(); $lunara_preview_admin_bar_enabled = true; $lunara_preview_core_admin_bar_events = array();
+	$GLOBALS['lunara_preview_is_404'] = 'utility-404' === $surface;
+	if ( 'utility-404' === $surface ) { $lunara_preview_status = 404; }
 	$state = null === $state ? lunara_preview_state( $surface ) : $state;
 	$values = $spec['params']; $values[ $spec['query'] ] = $token; $values['lunara_site_studio_instance'] = $instance;
 	if ( null === $query ) { $segments = array(); foreach ( $values as $key => $value ) { $segments[] = rawurlencode( $key ) . '=' . rawurlencode( $value ); } $query = implode( '&', $segments ); }
@@ -326,7 +332,7 @@ $utility_query = 'q=Lunara&lunara_utility_search_preview=' . $token . '&lunara_s
 $utility_get = array( 'q' => 'Lunara', 'lunara_utility_search_preview' => $token, 'lunara_site_studio_instance' => $instance );
 $utility_query_denials = array(
 	'changed fixed query value' => array( 'q=lunara&lunara_utility_search_preview=' . $token . '&lunara_site_studio_instance=' . rawurlencode( $instance ), array( 'q' => 'lunara', 'lunara_utility_search_preview' => $token, 'lunara_site_studio_instance' => $instance ) ),
-	'missing fixed query value' => array( 'lunara_utility_search_preview=' . $token . '&lunara_site_studio_instance=' . rawurlencode( $instance ), array( 'lunara_utility_search_preview' => $token, 'lunara_site_studio_instance' => $instance ) ),
+	'empty fixed query value' => array( 'q=&lunara_utility_search_preview=' . $token . '&lunara_site_studio_instance=' . rawurlencode( $instance ), array( 'q' => '', 'lunara_utility_search_preview' => $token, 'lunara_site_studio_instance' => $instance ) ),
 	'extra query value' => array( $utility_query . '&extra=1', $utility_get + array( 'extra' => '1' ) ),
 );
 foreach ( $utility_query_denials as $label => $case ) {
@@ -390,4 +396,45 @@ $hero_source = file_get_contents( dirname( __DIR__ ) . '/functions.php' ); $hero
 $fallback_hero = lunara_render_cinematic_hero_carousel(); $lunara_hero_fixture_slides = array( array( 'title' => 'Only' ) ); $singleton_fallback_hero = lunara_render_cinematic_hero_carousel(); $lunara_hero_fixture_slides = array( array( 'title' => 'One' ), array( 'title' => 'Two' ) ); $carousel_hero = lunara_render_cinematic_hero_carousel();
 foreach ( array( 'empty fallback' => $fallback_hero, 'singleton no-command fallback' => $singleton_fallback_hero, 'multi-slide' => $carousel_hero ) as $hero_kind => $hero_html ) { lunara_test_assert( 1 === substr_count( $hero_html, 'data-lunara-site-studio-section="hero"' ) && 1 === preg_match( '/^\s*<section\s+data-lunara-site-studio-section="hero"(?=\s|>)/', $hero_html ) && 1 === substr_count( $hero_html, '<section' ), 'Real ' . $hero_kind . ' Hero output must expose exactly one root marker with no wrapper or nested duplicate.' ); }
 lunara_test_assert( false !== strpos( $singleton_fallback_hero, 'fixture-static-hero' ) && false !== strpos( $singleton_fallback_hero, 'Fallback' ) && false === strpos( $singleton_fallback_hero, 'splide__slide' ), 'A singleton without a Hero Command must execute the required fewer-than-two static fallback branch; changing its <2 boundary to <1 must fail this assertion.' );
+// Search start is an explicit empty parameter set, not an arbitrary search term.
+$start_get = array( 'lunara_utility_search_preview' => $token, 'lunara_site_studio_instance' => $instance );
+$start_query = 'lunara_utility_search_preview=' . $token . '&lunara_site_studio_instance=' . rawurlencode( $instance );
+lunara_preview_reset( 'utility-search', $token, $instance, $start_query, $start_get );
+$start_before = serialize( array( $lunara_preview_options, $lunara_preview_mods, $lunara_preview_transients ) );
+$start_result = lunara_preview_run();
+lunara_test_assert( $start_result['ok'] && 200 === $start_result['status'] && 'utility-search' === $lunara_site_studio_preview_context['surface'], 'The exact Search start case shares the authenticated Search owner and remains200.' );
+lunara_test_assert( $start_before === serialize( array( $lunara_preview_options, $lunara_preview_mods, $lunara_preview_transients ) ), 'Search start preview never writes settings or extends its token.' );
+
+// A separate 404 editor must never turn its missing path into a successful page.
+lunara_preview_reset( 'utility-404', $token, $instance );
+$missing_result = lunara_preview_run();
+lunara_test_assert( $missing_result['ok'] && 404 === $missing_result['status'] && is_404() && 'utility-404' === $lunara_site_studio_preview_context['surface'], 'A valid recovery preview preserves the genuine404 status and missing-page query.' );
+lunara_preview_reset( 'utility-404', $token, $instance ); $lunara_preview_is_404 = false;
+$real_page = lunara_preview_run();
+lunara_test_assert( ! $real_page['ok'] && 403 === $real_page['status'], 'If the fixed recovery path becomes a real page, its404 preview must fail closed.' );
+lunara_preview_reset( 'utility-404', $token, $instance ); $_SERVER['REQUEST_URI'] = '/another-missing-page/?' . $_SERVER['QUERY_STRING'];
+$other_missing = lunara_preview_run();
+lunara_test_assert( ! $other_missing['ok'] && 403 === $other_missing['status'], 'A recovery token cannot roam to other missing paths.' );
+
+// Exact historical token shapes retain newly owned public settings.
+foreach ( array( 'utility-search', 'site-footer' ) as $surface ) {
+	lunara_preview_reset( $surface, $token, $instance );
+	$legacy_state = lunara_preview_state( $surface );
+	unset( $legacy_state[ 'site-footer' === $surface ? 'navigation' : 'content' ] );
+	$new_mod = 'site-footer' === $surface ? 'lunara_footer_navigation' : 'lunara_search_no_query_title_enabled';
+	$new_value = 'site-footer' === $surface ? '{"version":1,"columns":{"editorial":[],"oscars":[],"utility":[]}}' : true;
+	$lunara_preview_mods[$new_mod] = $new_value;
+	lunara_preview_reset( $surface, $token, $instance, null, null, $legacy_state );
+	$historical_before = serialize( array( $lunara_preview_mods, $lunara_preview_transients ) );
+	$historical_result = lunara_preview_run();
+	lunara_test_assert( $historical_result['ok'] && $new_value === get_theme_mod( $new_mod ) && $historical_before === serialize( array( $lunara_preview_mods, $lunara_preview_transients ) ), "$surface exact old authenticated token leaves new ownership and persistence unchanged" );
+	lunara_preview_reset( $surface, $token, $instance, null, null, $legacy_state ); $lunara_preview_user_id = 8;
+	$wrong_user = lunara_preview_run();
+	lunara_test_assert( ! $wrong_user['ok'] && 403 === $wrong_user['status'], "$surface historical compatibility never bypasses user binding" );
+	$near_legacy = $legacy_state; $first_group = array_key_first( $near_legacy ); unset( $near_legacy[$first_group][array_key_first( $near_legacy[$first_group] )] );
+	lunara_preview_reset( $surface, $token, $instance, null, null, $near_legacy );
+	$partial = lunara_preview_run();
+	lunara_test_assert( ! $partial['ok'] && 403 === $partial['status'], "$surface near-legacy partial token remains invalid" );
+	unset( $lunara_preview_mods[$new_mod] );
+}
 fwrite( STDOUT, "site-studio-private-preview-runtime: all assertions passed.\n" );

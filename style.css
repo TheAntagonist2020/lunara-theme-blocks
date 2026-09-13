@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.76
+Version: 3.2.77
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -2194,7 +2194,10 @@ footer.site-footer .lunara-footer-copyright {
 .lunara-footer-nav-col a {
     display: inline-flex;
     align-items: center;
-    min-height: 38px;
+    min-height: 44px;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
     padding: 8px 14px;
     border-radius: 999px;
     background: rgba(255,255,255,.02);
@@ -2744,6 +2747,7 @@ footer.site-footer .lunara-footer-copyright {
 
 .lunara-search-command-input {
     width: 100%;
+    min-width: 0;
     min-height: 54px;
     border: 1px solid rgba(224,196,129,.18);
     border-radius: 6px;
@@ -2758,6 +2762,7 @@ footer.site-footer .lunara-footer-copyright {
 }
 
 .lunara-search-command-submit {
+    min-width: 44px;
     min-height: 54px;
     border: 1px solid rgba(224,196,129,.42);
     border-radius: 6px;
@@ -2837,6 +2842,8 @@ footer.site-footer .lunara-footer-copyright {
 .lunara-search-oscar-link,
 .lunara-search-result-link {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
     gap: 12px;
     height: 100%;
     padding: 22px 22px 24px;
@@ -2852,6 +2859,7 @@ footer.site-footer .lunara-footer-copyright {
 
 .lunara-search-oscar-title,
 .lunara-search-result-title {
+    overflow-wrap: anywhere;
     margin: 0;
     color: var(--lunara-text, #FAFBFC);
     font-family: var(--lunara-font-display, Georgia, "Times New Roman", serif);
@@ -2875,6 +2883,8 @@ footer.site-footer .lunara-footer-copyright {
 
 .lunara-search-form-shell {
     margin: 0;
+    width: 100%;
+    min-width: 0;
     max-width: none;
     padding: 18px;
     border: 1px solid rgba(201,169,97,.14);
@@ -2886,13 +2896,25 @@ footer.site-footer .lunara-footer-copyright {
 }
 
 .lunara-search-form-shell .lunara-search-input {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     border-radius: 8px;
     min-height: 48px;
 }
 
 .lunara-search-empty-shell {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
     gap: 28px;
+}
+
+.lunara-search-empty-shell > *,
+.lunara-search-empty-routes-shell > *,
+.lunara-search-empty-shell .lunara-editorial-archive-empty-shell > * {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .lunara-search-empty-routes-shell {
@@ -8990,7 +9012,7 @@ body.single-review .lunara-review-single-ledger-card .lunara-oscar-ledger-counts
 .lunara-footer-legal a {
     display: inline-flex;
     align-items: center;
-    min-height: 34px;
+    min-height: 44px;
     padding: 6px 12px;
     border-radius: 999px;
     border: 1px solid rgba(201,169,97,.14);
@@ -9796,6 +9818,7 @@ body.single-review .lunara-review-single-ledger-card .lunara-oscar-ledger-counts
 
 .lunara-footer-nav-col {
     position: relative;
+    min-width: 0;
     min-height: 100%;
     padding: 20px 20px 18px;
     border-radius: 22px;
@@ -9828,6 +9851,7 @@ body.single-review .lunara-review-single-ledger-card .lunara-oscar-ledger-counts
 
 .lunara-footer-col-heading {
     margin-bottom: 18px;
+    overflow-wrap: anywhere;
 }
 
 .lunara-footer-utility {

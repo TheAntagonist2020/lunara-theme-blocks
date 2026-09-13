@@ -12507,6 +12507,19 @@ add_action( 'wp_head', 'lunara_output_review_layout_guardrail_css', 101 );
 
 if ( ! function_exists( 'lunara_register_oscar_pick_cpt' ) ) {
 	function lunara_register_oscar_pick_cpt() {
+		register_taxonomy( 'oscar_pick_category', 'lunara_oscar_pick', array(
+			'labels' => array(
+				'name'          => __( 'Pick Categories', 'lunara-film' ),
+				'singular_name' => __( 'Pick Category', 'lunara-film' ),
+				'menu_name'     => __( 'Categories', 'lunara-film' ),
+			),
+			'public'            => true,
+			'hierarchical'      => true,
+			'show_admin_column' => true,
+			'show_in_rest'      => true,
+			'rewrite'           => array( 'slug' => 'oscar-picks/category', 'with_front' => false ),
+		) );
+
 		register_post_type( 'lunara_oscar_pick', array(
 			'labels' => array(
 				'name'          => __( 'Oscar Picks', 'lunara-film' ),
@@ -12529,19 +12542,6 @@ if ( ! function_exists( 'lunara_register_oscar_pick_cpt' ) ) {
 			'taxonomies'          => array( 'oscar_pick_category' ),
 			'show_in_rest'        => true,
 			'capability_type'     => 'post',
-		) );
-
-		register_taxonomy( 'oscar_pick_category', 'lunara_oscar_pick', array(
-			'labels' => array(
-				'name'          => __( 'Pick Categories', 'lunara-film' ),
-				'singular_name' => __( 'Pick Category', 'lunara-film' ),
-				'menu_name'     => __( 'Categories', 'lunara-film' ),
-			),
-			'public'            => true,
-			'hierarchical'      => true,
-			'show_admin_column' => true,
-			'show_in_rest'      => true,
-			'rewrite'           => array( 'slug' => 'oscar-picks/category', 'with_front' => false ),
 		) );
 	}
 	add_action( 'init', 'lunara_register_oscar_pick_cpt' );
@@ -13605,6 +13605,19 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 
 if ( ! function_exists( 'lunara_register_oscar_fact_cpt' ) ) {
 	function lunara_register_oscar_fact_cpt() {
+		register_taxonomy( 'oscar_fact_category', 'oscar_fact', array(
+			'labels' => array(
+				'name'          => __( 'Fact Categories', 'lunara-film' ),
+				'singular_name' => __( 'Fact Category', 'lunara-film' ),
+				'menu_name'     => __( 'Categories', 'lunara-film' ),
+			),
+			'public'            => true,
+			'hierarchical'      => true,
+			'show_admin_column' => true,
+			'show_in_rest'      => true,
+			'rewrite'           => array( 'slug' => 'oscar-facts/category', 'with_front' => false ),
+		) );
+
 		register_post_type( 'oscar_fact', array(
 			'labels' => array(
 				'name'          => __( 'Oscar Facts', 'lunara-film' ),
@@ -13627,19 +13640,6 @@ if ( ! function_exists( 'lunara_register_oscar_fact_cpt' ) ) {
 			'taxonomies'          => array( 'oscar_fact_category' ),
 			'show_in_rest'        => true,
 			'capability_type'     => 'post',
-		) );
-
-		register_taxonomy( 'oscar_fact_category', 'oscar_fact', array(
-			'labels' => array(
-				'name'          => __( 'Fact Categories', 'lunara-film' ),
-				'singular_name' => __( 'Fact Category', 'lunara-film' ),
-				'menu_name'     => __( 'Categories', 'lunara-film' ),
-			),
-			'public'            => true,
-			'hierarchical'      => true,
-			'show_admin_column' => true,
-			'show_in_rest'      => true,
-			'rewrite'           => array( 'slug' => 'oscar-facts/category', 'with_front' => false ),
 		) );
 	}
 	add_action( 'init', 'lunara_register_oscar_fact_cpt' );

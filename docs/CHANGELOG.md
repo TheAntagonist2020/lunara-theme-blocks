@@ -11,6 +11,43 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-13 — Theme 3.2.77 footer and recovery editors
+
+Footer navigation joins Site Studio with three ordered link lists. Choose built-in
+destinations or custom URLs, change labels, hide links and drag or keyboard-order
+them. Existing navigation stays inherited until explicit Apply. Copy-only changes
+do not adopt the lists; custom empty lists remain empty. Built-in URLs resolve from
+their current owners, and Footer links provide 44px targets with long-label wrapping.
+Link rows stay compact until expanded; visible drag grips and keyboard movement
+controls remain available. Links-only previews preserve unchanged legacy footer
+copy exactly as Apply does.
+
+Search gains kicker, empty-search heading and excerpt-length controls. An explicit
+switch activates a custom empty-search heading so previously dormant saved text
+does not suddenly appear. Results and Search start previews share the same private
+token. The new 404 Recovery editor controls the existing explanation, guidance and
+recovery destination independently, with a real private 404 preview.
+
+Both surfaces use shared Preview, Apply, Discard and History. Exact older Footer
+and Search revisions preserve fields they never owned; old authenticated previews
+keep their limited scope. Invalid partial saves and competing Classic/Customizer
+writers cannot overwrite current settings. Search links to the canonical Journal
+archive; 404 forms use the canonical Search route. Search, 404 and generic pages
+retain one main landmark. Search cards wrap long titles, narrow empty-result
+panels fit their container, and configured excerpts and recovery copy remain
+fully readable instead of being cut off by the old three-line CSS clamp.
+Recovery forms and their inputs explicitly fit their containing panel, preventing
+native browser input sizing from expanding narrow Search and 404 layouts.
+Existing mobile presentation remains the baseline.
+
+Oscar Pick and Fact category routes also receive a narrow rule-order correction.
+WordPress's generated attachment rules previously matched those URLs before their
+taxonomy rules. Taxonomies now register first; an existing-rules compatibility
+filter promotes only the affected saved taxonomy rules ahead of the overlapping
+attachment rules. It preserves unrelated routing precedence and does not generate
+missing rules, write options or flush rewrites. Public route acceptance follows
+deployment.
+
 ## 2026-09-13 — Theme 3.2.76 shared editors and article presentation
 
 Latest Reviews joins the existing Home carousel editor with independent

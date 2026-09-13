@@ -23,6 +23,7 @@ require_once $lunara_inc . 'helpers.php';
 // Layer 1 — Independent modules.
 require_once $lunara_inc . 'customizer.php';
 require_once $lunara_inc . 'reviews-cpt.php';
+require_once $lunara_inc . 'oscar-taxonomy-rewrites.php';
 require_once $lunara_inc . 'journal-cpt.php';    // Journal CPT + journal_type taxonomy + per-post meta
 require_once $lunara_inc . 'journal-family.php'; // Canonical fields, taxonomy routes, and legacy presentation adapters
 require_once $lunara_inc . 'journal-archive-studio.php'; // Focused revisionable Journal archive curation + preview.
@@ -141,6 +142,8 @@ require_once $lunara_inc . 'design-tokens.php';
 require_once $lunara_inc . 'site-studio-registry.php';
 require_once $lunara_inc . 'site-studio-method.php';
 require_once $lunara_inc . 'site-studio-adapters.php';
+require_once $lunara_inc . 'site-studio-footer-navigation.php';
+require_once $lunara_inc . 'site-studio-utility-recovery.php';
 require_once $lunara_inc . 'site-studio-journal-single.php';
 require_once $lunara_inc . 'site-studio-oscars-ledger.php';
 require_once $lunara_inc . 'site-studio-carousels.php';

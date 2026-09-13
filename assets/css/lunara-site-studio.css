@@ -116,3 +116,23 @@
 	.lunara-site-studio-page-nav { grid-template-columns:repeat(2,minmax(0,1fr)); }
 	.lunara-site-studio-context-nav a { padding:8px; }
 }
+
+/* Footer lists share the same readable, keyboard-accessible inspector rhythm. */
+.lunara-footer-editor-column{margin-top:24px;border-top:1px solid #dcdcde;padding-top:12px;min-width:0}
+.lunara-footer-editor-row{display:grid;gap:10px;padding:14px;margin:12px 0;border:1px solid #c3c4c7;border-radius:8px;background:#fff;min-width:0}
+.lunara-footer-editor-row label{display:grid;gap:5px;min-width:0;font-weight:600}
+.lunara-footer-editor-row input:not([type=checkbox]),.lunara-footer-editor-row select{width:100%;min-width:0;min-height:44px}
+.lunara-footer-editor-row input[type=checkbox]{width:22px;height:22px;margin:8px 0}
+.lunara-footer-editor-row p{margin:0;overflow-wrap:anywhere}
+.lunara-footer-editor-actions{display:flex;flex-wrap:wrap;gap:8px}
+[data-footer-command],[data-search-preview-case]{min-height:44px!important;white-space:normal!important}
+[data-search-preview-case][aria-pressed=true]{box-shadow:inset 0 0 0 2px currentColor}
+.lunara-footer-editor-row.is-dragging{opacity:.6}
+.lunara-site-studio[data-surface="utility-search"] label[for="lunara-site-studio-content-use-empty-title"]{display:flex;align-items:center;min-height:44px}
+.lunara-site-studio[data-surface="utility-search"] #lunara-site-studio-content-use-empty-title{width:24px;height:24px}
+.lunara-footer-editor-row summary{cursor:pointer;min-height:44px;overflow-wrap:anywhere}
+.lunara-footer-editor-row summary strong{display:inline}
+.lunara-footer-editor-row summary span{display:block;font-size:12px;color:#50575e;margin-top:5px}
+.lunara-footer-editor-row details[open] summary{margin-bottom:14px}
+.lunara-footer-editor-row details>label{margin:10px 0}
+.lunara-footer-drag-grip{font-size:12px;color:#50575e;cursor:grab;user-select:none;min-height:24px;display:flex;align-items:center}

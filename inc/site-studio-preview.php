@@ -24,6 +24,7 @@ if ( ! function_exists( 'lunara_site_studio_preview_pilots' ) ) {
 			'journal-single' => array( 'owner' => 'theme:journal-single', 'query' => 'lunara_journal_single_preview', 'route' => '', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'article', 'gallery' ) ),
 			'review-single' => array( 'owner' => 'theme:review-single', 'query' => 'lunara_review_single_preview', 'route' => '/reviews/sinners-2025/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'criticism', 'debrief', 'pair-it-with' ) ),
 			'utility-search' => array( 'owner' => 'theme:utility-search', 'query' => 'lunara_utility_search_preview', 'route' => '/search/', 'params' => array( 'q' => 'Lunara' ), 'storage' => 'site-studio', 'markers' => array( 'search-command', 'direct-matches', 'result-run', 'recovery' ) ),
+			'utility-404' => array( 'owner' => 'theme:utility-404', 'query' => 'lunara_404_preview', 'route' => '/definitely-not-a-real-lunara-route/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'search-command', 'recovery' ) ),
 			'site-footer' => array( 'owner' => 'theme:site-footer', 'query' => 'lunara_footer_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'footer' ) ),
 		);
 	}
@@ -86,6 +87,8 @@ if ( ! function_exists( 'lunara_site_studio_preview_request_origin' ) ) {
 if ( ! function_exists( 'lunara_site_studio_preview_install_state' ) ) {
 	function lunara_site_studio_preview_state_safe( $surface_id, $state ) {
 		if ( ! is_array( $state ) ) { return false; }
+		if ( 'site-footer' === $surface_id && function_exists( 'lunara_site_studio_footer_navigation_preview_state_safe' ) ) { return lunara_site_studio_footer_navigation_preview_state_safe( $state ); }
+		if ( 'utility-search' === $surface_id && function_exists( 'lunara_site_studio_utility_search_legacy_preview_state_valid' ) && lunara_site_studio_utility_search_legacy_preview_state_valid( $state ) ) { return true; }
 		if ( in_array( $surface_id, array( 'hero-carousel', 'journal-carousel', 'reviews-carousel' ), true ) ) { $kind = lunara_home_carousel_kind( str_replace( '-carousel', '', $surface_id ) ); return lunara_site_studio_carousel_validate( $state, $kind ) === $state; }
 		if ( 'global-design' === $surface_id ) {
 			if ( array( 'colors', 'fonts' ) !== array_keys( $state ) || ! is_array( $state['colors'] ) || ! is_array( $state['fonts'] ) || array( 'gold', 'gold_light', 'bg_primary', 'bg_secondary', 'text', 'text_muted' ) !== array_keys( $state['colors'] ) || array( 'body', 'display', 'signature', 'glamour', 'label' ) !== array_keys( $state['fonts'] ) ) { return false; }
@@ -101,6 +104,7 @@ if ( ! function_exists( 'lunara_site_studio_preview_install_state' ) ) {
 			'journal-single' => 'lunara_site_studio_journal_single_validate_state',
 			'oscars-ledger' => 'lunara_site_studio_oscars_ledger_validate_state',
 			'utility-search' => 'lunara_site_studio_utility_search_validate_state',
+			'utility-404' => 'lunara_site_studio_utility_404_validate_state',
 			'site-footer' => 'lunara_site_studio_footer_validate_state',
 		);
 		if ( isset( $validators[ $surface_id ] ) && is_callable( $validators[ $surface_id ] ) ) {
@@ -111,6 +115,8 @@ if ( ! function_exists( 'lunara_site_studio_preview_install_state' ) ) {
 	}
 	function lunara_site_studio_preview_install_state( $surface_id, $state, $front_page_id ) {
 		if ( ! lunara_site_studio_preview_state_safe( $surface_id, $state ) ) { return false; }
+		if ( 'site-footer' === $surface_id && function_exists( 'lunara_site_studio_footer_navigation_preview_install_state' ) ) { return lunara_site_studio_footer_navigation_preview_install_state( $state ); }
+		if ( 'utility-search' === $surface_id && function_exists( 'lunara_site_studio_utility_search_legacy_preview_state_valid' ) && lunara_site_studio_utility_search_legacy_preview_state_valid( $state ) ) { return lunara_site_studio_utility_search_install_legacy_preview_state( $state ); }
 		if ( in_array( $surface_id, array( 'hero-carousel', 'journal-carousel', 'reviews-carousel' ), true ) ) { $kind = lunara_home_carousel_kind( str_replace( '-carousel', '', $surface_id ) ); $state['adopted'] = true; $GLOBALS['lunara_home_carousel_preview'][ $kind ] = $state; return true; }
 		if ( 'global-design' === $surface_id ) {
 			$tokens = array( 'colors' => array(), 'fonts' => array() ); foreach ( array( 'colors', 'fonts' ) as $group ) { foreach ( $state[ $group ] as $key => $item ) { if ( null !== $item['override'] ) { $tokens[ $group ][ $key ] = $item['override']; } } }
@@ -127,6 +133,7 @@ if ( ! function_exists( 'lunara_site_studio_preview_install_state' ) ) {
 			'journal-single' => 'lunara_site_studio_journal_single_spec',
 			'oscars-ledger' => 'lunara_site_studio_oscars_ledger_spec',
 			'utility-search' => 'lunara_site_studio_utility_search_spec',
+			'utility-404' => 'lunara_site_studio_utility_404_spec',
 			'site-footer' => 'lunara_site_studio_footer_spec',
 		);
 		if ( isset( $spec_callbacks[ $surface_id ] ) && is_callable( $spec_callbacks[ $surface_id ] ) ) {
@@ -157,14 +164,27 @@ if ( ! function_exists( 'lunara_site_studio_resolve_private_preview' ) ) {
 		if ( 'journal-single' === $selected ) { $pilot['route'] = lunara_site_studio_journal_single_preview_route(); }
 		$surface_keys = array( 'id', 'owner', 'supports_preview', 'preview_route', 'preview_query_arg', 'preview_params', 'capability' );
 		if ( ! is_array( $surface ) || array() !== array_diff( $surface_keys, array_keys( $surface ) ) || ! is_string( $surface['id'] ) || ! is_string( $surface['owner'] ) || ! is_bool( $surface['supports_preview'] ) || ! is_string( $surface['preview_route'] ) || ! is_string( $surface['preview_query_arg'] ) || ! is_array( $surface['preview_params'] ) || ! is_string( $surface['capability'] ) || '' === $surface['capability'] || $selected !== $surface['id'] || $pilot['owner'] !== $surface['owner'] || true !== $surface['supports_preview'] || $pilot['route'] !== $surface['preview_route'] || $pilot['params'] !== $surface['preview_params'] || $pilot['query'] !== $surface['preview_query_arg'] ) { return false; }
-		$expected_keys = array_merge( array( $pilot['query'], $instance_arg ), array_keys( $pilot['params'] ) ); $actual_keys = array_keys( $values ); sort( $expected_keys ); sort( $actual_keys ); if ( $expected_keys !== $actual_keys ) { return false; }
-		foreach ( $pilot['params'] as $key => $expected ) { if ( ! isset( $values[ $key ] ) || ! is_string( $values[ $key ] ) || ! hash_equals( $expected, $values[ $key ] ) ) { return false; } }
+		$request_params = $pilot['params'];
+		// Search has two fixed presentations; its token stays bound to the canonical route.
+		if ( 'utility-search' === $selected && ! array_key_exists( 'q', $values ) ) { $request_params = array(); }
+		$expected_keys = array_merge( array( $pilot['query'], $instance_arg ), array_keys( $request_params ) ); $actual_keys = array_keys( $values ); sort( $expected_keys ); sort( $actual_keys ); if ( $expected_keys !== $actual_keys ) { return false; }
+		foreach ( $request_params as $key => $expected ) { if ( ! isset( $values[ $key ] ) || ! is_string( $values[ $key ] ) || ! hash_equals( $expected, $values[ $key ] ) ) { return false; } }
 		if ( 'oscars-ledger' === $selected ? ! lunara_site_studio_oscars_ledger_preview_request_path() : ! lunara_site_studio_preview_request_path( $pilot['route'] ) ) { return false; }
+		if ( 'utility-404' === $selected && ( ! function_exists( 'lunara_site_studio_utility_404_preview_request_valid' ) || ! lunara_site_studio_utility_404_preview_request_valid() ) ) { return false; }
 		$front_page_id = 0; if ( '/' === $pilot['route'] ) { if ( ! is_front_page() ) { return false; } $front_page_id = 'page' === get_option( 'show_on_front' ) ? absint( get_option( 'page_on_front' ) ) : 0; if ( ! $front_page_id || absint( get_queried_object_id() ) !== $front_page_id ) { return false; } }
 		if ( ! is_user_logged_in() || ! get_current_user_id() || ! current_user_can( $surface['capability'] ) ) { return false; }
 		$availability = lunara_site_studio_surface_availability( $surface ); if ( ! is_array( $availability ) || ! array_key_exists( 'available', $availability ) || ! is_bool( $availability['available'] ) || true !== $availability['available'] ) { return false; } $adapter = lunara_site_studio_get_adapter( $selected ); if ( is_wp_error( $adapter ) ) { return false; }
 		if ( 'provider' === $pilot['storage'] ) { if ( empty( $pilot['preview_callback'] ) || ! is_callable( $pilot['preview_callback'] ) ) { return false; } try { $state = call_user_func( $pilot['preview_callback'], $values[ $pilot['query'] ] ); } catch ( Throwable $error ) { return false; } } else { $state = lunara_site_studio_get_private_preview( $selected, $pilot['owner'], $pilot['route'], $values[ $pilot['query'] ] ); }
-		if ( ! is_array( $state ) ) { return false; } $validated = lunara_site_studio_call_adapter( $adapter, 'validate_state', array( $state ) ); if ( is_wp_error( $validated ) || ! is_array( $validated ) || $validated !== $state ) { return false; } $projected = lunara_site_studio_project_state( $selected, $validated ); if ( is_wp_error( $projected ) || ! is_array( $projected ) || $projected !== $validated || ( 'provider' !== $pilot['storage'] && ! lunara_site_studio_preview_install_state( $selected, $projected, $front_page_id ) ) ) { return false; }
+		if ( ! is_array( $state ) ) { return false; }
+		// Only authenticated tokens may use these two frozen historical schemas.
+		$legacy_search = 'utility-search' === $selected && function_exists( 'lunara_site_studio_utility_search_legacy_preview_state_valid' ) && lunara_site_studio_utility_search_legacy_preview_state_valid( $state );
+		$legacy_footer = 'site-footer' === $selected && function_exists( 'lunara_site_studio_footer_navigation_preview_state_safe' ) && lunara_site_studio_mod_surface_validate_state( $state, lunara_site_studio_footer_spec(), 'site_studio_footer' ) === $state;
+		if ( $legacy_search || $legacy_footer ) {
+			if ( ! lunara_site_studio_preview_install_state( $selected, $state, $front_page_id ) ) { return false; }
+		} else {
+			$validated = lunara_site_studio_call_adapter( $adapter, 'validate_state', array( $state ) ); if ( is_wp_error( $validated ) || ! is_array( $validated ) || $validated !== $state ) { return false; }
+			$projected = lunara_site_studio_project_state( $selected, $validated ); if ( is_wp_error( $projected ) || ! is_array( $projected ) || $projected !== $validated || ( 'provider' !== $pilot['storage'] && ! lunara_site_studio_preview_install_state( $selected, $projected, $front_page_id ) ) ) { return false; }
+		}
 		return array( 'surface' => $selected, 'instance' => $values[ $instance_arg ], 'markers' => $pilot['markers'] );
 	}
 }
