@@ -15,13 +15,21 @@ function check(condition, message, evidence) { checks++; if (!condition) failure
     const browser = await chromium.launch({ headless: true, executablePath });
     try {
         for (const width of [320, 390, 768, 1440]) {
-            for (const [name, fixture] of Object.entries(fixtures)) {
+            const scenarios = Object.entries(fixtures);
+            // A native input's intrinsic width depends on platform font metrics.
+            // Exercise a larger HTML size hint, without replacing any layout CSS,
+            // so the Linux CI failure is also reproducible on Windows browsers.
+            if (width <= 390) for (const name of ['404', '404-long', 'search-blank', 'search-no-results']) {
+                scenarios.push([`${name}-wide-native`, { ...fixtures[name], native_size: 40 }]);
+            }
+            for (const [name, fixture] of scenarios) {
                 const page = await browser.newPage({ viewport: { width, height: 1000 }, javaScriptEnabled: false });
                 await page.route('**/*', route => route.abort());
                 // Blocksy supplies this reset and WordPress screen-reader utility.
                 // The main opener/closer, public body
                 // and footer are extracted from their actual production templates.
-                const document = fixture.html.replace('</head>', `<meta name="viewport" content="width=device-width,initial-scale=1"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}.screen-reader-text{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0}</style><style>${css}</style>${fixture.authority}</head>`).replace('<body>', `<body class="${fixture.body_class}">`);
+                let document = fixture.html.replace('</head>', `<meta name="viewport" content="width=device-width,initial-scale=1"><style>*,*::before,*::after{box-sizing:border-box}body{margin:0}.screen-reader-text{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0}</style><style>${css}</style>${fixture.authority}</head>`).replace('<body>', `<body class="${fixture.body_class}">`);
+                if (fixture.native_size) document = document.replace(/<input\b(?=[^>]*\btype="search")/g, `<input size="${fixture.native_size}"`);
                 await page.setContent(document, { waitUntil: 'load' });
                 const data = await page.evaluate(() => {
                     const rect = node => { const r=node.getBoundingClientRect(); return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}; };
@@ -46,7 +54,12 @@ function check(condition, message, evidence) { checks++; if (!condition) failure
                         titles:[...document.querySelectorAll('.lunara-search-result-title')].map(node=>node.textContent),
                         excerpts:[...document.querySelectorAll('.lunara-search-result-copy')].map(node=>({text:node.textContent,...rect(node)})),
                         images:document.querySelectorAll('.lunara-search-result-card img').length,
-                        forms:[...document.querySelectorAll('form[role=search]')].map(node=>({action:node.getAttribute('action'),method:node.method,input:node.querySelector('input')?.name})),
+                        forms:[...document.querySelectorAll('form[role=search]')].map(node=>{
+                            const box=rect(node),style=getComputedStyle(node);
+                            const left=box.left+parseFloat(style.borderLeftWidth)+parseFloat(style.paddingLeft),right=box.right-parseFloat(style.borderRightWidth)-parseFloat(style.paddingRight);
+                            return {action:node.getAttribute('action'),method:node.method,input:node.querySelector('input')?.name,nativeSize:node.querySelector('input')?.size,box,
+                                outside:[...node.querySelectorAll('input:not([type=hidden]),button')].filter(visible).map(child=>({selector:label(child),...rect(child)})).filter(child=>child.left<left-1||child.right>right+1)};
+                        }),
                         footerBox:rect(document.querySelector('.lunara-site-footer')),
                     };
                 });
@@ -58,7 +71,11 @@ function check(condition, message, evidence) { checks++; if (!condition) failure
                 check(JSON.stringify(data.columns)===JSON.stringify(fixture.expected_columns), `${tag}: exact zero/one/twelve or inherited footer lists`, data.columns);
                 if (fixture.footer_only) check(JSON.stringify(data.footerLabels)===JSON.stringify(fixture.footer_labels), `${tag}: complete long labels retain their saved order`, data.footerLabels);
                 if (fixture.saved_copy.length) check(fixture.saved_copy.every(copy=>data.bodyText.includes(copy)), `${tag}: all customized recovery copy reaches the actual public template`);
-                if (!fixture.footer_only) check(data.forms.length>0&&data.forms.every(form=>form.action==='https://example.test/search/'&&form.method==='get'&&form.input==='q'), `${tag}: recovery forms work without JavaScript`, data.forms);
+                if (!fixture.footer_only) {
+                    check(data.forms.length>0&&data.forms.every(form=>form.action==='https://example.test/search/'&&form.method==='get'&&form.input==='q'), `${tag}: recovery forms work without JavaScript`, data.forms);
+                    check(data.forms.every(form=>form.outside.length===0), `${tag}: native controls stay within the form content box`, data.forms);
+                    if (fixture.native_size) check(data.forms.every(form=>form.nativeSize===fixture.native_size), `${tag}: wider native input hint is active`, data.forms);
+                }
                 if (name==='search-query') {
                     check(JSON.stringify(data.titles)===JSON.stringify(fixture.titles), `${tag}: long source headlines remain complete`, data.titles);
                     check(data.excerpts.length===3&&data.excerpts.every(row=>row.text.includes('word50')&&!row.text.includes('word51'))&&data.images===0, `${tag}: configured excerpts and missing-art cards render without empty artwork`, data.excerpts);

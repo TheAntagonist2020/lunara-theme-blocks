@@ -36,6 +36,8 @@ archive; 404 forms use the canonical Search route. Search, 404 and generic pages
 retain one main landmark. Search cards wrap long titles, narrow empty-result
 panels fit their container, and configured excerpts and recovery copy remain
 fully readable instead of being cut off by the old three-line CSS clamp.
+Recovery forms and their inputs explicitly fit their containing panel, preventing
+native browser input sizing from expanding narrow Search and 404 layouts.
 Existing mobile presentation remains the baseline.
 
 Oscar Pick and Fact category routes also receive a narrow rule-order correction.
