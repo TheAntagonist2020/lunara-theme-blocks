@@ -24,7 +24,6 @@ function Read-ThemeFile {
 $reviewRendering = Read-ThemeFile 'inc/review-rendering.php'
 $reviewsCpt      = Read-ThemeFile 'inc/reviews-cpt.php'
 $controlDesk     = Read-ThemeFile 'inc/control-desk.php'
-$studio          = Read-ThemeFile 'inc/reviews-archive-studio.php'
 $helpers         = Read-ThemeFile 'inc/helpers.php'
 $frontend        = Read-ThemeFile 'inc/frontend.php'
 $customizer      = Read-ThemeFile 'inc/customizer.php'
@@ -49,18 +48,16 @@ Assert-True ($reviewRendering -match 'add_filter\(\s*''posts_orderby''') 'Pinned
 Assert-True ($reviewRendering -notmatch 'array_unshift\(\s*\$posts,\s*\$pinned_review') 'Renderer must not inject a tenth row after the paged query.'
 
 # Focused Archive Studio controls reuse canonical storage and stay guarded.
-# The save path now lives in the dedicated Studio module with the legacy
-# Control Desk body as fallback, so these contracts hold across both owners.
 foreach ($setting in @('lunara_reviews_archive_kicker','lunara_reviews_archive_title','lunara_reviews_archive_copy','lunara_reviews_archive_section_order')) {
-    Assert-True (($controlDesk + $studio).Contains($setting)) "Reviews Archive Studio must edit $setting."
+    Assert-True ($controlDesk.Contains($setting)) "Reviews Archive Studio must edit $setting."
 }
-Assert-True (($controlDesk + $studio) -match 'lunara_control_desk_reviews_archive_lead_options[\s\S]*posts_per_page[^\r\n]*=>\s*100') 'Lead selector must be a bounded published-Review query.'
-Assert-True (($controlDesk + $studio) -match 'lunara_set_pinned_review_id') 'Studio save must write through the canonical pin helper.'
-Assert-True (($controlDesk + $studio) -match 'lunara_get_reviews_archive_section_registry') 'Studio must render the canonical Reviews lane registry.'
-Assert-True (($controlDesk + $studio) -match 'lunara_sanitize_reviews_archive_section_order') 'Studio save must sanitize canonical lane order.'
-Assert-True (($controlDesk + $studio) -match 'check_admin_referer\(\s*''lunara_save_reviews_archive_studio''') 'Archive Studio must verify its nonce.'
-Assert-True (($controlDesk + $studio) -match 'current_user_can\(\s*''edit_theme_options''') 'Archive Studio must remain capability protected.'
-Assert-True (($controlDesk + $studio) -match 'lunara_control_desk_bounded_return_url') 'Archive Studio must keep a bounded return target.'
+Assert-True ($controlDesk -match 'lunara_control_desk_reviews_archive_lead_options[\s\S]*posts_per_page[^\r\n]*=>\s*100') 'Lead selector must be a bounded published-Review query.'
+Assert-True ($controlDesk -match 'lunara_set_pinned_review_id') 'Studio save must write through the canonical pin helper.'
+Assert-True ($controlDesk -match 'lunara_get_reviews_archive_section_registry') 'Studio must render the canonical Reviews lane registry.'
+Assert-True ($controlDesk -match 'lunara_sanitize_reviews_archive_section_order') 'Studio save must sanitize canonical lane order.'
+Assert-True ($controlDesk -match 'check_admin_referer\(\s*''lunara_save_reviews_archive_studio''') 'Archive Studio must verify its nonce.'
+Assert-True ($controlDesk -match 'current_user_can\(\s*''edit_theme_options''') 'Archive Studio must remain capability protected.'
+Assert-True ($controlDesk -match 'lunara_control_desk_bounded_return_url') 'Archive Studio must keep a bounded return target.'
 
 # The utility toolbar follows the grid lane truthfully and hero-off retains one H1.
 Assert-True ($customizer -match "'grid'\s*===\s*\`$slug[\s\S]{0,250}lunara-review-archive-slot-utility\{order:") 'Utility toolbar must inherit the configured grid lane order.'
@@ -133,15 +130,7 @@ $pinRuntimeOutput = & php (Join-Path $PSScriptRoot 'reviews-archive-pin-runtime.
 Assert-True ($LASTEXITCODE -eq 0) ("Reviews Archive pin runtime failed: " + ($pinRuntimeOutput -join [Environment]::NewLine))
 Assert-True (($pinRuntimeOutput -join "`n") -match 'all assertions passed') 'Reviews Archive pin runtime did not report success.'
 
-$openingOutput = & php -d error_reporting=24575 (Join-Path $PSScriptRoot 'reviews-opening-runtime.php') 2>&1
-Assert-True ($LASTEXITCODE -eq 0) ("Actual Reviews opening runtime failed: " + ($openingOutput -join [Environment]::NewLine))
-Assert-True (($openingOutput -join "`n") -match 'reviews-opening-runtime: \d+ assertions passed') 'Actual Reviews opening runtime did not report success.'
+$versionLine = (Read-ThemeFile 'style.css' | Select-String -Pattern 'Version:\s*3\.2\.43').Matches.Count
+Assert-True ($versionLine -ge 1) 'Theme version must be 3.2.43.'
 
-$openingBrowser = & node (Join-Path $PSScriptRoot 'reviews-opening-browser-runtime.js') 2>&1
-Assert-True ($LASTEXITCODE -eq 0) ("Actual Reviews opening browser failed: " + ($openingBrowser -join [Environment]::NewLine))
-Assert-True (($openingBrowser -join "`n") -match '"result": "PASS"') 'Actual Reviews opening browser did not report success.'
-
-$versionLine = (Read-ThemeFile 'style.css' | Select-String -Pattern 'Version:\s*3\.2\.73').Matches.Count
-Assert-True ($versionLine -ge 1) 'Theme version must be 3.2.73.'
-
-Write-Host 'Theme 3.2.73 Reviews Archive composition contract passed.'
+Write-Host 'Theme 3.2.43 Reviews Archive composition contract passed.'

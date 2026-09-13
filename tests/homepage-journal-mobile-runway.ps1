@@ -41,10 +41,11 @@ foreach ($needle in @(
     '@media(max-width:820px)',
     'body.home .lunara-dispatches-section .lunara-journal-home-grid{grid-template-columns:minmax(0,1fr)!important;',
     'body.home .lunara-dispatches-section .lunara-journal-home-card{min-height:0!important;height:auto!important;overflow:hidden;',
-    'body.home .lunara-dispatches-section .lunara-journal-home-card .lunara-journal-home-card-link{display:grid!important;grid-template-columns:minmax(0,1fr)!important;',
-    'body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-link{grid-template-rows:auto!important;',
-    'body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-copy{padding:14px 15px!important;',
-    'body.home .lunara-dispatches-section .lunara-journal-home-card .lunara-journal-home-card-media{aspect-ratio:16/10!important;',
+    'body.home .lunara-dispatches-section .lunara-journal-home-card.has-visual:not(.is-lead) .lunara-journal-home-card-link{display:grid!important;grid-template-columns:minmax(112px,38vw) minmax(0,1fr)!important;',
+    'body.home .lunara-dispatches-section .lunara-journal-home-card.is-lead.has-visual .lunara-journal-home-card-media{max-height:clamp(180px,50vw,260px)!important;',
+    'body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-link{grid-template-columns:minmax(0,1fr)!important;',
+    'body.home .lunara-dispatches-section .lunara-journal-home-card.has-no-visual .lunara-journal-home-card-copy{min-height:0!important;',
+    'body.home .lunara-dispatches-section .lunara-journal-home-card-media{aspect-ratio:16/10!important;',
     'body.home .lunara-dispatches-section .lunara-journal-home-card-excerpt{-webkit-line-clamp:2!important;',
     '@media(max-width:520px)',
     '@media(prefers-reduced-motion:reduce)'
@@ -58,12 +59,3 @@ Assert-True ($controlDesk -match "'mobile_order'\s*=>\s*array\(\s*'hero',\s*'dis
 Assert-True ($controlDesk -match "'desktop_order'\s*=>\s*array\(\s*'hero',\s*'latest-reviews',\s*'pairing-desk',\s*'dispatch'") 'Homepage desktop order presets must keep Lunara Method directly under Latest Reviews and before Journal.'
 
 Write-Host 'Homepage Journal mobile runway contract passed.'
-
-& php (Join-Path $PSScriptRoot 'home-oscar-mobile-art-runtime.php')
-Assert-True ($LASTEXITCODE -eq 0) 'Homepage Oscars mobile source-art rendering failed.'
-& node (Join-Path $PSScriptRoot 'home-oscar-framing-runtime.js')
-Assert-True ($LASTEXITCODE -eq 0) 'Homepage Oscars public image framing and no-JavaScript readability failed.'
-& node (Join-Path $PSScriptRoot 'home-mobile-panels-runtime.js')
-Assert-True ($LASTEXITCODE -eq 0) 'Homepage Journal/Oscars mobile browser geometry failed.'
-& node (Join-Path $PSScriptRoot 'home-oscar-navigation-runtime.js')
-Assert-True ($LASTEXITCODE -eq 0) 'Homepage Oscars arrow/keyboard/dot navigation failed.'

@@ -333,13 +333,6 @@ function lunara_get_journal_archive_section_registry() {
             'description'  => __( 'Show the journal archive title block and intro copy.', 'lunara-film' ),
             'aliases'      => array(),
         ),
-        'deskbar' => array(
-            'label'        => __( 'Desk Status', 'lunara-film' ),
-            'toggle_label' => __( 'Show Journal Desk Status', 'lunara-film' ),
-            'setting'      => 'lunara_journal_archive_show_deskbar',
-            'description'  => __( 'Show live published-file, latest-file, and taxonomy-lane counts.', 'lunara-film' ),
-            'aliases'      => array( 'desk-status', 'status' ),
-        ),
         'filters' => array(
             'label'        => __( 'Type Filters', 'lunara-film' ),
             'toggle_label' => __( 'Show Journal Type Filters', 'lunara-film' ),
@@ -347,26 +340,12 @@ function lunara_get_journal_archive_section_registry() {
             'description'  => __( 'Render the journal-type filter pills at the top of the archive.', 'lunara-film' ),
             'aliases'      => array( 'types', 'taxonomy' ),
         ),
-        'toolbar' => array(
-            'label'        => __( 'Sort Toolbar', 'lunara-film' ),
-            'toggle_label' => __( 'Show Journal Sort Toolbar', 'lunara-film' ),
-            'setting'      => 'lunara_journal_archive_show_toolbar',
-            'description'  => __( 'Show the archive framing and newest, oldest, and recently updated choices.', 'lunara-film' ),
-            'aliases'      => array( 'sort', 'desk-order' ),
-        ),
         'grid' => array(
             'label'        => __( 'Journal Grid', 'lunara-film' ),
             'toggle_label' => __( 'Show Journal Grid', 'lunara-film' ),
             'setting'      => 'lunara_journal_archive_show_grid',
             'description'  => __( 'Render the archive card grid for published journal entries.', 'lunara-film' ),
             'aliases'      => array( 'entries', 'cards' ),
-        ),
-        'retention' => array(
-            'label'        => __( 'Retention Lane', 'lunara-film' ),
-            'toggle_label' => __( 'Show Journal Retention Lane', 'lunara-film' ),
-            'setting'      => 'lunara_journal_archive_show_retention',
-            'description'  => __( 'Show the three editable continuation cards after the Journal run.', 'lunara-film' ),
-            'aliases'      => array( 'channels', 'continue-reading' ),
         ),
         'pagination' => array(
             'label'        => __( 'Pagination', 'lunara-film' ),
@@ -539,44 +518,7 @@ function lunara_sanitize_reviews_archive_section_order( $value ) {
 }
 
 function lunara_sanitize_journal_archive_section_order( $value ) {
-    if ( function_exists( 'lunara_journal_archive_studio_expand_section_order' ) ) {
-        return implode( ',', lunara_journal_archive_studio_expand_section_order( $value ) );
-    }
-
-    // Back-compat for the legacy four-lane Customizer control. The three new
-    // lanes belong beside their semantic owners, not appended after pagination.
-    $registry   = lunara_get_journal_archive_section_registry();
-    $recognized = lunara_get_registry_slugs( $registry );
-    $tokens     = preg_split( '/[\s,\r\n]+/', strtolower( (string) $value ) );
-    $tokens     = is_array( $tokens ) ? $tokens : array();
-    $requested  = array();
-    foreach ( $tokens as $token ) {
-        $token = lunara_normalize_registry_slug( $token, $registry );
-        if ( '' !== $token && in_array( $token, $recognized, true ) && ! in_array( $token, $requested, true ) ) {
-            $requested[] = $token;
-        }
-    }
-
-    $ordered = array();
-    foreach ( $requested as $slug ) {
-        $ordered[] = $slug;
-        if ( 'hero' === $slug && ! in_array( 'deskbar', $requested, true ) ) {
-            $ordered[] = 'deskbar';
-        }
-        if ( 'filters' === $slug && ! in_array( 'toolbar', $requested, true ) ) {
-            $ordered[] = 'toolbar';
-        }
-        if ( 'grid' === $slug && ! in_array( 'retention', $requested, true ) ) {
-            $ordered[] = 'retention';
-        }
-    }
-    foreach ( $recognized as $slug ) {
-        if ( ! in_array( $slug, $ordered, true ) ) {
-            $ordered[] = $slug;
-        }
-    }
-
-    return implode( ',', $ordered );
+    return lunara_sanitize_registry_section_order( $value, lunara_get_journal_archive_section_registry() );
 }
 
 function lunara_sanitize_news_archive_live_section_order( $value ) {
