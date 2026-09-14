@@ -25,6 +25,75 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-14 — Theme 3.2.81 shared carousel controls
+
+### Headline / what changed
+
+The next focused completion slice is ready on
+`codex/cross-site-carousel-controls-3.2.81`; code-level detail is in
+`docs/CHANGELOG.md`. Reviews' companion rail and the Oscars rotating-winners
+rail now use the same visible Pause/Play language, 44px arrow and pagination
+targets, hover/focus pause behavior, touch recovery and reduced-motion handling.
+The Oscars rail carries its own accessible label. Article content, saved
+selection, artwork metadata, ordering and editor settings were not changed.
+
+### Verified live state
+
+| Read-only probe | Result |
+| --- | --- |
+| Anonymous Home, Reviews, Journal and Oscars | 200; public build remains `3.2.80+20260914-021556` |
+
+No agent deployment or manual cache purge occurred. Theme 3.2.81 is not
+deployed; its live canary is pending. The 3.2.80 build above is the currently
+verified public release, not this candidate.
+
+### What shipped and why
+
+The Reviews companion rail had arrows and dots but no persistent playback
+control, and its visible controls were smaller than the shared 44px target.
+Oscars rotating winners had arrows but no matching playback control or rail
+label. The patch extends the existing dependency-free runtimes and current
+route markup instead of adding a slider library. Controls preserve compact
+visual dots, pause during hover or focus, resume after touch, and stop automatic
+motion for reduced-motion visitors.
+
+### Commit ledger
+
+| Repository / role | Commit or tree |
+| --- | --- |
+| Theme | Working candidate; commit will be recorded before closure |
+| Theme main | `81586d6cb714c094c3614ab61139c24049112475` remains the latest merged main |
+
+### Gate ledger
+
+- Reviews archive credibility contract passed.
+- Oscars portal fluid contract passed.
+- Reviews dynamic-rail runtime passed: 15 checks at phone width with normal
+  and reduced motion.
+- JavaScript syntax checks passed; the full 95-script required theme suite
+  passed.
+- Mutation gate passed: changing the dynamic-rail toggle hook was caught by the
+  Reviews archive credibility contract and the source was restored byte-exactly.
+
+### Logged, not fixed / punch-list carried forward
+
+The public Oscar Facts area is absent from the current public markup, most
+likely because no published `oscar_fact` records are available; no content was
+invented in this release. Critical CSS regeneration, Jetpack Boost image
+quality, opening lineup curation, NTFCA readiness and Manhunter source recovery
+remain open. Private preview, saved-settings and zero/one/many-item editor
+acceptance remain the next editor-focused verification slice.
+
+### Whose move it is next
+
+The candidate is ready for local review and merge after the full gates pass.
+Dalton merges this branch into `main`, then performs the manual WordPress.com
+deployment. After that handoff, run the versioned canary and public route
+matrix, rebuild the exact rollback hatch, and review the real controls on phone
+and desktop.
+
+---
+
 ## 2026-09-14 — Theme 3.2.80 Oscar carousel playback controls
 
 The next focused completion slice is ready on `codex/oscar-carousel-controls-3.2.80`; code-level detail is in `docs/CHANGELOG.md`.

@@ -6,6 +6,13 @@ are complete. A candidate, passing local test or merged PR is not a live result.
 Manual WordPress.com deployment remains Dalton's action; independent work can
 continue while a release awaits deployment.
 
+September 14 update: Theme 3.2.81 is a local candidate that standardizes the
+reader-facing controls for the Reviews companion rail and the Oscars
+rotating-winners rail. It preserves the existing editor and content state while
+adding the shared Pause/Play, 44px target, hover/focus pause, touch recovery and
+reduced-motion contract. Theme 3.2.80 remains the verified public build until
+this candidate is merged and manually deployed.
+
 September 13 update: Dalton confirms Academy 2.7.84 and Theme 3.2.76 are
 verified published live. A fresh agent canary also passes for
 `3.2.76+20260913-225857`: three anonymous reads agree and Journal/Oscars both

@@ -11,6 +11,22 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-14 — Theme 3.2.81 shared carousel controls
+
+The Reviews companion rail and the Oscars rotating-winners rail now share the
+same reader-facing playback contract. Each rail has arrows, keyboard and touch
+navigation, a visible Pause/Play control, and 44px hit targets while keeping its
+compact cinematic marks. Hover and keyboard focus pause automatic movement;
+touch gestures resume cleanly, and reduced-motion visitors receive a paused,
+disabled autoplay control. The Oscars control announces its own rail instead of
+using the homepage Oscar Picks label.
+
+This release changes presentation behavior only. It does not rewrite article
+content, saved selections, artwork metadata, ordering or Site Studio settings.
+Deployment remains manual through WordPress.com after the candidate is merged.
+
+---
+
 ## 2026-09-14 — Theme 3.2.80 Oscar carousel playback controls
 
 Oscar Picks now has a persistent, keyboard-sized Pause/Play control alongside

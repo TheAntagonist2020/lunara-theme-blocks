@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const next = section.querySelector('[data-lunara-carousel-next]');
             const dots = Array.from(section.querySelectorAll('[data-lunara-carousel-dot]'));
             const toggle = section.querySelector('[data-lunara-carousel-toggle]');
+            const carouselLabel = section.getAttribute('data-lunara-carousel-label') || 'Oscar Picks';
             if (!track) return;
             if (toggle && reduceMotion) {
                 toggle.disabled = true;
@@ -131,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 const paused = userPaused || reduceMotion || autoplay <= 0;
                 toggle.textContent = paused ? 'Play' : 'Pause';
-                toggle.setAttribute('aria-label', reduceMotion ? 'Autoplay disabled for reduced motion' : (paused ? 'Play Oscar Picks rotation' : 'Pause Oscar Picks rotation'));
+                toggle.setAttribute('aria-label', reduceMotion ? 'Autoplay disabled for reduced motion' : (paused ? 'Play ' + carouselLabel + ' rotation' : 'Pause ' + carouselLabel + ' rotation'));
                 toggle.setAttribute('aria-pressed', userPaused ? 'true' : 'false');
                 toggle.classList.toggle('is-paused', paused);
             }
@@ -143,9 +144,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
-            function start() {
+            function start(force) {
                 stop();
-                if (userPaused || reduceMotion || autoplay <= 0 || track.children.length < 2 || (!allowMobileAutoplay && window.innerWidth <= 900) || pointerHover || focusWithin) {
+                if (userPaused || reduceMotion || autoplay <= 0 || track.children.length < 2 || (!allowMobileAutoplay && window.innerWidth <= 900) || (!force && (pointerHover || focusWithin))) {
                     syncToggle();
                     return;
                 }
@@ -170,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (userPaused) {
                         stop();
                     } else {
-                        start();
+                        start(true);
                     }
                     syncToggle();
                 });
