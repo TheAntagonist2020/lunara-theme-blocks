@@ -145,7 +145,6 @@
 			else startAutoplay();
 		});
 
-		root.setAttribute('data-lunara-carousel-ready', 'true');
 		startAutoplay();
 	}
 
