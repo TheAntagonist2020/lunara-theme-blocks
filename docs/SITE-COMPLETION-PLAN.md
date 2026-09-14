@@ -18,12 +18,13 @@ in GitHub; the exact rollback hatch is rebuilt. Academy 2.7.85 is merged through
 PR #30 at `6a36be0`. Deploy the plugin before the theme. Manual deployment and
 public acceptance remain pending; last verified live theme is 3.2.76.
 
-Theme 3.2.79 is being prepared on `codex/journal-gallery-controls-3.2.79`:
-useful Journal gallery controls, empty Search correction, Footer writer
-retirement and truthful Control Desk handoffs. It is not merged or live yet.
-The final candidate also corrects Search-dialog Tab containment and focus return,
-with 162 focused keyboard checks and independent review. PR #199 remains draft
-until this final integration passes its checks.
+Theme 3.2.79 is merged through PR #199 at `5e1c943`: useful Journal gallery
+controls, empty Search correction, Footer writer retirement, truthful Control
+Desk handoffs and Search-dialog keyboard containment/return. Independent review,
+95 initial local gates, the final affected header gate and full final-head CI
+passed. The exact rollback hatch is rebuilt. A postmerge anonymous homepage GET
+at 2026-09-14 00:55:54 UTC still reports 3.2.76. Deploy Academy 2.7.85 before
+latest theme main (3.2.79); public acceptance remains pending.
 
 ## 1. Oscars cleanup
 
@@ -62,7 +63,7 @@ until this final integration passes its checks.
 - [x] Implement footer link ownership and Search/404 recovery controls in
   merged Theme 3.2.77. Footer inherits existing navigation until explicit Apply;
   all three editors use shared private Preview, Apply and History.
-- [ ] Accept the new Footer/Search/404 editors after Theme 3.2.77 deployment.
+- [ ] Accept the new Footer/Search/404 editors after latest theme deployment.
 - [x] Audit current editor ownership and close six competing Footer Customizer
   controls/settings in the 3.2.79 candidate. Saved values remain unchanged;
   actual registration, stale submission and shared lifecycle cases pass.
@@ -88,11 +89,10 @@ until this final integration passes its checks.
   phone buttons and keyboard movement. Swipe, missing-art Review and anonymous
   visual acceptance remain outside these samples.
 - [ ] Resolve any remaining reader-journey defects exposed by that acceptance.
-  Desktop gallery arrows remain enabled when both images already fit. A reviewed
-  controller follow-up is prepared on `codex/site-completion-next-3.2.78`: useful
-  start/end states, layout/content refresh, and JavaScript/CSS reduced motion.
-  Its 36 focused checks pass; formal release work remains open. It is not part
-  of merged 3.2.78.
+  The observed desktop gallery arrows stayed enabled when both images fit.
+  Theme 3.2.79 now contains the reviewed correction: useful start/end states,
+  layout/content refresh and JavaScript/CSS reduced motion. Its 36 focused
+  checks and final release CI pass; public acceptance is pending deployment.
 
 ## 4. Academy detail pages
 

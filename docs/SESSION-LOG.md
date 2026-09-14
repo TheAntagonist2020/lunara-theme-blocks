@@ -25,6 +25,77 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Theme 3.2.79 merged with exact rollback; deployment pending
+
+### Headline / what shipped
+
+PR #199 merged the complete reader-navigation/editor-ownership batch after
+independent review and green final-head CI. Latest theme main is 3.2.79 and
+includes the prior 3.2.77/78 changes. See docs/CHANGELOG.md and the updated
+PRESENTATION-EDITORS.md for behavior and operation. This entry is a release
+receipt on fresh branch `codex/release-record-3.2.79`, not another runtime change.
+
+### Commit ledger
+
+| Repository / role | Commit or tree |
+| --- | --- |
+| Theme PR #199 final tested head | `dd7c283ff4b53293662248875c9a52594976ce0f` |
+| Theme main merge | `5e1c9438b11794b6e85590cfad2c89ec94f1b699` |
+| Final candidate and merged main tree | `166783a8044c922c32180109ec1f5e2c0e69b526` |
+| Academy PR #30 merged main | `6a36be06be7cb56a4263306742049b146c33254f` |
+
+The standing rollback branch `claude/rollback-exact-theme-3.2.43` / PR #159 was
+rebuilt at 2026-09-14 00:55:44 UTC. Its first parent equals current main, its
+remote tree equals `c55bf394594149db2888295c5d51f85f47b2b520`, and the simulated
+merge produces that exact tree. Refer to the moving hatch by branch/PR.
+
+### Gate ledger
+
+- Initial candidate `2b5d3a4`: all 95 required Windows gates passed, zero failures,
+  768.1 seconds; initial GitHub run `34793259242` also passed.
+- Final keyboard integration: the affected header gate reran successfully after
+  adoption, with 64 PHP, 55 header-browser and 162 actual-overlay keyboard checks.
+- Final head `dd7c283`: full GitHub run `34793819255`, job `103822952718`, completed
+  successfully: all theme contracts, PHP syntax, JS syntax and CSS brace checks.
+  This final CI is distinct from the unchanged initial Windows run.
+- Gallery: 36 focused controls checks; its affected article gate also passed
+  444 layout and 34 stylesheet-delivery assertions. Footer lifecycle: 129;
+  handoff renderers: 12; Search/404 providers: 251; private HTTP lifecycle: 90.
+- Independent reviews approved all slices. Mutations caught old gallery controls,
+  missing boundaries, forced JS/CSS motion, a restored Footer writer, stale
+  Footer/Journal handoffs, empty Search loop/count regressions and missing keyboard
+  containment/return. No failed mutation was counted as coverage.
+- Initial local syntax sweep: 157 PHP and 77 JavaScript files passed; new/changed
+  keyboard files passed separately, then the final CI syntax sweep passed.
+  No second full local suite was run for the keyboard-only addition; final CI
+  ran the whole suite on the final source. No 79 live canary has run yet.
+
+### Verified live state
+
+| Read-only probe | Result |
+| --- | --- |
+| Anonymous homepage, 2026-09-14 00:55:54 UTC after merge | 200, `3.2.76+20260913-225857` |
+
+The merge is not a deployment. No agent deployment, production content/settings
+write, rewrite flush or manual cache purge occurred. Academy 2.7.85 and Theme
+3.2.79 deployment acceptance remain pending.
+
+### Logged, not fixed / carried forward / next owner
+
+Dalton manually deploys Academy 2.7.85, then latest theme main (3.2.79), through
+WordPress.com. Agent then runs the versioned canary and verifies actual public
+gallery boundaries, empty Search, 404-to-Search keyboard operation, Academy
+labels/actions, legacy category routes and authenticated editor handoffs.
+
+The seven-step plan remains active: new editor live acceptance, controlled public
+performance measurement, valid Critical CSS regeneration and approved opening
+lineups remain open. Manhunter's intended ending needs source wording or a
+reviewed replacement; the earliest available revision is already truncated.
+NTFCA's conflicting indexed requirements remain unresolved. No curation, article
+rewrite, association message or application was performed.
+
+---
+
 ## 2026-09-13 — Search keyboard acceptance folded into the final 3.2.79 candidate
 
 ### Headline / what changed
