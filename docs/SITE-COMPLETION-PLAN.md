@@ -33,6 +33,13 @@ interaction pause playback, and reduced-motion visitors remain paused. The
 candidate is local only; it is not merged, deployed or represented as live, and
 it follows the pending 3.2.79 deployment handoff.
 
+September 14 update: Theme 3.2.80 merged through PR #200 and is now live. The
+three-read versioned canary and both Journal/Oscars canonical sentinels returned
+`LIVE_COHERENT` with a `GO` verdict. The standing exact rollback hatch was
+rebuilt against the new main tip. The candidate and deployment-pending language
+above describes the pre-merge state; current production status is recorded in
+the newest `docs/SESSION-LOG.md` entry.
+
 ## 1. Oscars cleanup
 
 - [x] Theme 3.2.75 public canary: all three anonymous reads agree on

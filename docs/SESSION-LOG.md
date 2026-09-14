@@ -25,6 +25,72 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-14 — Theme 3.2.80 deployed and canary accepted
+
+The Oscar carousel playback candidate from the preceding entry was merged as
+PR #200 and deployed through the existing manual WordPress.com flow. Theme
+3.2.80 is now proven live on the canonical public routes. The deployment did
+not change saved selections, artwork overrides, ordering or copy.
+
+### Verified live state
+
+| Read-only probe | Result |
+| --- | --- |
+| Anonymous Home, Reviews, Journal and Oscars | HTTP 200; build `3.2.80+20260914-021556`; Reviews, Journal and Oscars stamp `3.2.80` |
+| Versioned canary | `bash tests/tools/lunara-canary-verify.sh 3.2.80`; three cache-separated reads agree; Journal and Oscars `LIVE_COHERENT`; verdict `GO` |
+
+The Academy 2.7.85 plugin was deployed before the theme as required. No agent
+deployment or cache purge occurred. The plugin has no independent public build
+stamp in these route probes, so its live state is recorded from the deployment
+sequence rather than inferred from the theme canary.
+
+### What shipped and why
+
+PR #200 brought the accessible Oscar Picks and Oscar Facts playback controls to
+main: persistent Pause/Play state, 44px pagination targets, hover/focus/touch
+pause behavior and reduced-motion protection. The exact code and local gate
+record remain in `docs/CHANGELOG.md` and the preceding 3.2.80 candidate entry.
+
+### Commit ledger
+
+| Repository / role | Commit or tree |
+| --- | --- |
+| Theme main merge | `81586d6cb714c094c3614ab61139c24049112475` — PR #200 |
+| Theme rollback hatch | `claude/rollback-exact-theme-3.2.43` / PR #159 rebuilt at `037e61d8`; remote and simulated-merge tree `c55bf394594149db2888295c5d51f85f47b2b520` |
+| Academy plugin main | `6a36be06be7cb56a4263306742049b146c33254f` — 2.7.85 |
+
+### Gate ledger
+
+- The 3.2.80 candidate's full theme contract suite passed before merge,
+  including Oscar navigation, Facts playback, responsive artwork/framing,
+  mobile panels, private previews, release identity and the 61,315-byte
+  homepage-module CSS budget.
+- Post-deploy canary passed with exit 0 / `GO`; no replay or cache-busted read
+  was used as proof.
+- Public route browser/editor acceptance after deployment remains the next
+  focused check; no authenticated Site Studio write was made in this session.
+
+### Corrections
+
+The preceding 3.2.80 candidate entry correctly described its pre-merge state;
+this entry supersedes its pending-deployment statements with the verified
+3.2.80 production result.
+
+### Logged, not fixed / punch-list carried forward
+
+Critical CSS regeneration, controlled performance comparison, opening lineup
+curation, the NTFCA clarification and Manhunter source recovery remain open.
+Those are separate from the successful Oscar playback release.
+
+### Whose move is next
+
+Agent performs the real public mobile/desktop route and editor acceptance pass
+against 3.2.80. Then continue the remaining completion work in order: Critical
+CSS and performance, followed by final editorial curation and accreditation
+readiness.
+
+---
+
 ## 2026-09-14 — Theme 3.2.80 Oscar carousel playback controls
 
 The next focused completion slice is ready on `codex/oscar-carousel-controls-3.2.80`; code-level detail is in `docs/CHANGELOG.md`.
