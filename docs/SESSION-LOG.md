@@ -25,6 +25,55 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Journal gallery follow-up prepared after the release merge
+
+### Headline / what changed
+
+The next branch, `codex/site-completion-next-3.2.78`, now carries the reviewed
+Journal-gallery correction discovered during public acceptance. Desktop arrows
+disable when all images fit; non-wrapping galleries disable the unusable start
+or end direction. Native scroll, keyboard movement, resizing, image loads and
+content changes refresh the state. A two-pixel boundary tolerance covers the
+observed fractional first-slide offset. Reduced motion is respected by both
+the JavaScript scroll request and the scoped CSS scroll behavior.
+
+This is prepared source, not a new release: style.css remains 3.2.78, no new PR
+or main merge has occurred, and none of this follow-up is included in PR #198.
+Journal-only ownership avoids changing the homepage carousel system. See the
+preceding release's docs/CHANGELOG.md entry for what is actually merged.
+
+### Gate ledger / review
+
+Independent review approved, with 36 focused checks rerun by the reviewer.
+Earlier affected-gate evidence passed 444 article geometry, 34 delivery and 34
+gallery checks. The final reduced-motion CSS correction extends the gallery
+count to 36; that focused runtime passes, with no unnecessary repeat of unchanged
+article geometry. Old controls, missing boundary behavior, forced smooth request
+and missing reduced-motion CSS mutations are all caught. Actual PHP fixtures
+cover zero/one-image output; browser cases cover fitting/overflowing galleries,
+three-slide middle snap, dynamic empty/add/remove states and computed motion.
+The five adopted files match the reviewed worktree after line-ending
+normalization; PHP syntax and whitespace checks pass. The next release's version,
+full suite, CI, merge and public acceptance have not run.
+
+### Verified live state / commit ledger / remaining work
+
+An ordinary anonymous homepage GET at 2026-09-14 00:16:35 UTC returned 200 and
+`3.2.76+20260913-225857`. No deployment or production edit occurred. Main remains
+the verified PR #198 merge `a272ec1`; `1b8d13a` records its release/rollback
+receipt on this follow-up branch. The standing hatch remains verified against
+that main. Dalton deploys Academy 2.7.85 then Theme 3.2.78; agent verifies those
+releases and continues the seven-step checklist. Final gallery release work and
+the remaining public/editor/performance/curation acceptance stay open.
+
+An approved-browser capability check found only the existing signed-in Chrome
+profile. Anonymous HTTP payload evidence remains available, but a later timing
+comparison needs an available signed-out browser or another suitable measurement
+service. No authentication was changed. Editorial readiness now also records
+Manhunter's unfinished stored sentence; no replacement copy was published.
+
+---
+
 ## 2026-09-13 — Theme 3.2.78 and Academy 2.7.85 ready for manual deployment
 
 ### Headline / what shipped

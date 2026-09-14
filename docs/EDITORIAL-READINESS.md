@@ -44,9 +44,10 @@ and full/cover framing in the public carousel after Apply.
 
 ## Review shelf and archive depth
 
-After the Latest Reviews editor ships, Automatic can surface the six newest
-published reviews using their canonical Card / Poster artwork. It should not
-inherit the old homepage featured-post priority.
+The live Latest Reviews editor's Automatic mode can surface the six newest
+published reviews using their canonical Card / Poster artwork. It does not
+inherit the old homepage featured-post priority after explicit adoption. This
+recommended opening configuration has not been applied as editorial curation.
 
 The public review inventory contains 193 records dated June 15 through
 September 13, 2026. Approximate rendered-body counts are at least 300 words for
@@ -80,9 +81,9 @@ screening attendance or association eligibility. The site's About page reports
   exposes the intended email link; no message was sent or inbox delivery tested.
   The policy states the site's watching, scoring, independence, tools and
   corrections standards. Policy and Contact exposed nested main landmarks;
-  merged Theme 3.2.77 corrects their generic page template, pending deployment
-  acceptance. The sampled Review and Journal articles still have nested main
-  landmarks and are queued for the following shared-template correction.
+  merged Theme 3.2.77 corrects their generic page template, and Theme 3.2.78
+  includes that work plus the sampled Review and Journal inner-landmark
+  correction. Deployment acceptance remains pending for both changes.
 - Test archive search/filter/pagination from a current review through an older
   review and into the Oscars ledger; existing content should be easy to find.
 - Review the proposed hero and Journal lineups with Dalton, apply through the
@@ -92,3 +93,8 @@ screening attendance or association eligibility. The site's About page reports
 - Decide the next fresh review/news assignment with Dalton based on films
   actually watched and reporting actually completed. The site presentation can
   surface the work; it cannot supply that editorial history.
+- Restore the intended ending of the published Manhunter Journal article
+  (post 100189): both stored content and the browser end mid-sentence at
+  "the cut that should". Its missing-art layout is readable at 390/1440px;
+  this is a copy issue, not CSS clipping. No replacement prose has been invented
+  or published.

@@ -55,3 +55,5 @@ if ($LASTEXITCODE -ne 0) { throw 'Review and Journal actual-template layout cont
 
 & php (Join-Path $PSScriptRoot 'journal-single-delivery-runtime.php')
 if ($LASTEXITCODE -ne 0) { throw 'Journal article stylesheet delivery contracts failed.' }
+& node (Join-Path $PSScriptRoot 'journal-gallery-controls-browser-runtime.js')
+if ($LASTEXITCODE -ne 0) { throw 'Journal gallery useful controls contracts failed.' }

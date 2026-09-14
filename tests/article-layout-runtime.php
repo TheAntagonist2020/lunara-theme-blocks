@@ -52,7 +52,7 @@ function the_title() { echo esc_html( get_the_title() ); }
 function get_post_meta( $id, $key, $single = true ) {
     if ( '_wp_attachment_image_alt' === $key ) { return 'A film scene with a bright window on the left'; }
     if ( '_lunara_review_standfirst' === $key ) { return 'A close reading of the film, its choices, and the details that stay with us.'; }
-    if ( '_lunara_journal_carousel_ids' === $key && 'journal' === $GLOBALS['article_case']['type'] && 'normal' === $GLOBALS['article_case']['scenario'] ) { return array( 102, 103 ); }
+    if ( '_lunara_journal_carousel_ids' === $key && 'journal' === $GLOBALS['article_case']['type'] && 'normal' === $GLOBALS['article_case']['scenario'] ) { $gallery_count = getenv( 'LUNARA_TEST_GALLERY_COUNT' ); return '0' === $gallery_count ? array() : ( '1' === $gallery_count ? array( 102 ) : array( 102, 103 ) ); }
     return '';
 }
 function get_the_content() {

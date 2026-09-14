@@ -76,8 +76,11 @@ public acceptance remain pending; last verified live theme is 3.2.76.
   phone buttons and keyboard movement. Swipe, missing-art Review and anonymous
   visual acceptance remain outside these samples.
 - [ ] Resolve any remaining reader-journey defects exposed by that acceptance.
-  Desktop gallery arrows remain enabled when both images already fit. An isolated
-  controller follow-up is in progress; it is not included in merged 3.2.78.
+  Desktop gallery arrows remain enabled when both images already fit. A reviewed
+  controller follow-up is prepared on `codex/site-completion-next-3.2.78`: useful
+  start/end states, layout/content refresh, and JavaScript/CSS reduced motion.
+  Its 36 focused checks pass; formal release work remains open. It is not part
+  of merged 3.2.78.
 
 ## 4. Academy detail pages
 
