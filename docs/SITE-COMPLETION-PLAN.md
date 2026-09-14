@@ -12,9 +12,11 @@ verified published live. A fresh agent canary also passes for
 report `LIVE_COHERENT`. Detailed route acceptance below stays explicit;
 deployment confirmation does not imply every remaining reader-journey check ran.
 
-Theme 3.2.77 is now merged through PR #197 at `72a0ea1`, with all 95 required
-GitHub gates green and the exact rollback hatch rebuilt. Manual deployment and
-its public canary/editor acceptance are pending; last verified live theme is 3.2.76.
+Theme 3.2.78 is merged through PR #198 at `a272ec1`, including the preceding
+3.2.77 Footer/Search/404 editor release. All 95 required gates pass locally and
+in GitHub; the exact rollback hatch is rebuilt. Academy 2.7.85 is merged through
+PR #30 at `6a36be0`. Deploy the plugin before the theme. Manual deployment and
+public acceptance remain pending; last verified live theme is 3.2.76.
 
 ## 1. Oscars cleanup
 
@@ -68,9 +70,14 @@ its public canary/editor acceptance are pending; last verified live theme is 3.2
   full/cover artwork, missing artwork, metadata, galleries and related stories.
   Dog Stars and Angel pass the sampled 390/1440px browser checks for complete
   headings, loaded artwork, metadata, no horizontal overflow and related links.
-  Two anonymous GETs separately confirm current build/headings. Missing artwork,
-  gallery variants and anonymous visual acceptance remain outside that sample.
+  Two anonymous GETs separately confirm current build/headings. A second signed-in
+  sample verifies natural missing-art Manhunter and the two-image David Robert
+  Mitchell gallery at exact 390/1440px, including loaded images, no empty hero,
+  phone buttons and keyboard movement. Swipe, missing-art Review and anonymous
+  visual acceptance remain outside these samples.
 - [ ] Resolve any remaining reader-journey defects exposed by that acceptance.
+  Desktop gallery arrows remain enabled when both images already fit. An isolated
+  controller follow-up is in progress; it is not included in merged 3.2.78.
 
 ## 4. Academy detail pages
 
@@ -94,11 +101,10 @@ its public canary/editor acceptance are pending; last verified live theme is 3.2
   Current candidate passes 64 PHP and 55 browser assertions; review fixes landed.
 - [x] Implement footer/search/recovery navigation and content ownership in
   merged Theme 3.2.77; deployment acceptance remains open above.
-- [ ] Replace twelve live inner main wrappers while keeping header.php's main
+- [x] Replace twelve live inner main wrappers while keeping header.php's main
   landmark. Nested landmarks were confirmed on both sampled public articles;
-  the correction is prepared on `codex/shared-landmarks-3.2.78`, isolated from
-  merged 3.2.77. Focused actual-template and geometry checks and release identity
-  pass; full suite/CI, merge and public acceptance remain open.
+  Theme 3.2.78 contains the independently reviewed correction, passes the full
+  suite/CI and is merged through PR #198. Public acceptance remains open.
 - [ ] Complete a public route matrix covering landing pages, articles, Academy
   records, search results, no results and 404; verify keyboard access, focus,
   reduced motion, readable narrow layouts and no horizontal overflow.
@@ -127,6 +133,10 @@ its public canary/editor acceptance are pending; last verified live theme is 3.2
   variables occupy 167 bytes. The saved 3.2.75 inline baseline was 14,860 bytes;
   16,115 was the expanded candidate static body before extraction, not the old
   public baseline. This proves reusable CSS delivery, not faster LCP or CLS.
+- [x] Observe browser cache reuse across three Angel reloads and one Beyond Fest
+  navigation: zero transferred bytes for the same 16,191-byte decoded stylesheet.
+  Signed-in throttled timings with concurrent local tests are exploratory only;
+  they do not establish anonymous visitor speed or controlled improvement.
 - [ ] Establish loading impact under controlled browser conditions. Do not add
   source minification or speculative duplicate removal: existing Boost bundles
   already compact the CSS, leaving approximately 100 and 39-46 gzip bytes to
@@ -151,6 +161,8 @@ its public canary/editor acceptance are pending; last verified live theme is 3.2
 - [ ] Identify any fresh coverage needed with Dalton. Do not invent reviews,
   screening attendance, access or publication history; new writing is separate
   editorial work.
+  Manhunter's published final sentence is incomplete in stored content; restore
+  the intended editorial copy through its owner, rather than treating it as CSS.
 
 ## Release acceptance for each batch
 
