@@ -11,6 +11,23 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-13 — Theme 3.2.79 reader navigation and editor ownership
+
+Journal gallery controls disable when all images fit and at the unavailable
+start/end direction. Scroll, keyboard movement, resizing, image loads and content
+changes refresh the state. Both JavaScript and CSS respect reduced motion.
+
+Opening Search without a query now shows a search invitation and zero matches,
+instead of treating the outer WordPress page or homepage query as results. Normal
+command/native searches retain their own results and counts; an executed query
+with no matches retains its recovery explanation and destinations.
+
+The six former Footer Customizer controls and setting registrations retire
+together, preserving saved values while closing the writer that bypassed shared
+History. Footer Control Desk handoffs now open Site Studio. The Journal reading
+guide opens article presentation and a published article preview; the separate
+Journal Defaults controls remain available.
+
 ## 2026-09-13 — Academy 2.7.85 entity category eras and category actions
 
 Film, person and company pages now delegate display names to the canonical

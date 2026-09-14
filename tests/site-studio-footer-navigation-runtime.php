@@ -173,4 +173,5 @@ $token=lunara_site_studio_store_private_preview('site-footer','theme:site-footer
 $before=serialize($lunara_pilot_theme_mods);
 footer_assert( is_array(lunara_site_studio_resolve_private_preview()) && str_contains(footer_fixture_render(),'An intentional replacement') && $before===serialize($lunara_pilot_theme_mods), 'An explicitly changed scalar still previews privately before Apply.' );
 unset($GLOBALS['footer_filters']);
+require __DIR__ . '/site-studio-footer-retirement-cases.php';
 echo "Footer navigation runtime passed: {$checks} checks.\n";

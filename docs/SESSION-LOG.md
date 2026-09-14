@@ -25,6 +25,66 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Theme 3.2.79 reader navigation release candidate
+
+### Headline / what changed
+
+The gallery follow-up is now part of a formal 3.2.79 candidate on
+`codex/journal-gallery-controls-3.2.79`. The same batch closes six competing
+Footer Customizer writers, updates Footer/Journal Control Desk handoffs and
+corrects empty Search listing its own outer page as a result. See
+docs/CHANGELOG.md for behavior and scope. Saved editorial content and public
+settings were not changed.
+
+### Verified live state / commit ledger
+
+| Probe | Observed result |
+| --- | --- |
+| Anonymous homepage GET, 2026-09-14 00:25:24 UTC | 200, `3.2.76+20260913-225857` |
+
+Main remains PR #198's `a272ec1`, with its exact rollback verified against that
+main. Academy PR #30 is merged at `6a36be0`. This branch includes `1b8d13a`
+(78 merge receipt) and `e6b3bd9` (reviewed gallery follow-up), then this candidate.
+No 79 PR or merge has occurred at this entry's creation.
+
+### Gate ledger / review
+
+Gallery: 36 focused browser checks, with old controls, missing boundary behavior,
+forced smooth JavaScript and missing reduced-motion CSS mutations caught.
+Footer: 129 lifecycle/renderer checks, with a restored old setting writer caught.
+Control Desk: 12 emitted-handoff checks; stale Footer and Journal links are caught
+by mutations. Search/404: 251 provider/renderer checks after adding real outer-page,
+whitespace, native-empty, normal result/count and no-match cases; the old source
+fails the new assigned-page regression. Adoption reruns pass. Syntax checks on
+affected PHP pass. Final independent Search review, the full 95-gate suite,
+whole-release syntax and CI remain to be completed and recorded in a later entry.
+
+### Logged, not fixed / punch-list carried forward
+
+The signed-in reader journey exercised Reviews year filtering, page 2, a review
+to its Academy film, Search results, no-results recovery and 404 at 390/1440px.
+No horizontal overflow was found in this bounded sample. Escape was dispatched
+from the Search dialog, but completed focus restoration remains unverified.
+
+Manhunter's canonical stored body also ends at “the cut that should”. No ending
+has been recovered; MCP revision calls did not support this Journal CPT, so no
+revisions were read. A bounded read-only Revisions UI check remains useful.
+Do not invent replacement editorial copy. Google's one public PageSpeed API
+attempt returned 429 with daily quota zero; no anonymous performance metrics
+were obtained. No retry or credentials were requested. Controlled public timing,
+Critical CSS regeneration, new editor live acceptance and reviewed lineups stay
+open in SITE-COMPLETION-PLAN.md.
+
+### Whose move it is next
+
+Agent completes the candidate's review, full gates and release preparation.
+Dalton retains manual deployment through WordPress.com, Academy 2.7.85 before
+the latest theme main; agent then verifies identity/canaries and remaining public
+acceptance. No agent deployment or manual cache purge occurred. Theme 3.2.79 is not
+deployed; its live canary is pending.
+
+---
+
 ## 2026-09-13 — Journal gallery follow-up prepared after the release merge
 
 ### Headline / what changed

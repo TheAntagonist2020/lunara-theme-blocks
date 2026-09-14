@@ -18,6 +18,10 @@ in GitHub; the exact rollback hatch is rebuilt. Academy 2.7.85 is merged through
 PR #30 at `6a36be0`. Deploy the plugin before the theme. Manual deployment and
 public acceptance remain pending; last verified live theme is 3.2.76.
 
+Theme 3.2.79 is being prepared on `codex/journal-gallery-controls-3.2.79`:
+useful Journal gallery controls, empty Search correction, Footer writer
+retirement and truthful Control Desk handoffs. It is not merged or live yet.
+
 ## 1. Oscars cleanup
 
 - [x] Theme 3.2.75 public canary: all three anonymous reads agree on
@@ -56,6 +60,11 @@ public acceptance remain pending; last verified live theme is 3.2.76.
   merged Theme 3.2.77. Footer inherits existing navigation until explicit Apply;
   all three editors use shared private Preview, Apply and History.
 - [ ] Accept the new Footer/Search/404 editors after Theme 3.2.77 deployment.
+- [x] Audit current editor ownership and close six competing Footer Customizer
+  controls/settings in the 3.2.79 candidate. Saved values remain unchanged;
+  actual registration, stale submission and shared lifecycle cases pass.
+  Footer handoffs now reach Site Studio and the Journal reading guide reaches
+  article presentation. Separate useful Journal Defaults controls remain.
 - [ ] Verify zero/one/many selections, unavailable stories, long labels, image
   fit/focal points, independent modes, private previews, restore and dirty-state
   protection for every newly covered surface.
@@ -111,6 +120,12 @@ public acceptance remain pending; last verified live theme is 3.2.76.
 - [ ] Complete a public route matrix covering landing pages, articles, Academy
   records, search results, no results and 404; verify keyboard access, focus,
   reduced motion, readable narrow layouts and no horizontal overflow.
+  A signed-in live-76 journey passed Reviews year filtering and page 2, a review
+  to its Academy film, Search results, no-results recovery and 404 at 390/1440px.
+  Empty Search incorrectly consumed its outer page query; the 79 candidate
+  fixes this with an actual-template regression. Search dialog opening/focus
+  passed; completed Escape focus return remains unverified. This sample does
+  not replace anonymous or all-route acceptance.
 
 ## 6. Measured performance
 
@@ -144,6 +159,9 @@ public acceptance remain pending; last verified live theme is 3.2.76.
   source minification or speculative duplicate removal: existing Boost bundles
   already compact the CSS, leaving approximately 100 and 39-46 gzip bytes to
   gain respectively from those approaches in sampled public bundles.
+  One official public PageSpeed API request returned HTTP 429 with daily quota
+  zero. No Lighthouse metrics were obtained and no retry was attempted. An
+  available approved anonymous browser or measurement service is still needed.
 - [ ] Compare loading and layout shift on identical representative pages and
   conditions, including image and font requests. Stored Boost scores are not a
   controlled before/after benchmark.
@@ -166,6 +184,9 @@ public acceptance remain pending; last verified live theme is 3.2.76.
   editorial work.
   Manhunter's published final sentence is incomplete in stored content; restore
   the intended editorial copy through its owner, rather than treating it as CSS.
+  Canonical raw-body inspection confirms the truncation. MCP revision calls did
+  not support this Journal CPT; no revisions were read and their absence is not
+  established. A bounded read-only Revisions UI check remains pending.
 
 ## Release acceptance for each batch
 
