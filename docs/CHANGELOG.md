@@ -11,6 +11,30 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-13 — Academy 2.7.85 entity category eras and category actions
+
+Film, person and company pages now delegate display names to the canonical
+ceremony-aware formatter. History rows use their own ceremony, latest-result
+chips use the latest ceremony, and each category summary uses that category's
+latest credit. This preserves historical Art Direction and Sound Mixing while
+modern credits display Production Design and Sound. Canonical IDs, links and raw
+cached rows remain unchanged. Category history actions have 44px minimums at
+their original desktop and phone inline rules, paired with Theme 3.2.78's shared
+action corrections. PR #30 merged after green CI; deployment remains manual.
+
+## 2026-09-13 — Theme 3.2.78 shared accessibility and Academy actions
+
+The shared header now owns the only main landmark across live Review, Journal,
+ordinary article, archive, film/person and assigned Hub templates. Twelve inner
+wrappers become neutral containers with their IDs, classes and content intact.
+The change preserves article/archive geometry and existing editor preview hooks.
+
+Academy actions retain 44px touch targets through the full theme/plugin cascade,
+including mobile ceremony actions, category buttons and decade navigation. The
+older theme declarations that reduced these controls to 40px are corrected at
+their original owners. Companion Academy entity category-label work is released
+separately by the plugin; the theme does not rewrite database category identities.
+
 ## 2026-09-13 — Theme 3.2.77 footer and recovery editors
 
 Footer navigation joins Site Studio with three ordered link lists. Choose built-in

@@ -31,6 +31,11 @@ its public canary/editor acceptance are pending; last verified live theme is 3.2
   modern/old Production Design and Sound paths, and ceremonies 84/98 agree.
   Aliases resolve directly rather than redirecting. Exact cutoff boundaries
   remain covered by source tests; this was a bounded public sample.
+- [ ] Release and accept the separate Film/Person/Company category-label fix
+  in Academy 2.7.85. Public film inspection exposed an older entity formatter;
+  candidate labels now follow each credit's ceremony and each category's own
+  latest credit. Independent review and 234 runtime checks pass; PR #30 merged
+  as `6a36be0` after green CI. Manual deployment and public acceptance remain.
 
 ## 2. One editing experience
 
@@ -75,6 +80,11 @@ its public canary/editor acceptance are pending; last verified live theme is 3.2
   four route types and four widths. This is not live candidate acceptance.
 - [ ] Verify deployed ceremony/category/film/person output at phone and desktop
   widths, including long names, absent art and links between record types.
+  Four sampled public routes have complete headings, bounded portraits and no
+  horizontal overflow at 390/1440px. Full live CSS exposed remaining 40px theme
+  actions and 30/28px plugin category actions. Theme 3.2.78 and Academy 2.7.85
+  correct their original owners. The offline full-cascade regression passes
+  3,438 checks at 320/390/1440px; deployed acceptance remains open.
 - [ ] Accept the corresponding shared presentation editor from step 2.
 
 ## 5. Shared site experience
@@ -87,8 +97,8 @@ its public canary/editor acceptance are pending; last verified live theme is 3.2
 - [ ] Replace twelve live inner main wrappers while keeping header.php's main
   landmark. Nested landmarks were confirmed on both sampled public articles;
   the correction is prepared on `codex/shared-landmarks-3.2.78`, isolated from
-  merged 3.2.77. Focused actual-template and geometry checks pass; formal release
-  identity, full suite/CI, merge and public acceptance remain open.
+  merged 3.2.77. Focused actual-template and geometry checks and release identity
+  pass; full suite/CI, merge and public acceptance remain open.
 - [ ] Complete a public route matrix covering landing pages, articles, Academy
   records, search results, no results and 404; verify keyboard access, focus,
   reduced motion, readable narrow layouts and no horizontal overflow.
@@ -111,12 +121,16 @@ its public canary/editor acceptance are pending; last verified live theme is 3.2
   missing saved rules are intentionally not synthesized by the compatibility fix.
 - [ ] Regenerate valid Critical CSS after the final structural release through
   the authorized owner workflow, then verify coverage and failure state.
-- [ ] Implement a measured stylesheet/image-loading improvement with unchanged
-  visual output and safe route/cache behavior. Conservative route pruning alone
-  saves only roughly 4-6KB gzip; do not overstate it as the full solution.
-  Current candidate extracts 16,115 bytes of unchanged static Journal geometry
-  into a synchronous route asset. Public acceptance and overall loading impact
-  remain pending; 34 delivery and 412 article checks pass locally.
+- [x] Verify Journal stylesheet extraction on live 3.2.76: two anonymous articles
+  deliver the same synchronous 16,191-byte route asset with a long cache lifetime;
+  canonical source hashes match after line-ending normalization. Per-page inline
+  variables occupy 167 bytes. The saved 3.2.75 inline baseline was 14,860 bytes;
+  16,115 was the expanded candidate static body before extraction, not the old
+  public baseline. This proves reusable CSS delivery, not faster LCP or CLS.
+- [ ] Establish loading impact under controlled browser conditions. Do not add
+  source minification or speculative duplicate removal: existing Boost bundles
+  already compact the CSS, leaving approximately 100 and 39-46 gzip bytes to
+  gain respectively from those approaches in sampled public bundles.
 - [ ] Compare loading and layout shift on identical representative pages and
   conditions, including image and font requests. Stored Boost scores are not a
   controlled before/after benchmark.

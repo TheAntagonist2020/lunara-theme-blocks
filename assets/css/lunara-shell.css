@@ -1810,7 +1810,7 @@ body.aat-shell-page .aat-winner-circle-action {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    min-height: 40px !important;
+    min-height: 44px !important;
     padding: 10px 16px !important;
     border: 1px solid rgba(201, 169, 97, 0.28) !important;
     border-radius: 999px !important;
@@ -2072,6 +2072,11 @@ body.aat-shell-page .aat-winner-circle-category {
     background: rgba(5, 13, 24, 0.62) !important;
     font-size: 0.72rem !important;
     line-height: 1 !important;
+}
+
+/* Linked category chips need a full action target; decorative badges stay compact. */
+body.aat-shell-page a.aat-hub-chip {
+    min-height: 44px !important;
 }
 
 body.aat-shell-page .aat-hub-spotlight-title,
