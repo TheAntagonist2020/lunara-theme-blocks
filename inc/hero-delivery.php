@@ -293,9 +293,6 @@ if ( ! function_exists( 'lunara_resolve_home_cinematic_hero_lcp_data' ) ) {
 	function lunara_resolve_home_cinematic_hero_lcp_data() {
 		$slides       = function_exists( 'lunara_get_home_cinematic_hero_slides' ) ? lunara_get_home_cinematic_hero_slides() : array();
 		$slides       = is_array( $slides ) ? $slides : array();
-		if ( function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'hero' ) ) {
-			return $slides[0] ?? array();
-		}
 		$command_live = function_exists( 'lunara_hero_command_slides' ) && count( (array) lunara_hero_command_slides() ) > 0;
 
 		if ( count( $slides ) < 1 || ( count( $slides ) < 2 && ! $command_live ) ) {
