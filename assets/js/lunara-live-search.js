@@ -17,6 +17,10 @@
 	var debounceTimer = null;
 	var controller = null;
 	var activeIndex = -1;
+	var isOpen = false;
+	var invokingElement = null;
+	var openingFrame = null;
+	var closingTimer = null;
 
 	function ready(fn) {
 		if (document.readyState !== 'loading') {
@@ -26,13 +30,21 @@
 		}
 	}
 
-	function openOverlay() {
-		if (!overlay) {
+	function openOverlay(trigger) {
+		if (!overlay || isOpen) {
 			return;
 		}
+		window.clearTimeout(closingTimer);
+		invokingElement = trigger || document.activeElement;
+		isOpen = true;
+		overlay.inert = false;
 		overlay.hidden = false;
 		document.body.classList.add('lunara-search-open');
-		window.requestAnimationFrame(function () {
+		openingFrame = window.requestAnimationFrame(function () {
+			openingFrame = null;
+			if (!isOpen) {
+				return;
+			}
 			overlay.classList.add('is-open');
 			if (input) {
 				input.focus();
@@ -45,14 +57,43 @@
 	}
 
 	function closeOverlay() {
-		if (!overlay || overlay.hidden) {
+		if (!overlay || !isOpen) {
 			return;
 		}
+		isOpen = false;
+		window.cancelAnimationFrame(openingFrame);
+		openingFrame = null;
+		// The closing animation must not leave invisible controls in the Tab order.
+		overlay.inert = true;
 		overlay.classList.remove('is-open');
 		document.body.classList.remove('lunara-search-open');
-		window.setTimeout(function () {
-			overlay.hidden = true;
+		if (invokingElement && invokingElement.isConnected && typeof invokingElement.focus === 'function') {
+			invokingElement.focus({ preventScroll: true });
+		}
+		invokingElement = null;
+		closingTimer = window.setTimeout(function () {
+			closingTimer = null;
+			if (!isOpen) {
+				overlay.hidden = true;
+			}
 		}, 180);
+	}
+
+	function containTab(event) {
+		// Results and filter chips change while open; take a fresh census per key.
+		var focusables = Array.prototype.filter.call(overlay.querySelectorAll('a[href], button, input, select, textarea, [tabindex], [contenteditable="true"]'), function (el) {
+			var visibility = window.getComputedStyle(el).visibility;
+			return el.tabIndex >= 0 && !el.matches(':disabled') && !el.closest('[hidden], [inert], [aria-hidden="true"]') && el.getClientRects().length > 0 && visibility !== 'hidden' && visibility !== 'collapse';
+		});
+		var index = focusables.indexOf(document.activeElement);
+		if (!focusables.length) {
+			event.preventDefault();
+			overlay.tabIndex = -1;
+			overlay.focus();
+		} else if (event.shiftKey ? index <= 0 : index < 0 || index === focusables.length - 1) {
+			event.preventDefault();
+			focusables[event.shiftKey ? focusables.length - 1 : 0].focus();
+		}
 	}
 
 	function optionEls() {
@@ -242,10 +283,16 @@
 			return;
 		}
 
-		// Escape remains available once the ordinary search control is open.
+		// Keep keyboard navigation inside the current dialog, including new results.
 		document.addEventListener('keydown', function (event) {
-			if (event.key === 'Escape' && !overlay.hidden) {
+			if (!isOpen) {
+				return;
+			}
+			if (event.key === 'Escape') {
+				event.preventDefault();
 				closeOverlay();
+			} else if (event.key === 'Tab') {
+				containTab(event);
 			}
 		});
 
@@ -260,7 +307,7 @@
 			}
 			event.preventDefault();
 			event.stopPropagation();
-			openOverlay();
+			openOverlay(trigger);
 		}, true);
 
 		Array.prototype.forEach.call(overlay.querySelectorAll('[data-lunara-search-close]'), function (el) {

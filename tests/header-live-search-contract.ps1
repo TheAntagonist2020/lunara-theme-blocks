@@ -46,3 +46,6 @@ if ($LASTEXITCODE -ne 0) { throw 'Header navigation runtime failed.' }
 
 & node (Join-Path $PSScriptRoot 'header-navigation-browser-runtime.js')
 if ($LASTEXITCODE -ne 0) { throw 'Header navigation browser runtime failed.' }
+
+& node (Join-Path $PSScriptRoot 'live-search-keyboard-browser-runtime.js')
+if ($LASTEXITCODE -ne 0) { throw 'Live Search keyboard browser runtime failed.' }

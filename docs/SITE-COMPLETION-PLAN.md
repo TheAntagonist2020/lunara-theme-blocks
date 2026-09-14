@@ -21,6 +21,9 @@ public acceptance remain pending; last verified live theme is 3.2.76.
 Theme 3.2.79 is being prepared on `codex/journal-gallery-controls-3.2.79`:
 useful Journal gallery controls, empty Search correction, Footer writer
 retirement and truthful Control Desk handoffs. It is not merged or live yet.
+The final candidate also corrects Search-dialog Tab containment and focus return,
+with 162 focused keyboard checks and independent review. PR #199 remains draft
+until this final integration passes its checks.
 
 ## 1. Oscars cleanup
 
@@ -124,8 +127,10 @@ retirement and truthful Control Desk handoffs. It is not merged or live yet.
   to its Academy film, Search results, no-results recovery and 404 at 390/1440px.
   Empty Search incorrectly consumed its outer page query; the 79 candidate
   fixes this with an actual-template regression. Search dialog opening/focus
-  passed; completed Escape focus return remains unverified. This sample does
-  not replace anonymous or all-route acceptance.
+  passed; the later settled check found Tab escaping and Escape losing trigger
+  focus. The final 79 candidate fixes both, including dynamic results and closing
+  races. Repeat that journey after deployment. This sample does not replace
+  anonymous or all-route acceptance.
 
 ## 6. Measured performance
 
@@ -185,8 +190,10 @@ retirement and truthful Control Desk handoffs. It is not merged or live yet.
   Manhunter's published final sentence is incomplete in stored content; restore
   the intended editorial copy through its owner, rather than treating it as CSS.
   Canonical raw-body inspection confirms the truncation. MCP revision calls did
-  not support this Journal CPT; no revisions were read and their absence is not
-  established. A bounded read-only Revisions UI check remains pending.
+  not support this Journal CPT. Subsequent read-only UI inspection covered seven
+  of 31 versions, including the earliest and its successor; both already contain
+  the fragment. No complete ending was found. Recovery has stopped; intended
+  source wording or a reviewed replacement is needed.
 
 ## Release acceptance for each batch
 

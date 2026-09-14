@@ -25,6 +25,61 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Search keyboard acceptance folded into the final 3.2.79 candidate
+
+### Headline / what changed
+
+Read-only acceptance on live 3.2.76 confirmed that Search opened from the 404
+recovery link and focused its input, but Tab escaped the modal and settled
+Escape dismissal left focus on BODY. The final candidate adds dynamic Tab
+containment, connected-trigger focus restoration and safe opening/closing
+transitions. It is folded into PR #199 before merge, avoiding another deployment
+for this known navigation issue. See docs/CHANGELOG.md for the final behavior.
+The presentation guide now describes implemented controls through 3.2.79,
+including their actual owners and the distinction from source publishing.
+
+### Commit / gate ledger
+
+Initial candidate `2b5d3a465d1537491217ffaf91e39b6355b2428a` passed all GitHub
+contract and syntax steps in run `34793259242`, job `103821378552`. Its separate
+95-gate Windows run is still finishing against the unchanged initial checkout.
+The final integration is isolated until that run ends. This is not a claim
+that the initial run tests the later keyboard changes.
+
+Independent review approved the four-file keyboard patch. Its existing header
+gate passes 64 PHP, 55 header-browser and 162 actual-overlay keyboard checks at
+390/1440px with normal/reduced motion, including dynamic results, reverse Tab,
+closing transition, rapid open/close, missing triggers, native Enter and no-JS
+navigation. Missing-containment and missing-return mutations fail. Earlier
+Search review separately reran 251 cases and caught both the outer-loop and
+outer-count regressions. Footer and Control Desk reviews found no issues.
+Final integration reruns and full CI must pass before merge; later receipts
+record those outcomes. Public acceptance of the final source remains open.
+
+### Verified live state / logged, not fixed
+
+No newer theme deployment was observed: the keyboard journey recorded
+`3.2.76+20260913-225857`. No content, settings, deployment or cache actions ran.
+Academy 2.7.85 is merged but its deployment acceptance remains pending.
+
+Manhunter's earliest available UI revision (100195) and immediate successor
+(100196), dated July 19, already contain the incomplete ending. Seven distinct
+versions out of 31 were inspected in total; no complete ending was recovered.
+This fragment predates the recent layout releases. Recovery is stopped at this
+bound; Dalton's intended wording or an explicitly reviewed replacement is needed.
+No revision was restored and no replacement prose was invented.
+
+### Next owner / carried-forward work
+
+Agent completes final verification and merges PR #199, then rebuilds the exact
+rollback hatch. Dalton manually deploys Academy 2.7.85 before the latest theme
+main through WordPress.com. Agent verifies the versioned public canary, editor
+handoffs and the original 404/Search keyboard journey afterward. Controlled
+public timing, valid Critical CSS regeneration and reviewed editorial curation
+remain open in SITE-COMPLETION-PLAN.md. No agent deployment occurred.
+
+---
+
 ## 2026-09-13 — Theme 3.2.79 reader navigation release candidate
 
 ### Headline / what changed

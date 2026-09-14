@@ -22,6 +22,12 @@ instead of treating the outer WordPress page or homepage query as results. Norma
 command/native searches retain their own results and counts; an executed query
 with no matches retains its recovery explanation and destinations.
 
+The Search dialog keeps Tab and Shift+Tab inside its current visible controls,
+including updated results and filters. Escape, Close and backdrop dismissal
+return focus to the invoking control. Closing makes the dialog inert immediately;
+canceled opening/closing callbacks prevent rapid actions from focusing a hidden
+input or hiding a reopened dialog. Native search links/forms remain usable.
+
 The six former Footer Customizer controls and setting registrations retire
 together, preserving saved values while closing the writer that bypassed shared
 History. Footer Control Desk handoffs now open Site Studio. The Journal reading

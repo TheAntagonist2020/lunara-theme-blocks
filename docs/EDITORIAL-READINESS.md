@@ -84,8 +84,9 @@ screening attendance or association eligibility. The site's About page reports
   merged Theme 3.2.77 corrects their generic page template, and Theme 3.2.78
   includes that work plus the sampled Review and Journal inner-landmark
   correction. Deployment acceptance remains pending for both changes.
-- Test archive search/filter/pagination from a current review through an older
-  review and into the Oscars ledger; existing content should be easy to find.
+- A bounded public journey passed Reviews year filtering and page 2, the older
+  Being John Malkovich review to its Academy record, and Search/recovery links at
+  phone and desktop widths. This signed-in sample does not cover every route.
 - Review the proposed hero and Journal lineups with Dalton, apply through the
   canonical Site Studio controls when authorized, and inspect public desktop and
   mobile output. Do not rewrite article publication dates to make coverage look
@@ -98,3 +99,7 @@ screening attendance or association eligibility. The site's About page reports
   "the cut that should". Its missing-art layout is readable at 390/1440px;
   this is a copy issue, not CSS clipping. No replacement prose has been invented
   or published.
+  The earliest available UI revision (100195) and its successor (100196) also
+  contain the fragment. Seven distinct versions out of 31 were inspected without
+  finding a complete ending. Recovery is stopped; request intended source wording
+  or review a replacement rather than inventing the missing original.
