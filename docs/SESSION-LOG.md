@@ -25,6 +25,71 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-14 — Theme 3.2.80 Oscar carousel playback controls
+
+The next focused completion slice is ready on `codex/oscar-carousel-controls-3.2.80`; code-level detail is in `docs/CHANGELOG.md`.
+Oscar Picks now has a persistent Pause/Play control and 44px pagination targets;
+Oscar Facts has the same playback control through the Splide pilot. Hover and
+keyboard focus pause movement, touch gestures resume cleanly, and readers who
+request reduced motion stay paused. Saved selections, artwork overrides,
+ordering and copy were not changed. This is a local candidate, not a second
+production identity.
+
+### Verified live state
+
+| Read-only probe | Result |
+| --- | --- |
+| Anonymous Home, Reviews, Journal and Oscars | 200; public build remains `3.2.76+20260913-225857` |
+
+No agent deployment or manual cache purge occurred. Theme 3.2.80 is not
+deployed; its live canary is pending. The already-merged Academy 2.7.85 and
+Theme 3.2.79 deployment handoff remains Dalton's action.
+
+### What shipped and why
+
+Oscar Picks' arrows and dots previously worked but offered no persistent
+playback control, and its visual dots were only 9px targets. Oscar Facts had
+autoplay through Splide without the same visible control. The shared controls
+now use one pause/play grammar while preserving the existing cinematic styling
+and readable mobile card layout. Reduced-motion behavior is explicit in both
+the dependency-free scroll controller and the Splide pilot.
+
+### Commit ledger
+
+| Repository / role | Commit or tree |
+| --- | --- |
+| Theme | `962b1c4` — Oscar carousel playback controls candidate |
+| Theme main | `5e1c9438b11794b6e85590cfad2c89ec94f1b699` remains the latest merged main |
+
+### Gate ledger
+
+- Oscar Picks navigation and playback: 56 checks across phone/desktop and
+  normal/reduced motion.
+- Oscar Facts Splide playback: 18 checks across phone/desktop and
+  normal/reduced motion.
+- Oscar artwork and responsive framing: 1,237 checks; mobile panels: 305
+  checks; PHP artwork renderer and dynamic-rail contracts passed.
+- Full required theme contract suite passed, including the 61,315-byte
+  homepage-module CSS budget, release identity, private previews, and the
+  route/editor browser contracts.
+
+### Logged, not fixed / punch-list carried forward
+
+The two merged releases are still awaiting Dalton's manual WordPress.com
+deployment in plugin-before-theme order. After that handoff, repeat the
+versioned canary, public route matrix, editor handoffs and Oscar controls on the
+actual site. Critical CSS regeneration, controlled performance comparison,
+opening lineup application, NTFCA clarification and Manhunter source recovery
+remain open from the seven-step completion plan.
+
+### Whose move it is next
+
+The candidate is ready for review on `codex/oscar-carousel-controls-3.2.80`.
+Dalton deploys the already-merged Academy 2.7.85, then Theme 3.2.79; no 3.2.80
+deployment should occur until this candidate is reviewed and merged.
+
+---
+
 ## 2026-09-13 — Search keyboard acceptance folded into the final 3.2.79 candidate
 
 ### Headline / what changed

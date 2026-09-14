@@ -18,12 +18,20 @@ in GitHub; the exact rollback hatch is rebuilt. Academy 2.7.85 is merged through
 PR #30 at `6a36be0`. Deploy the plugin before the theme. Manual deployment and
 public acceptance remain pending; last verified live theme is 3.2.76.
 
-Theme 3.2.79 is being prepared on `codex/journal-gallery-controls-3.2.79`:
-useful Journal gallery controls, empty Search correction, Footer writer
-retirement and truthful Control Desk handoffs. It is not merged or live yet.
-The final candidate also corrects Search-dialog Tab containment and focus return,
-with 162 focused keyboard checks and independent review. PR #199 remains draft
-until this final integration passes its checks.
+Theme 3.2.79 is merged through PR #199 at `5e1c943`: useful Journal gallery
+controls, empty Search correction, Footer writer retirement, truthful Control
+Desk handoffs and Search-dialog Tab containment/focus return. Independent review,
+95 initial local gates, the affected header gate and final-head CI passed. The
+exact rollback hatch was rebuilt. A postmerge anonymous homepage probe still
+reports `3.2.76+20260913-225857`; deploy Academy 2.7.85 before Theme 3.2.79
+through the existing WordPress.com connection, then run the versioned canary.
+
+Theme 3.2.80 is a focused Oscar carousel accessibility candidate. Oscar Picks
+has a persistent Pause/Play control and 44px pagination targets; Oscar Facts has
+the same control through the Splide pilot. Hover, keyboard focus and touch
+interaction pause playback, and reduced-motion visitors remain paused. The
+candidate is local only; it is not merged, deployed or represented as live, and
+it follows the pending 3.2.79 deployment handoff.
 
 ## 1. Oscars cleanup
 
