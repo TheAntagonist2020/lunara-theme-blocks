@@ -60,6 +60,7 @@ function lunara_resolve_oscar_fact_ledger_url( ...$args ) { return '/oscars/'; }
 function lunara_oscar_fact_visual_hold_ids() { return array( 106 ); }
 function lunara_repair_mojibake_text( $value ) { return $value; }
 function lunara_resolve_theme_asset( ...$args ) { return array( 'path' => false, 'uri' => '' ); }
+function lunara_home_carousel_toggle() { return '<button class="splide__toggle lunara-home-carousel-toggle" type="button"><span class="splide__toggle__play">Play</span><span class="splide__toggle__pause">Pause</span></button>'; }
 function get_the_content() { return 'The historical record explains why this achievement still matters, with enough context to read the card on a narrow phone.'; }
 function get_the_title( $id ) { return ! empty( $GLOBALS['long_titles'] ) ? 'A Remarkable Academy Awards Record With a Long Title That Must Stay Readable on a Narrow Phone' : 'A film'; }
 function has_post_thumbnail( $id ) { return ! in_array( $id, array( 4, 104 ), true ); }
@@ -111,6 +112,7 @@ if ( in_array( '--framing-fixture', $argv, true ) ) {
 }
 $html = lunara_render_oscar_picks_carousel();
 if ( in_array( '--fixture', $argv, true ) ) { echo $html; exit; }
+check( str_contains( $html, 'data-lunara-carousel-toggle' ) && str_contains( $html, 'Pause Oscar Picks rotation' ), 'Multiple Oscar Picks must expose a persistent pause control.' );
 preg_match_all( '/<article\b.*?<\/article>/s', $html, $cards );
 check( 4 === count( $cards[0] ), 'All four selected cards should render.' );
 check( str_contains( $cards[0][0], 'is-portrait' ) && str_contains( $cards[0][0], '<picture>' ), 'Portrait originals need responsive mobile artwork and an explicit fit class.' );
@@ -123,6 +125,7 @@ check( str_contains( $single, 'data-lunara-carousel-autoplay="0"' ) && ! str_con
 $GLOBALS['pick_count'] = 0;
 check( '' === lunara_render_oscar_picks_carousel(), 'No picks must hide the section.' );
 $facts = lunara_render_oscar_facts_carousel();
+check( str_contains( $facts, 'lunara-home-carousel-toggle' ), 'Multiple Oscar Facts must expose a persistent pause control.' );
 preg_match_all( '/<article\b.*?<\/article>/s', $facts, $fact_cards );
 check( 7 === count( $fact_cards[0] ), 'All seven Facts must remain readable, even when their artwork is unavailable.' );
 check( str_contains( $fact_cards[0][0], 'is-portrait' ) && str_contains( $fact_cards[0][0], '<picture>' ), 'Verified portrait Facts must use the uncropped mobile source.' );

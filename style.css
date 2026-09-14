@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.79
+Version: 3.2.80
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -18365,4 +18365,26 @@ body.single-journal .entry-content figcaption {
     max-width: 340px;
     margin-left: auto;
     margin-right: auto;
+}
+
+/* Oscar carousel controls keep the small cinematic marks while making the
+   complete control boxes comfortable for keyboard and touch use. */
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-control{box-sizing:border-box;width:44px;min-width:44px;height:44px;min-height:44px;}
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-dot{box-sizing:border-box;position:relative;width:44px;min-width:44px;height:44px;min-height:44px;padding:20px 8px;border:0;border-radius:0;background:transparent;}
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-dot::after{content:"";position:static;display:block;width:100%;height:4px;border-radius:2px;background:rgba(201,169,97,.38);}
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-dot.active{width:44px;background:transparent;border:0;}
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-dot.active::after{background:rgba(201,169,97,.98);}
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-toggle{width:auto;min-width:76px;padding-inline:12px;border-radius:999px;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;}
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-toggle:disabled,
+body.home .lunara-oscar-facts-section .lunara-home-carousel-toggle:disabled{cursor:not-allowed;opacity:.65;}
+body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel .lunara-oscar-facts-console{grid-template-columns:auto auto minmax(90px,1fr) auto;}
+body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel .lunara-home-carousel-toggle{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:76px;min-height:44px;padding:8px 12px;border:1px solid rgba(201,169,97,.5);border-radius:999px;background:#0a1722;color:#e0c481;font:inherit;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;}
+body.home .lunara-oscar-facts-section .lunara-oscar-facts-dots .lunara-carousel-dot{box-sizing:border-box;position:relative;width:44px;min-width:44px;height:44px;min-height:44px;padding:20px 8px;border:0;border-radius:0;background:transparent;}
+body.home .lunara-oscar-facts-section .lunara-oscar-facts-dots .lunara-carousel-dot::after{content:"";position:static;display:block;width:100%;height:4px;border-radius:2px;background:rgba(215,182,111,.38);}
+body.home .lunara-oscar-facts-section .lunara-oscar-facts-dots .lunara-carousel-dot.active{width:44px;background:transparent;border:0;}
+body.home .lunara-oscar-facts-section .lunara-oscar-facts-dots .lunara-carousel-dot.active::after{background:#d7b66f;}
+@media(max-width:780px){
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-toggle{grid-column:1/-1;grid-row:2;justify-self:center;}
+body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel .lunara-oscar-facts-console{grid-template-columns:1fr auto;}
+body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel .lunara-oscar-facts-console .lunara-home-carousel-toggle{grid-column:1/-1;grid-row:3;justify-self:center;}
 }

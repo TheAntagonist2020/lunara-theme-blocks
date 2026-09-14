@@ -10,7 +10,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const prev = section.querySelector('[data-lunara-carousel-prev]');
             const next = section.querySelector('[data-lunara-carousel-next]');
             const dots = Array.from(section.querySelectorAll('[data-lunara-carousel-dot]'));
+            const toggle = section.querySelector('[data-lunara-carousel-toggle]');
             if (!track) return;
+            if (toggle && reduceMotion) {
+                toggle.disabled = true;
+                toggle.setAttribute('aria-disabled', 'true');
+                toggle.setAttribute('aria-label', 'Autoplay disabled for reduced motion');
+            }
             function amount() {
                 const card = track.children[0];
                 const styles = window.getComputedStyle(track);
@@ -113,33 +119,104 @@ document.addEventListener('DOMContentLoaded', function () {
             }, { passive: true });
 
             const autoplay = parseInt(section.getAttribute('data-lunara-carousel-autoplay') || '0', 10);
-            if (!reduceMotion && autoplay > 0 && track.children.length > 1 && window.innerWidth > 900) {
-                let timer = null;
-                const stop = function () {
-                    if (timer) {
-                        window.clearInterval(timer);
-                        timer = null;
-                    }
-                };
-                const start = function () {
+            const allowMobileAutoplay = !!toggle;
+            let timer = null;
+            let userPaused = false;
+            let pointerHover = false;
+            let focusWithin = false;
+
+            function syncToggle() {
+                if (!toggle) {
+                    return;
+                }
+                const paused = userPaused || reduceMotion || autoplay <= 0;
+                toggle.textContent = paused ? 'Play' : 'Pause';
+                toggle.setAttribute('aria-label', reduceMotion ? 'Autoplay disabled for reduced motion' : (paused ? 'Play Oscar Picks rotation' : 'Pause Oscar Picks rotation'));
+                toggle.setAttribute('aria-pressed', userPaused ? 'true' : 'false');
+                toggle.classList.toggle('is-paused', paused);
+            }
+
+            function stop() {
+                if (timer) {
+                    window.clearInterval(timer);
+                    timer = null;
+                }
+            }
+
+            function start() {
+                stop();
+                if (userPaused || reduceMotion || autoplay <= 0 || track.children.length < 2 || (!allowMobileAutoplay && window.innerWidth <= 900) || pointerHover || focusWithin) {
+                    syncToggle();
+                    return;
+                }
+                timer = window.setInterval(function () {
+                    step(1);
+                }, autoplay);
+                syncToggle();
+            }
+
+            function resumeWhenAvailable() {
+                if (pointerHover || focusWithin || userPaused) {
                     stop();
-                    timer = window.setInterval(function () {
-                        step(1);
-                    }, autoplay);
-                };
-                section.addEventListener('mouseenter', stop);
-                section.addEventListener('mouseleave', start);
-                section.addEventListener('focusin', stop);
-                section.addEventListener('focusout', start);
-                document.addEventListener('visibilitychange', function () {
-                    if (document.hidden) {
+                    syncToggle();
+                    return;
+                }
+                start();
+            }
+
+            if (toggle) {
+                toggle.addEventListener('click', function () {
+                    userPaused = !userPaused;
+                    if (userPaused) {
                         stop();
                     } else {
                         start();
                     }
+                    syncToggle();
                 });
-                start();
             }
+
+            // Pause on real mouse hover and while keyboard focus is inside the
+            // section. Touch users can still swipe and autoplay resumes after
+            // the gesture ends. A user pause always wins over these temporary
+            // interaction pauses.
+            section.addEventListener('pointerenter', function (event) {
+                if (event.pointerType === 'mouse') {
+                    pointerHover = true;
+                    stop();
+                }
+            });
+            section.addEventListener('pointerleave', function (event) {
+                if (event.pointerType === 'mouse') {
+                    pointerHover = false;
+                    resumeWhenAvailable();
+                }
+            });
+            section.addEventListener('focusin', function () {
+                focusWithin = true;
+                stop();
+            });
+            section.addEventListener('focusout', function () {
+                window.setTimeout(function () {
+                    if (!section.contains(document.activeElement)) {
+                        focusWithin = false;
+                        resumeWhenAvailable();
+                    }
+                }, 0);
+            });
+            track.addEventListener('touchstart', stop, { passive: true });
+            track.addEventListener('touchend', resumeWhenAvailable, { passive: true });
+            track.addEventListener('touchcancel', resumeWhenAvailable, { passive: true });
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) {
+                    stop();
+                } else {
+                    resumeWhenAvailable();
+                }
+            });
+            syncToggle();
+            start();
+
             // The first dot is already marked active in server-rendered HTML.
             // Defer geometry reads until the rail actually scrolls or a reader
             // uses a control; this keeps below-fold carousels out of first paint.
