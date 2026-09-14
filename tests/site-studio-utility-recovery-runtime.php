@@ -61,6 +61,23 @@ utility_reset();$state=$missing->read_state();$state['hero']['explanation']="Fir
 $before=utility_snapshot();$GLOBALS['lunara_pilot_mod_fault']=array('key'=>'lunara_404_kicker','mode'=>'fail','remaining'=>1);$restore=$missing->restore_revision($saved['revision_id']);utility_assert(is_wp_error($restore)&&$before===utility_snapshot(),'History write failure restores both state and safety-history record');
 
 // Render actual templates; saved dormant title is adopted only by the explicit flag.
+// WordPress's outer query can contain the assigned Search page or home posts before a search runs.
+$GLOBALS['wp_query']=new WP_Query();
+$GLOBALS['wp_query']->posts=array(new WP_Post(9901,'page','publish'));
+$GLOBALS['wp_query']->found_posts=27;
+foreach(array(array('/search/',array()),array('/search/',array('q'=>" \t ")),array('/?s=',array('s'=>''))) as $start_case){
+    $_SERVER['REQUEST_URI']=$start_case[0];$_GET=$start_case[1];$html=utility_render('search.php');
+    utility_assert(!str_contains($html,'Fixture story 9901')&&!str_contains($html,'data-lunara-site-studio-section="result-run"'),'Empty Search never lists the outer page or home query: '.$start_case[0]);
+    utility_assert((bool)preg_match('/<strong>Matches<\/strong>\s*<span>0<\/span>/',$html),'Empty Search count ignores outer found_posts');
+    utility_assert(str_contains($html,'Start with a film, filmmaker or topic.')&&!str_contains($html,'Nothing matched that search yet.')&&!str_contains($html,'>Try Again<'),'Search start invites a query without reporting a failed search');
+    utility_assert(str_contains($html,'name="q"')&&str_contains($html,'Elsewhere in Lunara'),'Search start keeps its form and recovery destinations');
+}
+$_SERVER['REQUEST_URI']='/search/';$_GET=array('q'=>'Lunara');$GLOBALS['utility_results']=array(new WP_Post(401,'review','publish'));
+$html=utility_render('search.php');utility_assert(str_contains($html,'Fixture story 401')&&!str_contains($html,'Fixture story 9901')&&(bool)preg_match('/<strong>Matches<\/strong>\s*<span>1<\/span>/',$html),'Nonempty command query renders only its own results and count');
+$_SERVER['REQUEST_URI']='/?s=Lunara';$_GET=array('s'=>'Lunara');$GLOBALS['wp_query']->posts=array(new WP_Post(402,'journal','publish'));
+$html=utility_render('search.php');utility_assert(str_contains($html,'Fixture story 402')&&!str_contains($html,'Fixture story 401')&&(bool)preg_match('/<strong>Matches<\/strong>\s*<span>27<\/span>/',$html),'Nonempty native search retains its outer results and total');
+$GLOBALS['wp_query']=new WP_Query();$GLOBALS['utility_results']=array();$_SERVER['REQUEST_URI']='/search/';$_GET=array('q'=>'Unmatched');
+$html=utility_render('search.php');utility_assert(str_contains($html,'Nothing matched that search yet.')&&str_contains($html,'>Try Again<')&&!str_contains($html,'Start with a film, filmmaker or topic.'),'An executed zero-result query retains the no-match recovery state');
 utility_reset();$_SERVER['REQUEST_URI']='/search/';$_GET=array();$GLOBALS['lunara_pilot_theme_mods']['lunara_search_no_query_title']='Previously dormant title';
 $html=utility_render('search.php');utility_assert(substr_count($html,'<main ')===1&&substr_count($html,'</main>')===1,'Search has one main landmark inside the actual header/footer shell');utility_assert(str_contains($html,'>Search Lunara Film</h1>')&&!str_contains($html,'Previously dormant title'),'Dormant title remains unused on public start');
 $state=$search->read_state();$state['geometry']['section_gap']=52;$search->save_state($state);$html=utility_render('search.php');utility_assert(!str_contains($html,'Previously dormant title'),'Layout-only Apply does not adopt dormant title');

@@ -5493,6 +5493,9 @@ function lunara_control_desk_render_readiness_badge( $readiness ) {
 }
 
 function lunara_control_desk_customizer_url( $section ) {
+    if ( 'lunara_footer_options' === $section ) {
+        return lunara_site_studio_admin_url( 'site-footer' );
+    }
     return add_query_arg(
         array(
             'autofocus[section]' => sanitize_key( $section ),
@@ -11897,9 +11900,9 @@ function lunara_control_desk_theme_studio_groups() {
             'section'  => 'lunara_footer_options',
             'preview'  => home_url( '/' ),
             'owner'    => __( 'Custom Lunara footer renderer', 'lunara-film' ),
-            'note'     => __( 'Footer tagline, utility columns, copyright, and social display.', 'lunara-film' ),
+            'note'     => __( 'Footer logo, tagline, column headings, ordered links, and copyright.', 'lunara-film' ),
             'renders'  => array( __( 'Every public footer', 'lunara-film' ), __( 'Editorial links', 'lunara-film' ), __( 'Ledger links', 'lunara-film' ), __( 'Utility links', 'lunara-film' ) ),
-            'settings' => array( 'lunara_footer_tagline', 'lunara_footer_copyright', 'lunara_footer_show_social' ),
+            'settings' => array( 'lunara_footer_tagline', 'lunara_footer_show_logo', 'lunara_footer_col1_heading', 'lunara_footer_col2_heading', 'lunara_footer_col3_heading', 'lunara_footer_copyright', 'lunara_footer_navigation' ),
         ),
         array(
             'label'    => __( 'Mobile', 'lunara-film' ),
@@ -12472,6 +12475,7 @@ function lunara_control_desk_render_theme_studio_mobile_checks() {
 }
 
 function lunara_control_desk_theme_studio_goal_guides() {
+    $journal_article = lunara_site_studio_journal_single_preview_article();
     return array(
         array(
             'goal'    => __( 'Make mobile cleaner', 'lunara-film' ),
@@ -12498,13 +12502,15 @@ function lunara_control_desk_theme_studio_goal_guides() {
         array(
             'goal'    => __( 'Make Journal easier to read', 'lunara-film' ),
             'section' => 'lunara_standard_post_options',
-            'preview' => home_url( '/journal/' ),
+            'control_url' => lunara_site_studio_admin_url( 'journal-single' ),
+            'control_label' => __( 'Open Journal article presentation', 'lunara-film' ),
+            'preview' => ! empty( $journal_article['route'] ) ? home_url( $journal_article['route'] ) : home_url( '/journal/' ),
             'touch'   => array(
-                __( 'Journal label', 'lunara-film' ),
-                __( 'Journal title size', 'lunara-film' ),
-                __( 'Archive intro copy', 'lunara-film' ),
+                __( 'Headline size', 'lunara-film' ),
+                __( 'Image fit and focal point', 'lunara-film' ),
+                __( 'Author, publication date, and reading time', 'lunara-film' ),
             ),
-            'watch'   => __( 'Single-entry title scale, archive card rhythm, and whether the first paragraph arrives quickly.', 'lunara-film' ),
+            'watch'   => __( 'Article headline wrapping, artwork framing, metadata visibility, and how quickly the first paragraph arrives.', 'lunara-film' ),
         ),
         array(
             'goal'    => __( 'Tune the homepage', 'lunara-film' ),
@@ -12568,7 +12574,7 @@ function lunara_control_desk_render_theme_studio_goal_guide() {
                     </div>
                     <p><?php echo esc_html( $guide['watch'] ); ?></p>
                     <div class="lunara-control-desk-actions">
-                        <a class="button button-primary button-small" href="<?php echo esc_url( lunara_control_desk_customizer_url( $guide['section'] ) ); ?>"><?php esc_html_e( 'Open Controls', 'lunara-film' ); ?></a>
+                        <a class="button button-primary button-small" href="<?php echo esc_url( isset( $guide['control_url'] ) ? $guide['control_url'] : lunara_control_desk_customizer_url( $guide['section'] ) ); ?>"><?php echo esc_html( isset( $guide['control_label'] ) ? $guide['control_label'] : __( 'Open Controls', 'lunara-film' ) ); ?></a>
                         <a class="button button-small" href="<?php echo esc_url( $guide['preview'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Preview', 'lunara-film' ); ?></a>
                         <a class="button button-small" href="<?php echo esc_url( $mobile_preview ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( '390px', 'lunara-film' ); ?></a>
                     </div>
@@ -15035,7 +15041,7 @@ function lunara_control_desk_render_useful_controls() {
         array( __( 'Customizer: Home', 'lunara-film' ), lunara_control_desk_customizer_url( 'lunara_homepage_pulse_options' ), 'customize' ),
         array( __( 'Customizer: Reviews', 'lunara-film' ), lunara_control_desk_customizer_url( 'lunara_review_layout_options' ), 'customize' ),
         array( __( 'Customizer: Journal Defaults', 'lunara-film' ), lunara_control_desk_customizer_url( 'lunara_standard_post_options' ), 'customize' ),
-        array( __( 'Customizer: Footer', 'lunara-film' ), lunara_control_desk_customizer_url( 'lunara_footer_options' ), 'customize' ),
+        array( __( 'Site Studio: Footer', 'lunara-film' ), lunara_control_desk_customizer_url( 'lunara_footer_options' ), 'edit_theme_options' ),
         array( __( 'Carousel Manager', 'lunara-film' ), admin_url( 'themes.php?page=lunara-carousel-manager' ), 'manage_options' ),
         array( __( 'Block Migration', 'lunara-film' ), admin_url( 'tools.php?page=lunara-block-migration' ), 'edit_pages' ),
         array( __( 'AI Classic Settings', 'lunara-film' ), admin_url( 'options-general.php?page=lunara-ai-assistant-classic' ), 'manage_options' ),

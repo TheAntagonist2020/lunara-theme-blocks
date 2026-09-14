@@ -25,6 +25,255 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Search keyboard acceptance folded into the final 3.2.79 candidate
+
+### Headline / what changed
+
+Read-only acceptance on live 3.2.76 confirmed that Search opened from the 404
+recovery link and focused its input, but Tab escaped the modal and settled
+Escape dismissal left focus on BODY. The final candidate adds dynamic Tab
+containment, connected-trigger focus restoration and safe opening/closing
+transitions. It is folded into PR #199 before merge, avoiding another deployment
+for this known navigation issue. See docs/CHANGELOG.md for the final behavior.
+The presentation guide now describes implemented controls through 3.2.79,
+including their actual owners and the distinction from source publishing.
+
+### Commit / gate ledger
+
+Initial candidate `2b5d3a465d1537491217ffaf91e39b6355b2428a` passed all GitHub
+contract and syntax steps in run `34793259242`, job `103821378552`. Its separate
+95-gate Windows run is still finishing against the unchanged initial checkout.
+The final integration is isolated until that run ends. This is not a claim
+that the initial run tests the later keyboard changes.
+
+Independent review approved the four-file keyboard patch. Its existing header
+gate passes 64 PHP, 55 header-browser and 162 actual-overlay keyboard checks at
+390/1440px with normal/reduced motion, including dynamic results, reverse Tab,
+closing transition, rapid open/close, missing triggers, native Enter and no-JS
+navigation. Missing-containment and missing-return mutations fail. Earlier
+Search review separately reran 251 cases and caught both the outer-loop and
+outer-count regressions. Footer and Control Desk reviews found no issues.
+Final integration reruns and full CI must pass before merge; later receipts
+record those outcomes. Public acceptance of the final source remains open.
+
+### Verified live state / logged, not fixed
+
+No newer theme deployment was observed: the keyboard journey recorded
+`3.2.76+20260913-225857`. No content, settings, deployment or cache actions ran.
+Academy 2.7.85 is merged but its deployment acceptance remains pending.
+
+Manhunter's earliest available UI revision (100195) and immediate successor
+(100196), dated July 19, already contain the incomplete ending. Seven distinct
+versions out of 31 were inspected in total; no complete ending was recovered.
+This fragment predates the recent layout releases. Recovery is stopped at this
+bound; Dalton's intended wording or an explicitly reviewed replacement is needed.
+No revision was restored and no replacement prose was invented.
+
+### Next owner / carried-forward work
+
+Agent completes final verification and merges PR #199, then rebuilds the exact
+rollback hatch. Dalton manually deploys Academy 2.7.85 before the latest theme
+main through WordPress.com. Agent verifies the versioned public canary, editor
+handoffs and the original 404/Search keyboard journey afterward. Controlled
+public timing, valid Critical CSS regeneration and reviewed editorial curation
+remain open in SITE-COMPLETION-PLAN.md. No agent deployment occurred.
+
+---
+
+## 2026-09-13 — Theme 3.2.79 reader navigation release candidate
+
+### Headline / what changed
+
+The gallery follow-up is now part of a formal 3.2.79 candidate on
+`codex/journal-gallery-controls-3.2.79`. The same batch closes six competing
+Footer Customizer writers, updates Footer/Journal Control Desk handoffs and
+corrects empty Search listing its own outer page as a result. See
+docs/CHANGELOG.md for behavior and scope. Saved editorial content and public
+settings were not changed.
+
+### Verified live state / commit ledger
+
+| Probe | Observed result |
+| --- | --- |
+| Anonymous homepage GET, 2026-09-14 00:25:24 UTC | 200, `3.2.76+20260913-225857` |
+
+Main remains PR #198's `a272ec1`, with its exact rollback verified against that
+main. Academy PR #30 is merged at `6a36be0`. This branch includes `1b8d13a`
+(78 merge receipt) and `e6b3bd9` (reviewed gallery follow-up), then this candidate.
+No 79 PR or merge has occurred at this entry's creation.
+
+### Gate ledger / review
+
+Gallery: 36 focused browser checks, with old controls, missing boundary behavior,
+forced smooth JavaScript and missing reduced-motion CSS mutations caught.
+Footer: 129 lifecycle/renderer checks, with a restored old setting writer caught.
+Control Desk: 12 emitted-handoff checks; stale Footer and Journal links are caught
+by mutations. Search/404: 251 provider/renderer checks after adding real outer-page,
+whitespace, native-empty, normal result/count and no-match cases; the old source
+fails the new assigned-page regression. Adoption reruns pass. Syntax checks on
+affected PHP pass. Final independent Search review, the full 95-gate suite,
+whole-release syntax and CI remain to be completed and recorded in a later entry.
+
+### Logged, not fixed / punch-list carried forward
+
+The signed-in reader journey exercised Reviews year filtering, page 2, a review
+to its Academy film, Search results, no-results recovery and 404 at 390/1440px.
+No horizontal overflow was found in this bounded sample. Escape was dispatched
+from the Search dialog, but completed focus restoration remains unverified.
+
+Manhunter's canonical stored body also ends at “the cut that should”. No ending
+has been recovered; MCP revision calls did not support this Journal CPT, so no
+revisions were read. A bounded read-only Revisions UI check remains useful.
+Do not invent replacement editorial copy. Google's one public PageSpeed API
+attempt returned 429 with daily quota zero; no anonymous performance metrics
+were obtained. No retry or credentials were requested. Controlled public timing,
+Critical CSS regeneration, new editor live acceptance and reviewed lineups stay
+open in SITE-COMPLETION-PLAN.md.
+
+### Whose move it is next
+
+Agent completes the candidate's review, full gates and release preparation.
+Dalton retains manual deployment through WordPress.com, Academy 2.7.85 before
+the latest theme main; agent then verifies identity/canaries and remaining public
+acceptance. No agent deployment or manual cache purge occurred. Theme 3.2.79 is not
+deployed; its live canary is pending.
+
+---
+
+## 2026-09-13 — Journal gallery follow-up prepared after the release merge
+
+### Headline / what changed
+
+The next branch, `codex/site-completion-next-3.2.78`, now carries the reviewed
+Journal-gallery correction discovered during public acceptance. Desktop arrows
+disable when all images fit; non-wrapping galleries disable the unusable start
+or end direction. Native scroll, keyboard movement, resizing, image loads and
+content changes refresh the state. A two-pixel boundary tolerance covers the
+observed fractional first-slide offset. Reduced motion is respected by both
+the JavaScript scroll request and the scoped CSS scroll behavior.
+
+This is prepared source, not a new release: style.css remains 3.2.78, no new PR
+or main merge has occurred, and none of this follow-up is included in PR #198.
+Journal-only ownership avoids changing the homepage carousel system. See the
+preceding release's docs/CHANGELOG.md entry for what is actually merged.
+
+### Gate ledger / review
+
+Independent review approved, with 36 focused checks rerun by the reviewer.
+Earlier affected-gate evidence passed 444 article geometry, 34 delivery and 34
+gallery checks. The final reduced-motion CSS correction extends the gallery
+count to 36; that focused runtime passes, with no unnecessary repeat of unchanged
+article geometry. Old controls, missing boundary behavior, forced smooth request
+and missing reduced-motion CSS mutations are all caught. Actual PHP fixtures
+cover zero/one-image output; browser cases cover fitting/overflowing galleries,
+three-slide middle snap, dynamic empty/add/remove states and computed motion.
+The five adopted files match the reviewed worktree after line-ending
+normalization; PHP syntax and whitespace checks pass. The next release's version,
+full suite, CI, merge and public acceptance have not run.
+
+### Verified live state / commit ledger / remaining work
+
+An ordinary anonymous homepage GET at 2026-09-14 00:16:35 UTC returned 200 and
+`3.2.76+20260913-225857`. No deployment or production edit occurred. Main remains
+the verified PR #198 merge `a272ec1`; `1b8d13a` records its release/rollback
+receipt on this follow-up branch. The standing hatch remains verified against
+that main. Dalton deploys Academy 2.7.85 then Theme 3.2.78; agent verifies those
+releases and continues the seven-step checklist. Final gallery release work and
+the remaining public/editor/performance/curation acceptance stay open.
+
+An approved-browser capability check found only the existing signed-in Chrome
+profile. Anonymous HTTP payload evidence remains available, but a later timing
+comparison needs an available signed-out browser or another suitable measurement
+service. No authentication was changed. Editorial readiness now also records
+Manhunter's unfinished stored sentence; no replacement copy was published.
+
+---
+
+## 2026-09-13 — Theme 3.2.78 and Academy 2.7.85 ready for manual deployment
+
+### Headline / what shipped
+
+Theme PR #198 merged after all 95 required gates passed locally and in GitHub.
+The main tree matches the tested candidate, and the standing rollback hatch is
+rebuilt and tree-exact. Academy PR #30 is also merged. See docs/CHANGELOG.md for
+the landmark, action-sizing and category-era changes. All seven completion
+steps remain tracked in SITE-COMPLETION-PLAN.md; this is a release milestone,
+not a claim that the entire site has passed final acceptance.
+
+### Verified live state
+
+The latest bounded browser samples still report `3.2.76+20260913-225857`.
+No agent deployment, settings write, rewrite flush or cache purge occurred.
+Academy 2.7.84 remains the previously confirmed live plugin. Theme 3.2.78 and
+Academy 2.7.85 public acceptance follow Dalton's manual WordPress.com deployment.
+
+### Commit and gate ledger
+
+| Repository / evidence | Result |
+| --- | --- |
+| Theme tested head | `e86d3894c8e44f166c541b769af4d0f0084366d6` |
+| Theme main / PR #198 | `a272ec1e60a168e0eaa0abe01c7a6ee14795f71f` |
+| Candidate and main tree | `2e81c51bef27c25fd1232234562ae09e8edd5aad` |
+| GitHub theme run / job | `34791519906` / `103816527003`, all steps green |
+| Local theme validation | 95/95 gates; 155 PHP, 74 JS, 36 CSS brace checks; three changed stylesheets parse with PostCSS |
+| Academy tested head | `f9a8c3545950735b5c297041d60ae751ec641e8a` |
+| Academy main / PR #30 | `6a36be06be7cb56a4263306742049b146c33254f` |
+| Academy candidate and main tree | `95ddc9d807302fe6b9248819b7f7e2fb89119617` |
+| GitHub Academy run / job | `34791370871` / `103816107047`, all steps green |
+
+Independent landmark and plugin reviews approved; root reviewed the theme CSS.
+The 3,438-check full-cascade fixture catches old 40px theme and 30px plugin
+targets; the old nested-main mutation is caught. The plugin's 234-check runtime
+catches four era/context mutations. The two plugin local provenance contracts
+excluded by CI were not run. New live canary and new-editor acceptance are pending.
+
+At 2026-09-14 00:14:10 UTC, `claude/rollback-exact-theme-3.2.43` / PR #159
+has current main as first parent; remote tree and simulated merge both equal
+`c55bf394594149db2888295c5d51f85f47b2b520`. No moving hatch SHA is recorded.
+
+### Public article and performance evidence
+
+Existing Manhunter (post 100189, no primary art) and David Robert Mitchell
+(post 32536, two curated gallery images) Journal pages pass sampled browser
+geometry at exact CSS widths 390 and 1440. Full headings/body are readable;
+Manhunter has no empty image box; both gallery images load with visible subjects
+and credits. Mobile arrows and focused left/right keys move the gallery; buttons
+are 44px. This browser was signed in. Swipe, anonymous visual parity and live
+no-JavaScript/reduced-motion variants were not tested in this sample.
+
+The live Journal stylesheet is shared by Angel and Beyond Fest. Four exploratory
+browser navigations report zero transferred bytes for its 16,191-byte decoded
+body, supporting cache reuse. They do not establish public speed: the browser
+was signed in, throttled, at CSS width 434, with concurrent local test activity.
+The hero image was LCP in all samples; Angel median LCP was 8.220s and bounded
+load-window CLS 0.00614. These descriptive values are not a controlled baseline.
+Most signed-in script weight was Site Kit; its explicit files are absent from
+saved anonymous markup. Do not attribute that signed-in payload to visitors.
+
+### Corrections / logged, not fixed
+
+The saved public 3.2.75 Journal inline block was 14,860 bytes. The 16,115-byte
+number describes the expanded candidate body before extraction, plus a 76-byte
+asset header. SITE-COMPLETION-PLAN.md now distinguishes those quantities.
+
+Desktop gallery arrows remain enabled when both images fit and cannot scroll.
+A focused follow-up is being prepared in an isolated worktree, outside this
+release. Manhunter's final sentence ends with "the cut that should" in stored
+content as well as the page; this is an editorial truncation, not layout clipping.
+No replacement prose was invented or published. Known nested article landmarks
+in live 3.2.76 are addressed by this merged theme release, pending acceptance.
+
+### Punch-list / whose move
+
+Dalton deploys Academy 2.7.85 first, then Theme 3.2.78 from main; the theme also
+includes the preceding Footer/Search/404 editor release. Agent then runs the
+versioned canary, checks entity-era labels and Academy actions, accepts the new
+editors/public routes, and continues gallery controls, measured performance,
+Critical CSS coverage and reviewed opening lineups. The next branch carries this
+durable merge record; no additional main merge is required for deployment.
+
+---
+
 ## 2026-09-13 — Academy 2.7.85 merged; Theme 3.2.78 gates running
 
 ### Headline / what shipped

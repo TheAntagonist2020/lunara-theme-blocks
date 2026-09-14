@@ -5581,6 +5581,40 @@ function lunara_output_journal_image_carousel_js() {
             var next = carousel.querySelector('[data-lunara-carousel-action="next"]');
             if (!track || (!previous && !next)) return;
 
+            function syncControls() {
+                var maximum = Math.max(0, track.scrollWidth - track.clientWidth);
+                var fits = maximum <= 1;
+                if (previous) previous.disabled = fits || track.scrollLeft <= 2;
+                if (next) next.disabled = fits || track.scrollLeft >= maximum - 2;
+                return !fits;
+            }
+
+            var frame = 0;
+            function scheduleSync() {
+                if (frame) return;
+                frame = requestAnimationFrame(function(){ frame = 0; syncControls(); });
+            }
+            var resize = typeof ResizeObserver === 'function' ? new ResizeObserver(scheduleSync) : null;
+            function observeSlides() {
+                if (resize) {
+                    resize.disconnect();
+                    resize.observe(track);
+                    Array.prototype.forEach.call(track.children, function(slide){ resize.observe(slide); });
+                }
+                scheduleSync();
+            }
+            if (typeof MutationObserver === 'function') {
+                new MutationObserver(observeSlides).observe(track, {
+                    childList: true, subtree: true, characterData: true, attributes: true,
+                    attributeFilter: ['class', 'style', 'src', 'srcset', 'sizes', 'width', 'height']
+                });
+            }
+            track.addEventListener('load', scheduleSync, true);
+            track.addEventListener('scroll', scheduleSync, { passive: true });
+            window.addEventListener('resize', scheduleSync);
+            observeSlides();
+            syncControls();
+
             function slideWidth() {
                 var slide = track.querySelector('.lunara-journal-image-carousel-slide');
                 if (!slide) return Math.max(280, Math.round(track.clientWidth * 0.86));
@@ -5589,7 +5623,8 @@ function lunara_output_journal_image_carousel_js() {
             }
 
             function move(direction) {
-                track.scrollBy({ left: slideWidth() * direction, behavior: 'smooth' });
+                if (!syncControls()) return;
+                track.scrollBy({ left: slideWidth() * direction, behavior: window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
             }
 
             if (previous) previous.addEventListener('click', function(){ move(-1); });

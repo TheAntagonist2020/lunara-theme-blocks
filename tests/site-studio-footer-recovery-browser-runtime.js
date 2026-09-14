@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),{chromium}=require('playwright-core');
 const {fixture}=require('./site-studio-browser-fixture');
-const root=path.resolve(__dirname,'..'),output=path.resolve(root,'../_carousel-artifacts/site-experience-3.2.78');
+const root=path.resolve(__dirname,'..'),output=path.resolve(root,'../_carousel-artifacts/site-experience-3.2.79');
 const executablePath=process.env.LUNARA_BROWSER_EXECUTABLE||['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe','/usr/bin/chromium','/usr/bin/google-chrome'].find(fs.existsSync);
 const controller=process.env.LUNARA_RECOVERY_CONTROLLER_SOURCE?fs.readFileSync(process.env.LUNARA_RECOVERY_CONTROLLER_SOURCE,'utf8'):undefined;
 function stateOf(html){return JSON.parse(html.match(/<script[^>]+id="lunara-site-studio-state"[^>]*>([\s\S]*?)<\/script>/)[1]);}

@@ -3096,3 +3096,14 @@ function lunara_retire_search_recovery_customizer_controls( $customizer ) {
     foreach ( $keys as $key ) { $customizer->remove_control( $key ); $customizer->remove_setting( $key ); }
 }
 add_action( 'customize_register', 'lunara_retire_search_recovery_customizer_controls', 100 );
+
+/** Footer presentation belongs to Site Studio; keep saved mods, retire stale writers. */
+function lunara_retire_footer_customizer_controls( $customizer ) {
+    $keys = array(
+        'lunara_footer_tagline', 'lunara_footer_show_logo',
+        'lunara_footer_col1_heading', 'lunara_footer_col2_heading', 'lunara_footer_col3_heading',
+        'lunara_footer_copyright',
+    );
+    foreach ( $keys as $key ) { $customizer->remove_control( $key ); $customizer->remove_setting( $key ); }
+}
+add_action( 'customize_register', 'lunara_retire_footer_customizer_controls', 100 );

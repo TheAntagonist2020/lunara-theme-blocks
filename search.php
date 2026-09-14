@@ -266,11 +266,13 @@ if ( ! function_exists( 'lunara_search_render_oscar_matches' ) ) {
 }
 
 $query_text    = lunara_search_query_text();
+$has_query     = '' !== $query_text;
 $command_query = function_exists( 'lunara_is_search_command_request' ) && lunara_is_search_command_request();
 $custom_query  = $command_query ? lunara_search_command_results_query( $query_text ) : null;
-$result_posts  = $custom_query instanceof WP_Query ? lunara_get_loop_posts( $custom_query ) : lunara_get_loop_posts();
-$oscar_matches = function_exists( 'lunara_get_oscars_search_matches' ) ? lunara_get_oscars_search_matches( $query_text, 6 ) : array();
-$recovery_hits = function_exists( 'lunara_get_search_recovery_routes' ) ? lunara_get_search_recovery_routes( $query_text, 6 ) : array();
+// The outer query may be the assigned Search page or homepage, not search results.
+$result_posts  = $has_query ? ( $custom_query instanceof WP_Query ? lunara_get_loop_posts( $custom_query ) : lunara_get_loop_posts() ) : array();
+$oscar_matches = $has_query && function_exists( 'lunara_get_oscars_search_matches' ) ? lunara_get_oscars_search_matches( $query_text, 6 ) : array();
+$recovery_hits = $has_query && function_exists( 'lunara_get_search_recovery_routes' ) ? lunara_get_search_recovery_routes( $query_text, 6 ) : array();
 $result_count  = 0;
 $lead_focus    = lunara_search_select_theme_value( 'lunara_utility_search_lead_focus', 'balanced', array( 'balanced', 'ledger', 'reviews', 'journal' ) );
 $spotlight_type = lunara_search_select_theme_value( 'lunara_utility_search_spotlight_type', 'automatic', array( 'automatic', 'review', 'journal', 'page' ) );
@@ -289,7 +291,7 @@ global $wp_query;
 
 if ( $custom_query instanceof WP_Query ) {
     $result_count = max( 0, intval( $custom_query->found_posts ) );
-} elseif ( isset( $wp_query ) && $wp_query instanceof WP_Query ) {
+} elseif ( $has_query && isset( $wp_query ) && $wp_query instanceof WP_Query ) {
     $result_count = max( 0, intval( $wp_query->found_posts ) );
 }
 
@@ -428,11 +430,11 @@ if ( empty( $result_posts ) && empty( $oscar_matches ) && ! empty( $recovery_hit
         <section class="lunara-home-section lunara-search-empty-shell" data-lunara-site-studio-section="recovery">
             <div class="lunara-editorial-archive-empty-shell">
                 <div class="lunara-archive-empty lunara-editorial-archive-empty">
-                    <h2><?php esc_html_e( 'Nothing matched that search yet.', 'lunara-film' ); ?></h2>
+                    <h2><?php echo esc_html( $has_query ? __( 'Nothing matched that search yet.', 'lunara-film' ) : __( 'Start with a film, filmmaker or topic.', 'lunara-film' ) ); ?></h2>
                     <p><?php esc_html_e( 'Try a film title, a filmmaker, an Oscar category, or a broader keyword.', 'lunara-film' ); ?></p>
                 </div>
                 <div class="lunara-editorial-archive-empty-note">
-                    <p class="lunara-home-section-kicker"><?php esc_html_e( 'Try Again', 'lunara-film' ); ?></p>
+                    <p class="lunara-home-section-kicker"><?php echo esc_html( $has_query ? __( 'Try Again', 'lunara-film' ) : __( 'Explore Lunara', 'lunara-film' ) ); ?></p>
                     <h2 class="lunara-section-title"><?php esc_html_e( 'Search for a title, person, or argument worth reopening.', 'lunara-film' ); ?></h2>
                     <form role="search" method="get" class="lunara-search-form lunara-search-form-shell" action="<?php echo esc_url( function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/' ) ); ?>">
                         <label class="screen-reader-text" for="lunara-search-input"><?php esc_html_e( 'Search for:', 'lunara-film' ); ?></label>
