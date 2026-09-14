@@ -46,6 +46,7 @@ const metrics = [];
                 assert(journalStyleRequests === (fixture.type === 'journal' ? 1 : 0), `${label}: route loads exactly one versioned Journal stylesheet before layout checks`, journalStyleRequests);
                 if (fixture.type === 'journal') assert(fixture.authority.length < 850 && !fixture.authority.includes('!important') && fixture.authority.indexOf('<link ') < fixture.authority.indexOf('<style '), `${label}: HTML carries only the synchronous link and private presentation variables`, fixture.authority);
                 assert(data.document <= width + 1, `${label}: no document overflow`, data);
+                assert(await page.locator('main').count() === 1 && await page.locator('main > div.lunara-review-single-page,main > div.lunara-journal-single-page').count() === 1, `${label}: one shared main landmark and neutral article wrapper`);
                 assert(data.h1Count === 1 && data.titleText === fixture.title, `${label}: one complete server-rendered article heading`, data);
                 assert(data.clipping.length === 0, `${label}: full headlines, paragraphs and long links remain readable`, data.clipping);
                 assert(data.bodyText.includes('The ending rewards another look.') && data.linkCount > 0, `${label}: complete article and navigation survive without JavaScript`);

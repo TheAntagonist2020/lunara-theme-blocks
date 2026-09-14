@@ -75,10 +75,11 @@ reads agree and both canaries are `LIVE_COHERENT`. Dalton confirms this theme
 and Academy 2.7.84 are verified published live. This release covers Home Latest
 Reviews, Journal article and Academy dossier editors, article layouts, shared
 navigation and Journal stylesheet delivery. Detailed public route checks remain
-recorded individually. Theme 3.2.77 adds Footer, Search and 404 controls as the
-next candidate; it has not been deployed. The current acceptance
-checklist is [SITE-COMPLETION-PLAN.md](SITE-COMPLETION-PLAN.md); remaining footer,
-Search and 404 ownership gaps are mapped in
+recorded individually. Theme 3.2.77 adds Footer, Search and 404 controls and is
+merged through PR #197 with green CI and an exact rollback hatch; deployment
+and public acceptance are pending. The current acceptance
+checklist is [SITE-COMPLETION-PLAN.md](SITE-COMPLETION-PLAN.md); the footer,
+Search and 404 ownership design is mapped in
 [FOOTER-RECOVERY-FOLLOWUP.md](FOOTER-RECOVERY-FOLLOWUP.md).
 
 | Area | Observed gap | Next implementation / acceptance |
@@ -86,11 +87,11 @@ Search and 404 ownership gaps are mapped in
 | Site Studio entry | Flat directory of page, section and utility destinations above every editor | Verified live in 3.2.69: four primary pages, contextual editors, collapsible searchable directory, guarded navigation. Home opens by default. |
 | Inspector groups | Archive-wide geometry filed under Mobile; inconsistent task labels | Verified live in 3.2.69: archive Content/Layout groups, aligned Method and homepage Oscar labels, shared History. This does not add missing capabilities. |
 | Reviews and Journal editing | Gallery and continuation artwork required Classic controls | Verified live in 3.2.73: Gallery and Continue reading panels load existing settings. Shared image selection, focal points, drag/keyboard order and canonical Preview/Apply/History have local contract coverage. Individual article artwork remains with its article owner. |
-| Oscars editing | Hero buttons, Quick Start cards and winner tools required Classic controls | Verified live through 3.2.75: Hero labels, Quick Start and seven Winner sections controls load existing settings. The 3.2.76 candidate adds the 14 Academy dossier controls and retires their equivalent old writer. Homepage Picks/Facts controls do not substitute for portal editing. |
-| Category coverage | Historical category labels obscure two current names | All 24 competitive categories for the 98th Oscars are present. Academy 2.7.84 merged: Production Design and Sound display names and modern route aliases preserve historical identities. Public acceptance is pending. |
+| Oscars editing | Hero buttons, Quick Start cards and winner tools required Classic controls | Verified live through 3.2.75: Hero labels, Quick Start and seven Winner sections controls load existing settings. Live 3.2.76 adds the 14 Academy dossier controls and retires their equivalent old writer; their detailed editor acceptance remains tracked. Homepage Picks/Facts controls do not substitute for portal editing. |
+| Category coverage | Historical category labels obscure two current names | All 24 competitive categories for the 98th Oscars are present. Academy 2.7.84 is live: seven anonymous page checks confirm Production Design/Sound, old and modern category links, and historical/current labels in ceremonies 84/98. |
 | Reviews opening | Large introductory/statistics panel preceded the lead review | Verified live through 3.2.72: compact introduction and filters, no public Reviews Command panel, visible portrait art and complete phone titles. |
 | Journal opening | Title, counters and filter panels delayed visible story artwork | Verified live through 3.2.72: compact wrapping controls, stable 16:10 phone artwork and complete headlines. |
-| Shared header | Home/Oscars omit the textual Search item present on Reviews/Journal | The 3.2.76 candidate gives Header Command one consistent Search action, current-page state, 44px controls and usable links without JavaScript. Public acceptance is pending. |
+| Shared header | Home/Oscars omit the textual Search item present on Reviews/Journal | Live 3.2.76 gives Header Command one consistent Search action, current-page state, 44px controls and usable links without JavaScript. Full public keyboard/no-JavaScript acceptance remains tracked. |
 | Oscars mobile | Heading hyphenated ordinary words and nested gutters narrowed cards | Verified live at 390px in 3.2.72: intact words, compact navigation and two portrait board columns. Wider local matrix evidence remains in the release record. |
 
 ### Archive migration findings and resolution

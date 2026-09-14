@@ -22,7 +22,7 @@ while ( have_posts() ) :
     $roles     = get_post_meta( $person_id, 'roles', true );
     $roles     = array_filter( array_map( 'strval', is_array( $roles ) ? $roles : (array) maybe_unserialize( $roles ) ) );
     ?>
-    <main id="primary" class="site-main lunara-entity-page lunara-talent-page">
+    <div id="primary" class="site-main lunara-entity-page lunara-talent-page">
         <header class="lunara-entity-hero is-talent">
             <div class="lunara-entity-hero-overlay" aria-hidden="true"></div>
             <div class="lunara-entity-hero-inner">
@@ -77,7 +77,7 @@ while ( have_posts() ) :
                 <p class="lunara-entity-ledger-link"><a href="<?php echo esc_url( $ledgerurl ); ?>"><?php esc_html_e( 'Open the full record in the Oscars Ledger', 'lunara-film' ); ?> <span aria-hidden="true">&rarr;</span></a></p>
             <?php endif; ?>
         </div>
-    </main>
+    </div>
     <?php
 endwhile;
 

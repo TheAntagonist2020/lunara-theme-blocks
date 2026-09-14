@@ -202,7 +202,7 @@ if ( have_posts() ) :
             $display_label = __( 'Full Spoiler Review', 'lunara-film' );
         }
         ?>
-        <main id="primary" class="site-main lunara-archive-page lunara-review-single-page<?php echo $is_full_spoiler ? ' lunara-review-single-page--full-spoiler' : ''; ?>">
+        <div id="primary" class="site-main lunara-archive-page lunara-review-single-page<?php echo $is_full_spoiler ? ' lunara-review-single-page--full-spoiler' : ''; ?>">
             <article <?php post_class( 'lunara-journal-single lunara-review-single' . ( $is_full_spoiler ? ' lunara-review-single--full-spoiler' : '' ) ); ?>>
                 <section class="lunara-review-single-hero" data-lunara-site-studio-section="hero">
                     <div class="lunara-review-single-hero-inner">
@@ -417,7 +417,7 @@ if ( have_posts() ) :
                 echo lunara_render_newsletter_signup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             }
             ?>
-        </main>
+        </div>
         <?php
     endwhile;
 endif;

@@ -25,6 +25,200 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-13 — Academy 2.7.85 merged; Theme 3.2.78 gates running
+
+### Headline / what shipped
+
+Academy PR #30 merged as `6a36be06be7cb56a4263306742049b146c33254f` after
+independent review and green GitHub CI. See docs/CHANGELOG.md for category-era
+and action-sizing details. Theme 3.2.78 remains a local release candidate with
+its full required suite running. The seven-step completion plan remains open.
+
+### Gate and commit ledger
+
+Plugin tested head: `f9a8c3545950735b5c297041d60ae751ec641e8a`.
+GitHub run `34791370871`, job `103816107047`: all portable contracts, PHP/JS
+syntax and CSS balance pass. Local evidence: 32 portable contracts, 51 PHP
+syntax checks, 234 entity-template assertions; four deliberately broken context
+variants are caught. Root also reran the 234-check template test before commit.
+The two local provenance contracts omitted by CI were not run.
+
+### Live state / remaining work / whose move
+
+No new deployment or cache purge occurred. Last independently observed theme
+identity remains `3.2.76+20260913-225857`; Academy 2.7.84 is the previously
+confirmed live plugin. Root completes Theme 3.2.78 gates, merges tested code and
+rebuilds the exact rollback hatch. Dalton deploys Academy 2.7.85 before Theme
+3.2.78 from their existing WordPress.com repository connections. Public canary,
+mixed-era entity labels and full-cascade action acceptance follow deployment.
+
+---
+
+## 2026-09-13 — Theme 3.2.78 shared accessibility release candidate
+
+### Headline
+
+The prepared landmark cleanup is moving through formal release preparation,
+alongside Academy touch-target corrections discovered in the actual public
+theme/plugin cascade. See docs/CHANGELOG.md for release detail. The complete
+seven-step objective remains active.
+
+### Verified live state
+
+The bounded Academy detail audit still observes Theme
+`3.2.76+20260913-225857`. Theme 3.2.77 is merged and ready for Dalton's manual
+WordPress.com deployment; no new 3.2.77 live claim is made here.
+
+### What changed and gate ledger
+
+Twelve inner landmarks have been corrected, with existing attributes preserved.
+Independent source review approved the change. Focused evidence remains 75
+landmark checks, 157 archive assertions, 444 article layout assertions, 34 Journal
+delivery assertions and the existing 30-case archive geometry gate. An old-index
+mutation is caught and eight Hub geometry comparisons agree before/after.
+The new full-cascade Academy action regression passes 3,438 checks across four
+captured anonymous routes at 320/390/1440px. It preserves original stylesheet
+order, blocks all network requests, and catches the old 40px theme and 30px
+plugin mutations. Root reviewed the theme action changes. The complete required
+suite is running before this candidate is committed, pushed or merged.
+
+The companion Academy 2.7.85 entity-label correction passes independent review,
+234 runtime checks, all 32 portable PHP contracts and 51 PHP syntax checks.
+Four deliberate formatter/context regressions are caught. Local provenance
+contracts excluded by CI and live candidate acceptance were not run. No plugin
+commit or merge has occurred yet.
+
+No agent deployment or manual cache purge occurred. Theme 3.2.78 is not
+deployed; its live canary is pending.
+
+### Commit ledger
+
+- Main `72a0ea1`: merged Theme 3.2.77; standing exact rollback verified.
+- `28ae92d`: prepared, independently reviewed landmark source on the fresh
+  `codex/shared-landmarks-3.2.78` branch. Final release identity/CI follow below.
+
+### Corrections / logged, not fixed
+
+The prior Academy category-label acceptance covered category indexes/dossiers
+and ceremonies. Further public film inspection found the entity renderer still
+uses its own older display formatter. The plugin correction must preserve each
+historical ceremony context; it is being handled separately from these theme
+changes. Earlier plugin-only geometry fixtures did not prove the complete live
+theme/plugin cascade: late theme rules still reduced some controls to 40px.
+
+The performance audit rejects source minification and exact duplicate removal
+as useful current public optimizations: saved Boost aggregates already compact
+the CSS, leaving roughly 100 and 39–46 gzip bytes respectively to gain. No new
+build pipeline or speculative rule removal was added. Critical CSS coverage and
+controlled loading evidence remain open.
+
+### Punch-list / whose move is next
+
+Agent completes the Academy fixes, independent review and required release
+checks, then merges tested code and rebuilds the exact theme rollback hatch.
+Dalton retains manual WordPress.com deployment, plugins before the theme when
+both are changed. Continue public route/editor acceptance, measured performance
+and real published-work curation in SITE-COMPLETION-PLAN.md.
+
+---
+
+## 2026-09-13 — Shared landmark cleanup prepared on the next branch
+
+### Headline / what changed
+
+The next bounded accessibility correction is prepared on
+`codex/shared-landmarks-3.2.78`, based on merged main `72a0ea1`. Twelve inner
+main wrapper pairs across ten live article/archive/Hub templates are now neutral
+divs; header.php remains the single main owner. Every existing attribute is
+preserved. No CSS, settings, cache or editorial content changed. This source is
+unreleased; the version remains 3.2.77 until formal next-release preparation.
+
+### Live state and gates
+
+No new production checks, deployment or cache purge occurred. The preceding
+entry records the verified live 3.2.76 state and merged, ready-to-deploy 3.2.77.
+Focused preparation passes: landmark runtime 75, archive PHP 157, article
+layouts 444 assertions over 32 scenarios, Journal delivery 34, and the existing
+30-case archive geometry gate. Eight Hub before/after contexts preserve geometry.
+An old-index-wrapper mutation fails as intended and canonical restoration passes.
+Root independently reran the 75-check runtime after applying the reviewed patch.
+The full 95-gate suite and GitHub CI have not run for this unreleased change.
+
+### Commit ledger / punch-list / whose move is next
+
+The branch contains the 3.2.77 merge receipt and this follow-up source work;
+both are committed and pushed without another PR or main merge. The standing
+rollback hatch still matches main as verified below. Dalton can deploy 3.2.77
+from main. Agent continues next-release preparation, full gates and review for
+this cleanup, then the remaining route, performance and editorial work. Keep
+live acceptance separate from these local fixture results.
+
+---
+
+## 2026-09-13 — Theme 3.2.77 merged; public acceptance advanced
+
+### Headline
+
+Footer, Search and 404 Recovery editors and the Pick/Fact category route fix
+merged through PR #197 after green GitHub CI. Theme 3.2.77 is ready for Dalton's
+manual WordPress.com deployment. It has not been deployed by the agent or
+verified live. The seven-step completion goal remains active.
+
+### Verified live state
+
+| Check | Result |
+| --- | --- |
+| Last theme canary | Theme `3.2.76+20260913-225857`; three anonymous reads agree; Journal/Oscars `LIVE_COHERENT`. |
+| Academy category acceptance, 23:33:45–23:34:00 UTC | Seven anonymous URLs return 200. Modern Production Design/Sound aliases and old category URLs resolve directly; ceremony 84 preserves old labels and ceremony 98 uses modern labels. Fifteen saved-response assertions pass. These aliases are not redirects. |
+| Published Review/Journal sample | Dog Stars and Angel at measured 390/1440 CSS pixels: readable headlines, loaded artwork, metadata and no horizontal overflow. Journal/archive and related-story links work. Browser session was signed in; two separate anonymous GETs independently confirm the same build/headings without admin-bar markup. |
+
+### What shipped and why
+
+See CHANGELOG.md's Theme 3.2.77 entry. Shared Preview/Apply/History now cover
+Footer links and Search/404 copy while preserving inherited and historical
+settings. Narrow native search inputs cannot enlarge recovery panels. The
+category routing correction uses existing saved rules without option writes
+or a rewrite flush. No agent deployment or manual cache purge occurred.
+
+### Commit and gate ledger
+
+| Reference | Meaning |
+| --- | --- |
+| Theme candidate `0948a69d235d2c59dce7ac31f159b1a41c43cfea` | Final reviewed and tested PR #197 head. |
+| Theme main `72a0ea167da8137ab082b9710c47bb45dacd38b5` | PR #197 merge; tree `fbbc75fb4963dbd0ea6d422efff872e6dd02a859` equals the candidate tree. |
+| CI run `34790158794`, job `103812762386` | All 95 required theme gates plus PHP/JS syntax and CSS checks pass. |
+| Rollback branch `claude/rollback-exact-theme-3.2.43` / PR #159 | Rebuilt after merge; remote first parent equals current main; remote tree and simulated merge both equal `c55bf394594149db2888295c5d51f85f47b2b520`. Verified 23:42:14 UTC. |
+
+The first CI run exposed native-input intrinsic sizing differences missed by
+the Windows baseline. Eight added phone stress cases fail with the old CSS;
+the correction passes 40 actual-template scenarios / 330 assertions with
+JavaScript disabled. Strict overflow assertions remain intact. Earlier focused
+provider, HTTP, editor, routing and twelve mutation checks are recorded below.
+The Theme 3.2.77 canary and production editor acceptance remain pending deployment.
+
+### Corrections / logged, not fixed
+
+This entry supersedes the preceding candidate/CI-pending state. Public article
+checks confirm nested main landmarks on both sampled articles. A source audit
+finds twelve live inner main openings across ten theme files; a separate
+detached worktree is preparing the next bounded correction. It is not part of
+PR #197. The Journal comparison image has empty alt text; editorial intent
+needs review before treating it as decorative or adding a description.
+The public article sample does not cover all galleries, missing-art variants,
+anonymous visual rendering or every Academy detail layout.
+
+### Punch-list carried forward / whose move is next
+
+Dalton deploys `lunara-theme-blocks` main through the existing WordPress.com
+connection. Agent then runs the explicit 3.2.77 canary and checks repaired
+Pick/Fact category routes and new editors. Continue the isolated landmark
+cleanup, remaining public route matrix, measured performance/Critical CSS and
+editorial lineups in SITE-COMPLETION-PLAN.md. No new editorial content or
+homepage curation was applied. This record is committed and pushed on a fresh
+topic branch from merged main, ready to accompany the next functional batch.
+
+---
+
 ## 2026-09-13 — Theme 3.2.77 footer and recovery release candidate
 
 ### Headline

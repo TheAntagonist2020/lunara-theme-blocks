@@ -3433,7 +3433,7 @@ if ( ! function_exists( 'lunara_render_editorial_archive_shell' ) ) {
 
         ob_start();
         ?>
-        <main id="primary" class="<?php echo esc_attr( $classes ); ?>">
+        <div id="primary" class="<?php echo esc_attr( $classes ); ?>">
             <?php if ( $show_hero ) : ?>
             <section class="lunara-home-section lunara-archive-hero lunara-editorial-archive-slot-hero" data-lunara-section="hero">
                 <div class="lunara-editorial-archive-hero-shell">
@@ -3566,7 +3566,7 @@ if ( ! function_exists( 'lunara_render_editorial_archive_shell' ) ) {
                     <?php endif; ?>
                 <?php endif; ?>
             </section>
-        </main>
+        </div>
         <?php
 
         return ob_get_clean();
@@ -4058,7 +4058,7 @@ if ( ! function_exists( 'lunara_render_news_archive_shell' ) ) {
 
         ob_start();
         ?>
-        <main id="primary" class="<?php echo esc_attr( $classes ); ?>">
+        <div id="primary" class="<?php echo esc_attr( $classes ); ?>">
             <?php if ( function_exists( 'lunara_news_archive_live_section_is_enabled' ) ? lunara_news_archive_live_section_is_enabled( 'hero' ) : true ) : ?>
             <section class="lunara-home-section lunara-archive-hero lunara-news-archive-hero lunara-news-archive-slot-hero" data-lunara-section="hero">
                 <div class="lunara-news-archive-hero-shell">
@@ -4181,7 +4181,7 @@ if ( ! function_exists( 'lunara_render_news_archive_shell' ) ) {
                     <?php endif; ?>
                 <?php endif; ?>
             </section>
-        </main>
+        </div>
         <?php
 
         return ob_get_clean();

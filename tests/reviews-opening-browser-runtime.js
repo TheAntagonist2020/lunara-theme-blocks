@@ -26,7 +26,7 @@ const assert = (condition, message) => { if (!condition) throw new Error(message
                 // renderer; public header/navigation checks belong elsewhere.
                 // Blocksy provides the universal border-box reset; dynamic
                 // authority variables come from the real theme emitter.
-                await page.setContent(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>*,*::before,*::after{box-sizing:border-box}</style><style>${fixture.boostCss || ''}</style><style>${css}</style><style>${fixture.authorityCss}</style><style>${seed}</style><style>body{margin:0}.fixture-header{height:112px;box-sizing:border-box;padding:32px;font:20px Georgia;background:#09151e;color:#dbb761}.lunara-reveal{opacity:1!important;transform:none!important}</style></head><body class="${fixture.bodyClass}"><header class="fixture-header">Lunara Film</header>${fixture.html}</body></html>`, { waitUntil: 'load' });
+                await page.setContent(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>*,*::before,*::after{box-sizing:border-box}</style><style>${fixture.boostCss || ''}</style><style>${css}</style><style>${fixture.authorityCss}</style><style>${seed}</style><style>body{margin:0}.fixture-header{height:112px;box-sizing:border-box;padding:32px;font:20px Georgia;background:#09151e;color:#dbb761}.lunara-reveal{opacity:1!important;transform:none!important}</style></head><body class="${fixture.bodyClass}"><header class="fixture-header">Lunara Film</header>${scenario === 'published' ? fixture.html : '<main id="main" class="site-main">' + fixture.html + '</main>'}</body></html>`, { waitUntil: 'load' });
                 const geometry = await page.evaluate(() => {
                     const rect = selector => { const node = document.querySelector(selector); if (!node) return null; const r = node.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, height: r.height, left: r.left, right: r.right, width: r.width }; };
                     const hero = document.querySelector('.lunara-review-archive-hero');
@@ -65,6 +65,7 @@ const assert = (condition, message) => { if (!condition) throw new Error(message
                     };
                 });
                 const label = `${scenario}@${width}`;
+                assert(await page.locator('main').count() === 1 && await page.locator('main > div#primary.lra').count() === 1, `${label}: one main landmark and a neutral archive wrapper.`);
                 assert(geometry.h1s === 1 && geometry.removed === 0, `${label}: exactly one H1 and no statistics/actions.`);
                 assert(geometry.documentWidth <= width + 1, `${label}: horizontal overflow: ${JSON.stringify(geometry)}`);
                 assert(geometry.sortLinks === 3, `${label}: sorting remains usable without JavaScript.`);
