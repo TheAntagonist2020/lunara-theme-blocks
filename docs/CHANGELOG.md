@@ -11,6 +11,23 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-14 — Theme 3.2.80 Oscar carousel playback controls
+
+Oscar Picks now has a persistent, keyboard-sized Pause/Play control alongside
+its arrows and pagination. The shared scroll controller keeps that state
+truthful, pauses while the reader hovers or focuses the section, resumes after
+touch gestures, and preserves reduced-motion behavior. Pagination indicators
+retain their compact visual treatment while providing 44px hit targets.
+
+Oscar Facts now uses the same visible playback control through its Splide pilot.
+Readers who request reduced motion see the paused state and cannot re-enable
+automatic movement. The Facts and Picks controls retain their readable mobile
+layout, and the new runtime checks cover normal/reduced motion at phone and
+desktop widths. Existing selection, artwork, ordering and copy remain
+unchanged. Deployment remains manual through WordPress.com.
+
+---
+
 ## 2026-09-13 — Theme 3.2.79 reader navigation and editor ownership
 
 Journal gallery controls disable when all images fit and at the unavailable

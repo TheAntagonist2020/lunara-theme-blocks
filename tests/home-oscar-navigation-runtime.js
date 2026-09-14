@@ -36,6 +36,23 @@ function check(value, message) { checks++; if (!value) throw new Error(message);
             const track = page.locator('[data-lunara-carousel-track]');
             const next = page.locator('[data-lunara-carousel-next]');
             const prev = page.locator('[data-lunara-carousel-prev]');
+            const toggle = page.locator('[data-lunara-carousel-toggle]');
+            check(await toggle.count() === 1, `${width}/${reducedMotion}: Oscar Picks must expose one pause/play control.`);
+            const controlSizes = await page.locator('.lunara-oscar-picks-controls button').evaluateAll(buttons => buttons.map(button => {
+                const rect = button.getBoundingClientRect();
+                return { width: rect.width, height: rect.height, label: button.getAttribute('aria-label') || '' };
+            }));
+            check(controlSizes.every(size => size.width >= 44 && size.height >= 44), `${width}/${reducedMotion}: every Oscar Picks control needs a 44px target.`);
+            const initialToggleText = await toggle.textContent();
+            check(initialToggleText.trim() === (reducedMotion === 'reduce' ? 'Play' : 'Pause'), `${width}/${reducedMotion}: pause/play state must reflect reduced motion (saw ${initialToggleText.trim()}).`);
+            if (reducedMotion === 'reduce') {
+                check(await toggle.isDisabled() && await toggle.getAttribute('aria-disabled') === 'true', `${width}/${reducedMotion}: autoplay toggle must be disabled when reduced motion is requested.`);
+            } else {
+                await toggle.click();
+                check((await toggle.textContent()).trim() === 'Play' && await toggle.getAttribute('aria-pressed') === 'true', `${width}/${reducedMotion}: pause must expose the paused state.`);
+                await toggle.click();
+                check((await toggle.textContent()).trim() === 'Pause' && await toggle.getAttribute('aria-pressed') === 'false', `${width}/${reducedMotion}: play must restore the state.`);
+            }
             const waitOffset = async expected => {
                 try { await page.waitForFunction(value => Math.abs(document.querySelector('[data-lunara-carousel-track]').scrollLeft-value)<2,expected,{timeout:3000}); }
                 catch (error) { throw new Error(`${width}/${reducedMotion}: expected offset ${expected}, saw ${await track.evaluate(el=>el.scrollLeft)}. ${error.message}`); }

@@ -41,6 +41,12 @@ function near(actual, expected, message, tolerance = 1.1) { check(Math.abs(actua
             await page.goto('https://oscar-framing.test/');
             const cards = page.locator('[data-lunara-oscar-item-id]');
             check(await cards.count() === 11, `${label}: all four Picks and seven Facts must render.`);
+            const factsToggle = page.locator('.lunara-oscar-facts-carousel .lunara-home-carousel-toggle');
+            check(await factsToggle.count() === 1, `${label}: multiple Oscar Facts must expose one pause/play control.`);
+            if (!label.includes('no JavaScript')) {
+                const factsToggleBox = await factsToggle.boundingBox();
+                check(Boolean(factsToggleBox && factsToggleBox.width >= 44 && factsToggleBox.height >= 44), `${label}: Oscar Facts pause/play control needs a 44px target (${factsToggleBox ? JSON.stringify(factsToggleBox) : 'missing'}).`);
+            }
             for (let index = 0; index < await cards.count(); index++) {
                 const card = cards.nth(index);
                 await card.scrollIntoViewIfNeeded();

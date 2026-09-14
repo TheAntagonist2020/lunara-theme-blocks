@@ -13488,6 +13488,9 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 						<?php endfor; ?>
 					</div>
 					<button class="lunara-carousel-control" type="button" data-lunara-carousel-next aria-label="<?php esc_attr_e( 'Next Oscar Pick', 'lunara-film' ); ?>">&gt;</button>
+					<?php if ( $args['autoplay'] > 0 ) : ?>
+						<button class="lunara-carousel-control lunara-carousel-toggle lunara-oscar-picks-toggle" type="button" data-lunara-carousel-toggle aria-pressed="false" aria-label="<?php esc_attr_e( 'Pause Oscar Picks rotation', 'lunara-film' ); ?>"><?php esc_html_e( 'Pause', 'lunara-film' ); ?></button>
+					<?php endif; ?>
 				</div>
 			<?php endif; ?>
 
@@ -14045,6 +14048,9 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 							<span class="lunara-oscar-facts-total"><?php echo esc_html( str_pad( (string) $fact_total, 2, '0', STR_PAD_LEFT ) ); ?></span>
 						</span>
 						<span class="lunara-oscar-facts-progress" aria-hidden="true"><span class="lunara-oscar-facts-progress-bar"></span></span>
+						<?php if ( $autoplay > 0 ) : ?>
+							<?php echo lunara_home_carousel_toggle(); /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ ?>
+						<?php endif; ?>
 					</div>
 				<?php endif; ?>
 				<div class="lunara-oscar-facts-track" role="list">

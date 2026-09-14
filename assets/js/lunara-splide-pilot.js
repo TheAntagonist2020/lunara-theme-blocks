@@ -60,6 +60,7 @@
 		var dots = Array.prototype.slice.call(
 			root.querySelectorAll('.lunara-carousel-dot')
 		);
+		var toggle = root.querySelector('.splide__toggle');
 		var currentCounter = root.querySelector('.lunara-oscar-facts-current');
 		var totalCounter = root.querySelector('.lunara-oscar-facts-total');
 		var progressBar = root.querySelector('.lunara-oscar-facts-progress-bar');
@@ -87,6 +88,15 @@
 				next: 'splide__arrow--next lunara-splide-arrow-next'
 			}
 		});
+
+		// Respect a reader's reduced-motion preference even when the visible
+		// control is activated. Splide's toggle can otherwise start autoplay after
+		// the pilot correctly initialized it in a paused state.
+		if (toggle && reduceMotion) {
+			toggle.disabled = true;
+			toggle.setAttribute('aria-disabled', 'true');
+			toggle.setAttribute('aria-label', 'Autoplay disabled for reduced motion');
+		}
 
 		function syncHeight() {
 			if (heightFrame) {
