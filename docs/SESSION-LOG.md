@@ -61,7 +61,7 @@ motion for reduced-motion visitors.
 
 | Repository / role | Commit or tree |
 | --- | --- |
-| Theme | Working candidate; commit will be recorded before closure |
+| Theme | `84ba0e7` — shared carousel controls candidate |
 | Theme main | `81586d6cb714c094c3614ab61139c24049112475` remains the latest merged main |
 
 ### Gate ledger
