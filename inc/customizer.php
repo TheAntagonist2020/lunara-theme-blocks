@@ -1723,7 +1723,7 @@ function lunara_customize_register( $wp_customize ) {
             'label'       => __( 'Journal Archive Section Order', 'lunara-film' ),
             'section'     => 'lunara_editorial_archive_sections_options',
             'type'        => 'text',
-            'description' => __( 'Comma-separated slugs: hero, deskbar, filters, toolbar, grid, retention, pagination.', 'lunara-film' ),
+            'description' => __( 'Comma-separated slugs: hero, filters, grid, pagination.', 'lunara-film' ),
         )
     );
 
@@ -2806,27 +2806,6 @@ function lunara_customize_register( $wp_customize ) {
 }
 add_action( 'customize_register', 'lunara_customize_register' );
 
-/** Retire covered Portal writers while preserving supplemental Oscar tools. */
-function lunara_customize_retire_portal_studio_controls( $wp_customize ) {
-    if ( ! function_exists( 'lunara_oscars_portal_studio_identity_specs' ) ) { return; }
-    $covered = array( 'lunara_oscars_portal_section_order', 'lunara_oscars_portal_copy', 'lunara_oscars_portal_research_copy' );
-    foreach ( lunara_oscars_portal_studio_identity_specs() as $spec ) { $covered[] = $spec['setting']; }
-    foreach ( lunara_oscars_portal_studio_visibility_owners() as $owner ) { if ( $owner['setting'] ) { $covered[] = $owner['setting']; } }
-    foreach ( $covered as $setting ) { $wp_customize->remove_control( $setting ); $wp_customize->remove_setting( $setting ); }
-    // Retiring registrations prevents stale Customizer saves; stored theme mods remain intact.
-    foreach ( lunara_oscars_portal_studio_button_specs() as $spec ) { $wp_customize->remove_control( $spec['setting'] ); $wp_customize->remove_setting( $spec['setting'] ); }
-    foreach ( lunara_oscars_portal_studio_quick_start_specs() as $spec ) {
-        foreach ( array( 'enabled', 'kicker', 'title', 'copy', 'url' ) as $field ) { $setting = 'lunara_oscars_portal_card_' . $spec['slot'] . '_' . $field; $wp_customize->remove_control( $setting ); $wp_customize->remove_setting( $setting ); }
-    }
-    foreach ( lunara_oscars_portal_studio_winner_specs() as $fields ) {
-        foreach ( $fields as $spec ) { $wp_customize->remove_control( $spec['setting'] ); $wp_customize->remove_setting( $spec['setting'] ); }
-    }
-    $section = $wp_customize->get_section( 'lunara_oscars_portal_options' );
-    if ( $section ) { $section->description = '<a href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=oscars-portal' ) ) . '">' . esc_html__( 'Open Site Studio for Portal copy, hero buttons, Quick Start cards, winner sections, visibility, order and presentation.', 'lunara-film' ) . '</a>'; }
-}
-add_action( 'customize_register', 'lunara_customize_retire_portal_studio_controls', 100 );
-
-
 /**
  * Print runtime CSS for Lunara design controls.
  */
@@ -2888,6 +2867,9 @@ function lunara_output_runtime_customizer_css() {
     $review_section_order = function_exists( 'lunara_get_reviews_archive_section_order_map' )
         ? lunara_get_reviews_archive_section_order_map()
         : array();
+    $journal_section_order = function_exists( 'lunara_get_journal_archive_section_order_map' )
+        ? lunara_get_journal_archive_section_order_map()
+        : array();
     $journal_live_section_order = function_exists( 'lunara_get_news_archive_live_section_order_map' )
         ? lunara_get_news_archive_live_section_order_map()
         : array();
@@ -2900,8 +2882,14 @@ function lunara_output_runtime_customizer_css() {
     $css               = '';
 
     $css .= ':root{';
+    $css .= '--lunara-bg-primary:' . $bg_primary . ';';
     $css .= '--lunara-bg-deep:#0a1520;';
+    $css .= '--lunara-bg-secondary:' . $bg_secondary . ';';
     $css .= '--lunara-bg-card:' . $bg_card . ';';
+    $css .= '--lunara-gold:' . $accent . ';';
+    $css .= '--lunara-gold-light:' . $accent_soft . ';';
+    $css .= '--lunara-text:' . $text_color . ';';
+    $css .= '--lunara-text-muted:' . $muted_text . ';';
     $css .= '--lunara-border:' . $border_alpha . ';';
     $css .= '--lunara-border-solid:' . $border_color . ';';
     $css .= '--lunara-glow-gold:rgba(201,169,97,0.16);';
@@ -2998,6 +2986,11 @@ function lunara_output_runtime_customizer_css() {
         }
     }
 
+    foreach ( lunara_get_registry_slugs( lunara_get_journal_archive_section_registry() ) as $slug ) {
+        $order = isset( $journal_section_order[ $slug ] ) ? intval( $journal_section_order[ $slug ] ) : 99;
+        $css  .= '.lunara-journal-archive-page > .lunara-journal-archive-slot-' . $slug . '{order:' . $order . ';}';
+    }
+
     foreach ( lunara_get_registry_slugs( lunara_get_news_archive_live_section_registry() ) as $slug ) {
         $order = isset( $journal_live_section_order[ $slug ] ) ? intval( $journal_live_section_order[ $slug ] ) : 99;
         $css  .= '.lunara-editorial-archive-page.lunara-editorial-archive-has-posts > .lunara-editorial-archive-slot-' . $slug . '{order:' . $order . ';}';
@@ -3084,15 +3077,3 @@ function lunara_output_runtime_customizer_css() {
     echo '<style id="lunara-runtime-customizer-css">' . $css . '</style>' . "\n";
 }
 add_action( 'wp_head', 'lunara_output_runtime_customizer_css', 99 );
-
-/** Retire migrated controls and stale Customizer writers without deleting saved mods. */
-function lunara_retire_search_recovery_customizer_controls( $customizer ) {
-    $keys = array(
-        'lunara_search_kicker', 'lunara_search_no_query_title', 'lunara_search_excerpt_words',
-        'lunara_404_kicker', 'lunara_404_title', 'lunara_404_explanation',
-        'lunara_404_reset_label', 'lunara_404_reset_desc', 'lunara_404_fastest_label', 'lunara_404_fastest_desc',
-        'lunara_404_hubs_label', 'lunara_404_hubs_desc', 'lunara_404_reentry_title',
-    );
-    foreach ( $keys as $key ) { $customizer->remove_control( $key ); $customizer->remove_setting( $key ); }
-}
-add_action( 'customize_register', 'lunara_retire_search_recovery_customizer_controls', 100 );
