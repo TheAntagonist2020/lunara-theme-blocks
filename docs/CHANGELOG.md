@@ -11,6 +11,13 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-16 — Theme 3.2.83: centered Oscars captions
+
+Center all poster-card captions and Board status badges across the Oscars page,
+including phone layouts. Correct the Board name selector's precedence so its
+symmetric inset survives the shared typography rule instead of touching the
+card edge. Card sizes, artwork and content remain unchanged.
+
 ## 2026-09-16 — Theme 3.2.82: uniform Oscars cards
 
 The Oscars portal uses one card scale across the prediction Board, spotlights,
