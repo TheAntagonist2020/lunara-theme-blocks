@@ -10,7 +10,7 @@
  */
 
 // Prevent direct access.
-if ( ! defined( 'ABSPATH' ) ) {
+ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
@@ -18,6 +18,7 @@ $lunara_inc = get_stylesheet_directory() . '/inc/';
 
 // Layer 0 — Foundation (no dependencies).
 require_once $lunara_inc . 'setup.php';
+require_once $lunara_inc . 'surface-pass.php';
 require_once $lunara_inc . 'helpers.php';
 
 // Layer 1 — Independent modules.
