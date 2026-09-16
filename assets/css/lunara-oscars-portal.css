@@ -1239,6 +1239,7 @@ body.lunara-oscars-portal-page .lunara-oscars-board-note {
     flex-direction: column !important;
     align-items: stretch !important;
     justify-content: flex-start !important;
+    text-align: center !important;
     gap: 0 !important;
     aspect-ratio: auto !important;
     width: 100% !important;
@@ -1384,7 +1385,7 @@ body.lunara-oscars-portal-page .lunara-oscars-board-note {
 #primary#primary.lunara-oscars-portal .lunara-oscars-board-category {
     margin: 18px 18px 8px !important;
 }
-#primary#primary.lunara-oscars-portal .lunara-oscars-board-call {
+#primary#primary.lunara-oscars-portal .lunara-oscars-board-row .lunara-oscars-board-call {
     align-self: stretch !important;
     margin: 0 18px 16px !important;
 }
@@ -1393,7 +1394,9 @@ body.lunara-oscars-portal-page .lunara-oscars-board-note {
     margin-top: 6px !important;
 }
 #primary#primary.lunara-oscars-portal .lunara-oscars-board-status {
-    align-self: flex-start !important;
+    align-self: center !important;
+    justify-self: center !important;
+    justify-content: center !important;
     margin: auto 18px 18px !important;
     padding: 5px 8px !important;
     border-radius: 3px !important;
@@ -1496,7 +1499,7 @@ body.lunara-oscars-portal-page .lunara-oscars-board-note {
     #primary#primary.lunara-oscars-portal .lunara-oscars-board-category {
         margin: 14px 14px 8px !important;
     }
-    #primary#primary.lunara-oscars-portal .lunara-oscars-board-call {
+    #primary#primary.lunara-oscars-portal .lunara-oscars-board-row .lunara-oscars-board-call {
         margin: 0 14px 12px !important;
     }
     #primary#primary.lunara-oscars-portal .lunara-oscars-board-status {

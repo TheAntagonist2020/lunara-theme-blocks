@@ -25,6 +25,32 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-16 — Theme 3.2.83: centered Oscars caption candidate
+
+Dalton requested centered text throughout the poster cards in his screenshot.
+Centered categories, names, film titles and status badges across Board,
+spotlights, film entry points, winners, rotation and embedded Academy posters.
+Fixed the Board name inset's specificity so text retains symmetric breathing
+room. See CHANGELOG.md; no content or artwork changes.
+
+Desktop preview at 1440px confirms centered captions across all eight sampled
+caption selectors, centered Board badges (within 0.01px), and no page overflow.
+At a 389px phone viewport, all sampled captions are centered, badges align to
+their caption column within 0.01px, and there is no page overflow. Diff whitespace
+and the unchanged CSS budget pass (57,320 bytes). The preview reuses rendered
+page markup and loaded styles with the candidate stylesheet. No new tests, broad suites,
+production settings changes or deployments were performed for this CSS edit.
+
+Theme 3.2.82 is merged in `dbbe02f` / PR #202; this turn did not independently
+re-probe production identity. Candidate `codex/oscars-centered-captions-3.2.83`
+starts from that main. Rebuilt the standing exact rollback branch / PR #159
+on the new main and verified the tree remains
+`c55bf394594149db2888295c5d51f85f47b2b520` before its leased push.
+
+Next: merge this candidate and manually deploy Theme 3.2.83 through the existing
+WordPress.com connection. No plugin update is needed. Earlier Critical CSS and
+performance work remains open; this change only addresses caption alignment.
+
 ## 2026-09-16 — Theme 3.2.82: clean, uniform Oscars card candidate
 
 ### Headline / what changed
