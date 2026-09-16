@@ -1,0 +1,81 @@
+/**
+ * Lunara 2026-09-16 surface pass.
+ * Home / Oscars / Reviews only. Printed after public guardrails.
+ */
+
+body.home .lunara-home-curated-hero.lunara-cinematic-hero {
+    --lunara-hero-height: clamp(360px, 46vh, 520px);
+    margin-bottom: 20px;
+}
+
+@media (max-width: 540px) {
+    body.home .lunara-home-curated-hero {
+        --lunara-hero-height: auto;
+    }
+
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-slide .lunara-cinematic-hero-link {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-bg {
+        position: relative !important;
+        inset: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 200px;
+        aspect-ratio: 16 / 9;
+        flex: none;
+        transform: none !important;
+        background: #07111b !important;
+        overflow: hidden !important;
+    }
+
+    body.home .lunara-home-curated-hero .lunara-cinematic-hero-img {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: var(--lunara-hero-focal-x, 50%) var(--lunara-hero-focal-y, 30%) !important;
+        opacity: 1 !important;
+    }
+}
+
+body.post-type-archive-review .lunara-review-archive-hero,
+body.lunara-review-archive-page .lunara-review-archive-hero {
+    padding-top: 28px !important;
+}
+
+@media (max-width: 820px) {
+    body.lunara-oscars-portal-page .lunara-oscars-portal-feature-poster,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-title-media {
+        aspect-ratio: 2 / 3;
+        min-height: 140px;
+        overflow: hidden;
+    }
+
+    body.lunara-oscars-portal-page .lunara-oscars-portal-feature-poster img,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-feature-poster .aat-entity-poster,
+    body.lunara-oscars-portal-page .lunara-oscars-portal-title-media img {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        object-fit: cover !important;
+    }
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-research-shell:not(.is-table-view) .aat-header.aat-database-landing-header,
+body.lunara-oscars-portal-page .lunara-oscars-research-shell:not(.is-table-view) .aat-header.aat-ledger-command {
+    min-height: 0 !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 16px !important;
+    padding: 22px 24px !important;
+}
+
+body.lunara-oscars-portal-page .lunara-oscars-research-shell:not(.is-table-view) .aat-database-landing-metrics,
+body.lunara-oscars-portal-page .lunara-oscars-research-shell:not(.is-table-view) .aat-ledger-command-symbol {
+    display: none !important;
+}
