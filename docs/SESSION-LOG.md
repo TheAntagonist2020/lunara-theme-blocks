@@ -25,6 +25,97 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-16 — Theme 3.2.82: clean, uniform Oscars card candidate
+
+### Headline / what changed
+
+Dalton rejected the Oscars page's uneven scale and crowded poster cards. The
+new theme candidate uses consistent image frames, captions outside the artwork,
+readable type and restrained borders across the Board, spotlights, film cards,
+latest winners and rotating winners. The carousel uses the same card scale as
+the surrounding grids. Phone cards pair a compact poster with a readable caption.
+See CHANGELOG.md for artwork selection and cache-version details.
+
+### Verified state
+
+| Probe | Result |
+| --- | --- |
+| Live Oscars visual inspection | Existing bottom winner names approximately 33px versus 19px above; carousel card 1545px wide versus 212px latest-winner cards at a 1707px viewport |
+| Local full-page desktop preview, 1440px layout viewport | Board, spotlights, titles and latest winners 246px wide; rotating winners 245px; no clipped cards or document overflow |
+| Local full-page phone preview, 389px layout viewport | All 66 cards free of clipping; no document overflow; sampled winner captions 18px, outside artwork |
+| Local real carousel script with revised CSS | Next control advances the rail; existing Pause/Play and navigation controls retained |
+
+The preview uses captured rendered page markup and its actual loaded styles,
+with the candidate route stylesheet. It is visual acceptance, not a production
+deployment or an anonymous performance benchmark. The poster-selection PHP
+change is not represented by the captured old carousel artwork.
+
+### Commit ledger / gate ledger
+
+- Candidate: `codex/oscars-uniform-cards-3.2.82`, based on the pushed deployment
+  receipt `0588da5`, itself based on theme main `afaeca3` / PR #201.
+- Production remains the previously verified Theme 3.2.81 / Academy 2.7.86.
+- Focused portal fluid contract passes; shared Oscars Studio runtime passes
+  with its cache fixture updated to v4; changed PHP syntax and diff whitespace
+  pass. The initial CSS-budget check failed; retiring obsolete styles corrected
+  it, and the focused rerun passed at 57,163 bytes within the unchanged 57,344
+  byte limit. Removed assertions that required the rejected full-width marquee.
+- No full-suite rerun, mutation run, production write, cache purge, new PR or
+  deployment. No merge occurred; the standing rollback branch is unchanged.
+
+### Artifacts / remaining work / whose move
+
+Local screenshots and reproducible static previews are in
+`_carousel-artifacts/oscars-uniform-20260916/` in the workspace parent.
+Next release step: merge the candidate and manually deploy Theme 3.2.82 through
+the existing WordPress.com connection, then verify the deployed Oscars page.
+Critical CSS coverage and controlled performance measurement remain separate
+open work; no speed improvement is claimed.
+
+## 2026-09-16 — Theme 3.2.81 and Academy 2.7.86 verified live
+
+### Headline / what shipped
+
+Following Dalton's deployment confirmation, Theme 3.2.81 and Academy 2.7.86
+are verified live. The Academy presentation editor now loads its settings.
+See CHANGELOG.md and the preceding preparation receipt below for code changes.
+
+### Verified live state
+
+| Read-only probe | Observed result |
+| --- | --- |
+| Versioned Theme 3.2.81 canary | Three anonymous HTTP 200 reads agree on `3.2.81+20260916-185748`; Journal and Oscars both `LIVE_COHERENT`; exit 0 / GO |
+| Active Academy plugin inventory | Academy Awards Database 2.7.86, active |
+| Site Studio Oscars Ledger Routes | Presentation controls available; "Live settings loaded." No settings changed |
+
+### Commit ledger / release upkeep
+
+| Repository | Merged reference |
+| --- | --- |
+| Theme | `afaeca3451206d5963587729e53ac9c065da704d`, PR #201; includes candidate `25e0896` |
+| Academy | `3b0e4cba7be54059bce63dc212372afd8cd1fd58`, PR #31; includes candidate `baf8f54` |
+
+Rebuilt `claude/rollback-exact-theme-3.2.43` / PR #159 with current theme main
+as its parent. Verified its exact tree is
+`c55bf394594149db2888295c5d51f85f47b2b520` before pushing with a lease.
+This deployment receipt is on `codex/premium-live-verification-3.2.81`.
+
+### Gate ledger / corrections
+
+One versioned canary, one active-plugin inventory and one read-only Academy
+editor check. No code suites or performance benchmarks were rerun; unchanged
+focused evidence remains in the preparation receipt. No deployment, settings
+write, cache purge or PR creation was performed by the agent. The earlier
+candidate-only status is superseded by this receipt, not retroactively altered.
+
+### Logged, not fixed / next move
+
+Critical CSS coverage and controlled anonymous performance measurement remain
+open, along with previously recorded editorial curation and unverified private
+editor workflows. No speed improvement is claimed. Next engineering work is
+the remaining performance pass under the focused-validation policy; Dalton
+retains deployment and production-settings actions.
+
 ## 2026-09-16 — Premium completion candidates; focused validation policy
 
 ### Headline / what changed

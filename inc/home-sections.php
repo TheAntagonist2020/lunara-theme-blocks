@@ -516,6 +516,7 @@ function lunara_flush_oscars_home_transients() {
     $today = function_exists( 'wp_date' ) ? intval( wp_date( 'z' ) ) : intval( date( 'z' ) );
     foreach ( array( $today, ( $today + 1 ) % 366 ) as $day ) {
         for ( $limit = 4; $limit <= 16; $limit++ ) {
+            delete_transient( 'lunara_oscars_rotating_showcase_v4_' . $day . '_' . $limit );
             delete_transient( 'lunara_oscars_rotating_showcase_v3_' . $day . '_' . $limit );
         }
     }
@@ -876,7 +877,8 @@ function lunara_render_oscars_winner_media_link( $winner_card, $fallback_url = '
 function lunara_get_rotating_oscars_ceremony_showcase( $card_limit = 10 ) {
     $card_limit = max( 4, min( 16, absint( $card_limit ) ) );
     $day_index  = function_exists( 'wp_date' ) ? intval( wp_date( 'z' ) ) : intval( date( 'z' ) );
-    $cache_key  = 'lunara_oscars_rotating_showcase_v3_' . $day_index . '_' . $card_limit;
+    // v4 keeps film posters intact for the shared portrait-card presentation.
+    $cache_key  = 'lunara_oscars_rotating_showcase_v4_' . $day_index . '_' . $card_limit;
     $cached     = get_transient( $cache_key );
 
     if ( is_array( $cached ) && ! empty( $cached ) ) {
@@ -915,7 +917,7 @@ function lunara_get_rotating_oscars_ceremony_showcase( $card_limit = 10 ) {
         $card_limit,
         array(
             'use_curated_photos' => false,
-            'prefer_backdrop'    => true,
+            'prefer_backdrop'    => false,
             'prefer_person_visuals' => true,
             'title_visual_size'  => 'large',
             'person_visual_size' => 'medium_large',

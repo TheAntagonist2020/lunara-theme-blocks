@@ -116,13 +116,10 @@ Assert-Contract (-not ($shell -match '\.lunara-oscars-portal-fact-card,\s*\r?\n[
 Assert-Contract ($shell -match '\.lunara-ceremony-winner-card \{\s*\r?\n\s*max-width: none !important;') 'Ceremony winner cards must fill their column.'
 Assert-Contract ($route -match '\.lunara-ceremony-winner-card:not\(:has\(\.lunara-ceremony-winner-media-link\)\)') 'Winner cards without media must collapse to one column.'
 
-# 6b. Winners are portraits, the rotation is a marquee, the hero drifts (3.2.81).
+# 6b. Shared carousel controls remain intact. Theme 3.2.82 replaces the
+# overlay portraits and full-width marquee with captioned cards; their visual
+# geometry is checked in the focused desktop/phone preview, not old regexes.
 $pageTemplate = [IO.File]::ReadAllText((Join-Path $root 'page-oscars.php'))
-Assert-Contract ($route -match '\.lunara-ceremony-winners-grid \.lunara-ceremony-winner-card\s*\{[^}]*aspect-ratio:\s*3 / 4 !important;[^}]*overflow:\s*hidden !important;') 'Ceremony winner cards must be 3:4 portraits.'
-Assert-Contract ($route -match '\.lunara-ceremony-winners-grid \.lunara-ceremony-winner-card\.has-poster::after') 'Winner portraits must carry the legibility gradient.'
-Assert-Contract ($route -match '\.lunara-oscars-winner-carousel-track \.lunara-oscars-winner-carousel-card\s*\{[^}]*aspect-ratio:\s*21 / 9 !important;') 'Marquee slides must be 21:9.'
-Assert-Contract ($route -match '\.lunara-oscars-rotating-winners-section \.lunara-oscars-winner-carousel-card\.has-backdrop::before,[^{]*\.lunara-oscars-winner-carousel-card\.has-poster-backdrop::before\s*\{[^}]*background-image:\s*var\(--lunara-card-backdrop\);') 'Marquee slides must paint the film backdrop from the card variable.'
-Assert-Contract ($route -match '\.lunara-oscars-rotating-winners-section \.lunara-oscars-winner-carousel-track \.lunara-oscars-winner-carousel-card\s*\{[^}]*flex:\s*0 0 100% !important;[^}]*max-width:\s*100% !important;') 'The marquee must show one slide per view, outranking the shell three-up flex basis.'
 Assert-Contract ($pageTemplate -match 'data-lunara-carousel-label="Rotating ceremony winners"') 'The rotating winners rail must identify itself to the shared control runtime.'
 Assert-Contract ($pageTemplate -match 'data-lunara-carousel-label="Rotating ceremony winners"[^>]*aria-roledescription="carousel"') 'The rotating winners rail must expose its carousel role to assistive technology.'
 Assert-Contract ($pageTemplate -match 'data-lunara-carousel-toggle[^>]*aria-label="Pause rotating ceremony winners rotation"[^>]*aria-pressed="false"') 'The rotating winners rail must render a labeled pause/play control when autoplay is enabled.'
@@ -159,4 +156,4 @@ if ($failures.Count -gt 0) {
     throw "Oscars portal fluid contract failed:`n$($details -join "`n")"
 }
 
-Write-Host 'Theme 3.2.81 Oscars portal fluid contract passed: one 1720px cap in three authorities, board poster wall with tile art, portrait winners, backdrop marquee, drifting hero, daily warmer, composer hook, poster-first gallery, caps removed.'
+Write-Host 'Oscars portal fluid contract passed: one 1720px cap in three authorities, board poster wall with tile art, shared winner controls, drifting hero, daily warmer, composer hook, poster-first gallery, caps removed.'
