@@ -11,6 +11,22 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-16 — Theme 3.2.82: uniform Oscars cards
+
+The Oscars portal uses one card scale across the prediction Board, spotlights,
+film entry points, latest winners and rotating winners. Artwork occupies a clean
+2:3 frame; captions stay in normal flow below it, with consistent title, label
+and supporting-copy sizes. Phones use compact artwork beside the caption.
+Heavy shadows, zooms, backdrop overlays and the oversized full-width rotation
+are removed. Embedded Academy headings and poster cards share the portal scale.
+
+Rotating film winners now request posters rather than replacing them with
+landscape backdrops. The rotating-showcase cache moves to v4; invalidation keeps
+both v4 and retired v3 keys. Editorial content, section order and public controls
+are retained. The route stylesheet stays within its existing 56 KB ceiling by
+retiring superseded marquee and compact-card rules. This is a theme-only release.
+Release status and focused visual evidence are in SESSION-LOG.md.
+
 ## 2026-09-16 — Theme 3.2.81 / Academy 2.7.86 completion follow-up
 
 Theme: the Academy dossier editor now checks the real canonical plugin reader,

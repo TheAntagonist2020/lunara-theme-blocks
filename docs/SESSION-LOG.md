@@ -25,6 +25,53 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-16 — Theme 3.2.82: clean, uniform Oscars card candidate
+
+### Headline / what changed
+
+Dalton rejected the Oscars page's uneven scale and crowded poster cards. The
+new theme candidate uses consistent image frames, captions outside the artwork,
+readable type and restrained borders across the Board, spotlights, film cards,
+latest winners and rotating winners. The carousel uses the same card scale as
+the surrounding grids. Phone cards pair a compact poster with a readable caption.
+See CHANGELOG.md for artwork selection and cache-version details.
+
+### Verified state
+
+| Probe | Result |
+| --- | --- |
+| Live Oscars visual inspection | Existing bottom winner names approximately 33px versus 19px above; carousel card 1545px wide versus 212px latest-winner cards at a 1707px viewport |
+| Local full-page desktop preview, 1440px layout viewport | Board, spotlights, titles and latest winners 246px wide; rotating winners 245px; no clipped cards or document overflow |
+| Local full-page phone preview, 389px layout viewport | All 66 cards free of clipping; no document overflow; sampled winner captions 18px, outside artwork |
+| Local real carousel script with revised CSS | Next control advances the rail; existing Pause/Play and navigation controls retained |
+
+The preview uses captured rendered page markup and its actual loaded styles,
+with the candidate route stylesheet. It is visual acceptance, not a production
+deployment or an anonymous performance benchmark. The poster-selection PHP
+change is not represented by the captured old carousel artwork.
+
+### Commit ledger / gate ledger
+
+- Candidate: `codex/oscars-uniform-cards-3.2.82`, based on the pushed deployment
+  receipt `0588da5`, itself based on theme main `afaeca3` / PR #201.
+- Production remains the previously verified Theme 3.2.81 / Academy 2.7.86.
+- Focused portal fluid contract passes; shared Oscars Studio runtime passes
+  with its cache fixture updated to v4; changed PHP syntax and diff whitespace
+  pass. The initial CSS-budget check failed; retiring obsolete styles corrected
+  it, and the focused rerun passed at 57,163 bytes within the unchanged 57,344
+  byte limit. Removed assertions that required the rejected full-width marquee.
+- No full-suite rerun, mutation run, production write, cache purge, new PR or
+  deployment. No merge occurred; the standing rollback branch is unchanged.
+
+### Artifacts / remaining work / whose move
+
+Local screenshots and reproducible static previews are in
+`_carousel-artifacts/oscars-uniform-20260916/` in the workspace parent.
+Next release step: merge the candidate and manually deploy Theme 3.2.82 through
+the existing WordPress.com connection, then verify the deployed Oscars page.
+Critical CSS coverage and controlled performance measurement remain separate
+open work; no speed improvement is claimed.
+
 ## 2026-09-16 — Theme 3.2.81 and Academy 2.7.86 verified live
 
 ### Headline / what shipped

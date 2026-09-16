@@ -25,7 +25,7 @@ $winner_day = function_exists( 'wp_date' ) ? intval( wp_date( 'z' ) ) : intval( 
 foreach ( array( 4, 10, 16 ) as $count ) {
     $cards = array();
     for ( $i = 1; $i <= $count; $i++ ) { $cards[] = array( 'primary_label' => 'Cached winner ' . $count . '-' . $i, 'category_label' => 'Category ' . $i, 'film' => 'Film ' . $i, '_visual' => array() ); }
-    set_transient( 'lunara_oscars_rotating_showcase_v3_' . $winner_day . '_' . $count, array( 'winner_cards' => $cards, 'ceremony_label' => 'Cached ceremony ' . $count, 'ceremony_url' => 'https://example.test/oscars/ceremony/' . $count . '/' ), 86400 );
+    set_transient( 'lunara_oscars_rotating_showcase_v4_' . $winner_day . '_' . $count, array( 'winner_cards' => $cards, 'ceremony_label' => 'Cached ceremony ' . $count, 'ceremony_url' => 'https://example.test/oscars/ceremony/' . $count . '/' ), 86400 );
 }
 $winner_initial = $adapter->read_state();
 $winner_draft = $winner_initial;
