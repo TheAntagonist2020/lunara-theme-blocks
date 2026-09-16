@@ -25,6 +25,44 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-16 — Theme 3.2.84: compact archive header candidate
+
+Dalton marked the oversized Reviews and Journal openings and asked to condense
+them and remove Journal types. The candidate shortens both introductions,
+flattens the controls, removes repeated toolbar headings and Journal's types
+row/Desk Mix, and retains sorting, year/section/topic filters, supporting copy,
+Studio slots and trailer retention links. See CHANGELOG.md for implementation.
+
+Verified preview state (captured live markup/styles with candidate route and
+first-paint CSS; Journal markup mirrors the template removals):
+
+| Probe | Result |
+| --- | --- |
+| Desktop, measured 2048px viewport | First article begins 248px below Reviews archive start and 271px below Journal archive start; no document overflow |
+| Phone, measured 390px viewport | Reviews opening 419px, Journal 278px; no horizontal overflow; all sampled sort/filter targets 44px high |
+| Journal controls | Archive Types absent; section and sorting links remain |
+| Repeated toolbar headings | Hidden in both archive previews |
+| PHP lint | Three changed PHP files pass |
+| Reviews CSS budgets | Route 44,605 bytes (45,000 limit); emitted seed 12,275 bytes (12,288 limit) |
+| Diff whitespace | Pass |
+
+After the phone preview, restored the Reviews sort-link max-width guard so the
+third button can fill its row; the browser disconnected before a final image
+could be captured. No new tests, broad suites, production writes, deployment or
+cache clearing. Production identity was not independently re-probed this turn.
+
+Commit ledger: origin/main `7f985af` is merged Theme 3.2.83 / PR #203. Candidate
+`codex/compact-archive-headers-3.2.84` starts there; `0b2d4d8` contains the layout
+changes, followed by release-version and documentation bookkeeping. Rebuilt the
+standing exact rollback branch / PR #159 on current main and verified its tree
+is `c55bf394594149db2888295c5d51f85f47b2b520` before the leased push.
+No corrections to previous entries. Earlier Critical CSS/performance work remains
+open; this focused archive change does not claim completion of the broader program.
+
+Next: merge the candidate and have Dalton manually deploy Theme 3.2.84 through
+the existing WordPress.com connection, then run the versioned live canary. No
+plugin update is required. Deployment remains Dalton's action.
+
 ## 2026-09-16 — Theme 3.2.83: centered Oscars caption candidate
 
 Dalton requested centered text throughout the poster cards in his screenshot.
