@@ -1,24 +1,21 @@
 # Lunara completion plan
 
-September 16 status: Theme 3.2.80 is verified live by the versioned public
-canary; Academy 2.7.85 and the other five repository-managed plugins match
-current merged versions. Earlier pending deployment references below are
-historical and do not override this status.
+September 16 post-deployment status: Theme 3.2.81 is verified live by the
+versioned public canary; Academy 2.7.86 is active. Earlier pending deployment
+references below are historical and do not override this status.
 
-Theme 3.2.81 (`codex/premium-completion-3.2.81`) and Academy 2.7.86
-(`codex/premium-asset-routing-2.7.86`) are prepared candidates, not live releases.
-They finish the shared carousel controls, correct the unavailable Academy
-presentation editor, and fix conditional Academy asset delivery. See the
-September 16 SESSION-LOG.md receipt for exact changes and focused evidence.
+Theme PR #201 and Academy PR #31 are merged and deployed. The Academy
+presentation editor now reports "Live settings loaded." These releases include
+the shared carousel controls and conditional Academy asset delivery fixes.
+See the September 16 SESSION-LOG.md receipts for changes and focused evidence.
 
 Dalton's September 16 instruction: expedite work with focused, relevant checks;
 no redundant full suites or repeated verification of unchanged code. The broad
 theme test run was stopped. Follow the updated AGENTS.md validation rule.
 
-Next: merge/release these branches, manually deploy Academy before the theme,
-then one canary and focused changed-surface acceptance. Critical CSS, controlled
-anonymous performance measurement and reviewed editorial curation remain open.
-Do not claim this entire seven-step plan complete from local passing checks.
+Next: finish Critical CSS coverage and controlled anonymous performance
+measurement. Reviewed editorial curation remains open. The deployment and
+Academy editor check do not complete every item in this seven-step plan.
 
 ## 1. Oscars cleanup
 

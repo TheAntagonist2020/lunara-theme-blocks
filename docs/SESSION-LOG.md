@@ -25,6 +25,50 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-16 — Theme 3.2.81 and Academy 2.7.86 verified live
+
+### Headline / what shipped
+
+Following Dalton's deployment confirmation, Theme 3.2.81 and Academy 2.7.86
+are verified live. The Academy presentation editor now loads its settings.
+See CHANGELOG.md and the preceding preparation receipt below for code changes.
+
+### Verified live state
+
+| Read-only probe | Observed result |
+| --- | --- |
+| Versioned Theme 3.2.81 canary | Three anonymous HTTP 200 reads agree on `3.2.81+20260916-185748`; Journal and Oscars both `LIVE_COHERENT`; exit 0 / GO |
+| Active Academy plugin inventory | Academy Awards Database 2.7.86, active |
+| Site Studio Oscars Ledger Routes | Presentation controls available; "Live settings loaded." No settings changed |
+
+### Commit ledger / release upkeep
+
+| Repository | Merged reference |
+| --- | --- |
+| Theme | `afaeca3451206d5963587729e53ac9c065da704d`, PR #201; includes candidate `25e0896` |
+| Academy | `3b0e4cba7be54059bce63dc212372afd8cd1fd58`, PR #31; includes candidate `baf8f54` |
+
+Rebuilt `claude/rollback-exact-theme-3.2.43` / PR #159 with current theme main
+as its parent. Verified its exact tree is
+`c55bf394594149db2888295c5d51f85f47b2b520` before pushing with a lease.
+This deployment receipt is on `codex/premium-live-verification-3.2.81`.
+
+### Gate ledger / corrections
+
+One versioned canary, one active-plugin inventory and one read-only Academy
+editor check. No code suites or performance benchmarks were rerun; unchanged
+focused evidence remains in the preparation receipt. No deployment, settings
+write, cache purge or PR creation was performed by the agent. The earlier
+candidate-only status is superseded by this receipt, not retroactively altered.
+
+### Logged, not fixed / next move
+
+Critical CSS coverage and controlled anonymous performance measurement remain
+open, along with previously recorded editorial curation and unverified private
+editor workflows. No speed improvement is claimed. Next engineering work is
+the remaining performance pass under the focused-validation policy; Dalton
+retains deployment and production-settings actions.
+
 ## 2026-09-16 — Premium completion candidates; focused validation policy
 
 ### Headline / what changed
