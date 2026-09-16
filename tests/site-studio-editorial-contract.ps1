@@ -10,6 +10,8 @@ foreach ($runtime in @('site-studio-footer-recovery-browser-runtime.js', 'footer
 }
 
 # Academy presentation shares the same editor and private transaction boundary.
+& php (Join-Path $PSScriptRoot 'site-studio-ledger-dependency-runtime.php')
+if ($LASTEXITCODE -ne 0) { throw 'Academy Ledger dependency contracts failed.' }
 & php (Join-Path $PSScriptRoot 'site-studio-oscars-ledger-runtime.php')
 if ($LASTEXITCODE -ne 0) { throw 'Academy Ledger provider contracts failed.' }
 & node (Join-Path $PSScriptRoot 'site-studio-oscars-ledger-browser-runtime.js')

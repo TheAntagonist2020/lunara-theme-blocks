@@ -3890,6 +3890,9 @@ if ( ! function_exists( 'lunara_render_review_archive_shell' ) ) {
                                             <button type="button" class="lunara-review-archive-rail-control" data-lunara-dynamic-rail-next aria-label="<?php esc_attr_e( 'Next companion review', 'lunara-film' ); ?>">
                                                 <span aria-hidden="true">&rsaquo;</span>
                                             </button>
+                                            <button type="button" class="lunara-review-archive-rail-toggle" data-lunara-dynamic-rail-toggle aria-label="<?php esc_attr_e( 'Pause companion review rotation', 'lunara-film' ); ?>" aria-pressed="false">
+                                                <?php esc_html_e( 'Pause', 'lunara-film' ); ?>
+                                            </button>
                                         </div>
                                     <?php endif; ?>
                                     <div class="lunara-review-archive-rail-track" data-lunara-dynamic-rail-track tabindex="0">

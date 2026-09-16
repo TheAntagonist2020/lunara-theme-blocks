@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.80
+Version: 3.2.81
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -18387,4 +18387,62 @@ body.home .lunara-oscar-facts-section .lunara-oscar-facts-dots .lunara-carousel-
 body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-toggle{grid-column:1/-1;grid-row:2;justify-self:center;}
 body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel .lunara-oscar-facts-console{grid-template-columns:1fr auto;}
 body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel .lunara-oscar-facts-console .lunara-home-carousel-toggle{grid-column:1/-1;grid-row:3;justify-self:center;}
+}
+
+/* Shared carousel controls: the portal uses the same comfortable hit areas
+   as the homepage while keeping its compact cinematic marks. */
+html body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-poster-carousel-controls {
+    align-items: center !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+
+html body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-poster-carousel-btn {
+    box-sizing: border-box !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    width: 44px !important;
+}
+
+html body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-carousel-toggle {
+    align-items: center !important;
+    background: rgba(6, 16, 27, 0.82) !important;
+    border: 1px solid rgba(224, 196, 129, 0.32) !important;
+    border-radius: 999px !important;
+    box-sizing: border-box !important;
+    color: rgba(239, 222, 173, 0.96) !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    height: 44px !important;
+    justify-content: center !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1 !important;
+    min-width: 76px !important;
+    min-height: 44px !important;
+    padding: 8px 12px !important;
+    text-transform: uppercase !important;
+}
+
+html body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-carousel-toggle:hover,
+html body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-carousel-toggle:focus-visible {
+    background: rgba(224, 196, 129, 0.16) !important;
+    border-color: rgba(224, 196, 129, 0.58) !important;
+    color: #fff4cf !important;
+    outline: 2px solid rgba(224, 196, 129, 0.28) !important;
+    outline-offset: 2px !important;
+}
+
+html body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-carousel-toggle:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.65 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html body.lunara-oscars-portal-page .lunara-oscars-rotating-winners-section .lunara-oscars-carousel-toggle {
+        transition: none !important;
+    }
 }

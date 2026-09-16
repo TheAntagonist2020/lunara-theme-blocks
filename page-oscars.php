@@ -780,7 +780,7 @@ $command_cards = array(
             $rotating_copy  = trim( (string) ( $rotating_showcase['summary'] ?? '' ) );
 
             ?>
-            <section class="lunara-home-section lunara-oscars-rotating-winners-section lunara-oscars-portal-slot-rotating-winners" data-lunara-site-studio-section="rotating-winners" aria-label="Oscars Deep Dive"<?php if ( $rotating_autoplay > 0 ) : ?> data-lunara-carousel data-lunara-carousel-autoplay="<?php echo absint( $rotating_autoplay ); ?>"<?php else : ?> data-lunara-carousel<?php endif; ?>>
+            <section class="lunara-home-section lunara-oscars-rotating-winners-section lunara-oscars-portal-slot-rotating-winners" data-lunara-site-studio-section="rotating-winners" data-lunara-carousel-label="Rotating ceremony winners" aria-label="Oscars Deep Dive" aria-roledescription="carousel"<?php if ( $rotating_autoplay > 0 ) : ?> data-lunara-carousel data-lunara-carousel-autoplay="<?php echo absint( $rotating_autoplay ); ?>"<?php else : ?> data-lunara-carousel<?php endif; ?>>
                 <div class="lunara-home-section-header">
                     <div>
                         <p class="lunara-home-section-kicker"><?php echo esc_html( $rotating_kicker ); ?></p>
@@ -791,6 +791,9 @@ $command_cards = array(
                         <div class="lunara-poster-carousel-controls">
                             <button type="button" class="lunara-poster-carousel-btn lunara-poster-carousel-prev" data-lunara-carousel-prev aria-label="Previous rotating ceremony winners">&#8592;</button>
                             <button type="button" class="lunara-poster-carousel-btn lunara-poster-carousel-next" data-lunara-carousel-next aria-label="Next rotating ceremony winners">&#8594;</button>
+                            <?php if ( $rotating_autoplay > 0 && count( $rotating_cards ) > 1 ) : ?>
+                                <button type="button" class="lunara-carousel-toggle lunara-oscars-carousel-toggle" data-lunara-carousel-toggle aria-label="Pause rotating ceremony winners rotation" aria-pressed="false">Pause</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>

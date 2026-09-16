@@ -1,37 +1,24 @@
 # Lunara completion plan
 
-Dalton authorized completing all seven steps, quickly without sacrificing
-quality. This checklist remains open until implementation and public acceptance
-are complete. A candidate, passing local test or merged PR is not a live result.
-Manual WordPress.com deployment remains Dalton's action; independent work can
-continue while a release awaits deployment.
+September 16 status: Theme 3.2.80 is verified live by the versioned public
+canary; Academy 2.7.85 and the other five repository-managed plugins match
+current merged versions. Earlier pending deployment references below are
+historical and do not override this status.
 
-September 13 update: Dalton confirms Academy 2.7.84 and Theme 3.2.76 are
-verified published live. A fresh agent canary also passes for
-`3.2.76+20260913-225857`: three anonymous reads agree and Journal/Oscars both
-report `LIVE_COHERENT`. Detailed route acceptance below stays explicit;
-deployment confirmation does not imply every remaining reader-journey check ran.
+Theme 3.2.81 (`codex/premium-completion-3.2.81`) and Academy 2.7.86
+(`codex/premium-asset-routing-2.7.86`) are prepared candidates, not live releases.
+They finish the shared carousel controls, correct the unavailable Academy
+presentation editor, and fix conditional Academy asset delivery. See the
+September 16 SESSION-LOG.md receipt for exact changes and focused evidence.
 
-Theme 3.2.78 is merged through PR #198 at `a272ec1`, including the preceding
-3.2.77 Footer/Search/404 editor release. All 95 required gates pass locally and
-in GitHub; the exact rollback hatch is rebuilt. Academy 2.7.85 is merged through
-PR #30 at `6a36be0`. Deploy the plugin before the theme. Manual deployment and
-public acceptance remain pending; last verified live theme is 3.2.76.
+Dalton's September 16 instruction: expedite work with focused, relevant checks;
+no redundant full suites or repeated verification of unchanged code. The broad
+theme test run was stopped. Follow the updated AGENTS.md validation rule.
 
-Theme 3.2.79 is merged through PR #199 at `5e1c943`: useful Journal gallery
-controls, empty Search correction, Footer writer retirement, truthful Control
-Desk handoffs and Search-dialog Tab containment/focus return. Independent review,
-95 initial local gates, the affected header gate and final-head CI passed. The
-exact rollback hatch was rebuilt. A postmerge anonymous homepage probe still
-reports `3.2.76+20260913-225857`; deploy Academy 2.7.85 before Theme 3.2.79
-through the existing WordPress.com connection, then run the versioned canary.
-
-Theme 3.2.80 is a focused Oscar carousel accessibility candidate. Oscar Picks
-has a persistent Pause/Play control and 44px pagination targets; Oscar Facts has
-the same control through the Splide pilot. Hover, keyboard focus and touch
-interaction pause playback, and reduced-motion visitors remain paused. The
-candidate is local only; it is not merged, deployed or represented as live, and
-it follows the pending 3.2.79 deployment handoff.
+Next: merge/release these branches, manually deploy Academy before the theme,
+then one canary and focused changed-surface acceptance. Critical CSS, controlled
+anonymous performance measurement and reviewed editorial curation remain open.
+Do not claim this entire seven-step plan complete from local passing checks.
 
 ## 1. Oscars cleanup
 
@@ -205,8 +192,9 @@ it follows the pending 3.2.79 deployment handoff.
 
 ## Release acceptance for each batch
 
-Focused tests and deliberate mutations precede the full required theme suite.
-Independent review must be resolved before release. Merge tested commits, rebuild
+Run focused regression and syntax checks for changed behavior, reusing passing
+evidence for unchanged code. Broaden only for a concrete unresolved concern;
+do not restart a full suite by default. Resolve actionable review findings. Merge tested commits, rebuild
 the standing theme rollback hatch after every theme merge, deploy plugins before
 the theme, and verify the actual public identity/canaries after Dalton's click.
 Record results in SESSION-LOG.md and carry every unfinished item forward.

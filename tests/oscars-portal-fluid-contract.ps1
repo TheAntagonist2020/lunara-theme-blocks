@@ -16,6 +16,8 @@ function Assert-Contract {
 }
 
 $route    = [IO.File]::ReadAllText((Join-Path $root 'assets/css/lunara-oscars-portal.css'))
+$style    = [IO.File]::ReadAllText((Join-Path $root 'style.css'))
+$carouselJs = [IO.File]::ReadAllText((Join-Path $root 'assets/js/lunara-scroll-carousel.js'))
 $shell    = [IO.File]::ReadAllText((Join-Path $root 'assets/css/lunara-shell.css'))
 $seedPhp  = [IO.File]::ReadAllText((Join-Path $root 'inc/oscars-portal-critical.php'))
 $portal   = [IO.File]::ReadAllText((Join-Path $root 'inc/oscars-portal.php'))
@@ -34,11 +36,11 @@ Assert-Contract ($route -match '\.lunara-oscars-board-list\s*\{[^}]*display:\s*g
 Assert-Contract ($route -match 'grid-template-areas:\s*"status"\s*"category"\s*"call"') 'Route sheet board row must stack the status chip, the category and the call.'
 Assert-Contract ($seedPhp -match '\.lunara-oscars-board-list\{display:grid!important;gap:clamp\(8px,\.8vw,14px\)!important;grid-template-columns:repeat\(auto-fill,minmax\(min\(100%,var\(--lunara-oscars-portal-board-min-width,190px\)\),1fr\)\)!important') 'Critical seed board list must be the same auto-fill poster grid, with the tile floor behind the Studio board-rhythm variable and its 190px shipped fallback.'
 
-# --- 3.2.80 presentation controls -------------------------------------------
+# --- 3.2.81 presentation controls -------------------------------------------
 # Every custom property the emitter can stamp must be consumed by the seed.
 # A property that is emitted and never read is a control that saves cleanly
 # and changes nothing, which is exactly what card_min_height did from the day
-# it shipped until 3.2.80.
+# it shipped until 3.2.81.
 foreach ($pair in @(
     @{ Property = 'section-gap';       Label = 'section gap' },
     @{ Property = 'hero-min-height';   Label = 'hero minimum height' },
@@ -76,7 +78,7 @@ Assert-Contract ($seedPhp -match 'grid-template-areas:"status" "category" "call"
 Assert-Contract (-not ($route -match '"category status"') -and -not ($seedPhp -match '"category status"')) 'No authority may keep the side-by-side category and status row that let long categories run under the chip.'
 Assert-Contract (-not ($seedPhp -match 'minmax\(0,\.72fr\) minmax\(0,1fr\) auto')) 'Critical seed must not retain the three-column list row.'
 Assert-Contract (-not ($shell -match 'THE BOARD')) 'Shell must not carry a second copy of the board rules.'
-# 2b. Every tile is a 2:3 poster with the art behind the copy (3.2.80).
+# 2b. Every tile is a 2:3 poster with the art behind the copy (3.2.81).
 $routeRow = [regex]::Match($route, '\.lunara-oscars-board-row\s*\{[^}]*\}').Value
 Assert-Contract ($routeRow -match 'aspect-ratio:\s*2 / 3;' -and $routeRow -match 'position:\s*relative;' -and $routeRow -match 'overflow:\s*hidden;') 'Route sheet board row must be a 2:3 positioned poster tile.'
 Assert-Contract ($seedPhp -match '\.lunara-oscars-board-row\{[^}]*aspect-ratio:2/3!important;[^}]*overflow:hidden!important;[^}]*position:relative!important\}') 'Critical seed board row must be the same 2:3 positioned poster tile.'
@@ -114,16 +116,25 @@ Assert-Contract (-not ($shell -match '\.lunara-oscars-portal-fact-card,\s*\r?\n[
 Assert-Contract ($shell -match '\.lunara-ceremony-winner-card \{\s*\r?\n\s*max-width: none !important;') 'Ceremony winner cards must fill their column.'
 Assert-Contract ($route -match '\.lunara-ceremony-winner-card:not\(:has\(\.lunara-ceremony-winner-media-link\)\)') 'Winner cards without media must collapse to one column.'
 
-# 6b. Winners are portraits, the rotation is a marquee, the hero drifts (3.2.80).
+# 6b. Winners are portraits, the rotation is a marquee, the hero drifts (3.2.81).
+$pageTemplate = [IO.File]::ReadAllText((Join-Path $root 'page-oscars.php'))
 Assert-Contract ($route -match '\.lunara-ceremony-winners-grid \.lunara-ceremony-winner-card\s*\{[^}]*aspect-ratio:\s*3 / 4 !important;[^}]*overflow:\s*hidden !important;') 'Ceremony winner cards must be 3:4 portraits.'
 Assert-Contract ($route -match '\.lunara-ceremony-winners-grid \.lunara-ceremony-winner-card\.has-poster::after') 'Winner portraits must carry the legibility gradient.'
 Assert-Contract ($route -match '\.lunara-oscars-winner-carousel-track \.lunara-oscars-winner-carousel-card\s*\{[^}]*aspect-ratio:\s*21 / 9 !important;') 'Marquee slides must be 21:9.'
 Assert-Contract ($route -match '\.lunara-oscars-rotating-winners-section \.lunara-oscars-winner-carousel-card\.has-backdrop::before,[^{]*\.lunara-oscars-winner-carousel-card\.has-poster-backdrop::before\s*\{[^}]*background-image:\s*var\(--lunara-card-backdrop\);') 'Marquee slides must paint the film backdrop from the card variable.'
 Assert-Contract ($route -match '\.lunara-oscars-rotating-winners-section \.lunara-oscars-winner-carousel-track \.lunara-oscars-winner-carousel-card\s*\{[^}]*flex:\s*0 0 100% !important;[^}]*max-width:\s*100% !important;') 'The marquee must show one slide per view, outranking the shell three-up flex basis.'
+Assert-Contract ($pageTemplate -match 'data-lunara-carousel-label="Rotating ceremony winners"') 'The rotating winners rail must identify itself to the shared control runtime.'
+Assert-Contract ($pageTemplate -match 'data-lunara-carousel-label="Rotating ceremony winners"[^>]*aria-roledescription="carousel"') 'The rotating winners rail must expose its carousel role to assistive technology.'
+Assert-Contract ($pageTemplate -match 'data-lunara-carousel-toggle[^>]*aria-label="Pause rotating ceremony winners rotation"[^>]*aria-pressed="false"') 'The rotating winners rail must render a labeled pause/play control when autoplay is enabled.'
+Assert-Contract ($style -match 'html body\.lunara-oscars-portal-page[\s\S]*lunara-oscars-carousel-toggle[\s\S]*min-width:\s*76px !important[\s\S]*min-height:\s*44px !important') 'The rotating winners pause/play control must use the shared 44px target and outrank the shell rule.'
+Assert-Contract ($style -match 'html body\.lunara-oscars-portal-page[\s\S]*lunara-oscars-rotating-winners-section[\s\S]*lunara-poster-carousel-btn[\s\S]*min-width:\s*44px !important[\s\S]*min-height:\s*44px !important') 'The rotating winners arrows must use the shared 44px target and outrank the shell rule.'
+Assert-Contract ($carouselJs -match 'const carouselLabel = section\.getAttribute\(\x27data-lunara-carousel-label\x27\)') 'The shared carousel runtime must derive its accessible label from each rail.'
+Assert-Contract ($carouselJs -match 'start\(true\)') 'The shared carousel runtime must let an explicit Play action resume while its control retains focus.'
+Assert-Contract ($carouselJs -match 'pointerenter' -and $carouselJs -match 'focusin') 'The shared carousel runtime must pause during hover and keyboard focus.'
 
 Assert-Contract ($shell -match '@keyframes lunara-oscars-hero-drift') 'Shell must define the hero drift.'
 $pageTemplate = [IO.File]::ReadAllText((Join-Path $root 'page-oscars.php'))
-Assert-Contract ($pageTemplate -match 'lunara-oscars-portal-slot-hero<\?php echo '''' !== \$hero_style \? '' has-backdrop'' : ''''; \?>"') 'The live page template must stamp has-backdrop on the hero it renders, or the drift never fires (3.2.80).'
+Assert-Contract ($pageTemplate -match 'lunara-oscars-portal-slot-hero<\?php echo '''' !== \$hero_style \? '' has-backdrop'' : ''''; \?>"') 'The live page template must stamp has-backdrop on the hero it renders, or the drift never fires (3.2.81).'
 Assert-Contract ($pageTemplate -match 'linear-gradient\(112deg, rgba\(7,16,27,\.9\) 0%, rgba\(7,16,27,\.66\) 34%, rgba\(7,16,27,\.34\) 58%') 'The live page template hero gradient must let the backdrop read through its middle.'
 Assert-Contract (-not ($pageTemplate -match 'linear-gradient\(120deg, rgba\(7,16,27,\.92\)')) 'The live page template must not keep the near-opaque 120deg hero gradient.'
 Assert-Contract ($shell -match '\.lunara-oscars-portal-hero\.has-backdrop\s*\{\s*\r?\n\s*animation:\s*lunara-oscars-hero-drift') 'The hero must drift only when it has a backdrop.'
@@ -148,4 +159,4 @@ if ($failures.Count -gt 0) {
     throw "Oscars portal fluid contract failed:`n$($details -join "`n")"
 }
 
-Write-Host 'Theme 3.2.80 Oscars portal fluid contract passed: one 1720px cap in three authorities, board poster wall with tile art, portrait winners, backdrop marquee, drifting hero, daily warmer, composer hook, poster-first gallery, caps removed.'
+Write-Host 'Theme 3.2.81 Oscars portal fluid contract passed: one 1720px cap in three authorities, board poster wall with tile art, portrait winners, backdrop marquee, drifting hero, daily warmer, composer hook, poster-first gallery, caps removed.'

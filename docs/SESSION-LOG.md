@@ -25,6 +25,170 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-16 — Premium completion candidates; focused validation policy
+
+### Headline / what changed
+
+Prepared Theme 3.2.81 on `codex/premium-completion-3.2.81` and Academy 2.7.86
+on `codex/premium-asset-routing-2.7.86`. The theme includes the earlier unmerged
+3.2.81 carousel candidate. Live inspection found that Oscars Ledger Routes was
+unavailable despite the active plugin: its dependency called a nonexistent
+helper. It now uses the existing canonical `lunara_oscars_reader` boundary.
+See CHANGELOG.md for carousel behavior and Academy asset routing changes.
+
+Dalton explicitly requested expedited work without redundant, overlong checks
+or further questions. The running broad theme suite was interrupted. AGENTS.md
+now requires proportional focused checks and reuse of unchanged passing evidence.
+This user instruction supersedes the earlier mandatory full-suite/mutation rule.
+
+### Verified live state
+
+| Read-only probe, September 16 | Observed result |
+| --- | --- |
+| Theme versioned 3.2.80 canary | Three anonymous reads agree on `3.2.80+20260914-021556`; Journal and Oscars `LIVE_COHERENT`; exit 0 / GO |
+| WordPress active plugin inventory | Core 0.8.11; Academy 2.7.85; Journal Foundation 1.3.1; Dispatch 3.2.8; IMDb Guard 0.4.1; AI Assistant Classic 0.6.1 |
+| Signed-in Site Studio | Home and Footer load live settings; Footer Apply available and Discard disabled; no settings changed |
+| Signed-in Academy editor | Unavailable due to missing helper; fixed in this theme candidate, not yet deployed |
+| Signed-in Home/Reviews narrow layout | One main landmark; document scroll width equals client width. Existing browser zoom produced a 434px layout viewport, so this is not an exact 390px acceptance claim |
+
+### Commit ledger
+
+| Repository / role | Reference |
+| --- | --- |
+| Theme merged main | `81586d6cb714c094c3614ab61139c24049112475` — Theme 3.2.80 |
+| Inherited theme candidate | `5118328` — unmerged shared carousel controls |
+| Theme changes and session record | This topic branch / commit |
+| Academy merged main | `6a36be06be7cb56a4263306742049b146c33254f` — 2.7.85 |
+| Academy candidate, pushed | `baf8f54` — `codex/premium-asset-routing-2.7.86` |
+
+No merge occurred, so no rollback rebuild was needed. No PR was opened, in
+accordance with the existing no-unsolicited-PR instruction. No deployment,
+production content/settings write, rewrite flush or cache purge occurred.
+
+### Gate ledger
+
+- Academy routing: 333 checks using production enqueue/render methods and a
+  pinned WordPress shortcode parser. All 33 portable plugin gates passed across
+  the initial run and two focused reruns after adding the missing 2.7.86
+  changelog entry. Two local provenance gates were excluded, as in CI.
+- Theme carousel lifecycle: 54 deterministic checks across both real runtimes.
+  Reviews real-CSS/browser: 15 checks; Oscar Picks navigation: 56 checks at
+  phone/desktop and normal/reduced motion. Changed JavaScript syntax passed.
+- Actual Academy dependency/registry: seven checks with absent, active and
+  failed plugin instances, without substituting the dependency callback.
+- Six deliberate regressions were caught in scratch copies: unrelated table
+  query loading, missing shortcode assets, dropped autoload, hidden-tab restart,
+  overridden touch pause and ignored motion change. Candidate files were not
+  mutated. No additional mutation ritual followed Dalton's instruction.
+- The broad theme run was intentionally stopped at Dalton's request. It is
+  **not** a full-suite pass. Thirty log files existed, including work in
+  progress; do not treat their count as completed gates. No new CI run or
+  independent review was performed. Targeted evidence above is the acceptance
+  scope, and no speed/Core Web Vitals improvement is claimed.
+
+Local evidence: `_carousel-artifacts/premium-completion-20260916/` in the
+workspace parent; backups, focused outputs, six mutation logs and suite logs.
+
+### Corrections / carried-forward work
+
+The previous checklist's pending 3.2.80 / Academy 2.7.85 deployment statements
+are obsolete: today's canary and plugin inventory verify them live. The separate
+`codex/postdeploy-record-3.2.80` receipt was found but not merged here.
+The 3.2.81 entry's claim that Jetpack image quality still needs changing is
+also stale: the September 7 receipt and later plan record JPEG 82 / PNG/WebP 80.
+Do not repeat that settings change without new evidence.
+
+Still open: merge/release of these candidates; Academy editor live acceptance;
+private Preview/Apply/History acceptance where previously untested; valid
+Critical CSS regeneration and controlled anonymous performance comparison;
+reviewed opening lineups. Manhunter's missing original wording and association
+requirements are separate editorial work, not theme/plugin optimization.
+The five unchanged repository-managed plugins need no speculative edits from
+this pass; their current versions and scoped asset entry points were inspected.
+Two additional active Lunara plugins (Database Engine 1.2.0 and Editorial
+Spotlight 1.0.0) have no repository in this workspace; code auditing them is not
+claimed complete.
+
+### Whose move is next
+
+Review/merge the two prepared branches; rebuild the standing exact theme
+rollback after the theme merge. Dalton manually deploys Academy 2.7.86 before
+Theme 3.2.81 through the existing WordPress.com repository connections. Then
+run one versioned canary and focused live checks for the changed editor and
+controls; continue the remaining Critical CSS/performance work without
+restarting broad audits or repeating unchanged tests.
+
+---
+
+## 2026-09-14 — Theme 3.2.81 shared carousel controls
+
+### Headline / what changed
+
+The next focused completion slice is ready on
+`codex/cross-site-carousel-controls-3.2.81`; code-level detail is in
+`docs/CHANGELOG.md`. Reviews' companion rail and the Oscars rotating-winners
+rail now use the same visible Pause/Play language, 44px arrow and pagination
+targets, hover/focus pause behavior, touch recovery and reduced-motion handling.
+The Oscars rail carries its own accessible label. Article content, saved
+selection, artwork metadata, ordering and editor settings were not changed.
+
+### Verified live state
+
+| Read-only probe | Result |
+| --- | --- |
+| Anonymous Home, Reviews, Journal and Oscars | 200; public build remains `3.2.80+20260914-021556` |
+
+No agent deployment or manual cache purge occurred. Theme 3.2.81 is not
+deployed; its live canary is pending. The 3.2.80 build above is the currently
+verified public release, not this candidate.
+
+### What shipped and why
+
+The Reviews companion rail had arrows and dots but no persistent playback
+control, and its visible controls were smaller than the shared 44px target.
+Oscars rotating winners had arrows but no matching playback control or rail
+label. The patch extends the existing dependency-free runtimes and current
+route markup instead of adding a slider library. Controls preserve compact
+visual dots, pause during hover or focus, resume after touch, and stop automatic
+motion for reduced-motion visitors.
+
+### Commit ledger
+
+| Repository / role | Commit or tree |
+| --- | --- |
+| Theme | `84ba0e7` — shared carousel controls candidate |
+| Theme main | `81586d6cb714c094c3614ab61139c24049112475` remains the latest merged main |
+
+### Gate ledger
+
+- Reviews archive credibility contract passed.
+- Oscars portal fluid contract passed.
+- Reviews dynamic-rail runtime passed: 15 checks at phone width with normal
+  and reduced motion.
+- JavaScript syntax checks passed; the full 95-script required theme suite
+  passed.
+- Mutation gate passed: changing the dynamic-rail toggle hook was caught by the
+  Reviews archive credibility contract and the source was restored byte-exactly.
+
+### Logged, not fixed / punch-list carried forward
+
+The public Oscar Facts area is absent from the current public markup, most
+likely because no published `oscar_fact` records are available; no content was
+invented in this release. Critical CSS regeneration, Jetpack Boost image
+quality, opening lineup curation, NTFCA readiness and Manhunter source recovery
+remain open. Private preview, saved-settings and zero/one/many-item editor
+acceptance remain the next editor-focused verification slice.
+
+### Whose move it is next
+
+The candidate is ready for local review and merge after the full gates pass.
+Dalton merges this branch into `main`, then performs the manual WordPress.com
+deployment. After that handoff, run the versioned canary and public route
+matrix, rebuild the exact rollback hatch, and review the real controls on phone
+and desktop.
+
+---
+
 ## 2026-09-14 — Theme 3.2.80 Oscar carousel playback controls
 
 The next focused completion slice is ready on `codex/oscar-carousel-controls-3.2.80`; code-level detail is in `docs/CHANGELOG.md`.

@@ -114,9 +114,14 @@ it. A log tidied into correctness is worth nothing.
 
 ## Engineering discipline — lessons this project already paid for
 
-- **Mutation-test before every release.** Break the thing, confirm the test
-  fails, restore. If a mutation is *not* caught, say so plainly and explain why
-  — never round a partial result up to full coverage.
+- **Keep validation proportional (Dalton, September 16).** Run the focused
+  regressions and syntax checks relevant to changed behavior. Reuse passing
+  evidence while the tested code is unchanged. Do not repeat full suites for
+  routine patches, documentation edits, or release bookkeeping. Broaden testing
+  only when a shared architectural change, failure, or unresolved concern
+  justifies it. Use mutation checks when regression strength is uncertain,
+  rather than as a mandatory ritual for every release. Report skipped or
+  interrupted checks honestly; never describe them as passed.
 - **Back up files before mutating them, with `cp`, not git.** `git checkout --`
   reverts to HEAD and will destroy uncommitted work. This has already cost one
   session a full set of edits.
@@ -180,6 +185,7 @@ php tests/<name>-runtime.php
 bash tests/tools/lunara-canary-verify.sh <version>
 ```
 
-Run the full contract suite before any release. `.deployignore` keeps `docs`,
+Select the relevant contracts using the proportional validation rule above.
+`.deployignore` keeps `docs`,
 `tests`, `.github`, `AGENTS.md`, and `CLAUDE.md` out of the live theme, so
 tooling and instructions live in the repo without shipping to production.
