@@ -1101,3 +1101,70 @@
     .lunara-review-archive-page .lunara-review-archive-retention-showcase-grid,
     .lunara-review-archive-page .lunara-review-archive-gallery-grid { grid-template-columns: minmax(0, 1fr) !important; }
 }
+
+/* Shared archive carousel controls: keep the visual marks compact while
+   giving every keyboard and touch target the same 44px contract. */
+.lunara-review-archive-page .lunara-review-archive-rail-toggle {
+    align-items: center;
+    background: rgba(6, 16, 27, 0.82);
+    border: 1px solid rgba(224, 196, 129, 0.32);
+    border-radius: 999px;
+    color: rgba(239, 222, 173, 0.96);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.72rem;
+    font-weight: 700;
+    height: 44px;
+    justify-content: center;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    min-height: 44px;
+    min-width: 76px;
+    padding: 8px 12px;
+    text-transform: uppercase;
+}
+
+.lunara-review-archive-page .lunara-review-archive-rail-toggle:hover,
+.lunara-review-archive-page .lunara-review-archive-rail-toggle:focus-visible {
+    background: rgba(224, 196, 129, 0.16);
+    border-color: rgba(224, 196, 129, 0.58);
+    color: #fff4cf;
+    outline: 2px solid rgba(224, 196, 129, 0.28);
+    outline-offset: 2px;
+    transform: translateY(-1px);
+}
+
+.lunara-review-archive-page .lunara-review-archive-rail-toggle:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.lunara-review-archive-page .lunara-review-archive-rail-dot::after {
+    content: "";
+    position: absolute;
+    top: 17px;
+    left: 50%;
+    width: 9px;
+    height: 9px;
+    border: 1px solid rgba(224, 196, 129, 0.6);
+    border-radius: 999px;
+    background: rgba(244, 239, 227, 0.13);
+    transform: translateX(-50%);
+    transition: width 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.lunara-review-archive-page .lunara-review-archive-rail-dot.is-active::after {
+    left: 7px;
+    right: 7px;
+    width: auto;
+    border-color: #d7b66f;
+    background: #d7b66f;
+    transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lunara-review-archive-page .lunara-review-archive-rail-toggle,
+    .lunara-review-archive-page .lunara-review-archive-rail-dot::after {
+        transition: none;
+    }
+}

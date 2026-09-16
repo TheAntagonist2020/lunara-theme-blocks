@@ -58,3 +58,8 @@ foreach ($forbidden in @('prettyPhoto', 'all_in_one', 'magic_carousel', 'multime
 }
 
 Write-Output 'Reviews archive credibility contract passed.'
+
+& node (Join-Path $PSScriptRoot 'carousel-lifecycle-runtime.js')
+if ($LASTEXITCODE -ne 0) { throw 'Carousel lifecycle regression failed.' }
+& node (Join-Path $PSScriptRoot 'reviews-archive-dynamic-rail-runtime.js')
+if ($LASTEXITCODE -ne 0) { throw 'Reviews carousel browser regression failed.' }

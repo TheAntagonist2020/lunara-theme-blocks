@@ -9,8 +9,7 @@
 
 	var SWIPE_THRESHOLD = 42;
 	var VERTICAL_LIMIT = 64;
-	var reduceMotion = window.matchMedia &&
-		window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	var motionQuery = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
 
 	function clamp(index, length) {
 		if (!length) return 0;
@@ -34,7 +33,7 @@
 		);
 		var autoplayMs = parseInt(rail.getAttribute('data-lunara-dynamic-rail-autoplay') || '0', 10);
 		var current = 0;
-		var paused = false;
+		var reduceMotion = !!(motionQuery && motionQuery.matches);
 		var userPaused = false;
 		var pointerHover = false;
 		var focusWithin = false;
@@ -102,12 +101,12 @@
 		}
 
 		function startAutoplay(force) {
-			if (reduceMotion || autoplayMs <= 0 || timer || userPaused || (!force && (paused || pointerHover || focusWithin))) {
+			if (document.hidden || touchActive || reduceMotion || autoplayMs <= 0 || timer || userPaused || (!force && (pointerHover || focusWithin))) {
 				syncToggle();
 				return;
 			}
 			timer = window.setInterval(function () {
-				if (!paused && !userPaused) {
+				if (!document.hidden && !touchActive && !reduceMotion && !userPaused) {
 					scrollToIndex(current + 1, 'smooth');
 				}
 			}, autoplayMs);
@@ -124,7 +123,10 @@
 				: (isPaused ? 'Play companion review rotation' : 'Pause companion review rotation'));
 			toggle.setAttribute('aria-pressed', userPaused ? 'true' : 'false');
 			toggle.classList.toggle('is-paused', isPaused);
-			if (reduceMotion) {
+			if (autoplayMs <= 0 && !reduceMotion) {
+				toggle.setAttribute('aria-label', 'Automatic rotation is turned off');
+			}
+			if (reduceMotion || autoplayMs <= 0) {
 				toggle.disabled = true;
 				toggle.setAttribute('aria-disabled', 'true');
 			} else {
@@ -135,11 +137,10 @@
 
 		function resumeAutoplay(force) {
 			if (force) {
-				paused = false;
 				startAutoplay(true);
 				return;
 			}
-			if (paused || userPaused || pointerHover || focusWithin) {
+			if (document.hidden || touchActive || userPaused || pointerHover || focusWithin) {
 				stopAutoplay();
 				syncToggle();
 				return;
@@ -187,7 +188,6 @@
 		rail.addEventListener('pointerenter', function (event) {
 			if (event.pointerType === 'mouse') {
 				pointerHover = true;
-				paused = true;
 				stopAutoplay();
 				syncToggle();
 			}
@@ -195,13 +195,11 @@
 		rail.addEventListener('pointerleave', function (event) {
 			if (event.pointerType === 'mouse') {
 				pointerHover = false;
-				paused = false;
 				resumeAutoplay();
 			}
 		});
 		rail.addEventListener('focusin', function () {
 			focusWithin = true;
-			paused = true;
 			stopAutoplay();
 			syncToggle();
 		});
@@ -209,7 +207,6 @@
 			window.setTimeout(function () {
 				if (!rail.contains(document.activeElement)) {
 					focusWithin = false;
-					paused = false;
 					resumeAutoplay();
 				}
 			}, 0);
@@ -230,19 +227,16 @@
 			touchStartX = event.touches[0].clientX;
 			touchStartY = event.touches[0].clientY;
 			touchActive = true;
-			paused = true;
 			stopAutoplay();
 			syncToggle();
 		}, { passive: true });
 
 		track.addEventListener('touchend', function (event) {
 			if (!touchActive) {
-				paused = false;
 				resumeAutoplay();
 				return;
 			}
 			touchActive = false;
-			paused = false;
 
 			var touch = event.changedTouches && event.changedTouches[0];
 			if (!touch) {
@@ -266,7 +260,6 @@
 
 		track.addEventListener('touchcancel', function () {
 			touchActive = false;
-			paused = false;
 			resumeAutoplay();
 		});
 
@@ -283,6 +276,15 @@
 				resumeAutoplay();
 			}
 		});
+
+		if (motionQuery && motionQuery.addEventListener) {
+			motionQuery.addEventListener('change', function (event) {
+				reduceMotion = event.matches;
+				stopAutoplay();
+				syncToggle();
+				resumeAutoplay();
+			});
+		}
 
 		updateState(0);
 		syncToggle();

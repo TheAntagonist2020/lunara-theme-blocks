@@ -18,16 +18,13 @@ const executablePath = process.env.LUNARA_BROWSER_EXECUTABLE || [
     '/usr/bin/google-chrome',
 ].find(fs.existsSync);
 
-const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${fs.readFileSync(path.join(root,'style.css'),'utf8')}\n${fs.readFileSync(path.join(root,'assets/css/lunara-review-archive.css'),'utf8')}</style><style>
     * { box-sizing: border-box; }
     body { margin: 0; padding: 16px; background: #07101b; color: #fafbfc; }
     .lunara-review-archive-page { width: min(100%, 360px); margin: 0 auto; }
     .lunara-review-archive-rail-controls { display: flex; gap: 8px; }
-    .lunara-review-archive-rail-control,
-    .lunara-review-archive-rail-toggle,
-    .lunara-review-archive-rail-dot { min-width: 44px; min-height: 44px; }
-    .lunara-review-archive-rail-track { display: flex; gap: 16px; width: 300px; max-width: 100%; overflow-x: auto; scroll-snap-type: x mandatory; }
-    .lunara-review-archive-rail-item { flex: 0 0 260px; height: 120px; scroll-snap-align: start; background: #102238; }
+    .lunara-review-archive-page .lunara-review-archive-rail-track { display: flex; gap: 16px !important; width: 300px !important; max-width: 100%; overflow-x: auto; scroll-snap-type: x mandatory; }
+    .lunara-review-archive-page .lunara-review-archive-rail-item { flex: 0 0 260px !important; height: 120px; scroll-snap-align: start; background: #102238; }
     .lunara-review-archive-rail-dots { display: flex; flex-wrap: wrap; }
     @media (prefers-reduced-motion: reduce) { .lunara-review-archive-rail-track { scroll-behavior: auto; } }
 </style></head><body><main class="lunara-review-archive-page"><section class="lunara-review-archive-dynamic-rail" data-lunara-dynamic-rail data-lunara-dynamic-rail-autoplay="800" aria-label="Current companion review files"><div class="lunara-review-archive-rail-controls"><button type="button" class="lunara-review-archive-rail-control" data-lunara-dynamic-rail-prev aria-label="Previous companion review">‹</button><button type="button" class="lunara-review-archive-rail-control" data-lunara-dynamic-rail-next aria-label="Next companion review">›</button><button type="button" class="lunara-review-archive-rail-toggle" data-lunara-dynamic-rail-toggle aria-pressed="false">Pause</button></div><div class="lunara-review-archive-rail-track" data-lunara-dynamic-rail-track tabindex="0"><div class="lunara-review-archive-rail-item" data-lunara-dynamic-rail-item>One</div><div class="lunara-review-archive-rail-item" data-lunara-dynamic-rail-item>Two</div><div class="lunara-review-archive-rail-item" data-lunara-dynamic-rail-item>Three</div></div><div class="lunara-review-archive-rail-dots"><button type="button" class="lunara-review-archive-rail-dot is-active" data-lunara-dynamic-rail-dot data-lunara-dynamic-rail-index="0" aria-current="true" aria-label="Go to companion review 1"></button><button type="button" class="lunara-review-archive-rail-dot" data-lunara-dynamic-rail-dot data-lunara-dynamic-rail-index="1" aria-label="Go to companion review 2"></button><button type="button" class="lunara-review-archive-rail-dot" data-lunara-dynamic-rail-dot data-lunara-dynamic-rail-index="2" aria-label="Go to companion review 3"></button></div></section></main></body></html>`;
@@ -63,11 +60,14 @@ function check(value, message) {
                 check((await toggle.textContent()).trim() === 'Play' && await toggle.getAttribute('aria-pressed') === 'true', 'Pause must expose the user-paused state.');
                 await toggle.click();
                 check((await toggle.textContent()).trim() === 'Pause' && await toggle.getAttribute('aria-pressed') === 'false', 'Play must restore automatic rotation.');
-                await page.waitForFunction(() => document.querySelector('[data-lunara-dynamic-rail-track]').scrollLeft > 0);
+                await page.waitForFunction(() => document.querySelector('[data-lunara-dynamic-rail-dot].is-active').getAttribute('data-lunara-dynamic-rail-index') !== '0');
                 check(await rail.locator('[data-lunara-dynamic-rail-dot].is-active').getAttribute('data-lunara-dynamic-rail-index') !== '0', 'Play must resume automatic rotation while its control retains focus.');
+                await toggle.click();
             }
+            await rail.locator('[data-lunara-dynamic-rail-dot]').first().click();
+            await page.waitForFunction(() => document.querySelector('[data-lunara-dynamic-rail-track]').scrollLeft < 2);
             await rail.locator('[data-lunara-dynamic-rail-next]').click();
-            await page.waitForFunction(() => document.querySelector('[data-lunara-dynamic-rail-track]').scrollLeft > 0);
+            await page.waitForFunction(() => document.querySelector('[data-lunara-dynamic-rail-dot].is-active').getAttribute('data-lunara-dynamic-rail-index') === '1');
             check(await rail.locator('[data-lunara-dynamic-rail-dot].is-active').getAttribute('data-lunara-dynamic-rail-index') === '1', `${reducedMotion}: next must update the active dot.`);
             await track.focus();
             await page.keyboard.press('ArrowLeft');

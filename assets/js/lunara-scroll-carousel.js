@@ -4,8 +4,9 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
         document.querySelectorAll('[data-lunara-carousel]').forEach(function(section) {
+            let reduceMotion = motionQuery.matches;
             const track = section.querySelector('[data-lunara-carousel-track]');
             const prev = section.querySelector('[data-lunara-carousel-prev]');
             const next = section.querySelector('[data-lunara-carousel-next]');
@@ -125,6 +126,7 @@ document.addEventListener('DOMContentLoaded', function () {
             let userPaused = false;
             let pointerHover = false;
             let focusWithin = false;
+            let touchActive = false;
 
             function syncToggle() {
                 if (!toggle) {
@@ -135,6 +137,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 toggle.setAttribute('aria-label', reduceMotion ? 'Autoplay disabled for reduced motion' : (paused ? 'Play ' + carouselLabel + ' rotation' : 'Pause ' + carouselLabel + ' rotation'));
                 toggle.setAttribute('aria-pressed', userPaused ? 'true' : 'false');
                 toggle.classList.toggle('is-paused', paused);
+                toggle.disabled = reduceMotion || autoplay <= 0 || track.children.length < 2;
+                if (toggle.disabled) {
+                    toggle.setAttribute('aria-disabled', 'true');
+                    if (!reduceMotion) toggle.setAttribute('aria-label', 'Automatic rotation is turned off');
+                } else {
+                    toggle.removeAttribute('aria-disabled');
+                }
             }
 
             function stop() {
@@ -146,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             function start(force) {
                 stop();
-                if (userPaused || reduceMotion || autoplay <= 0 || track.children.length < 2 || (!allowMobileAutoplay && window.innerWidth <= 900) || (!force && (pointerHover || focusWithin))) {
+                if (document.hidden || touchActive || userPaused || reduceMotion || autoplay <= 0 || track.children.length < 2 || (!allowMobileAutoplay && window.innerWidth <= 900) || (!force && (pointerHover || focusWithin))) {
                     syncToggle();
                     return;
                 }
@@ -157,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             function resumeWhenAvailable() {
-                if (pointerHover || focusWithin || userPaused) {
+                if (document.hidden || touchActive || pointerHover || focusWithin || userPaused) {
                     stop();
                     syncToggle();
                     return;
@@ -205,15 +214,28 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }, 0);
             });
-            track.addEventListener('touchstart', stop, { passive: true });
-            track.addEventListener('touchend', resumeWhenAvailable, { passive: true });
-            track.addEventListener('touchcancel', resumeWhenAvailable, { passive: true });
+            track.addEventListener('touchstart', function () {
+                touchActive = true;
+                stop();
+            }, { passive: true });
+            function finishTouch() {
+                touchActive = false;
+                resumeWhenAvailable();
+            }
+            track.addEventListener('touchend', finishTouch, { passive: true });
+            track.addEventListener('touchcancel', finishTouch, { passive: true });
             document.addEventListener('visibilitychange', function () {
                 if (document.hidden) {
                     stop();
                 } else {
                     resumeWhenAvailable();
                 }
+            });
+            motionQuery.addEventListener('change', function (event) {
+                reduceMotion = event.matches;
+                stop();
+                syncToggle();
+                resumeWhenAvailable();
             });
             syncToggle();
             start();

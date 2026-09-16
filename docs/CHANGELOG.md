@@ -11,6 +11,28 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-16 — Theme 3.2.81 / Academy 2.7.86 completion follow-up
+
+Theme: the Academy dossier editor now checks the real canonical plugin reader,
+correcting its false Unavailable state. Both native carousel controllers honor
+reduced-motion changes immediately, preserve an explicit user pause, and prevent
+hover/focus/visibility events from restarting an active touch or hidden tab.
+Disabled autoplay exposes a disabled control. Reviews control styling lives in
+the cacheable archive asset; the new browser regression uses shipped styles.
+The earlier 3.2.81 shared Pause/Play, target sizes and labels remain included.
+
+Academy: shortcode-only database pages receive their styles and table scripts
+when needed. Embedded layout and explicit autoload values use WordPress's
+shortcode parser rather than loose attribute matching; autoload survives the
+renderer argument allowlist. Unrelated `?view=table` parameters no longer load
+DataTables on entity/index/ballot/Tracker V2 pages. Ballot and Tracker V2 assets
+load independently when a page also contains the database. Public record data,
+stored settings and cached payload shapes are unchanged.
+
+Parsing reference: [WordPress shortcode attributes](https://developer.wordpress.org/reference/functions/shortcode_atts/).
+Validation and release status are recorded in SESSION-LOG.md. These changes are
+candidates; verified production remains Theme 3.2.80 / Academy 2.7.85.
+
 ## 2026-09-14 — Theme 3.2.81 shared carousel controls
 
 The Reviews companion rail and the Oscars rotating-winners rail now share the

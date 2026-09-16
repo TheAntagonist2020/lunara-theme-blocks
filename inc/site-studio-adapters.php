@@ -510,7 +510,7 @@ if ( ! function_exists( 'lunara_site_studio_oscars_portal_dependency' ) ) {
 }
 if ( ! function_exists( 'lunara_site_studio_oscars_ledger_dependency' ) ) {
 	function lunara_site_studio_oscars_ledger_dependency() {
-		return function_exists( 'lunara_oscars_plugin_instance' ) && is_object( lunara_oscars_plugin_instance() );
+		return function_exists( 'lunara_oscars_reader' ) && is_object( lunara_oscars_reader() );
 	}
 }
 
