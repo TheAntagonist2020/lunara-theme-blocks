@@ -11,6 +11,22 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-16 — Theme 3.2.84: compact Reviews and Journal openings
+
+Condense the oversized archive introductions and stacked control panels so
+readers reach the articles sooner. Reviews uses a smaller title, tighter
+spacing and one flat sort/year-filter toolbar. Journal uses a short masthead,
+plain desk status, and compact section/topic and sorting controls. Remove the
+Journal Types/Archive Types row and redundant Desk Mix; preserve trailer
+retention links independently of the removed row.
+
+Hide the repeated Review Order and Desk Order headings while retaining authored
+supporting copy. Preserve saved Studio slot order/visibility, archive queries,
+article cards and existing filter links. Route styles and first-paint CSS share
+the new geometry; retired Reviews panel rules keep both stylesheets within their
+existing size limits. This is a theme-only candidate; release state and focused
+preview evidence are in SESSION-LOG.md.
+
 ## 2026-09-16 — Theme 3.2.83: centered Oscars captions
 
 Center all poster-card captions and Board status badges across the Oscars page,

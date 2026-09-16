@@ -78,30 +78,20 @@ $section_terms = lunara_get_journal_archive_filter_terms( 'journal_section', abs
 $topic_terms = lunara_get_journal_archive_filter_terms( 'journal_topic', absint( $journal_config['filter_caps']['journal_topic'] ), $current_term );
 $legacy_type_terms = lunara_get_journal_archive_filter_terms( 'journal_type', absint( $journal_config['filter_caps']['journal_type'] ), $current_term );
 
-$has_section_terms = is_array( $section_terms ) && ! empty( $section_terms );
-$primary_terms     = $has_section_terms ? $section_terms : $legacy_type_terms;
-$primary_label     = $has_section_terms ? $journal_labels['filter_sections'] : $journal_labels['filter_types'];
 $journal_filter_groups = array();
 
-if ( is_array( $primary_terms ) && ! empty( $primary_terms ) ) {
-	$journal_filter_groups[] = array( 'label' => $primary_label, 'terms' => $primary_terms );
+if ( is_array( $section_terms ) && ! empty( $section_terms ) ) {
+	$journal_filter_groups[] = array( 'label' => $journal_labels['filter_sections'], 'terms' => $section_terms );
 }
 if ( is_array( $topic_terms ) && ! empty( $topic_terms ) ) {
 	$journal_filter_groups[] = array( 'label' => $journal_labels['filter_topics'], 'terms' => $topic_terms );
 }
-if ( $has_section_terms && is_array( $legacy_type_terms ) && ! empty( $legacy_type_terms ) ) {
-	$journal_filter_groups[] = array( 'label' => $journal_labels['filter_archive_types'], 'terms' => $legacy_type_terms );
-}
-
-$journal_lane_count = 0;
-foreach ( $journal_filter_groups as $filter_group ) {
-	$journal_lane_count += count( $filter_group['terms'] );
-}
 
 $latest_journal_url = ! empty( $latest_journal[0] ) ? get_permalink( (int) $latest_journal[0] ) : get_post_type_archive_link( 'journal' );
 $trailer_lane_url   = get_post_type_archive_link( 'journal' );
-foreach ( $journal_filter_groups as $filter_group ) {
-	foreach ( $filter_group['terms'] as $type_term ) {
+// Types no longer add another filter row; keep their existing retention links.
+foreach ( array( $section_terms, $topic_terms, $legacy_type_terms ) as $retention_terms ) {
+	foreach ( is_array( $retention_terms ) ? $retention_terms : array() as $type_term ) {
 		if ( ! $type_term instanceof WP_Term || 'trailer' !== sanitize_title( $type_term->slug ) ) {
 			continue;
 		}
@@ -157,7 +147,6 @@ ob_start();
 <div class="lunara-journal-archive-deskbar lunara-journal-archive-slot-deskbar" data-lunara-site-studio-section="deskbar" aria-label="<?php esc_attr_e( 'Journal desk status', 'lunara-film' ); ?>">
 	<span><strong><?php echo esc_html( $journal_labels['desk_count'] ); ?></strong> <?php echo esc_html( $journal_total . ' ' . ( 1 === $journal_total ? $journal_labels['file_singular'] : $journal_labels['file_plural'] ) ); ?></span>
 	<?php if ( '' !== $latest_label ) : ?><span><strong><?php echo esc_html( $journal_labels['desk_latest'] ); ?></strong> <?php echo esc_html( $latest_label ); ?></span><?php endif; ?>
-	<?php if ( $journal_lane_count > 0 ) : ?><span><strong><?php echo esc_html( $journal_labels['desk_mix'] ); ?></strong> <?php echo esc_html( $journal_lane_count . ' ' . ( 1 === $journal_lane_count ? $journal_labels['lane_singular'] : $journal_labels['lane_plural'] ) ); ?></span><?php endif; ?>
 </div>
 <?php
 $journal_section_markup['deskbar'] = ob_get_clean();
