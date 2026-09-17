@@ -32,6 +32,44 @@ if ( ! function_exists( 'lunara_journal_archive_card_is_visual_lead' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lunara_journal_archive_card_image_sizes' ) ) {
+	/**
+	 * Match the route's 620/900px columns, 768px padding change and 1180px cap.
+	 *
+	 * Sizes describes the image inside the card's two 1px borders. Card/media
+	 * minimum heights do not change that width. Resolve the same preview-aware
+	 * config as the route CSS once, rather than reloading it for every card.
+	 *
+	 * @param array|null $config Optional resolved config, otherwise current request.
+	 * @return string
+	 */
+	function lunara_journal_archive_card_image_sizes( $config = null ) {
+		if ( null === $config ) {
+			static $public_config = null;
+			if ( null === $public_config ) {
+				$public_config = function_exists( 'lunara_journal_archive_studio_get_public_config' )
+					? lunara_journal_archive_studio_get_public_config()
+					: array();
+				$public_config = is_array( $public_config ) ? $public_config : array();
+			}
+			$config = $public_config;
+		}
+
+		$density = isset( $config['presentation']['density'] ) && is_string( $config['presentation']['density'] )
+			? $config['presentation']['density']
+			: 'editorial';
+		$gaps = array( 'compact' => 16, 'editorial' => 24, 'showcase' => 30 );
+		$gap  = isset( $gaps[ $density ] ) ? $gaps[ $density ] : 24;
+
+		return sprintf(
+			'(max-width: 620px) calc(100vw - 34px), (max-width: 768px) calc((100vw - %dpx) / 2 - 2px), (max-width: 900px) calc((92vw - %dpx) / 2 - 2px), calc((min(100vw, 1180px) - clamp(32px, 8vw, 80px) - %dpx) / 3 - 2px)',
+			32 + $gap,
+			$gap,
+			2 * $gap
+		);
+	}
+}
+
 if ( ! function_exists( 'lunara_journal_archive_card_image_attributes' ) ) {
 	/**
 	 * Build one stable loading/sizing contract for Journal archive cards.
@@ -46,7 +84,7 @@ if ( ! function_exists( 'lunara_journal_archive_card_image_attributes' ) ) {
 			'loading'       => $is_visual_lead ? 'eager' : 'lazy',
 			'fetchpriority' => $is_visual_lead ? 'high' : 'auto',
 			'decoding'      => 'async',
-			'sizes'         => '(max-width: 640px) 92vw, (max-width: 980px) 46vw, (max-width: 1280px) 31vw, 380px',
+			'sizes'         => lunara_journal_archive_card_image_sizes(),
 			'alt'           => trim( (string) $alt ),
 		);
 	}

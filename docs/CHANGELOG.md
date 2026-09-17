@@ -11,6 +11,20 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-17 — Theme 3.2.86: accurate Journal image selection
+
+Align Journal card image `sizes` with the uniform grid's actual 620/900px
+column breakpoints, 768px padding change, 1180px shell limit, card borders and
+saved compact/editorial/showcase spacing. Browsers can select a source image
+appropriate to the rendered width instead of using the retired 640/980px
+breakpoints and oversized desktop estimate. Resolve preview-aware layout
+configuration once per request; preserve native responsive sources, CDN
+fallbacks and first-image priority.
+
+The separate live plugin cleanup is documented in
+`PERFORMANCE-PLUGIN-AUDIT-2026-09-17.md`. This source change is a branch
+candidate; it does not alter the live theme until the normal manual deployment.
+
 ## 2026-09-16 — Theme 3.2.85: uniform Journal cards
 
 Make the first Journal article the same size as the rest of the archive. All

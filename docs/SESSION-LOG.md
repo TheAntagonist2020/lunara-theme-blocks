@@ -25,6 +25,197 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-17 — Live plugin cleanup and Journal 3.2.86 candidate
+
+Dalton requested a performance-plugin redundancy audit, then explicitly granted
+authority to deactivate unused/redundant plugins without repeated permission
+questions. UpdraftPlus, WP Social and Galleryberg were deactivated, retaining
+their data. Boost's administrator Image Guide overlay was switched off. Active
+plugins fell from 37 to 34; all 59 remain installed. The separate theme candidate
+corrects Journal responsive-image width hints and is not deployed.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Final authenticated plugin inventory | 59 installed, 34 active, 25 inactive; all three targeted plugins inactive |
+| Boost after settings-page reload | Image Guide off; image CDN remains on |
+| Anonymous Home, Journal, Reviews, Oscars after final cleanup | HTTP 200; expected build `3.2.85+20260917-031752`; no missing-config/critical-error body |
+| Principal CSS bundle on all four routes | Exactly 112,414 fewer uncompressed bytes each; no WP Social paths or wslu rules |
+
+### What changed and why
+
+UpdraftPlus had no backup schedules and two old backup sets. WP Social had no
+enabled sharing/counter providers or login placements, no published shortcode
+matches and no theme integration. Galleryberg had no dependencies in the checked
+content, patterns or theme. No uninstall, content/media/backup deletion, manual
+cache purge, restore or theme deployment occurred.
+
+Keep Jetpack, Boost and Cimo: hosting owns page caching, Boost owns CSS/JS/LCP
+optimization, and Cimo compresses uploads. Jetpack/Boost CDN controls synchronize;
+they are not duplicate processing pipelines. Retain Stackable and GutenKit after
+finding actual content/pattern dependencies. WP All Export has a configured Reviews
+export. Full inventory, feature settings, evidence limits and source references:
+`PERFORMANCE-PLUGIN-AUDIT-2026-09-17.md`.
+
+Theme 3.2.86 aligns image sizes with the Journal's uniform card widths, real column
+breakpoints and saved density. See CHANGELOG.md for source-level detail.
+
+### Commit and gate ledger
+
+| Item | State |
+| --- | --- |
+| Theme main | `c67ebf8`, unchanged; 3.2.85 remains live |
+| Prior continuity record | `407123f`, confirmed FileZilla cause; pushed on `codex/live-record-3.2.85` |
+| Theme candidate | `b4c388d` on `codex/journal-image-sizing-3.2.86`; no PR, main merge or deployment |
+| Focused source verification | Two PHP syntax checks and one existing responsive-media runtime passed |
+| Browser fixture | 13/13 Chrome scenarios loaded correct source candidates; CSS slot math matches actual width within 0.133px at current fractional scale |
+| Whitespace | `git diff --check` passed |
+| Broad suites / Lighthouse / deploy canary | Not run; no architecture change or theme deployment in this pass |
+
+The source and this record are pushed together on the candidate branch before
+handoff. No rollback-hatch update is necessary because main did not change.
+
+### Logged, not fixed / next move
+
+- Boost's critical-CSS dashboard reports two failed generations and stale/missing
+  taxonomy targets. The Oscars inline critical CSS is also large. A focused
+  asset/critical-CSS pass is the next optimization task, not another cache plugin.
+- Inactive-plugin deletion was not pursued; no speed gain is claimed from files
+  that were already inactive. Non-public custom post types were not exhaustively
+  exported, and no per-plugin CPU or fresh Core Web Vitals benchmark was performed.
+- Journal 3.2.86 is ready for a requested PR/merge, followed by Dalton's manual
+  WordPress.com theme deployment and the versioned live verifier.
+- The FileZilla incident cause remains settled; no further forensic work occurred.
+
+## 2026-09-17 — Outage cause confirmed: accidental FileZilla deletion
+
+Dalton confirmed that he accidentally deleted `wp-config.php` using FileZilla.
+This supplies the missing cause for the configuration outage below. The
+deployment/sync explanation in the subsequent support response was a hypothesis,
+not a logged file operation. The precautionary deployment-scope audit was stopped
+after Dalton identified the action; no settings, theme, or plugin changes were made.
+
+Support's follow-up, supplied by Dalton, confirms that all four failed restores
+are stopped, none remains queued/running, and automatic backups resumed normally.
+The separate internal reason for restore `error_code 1` was not established.
+
+Recovery evidence remains the preceding session's successful homepage/login
+checks and Journal/Oscars live sentinels on `3.2.85+20260917-031752`. No repeated
+site checks or test suites were needed for this documentation-only clarification.
+No new release, merge to main, deployment, restore, or cache purge occurred.
+
+Next: no further recovery action is required. An optional prevention step is to
+keep routine FileZilla work within the specific theme/plugin directories and
+review remote deletion confirmations before accepting them.
+
+## 2026-09-17 — Site recovered after WordPress.com configuration repair
+
+Lunara Film (WordPress.com site `247355955`) is reachable again. After four
+managed restores failed, Dalton authorized an urgent support request. A
+WordPress.com Happiness Engineer reported replacing `wp-config.php` with the
+default file. Independent public checks at approximately **08:38 UTC / 03:38
+Central** confirm recovery on the expected Theme `3.2.85+20260917-031752`.
+Support subsequently confirmed that no database, media, theme, or other files
+were changed. The cause of the missing configuration and restore failures
+remains open.
+
+### Verified current state
+
+| Probe or hosting record | Result |
+| --- | --- |
+| Before repair: homepage, `/journal/`, `/wp-login.php` | HTTP 200, 109-byte body: `Missing wp-config.php please contact WordPress.com Support.`; not a working site |
+| After repair: homepage | HTTP 200; 204,783 bytes; normal Lunara Film title; missing-config and critical-error messages absent |
+| After repair: `/wp-login.php` | HTTP 200; 8,014 bytes; normal WordPress login title; error messages absent |
+| After repair: three anonymous Journal identity reads | All HTTP 200 and `3.2.85+20260917-031752` |
+| Journal canonical live sentinel | Exit 0; live proof and coherent; all 10 contracts pass; eight nonblank cards |
+| Oscars canonical live sentinel | Exit 0; live proof and coherent; all 10 contracts pass |
+| Theme repository | `origin/main` remains `c67ebf8`, PR #205; no new main change |
+| Backup status | 393 available; last backup finished |
+| Managed restores | Four failures, each reported as `System error` |
+| Support request | Delivered; engineer confirms only configuration changed; cause and failed-job details pending |
+
+The preceding release was independently healthy before this incident; that
+earlier GO was not treated as evidence during the outage. The table above
+records new evidence collected after the host repair.
+
+### Recovery attempted
+
+Dalton's three restore attempts at **08:06, 08:08, and 08:10 UTC** failed.
+The subsequently authorized attempt selected **only `wp-config.php`** from the
+September 16 daily backup shown as **6:29 PM**, snapshot `1789601380.355`.
+It started at **08:20:47.481 UTC** and failed at **08:20:54.181 UTC**. The
+lingering 0% restore display is stale; the backend reports failure.
+
+Codex performed no theme rollback, database/media/theme restore, cache purge,
+or deployment. The urgent support request asks for configuration/host repair while
+preserving the current database, media, and theme.
+
+Dalton supplied Jetpack download `573496`, filename
+`jetpack-backup-lunarafilm-com-2026-09-17-05-31-00.tar.gz`. Its endpoint returned
+HTTP 200 with a 10,876,427,742-byte length; a bounded ranged archive scan returned
+HTTP 206 but did not reach `wp-config.php` before its limit. No whole archive was
+downloaded and no configuration was extracted. This was a recovery reference,
+not a full archive-integrity verification. The private download token is omitted.
+
+### Commit and gate ledger
+
+No code shipped and no release version changed during this incident. Existing
+release merge: theme `c67ebf8` / PR #205. Focused endpoint, repository, backup,
+restore-status, and support-delivery checks supplied the evidence above.
+The shell canary initially could not run because the checkout has CRLF endings;
+an ephemeral LF copy completed its three identity reads but Bash lacked `node`.
+Both unchanged canonical JavaScript sentinels were then run directly with
+Windows Node and `--expected-version 3.2.85`, each exiting 0. Thus all canary
+components passed, but the shell wrapper itself did not exit 0. No broad suites
+were run, and no test or source files were changed.
+
+### Corrections and open items
+
+No prior release evidence is retracted. A legacy hosting-dashboard error refers
+to `v3.2.22`; its relevance is unverified and potentially stale, and it is not a
+diagnosed cause. Support mentioned SFTP connections but explicitly did not
+establish a cause; connection presence alone is not evidence of a deletion or
+its actor. Requested actual file-operation records/timestamps, the cause of
+restore failures, and confirmation that failed jobs are fully stopped. Further
+speculative restore attempts are not queued by Codex.
+
+### Whose move it is next
+
+**WordPress.com Support:** explain the configuration loss and failed restores,
+and confirm failed-job status. **Dalton/Codex:** retain the
+support conversation and record that answer; public recovery is now verified.
+No further theme deployment is needed for this incident record.
+
+## 2026-09-16 — Theme 3.2.85 verified live
+
+Dalton confirmed merge and manual deployment. Fresh origin/main is `c67ebf8`
+(PR #205), containing uniform Journal cards from `4317c23`; its tree matches
+the prepared release. The versioned production canary completed with exit 0.
+
+| Live probe | Result |
+| --- | --- |
+| Three anonymous Journal identity reads | HTTP 200; all report `3.2.85+20260917-031752` |
+| Canonical Journal sentinel | `LIVE_COHERENT`, exit 0 |
+| Canonical Oscars sentinel | `LIVE_COHERENT`, exit 0 |
+| Overall canary | GO — Theme 3.2.85 coherently live |
+
+Verification ran September 16 at approximately 23:38 America/Chicago. This was
+the focused post-deploy command `bash tests/tools/lunara-canary-verify.sh 3.2.85`;
+no broad regression suites or repeated visual previews were needed. Previous
+desktop/phone preview evidence remains in the candidate entry below. No agent
+deployment, production write or cache purge occurred.
+
+Rebuilt the standing exact rollback branch / PR #159 on `c67ebf8`, verifying
+its parent and exact tree `c55bf394594149db2888295c5d51f85f47b2b520` before the
+leased push. This documentation-only record is on `codex/live-record-3.2.85`.
+No corrections or new issues. The previously deleted automated-check workflow
+remains recoverable; broader Critical CSS/performance work remains open.
+
+Next: this release is complete. The next useful work is the remaining shared
+theme/plugin performance work; no further deployment is needed for this record.
+If the record is merged to main later, refresh the rollback parent again.
+
 ## 2026-09-16 — Theme 3.2.85: repository audit and uniform Journal candidate
 
 Dalton asked whether GitHub had been damaged and requested consistent Journal

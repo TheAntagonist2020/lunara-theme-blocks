@@ -15,6 +15,7 @@ $lunara_test_image_outputs = array();
 $lunara_test_photon_calls = array();
 $lunara_test_photon_available = true;
 $lunara_test_photon_url_mode = 'https';
+$lunara_test_config_reads = 0;
 $lunara_test_attachments = array(
 	101 => array(
 		'post_type' => 'attachment',
@@ -146,7 +147,7 @@ function wp_get_attachment_image( $id, $size, $icon, $attrs ) {
 		return '';
 	}
 	$html = 'full' === $size ? $lunara_test_attachments[ $id ]['html_full'] : $lunara_test_attachments[ $id ]['html_route'];
-	if ( 101 === $id || '' === $html ) {
+	if ( '' === $html ) {
 		$lunara_test_image_outputs[] = $html;
 		return $html;
 	}
@@ -182,6 +183,11 @@ function jetpack_photon_url( $url, $args = array(), $scheme = null ) {
 function is_post_type_archive( $type = '' ) { global $lunara_test_is_archive; return 'journal' === $type && $lunara_test_is_archive; }
 function is_paged() { global $lunara_test_is_paged; return $lunara_test_is_paged; }
 function is_tax( $taxonomies = '' ) { global $lunara_test_is_tax; return $lunara_test_is_tax; }
+function lunara_journal_archive_studio_get_public_config() {
+	global $lunara_test_config_reads;
+	$lunara_test_config_reads++;
+	return array( 'presentation' => array( 'density' => 'editorial' ) );
+}
 
 $module = dirname( __DIR__ ) . '/inc/journal-archive-media.php';
 lunara_test_assert( is_file( $module ), 'The Journal archive media module must exist.' );
@@ -205,17 +211,21 @@ function lunara_test_srcset_candidates( $html ) {
 	return $result;
 }
 
-$base_attrs = array(
-	'class'         => 'lunara-review-grid-poster',
-	'loading'       => 'lazy',
-	'fetchpriority' => 'auto',
-	'decoding'      => 'async',
-	'sizes'         => '(max-width: 640px) 92vw, (max-width: 980px) 46vw, (max-width: 1280px) 31vw, 380px',
-	'alt'           => 'A useful editorial description',
-);
+$base_attrs = lunara_journal_archive_card_image_attributes( false, 'A useful editorial description' );
+$expected_sizes = '(max-width: 620px) calc(100vw - 34px), (max-width: 768px) calc((100vw - 56px) / 2 - 2px), (max-width: 900px) calc((92vw - 24px) / 2 - 2px), calc((min(100vw, 1180px) - clamp(32px, 8vw, 80px) - 48px) / 3 - 2px)';
+lunara_test_assert( $expected_sizes === $base_attrs['sizes'], 'The image slot must follow route columns, padding, borders, shell cap and editorial gap.' );
+foreach ( array( 'compact' => array( 48, 16, 32 ), 'showcase' => array( 62, 30, 60 ) ) as $density => $offsets ) {
+	$sizes = lunara_journal_archive_card_image_sizes( array( 'presentation' => array( 'density' => $density ) ) );
+	lunara_test_assert( false !== strpos( $sizes, sprintf( '(100vw - %dpx) / 2', $offsets[0] ) ), "{$density} tablet slots must include their configured gap." );
+	lunara_test_assert( false !== strpos( $sizes, sprintf( '(92vw - %dpx) / 2', $offsets[1] ) ), "{$density} wide-tablet slots must include fluid shell padding." );
+	lunara_test_assert( false !== strpos( $sizes, sprintf( '80px) - %dpx) / 3', $offsets[2] ) ), "{$density} desktop slots must subtract both gaps." );
+}
+lunara_test_assert( $expected_sizes === lunara_journal_archive_card_image_sizes( array( 'presentation' => array( 'density' => array() ) ) ), 'Malformed density must use the same editorial fallback as public layout.' );
+lunara_test_assert( $expected_sizes === lunara_journal_archive_card_image_sizes( array( 'presentation' => array( 'density' => 'editorial', 'card_min_height' => 560, 'media_min_height' => 360 ) ) ), 'Minimum card and media heights must not change the image slot width.' );
 
 $native = lunara_journal_archive_card_image_markup( 101, $base_attrs );
-lunara_test_assert( $native === $lunara_test_attachments[101]['html_route'], 'A working route-size native responsive image must round-trip byte-for-byte.' );
+lunara_test_assert( $native === end( $lunara_test_image_outputs ), 'A working route-size native responsive image must round-trip byte-for-byte after WordPress applies attributes.' );
+lunara_test_assert( $expected_sizes === lunara_test_img_attr( $native, 'sizes' ), 'A native responsive image must receive the same accurate slot hint as CDN fallbacks.' );
 lunara_test_assert( 1 === count( $lunara_test_image_calls ) && 'lunara-hero-spotlight' === $lunara_test_image_calls[0]['size'], 'A working route-size srcset must not trigger a full-size probe.' );
 
 $photon_before = count( $lunara_test_photon_calls );
@@ -236,7 +246,7 @@ foreach ( array( 108, 103, 104, 110 ) as $id ) {
 	}
 	lunara_test_assert( max( $widths ) <= min( 1920, $source['width'] ), "Attachment {$id} must never upscale or exceed the 1920px route ceiling." );
 	lunara_test_assert( (string) $source['width'] === lunara_test_img_attr( $markup, 'width' ) && (string) $source['height'] === lunara_test_img_attr( $markup, 'height' ), "Attachment {$id} must preserve honest intrinsic dimensions." );
-	lunara_test_assert( '(max-width: 640px) 92vw, (max-width: 980px) 46vw, (max-width: 1280px) 31vw, 380px' === lunara_test_img_attr( $markup, 'sizes' ), "Attachment {$id} must preserve the route sizes contract." );
+	lunara_test_assert( $expected_sizes === lunara_test_img_attr( $markup, 'sizes' ), "Attachment {$id} must preserve the route sizes contract." );
 	lunara_test_assert( 'A useful editorial description' === lunara_test_img_attr( $markup, 'alt' ), "Attachment {$id} must preserve meaningful alt text." );
 	lunara_test_assert( strlen( $markup ) < 4096, "Attachment {$id} responsive markup must stay compact." );
 
@@ -284,5 +294,6 @@ $lunara_test_is_paged   = false;
 $lunara_test_is_archive = false;
 $lunara_test_is_tax     = true;
 lunara_test_assert( ! lunara_journal_archive_card_is_visual_lead( 1 ), 'Journal taxonomy archives must remain uniform without a visual lead.' );
+lunara_test_assert( 1 === $lunara_test_config_reads, 'Building attributes for several cards must resolve public/preview config only once per request.' );
 
 fwrite( STDOUT, "Journal archive responsive media runtime passed.\n" );
