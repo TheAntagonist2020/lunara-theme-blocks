@@ -15,14 +15,6 @@
 
 This document is retained as historical recovery context for that retired theme.
 
-> **Two things in here are not merely outdated, they are the opposite of
-> current practice.** §TL;DR item 3 describes scp deploys from a Windows
-> desktop — deployment is now a push-button *Deployer for Git (Pro)* action in
-> the Lunara Control Desk. §TL;DR item 4 says *"Always Clear Cache after a
-> deploy"* — the standing rule is now **never clear cache as a fix**, because a
-> release that needs a flush to look correct is a broken release. That is the
-> 3.2.48 incident. See `AGENTS.md` and `docs/GO-LIVE-RUNBOOK.md`.
-
 ---
 
 ## TL;DR — If you only read one section, read this
