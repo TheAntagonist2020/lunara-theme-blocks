@@ -25,6 +25,27 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-17 — Outage cause confirmed: accidental FileZilla deletion
+
+Dalton confirmed that he accidentally deleted `wp-config.php` using FileZilla.
+This supplies the missing cause for the configuration outage below. The
+deployment/sync explanation in the subsequent support response was a hypothesis,
+not a logged file operation. The precautionary deployment-scope audit was stopped
+after Dalton identified the action; no settings, theme, or plugin changes were made.
+
+Support's follow-up, supplied by Dalton, confirms that all four failed restores
+are stopped, none remains queued/running, and automatic backups resumed normally.
+The separate internal reason for restore `error_code 1` was not established.
+
+Recovery evidence remains the preceding session's successful homepage/login
+checks and Journal/Oscars live sentinels on `3.2.85+20260917-031752`. No repeated
+site checks or test suites were needed for this documentation-only clarification.
+No new release, merge to main, deployment, restore, or cache purge occurred.
+
+Next: no further recovery action is required. An optional prevention step is to
+keep routine FileZilla work within the specific theme/plugin directories and
+review remote deletion confirmations before accepting them.
+
 ## 2026-09-17 — Site recovered after WordPress.com configuration repair
 
 Lunara Film (WordPress.com site `247355955`) is reachable again. After four
