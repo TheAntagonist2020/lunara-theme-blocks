@@ -32,7 +32,9 @@ managed restores failed, Dalton authorized an urgent support request. A
 WordPress.com Happiness Engineer reported replacing `wp-config.php` with the
 default file. Independent public checks at approximately **08:38 UTC / 03:38
 Central** confirm recovery on the expected Theme `3.2.85+20260917-031752`.
-The cause of the missing configuration and restore failures remains open.
+Support subsequently confirmed that no database, media, theme, or other files
+were changed. The cause of the missing configuration and restore failures
+remains open.
 
 ### Verified current state
 
@@ -47,7 +49,7 @@ The cause of the missing configuration and restore failures remains open.
 | Theme repository | `origin/main` remains `c67ebf8`, PR #205; no new main change |
 | Backup status | 393 available; last backup finished |
 | Managed restores | Four failures, each reported as `System error` |
-| Support request | Delivered; engineer reports configuration replacement; final cause/scope details requested |
+| Support request | Delivered; engineer confirms only configuration changed; cause and failed-job details pending |
 
 The preceding release was independently healthy before this incident; that
 earlier GO was not treated as evidence during the outage. The table above
@@ -88,14 +90,16 @@ were run, and no test or source files were changed.
 
 No prior release evidence is retracted. A legacy hosting-dashboard error refers
 to `v3.2.22`; its relevance is unverified and potentially stale, and it is not a
-diagnosed cause. Support has been asked to confirm repair scope, whether failed
-restore jobs are fully stopped, and the underlying cause. Further speculative
-restore attempts are not queued by Codex.
+diagnosed cause. Support mentioned SFTP connections but explicitly did not
+establish a cause; connection presence alone is not evidence of a deletion or
+its actor. Requested actual file-operation records/timestamps, the cause of
+restore failures, and confirmation that failed jobs are fully stopped. Further
+speculative restore attempts are not queued by Codex.
 
 ### Whose move it is next
 
 **WordPress.com Support:** explain the configuration loss and failed restores,
-and confirm the final repair scope/job status. **Dalton/Codex:** retain the
+and confirm failed-job status. **Dalton/Codex:** retain the
 support conversation and record that answer; public recovery is now verified.
 No further theme deployment is needed for this incident record.
 
