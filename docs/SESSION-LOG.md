@@ -25,6 +25,48 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-16 — Theme 3.2.85: repository audit and uniform Journal candidate
+
+Dalton asked whether GitHub had been damaged and requested consistent Journal
+card sizes. Freshly fetched main is `234068a`, following the 3.2.84 merge
+`508c507` / PR #204. Compared with our completed `d33d6e5`, the only change is
+deletion of `.github/workflows/lint.yml` (61 lines). Theme source and the archive
+improvements are intact; the expected history remains reachable. The removed
+workflow ran checks, not deployment. It is recoverable from `508c507`; it was
+not restored because Dalton explicitly requested lighter testing.
+
+The 3.2.85 candidate gives every Journal article the same card treatment,
+including the first item. Image frames, title styling, metadata space and
+footers align. See CHANGELOG.md for implementation details.
+
+| Focused verification | Result |
+| --- | --- |
+| Desktop preview, measured 1920px viewport | All eight cards 351 x 566px, image frames 220px high, titles 21.44px; identical title offsets and footer insets; no horizontal overflow |
+| Phone preview, measured 390px viewport | All eight cards 358 x 575px, image frames 223px high; titles allowed full visible overflow; no horizontal overflow |
+| Final nested first-paint guard | Phone card dimensions unchanged after reload |
+| PHP syntax | Both changed PHP files pass |
+| CSS size | Route 36,376 bytes / 40 KiB limit; variables plus critical seed 7,499 bytes / 8 KiB limit |
+| Diff review | Corrected mobile selector grouping; first-image priority, media fallbacks and badge output retained |
+| Whitespace | Pass |
+
+Preview evidence uses captured rendered Journal markup/styles with the candidate
+CSS and the template's metadata wrapper. No broad suites or new tests were run;
+no production settings, cache or deployment actions were taken. Production
+release identity was not independently canary-verified in this turn.
+
+Commit ledger: candidate `codex/uniform-journal-cards-3.2.85` starts from current
+main `234068a`. Refreshed the standing exact rollback branch / PR #159 on that
+main, checked its parent and exact tree
+`c55bf394594149db2888295c5d51f85f47b2b520`, and pushed with an exact lease.
+No corrections to prior entries. Broader Critical CSS/performance work remains
+open; this candidate addresses Journal sizing only.
+
+Next: merge this theme-only candidate and have Dalton manually deploy 3.2.85
+through the existing WordPress.com repository connection, then run the versioned
+live canary. The deleted workflow can be replaced with a small syntax check in
+a separate follow-up if desired; restoring the old full suite is not required
+to render the website.
+
 ## 2026-09-16 — Theme 3.2.84: compact archive header candidate
 
 Dalton marked the oversized Reviews and Journal openings and asked to condense
