@@ -25,17 +25,23 @@ test('only positive body anchors in every selector branch are removable', () => 
     ]) assert.equal(onlyPortalSelectors(selector), false, selector);
 });
 
-test('exact byte splicing preserves shared rules, order, comments and nested media', () => {
+test('splicing preserves CSS and order while cleaning only empty-line whitespace', () => {
     const remove = 'body.lunara-oscars-portal-page :is(.one,.two) { color: red; }';
     const source = '/* before */\r\n.shared { content: "},x{"; }\r\n' +
         '@media (max-width: 900px) {\r\n  /* keep */ ' + remove + '\r\n' +
         '  body.lunara-oscars-portal-page .a, body.home .a { color: blue; }\r\n}\r\n' +
-        '@supports (display: grid) {\n' + remove + '\n}\n' +
+        '@supports (display: grid) {\n\t  ' + remove + '\n}\n' +
         '@keyframes turn { from { opacity: 0; } to { opacity: 1; } }\n' +
-        '.shared { color: gold; }';
+        '.shared { color: gold; }\n\n   \n\t\n';
     const built = buildShell(source);
     assert.equal(built.ranges.length, 2);
-    assert.equal(built.retained, source.split(remove).join(''));
+    const expected = '/* before */\r\n.shared { content: "},x{"; }\r\n' +
+        '@media (max-width: 900px) {\r\n  /* keep */ \r\n' +
+        '  body.lunara-oscars-portal-page .a, body.home .a { color: blue; }\r\n}\r\n' +
+        '@supports (display: grid) {\n\n}\n' +
+        '@keyframes turn { from { opacity: 0; } to { opacity: 1; } }\n' +
+        '.shared { color: gold; }\n';
+    assert.equal(built.retained, expected);
     assert.doesNotThrow(() => postcss.parse(built.css));
 });
 

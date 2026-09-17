@@ -28,8 +28,9 @@ or changing the final design.
 
 Serve a generated non-portal shell on routes outside the Oscars portal, removing
 only whole rules whose every selector requires the portal body class. Retained
-rules keep their exact order and bytes; portal and preview paths keep the
-canonical full shell. This removes 107,839 source bytes (9,690 bytes with local
+rules keep their order and declarations; only empty-line indentation is cleaned
+up. Portal and preview paths keep the canonical full shell. This removes
+108,552 source bytes (9,719 bytes with local
 gzip) without changing the matching styles. Rebuild with
 `node tests/tools/build-shell-css.cjs` after editing the canonical shell; its
 `--check` mode and focused parser tests detect stale generated output.

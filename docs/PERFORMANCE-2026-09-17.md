@@ -49,10 +49,11 @@ their own fix; a faster LCP does not establish visual stability.
   the final production CLS must still be measured after deployment.
 - Serve a generated shell stylesheet outside the Oscars portal. Remove only
   complete rules whose every selector is positively anchored to
-  `body.lunara-oscars-portal-page`; retain all other bytes and cascade order.
+  `body.lunara-oscars-portal-page`; retain all other rules and cascade order,
+  cleaning only empty-line indentation and excess trailing blank lines.
   The full canonical shell remains on the portal, previews and fallback paths.
-  Source size falls from 185,982 to 78,143 bytes: 107,839 fewer raw bytes and
-  9,690 fewer bytes with local default gzip. Production compression/aggregation
+  Source size falls from 185,982 to 77,430 bytes: 108,552 fewer raw bytes and
+  9,719 fewer bytes with local default gzip. Production compression/aggregation
   can differ; this is not a measured live transfer reduction yet.
 
 The original `assets/css/lunara-shell.css` is the canonical editing surface.
