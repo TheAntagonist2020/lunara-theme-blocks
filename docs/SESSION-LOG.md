@@ -25,6 +25,95 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-17 — Edge caching live; performance 3.2.87 prepared
+
+Dalton confirmed the previous release was merged and live, and requested a much
+faster site while preserving intentional design. Theme 3.2.86 is now verified
+live. WordPress.com's global edge cache was disabled; it is now enabled and
+confirmed serving anonymous cache HITs. A separate 3.2.87 theme candidate reduces
+asset work and corrects the hero's startup width. It is not merged or deployed.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Main / PR #206 | `d3373c6`; candidate/main trees identical |
+| Versioned 3.2.86 canary | Exit 0 GO; three reads `3.2.86+20260917-165902` |
+| Journal and Oscars sentinels | Both `LIVE_COHERENT`, exit 0 |
+| Global edge cache | Enabled in hosting UI; success notice and checked state after reload |
+| Anonymous cache behavior | All four routes changed from BYPASS to MISS then HIT |
+| Repeat Home TTFB | 0.198 s → 0.073 s |
+| Repeat Journal TTFB | 1.684 s → 0.053 s |
+| Repeat Reviews TTFB | 1.841 s → 0.092 s |
+| Repeat Oscars TTFB | 2.056 s → 0.060 s |
+| One fresh mobile Home report | 70/100; FCP 0.96 s, LCP 1.96 s, TBT 0.08 s, CLS 0.88 |
+| Standing rollback hatch | Refreshed on main; exact 3.2.43 tree `c55bf394594149db2888295c5d51f85f47b2b520` verified |
+
+The timing comparison is two anonymous requests per route per state, not a
+population-wide guarantee. First cache misses still took 1.6–2.5 seconds.
+The previous mobile report was a day old (60/100, LCP 3.53 s); the new result
+does not isolate every cause of improvement. Full methods and limitations are
+in `PERFORMANCE-2026-09-17.md`.
+
+### What changed and why
+
+The live hosting change avoids repeated origin rendering on cache HITs. No cache
+purge, restoration, additional plugin deactivation or deployment occurred.
+The earlier 34-active-plugin cleanup remains in place.
+
+Theme 3.2.87 keeps first-hero image priority and exact sources, defers distant
+slide artwork, lazily loads the below-article Review poster, and omits portal-only
+shell rules on other routes. A synchronous width seed prevents the first hero
+slide from resizing when Splide starts. See CHANGELOG.md for implementation and
+the generated-CSS maintenance command. Artwork quality, typography and intended
+final composition are retained.
+
+### Commit and gate ledger
+
+| Item | State |
+| --- | --- |
+| Theme main | `d3373c6`, live 3.2.86 |
+| Source candidate | `a0b094f` plus the generated-whitespace correction on `codex/performance-3.2.87` |
+| Rollback | `claude/rollback-exact-theme-3.2.43` / PR #159 refreshed and pushed |
+| Homepage carousel runtime | 50 assertions passed |
+| Carousel lifecycle runtime | 57 assertions passed |
+| Responsive hero / Review composition runtimes | Passed |
+| CSS parser/artifact checks | 5 cases passed; generated artifact freshness passed |
+| Shell route / preview / fallback checks | 17 cases passed |
+| Relevant PHP and JS syntax | Passed |
+| Browser image checks | Deferred images retained; Next and direct pagination load correctly; static first image retained |
+| Browser hero geometry | At 390px, seed removes 1060.5px → 390.4px startup width change; image/caption/track dimensions now match |
+| Browser shell comparison | Home, Journal and Reviews at 390/1280px match; animated desktop image differs by less than 0.001px |
+| Independent source review | No release-blocking finding |
+| Broad suites / post-deploy 3.2.87 canary | Not run; candidate has not been deployed |
+
+The final staged whitespace check exposed empty-line indentation left by exact
+CSS rule splicing. The generator now removes only that non-semantic whitespace;
+the focused artifact checks were rerun. Source CSS and cascade remain unchanged.
+No past session record needed correction: the earlier candidate state was true
+at its recorded time.
+
+### Logged, not fixed / carried forward
+
+- Production CLS is still the measured 0.88 until 3.2.87 is deployed and tested.
+  The fixture's existing controls add 96px when mounting; this width correction
+  does not claim zero overall layout shift.
+- Origin cache misses, large remaining shared CSS and stale/failed Boost
+  critical-CSS targets remain opportunities. Do not add another cache plugin.
+- Browser comparisons used identical local image/font substitutions and isolate
+  geometry; they do not constitute a production speed benchmark.
+- Evidence: `../_carousel-artifacts/performance-3.2.87/`, including
+  `browser-validation.md` and release-verification logs. Temporary browser tabs
+  and the local fixture server were closed.
+
+### Whose move is next
+
+The candidate and this record are committed and pushed together. No new PR was
+opened because the repository requires an explicit PR request. Next: requested
+PR/merge, refresh the rollback hatch onto that merge, then Dalton's manual native
+WordPress.com theme deployment. Verify with the versioned 3.2.87 canary and one
+fresh mobile report. The edge-cache improvement is already live.
+
 ## 2026-09-17 — Live plugin cleanup and Journal 3.2.86 candidate
 
 Dalton requested a performance-plugin redundancy audit, then explicitly granted

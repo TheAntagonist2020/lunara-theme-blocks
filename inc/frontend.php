@@ -515,6 +515,23 @@ function lunara_preload_oscars_portal_label_font() {
 add_action( 'wp_head', 'lunara_preload_oscars_portal_label_font', 4 );
 
 /**
+ * Match Splide's one-slide width before its JavaScript can initialize.
+ *
+ * Without a basis, the first flex item grows to its text's intrinsic width;
+ * mobile art then shrinks when Splide assigns 100%. Emit this tiny seed
+ * directly in the head so deferred styles and stale critical CSS cannot
+ * reintroduce that first-paint geometry change. Caption height stays natural.
+ */
+function lunara_output_home_hero_geometry_css() {
+    if ( is_admin() || is_feed() || ! is_front_page() ) {
+        return;
+    }
+
+    echo '<style id="lunara-home-hero-geometry-css">.lunara-cinematic-hero-carousel .splide__list>.lunara-cinematic-hero-slide{flex:0 0 100%;width:100%;min-width:0}</style>';
+}
+add_action( 'wp_head', 'lunara_output_home_hero_geometry_css', 2 );
+
+/**
  * Keep the masthead's layout CSS out of WP Rocket's used-CSS pipeline.
  *
  * Rocket's Remove Unused CSS collects inline styles into its async-applied
@@ -526,6 +543,7 @@ add_action( 'wp_head', 'lunara_preload_oscars_portal_label_font', 4 );
  */
 function lunara_rocket_preserve_front_door_css( $exclusions ) {
     $exclusions[] = 'lunara-home-front-door-vars';
+    $exclusions[] = 'lunara-home-hero-geometry-css';
     $exclusions[] = 'lunara-home-modules.css';
     return $exclusions;
 }

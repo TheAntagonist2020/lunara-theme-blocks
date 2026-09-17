@@ -6,6 +6,9 @@
 		// Failed remote artwork receives the same treatment as an absent image.
 		document.querySelectorAll('.lunara-home-curated-journal img, .lunara-home-curated-reviews img, .lunara-home-curated-hero img').forEach(function (img) {
 			function fallback() {
+				// A source-less distant hero has not failed; Splide owns when
+				// its request starts and removes these attributes on activation.
+				if (img.hasAttribute('data-splide-lazy') || img.hasAttribute('data-splide-lazy-srcset')) { return; }
 				var placeholder = document.createElement('span');
 				placeholder.className = 'lunara-home-carousel-placeholder';
 				placeholder.setAttribute('aria-hidden', 'true');

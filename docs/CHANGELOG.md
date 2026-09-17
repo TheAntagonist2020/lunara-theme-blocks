@@ -11,6 +11,35 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-17 — Theme 3.2.87: lighter assets and stable hero startup
+
+Keep the first hero image and its responsive preload intact while deferring
+later slide sources to Splide's nearby loader. Prepare adjacent slides and
+distant pagination destinations when needed. Once a source is activated it
+loads eagerly at low priority, avoiding a deadlock with Splide's hidden pending
+images. The existing failed-image fallback now distinguishes deferred artwork
+from a failed request. Review debrief posters below the article load lazily.
+
+Give hero slides their final one-slide width in a small synchronous head style.
+Before Splide initialized, the visible flex item had no width or flex basis;
+its intrinsic width could differ from Splide's eventual 100% width. The seed
+reserves the same width before and after startup without fixing caption height
+or changing the final design.
+
+Serve a generated non-portal shell on routes outside the Oscars portal, removing
+only whole rules whose every selector requires the portal body class. Retained
+rules keep their order and declarations; only empty-line indentation is cleaned
+up. Portal and preview paths keep the canonical full shell. This removes
+108,552 source bytes (9,719 bytes with local
+gzip) without changing the matching styles. Rebuild with
+`node tests/tools/build-shell-css.cjs` after editing the canonical shell; its
+`--check` mode and focused parser tests detect stale generated output.
+
+The separate live improvement enables WordPress.com's existing global edge
+cache. Measured anonymous repeat archive TTFB fell from 1.68–2.06 seconds to
+0.05–0.09 seconds. Measurements, limits and live/candidate distinctions are in
+`PERFORMANCE-2026-09-17.md`; this theme version still requires manual deployment.
+
 ## 2026-09-17 — Theme 3.2.86: accurate Journal image selection
 
 Align Journal card image `sizes` with the uniform grid's actual 620/900px

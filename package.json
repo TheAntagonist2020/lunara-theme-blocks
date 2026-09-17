@@ -6,6 +6,8 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "playwright-core": "1.62.1"
+    "playwright-core": "1.62.1",
+    "postcss": "8.5.28",
+    "postcss-selector-parser": "7.1.6"
   }
 }

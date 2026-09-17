@@ -38,7 +38,24 @@ function get_bloginfo() { return 'UTF-8'; }
 function get_the_title() { return 'Runtime Review'; }
 function get_permalink() { return 'https://example.com/reviews/runtime-review/'; }
 function attachment_url_to_postid() { return 0; }
+function has_post_thumbnail( $post_id ) { return 903 === $post_id; }
+function get_the_post_thumbnail_url() { return 'https://example.com/posters/thumbnail.jpg'; }
+function get_the_post_thumbnail( $post_id, $size, $attrs ) {
+    $html = '<img src="' . esc_url( get_the_post_thumbnail_url() ) . '" alt="Thumbnail"';
+    foreach ( $attrs as $name => $value ) {
+        $html .= ' ' . $name . '="' . esc_attr( $value ) . '"';
+    }
+    return $html . '>';
+}
+function lunara_get_title_poster_html( $title_id, $size, $class, $alt, $loading ) {
+    return '<img src="https://example.com/posters/title.jpg" class="' . esc_attr( $class )
+        . '" alt="' . esc_attr( $alt ) . '" loading="' . esc_attr( $loading )
+        . '" decoding="async" data-no-lazy="1" data-skip-lazy="1">';
+}
 function get_post_meta( $post_id, $key ) {
+    if ( 902 === $post_id && '_lunara_imdb_title_id' === $key ) {
+        return 'tt1234567';
+    }
     if ( '_lunara_review_card_image' === $key ) {
         return 'https://image.tmdb.org/t/p/original/runtime-review.jpg';
     }
@@ -165,5 +182,20 @@ foreach ( $anchor_tags[0] as $anchor_tag ) {
 }
 lunara_test_assert( 1 === $max_anchor_depth, 'Feature card must never nest one anchor inside another.' );
 lunara_test_assert( 0 === $anchor_depth, 'Feature card anchors must close cleanly.' );
+
+$debrief_sources = array(
+    902 => 'https://example.com/posters/title.jpg',
+    903 => 'https://example.com/posters/thumbnail.jpg',
+);
+foreach ( $debrief_sources as $post_id => $source ) {
+    $debrief_html = lunara_get_review_debrief_signature_media_html( $post_id );
+    lunara_test_assert( false !== strpos( $debrief_html, 'loading="lazy"' ), 'Below-article posters must defer loading in both source paths.' );
+    lunara_test_assert( false === strpos( $debrief_html, 'data-no-lazy=' ) && false === strpos( $debrief_html, 'data-skip-lazy=' ), 'Lazy debrief posters must not retain optimizer bypass flags.' );
+    lunara_test_assert( false !== strpos( $debrief_html, 'src="' . $source . '"' ), 'Deferring a debrief poster must preserve its source.' );
+    lunara_test_assert( false !== strpos( $debrief_html, 'width="2000"' ) && false !== strpos( $debrief_html, 'height="3000"' ), 'Deferred debrief posters must retain reserved dimensions.' );
+    lunara_test_assert( false !== strpos( $debrief_html, 'sizes="(max-width: 900px) 42vw, 320px"' ), 'Deferred debrief posters must retain responsive sizing.' );
+    lunara_test_assert( false !== strpos( $debrief_html, 'alt="Runtime Review poster"' ) && false !== strpos( $debrief_html, 'lunara-review-single-debrief-poster-shell' ), 'Deferring a debrief poster must preserve its accessible label and shell.' );
+}
+lunara_test_assert( '' === lunara_get_review_debrief_signature_media_html( 904 ), 'Missing debrief media must not create an empty poster shell.' );
 
 fwrite( STDOUT, "reviews-archive-composition-runtime: all assertions passed.\n" );

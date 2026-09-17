@@ -191,6 +191,16 @@ lunara_test_assert( $descriptor['html'] === lunara_render_cinematic_hero_image( 
 lunara_test_assert( 1 === $GLOBALS['lunara_wp_image_calls'], 'Renderer/preload parity must not build a second filtered image.' );
 $second_descriptor = lunara_build_cinematic_hero_image_descriptor( $slide, false );
 lunara_test_assert( false !== strpos( $second_descriptor['html'], 'loading="lazy"' ) && false !== strpos( $second_descriptor['html'], 'fetchpriority="low"' ), 'The same attachment must be lazy/low outside the first LCP slot.' );
+$deferred_html = lunara_render_cinematic_hero_image( $slide, false, true );
+lunara_test_assert( ! preg_match( '/\s(?:src|srcset)\s*=/', $deferred_html ), 'A noninitial slide must not expose fetchable sources before Splide selects it.' );
+lunara_test_assert( str_contains( $deferred_html, 'loading="eager"' ) && str_contains( $deferred_html, 'fetchpriority="low"' ), 'Splide-selected sources must load while hidden without competing with the first hero priority.' );
+preg_match( '/data-splide-lazy="([^"]+)"/', $deferred_html, $deferred_src );
+preg_match( '/data-splide-lazy-srcset="([^"]+)"/', $deferred_html, $deferred_srcset );
+lunara_test_assert( isset( $deferred_src[1] ) && $second_descriptor['src'] === html_entity_decode( $deferred_src[1], ENT_QUOTES, 'UTF-8' ), 'Deferred slides must retain the exact filtered fallback source.' );
+lunara_test_assert( isset( $deferred_srcset[1] ) && $expected_srcset === html_entity_decode( $deferred_srcset[1], ENT_QUOTES, 'UTF-8' ), 'Deferred slides must retain every filtered responsive candidate.' );
+lunara_test_assert( str_contains( $deferred_html, 'width="3038" height="1713"' ) && str_contains( $deferred_html, 'sizes="100vw"' ) && str_contains( $deferred_html, 'is-full-frame' ), 'Deferring sources must preserve dimensions, responsive sizing and framing.' );
+lunara_test_assert( $second_descriptor['html'] === lunara_render_cinematic_hero_image( $slide, false ), 'A non-LCP first/static image must keep its real source for no-JS delivery.' );
+lunara_test_assert( $descriptor['html'] === lunara_render_cinematic_hero_image( $slide, true, true ), 'The priority hero must never be deferred or diverge from its preload descriptor.' );
 $cover_descriptor = lunara_build_cinematic_hero_image_descriptor( array_merge( $slide, array( 'fit' => 'cover' ) ), false );
 lunara_test_assert( 'full' === end( $GLOBALS['lunara_wp_image_sizes'] ), 'Cover mode must retain all source pixels for the existing focal-position controls.' );
 
@@ -224,6 +234,8 @@ $raw_descriptor = lunara_build_cinematic_hero_image_descriptor( $raw, false );
 lunara_test_assert( '' === $raw_descriptor['srcset'], 'URL-only fallback must not invent responsive candidates.' );
 lunara_test_assert( 1600 === $raw_descriptor['width'] && 900 === $raw_descriptor['height'], 'Explicit URL crop may provide honest dimensions.' );
 lunara_test_assert( false !== strpos( $raw_descriptor['html'], 'loading="lazy"' ) && false !== strpos( $raw_descriptor['html'], 'fetchpriority="low"' ), 'Non-priority slides must stay lazy/low.' );
+$raw_deferred = lunara_render_cinematic_hero_image( $raw, false, true );
+lunara_test_assert( ! preg_match( '/\s(?:src|srcset)\s*=/', $raw_deferred ) && str_contains( $raw_deferred, 'data-splide-lazy="' . esc_url( $raw['image'] ) . '"' ), 'URL-only later slides must defer the exact original source without inventing a srcset.' );
 
 $unknown = lunara_build_cinematic_hero_image_descriptor( array( 'image' => 'https://example.com/unknown.jpg' ), true );
 lunara_test_assert( 0 === $unknown['width'] && 0 === $unknown['height'], 'Unknown external images must not claim synthetic dimensions.' );
