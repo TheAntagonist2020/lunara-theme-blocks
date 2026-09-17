@@ -25,6 +25,35 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-16 — Theme 3.2.85 verified live
+
+Dalton confirmed merge and manual deployment. Fresh origin/main is `c67ebf8`
+(PR #205), containing uniform Journal cards from `4317c23`; its tree matches
+the prepared release. The versioned production canary completed with exit 0.
+
+| Live probe | Result |
+| --- | --- |
+| Three anonymous Journal identity reads | HTTP 200; all report `3.2.85+20260917-031752` |
+| Canonical Journal sentinel | `LIVE_COHERENT`, exit 0 |
+| Canonical Oscars sentinel | `LIVE_COHERENT`, exit 0 |
+| Overall canary | GO — Theme 3.2.85 coherently live |
+
+Verification ran September 16 at approximately 23:38 America/Chicago. This was
+the focused post-deploy command `bash tests/tools/lunara-canary-verify.sh 3.2.85`;
+no broad regression suites or repeated visual previews were needed. Previous
+desktop/phone preview evidence remains in the candidate entry below. No agent
+deployment, production write or cache purge occurred.
+
+Rebuilt the standing exact rollback branch / PR #159 on `c67ebf8`, verifying
+its parent and exact tree `c55bf394594149db2888295c5d51f85f47b2b520` before the
+leased push. This documentation-only record is on `codex/live-record-3.2.85`.
+No corrections or new issues. The previously deleted automated-check workflow
+remains recoverable; broader Critical CSS/performance work remains open.
+
+Next: this release is complete. The next useful work is the remaining shared
+theme/plugin performance work; no further deployment is needed for this record.
+If the record is merged to main later, refresh the rollback parent again.
+
 ## 2026-09-16 — Theme 3.2.85: repository audit and uniform Journal candidate
 
 Dalton asked whether GitHub had been damaged and requested consistent Journal
