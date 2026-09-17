@@ -84,4 +84,16 @@ for (const kind of ['dynamic','scroll']) {
     const reduced=fixture(kind,{reduced:true}); check(reduced.timers.size===0&&reduced.toggle.disabled,`${kind}: initially reduced motion stays idle`);
     const disabled=fixture(kind,{autoplay:0}); check(disabled.timers.size===0&&disabled.toggle.disabled,`${kind}: disabled autoplay has no misleading Play button`);
 }
-console.log(`Carousel lifecycle passed: ${checks} checks across both production runtimes.`);
+// Source-less Splide images are pending, while actual failed artwork still
+// receives the shared placeholder, including after activation.
+const pendingArt = Object.assign(node({'data-splide-lazy':'/pending.jpg'}), {complete:true,naturalWidth:0,replaceWith(replacement) { this.replacement=replacement; }});
+const failedArt = Object.assign(node({src:'/failed.jpg'}), {complete:true,naturalWidth:0,replaceWith(replacement) { this.replacement=replacement; }});
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../assets/js/lunara-home-carousels.js'),'utf8'), {
+    window: {matchMedia:()=>({matches:false})},
+    document: {readyState:'complete',querySelectorAll:()=>[pendingArt,failedArt],createElement:()=>Object.assign(node(),{appendChild(){}})}
+});
+check(!pendingArt.replacement, 'A deferred hero must survive the complete/zero-width artwork check.');
+check(failedArt.replacement?.className === 'lunara-home-carousel-placeholder', 'Actually failed artwork must keep its placeholder fallback.');
+pendingArt.removeAttribute('data-splide-lazy'); pendingArt.emit('error');
+check(pendingArt.replacement?.className === 'lunara-home-carousel-placeholder', 'A deferred hero that fails after activation must still receive its placeholder.');
+console.log(`Carousel lifecycle passed: ${checks} checks across production runtimes.`);

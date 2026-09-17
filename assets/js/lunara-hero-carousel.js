@@ -5,8 +5,8 @@
  * through the latest reviews + journal entries. Independent of the Oscar-Facts
  * "splide pilot" (which is hardcoded to its own markup). The PHP outputs native
  * Splide DOM (.splide / .splide__track / .splide__list / .splide__slide) with
- * REAL image srcs on every slide (slide 1 eager, the rest native-lazy), so
- * this just configures and mounts — no image swapping.
+ * a real image source on slide 1. Splide activates the unchanged responsive
+ * sources on adjacent slides as they approach, keeping distant art deferred.
  *
  * Resilience contract: the pre-mount guard in style.css hides slides 2+ until
  * .is-hero-mounted exists. That class is added BEFORE mount() so a failure
@@ -65,6 +65,8 @@
 				rewind: true,
 				perPage: 1,
 				perMove: 1,
+				lazyLoad: 'nearby',
+				preloadPages: 1,
 				arrows: true,
 				pagination: true,
 				drag: true,
@@ -83,6 +85,16 @@
 					next: 'splide__arrow--next lunara-hero-arrow-next',
 					pagination: 'splide__pagination lunara-hero-pagination',
 					page: 'splide__pagination__page lunara-hero-page'
+				}
+			});
+
+			// Pagination can jump beyond the prepared neighbors. Start its image
+			// request at the beginning of the fade, instead of waiting for moved.
+			splide.on('move', function () {
+				try {
+					splide.Components.LazyLoad.check();
+				} catch (err) {
+					warn('prepare slide image', err);
 				}
 			});
 

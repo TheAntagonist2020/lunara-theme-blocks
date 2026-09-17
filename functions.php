@@ -15831,10 +15831,10 @@ if ( ! function_exists( 'lunara_get_hero_featured_slides' ) ) {
 }
 
 /**
- * Render one cinematic-hero slide from prepared data. Every slide carries its
- * REAL image src. The first is eager/high only when its caller identifies it
- * as the LCP; every other image uses native lazy loading at low priority. No
- * placeholder/swap machinery can leave a slide blank. The first slide is also
+ * Render one cinematic-hero slide from prepared data. The first retains its
+ * real source and is eager/high only when its caller identifies it as the LCP.
+ * Later slides defer their unchanged sources to Splide's nearby loader. The
+ * first slide is also
  * server-marked is-active so it stays visible in every pre-mount and
  * failed-mount state once the fade layout class exists.
  */
@@ -15844,7 +15844,7 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
 		$is_priority_image = $is_first && (bool) $first_image_is_lcp;
 		$frame_mode        = isset( $data['fit'] ) && 'full' === (string) $data['fit'] ? 'full' : 'cover';
 		$image_markup      = function_exists( 'lunara_render_cinematic_hero_image' )
-			? lunara_render_cinematic_hero_image( $data, $is_priority_image )
+			? lunara_render_cinematic_hero_image( $data, $is_priority_image, ! $is_first )
 			: '';
 		if ( '' === $image_markup && isset( $data['post_id'] ) && function_exists( 'lunara_home_carousel_placeholder' ) ) {
 			$image_markup = lunara_home_carousel_placeholder();
