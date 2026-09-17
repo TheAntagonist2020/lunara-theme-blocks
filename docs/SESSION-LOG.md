@@ -25,6 +25,80 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-17 — Site recovered after WordPress.com configuration repair
+
+Lunara Film (WordPress.com site `247355955`) is reachable again. After four
+managed restores failed, Dalton authorized an urgent support request. A
+WordPress.com Happiness Engineer reported replacing `wp-config.php` with the
+default file. Independent public checks at approximately **08:38 UTC / 03:38
+Central** confirm recovery on the expected Theme `3.2.85+20260917-031752`.
+The cause of the missing configuration and restore failures remains open.
+
+### Verified current state
+
+| Probe or hosting record | Result |
+| --- | --- |
+| Before repair: homepage, `/journal/`, `/wp-login.php` | HTTP 200, 109-byte body: `Missing wp-config.php please contact WordPress.com Support.`; not a working site |
+| After repair: homepage | HTTP 200; 204,783 bytes; normal Lunara Film title; missing-config and critical-error messages absent |
+| After repair: `/wp-login.php` | HTTP 200; 8,014 bytes; normal WordPress login title; error messages absent |
+| After repair: three anonymous Journal identity reads | All HTTP 200 and `3.2.85+20260917-031752` |
+| Journal canonical live sentinel | Exit 0; live proof and coherent; all 10 contracts pass; eight nonblank cards |
+| Oscars canonical live sentinel | Exit 0; live proof and coherent; all 10 contracts pass |
+| Theme repository | `origin/main` remains `c67ebf8`, PR #205; no new main change |
+| Backup status | 393 available; last backup finished |
+| Managed restores | Four failures, each reported as `System error` |
+| Support request | Delivered; engineer reports configuration replacement; final cause/scope details requested |
+
+The preceding release was independently healthy before this incident; that
+earlier GO was not treated as evidence during the outage. The table above
+records new evidence collected after the host repair.
+
+### Recovery attempted
+
+Dalton's three restore attempts at **08:06, 08:08, and 08:10 UTC** failed.
+The subsequently authorized attempt selected **only `wp-config.php`** from the
+September 16 daily backup shown as **6:29 PM**, snapshot `1789601380.355`.
+It started at **08:20:47.481 UTC** and failed at **08:20:54.181 UTC**. The
+lingering 0% restore display is stale; the backend reports failure.
+
+Codex performed no theme rollback, database/media/theme restore, cache purge,
+or deployment. The urgent support request asks for configuration/host repair while
+preserving the current database, media, and theme.
+
+Dalton supplied Jetpack download `573496`, filename
+`jetpack-backup-lunarafilm-com-2026-09-17-05-31-00.tar.gz`. Its endpoint returned
+HTTP 200 with a 10,876,427,742-byte length; a bounded ranged archive scan returned
+HTTP 206 but did not reach `wp-config.php` before its limit. No whole archive was
+downloaded and no configuration was extracted. This was a recovery reference,
+not a full archive-integrity verification. The private download token is omitted.
+
+### Commit and gate ledger
+
+No code shipped and no release version changed during this incident. Existing
+release merge: theme `c67ebf8` / PR #205. Focused endpoint, repository, backup,
+restore-status, and support-delivery checks supplied the evidence above.
+The shell canary initially could not run because the checkout has CRLF endings;
+an ephemeral LF copy completed its three identity reads but Bash lacked `node`.
+Both unchanged canonical JavaScript sentinels were then run directly with
+Windows Node and `--expected-version 3.2.85`, each exiting 0. Thus all canary
+components passed, but the shell wrapper itself did not exit 0. No broad suites
+were run, and no test or source files were changed.
+
+### Corrections and open items
+
+No prior release evidence is retracted. A legacy hosting-dashboard error refers
+to `v3.2.22`; its relevance is unverified and potentially stale, and it is not a
+diagnosed cause. Support has been asked to confirm repair scope, whether failed
+restore jobs are fully stopped, and the underlying cause. Further speculative
+restore attempts are not queued by Codex.
+
+### Whose move it is next
+
+**WordPress.com Support:** explain the configuration loss and failed restores,
+and confirm the final repair scope/job status. **Dalton/Codex:** retain the
+support conversation and record that answer; public recovery is now verified.
+No further theme deployment is needed for this incident record.
+
 ## 2026-09-16 — Theme 3.2.85 verified live
 
 Dalton confirmed merge and manual deployment. Fresh origin/main is `c67ebf8`
