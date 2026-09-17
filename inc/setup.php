@@ -80,44 +80,33 @@ function lunara_enqueue_styles() {
         }
     }
 
-    // The Oscars portal's route stylesheet is assets/css/lunara-oscars-portal.css
-    // (inc/frontend.php, wp_enqueue_scripts 111). assets/css/oscars.css remains
-    // shipped for the plugin-owned ledger routes, which enqueue it themselves.
-}
-add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
+    if ( is_page( 'oscars' ) || is_page_template( 'page-oscars.php' ) ) {
+        $oscars_css = lunara_resolve_theme_asset(
+            'assets/css/oscars.css',
+            array( 'oscars/oscars.css' )
+        );
 
-/** Whether the public request can omit rules anchored only to the portal body. */
-function lunara_shell_uses_non_portal_variant() {
-    // Match the body-class owner. Unknown routes/previews keep the complete shell.
-    if ( ! function_exists( 'lunara_is_oscars_portal_route' ) || is_admin() || is_feed() || is_preview() || is_customize_preview() || lunara_is_oscars_portal_route() || ! empty( $GLOBALS['lunara_site_studio_preview_context'] ) ) {
-        return false;
-    }
-
-    foreach ( array_keys( $_GET ) as $key ) {
-        if ( is_string( $key ) && ( 'lunara_site_studio_instance' === $key || ( 0 === strpos( $key, 'lunara_' ) && false !== strpos( $key, 'preview' ) ) ) ) {
-            return false;
+        if ( ! empty( $oscars_css['uri'] ) ) {
+            wp_enqueue_style(
+                'lunara-oscars-shell',
+                $oscars_css['uri'],
+                array( 'lunara-style' ),
+                lunara_theme_asset_version( $oscars_css['path'] )
+            );
         }
     }
-
-    return true;
 }
+add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
 
 /**
  * Load the public shell repair layer after route-specific styles.
  *
- * This stylesheet used to live inline in header.php. Keeping its enqueue
- * position preserves the existing cascade and lets browsers reuse the file.
+ * This stylesheet used to live inline in header.php. Keeping it as the final
+ * queued theme stylesheet preserves the existing cascade while allowing the
+ * browser to cache and reuse it across page views.
  */
 function lunara_enqueue_shell_styles() {
     $shell_css = lunara_resolve_theme_asset( 'assets/css/lunara-shell.css' );
-
-    if ( lunara_shell_uses_non_portal_variant() ) {
-        // Built from the canonical shell without moving any retained rules.
-        $non_portal_css = lunara_resolve_theme_asset( 'assets/css/lunara-shell-non-portal.css' );
-        if ( ! empty( $non_portal_css['uri'] ) ) {
-            $shell_css = $non_portal_css;
-        }
-    }
 
     if ( empty( $shell_css['uri'] ) ) {
         return;
