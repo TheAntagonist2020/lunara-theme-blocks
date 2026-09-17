@@ -11,6 +11,21 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-16 — Theme 3.2.85: uniform Journal cards
+
+Make the first Journal article the same size as the rest of the archive. All
+cards use a single-column image/caption layout, equal grid-row heights, shared
+headline styling and consistent caption padding. A shared label area aligns
+headlines whether a card has source/trailer badges or only its section label;
+footers sit at the bottom. Phone titles remain fully visible.
+
+Remove the oversized lead layout and its extra visible kicker while retaining
+the first image's eager/high-priority loading, existing provenance/trailer
+output, and text-only/failed-image fallbacks. Saved density and minimum card/image
+sizes remain supported; lead prominence no longer creates a differently sized
+card. The first-paint guard shares its selector through native nesting to remain
+within the existing 8 KiB head-CSS budget. No plugin or live settings changes.
+
 ## 2026-09-16 — Theme 3.2.84: compact Reviews and Journal openings
 
 Condense the oversized archive introductions and stacked control panels so

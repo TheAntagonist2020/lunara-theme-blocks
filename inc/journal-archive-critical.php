@@ -139,15 +139,18 @@ if ( ! function_exists( 'lunara_journal_archive_critical_css' ) ) {
 #primary.lunara-journal-archive-page>.lunara-journal-archive-slot-deskbar span{padding:0!important;border:0!important}
 #primary.lunara-journal-archive-page .lunara-journal-filter-pill,#primary.lunara-journal-archive-page .lunara-archive-sort-link{min-height:44px!important}
 #primary.lunara-journal-archive-page .lunara-archive-sort{padding:0!important;justify-content:flex-start!important}
-#primary.lunara-journal-archive-page>.lunara-journal-archive-slot-grid{align-items:stretch;display:grid!important;gap:var(--lunara-journal-archive-grid-gap,24px)!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;margin:0!important;width:100%!important}
-#primary.lunara-journal-archive-page .lunara-journal-archive-card{box-sizing:border-box;min-height:var(--lunara-journal-archive-card-min,390px)!important;min-width:0!important;width:100%!important}
-#primary.lunara-journal-archive-page .lunara-journal-archive-card .lunara-review-grid-link{display:grid!important;grid-template-rows:auto 1fr!important;height:100%!important;min-height:var(--lunara-journal-archive-card-min,390px)!important}
+#primary.lunara-journal-archive-page>.lunara-journal-archive-slot-grid{align-items:stretch;grid-auto-rows:1fr!important;display:grid!important;gap:var(--lunara-journal-archive-grid-gap,24px)!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;margin:0!important;width:100%!important}
+#primary.lunara-journal-archive-page .lunara-journal-archive-card{box-sizing:border-box;grid-column:auto!important;min-height:var(--lunara-journal-archive-card-min,390px)!important;min-width:0!important;width:100%!important}
+#primary.lunara-journal-archive-page .lunara-journal-archive-card .lunara-review-grid-link{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto 1fr!important;height:100%!important;min-height:var(--lunara-journal-archive-card-min,390px)!important}
 #primary.lunara-journal-archive-page .lunara-journal-archive-card .lunara-review-grid-poster-wrap{aspect-ratio:16/10!important;min-height:var(--lunara-journal-archive-media-min,220px)!important;overflow:hidden!important}
 #primary.lunara-journal-archive-page .lunara-journal-archive-card .lunara-review-grid-poster-wrap img{display:block!important;height:100%!important;object-fit:cover!important;width:100%!important}
 #primary.lunara-journal-archive-page .lunara-journal-archive-card.is-lead .lunara-review-grid-poster{opacity:1!important;transition:none!important}
-#primary.lunara-journal-archive-page .lunara-journal-archive-card.is-lead{grid-column:span 2!important}
-#primary.lunara-journal-archive-page .lunara-journal-archive-card.is-lead .lunara-review-grid-link{grid-template-columns:minmax(320px,.58fr) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important}
-#primary.lunara-journal-archive-page .lunara-journal-archive-card.is-lead .lunara-review-grid-poster-wrap{height:100%!important;min-height:var(--lunara-journal-archive-lead-media-min,260px)!important}
+#primary.lunara-journal-archive-page .lunara-journal-archive-card .lunara-review-grid-kicker{display:none!important}
+#primary.lunara-journal-archive-page .lunara-journal-archive-card .lunara-review-grid-copy{display:flex!important;flex-direction:column!important}
+#primary.lunara-journal-archive-page .lunara-journal-archive-card .lunara-review-grid-footer{margin:auto 0 0!important}
+#primary.lunara-journal-archive-page .lunara-journal-card-labels{display:flex!important;flex-wrap:wrap!important;align-content:start!important;align-items:start!important;gap:8px!important;min-height:54px!important}
+#primary.lunara-journal-archive-page .lunara-journal-card-labels>.lunara-dispatch-type{flex-basis:100%!important}
+#primary.lunara-journal-archive-page .lunara-journal-card-labels>:is(.lunara-journal-card-provenance,.lunara-trailer-card-badge){margin:0!important}
 #primary.lunara-journal-archive-page .lunara-journal-archive-card.is-text-brief,#primary.lunara-journal-archive-page .lunara-journal-archive-card.is-media-failed{grid-column:auto!important}
 #primary.lunara-journal-archive-page .lunara-journal-archive-card.is-text-brief .lunara-review-grid-link,#primary.lunara-journal-archive-page .lunara-journal-archive-card.is-media-failed .lunara-review-grid-link{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important}
 #primary.lunara-journal-archive-page>.lunara-journal-archive-slot-retention{display:grid!important;gap:var(--lunara-journal-archive-retention-gap,18px)!important;grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr)!important;margin:0!important;padding:clamp(18px,2.4vw,30px)!important;width:100%!important}
@@ -156,7 +159,7 @@ if ( ! function_exists( 'lunara_journal_archive_critical_css' ) ) {
 #primary.lunara-journal-archive-page .lunara-journal-archive-retention-media{aspect-ratio:16/9;display:block;flex:0 0 auto;margin:-16px -16px 2px;overflow:hidden;position:relative;width:calc(100% + 32px)}
 #primary.lunara-journal-archive-page .lunara-journal-archive-retention-media img{display:block;height:100%!important;object-fit:cover!important;object-position:var(--lunara-retention-focus-x,50%) var(--lunara-retention-focus-y,50%)!important;width:100%!important}
 #primary.lunara-journal-archive-page>.lunara-journal-archive-slot-pagination{margin:0 auto!important;width:100%!important}
-@media(max-width:900px){#primary.lunara-journal-archive-page>.lunara-journal-archive-slot-toolbar{grid-template-columns:minmax(0,1fr)!important}#primary.lunara-journal-archive-page>.lunara-journal-archive-slot-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}#primary.lunara-journal-archive-page .lunara-journal-archive-card.is-lead{grid-column:1/-1!important}#primary.lunara-journal-archive-page>.lunara-journal-archive-slot-retention{grid-template-columns:minmax(0,1fr)!important}}
+@media(max-width:900px){#primary.lunara-journal-archive-page>.lunara-journal-archive-slot-toolbar{grid-template-columns:minmax(0,1fr)!important}#primary.lunara-journal-archive-page>.lunara-journal-archive-slot-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}#primary.lunara-journal-archive-page>.lunara-journal-archive-slot-retention{grid-template-columns:minmax(0,1fr)!important}}
 @media(max-width:768px) {#primary.lunara-journal-archive-page{
     & {
         gap: 20px !important;
@@ -199,7 +202,7 @@ if ( ! function_exists( 'lunara_journal_archive_critical_css' ) ) {
     & .lunara-journal-archive-card.is-lead .lunara-review-grid-link {
         grid-template-columns: minmax(0, 1fr) !important;
         grid-template-rows: auto 1fr !important;
-        height: auto !important;
+        height: 100% !important;
     }
     & .lunara-journal-archive-card .lunara-review-grid-poster-wrap,
     & .lunara-journal-archive-card.is-lead .lunara-review-grid-poster-wrap {
@@ -216,6 +219,11 @@ if ( ! function_exists( 'lunara_journal_archive_critical_css' ) ) {
 }}
 CSS;
 
-		return lunara_journal_archive_minify_structural_css( $css );
+		// Share the archive scope through native nesting, as Reviews does, to
+		// keep the first-paint guard within its existing inline size budget.
+		$scope = '#primary.lunara-journal-archive-page';
+		return lunara_journal_archive_minify_structural_css(
+			$scope . '{' . str_replace( $scope, '&', $css ) . '}'
+		);
 	}
 }
