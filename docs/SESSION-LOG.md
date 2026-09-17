@@ -25,6 +25,69 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-17 — Live plugin cleanup and Journal 3.2.86 candidate
+
+Dalton requested a performance-plugin redundancy audit, then explicitly granted
+authority to deactivate unused/redundant plugins without repeated permission
+questions. UpdraftPlus, WP Social and Galleryberg were deactivated, retaining
+their data. Boost's administrator Image Guide overlay was switched off. Active
+plugins fell from 37 to 34; all 59 remain installed. The separate theme candidate
+corrects Journal responsive-image width hints and is not deployed.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Final authenticated plugin inventory | 59 installed, 34 active, 25 inactive; all three targeted plugins inactive |
+| Boost after settings-page reload | Image Guide off; image CDN remains on |
+| Anonymous Home, Journal, Reviews, Oscars after final cleanup | HTTP 200; expected build `3.2.85+20260917-031752`; no missing-config/critical-error body |
+| Principal CSS bundle on all four routes | Exactly 112,414 fewer uncompressed bytes each; no WP Social paths or wslu rules |
+
+### What changed and why
+
+UpdraftPlus had no backup schedules and two old backup sets. WP Social had no
+enabled sharing/counter providers or login placements, no published shortcode
+matches and no theme integration. Galleryberg had no dependencies in the checked
+content, patterns or theme. No uninstall, content/media/backup deletion, manual
+cache purge, restore or theme deployment occurred.
+
+Keep Jetpack, Boost and Cimo: hosting owns page caching, Boost owns CSS/JS/LCP
+optimization, and Cimo compresses uploads. Jetpack/Boost CDN controls synchronize;
+they are not duplicate processing pipelines. Retain Stackable and GutenKit after
+finding actual content/pattern dependencies. WP All Export has a configured Reviews
+export. Full inventory, feature settings, evidence limits and source references:
+`PERFORMANCE-PLUGIN-AUDIT-2026-09-17.md`.
+
+Theme 3.2.86 aligns image sizes with the Journal's uniform card widths, real column
+breakpoints and saved density. See CHANGELOG.md for source-level detail.
+
+### Commit and gate ledger
+
+| Item | State |
+| --- | --- |
+| Theme main | `c67ebf8`, unchanged; 3.2.85 remains live |
+| Prior continuity record | `407123f`, confirmed FileZilla cause; pushed on `codex/live-record-3.2.85` |
+| Theme candidate | `b4c388d` on `codex/journal-image-sizing-3.2.86`; no PR, main merge or deployment |
+| Focused source verification | Two PHP syntax checks and one existing responsive-media runtime passed |
+| Browser fixture | 13/13 Chrome scenarios loaded correct source candidates; CSS slot math matches actual width within 0.133px at current fractional scale |
+| Whitespace | `git diff --check` passed |
+| Broad suites / Lighthouse / deploy canary | Not run; no architecture change or theme deployment in this pass |
+
+The source and this record are pushed together on the candidate branch before
+handoff. No rollback-hatch update is necessary because main did not change.
+
+### Logged, not fixed / next move
+
+- Boost's critical-CSS dashboard reports two failed generations and stale/missing
+  taxonomy targets. The Oscars inline critical CSS is also large. A focused
+  asset/critical-CSS pass is the next optimization task, not another cache plugin.
+- Inactive-plugin deletion was not pursued; no speed gain is claimed from files
+  that were already inactive. Non-public custom post types were not exhaustively
+  exported, and no per-plugin CPU or fresh Core Web Vitals benchmark was performed.
+- Journal 3.2.86 is ready for a requested PR/merge, followed by Dalton's manual
+  WordPress.com theme deployment and the versioned live verifier.
+- The FileZilla incident cause remains settled; no further forensic work occurred.
+
 ## 2026-09-17 — Outage cause confirmed: accidental FileZilla deletion
 
 Dalton confirmed that he accidentally deleted `wp-config.php` using FileZilla.
