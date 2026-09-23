@@ -11,6 +11,37 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-23 — Theme 3.2.89: The Debrief Method page
+
+Give the signature that closes every review its own home. `page-debrief.php`
+("Lunara Debrief Method" template) auto-applies to a page with slug `debrief`
+and explains the three moves — Theme Echo, Counter-Program, Career Context —
+with the question each answers and what each is not. The rest of the page is
+live data: a specimen Debrief from the newest review carrying the full trio
+(reusing `lunara_render_pair_it_with_cards()`), hero totals (reviews
+debriefed, films prescribed, distinct titles), the "Debrief Canon" of films
+prescribed in more than one review, and the eight most recent Debriefs. The
+page's editor content renders in a "From the Desk" seat so the manifesto stays
+editable without code.
+
+`inc/debrief-method.php` aggregates every published review's pairings
+(Relational Trinity movie links first, legacy text fields second — the same
+precedence as the review renderer) without poster work, into the transient
+`lunara_debrief_index_v1` (12 h TTL, deleted on review save/trash/delete).
+New cached payload, new key; no existing cache shape changed.
+
+Both Pair It With renderers (`inc/debrief.php` legacy and
+`inc/debrief-public.php` canonical) append a "How the Debrief works" link to
+their heading via `lunara_debrief_method_link_html()`. It renders only when a
+published page with slug `debrief` exists and is suppressed on that page
+itself, so review markup is byte-identical until the page is published.
+
+Styles: new route-scoped `assets/css/lunara-debrief-method.css` (enqueued only
+on the template, with `lunara-review-components` for the specimen cards) and a
+small `.lunara-pair-cards-method` rule in `lunara-review-components.css`.
+`style.css` moves to 3.2.89; the merged 3.2.88 surface pass never bumped the
+header, so this also lets the canary distinguish the release from 3.2.87.
+
 ## 2026-09-17 — Theme 3.2.87: lighter assets and stable hero startup
 
 Keep the first hero image and its responsive preload intact while deferring
