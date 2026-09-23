@@ -1413,6 +1413,9 @@ if ( ! function_exists( 'lunara_render_pair_it_with_cards' ) ) {
         if ( '' !== trim( $subtitle ) ) {
             $html .= '<p class="lunara-pair-cards-sub">' . esc_html( $subtitle ) . '</p>';
         }
+        if ( function_exists( 'lunara_debrief_method_link_html' ) ) {
+            $html .= lunara_debrief_method_link_html();
+        }
         $html .= '</div>';
         $html .= '<div class="lunara-pair-cards-grid" data-count="' . count( $cards ) . '">' . implode( '', $cards ) . '</div>';
         $html .= '</section>';

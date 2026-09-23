@@ -25,6 +25,81 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-23 — The Debrief Method page (Theme 3.2.89 candidate)
+
+### Headline
+
+Dalton asked for the Lunara Debrief — the three films paired with every
+review — to get its own explanatory page, because it sits under every review
+and is "essential to the site," with a larger ambition for it still to be
+spelled out (his message was cut off mid-sentence). Theme 3.2.89 on
+`claude/sharp-curie-wtaszy` adds the `page-debrief.php` template, a cached
+live index of every review's pairings, and a "How the Debrief works" link on
+every review's Pair It With heading that stays dark until the page exists.
+Nothing is merged or deployed.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Existing page with "debrief" (read-only MCP search, pages) | None; only About (33080) matched |
+| Five most recent reviews | Newest is 103064, Resident Evil (2026-09-21) |
+
+No other live probes were run; the live theme was not touched.
+
+### What shipped and why
+
+See `docs/CHANGELOG.md` → 3.2.89. It is a template rather than a block-built
+page because it is a permanent architectural surface fed by review data (the
+Canon and Recent Debriefs rebuild themselves as reviews are published). The
+editor-content seat keeps the manifesto in Dalton's hands. **The hard-coded
+explainer copy (three moves, "Why three") is a draft in the house register and
+should be rewritten in Dalton's voice before launch.**
+
+To go live: merge → deploy (Dalton) → create and publish a Page with slug
+`debrief` (title e.g. "The Debrief Method"; optional featured image becomes the
+hero backdrop). Publishing the page is what turns on the review link.
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| theme | this entry's commit on `claude/sharp-curie-wtaszy` | Debrief Method page, index, review link, 3.2.89 |
+
+### Gate ledger
+
+| Gate | Result |
+| --- | --- |
+| `php -l` on the five changed/new PHP files | Passed |
+| `tests/fixtures/debrief-public-renderer-harness.php` | All 12 runtime flags true |
+| `debrief-public-renderer.ps1` static assertions | Not run (no `pwsh` in container); read by hand — all pass except the pre-existing `Version: 3.2.81` assertion, already stale since 3.2.82+ |
+| `pairing-showcase-block.ps1` | Not run (no `pwsh`); unaffected module |
+| Stubbed render smoke of `page-debrief.php` | All sections render; index math correct (2 reviews, 4 pairings, 3 titles, repeat film counted twice); review link suppressed on the page |
+| Chromium layout check at 390 / 1280 px | No horizontal overflow after adding a page-scoped `box-sizing` rule |
+| Broad suites / canary | Not run; nothing deployed |
+
+### Logged, not fixed
+
+- `tests/debrief-public-renderer.ps1` asserts `Version: 3.2.81`; it fails on
+  main today, independent of this change.
+- The 3.2.88 surface pass merged (PRs #208/#210) without a version bump or a
+  session-log entry; 3.2.89 carries the bump.
+- First uncached render of `/debrief/` walks every review's meta once per
+  12 h; fine at current catalogue size, revisit past a few thousand reviews.
+
+### Punch-list carried forward
+
+- Dalton: rewrite explainer copy in his voice; describe the "bigger idea" for
+  the Debrief (message was truncated) — likely next phase: a browsable
+  pairing graph / per-film "appears in these Debriefs" on movie dossiers.
+- 3.2.87 deploy + canary, and CLS remeasure, still as recorded below.
+
+### Whose move is next
+
+Dalton: review the branch and ask for a PR/merge, then deploy and publish the
+`debrief` page. Verify with `bash tests/tools/lunara-canary-verify.sh 3.2.89`,
+then rebuild the rollback hatch after the merge.
+
 ## 2026-09-17 — Edge caching live; performance 3.2.87 prepared
 
 Dalton confirmed the previous release was merged and live, and requested a much
