@@ -24,7 +24,8 @@ function Read-ThemeFile {
     return Get-Content -Raw $path
 }
 
-$functions = Read-ThemeFile 'functions.php'
+# Oscar Picks data moved to inc/oscar-picks.php in 3.2.90; the public rail stays in functions.php.
+$functions = (Read-ThemeFile 'functions.php') + "`n" + (Read-ThemeFile 'inc/oscar-picks.php')
 $controlDesk = Read-ThemeFile 'inc/control-desk.php'
 $style = Read-ThemeFile 'style.css'
 

@@ -863,6 +863,11 @@ function lunara_get_dispatch_type_label( $post_id ) {
         return __( 'Journal', 'lunara-film' );
     }
 
+    // Reviews reach dispatch cards through shared tag archives; name them plainly.
+    if ( 'review' === get_post_type( $post_id ) ) {
+        return __( 'Review', 'lunara-film' );
+    }
+
     $terms = get_the_terms( $post_id, 'category' );
     if ( ! is_array( $terms ) ) {
         return __( 'Dispatch', 'lunara-film' );
@@ -1578,13 +1583,25 @@ if ( ! function_exists( 'lunara_lock_review_image_markup' ) ) {
             $html = lunara_replace_img_attribute( $html, 'sizes', $profile['sizes'] );
         }
 
-        $retina_profile           = $profile;
-        $retina_profile['width']  = $width * 2;
-        $retina_profile['height'] = $height * 2;
-        $retina_src               = lunara_lock_review_image_url( $source_url, $retina_profile );
+        // Same aspect ratio at a quarter, half, the locked size and retina, so a
+        // 320px poster slot stops downloading the 2000px source. The width and
+        // height attributes stay locked, so layout does not change.
+        $candidates = array();
+        foreach ( array( (int) round( $width / 4 ), (int) round( $width / 2 ), $width, $width * 2 ) as $candidate_width ) {
+            if ( $candidate_width < 200 && $candidate_width !== $width ) {
+                continue;
+            }
+            $candidate_profile           = $profile;
+            $candidate_profile['width']  = $candidate_width;
+            $candidate_profile['height'] = (int) round( $candidate_width * $height / $width );
+            $candidate_src               = $candidate_width === $width ? $src : lunara_lock_review_image_url( $source_url, $candidate_profile );
+            if ( '' !== $candidate_src && ( $candidate_width === $width || $candidate_src !== $src ) && ! isset( $candidates[ $candidate_src ] ) ) {
+                $candidates[ $candidate_src ] = $candidate_src . ' ' . $candidate_width . 'w';
+            }
+        }
 
-        if ( '' !== $retina_src && $retina_src !== $src ) {
-            $srcset = $src . ' ' . $width . 'w, ' . $retina_src . ' ' . ( $width * 2 ) . 'w';
+        if ( count( $candidates ) > 1 ) {
+            $srcset = implode( ', ', $candidates );
             $html   = lunara_replace_img_attribute( $html, 'srcset', $srcset );
             $html   = lunara_replace_img_attribute( $html, 'data-srcset', $srcset );
         } else {
@@ -2147,15 +2164,24 @@ if ( ! function_exists( 'lunara_render_review_visual_slot' ) ) {
             }
         }
         if ( '' === $image_html ) {
+            // External TMDB stills carried `sizes` with no candidates, so every
+            // reader downloaded the multi-megabyte original. Offer TMDB's own widths.
+            $srcset = function_exists( 'lunara_tmdb_image_srcset' )
+                ? lunara_tmdb_image_srcset( html_entity_decode( (string) $src, ENT_QUOTES, 'UTF-8' ), ! $is_poster_hero )
+                : '';
+            if ( '' !== $srcset && function_exists( 'lunara_resize_tmdb_image_url' ) ) {
+                $src = lunara_resize_tmdb_image_url( html_entity_decode( (string) $src, ENT_QUOTES, 'UTF-8' ), $is_poster_hero ? 'w780' : 'w1280' );
+            }
             $image_html = sprintf(
-                '<img class="lunara-review-visual-image" src="%1$s" alt="%2$s" loading="%3$s" decoding="async" width="%4$d" height="%5$d" sizes="%6$s"%7$s>',
+                '<img class="lunara-review-visual-image" src="%1$s"%8$s alt="%2$s" loading="%3$s" decoding="async" width="%4$d" height="%5$d" sizes="%6$s"%7$s>',
                 esc_url( $src ),
                 esc_attr( $data['alt'] ),
                 esc_attr( $args['loading'] ),
                 $width,
                 $height,
                 esc_attr( isset( $profile['sizes'] ) ? (string) $profile['sizes'] : '(max-width: 900px) 100vw, 960px' ),
-                'hero' === $args['context'] ? ' fetchpriority="high" data-no-lazy="1" data-skip-lazy="1"' : ''
+                'hero' === $args['context'] ? ' fetchpriority="high" data-no-lazy="1" data-skip-lazy="1"' : '',
+                '' !== $srcset ? ' srcset="' . esc_attr( $srcset ) . '"' : ''
             );
         }
 

@@ -44,7 +44,8 @@ check( 3 === count( $fixture['provenance']['sources'] ), 'Fixture must retain th
 foreach ( $fixture['provenance']['sources'] as $source ) {
 	check( str_starts_with( $source['url'], 'https://raw.githubusercontent.com/WordPress/wordpress-develop/7.1/' ) && 64 === strlen( $source['sha256'] ), 'Fixture provenance must identify exact official source content.' );
 }
-$source = file_get_contents( getenv( 'LUNARA_OSCAR_REGISTRATION_SOURCE' ) ?: dirname( __DIR__ ) . '/functions.php' );
+// Picks registration lives in inc/oscar-picks.php (3.2.90); Facts remain in functions.php.
+$source = getenv( 'LUNARA_OSCAR_REGISTRATION_SOURCE' ) ? file_get_contents( getenv( 'LUNARA_OSCAR_REGISTRATION_SOURCE' ) ) : file_get_contents( dirname( __DIR__ ) . '/inc/oscar-picks.php' ) . "\n" . file_get_contents( dirname( __DIR__ ) . '/functions.php' );
 foreach ( array( 'lunara_register_oscar_pick_cpt', 'lunara_register_oscar_fact_cpt' ) as $name ) { eval( extract_registration( $source, $name ) ); $name(); }
 check( array( 'oscar_pick_category', 'lunara_oscar_pick', 'oscar_fact_category', 'oscar_fact' ) === array_column( $registrations, 'name' ), 'Future rule generation must register each taxonomy before its CPT.' );
 $old_arguments = array_column( $fixture['provenance']['registration_arguments'], null, 'name' );

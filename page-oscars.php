@@ -11,7 +11,6 @@ $aat                = function_exists( 'lunara_oscars_reader' ) ? lunara_oscars_
 $snapshot           = function_exists( 'lunara_get_home_oscars_snapshot' ) ? lunara_get_home_oscars_snapshot() : array();
 $database_spotlight = function_exists( 'lunara_get_home_database_spotlight' ) ? lunara_get_home_database_spotlight() : array();
 $deep_cuts          = function_exists( 'lunara_get_home_deep_cuts' ) ? lunara_get_home_deep_cuts() : array();
-$linked_reviews     = function_exists( 'lunara_oscars_linked_reviews_query' ) ? lunara_oscars_linked_reviews_query( 4 ) : new WP_Query();
 
 /*
  * Oscars Portal Studio composer state. The existing owners stay canonical:
@@ -244,12 +243,8 @@ $portal_stats = array(
 );
 
 // Backdrop images keyed by portal card to keep the top-level gateway visual.
-$portal_backdrop_map = array(
-    'Ceremonies' => 'tt7286456',
-    'Categories' => 'tt1375666',
-    'Ledger'     => 'tt0111161',
-    'About'      => 'tt0068646',
-);
+// One map: the daily visual warmer (inc/oscars-portal.php) warms these same films.
+$portal_backdrop_map = function_exists( 'lunara_oscars_portal_door_backdrop_map' ) ? lunara_oscars_portal_door_backdrop_map() : array();
 $portal_backdrops = array();
 
 if ( $aat && method_exists( $aat, 'get_title_visual_package' ) ) {
@@ -674,11 +669,12 @@ $command_cards = array(
 <?php $oscars_slot_markup['research'] = ob_get_clean(); ob_start(); ?>
 
         <?php
-        /**
-         * "Reviews Inside the Ledger" section disabled 2026-04-20 per Dalton.
-         * To be replaced by a more distinctive Oscars-native section (stats /
-         * ceremony grid / deep-cuts visual). Re-enable by removing the `0 &&` guard.
+        /*
+         * "Reviews Inside the Ledger" is hidden by default (since 2026-04-20, per
+         * Dalton) and shown through its Studio / lunara_oscars_show_linked_reviews
+         * visibility. Its query runs only when the section will render.
          */
+        $linked_reviews = ( $show_linked_reviews && function_exists( 'lunara_oscars_linked_reviews_query' ) ) ? lunara_oscars_linked_reviews_query( 4 ) : null;
         ?>
         <?php if ( $show_linked_reviews && $linked_reviews instanceof WP_Query && $linked_reviews->have_posts() ) : ?>
             <section id="oscars-reviews" class="lunara-home-section lunara-oscars-portal-reviews lunara-oscars-portal-slot-linked-reviews" data-lunara-site-studio-section="linked-reviews">

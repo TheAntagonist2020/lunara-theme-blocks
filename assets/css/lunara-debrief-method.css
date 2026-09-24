@@ -1,5 +1,5 @@
 /* ============================================================
-   THE DEBRIEF METHOD (3.2.89)
+   THE DEBRIEF METHOD (3.2.89; settings-driven since 3.2.90)
    Explainer page for the signature that closes every review.
    Loaded only on page-debrief.php (inc/debrief-method.php).
    Token-driven and mobile-first, sharing the About page's vocabulary.
@@ -71,6 +71,11 @@
 .lunara-debrief-canon-year { color: rgba(244, 239, 227, 0.58); font-size: 0.86em; }
 .lunara-debrief-canon-count { margin: 0; color: var(--lunara-gold, #c9a961); font-family: var(--lunara-font-label, sans-serif); font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; }
 .lunara-debrief-canon-roles { margin: 0; color: rgba(244, 239, 227, 0.62); font-family: var(--lunara-font-body, Georgia, serif); font-size: 0.84rem; line-height: 1.45; }
+.lunara-debrief-canon-reviews { margin: 2px 0 0; color: rgba(244, 239, 227, 0.62); font-family: var(--lunara-font-body, Georgia, serif); font-size: 0.82rem; line-height: 1.45; overflow-wrap: anywhere; }
+.lunara-debrief-canon-reviews-label { display: block; margin-bottom: 2px; color: rgba(201, 169, 97, 0.85); font-family: var(--lunara-font-label, sans-serif); font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase; }
+.lunara-debrief-canon-reviews a { color: rgba(244, 239, 227, 0.86); text-decoration: underline; text-decoration-color: rgba(201, 169, 97, 0.45); text-underline-offset: 2px; }
+.lunara-debrief-canon-reviews a:hover,
+.lunara-debrief-canon-reviews a:focus-visible { color: var(--lunara-gold-light, #e0c481); }
 
 /* Recent debriefs */
 .lunara-debrief-recent-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }

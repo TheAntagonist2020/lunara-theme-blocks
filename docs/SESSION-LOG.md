@@ -25,6 +25,157 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-24 — Theme 3.2.90 candidate: editable Debrief, modular Oscars, image delivery, discovery
+
+### Headline
+
+Dalton asked for five things in one pass:
+
+1. Decouple the Oscars page.
+2. Finish the Debrief page and make it fully dynamic and configurable.
+3. Fix image loading and clipping.
+4. Verify every review.
+5. Make the Journal deliver fully and navigate properly.
+
+Theme 3.2.90 on `claude/sweet-cannon-ugwj4q` does all five. None of it is merged or deployed, and no plugin changed. The session began with live probes: a crawl of all 567 posts and a 90-load browser audit. Every fix below answers a measured defect.
+
+- **Debrief page:** a full Site Studio surface.
+- **Oscars:** its data no longer lives in the monolith or the homepage module.
+- **Images and clipping:** four clipping bugs fixed, several over-downloads cut, and CLS reduced on desktop homepage and dossier pages.
+- **Reviews and Journal:**
+  - Tag archives were empty site-wide; they now list their posts.
+  - Reviews and Journal entries were missing from every sitemap; they are now listed.
+  - Journal entries gain older/newer navigation.
+
+### Verified live state (read-only probes, anonymous GETs)
+
+| Probe | Result |
+| --- | --- |
+| Live build (`/journal/` meta) | `3.2.89+20260923-193827`. 3.2.89 is live, so the previous session's deploy happened. |
+| `/debrief/` | 200, published page, title "Lunara Debrief". Index: 255 reviews debriefed, 765 films prescribed, 570 distinct titles. |
+| Live Debrief canon | Lists "2001: A Space Odyssey (Kubrick, 1968)" as a separate title from its linked-movie entries (the identity split fixed below). |
+| All 256 reviews (REST, archive pagination) | 256/256 return 200 with no redirects and no PHP errors. The archive reaches every review. All 761 hero, poster and OG image URLs return 200 or 206. |
+| Pair It With | Present on 255 reviews. `/reviews/bugonia-the-full-spoiler/` has none (no pairings in the data). |
+| All 311 Journal posts | 311/311 return 200 with no PHP errors. Archive pagination reaches all 311. No older/newer navigation existed. |
+| Sitemaps | Jetpack's `/sitemap.xml` lists 13 pages and **zero** reviews or Journal posts. `/wp-sitemap.xml` returns 404. |
+| Tag archives | 10 `/tag/…/` archives linked from Journal sidebars show "Total Filed 0". Root cause: the query forced `post_type = post`, and the site has no published Posts. |
+| Browser audit, 18 routes × 5 widths | 0 broken images and 0 page-level horizontal overflow. 4 clipping bugs, detailed in "What shipped". |
+| Review hero weight | 16 heroes load TMDB `/t/p/original/`. Example: 1,919,034 bytes, against 145,879 at w1280. |
+| CLS, deferred CSS held back 4s (deterministic) | Live: Home 1280 0.86–0.98; Person 768 0.50; Film 1280 0.26; Home 390 0.72. |
+| Oscars CSS | Boost's 861 KB concat on `/oscars/` carries about 3,800 `aat-` plugin rules. |
+
+### What shipped and why
+
+Code-level detail is in `docs/CHANGELOG.md` → 3.2.90. The Oscars module map is
+in the new `docs/OSCARS-PORTAL-ARCHITECTURE.md`.
+
+- **Debrief page.** Every word, section toggle and count is now a theme mod, edited in Site Studio → Reviews → Debrief page with Preview, Apply and History. Defaults reproduce 3.2.89 exactly, so the page looks the same until Dalton edits it.
+  - Move *names* stay fixed because review cards share them.
+  - The index moves to v2. One film is now one entry, however it was entered. The retired v1 key is cleared on every flush.
+  - The canon now links the reviews that prescribed each film.
+  - The index also refreshes on pairing-meta writes that bypass `save_post`.
+- **Oscars.**
+  - The Oscar Picks domain moved from `functions.php` to `inc/oscar-picks.php`. It is required at its original line, so hook order and the saved rewrite rules are unchanged.
+  - The Oscars data layer moved from `inc/home-sections.php` to `inc/oscars-data.php`.
+  - Both moves are byte-identical, verified by diff.
+  - The hidden linked-reviews query no longer runs on every request.
+  - The door backdrops now read the same map the warmer uses.
+  - The template's inline logic stays put, because several contracts pin its source. That is logged as the next step.
+- **Images and clipping.**
+
+  | Defect | Before | After |
+  | --- | --- | --- |
+  | Review-card Oscar Ledger footer | Clipped on every card | Visible |
+  | Oscars research shell (tablet) | 47px clipped at 768, 107px at 820 | 0 |
+  | Homepage Oscar Picks images | 45–54px overflow at desktop widths | 0 |
+
+  - Locked review art offers quarter and half widths, so a 320px debrief poster no longer downloads 2000px.
+  - TMDB heroes start from w1280.
+  - URL-only carousel art gains width candidates.
+  - Pair It With and canon posters carry real `sizes` hints.
+  - First-paint seeds were added for desktop hero controls and for film/person dossiers.
+  - The hero seed was first written for all widths, then measured on phones, where it hurt CLS slightly (0.7232 against 0.7205). Phones lay the controls out in flow by design, so the seed was narrowed to 901px and up before shipping.
+- **Discovery.**
+  - Tag archives gather Journal entries, Reviews and Posts.
+  - Jetpack sitemaps list `review` and `journal`; the news sitemap lists `journal`.
+  - Journal entries link their older and newer neighbours with `rel` prev/next.
+  - Journal lead images always carry alt text.
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| theme | this entry's commit on `claude/sweet-cannon-ugwj4q` | Theme 3.2.90 candidate, tests and docs |
+| plugins | none | No plugin changes. Deploy is theme-only. |
+
+### Gate ledger
+
+PowerShell 7.4.6 and the repo's pinned `playwright-core` 1.62.1 were installed in the container for this session, so the PowerShell contracts could run at all. Both are gitignored and deployignored.
+
+| Gate | Result |
+| --- | --- |
+| New runtimes | `site-studio-debrief-method-runtime` 364 checks, `debrief-method-runtime` 75, `image-delivery-runtime` 28, `archive-discovery-runtime` 21. All pass. |
+| Existing PHP runtimes (Site Studio, Oscars, Picks, carousels, landmarks, Journal delivery) | All 19 pass. Counts: utility-recovery 251, taxonomy rewrites 373, landmarks 75, footer navigation 129, Ledger 97, Method 34, home Oscars 20, carousels 50/55, Journal delivery 34. Also the `debrief-public-renderer` harness (12/12 flags). |
+| Browser: `article-layout-browser-runtime` | 32 real-template scenarios, 444 assertions. It caught a real phone spacing regression in the new Journal navigation, which was fixed before shipping. |
+| Browser: `site-studio-navigation-runtime` | 296 assertions (main: 292). |
+| Browser: editorial workspace, archive selection, archive media | Pass on both trees. |
+| Full PowerShell suite, 95 contracts, on copies with the header set to 3.2.81 (both with pinned Playwright) | `main` fails 7, this branch fails 8. |
+| Of the branch's 8 failures | 6 are identical to `main`. The other 2 are timing races with equal failure rates on both trees (next row). |
+| Flake characterization (run back to back) | `journal-gallery-controls-browser-runtime`: 4/6 runs fail on **both** trees, on the same 5000ms timeout. `site-studio-preview-viewport-runtime`: 1/5 fail on each. `site-studio-workspace-runtime`: main 10/10 isolated but failed once in its full run; branch 8/10 overall and 6/6 interleaved. |
+| Branch regressions the suite found, all fixed | Oscar Picks greps now read `inc/oscar-picks.php`. The article fixture's stubs no longer collide with the landmarks fixture. Navigation and workspace inventories now include the new surface. |
+| Live CSS before/after (rules appended to the live pages) | Review footer clipped → visible (1280, 768). Oscars research clip 47px → 0 (768) and 107px → 0 (820). Picks image overflow 45/54px → 0 (1280/1920). No new horizontal overflow anywhere. |
+| Live CLS, deferred CSS held back 4s, seeds injected into served HTML | Home 1280 0.86–0.98 → 0.48. Home 1920 0.83–0.95 → 0.32–0.44. Person 768 0.50 → 0.013. Person 1920 0.31 → 0.004. Film 1280 0.26 → 0.01. Film 390 0.115 → 0.060 (mean of 4). Home 390 0.72 → 0.72. |
+| Hygiene | `php -l` on every changed PHP file, `git diff --check`, `node --check` on both workspace scripts, and `build-shell-css.cjs --check`: all pass. |
+| Not run | Post-deploy canary (nothing deployed). Lighthouse and field Core Web Vitals. The Site Studio Debrief editor in a real WordPress admin (only fixtures and contracts exercised it). |
+
+### Corrections
+
+- **The 3.2.89 Debrief index split films on live data.** It keyed legacy text pairings by their raw title. So "2001: A Space Odyssey (Kubrick, 1968)" counted apart from the same film's linked-movie entries, as the live canon shows. The 3.2.89 fixture math was correct; the flaw only appears with live data. A correction line now sits inside the 3.2.89 entry, pointing here.
+- **About 50 PowerShell contracts stop at a version pin.** They assert "3.2.81", so they have stopped at their first assertion on every release since 3.2.82. Earlier entries that list individual PowerShell failures (e.g. 3.2.89's `debrief-public-renderer.ps1`) are accurate, but they saw only the pin, never what sits behind it.
+
+### Logged, not fixed
+
+- **Stale version pins.** About 50 PowerShell assertions pin Theme 3.2.81, so those contracts stop at their first line and nothing after it has run since 3.2.82. This session ran them on copies with the header set to 3.2.81. Refreshing the pins, or replacing them with a single release-identity check, would restore the gate. That is Dalton's call on scope.
+- **Failing on `main` too, when run with pinned Playwright** (not caused by this branch):
+  - `release-identity-3-2-81`
+  - `journal-archive-studio-contract`: needs `.git`; an environment artefact of the copy
+  - `performance-payload-budget`: scroll carousel at 10,516 bytes against a 10 KB budget
+  - `reviews-archive-composition-3-2-40`: the year row at 390px
+  - `reviews-archive-text-led-cards`: structural seed hash
+  - `run-journal-archive-first-paint`: runtime line 820
+- **Timing-sensitive browser runtimes, flaky on `main` too.** `journal-gallery-controls-browser-runtime.js` (4/6 failures on each tree, a 5000ms `waitForFunction`), `site-studio-preview-viewport-runtime.js` (1/5 on each), and the race fixtures in `site-studio-workspace-runtime.js`. They can fail contracts intermittently. The fix is sturdier waits, not reruns.
+- **Phone homepage CLS (0.72).** Boost's stored critical CSS orders two equal-specificity `!important` rules differently from the real sheets, which adds 40px to the hero's top padding before the deferred CSS lands. Fix: regenerate critical CSS in Jetpack Boost. That is a Boost action, not a cache clear.
+- **Content and data, for Dalton:**
+  - Bugonia full-spoiler review: no pairings.
+  - Journal posts with empty or fragment bodies: `what-would-make-you-show-up-for-a-david-ayer-movie-in-september` (0 words), plus the Farhadi (22 words) and Östlund (32 words) question fragments, all dated May 13–14.
+  - Duplicated stories: Refn `…-2`, and Park Chan-wook twice.
+  - Shared hero images: `project-hail-mary-1-header` on 7 unrelated posts, `IMG_5067-1` on 6.
+  - 252 of 311 Journal posts have no featured image.
+  - 283 of 311 Journal posts have no section, topic or type.
+  - About 20 junk `lunara_director` terms, such as `bart-layton-runtime-140-min-studio`, plus split Russo terms and `field_lunara_year`.
+  - 5 reviews lack the Director Archive button because their director meta doesn't match the term.
+  - The Backrooms pairing needs a portrait poster (the current one is a 300×214 still).
+  - The Oscars board crops 16:9 stills into 2:3 tiles (a design choice).
+- **Sitemap scope.** Movie and person dossiers (13.7k URLs) are not in the sitemap, pending a thin-page decision.
+- **Minor clips at 360px.** The review debrief poster loses 5px. `.lunara-review-single-debrief` reports scrollHeight above clientHeight, but no child is cut. Unverified.
+- **Remaining Oscars coupling.** Listed in `docs/OSCARS-PORTAL-ARCHITECTURE.md`: raw table reads in the data layer, plugin callbacks into the theme, the plugin stylesheet on the portal, four route detectors, and the template logic.
+
+### Punch-list carried forward
+
+- **Dalton:** review the branch and ask for the PR and merge. Then deploy the theme only, from `main`.
+- **After deploy:**
+  - Verify with `bash tests/tools/lunara-canary-verify.sh 3.2.90`.
+  - Rebuild the rollback hatch (PR #159) after the merge.
+  - Check `/sitemap.xml` after Jetpack's next sitemap generation for review and Journal entries.
+- **Dalton:** rewrite the Debrief explainer copy in his voice. It is now in Site Studio; no code needed.
+- **Dalton:** regenerate Boost critical CSS.
+- **Dalton:** work through the content list above.
+- **Next engineering step:** move `page-oscars.php`'s inline view logic into a tested view-model function, together with the contracts that pin its slices.
+
+### Whose move is next
+
+Dalton: review `claude/sweet-cannon-ugwj4q` and say whether to open the PR. `AGENTS.md` says not to open one unless asked. After the merge, deploy and run the 3.2.90 canary.
+
 ## 2026-09-23 — The Debrief Method page (Theme 3.2.89 candidate)
 
 ### Headline
@@ -37,6 +188,12 @@ spelled out (his message was cut off mid-sentence). Theme 3.2.89 on
 live index of every review's pairings, and a "How the Debrief works" link on
 every review's Pair It With heading that stays dark until the page exists.
 Nothing is merged or deployed.
+
+> Correction (2026-09-24): on live data this index split one film into
+> separate titles when a legacy pairing carried a director and year in its
+> parenthetical, e.g. "2001: A Space Odyssey (Kubrick, 1968)". The fixture math
+> recorded below was right; the defect needs live data. The v2 index in Theme
+> 3.2.90 fixes it; see the 2026-09-24 entry.
 
 ### Verified live state
 

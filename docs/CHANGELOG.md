@@ -11,6 +11,112 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-24 — Theme 3.2.90: editable Debrief page, modular Oscars, image delivery, discovery
+
+**Debrief page, fully editable.** The Debrief Method page's words, sections and
+counts are now settings. They live in `lunara_debrief_method_settings_spec()`
+(`inc/debrief-method.php`) as 35 theme mods whose defaults reproduce the
+3.2.89 page exactly. Site Studio gains a **Debrief Page** surface under
+Reviews (`inc/site-studio-debrief-method.php`), with the shared Preview,
+Apply and History transaction. The editable settings:
+
+- hero kicker, heading and thesis, and whether the live totals show;
+- the question, copy and "what it is not" line for each of the three moves (move names stay canonical because review cards share them);
+- the Why Three copy (paragraphs separated by blank lines);
+- a pinned specimen review (0 means automatic);
+- the From the Desk kicker;
+- the canon's size, its minimum prescriptions, and whether each film lists the reviews that prescribed it;
+- the recent count;
+- the closing links;
+- a show toggle for each optional section.
+
+The template marks all eight sections for the preview bridge. The editor is
+available only while a published page sits at `/debrief/`.
+
+**Debrief index v2.** New key `lunara_debrief_index_v2`; the retired v1 key
+is cleared on every flush. A film is now one entry however it was entered:
+
+- An IMDb ID and a title|year both resolve to the same film, so a linked movie, a legacy text pairing and an ID-only pairing are counted together.
+- "2001: A Space Odyssey (Kubrick, 1968)" parses to the title plus 1968. It no longer counts as a separate film.
+- A stray `|` left by "Title | tt… — note" entries is trimmed.
+
+Recent Debriefs store up to 12 and the films list up to 24. Each film records
+the reviews that prescribed it, and the canon now links them.
+
+Invalidation now also fires on:
+
+- linked-movie saves;
+- untrash;
+- permanent deletes, identified by the hook's post object;
+- any add, update or delete of review pairing meta, so imports and REST writes that skip `save_post` still refresh the page.
+
+**Oscars portal, decoupled.** The board's data source and the Oscars data
+layer are now modules of their own. Both moves are byte-identical; details
+and the remaining coupling are in `docs/OSCARS-PORTAL-ARCHITECTURE.md`.
+
+- `inc/oscar-picks.php`: the Oscar Picks post type, taxonomy, meta box and
+  `lunara_get_oscar_picks()`, moved out of `functions.php`. `functions.php`
+  requires it at the original line so `init` registration order, and with it
+  the saved rewrite rules, is unchanged.
+- `inc/oscars-data.php`: the snapshot, winner cards, rotating showcase,
+  spotlight, story cards and deep cuts, moved out of `inc/home-sections.php`.
+  The loader requires it immediately before `home-sections.php`.
+- `page-oscars.php` runs the hidden-by-default linked-reviews query only when
+  that section renders. It also reads the door backdrops from the same map the
+  visual warmer uses.
+
+**Image delivery and clipping.**
+
+- **Review cards:** the Oscar Ledger footer was clipped on every Reviews archive card. The card and its link were both `height:100%` inside `overflow:hidden`. The card is now a column that keeps the footer inside it. The route CSS stays within its 45 KB budget.
+- **Oscars research landing (541–820px):** it was clipped because the shared guardrail sized Academy containers to the viewport. The portal sheet now scopes them to the research shell.
+- **Homepage Oscar Picks:** the bottom 17% of mobile-art images was cropped at desktop widths. Their `<picture>` wrapper now takes the frame's size. Canonical shell edited, non-portal shell regenerated with `node tests/tools/build-shell-css.cjs`.
+- **Locked review artwork** (debrief posters, card posters, heroes) now offers quarter-, half-, locked- and retina-width candidates at the same aspect ratio. Previously it offered only the locked and retina widths, so a 320px debrief poster downloaded 2000px. Width and height attributes are unchanged.
+- **External TMDB review heroes** loaded `/t/p/original/` (1.9 MB in the measured case). They now start from w1280 (146 KB) and offer w780, w1280 and the original through `lunara_tmdb_image_srcset()`.
+- **URL-only homepage carousel art** gains width candidates through `lunara_image_url_width_srcset()`.
+- **Sizes hints:**
+  - `lunara_get_title_poster_html()` takes an optional `$sizes` hint. Pair It With posters now pass their real widths: 116px on phones, 45vw on tablets, 340px on desktop.
+  - Debrief canon posters pass their widths too.
+- **First-paint seeds:**
+  - On desktop (901px and up), the homepage hero seed now takes Splide's inserted arrows, pagination and the Play/Pause toggle out of flow before the deferred CSS lands. Phones place those controls in the grid's flow by design, so the seed leaves them alone there.
+  - Film and person dossiers get a matching seed (`lunara-entity-geometry-css`), copied verbatim from `style.css`, for their hero, filmography grid and award list.
+  - Both seeds are excluded from WP Rocket used-CSS.
+  - With Boost's deferred CSS held back 4s against live pages, measured CLS fell:
+
+    | Page | Before | After |
+    | --- | --- | --- |
+    | Homepage, 1280/1920px | 0.83–0.98 | 0.32–0.49 |
+    | Person, 768px | 0.50 | 0.013 |
+    | Person, 1920px | 0.31 | 0.004 |
+    | Film, 1280px | 0.26 | 0.01 |
+    | Film, 390px (mean of 4) | 0.115 | 0.060 |
+
+  - The phone homepage (0.72) is unchanged: its remaining shift comes from Boost's stale critical CSS.
+
+**Reviews and Journal discovery.**
+
+- **Tag archives** were forced to the Posts lane, and the site has no published Posts, so every `/tag/…/` link from a Journal entry or Review opened an empty page. Tag archives now gather Journal entries, Reviews and Posts. A Review on a shared archive card is labelled "Review".
+- **Sitemaps:** Jetpack's sitemaps listed neither post type. `review` and `journal` now go through `jetpack_sitemap_post_types`, and `journal` through the news sitemap. Movie and person dossiers are left out pending a thin-page decision.
+- **Journal entries** now link their older and newer neighbours, with `rel="prev"`/`rel="next"`.
+- **Lead image alt:** a Journal lead image is never decorative. `lunara_get_journal_hero_alt()` falls back from the Foundation alt to the attachment alt, then the caption, then "Lead image for {title}".
+
+**Tests.**
+
+- New runtimes:
+  - `site-studio-debrief-method-runtime.php` (364 checks)
+  - `debrief-method-runtime.php` (75)
+  - `image-delivery-runtime.php` (28)
+  - `archive-discovery-runtime.php` (21)
+- Updated for the moves and the new surface:
+  - `oscar-taxonomy-rewrites-runtime`
+  - `site-studio-home-oscars-runtime`
+  - `homepage-oscar-picks-seasonal-forecast`
+  - `oscars-winner-map-runtime`
+  - `oscars-portal-studio-runtime`
+  - `site-studio-foundation-runtime`
+  - `site-studio-editorial-workspace-runtime`
+  - `journal-foundation-integration-contract`
+  - `article-layout-runtime` (whose Journal fixtures now carry older/newer neighbours)
+
 ## 2026-09-23 — Theme 3.2.89: The Debrief Method page
 
 Give the signature that closes every review its own home. `page-debrief.php`

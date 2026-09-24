@@ -48,7 +48,7 @@ foreach ($relative in $sqlFreeFiles) {
 #   functions.php        12  (unsplit legacy fallback bundle)
 #   inc/frontend.php      2
 #   inc/debrief.php       3  (table-name candidates for the debrief resolver)
-#   inc/home-sections.php 1
+#   inc/home-sections.php 1  (moved to inc/oscars-data.php in 3.2.90; same count)
 #   docs/                 4  (CHANGELOG + OPERATORS-GUIDE prose)
 # Scope: every file under the theme root EXCEPT tests/, node_modules/, and
 # .git/ — the same sweep as `grep -ro academy_awards` with those exclusions.

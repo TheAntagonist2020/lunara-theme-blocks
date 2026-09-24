@@ -126,6 +126,7 @@ class Academy_Awards_Table {
 	}
 }
 
+require dirname( __DIR__ ) . '/inc/oscars-data.php';
 require dirname( __DIR__ ) . '/inc/home-sections.php';
 
 // ---------------------------------------------------------------------------

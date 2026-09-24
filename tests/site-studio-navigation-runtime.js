@@ -13,10 +13,10 @@ const editorControls = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-ed
 const archiveMediaEditor = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio-archive-media.js'), 'utf8');
 const archiveEditor = fs.readFileSync(path.join(themeRoot, 'assets/js/lunara-site-studio-archive-selection.js'), 'utf8');
 const mainPages = { home: 'homepage-structure', reviews: 'reviews-archive', journal: 'journal-archive', oscars: 'oscars-portal' };
-const directorySurfaces = ['lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger', 'global-design', 'review-single', 'journal-single', 'utility-search', 'utility-404', 'site-footer', 'hero-carousel', 'journal-carousel', 'reviews-carousel', 'home-oscar-picks', 'home-oscar-facts'];
+const directorySurfaces = ['lunara-method', 'homepage-structure', 'reviews-archive', 'journal-archive', 'oscars-portal', 'oscars-ledger', 'global-design', 'review-single', 'journal-single', 'utility-search', 'utility-404', 'site-footer', 'debrief-method', 'hero-carousel', 'journal-carousel', 'reviews-carousel', 'home-oscar-picks', 'home-oscar-facts'];
 const contextPages = {
  home: ['homepage-structure', 'hero-carousel', 'reviews-carousel', 'journal-carousel', 'lunara-method', 'home-oscar-picks', 'home-oscar-facts'],
- reviews: ['reviews-archive', 'review-single'], journal: ['journal-archive', 'journal-single'], oscars: ['oscars-portal', 'oscars-ledger']
+ reviews: ['reviews-archive', 'review-single', 'debrief-method'], journal: ['journal-archive', 'journal-single'], oscars: ['oscars-portal', 'oscars-ledger']
 };
 const homeEditors = { hero: 'hero-carousel', 'latest-reviews': 'reviews-carousel', dispatch: 'journal-carousel', 'pairing-desk': 'lunara-method', 'oscar-picks': 'home-oscar-picks', 'oscar-facts': 'home-oscar-facts' };
 let checks = 0;
@@ -85,7 +85,7 @@ async function navigationSnapshot(page) {
      assert(new URL(link.href).searchParams.get('surface') === expected && link.guarded, `${surface}: canonical guarded destination ${link.id}`, link);
     }
     assert(!snapshot.directoryOpen && snapshot.searchInside && new Set(snapshot.cards).size === snapshot.cards.length, `${surface}: secondary directory starts closed with unique destinations`, snapshot);
-    equal(snapshot.cards, directorySurfaces, `${surface}: secondary directory retains all 17 destinations including 404 Recovery`);
+    equal(snapshot.cards, directorySurfaces, `${surface}: secondary directory retains all 18 destinations including 404 Recovery`);
     assert(snapshot.doc[1] <= snapshot.doc[0] + 1, `${surface}/${width}: document must not overflow`, snapshot);
     const targets = page.locator('[data-studio-page], [data-studio-editor]');
     for (let index = 0; index < await targets.count(); index += 1) {

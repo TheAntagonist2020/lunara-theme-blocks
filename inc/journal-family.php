@@ -147,6 +147,33 @@ function lunara_get_journal_image_source_pair( $post_id, $attachment_id ) {
 	);
 }
 
+/**
+ * Alt text for a Journal entry's lead image. The lead image is never shipped
+ * as decorative: the canonical Foundation alt wins, then the attachment's own
+ * alt, then its caption, and finally the entry it leads.
+ *
+ * @param int $post_id Journal post ID.
+ * @return string
+ */
+function lunara_get_journal_hero_alt( $post_id ) {
+	$post_id       = absint( $post_id );
+	$attachment_id = absint( get_post_thumbnail_id( $post_id ) );
+	$alt           = trim( (string) lunara_get_journal_field_value( $post_id, 'journal_image_alt' ) );
+
+	if ( '' === $alt && $attachment_id ) {
+		$alt = trim( (string) get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ) );
+	}
+	if ( '' === $alt && $attachment_id ) {
+		$alt = trim( wp_strip_all_tags( (string) wp_get_attachment_caption( $attachment_id ) ) );
+	}
+	if ( '' === $alt ) {
+		/* translators: %s: Journal entry title. */
+		$alt = sprintf( __( 'Lead image for %s', 'lunara-film' ), html_entity_decode( wp_strip_all_tags( (string) get_the_title( $post_id ) ), ENT_QUOTES, 'UTF-8' ) );
+	}
+
+	return $alt;
+}
+
 function lunara_get_journal_section_label( $post_id ) {
 	$primary = lunara_get_journal_field_value( $post_id, 'journal_primary_section' );
 	$term    = null;

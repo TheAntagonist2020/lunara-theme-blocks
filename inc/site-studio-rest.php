@@ -116,6 +116,7 @@ if ( ! function_exists( 'lunara_site_studio_safe_validation_fields' ) ) {
 		$data    = is_wp_error( $error ) ? $error->get_error_data() : array();
 		$allowed = array_merge( $allowed, array( 'buttons', 'quick_start', 'quick_start.ceremonies', 'quick_start.categories', 'quick_start.ledger', 'quick_start.method' ), lunara_site_studio_oscars_navigation_paths() );
 		$allowed = array_merge( $allowed, array( 'winners', 'rotating_winners' ), lunara_site_studio_oscars_winner_paths() );
+		$allowed = array_merge( $allowed, function_exists( 'lunara_site_studio_debrief_method_paths' ) ? lunara_site_studio_debrief_method_paths() : array() );
 		$fields  = is_array( $data ) && isset( $data['fields'] ) && is_array( $data['fields'] ) ? $data['fields'] : array();
 		$safe    = array();
 		foreach ( $allowed as $field ) {
