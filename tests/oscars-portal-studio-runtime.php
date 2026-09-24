@@ -230,6 +230,7 @@ $oscars_projection_roundtrip = lunara_site_studio_project_state_value( lunara_os
 lunara_test_assert( $oscars_projection_accepted && lunara_oscars_portal_studio_defaults() === $oscars_projection_roundtrip, 'Oscars projection must preserve the complete authoritative default shape.' );
 require dirname( __DIR__ ) . '/inc/oscars-portal-critical.php';
 require dirname( __DIR__ ) . '/inc/queries.php';
+require dirname( __DIR__ ) . '/inc/oscars-data.php';
 require dirname( __DIR__ ) . '/inc/home-sections.php';
 
 // ---------------------------------------------------------------------------

@@ -592,6 +592,13 @@ body.lunara-oscars-portal-page .lunara-oscars-board-note {
         overflow: hidden !important;
     }
 
+    /* The shared guardrail sizes Academy containers to the viewport below 821px;
+       inside this bordered shell that clipped the research landing's left edge. */
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell :is(.aat-container, .aat-hub-page) {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
     body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-hub-header,
     body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-hub-section,
     body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-hub-metric-card,

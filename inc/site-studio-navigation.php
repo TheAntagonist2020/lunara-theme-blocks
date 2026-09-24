@@ -17,6 +17,7 @@ function lunara_site_studio_page_groups() {
 		'reviews' => array( 'label' => __( 'Reviews', 'lunara-film' ), 'surface' => 'reviews-archive', 'editors' => array(
 			'reviews-archive' => __( 'Reviews page', 'lunara-film' ),
 			'review-single' => __( 'Review article layout', 'lunara-film' ),
+			'debrief-method' => __( 'Debrief page', 'lunara-film' ),
 		) ),
 		'journal' => array( 'label' => __( 'Journal', 'lunara-film' ), 'surface' => 'journal-archive', 'editors' => array(
 			'journal-archive' => __( 'Journal page', 'lunara-film' ),
