@@ -25,6 +25,61 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-25 (later) — Theme 3.2.91 live: positional link guards and verbatim year labels
+
+### Headline
+
+Theme 3.2.91 is live and coherent: canary **GO**. At Dalton's direction it was pushed straight to `main`, and auto-deploy carried it out in under a minute. Theme links now pair a name with an IMDb ID only when the row's name and ID slots line up, and the old fallback that gave an unmatched name the row's first ID is gone. Split-season years such as `1932/33` print as written. The dataset stamp and the link guard are in place but inert, because Oscars Ledger 2.7.93 provides neither accessor.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Homepage `lunara-build` | `3.2.90+20260925-211257` at 21:16:32 UTC, which was the earlier docs push redeploying 3.2.90. Then `3.2.91+20260925-211637` at 21:16:55 UTC, 45 s after the push |
+| `bash tests/tools/lunara-canary-verify.sh 3.2.91`, run 150 s after 3.2.91 first appeared | Three cache-separated anonymous reads: http 200, 159,381 bytes, all `3.2.91+20260925-211637`. Journal sentinel `LIVE_COHERENT`, Oscars sentinel `LIVE_COHERENT`. **VERDICT: GO** |
+
+### What shipped and why
+
+The code is unit U13 of the dropped plan-v5 ledger rebuild. It was built and gated earlier today, then cherry-picked from the feature branch onto `main` without conflicts. Dalton's words: *"Ship 3.2.91 directly to main."* The link guards were written for the importer that dropped `?` slots. They are equally right for the plugin's slot-keeping import (2.7.93): a `?` slot keeps every later name on its own ID, and the joint "Roderick Jaynes" credit stays unlinked instead of pointing at one Coen. Code-level detail is in the `docs/CHANGELOG.md` entry "Theme 3.2.91".
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-theme-blocks | `bb14c7b` | Theme 3.2.91 code, cherry-pick of feature-branch `1e6728b` |
+| lunara-theme-blocks | `7352186` | The 3.2.91 changelog entry, plus the ratchet wording fix described under Corrections |
+| lunara-theme-blocks | this record | Session log |
+| lunara-theme-blocks | hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on this record, tree `c55bf394…` |
+
+Roll back by reverting `bb14c7b` on `main`, which auto-deploys 3.2.90 behaviour, or by using the hatch.
+
+### Gate ledger
+
+- `php8.2 -l` on every changed PHP file: clean.
+- PHP runtime tests: `tests/oscars-positional-link-runtime.php`, `tests/film-year-label-runtime.php`, `tests/oscars-dataset-cache-runtime.php` and `tests/oscars-winner-map-runtime.php` all passed.
+- `tests/oscars-read-path-ratchet.ps1`: it first **failed** at 25 against its pin of 22. The cause was this session's earlier entry, not the 3.2.91 code (see Corrections). After the fix it passed at 22.
+- `tests/release-identity-3-2-81.ps1` still fails, identically on untouched `main`. It is stale, as logged in the entry below.
+- **Not run:** the other pwsh contracts and any local WordPress gate.
+
+### Corrections
+
+- The 2026-09-25 entry below named the plugin's master-table backups by their literal table name three times. That raised the read-path ratchet from 22 to 25, and I did not run the ratchet for that docs-only push. `7352186` rewords the three lines, with the same facts and without the literal. This is recorded here rather than hidden.
+- That entry lists theme U13 as unshipped. It is now superseded; a pointer line was added inside it.
+
+### Logged, not fixed
+
+- The theme's Oscars caches carry the dataset stamp only once the plugin provides `get_dataset_stamp()`, and 2.7.93 does not. Until then, after a future import, the theme's cached Oscars blocks can show old data until their transients expire.
+- Every push to theme `main` redeploys the theme, docs-only pushes included, as the `211257` build shows. That is harmless, but each one is a deploy.
+
+### Punch-list carried forward
+
+- **Unshipped:** plugin U01 (ledger bundle and codec) on the plugin feature branch. Plan v5 is dropped, so ship it only if Dalton asks.
+- Everything carried in the entries below still stands.
+
+### Whose move is next
+
+Dalton's. Theme 3.2.91 and Oscars Ledger 2.7.93 are live, and no agent task is open.
+
 ## 2026-09-25 — Oscars Ledger 2.7.93: the audited dataset is live, names pair by slot
 
 ### Headline
@@ -100,6 +155,7 @@ Each import also keeps the table it replaced as a timestamped `…_backup_<times
 - **Dalton, optional:** drop the old master-table backups.
 - **Dalton:** the ship rule is still his to write into `AGENTS.md`. Today he again directed pushes straight to `main`.
 - **Unshipped, on feature branches:** plugin U01 (ledger bundle and codec) and theme U13 (Theme 3.2.91: positional guards, unflattened year labels, dataset-stamped caches). Plan v5 is dropped, so ship these only if Dalton asks.
+  > **Superseded (2026-09-25, later):** U13 shipped as Theme 3.2.91. See the entry above.
 - Everything carried in the entries below still stands. That includes the Boost critical-CSS regeneration, the content list, the stale Lunara Core 0.8.11 copy, staging, and the three plugins with no repo.
 
 ### Whose move is next
