@@ -25,6 +25,83 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-25 (late) — Theme 3.2.92 and Oscars Ledger 2.8.3 live: Oscar content kept inside rounded frames
+
+### Headline
+
+Oscar-page content no longer clips at rounded corners. Dalton reported *"countless instances like that on the Oscar pages, where things are kind of cut off at the rounded corners"*, with a desktop screenshot of the /oscars/ "Explore the Portal" block as the example. A clip scan found 178 instances across 11 Oscar routes at seven widths. After the fixes, a live rescan of six of those routes (portal, two ceremonies, a category page, and the Ceremonies and Categories hubs) at six widths from 360 to 1920 px found none. The homepage Oscar Picks slide marks, which Dalton circled on a phone, are now one row. Both repos were pushed straight to `main` at Dalton's direction, plugin first. Canary **GO**.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Homepage `lunara-build` | `3.2.92+20260925-224932` at 22:49:40 UTC, 34 s after the push |
+| `bash tests/tools/lunara-canary-verify.sh 3.2.92`, first run, 40 s after the push | **ROLLBACK**: split brain, one read still `3.2.91+20260925-211637` from the edge. Not a code fault |
+| Same, at 22:51:18 UTC, after four consecutive triple reads agreed on 3.2.92 | Three reads, http 200, 159,381 bytes, all `3.2.92+20260925-224932`. Journal and Oscars sentinels `LIVE_COHERENT`. **GO** |
+| Plugin 2.8.3 in a browser, `/oscars/ceremony/98/` at 1501 px | Research Mode callout padding `28px` (was `0px`); Winner Circle top row `flex-wrap: wrap` (was `nowrap`) |
+| `/oscars/ceremonies/` served HTML | http 200; zero `aat-database-landing` matches. Before, the whole ledger landing rendered nested inside the hub header |
+| Clip scan, live, no injected CSS | 0 findings at 360, 430, 820, 1024, 1501 and 1920 px on `/oscars/`, `/oscars/ceremony/98/`, `/oscars/ceremony/69/`, `/oscars/category/best-picture/`, `/oscars/ceremonies/` and `/oscars/categories/`. The pre-fix scan found 178 |
+| Portal kicker hairlines, `/oscars/` at 393 and 1501 px | Before: eight headings overlapped by 7 px. After: each clears the rule by 7 px |
+| Homepage Oscar Picks controls, 15 picks | At 360 px: 4 rows and 246 px before; 1 row and 96 px (arrows and marks, with Pause below) after. At 820 px: 2 rows before, 1 row after. At 1024 px: unchanged |
+
+### What shipped and why
+
+Detail is in the `docs/CHANGELOG.md` entry "Theme 3.2.92 and Oscars Ledger 2.8.3".
+
+The common cause: a box with `border-radius` and `overflow: hidden` and no inner padding trims anything that touches its corners. The scanner measures each text line box and framed shape against the corner arcs of its clipping ancestor. Every finding outside the Ceremonies hub came from one of three components:
+
+- the unframed "Explore the Portal" section, which still carried the shared 26 px clip;
+- the Research Mode callout, which had no desktop padding;
+- the Winner Circle top row, which could not wrap.
+
+The hub's findings came from the ledger landing nested in its header. Separately, the kicker hairline overlapped every portal heading, because the compact guardrail zeroes the kicker margin.
+
+For the Oscar Picks controls, a JavaScript "3 / 15" counter was built first and dropped before any push. `assets/js/lunara-scroll-carousel.js` is already over its 10 KB budget on `main` (10,516 bytes), and the counter would have grown it. The shipped fix is CSS only, in `style.css` beside the existing Oscar Picks control rules. The 44 px arrows remain the full-size controls: at 360 px each mark is 10 px wide, which relies on the equivalent-control exception in WCAG 2.5.8.
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-plugin-oscars-ledger | `64d8244` | Oscars Ledger 2.8.3: callout padding, Winner Circle wrap, hub nesting |
+| lunara-theme-blocks | `7837379` | Theme 3.2.92 code and changelog entry |
+| lunara-theme-blocks | this record | Session log |
+| lunara-theme-blocks | hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on this record, tree `c55bf394…` |
+
+Roll back the theme by reverting `7837379` on `main` or by using the hatch. Roll back the plugin by reverting `64d8244`.
+
+### Gate ledger
+
+- Plugin:
+  - `php -l` on `templates/hub-page.php` and `academy-awards-table.php`: clean.
+  - The strip regex was exercised on four samples. It removes the database block (self-closing and paired) and the database shortcode. It keeps the editor's own paragraphs and look-alike tags such as the ballot shortcode.
+  - CI-equivalent: **PASS**.
+- Theme:
+  - Node runtime tests: `tests/carousel-lifecycle-runtime.js` (57 checks), `tests/home-oscar-navigation-runtime.js` (56) and `tests/home-oscar-framing-runtime.js` (1,237) all passed, the last two with `LUNARA_BROWSER_EXECUTABLE=/opt/pw-browsers/chromium`.
+  - The full pwsh suite (95 files) was run on the branch and on untouched `main`. Both have the same 41 failures: stale 3.2.81 version pins, browser paths this container lacks, and `performance-payload-budget.ps1` on the carousel runtime. None is new.
+  - One branch run of `site-studio-workspace-contract.ps1` failed with an interrupted navigation while both suites ran in parallel. It passed on the re-run.
+  - `tests/oscars-read-path-ratchet.ps1` passed at 22.
+- Pre-push injection: the scanner, run against the live pages with the new CSS injected, found 0 at 393, 820, 1024 and 1501 px on `/oscars/`, ceremony 98 and Best Picture.
+
+### Corrections
+
+- The first draft of this release's changelog entry wrote the plugin's shortcode names literally. The ratchet counted one as a table reference (22 → 23), so the line was reworded before the push. This is the same trap the entry below records.
+
+### Logged, not fixed
+
+- `performance-payload-budget.ps1` fails on `main`: `lunara-scroll-carousel.js` is 10,516 bytes against 10,240. This predates the session.
+- A canary run in the first minute after a deploy can read split brain from the edge. It converged on its own within about two minutes; nothing was purged.
+- 41 pwsh contracts fail identically on `main`, most on stale version pins. They need re-pinning, or retiring as release-identity tests.
+
+### Punch-list carried forward
+
+- **Batch 3 of the Explorer plan** is waiting on Dalton's go: the Oscars hub and footer "Full Ledger" links pointing to `/oscars/explore/`.
+- **Unshipped:** plugin U01, on its feature branch. Ship it only if Dalton asks.
+- Everything carried in the entries below still stands.
+
+### Whose move is next
+
+Dalton's. Theme 3.2.92 and Oscars Ledger 2.8.3 are live, and no agent task is open.
+
 ## 2026-09-25 (later) — Theme 3.2.91 live: positional link guards and verbatim year labels
 
 ### Headline
