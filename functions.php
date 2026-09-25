@@ -12703,25 +12703,62 @@ if ( ! function_exists( 'lunara_oscar_first_id_from_list' ) ) {
 }
 
 if ( ! function_exists( 'lunara_oscar_nominee_id_for_label' ) ) {
+	/**
+	 * The person ID credited to $label on one Oscars row, or ''.
+	 *
+	 * Only positional pairs are trusted: names[i] pairs with ids[i] only when
+	 * the row carries as many IDs as names. A misaligned row (a '?' slot the
+	 * importer dropped, a comma-joined slot) returns '' instead of the
+	 * neighbour's ID. The first-ID fallback applies only to a row with exactly
+	 * one ID and at most one name. A pair the plugin's legacy link guard
+	 * rejects (lunara_oscars_pair_is_guarded()) returns '' too.
+	 *
+	 * This is the only definition (no inc/ copy), so it is live code.
+	 *
+	 * @param string $label     The person label to resolve.
+	 * @param string $names_raw Pipe-separated credited names.
+	 * @param string $ids_raw   Pipe-separated IDs.
+	 * @return string
+	 */
 	function lunara_oscar_nominee_id_for_label( $label, $names_raw, $ids_raw ) {
 		$label = (string) $label;
 		if ( '' === trim( $label ) ) {
 			return '';
 		}
 
-		$names = array_map( 'trim', preg_split( '/\|/', (string) $names_raw ) );
-		$ids   = array_map( 'trim', preg_split( '/\|/', (string) $ids_raw ) );
+		$names = array_values( array_filter( array_map( 'trim', preg_split( '/\|/', (string) $names_raw ) ), 'strlen' ) );
+		// A comma- or semicolon-joined slot counts as the IDs it holds, the way
+		// the plugin's normalizer splits it, so it never pairs with one name.
+		$ids   = array_values( array_filter( array_map( 'trim', preg_split( '/[|,;]/', (string) $ids_raw ) ), 'strlen' ) );
 
-		foreach ( $names as $index => $name ) {
-			if ( lunara_oscar_text_matches( $label, $name ) && ! empty( $ids[ $index ] ) ) {
-				$id = lunara_oscar_first_id_from_list( $ids[ $index ], 'name' );
-				if ( '' !== $id ) {
-					return $id;
+		$is_guarded = static function ( $id, $credited ) use ( $label ) {
+			if ( ! function_exists( 'lunara_oscars_pair_is_guarded' ) ) {
+				return false;
+			}
+
+			return lunara_oscars_pair_is_guarded( $id, $label )
+				|| ( '' !== $credited && lunara_oscars_pair_is_guarded( $id, $credited ) );
+		};
+
+		if ( ! empty( $names ) && count( $names ) === count( $ids ) ) {
+			foreach ( $names as $index => $name ) {
+				if ( lunara_oscar_text_matches( $label, $name ) ) {
+					$id = lunara_oscar_first_id_from_list( $ids[ $index ], 'name' );
+					if ( '' !== $id ) {
+						return $is_guarded( $id, $name ) ? '' : $id;
+					}
 				}
 			}
 		}
 
-		return lunara_oscar_first_id_from_list( $ids_raw, 'name' );
+		if ( 1 === count( $ids ) && count( $names ) <= 1 ) {
+			$id = lunara_oscar_first_id_from_list( $ids[0], 'name' );
+			if ( '' !== $id ) {
+				return $is_guarded( $id, $names[0] ?? '' ) ? '' : $id;
+			}
+		}
+
+		return '';
 	}
 }
 

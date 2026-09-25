@@ -612,20 +612,27 @@ if ( ! function_exists( 'lunara_oscars_person_index_absorb' ) ) {
 		}
 		$names = array_values( array_filter( array_map( 'trim', explode( '|', (string) ( $row['nominees'] ?? '' ) ) ), 'strlen' ) );
 		$ids   = array_values( array_filter( array_map( 'trim', explode( '|', (string) ( $row['nominee_ids'] ?? '' ) ) ), 'strlen' ) );
+		// A pair the plugin's legacy link guard rejects (a known-wrong legacy
+		// pairing or a never-link ID) lends no portrait.
+		$guarded = static function ( $nm, $label ) {
+			return function_exists( 'lunara_oscars_pair_is_guarded' ) && lunara_oscars_pair_is_guarded( $nm, $label );
+		};
 		if ( ! empty( $names ) && count( $names ) === count( $ids ) ) {
 			foreach ( $names as $i => $name ) {
 				$nm  = lunara_oscars_pick_id_from_text( $ids[ $i ], 'nm' );
 				$key = lunara_oscars_person_key( $name );
-				if ( '' !== $nm && '' !== $key && ! isset( $index[ $key ] ) ) {
+				if ( '' !== $nm && '' !== $key && ! isset( $index[ $key ] ) && ! $guarded( $nm, $name ) ) {
 					$index[ $key ] = $nm;
 				}
 			}
 		}
+		// The whole Name string maps to the one ID only when the row credits at
+		// most one name: one ID beside several names cannot say whose it is.
 		$winner = trim( (string) ( $row['name'] ?? '' ) );
-		if ( '' !== $winner && 1 === count( $ids ) ) {
+		if ( '' !== $winner && 1 === count( $ids ) && count( $names ) <= 1 ) {
 			$nm  = lunara_oscars_pick_id_from_text( $ids[0], 'nm' );
 			$key = lunara_oscars_person_key( $winner );
-			if ( '' !== $nm && '' !== $key && ! isset( $index[ $key ] ) ) {
+			if ( '' !== $nm && '' !== $key && ! isset( $index[ $key ] ) && ! $guarded( $nm, $winner ) && ! $guarded( $nm, (string) ( $names[0] ?? '' ) ) ) {
 				$index[ $key ] = $nm;
 			}
 		}
@@ -640,6 +647,7 @@ if ( ! function_exists( 'lunara_oscars_person_name_index' ) ) {
 	 */
 	function lunara_oscars_person_name_index( $build = false ) {
 		$key    = 'lunara_oscars_person_index_v1';
+		$key    = lunara_oscars_dataset_cache_key( $key );
 		$cached = get_transient( $key );
 		if ( is_array( $cached ) ) {
 			return $cached;
@@ -913,6 +921,7 @@ if ( ! function_exists( 'lunara_oscars_portal_warm_visuals' ) ) {
 			return;
 		}
 		delete_transient( 'lunara_oscars_person_index_v1' );
+		delete_transient( lunara_oscars_dataset_cache_key( 'lunara_oscars_person_index_v1' ) );
 		lunara_oscars_person_name_index( true );
 		foreach ( lunara_oscars_portal_collect_title_ids() as $tt ) {
 			$aat->get_title_visual_package( $tt, 'large', true );
