@@ -70,7 +70,7 @@ Plugin detail is in the `docs/CHANGELOG.md` entry "Academy 2.7.93".
 | lunara-plugin-oscars-ledger | `bf2651d` | Academy 2.7.93: version markers and changelog | Revert. Version only |
 | lunara-theme-blocks | this record | Session log, changelog, one correction line | Docs only |
 
-Each import also keeps the table it replaced as `wp_academy_awards_backup_<timestamp>`. One `RENAME TABLE` swaps a backup back without a re-import, but it needs database access.
+Each import also keeps the table it replaced as a timestamped `…_backup_<timestamp>` copy of the plugin's master table. One `RENAME TABLE` swaps a backup back without a re-import, but it needs database access.
 
 ### Gate ledger
 
@@ -90,14 +90,14 @@ Each import also keeps the table it replaced as `wp_academy_awards_backup_<times
 ### Logged, not fixed
 
 - Entity-label and permalink transients, kept up to 12 hours, are not keyed to the dataset. After an import some pages can show old names until they expire. None did in today's probes.
-- Today's three imports left three `wp_academy_awards_backup_<timestamp>` tables. Drop old ones once no rollback is wanted.
+- Today's three imports left three timestamped backups of the plugin's master table. Drop old ones once no rollback is wanted.
 - From reading the code, not probed: the joint credit "Roderick Jaynes" (2 rows) now renders without a link. Linking a joint credit to both people would need a renderer change.
 - `data.sql.gz`'s `source_sha256` hashes the audit's intermediate JSON, not `data/oscars.csv`, as `docs/database/README.md` notes.
 - `tests/release-identity-3-2-81.ps1` is stale. It has pinned `style.css` to 3.2.81 since 3.2.82 shipped, so it fails on `main`. Retire it, or re-pin it to the current release.
 
 ### Punch-list carried forward
 
-- **Dalton, optional:** drop the old `academy_awards` backup tables.
+- **Dalton, optional:** drop the old master-table backups.
 - **Dalton:** the ship rule is still his to write into `AGENTS.md`. Today he again directed pushes straight to `main`.
 - **Unshipped, on feature branches:** plugin U01 (ledger bundle and codec) and theme U13 (Theme 3.2.91: positional guards, unflattened year labels, dataset-stamped caches). Plan v5 is dropped, so ship these only if Dalton asks.
 - Everything carried in the entries below still stands. That includes the Boost critical-CSS regeneration, the content list, the stale Lunara Core 0.8.11 copy, staging, and the three plugins with no repo.

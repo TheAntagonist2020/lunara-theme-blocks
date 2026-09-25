@@ -11,6 +11,30 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-25 — Theme 3.2.91: positional link guards, verbatim year labels, dataset-ready Oscars caches
+
+Pushed straight to `main` at Dalton's direction; the theme connection auto-deploys. The code was built as unit U13 of the dropped plan-v5 ledger rebuild, then cherry-picked onto `main`. With Oscars Ledger 2.7.93 the stamp and the guard are inert, because the plugin has neither accessor. Everything else below takes effect now.
+
+- **Positional pairing.** `lunara_oscar_nominee_id_for_label()` in `functions.php` pairs `names[i]` with `ids[i]` only when a row carries as many IDs as names, and a comma-joined slot counts as its IDs. It no longer falls back to the row's first ID for a name it cannot match, which linked unmatched names to someone else. The lone-ID fallback now applies only to a row with one ID and at most one name. The same count rule is applied in:
+  - `lunara_resolve_oscars_winner_person_id()` (`inc/oscars-data.php`);
+  - `lunara_oscars_person_index_absorb()` (`inc/oscars-portal.php`);
+  - the search pair map and title matches (`inc/frontend.php`).
+
+  With the plugin's slot-keeping import (2.7.93), a `?` slot keeps every later name on its own ID, and a joint credit such as "Roderick Jaynes" stays unlinked instead of pointing at one Coen.
+- **Year labels.** Award history prints `YYYY` or `YYYY/YY` verbatim, otherwise an em dash (`inc/entity-surfaces.php`). Movie JSON-LD emits `datePublished` only for a plain `YYYY`, and the Debrief resolver keeps `1932/33` as written (`inc/debrief-resolver.php`).
+- **Dataset-ready caches.** `inc/oscars-family.php` gains three helpers, each `function_exists`-guarded and `method_exists`-gated on the plugin reader:
+  - `lunara_oscars_dataset_stamp()`;
+  - `lunara_oscars_dataset_cache_key()`, which appends the stamp;
+  - `lunara_oscars_pair_is_guarded()`.
+
+  The person index, rotating showcase, story cards, Oscar spotlight, deep cuts and live-search keys carry the stamp when the plugin provides one, and every delete site deletes both key forms. `lunara_oscars_on_ledger_swapped()` listens for `aat_ledger_swapped`, which today's plugin never fires. With no stamp, every key is exactly the 3.2.90 key.
+- **Tests.** Three new PHP runtime tests share a stub reader in `tests/fixtures/oscars-ledger-reader-stub.php`:
+  - `tests/oscars-positional-link-runtime.php`;
+  - `tests/film-year-label-runtime.php`;
+  - `tests/oscars-dataset-cache-runtime.php`.
+
+  `tests/oscars-winner-map-runtime.php` loads `inc/oscars-family.php` first, as the loader does.
+
 ## 2026-09-25 — Academy 2.7.93: the audited Oscars dataset, slot-aligned names
 
 Repo `lunara-plugin-oscars-ledger`, `main` at `bf2651d`. At Dalton's direction these changes were pushed straight to `main`, and the Oscars Ledger connection auto-deploys.
