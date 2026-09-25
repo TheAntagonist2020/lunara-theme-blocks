@@ -165,22 +165,44 @@ function lunara_oscars_category_prefers_title_visual( $canonical_category ) {
 
 /**
  * Resolve a nominee person id for the winner entry when the data maps cleanly.
+ *
+ * The single-ID branch applies only to a row with at most one nominee name:
+ * one ID beside several names (a '?' slot the importer dropped) cannot say
+ * whose ID it is. A pair the plugin's legacy link guard rejects returns ''.
  */
 function lunara_resolve_oscars_winner_person_id( $entry ) {
     $winner_name   = trim( (string) ( $entry['name'] ?? '' ) );
     $nominee_names = array_values( array_filter( array_map( 'trim', explode( '|', (string) ( $entry['nominees'] ?? '' ) ) ), 'strlen' ) );
     $nominee_ids   = array_values( array_filter( array_map( 'trim', explode( '|', (string) ( $entry['nominee_ids'] ?? '' ) ) ), 'strlen' ) );
 
-    if ( 1 === count( $nominee_ids ) && preg_match( '/^nm\\d+$/i', $nominee_ids[0] ) ) {
+    $is_guarded = static function ( $id, $credited ) use ( $winner_name ) {
+        if ( ! function_exists( 'lunara_oscars_pair_is_guarded' ) ) {
+            return false;
+        }
+
+        // Both the credited label and the Name; a never-link ID is guarded
+        // whatever the label, so a row with no labels at all is checked too.
+        foreach ( array_unique( array( (string) $credited, $winner_name ) ) as $label ) {
+            if ( lunara_oscars_pair_is_guarded( $id, $label ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    if ( 1 === count( $nominee_ids ) && count( $nominee_names ) <= 1 && preg_match( '/^nm\\d+$/i', $nominee_ids[0] ) ) {
         if ( empty( $nominee_names ) || '' === $winner_name || ! isset( $nominee_names[0] ) || 0 === strcasecmp( $nominee_names[0], $winner_name ) ) {
-            return strtolower( (string) $nominee_ids[0] );
+            $id = strtolower( (string) $nominee_ids[0] );
+            return $is_guarded( $id, (string) ( $nominee_names[0] ?? '' ) ) ? '' : $id;
         }
     }
 
     if ( '' !== $winner_name && count( $nominee_ids ) === count( $nominee_names ) ) {
         foreach ( $nominee_names as $idx => $nominee_name ) {
             if ( 0 === strcasecmp( $nominee_name, $winner_name ) && ! empty( $nominee_ids[ $idx ] ) && preg_match( '/^nm\\d+$/i', $nominee_ids[ $idx ] ) ) {
-                return strtolower( (string) $nominee_ids[ $idx ] );
+                $id = strtolower( (string) $nominee_ids[ $idx ] );
+                return $is_guarded( $id, $nominee_name ) ? '' : $id;
             }
         }
     }
@@ -488,8 +510,11 @@ function lunara_flush_oscars_home_transients() {
     delete_transient( 'lunara_home_oscars_snapshot_v6' );
     delete_transient( 'lunara_home_database_spotlight_v1' );
     delete_transient( 'lunara_home_ledger_story_cards_v2' );
+    delete_transient( lunara_oscars_dataset_cache_key( 'lunara_home_ledger_story_cards_v2' ) );
     delete_transient( 'lunara_home_oscar_spotlight_v1' );
+    delete_transient( lunara_oscars_dataset_cache_key( 'lunara_home_oscar_spotlight_v1' ) );
     delete_transient( 'lunara_home_deep_cuts_v1' );
+    delete_transient( lunara_oscars_dataset_cache_key( 'lunara_home_deep_cuts_v1' ) );
 
     // The rotating showcase keys carry the day-of-year and the card limit;
     // clear today's (and tomorrow's, for imports near midnight) across the
@@ -498,6 +523,7 @@ function lunara_flush_oscars_home_transients() {
     foreach ( array( $today, ( $today + 1 ) % 366 ) as $day ) {
         for ( $limit = 4; $limit <= 16; $limit++ ) {
             delete_transient( 'lunara_oscars_rotating_showcase_v4_' . $day . '_' . $limit );
+            delete_transient( lunara_oscars_dataset_cache_key( 'lunara_oscars_rotating_showcase_v4_' . $day . '_' . $limit ) );
             delete_transient( 'lunara_oscars_rotating_showcase_v3_' . $day . '_' . $limit );
         }
     }
@@ -507,6 +533,48 @@ function lunara_flush_oscars_home_transients() {
     }
 }
 add_action( 'aat_after_data_import', 'lunara_flush_oscars_home_transients' );
+
+if ( ! function_exists( 'lunara_oscars_on_ledger_swapped' ) ) {
+    /**
+     * Invalidate the theme's Oscars caches when the plugin swaps datasets.
+     *
+     * The plugin (2.8.1+) fires aat_ledger_swapped after every swap: a new
+     * ledger, a fix-forward, a re-assert and a rollback. A rollback to the
+     * pre-ledger data fires nothing else, so this listener is what
+     * invalidates the theme then. It is the normal data-change invalidation
+     * path, the same one aat_after_data_import drives.
+     *
+     * Stamped keys (lunara_oscars_dataset_cache_key()) already rotate with
+     * the new stamp; this clears the unstamped ones and the current stamp's
+     * keys, re-stamps the board art, and schedules the portal warm 30 s out
+     * so the person index for the new stamp is built about a minute after
+     * the swap instead of at the next daily warm. It runs in the plugin's
+     * import job, never on an anonymous request, and does no heavy work
+     * itself. Every hook argument is treated alike.
+     *
+     * @param string $stamp            The stamp that went live ('' for pre-ledger data).
+     * @param bool   $consumer_changed Whether the consumer tables changed.
+     * @param string $restored_kind    forward, ledger, pre_ledger or reassert.
+     */
+    function lunara_oscars_on_ledger_swapped( $stamp = '', $consumer_changed = false, $restored_kind = '' ) {
+        unset( $stamp, $consumer_changed, $restored_kind );
+
+        if ( function_exists( 'lunara_invalidate_oscars_data_caches' ) ) {
+            lunara_invalidate_oscars_data_caches( 'ledger_swap', 0 );
+        }
+
+        lunara_flush_oscars_home_transients();
+
+        if ( function_exists( 'lunara_oscars_board_art_invalidate' ) ) {
+            lunara_oscars_board_art_invalidate();
+        }
+
+        if ( function_exists( 'wp_next_scheduled' ) && function_exists( 'wp_schedule_single_event' ) && ! wp_next_scheduled( 'lunara_oscars_portal_warm_visuals_now' ) ) {
+            wp_schedule_single_event( time() + 30, 'lunara_oscars_portal_warm_visuals_now' );
+        }
+    }
+}
+add_action( 'aat_ledger_swapped', 'lunara_oscars_on_ledger_swapped', 10, 3 );
 
 /**
  * Reduce a ceremony rollup's winner rows to one entry per canonical category.
@@ -860,6 +928,7 @@ function lunara_get_rotating_oscars_ceremony_showcase( $card_limit = 10 ) {
     $day_index  = function_exists( 'wp_date' ) ? intval( wp_date( 'z' ) ) : intval( date( 'z' ) );
     // v4 keeps film posters intact for the shared portrait-card presentation.
     $cache_key  = 'lunara_oscars_rotating_showcase_v4_' . $day_index . '_' . $card_limit;
+    $cache_key  = lunara_oscars_dataset_cache_key( $cache_key );
     $cached     = get_transient( $cache_key );
 
     if ( is_array( $cached ) && ! empty( $cached ) ) {
@@ -1217,6 +1286,7 @@ function lunara_get_home_database_spotlight() {
  */
 function lunara_get_home_ledger_story_cards() {
     $cache_key = 'lunara_home_ledger_story_cards_v2';
+    $cache_key = lunara_oscars_dataset_cache_key( $cache_key );
     $cached    = get_transient( $cache_key );
 
     if ( is_array( $cached ) && ! empty( $cached ) ) {
@@ -1340,6 +1410,7 @@ function lunara_get_home_ledger_story_cards() {
  */
 function lunara_get_home_oscar_spotlight() {
     $cache_key = 'lunara_home_oscar_spotlight_v1';
+    $cache_key = lunara_oscars_dataset_cache_key( $cache_key );
     $cached    = get_transient( $cache_key );
 
     if ( is_array( $cached ) && ! empty( $cached ) ) {
@@ -1699,6 +1770,7 @@ function lunara_get_home_oscar_spotlight() {
  */
 function lunara_get_home_deep_cuts() {
     $cache_key = 'lunara_home_deep_cuts_v1';
+    $cache_key = lunara_oscars_dataset_cache_key( $cache_key );
     $cached    = get_transient( $cache_key );
 
     if ( is_array( $cached ) && ! empty( $cached ) ) {

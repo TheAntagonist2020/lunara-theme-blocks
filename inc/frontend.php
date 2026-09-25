@@ -2212,6 +2212,12 @@ if ( ! function_exists( 'lunara_get_search_recovery_routes' ) ) {
                     $film_id = strtolower( trim( (string) ( $row['film_id'] ?? '' ) ) );
                     $score   = $score_label( $film );
 
+                    // A never-link or guarded title (the plugin's legacy link
+                    // guard) is not offered: this builds the title URL itself.
+                    if ( '' !== $film_id && function_exists( 'lunara_oscars_pair_is_guarded' ) && lunara_oscars_pair_is_guarded( $film_id, $film ) ) {
+                        continue;
+                    }
+
                     if ( '' !== $film && preg_match( '/^tt\d+$/', $film_id ) && $score >= 72 ) {
                         if ( intval( $row['winner'] ?? 0 ) > 0 ) {
                             $score += 2;
@@ -2577,14 +2583,27 @@ if ( ! function_exists( 'lunara_get_oscars_search_matches' ) ) {
                 return array();
             }
 
-            return array_combine( $id_parts, $value_parts );
+            // Drop each pair the plugin's legacy link guard rejects (a
+            // known-wrong legacy pairing or a never-link ID).
+            $pairs = array();
+            foreach ( $id_parts as $index => $id_part ) {
+                if ( function_exists( 'lunara_oscars_pair_is_guarded' ) && lunara_oscars_pair_is_guarded( $id_part, $value_parts[ $index ] ) ) {
+                    continue;
+                }
+                $pairs[ $id_part ] = $value_parts[ $index ];
+            }
+
+            return $pairs;
         };
 
         foreach ( $rows as $row ) {
             $film    = trim( (string) ( $row['film'] ?? '' ) );
             $film_id = strtolower( trim( (string) ( $row['film_id'] ?? '' ) ) );
 
-            if ( '' !== $film && preg_match( '/^tt\d+$/', $film_id ) ) {
+            // A never-link or guarded title (the plugin's legacy link guard)
+            // is not offered: this builds the title URL itself. The row's
+            // nominee pairs are still considered below.
+            if ( '' !== $film && preg_match( '/^tt\d+$/', $film_id ) && ! ( function_exists( 'lunara_oscars_pair_is_guarded' ) && lunara_oscars_pair_is_guarded( $film_id, $film ) ) ) {
                 $film_score = function_exists( 'lunara_search_text_match_score' )
                     ? lunara_search_text_match_score( $film, $query_text )
                     : 0;
