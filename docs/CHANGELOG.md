@@ -11,6 +11,21 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-25 — Academy 2.7.93: the audited Oscars dataset, slot-aligned names
+
+Repo `lunara-plugin-oscars-ledger`, `main` at `bf2651d`. At Dalton's direction these changes were pushed straight to `main`, and the Oscars Ledger connection auto-deploys.
+
+- **Dataset (`94b4f0d`).** `data/oscars.csv` is now the audited dataset from `docs/database` (PRs #38 and #39): 12,138 nominations and 3,516 winners, the Academy's own count. It carries 373 corrected cells in 339 rows plus one added award, the 97th ceremony's captioning Award of Merit. Fields that contain a quote are enclosed with doubled quotes, so `fgetcsv` reads each cell exactly as corrected. `docs/database/corrections.json` logs every change with its evidence. Dataset version `2026.09.25-2`.
+- **Slot pairing (`94b4f0d`).** `rebuild_reporting_tables()` and `get_name_entity_link_by_label()` paired nominee IDs with credit names by flattened position. So an unlinked `?` slot shifted every later name onto the wrong person: 239 rows have one, and Jean Hersholt's page read "The Motion Picture Relief Fund". The new `split_nominee_id_slots()` and `pair_nominee_ids_with_labels()` pair by slot. A jointly credited slot (`nm0001053,nm0001054`, "Roderick Jaynes") names an entity only when nothing else does. IDs, ordinals and primaries are unchanged.
+- **Imports keep slots (`d368de4`).** `apply_row_hotfixes()` ran `normalize_imdb_entity_ids()` on NomineeIds, which dropped `?` and split joint slots, so stored rows lost their alignment. The new `normalize_nominee_id_slots()` keeps one `|` slot per credit. Every stored-ID reader already validates IDs before linking: the plugin templates and the theme's `inc/oscars-data.php` and `inc/oscars-portal.php`. So a `?` or comma slot never becomes a link.
+- **Privacy (`79911eb`, U00).** Wikidata IDs, birth years and life spans are gone from `docs/database`. `tests/ledger-privacy-contract.php` keeps them out.
+- **Dubois (`2621669`).** Row 5672 (48th ceremony Sci-Tech, Akwaklame Company) is unlinked, because nothing proves IMDb's `nm0239470` is the honoree. `needs-review.json` is empty.
+- **Version (`bf2651d`).** 2.7.93 is in all four markers, and the tests that pin them moved with it.
+
+Not shipped: the plan-v5 ledger rebuild (R1 to R7), which Dalton stopped on 2026-09-25 in favour of direct edits. Its built units stay on feature branches: U01 (bundle and codec) in the plugin, and U13 (Theme 3.2.91) in the theme.
+
+---
+
 ## 2026-09-24 — Theme 3.2.90: editable Debrief page, modular Oscars, image delivery, discovery
 
 **Debrief page, fully editable.** The Debrief Method page's words, sections and

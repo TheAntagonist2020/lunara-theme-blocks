@@ -25,11 +25,94 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-25 — Oscars Ledger 2.7.93: the audited dataset is live, names pair by slot
+
+### Headline
+
+The Oscars database on lunarafilm.com now serves the audited dataset: 12,138 nominations and 3,516 winners, the Academy's own count. Every person's page is named from the credit in their own slot, so an unlinked credit no longer shifts names onto the wrong people. Jean Hersholt's page had read "The Motion Picture Relief Fund", and Ethan Coen's had read "Roderick Jaynes". The last open data question (Richard Dubois) is settled, and the plugin is at **2.7.93** on `main`. Dalton dropped the plan-v5 ledger pipeline partway through its first release, in favour of direct edits pushed straight to `main`. Every push auto-deployed; each data change needed only Dalton's **Import Bundled oscars.csv** click.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| `/oscars/` hub | 12,138 nominations and 3,516 winners, after the first import |
+| `/oscars/name/nm0380965/` | **Jean Hersholt**. Before: "The Motion Picture Relief Fund" |
+| `nm0604960`, `nm0088759`, `nm0619261` | **Ralph Morgan**, **Ralph Block** and **Conrad Nagel**, after the `d368de4` re-import. Between `94b4f0d` and `d368de4` all three showed the row's full credit line |
+| `nm0001053`, `nm0001054` | **Ethan Coen** (before: "Roderick Jaynes") and **Joel Coen** |
+| 24 random people credited after a `?` slot, ceremonies 12 to 79 | 23 page titles match the credit in their slot. The 24th, `nm0806351`, reads "Sam Slyfield" where the slot says "C. O. Slyfield": the same Disney sound director, whose first credit is "Sam Slyfield" |
+| `/oscars/ceremony/48/` and `/oscars/name/nm0239470/` | Richard Dubois is listed with no link, and the `nm0239470` page returns 404 |
+| Edge cache | The plain URLs first served the old HTML as `STALE`, then refreshed on their own within about a minute. There was no purge |
+| GitHub Lint, plugin `main` | success on `94b4f0d` and `d368de4` |
+| Not probed | the 2.7.93 deploy itself, and the Lint runs for `79911eb`, `2621669` and `bf2651d` |
+
+### What shipped and why
+
+Plugin detail is in the `docs/CHANGELOG.md` entry "Academy 2.7.93".
+
+- **Earlier in the session**, the audited dataset and its relational schema merged as docs in the plugin: [PR #38](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/38), then the full reconciliation with the Academy Awards Database in [PR #39](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/39). A 30-unit ledger rebuild (plan v5, R1 to R7) was designed and started. U00 and U01 were built in the plugin and U13 (Theme 3.2.91) in the theme. A container restart stopped the build during U02.
+- **Dalton then stopped the pipeline.** His words: *"STOP all batch builds … Do not rebuild U02 through U12. We are dropping the full pipeline. Make the direct edits needed … run a single local syntax lint, and push the commit directly to deploy."*
+- **`94b4f0d`: the corrected data and slot pairing.** The rebuild paired nominee IDs with names by flattened position, and that was the root of the mislabelled pages. Shipping the corrected data without the fix would have made things worse, because the corrections unlink more slots.
+- **`d368de4`: imports keep slots.** The first live check found the import itself stripping `?` placeholders. The slot pairing then refused to guess, and three people fell back to the full credit line. This fix makes the stored data keep every slot.
+- **`79911eb`: privacy (U00),** cherry-picked from the feature branch at Dalton's direction.
+- **`2621669`: Dubois settled by unlinking.** The only link between the Akwaklame honoree and IMDb's actor-producer `nm0239470` is IMDb's own award attachment, which is wrong for the co-honoree on the same award.
+- **`bf2651d`: version 2.7.93,** so the deploy history names this data release.
+
+### Commit ledger
+
+| Repo | Commit | Meaning | How to roll it back |
+| --- | --- | --- | --- |
+| lunara-plugin-oscars-ledger | `021db1f` | Merge of PR #38: audited dataset, schema and corrections (docs) | Revert. Docs only |
+| lunara-plugin-oscars-ledger | `826d537` | Merge of PR #39: reconciliation with the Academy Awards Database (docs) | Revert. Docs only |
+| lunara-plugin-oscars-ledger | `94b4f0d` | Corrected `data/oscars.csv` and slot-aligned pairing | Revert `2621669` and `d368de4` first, then this, and re-import. That restores the old 12,137-row data and the mislabels |
+| lunara-plugin-oscars-ledger | `d368de4` | Imports keep `?` and joint nominee slots | Revert and re-import. Three titles fall back to the full credit line, and 239 rows' links misalign again |
+| lunara-plugin-oscars-ledger | `79911eb` | U00: no Wikidata IDs or life years in the public docs | Revert. Docs only, but it would republish that data, so don't |
+| lunara-plugin-oscars-ledger | `2621669` | Dubois unlinked, dataset `2026.09.25-2` | Revert and re-import. That restores the `nm0239470` link |
+| lunara-plugin-oscars-ledger | `bf2651d` | Academy 2.7.93: version markers and changelog | Revert. Version only |
+| lunara-theme-blocks | this record | Session log, changelog, one correction line | Docs only |
+
+Each import also keeps the table it replaced as `wp_academy_awards_backup_<timestamp>`. One `RENAME TABLE` swaps a backup back without a re-import, but it needs database access.
+
+### Gate ledger
+
+- `94b4f0d`: `php8.2 -l` on the 3 changed PHP files. PHP `SplFileObject` read-back of `data/oscars.csv` against `oscars-corrected.tsv`: 12,139 lines, 0 mismatches. No test suite, per Dalton's single-lint instruction.
+- `d368de4`: `php8.2 -l`.
+- `79911eb`: clean cherry-pick onto `main` and `php8.2 -l` on its 4 PHP files. No post-push checks, per Dalton's instruction.
+- `2621669`: `tests/ledger-privacy-contract.php` first **failed**, because `data/ledger/entities.tsv` still listed `nm0239470`. After the fix it passed: 144 files, 26 redaction cases, 12 mutations. The workbook was skipped locally for lack of ZipArchive. `tests/reporting-integrity-contract.php` passed.
+- `bf2651d`: the plugin's Lint workflow run locally on PHP 8.2 printed `CI-EQUIVALENT: PASS`.
+- This record: `tests/release-identity-3-2-81.ps1`, the one theme contract that reads these docs, **fails**. It fails identically on untouched `main`: it pins `style.css` to 3.2.81 and wants 3.2.81 as the newest theme release. So this record did not cause it, and plugin-only entries like today's are explicitly allowed above.
+- **Not run:** the local WordPress gate (stopped with the pipeline), any plan-v5 verification, and the other theme pwsh contracts and canary. No theme code changed.
+
+### Corrections
+
+- The 2026-09-24 (later) entry says the plugin connections were unconfirmed and should be treated as manual. For the Oscars Ledger that is superseded: its pushes to `main` went live today without a Deploy click. A correction line was added inside that entry.
+- The plugin's `docs/database/AUDIT-REPORT.md` said the Dubois credit was "shown on the site without a link". It was linked until `2621669`, and that commit rewrote the report's section.
+
+### Logged, not fixed
+
+- Entity-label and permalink transients, kept up to 12 hours, are not keyed to the dataset. After an import some pages can show old names until they expire. None did in today's probes.
+- Today's three imports left three `wp_academy_awards_backup_<timestamp>` tables. Drop old ones once no rollback is wanted.
+- From reading the code, not probed: the joint credit "Roderick Jaynes" (2 rows) now renders without a link. Linking a joint credit to both people would need a renderer change.
+- `data.sql.gz`'s `source_sha256` hashes the audit's intermediate JSON, not `data/oscars.csv`, as `docs/database/README.md` notes.
+- `tests/release-identity-3-2-81.ps1` is stale. It has pinned `style.css` to 3.2.81 since 3.2.82 shipped, so it fails on `main`. Retire it, or re-pin it to the current release.
+
+### Punch-list carried forward
+
+- **Dalton, optional:** drop the old `academy_awards` backup tables.
+- **Dalton:** the ship rule is still his to write into `AGENTS.md`. Today he again directed pushes straight to `main`.
+- **Unshipped, on feature branches:** plugin U01 (ledger bundle and codec) and theme U13 (Theme 3.2.91: positional guards, unflattened year labels, dataset-stamped caches). Plan v5 is dropped, so ship these only if Dalton asks.
+- Everything carried in the entries below still stands. That includes the Boost critical-CSS regeneration, the content list, the stale Lunara Core 0.8.11 copy, staging, and the three plugins with no repo.
+
+### Whose move is next
+
+Dalton's. Nothing is open on the Oscars data, and no agent task is pending.
+
 ## 2026-09-24 (later) — Theme 3.2.90 merged; theme auto-deploy switched on
 
 ### Headline
 
 Theme 3.2.90 is on `main` through [PR #212](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/212), merge `d242366`. Dalton changed how releases ship. In his words: *"Disregard that old rule. That is majorly slowing me down. I need you to be able to open draft PRs and merge them and get it live on the site."* He then switched on **Automatic deployments** for the theme's WordPress.com connection. The merge landed before the switch, so it did not deploy. This record's own merge is the first push to `main` under auto-deploy, and it carries 3.2.90 live. The plugin connections are still unconfirmed and should be treated as manual.
+
+> **Correction (2026-09-25):** the Oscars Ledger connection does auto-deploy. Its pushes to `main` went live without a Deploy click. See the 2026-09-25 entry.
 
 ### Verified live state
 
