@@ -25,6 +25,73 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-25 (night) — Theme 3.2.93 live: "Full Ledger" opens the Oscar Ledger Explorer
+
+### Headline
+
+Batch 3 of the re-scoped Explorer plan is live, which completes the plan. Every "Full Ledger" link on the site now opens the Oscar Ledger Explorer at `/oscars/explore/`, instead of the in-page research table. That covers the Oscars hub's hero button, its Full Ledger door card, its Research Table card and the footer. Dalton's go: *"Go go go"*. Pushed straight to `main`; canary **GO**.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Homepage `lunara-build` | `3.2.93+20260925-230831` at 23:08:45 UTC, 41 s after the push |
+| `bash tests/tools/lunara-canary-verify.sh 3.2.93` at 23:10:10 UTC | **ROLLBACK**: both sentinels read 3.2.92 HTML. They read the plain `/journal/` and `/oscars/` URLs, which the edge was still serving from cache. The homepage settle loop before it had polled only cache-busted homepage reads |
+| Plain `/journal/` and `/oscars/`, polled | Both 3.2.93 from 23:10:32 UTC, three polls in a row |
+| Same canary at 23:11:18 UTC | Three reads, http 200, 159,362 bytes, all `3.2.93+20260925-230831`. Journal and Oscars sentinels `LIVE_COHERENT`. **GO** |
+| `/oscars/` links | The hero "Open Full Ledger" button, the `lunara-oscars-command-card`, the `lunara-oscars-portal-link-card` and the footer Full Ledger all point to `https://lunarafilm.com/oscars/explore/`. The `lunara-oscars-research-card` (Data Explorer) and the plugin's own research toggles still open `?view=table` |
+| `/reviews/` footer | Full Ledger links to `https://lunarafilm.com/oscars/explore/` |
+| `/oscars/explore/` | http 200, title "Oscar Ledger Explorer - Lunara Film", one `data-lle-root` |
+
+### What shipped and why
+
+Detail is in the `docs/CHANGELOG.md` entry "Theme 3.2.93".
+
+- A new helper, `lunara_oscars_explorer_url()` in `inc/oscars-family.php`, asks the plugin for `AAT_Explorer::base_url()`.
+- `page-oscars.php` resolves one `$ledger_url` from it, and the footer's built-in Full Ledger destination uses it too. Both fall back to the research table when the plugin has no Explorer.
+- The Full Ledger card's saved-URL check now ignores a `#` fragment. A saved copy of the old default link therefore follows the new one, and a custom Site Studio address is kept as saved.
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-theme-blocks | `56f04b4` | Theme 3.2.93 code, tests and changelog entry |
+| lunara-theme-blocks | this record | Session log |
+| lunara-theme-blocks | hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on this record, tree `c55bf394…` |
+
+Roll back by reverting `56f04b4` on `main`, or by using the hatch.
+
+### Gate ledger
+
+- `php8.2 -l` on `inc/oscars-family.php`, `page-oscars.php` and `inc/site-studio-footer-navigation.php`: clean.
+- New test `tests/oscars-explorer-link-runtime.php`: 9 checks passed, with and without the plugin Explorer.
+- Every test that reads `page-oscars.php`, `inc/oscars-family.php` or the footer navigation (25 files) was run. All passed, including:
+  - `tests/site-studio-oscars-runtime.php`, now asserting that the hero button and the Full Ledger card use the Explorer;
+  - `tests/site-studio-footer-navigation-runtime.php` (129 checks);
+  - `tests/oscars-read-path-ratchet.ps1` (22).
+
+  The exceptions are `oscars-canonical-coherency.ps1` and `oscars-portal-studio-contract.ps1`, which fail on their stale 3.2.81 pin exactly as on `main`.
+- **Not run:** the rest of the pwsh suite. The earlier entry records its 41 failures that `main` shares.
+
+### Corrections
+
+- None.
+
+### Logged, not fixed
+
+- **Settle the edge before the canary.** Wait until the plain `/journal/` and `/oscars/` URLs serve the new version. Cache-busted homepage reads alone do not show that. Both of today's early runs read split brain, and both converged on their own.
+- `lunara_render_oscars_portal_markup()` in `inc/oscars-portal.php` and the `function_exists` footer copy in `functions.php` still carry the old table link. Neither is hooked or reached at runtime.
+
+### Punch-list carried forward
+
+- The re-scoped Explorer plan is complete: API (2.8.0), Explorer (2.8.1, 2.8.2) and links (3.2.93).
+- **Unshipped:** plugin U01, on its feature branch. Ship it only if Dalton asks.
+- Everything carried in the entries below still stands.
+
+### Whose move is next
+
+Dalton's. Theme 3.2.93 and Oscars Ledger 2.8.3 are live, and no agent task is open.
+
 ## 2026-09-25 (late) — Theme 3.2.92 and Oscars Ledger 2.8.3 live: Oscar content kept inside rounded frames
 
 ### Headline
