@@ -11,6 +11,22 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-25 — Theme 3.2.93: "Full Ledger" opens the Oscar Ledger Explorer
+
+Batch 3 of the re-scoped Explorer plan, pushed straight to `main` on Dalton's go (*"Go go go"*). Before this, every "Full Ledger" link opened the in-page research table (`/oscars/?view=table#oscars-research`). They now open the Explorer that Oscars Ledger 2.8.1 serves at `/oscars/explore/`.
+
+- **`inc/oscars-family.php`: `lunara_oscars_explorer_url()`.** It returns `AAT_Explorer::base_url()` when the plugin provides it, otherwise `''`. It is `function_exists`-guarded, like its neighbours.
+- **`page-oscars.php`:**
+  - One `$ledger_url` is resolved, falling back to the research table.
+  - Three links take it: the hero's "Open Full Ledger" button, the "Explore the Portal" Full Ledger card, and the "Research Table / Full Ledger" command card.
+  - The Full Ledger card's saved-URL normalisation now ignores a `#` fragment. A saved copy of the old default link (the base, its table view, or the `#oscars-research` anchor) therefore follows the new default. A custom address saved in Site Studio is still kept as saved.
+  - The research section's "Data Explorer" card still opens the in-page table, since that card is the table.
+- **`inc/site-studio-footer-navigation.php`.** The footer's built-in Full Ledger destination uses the helper, with the same fallback. Built-ins resolve at request time, so the live footer follows without a re-save.
+- **Tests:**
+  - New: `tests/oscars-explorer-link-runtime.php`, 9 checks. The plugin-absent half runs in a child process.
+  - `tests/site-studio-oscars-runtime.php` now supplies an Explorer address to the portal harness and asserts that the hero button and the Full Ledger card use it.
+- **Not changed.** `lunara_render_oscars_portal_markup()` in `inc/oscars-portal.php` and the `function_exists` footer copy in `functions.php` still carry the old link. Neither is hooked or reached at runtime.
+
 ## 2026-09-25 — Theme 3.2.92 and Oscars Ledger 2.8.3: content kept inside rounded frames
 
 Pushed straight to `main` at Dalton's direction, plugin first. Dalton's report: *"There's actually countless instances like that on the Oscar pages, where things are kind of cut off at the rounded corners."* His desktop screenshot showed the /oscars/ "Explore the Portal" block with three faults: the kicker's first letter cut, a gold rule through the heading, and the last card's corner cut.

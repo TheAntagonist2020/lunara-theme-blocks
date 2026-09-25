@@ -192,6 +192,10 @@ $database_landing_url = remove_query_arg( 'view', $database_url );
 $database_table_url   = add_query_arg( 'view', 'table', $database_url );
 $database_landing_url = $database_landing_url . $research_anchor;
 $database_table_url   = $database_table_url . $research_anchor;
+// "Full Ledger" opens the Oscar Ledger Explorer when the plugin serves it; the
+// in-page research table stays the fallback and keeps its own Data Explorer card.
+$ledger_url           = function_exists( 'lunara_oscars_explorer_url' ) ? lunara_oscars_explorer_url() : '';
+$ledger_url           = '' !== $ledger_url ? $ledger_url : $database_table_url;
 $table_view_requested = isset( $_GET['view'] ) && 'table' === sanitize_key( wp_unslash( $_GET['view'] ) );
 $about_url         = ( $aat && method_exists( $aat, 'get_about_url' ) ) ? $aat->get_about_url() : home_url( '/oscars/about/' );
 $ceremonies_url    = ( $aat && method_exists( $aat, 'get_ceremonies_index_url' ) ) ? $aat->get_ceremonies_index_url() : home_url( '/oscars/ceremonies/' );
@@ -275,7 +279,7 @@ $portal_link_defaults = array(
         'kicker'   => 'Ledger',
         'title'    => 'Full Ledger',
         'copy'     => '',
-        'url'      => $database_table_url,
+        'url'      => $ledger_url,
         'backdrop' => $portal_backdrops['Ledger'] ?? '',
     ),
     4 => array(
@@ -301,11 +305,13 @@ foreach ( $portal_link_defaults as $slot => $defaults ) {
     }
 
     if ( 3 === $slot ) {
-        $normalized_card_url = untrailingslashit( remove_query_arg( 'view', $card_url ) );
-        $normalized_base_url = untrailingslashit( remove_query_arg( 'view', $database_url ) );
+        // A saved copy of the old ledger link (the base, the table view or its
+        // #oscars-research anchor) follows the Full Ledger default.
+        $normalized_card_url = untrailingslashit( remove_query_arg( 'view', explode( '#', $card_url, 2 )[0] ) );
+        $normalized_base_url = untrailingslashit( remove_query_arg( 'view', explode( '#', $database_url, 2 )[0] ) );
 
         if ( $normalized_card_url === $normalized_base_url ) {
-            $card_url = $database_table_url;
+            $card_url = $ledger_url;
         }
     }
 
@@ -379,7 +385,7 @@ $command_cards = array(
         'kicker' => 'Research Table',
         'title'  => 'Full Ledger',
         'meta'   => number_format_i18n( intval( $database_spotlight['records_total'] ?? 0 ) ) . ' rows',
-        'url'    => $database_table_url,
+        'url'    => $ledger_url,
     ),
 );
 ?>
@@ -409,7 +415,7 @@ $command_cards = array(
 
                     <div class="lunara-oscars-portal-actions">
                         <a class="lunara-button lunara-button-primary" href="<?php echo esc_url( $ceremony_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['ceremony'] ); ?></a>
-                        <a class="lunara-button lunara-button-secondary" href="<?php echo esc_url( $database_table_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['ledger'] ); ?></a>
+                        <a class="lunara-button lunara-button-secondary" href="<?php echo esc_url( $ledger_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['ledger'] ); ?></a>
                         <a class="lunara-button-ghost" href="<?php echo esc_url( $categories_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['categories'] ); ?></a>
                     </div>
 

@@ -167,6 +167,27 @@ if ( ! function_exists( 'lunara_oscars_dataset_stamp' ) ) {
 	}
 }
 
+if ( ! function_exists( 'lunara_oscars_explorer_url' ) ) {
+	/**
+	 * The Oscar Ledger Explorer's address (/oscars/explore/), or ''.
+	 *
+	 * The plugin (2.8.1+) serves the Explorer and owns its route. Returns ''
+	 * when the plugin or its AAT_Explorer::base_url() accessor is absent, so
+	 * each "Full Ledger" link keeps its own in-page table fallback.
+	 *
+	 * @return string Absolute Explorer URL or ''.
+	 */
+	function lunara_oscars_explorer_url() {
+		if ( ! class_exists( 'AAT_Explorer' ) || ! method_exists( 'AAT_Explorer', 'base_url' ) ) {
+			return '';
+		}
+
+		$url = AAT_Explorer::base_url();
+
+		return is_string( $url ) ? trim( $url ) : '';
+	}
+}
+
 if ( ! function_exists( 'lunara_oscars_dataset_cache_key' ) ) {
 	/**
 	 * Version a theme cache key on the live Academy dataset.
