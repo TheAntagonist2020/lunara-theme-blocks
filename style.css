@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.91
+Version: 3.2.92
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -18387,6 +18387,15 @@ body.home .lunara-oscar-facts-section .lunara-oscar-facts-dots .lunara-carousel-
 body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-toggle{grid-column:1/-1;grid-row:2;justify-self:center;}
 body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel .lunara-oscar-facts-console{grid-template-columns:1fr auto;}
 body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel .lunara-oscar-facts-console .lunara-home-carousel-toggle{grid-column:1/-1;grid-row:3;justify-self:center;}
+}
+/* Oscar Picks slide marks on phones and tablets: one row of segments that
+   share the width, so fifteen picks read as one progress line instead of
+   wrapping into a four-row block. The 44px arrows beside them stay the
+   full-size way to step through the picks. */
+@media(max-width:820px){
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-oscar-picks-dots{flex-wrap:nowrap;gap:3px;align-self:center;}
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-oscar-picks-dots .lunara-carousel-dot,
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-oscar-picks-dots .lunara-carousel-dot.active{flex:1 1 0;width:auto;min-width:0;max-width:44px;padding-inline:0;}
 }
 
 /* Shared carousel controls: the portal uses the same comfortable hit areas

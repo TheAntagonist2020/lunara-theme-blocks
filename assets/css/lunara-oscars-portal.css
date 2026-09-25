@@ -1513,3 +1513,20 @@ body.lunara-oscars-portal-page .lunara-oscars-board-note {
         margin: 0 14px 14px !important;
     }
 }
+
+/* Rounded-corner fit. "Explore the Portal" is the one unframed section (no
+   background, border or inset), so the rounded clip every portal section
+   shares only trimmed its content: the kicker's first letter and the corner
+   of the last door card. It keeps its content whole instead. */
+body.lunara-oscars-portal-page .lunara-oscars-portal > .lunara-home-section.lunara-oscars-portal-links-section {
+    border-radius: 0 !important;
+    overflow: visible !important;
+}
+
+/* The gold hairline under each section kicker sits 7px below it. The compact
+   guardrail above zeroes the kicker margin, which drew the line through the
+   heading's first line; this gives it room. */
+body.lunara-oscars-portal-page .lunara-home-section-header .lunara-home-section-kicker,
+body.lunara-oscars-portal-page .lunara-home-section-head .lunara-home-section-kicker {
+    margin-bottom: 14px !important;
+}

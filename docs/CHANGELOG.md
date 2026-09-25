@@ -11,6 +11,26 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-25 — Theme 3.2.92 and Oscars Ledger 2.8.3: content kept inside rounded frames
+
+Pushed straight to `main` at Dalton's direction, plugin first. Dalton's report: *"There's actually countless instances like that on the Oscar pages, where things are kind of cut off at the rounded corners."* His desktop screenshot showed the /oscars/ "Explore the Portal" block with three faults: the kicker's first letter cut, a gold rule through the heading, and the last card's corner cut.
+
+The common cause: a box with `border-radius` and `overflow: hidden` and no inner padding trims anything that touches its corners. A clip scanner measured text line boxes and framed shapes against each rounded box's corner arcs. Before these fixes it ran across 11 Oscar routes at seven widths from 360 to 1920 px. Every finding outside the Ceremonies hub traced to three components, plus the hub nesting.
+
+- **Theme, `assets/css/lunara-oscars-portal.css`:**
+  - "Explore the Portal" is the one portal section with no frame (no background, border or inset). It kept the shared 26 px rounded clip, which only trimmed its content, so it now has `border-radius: 0` and `overflow: visible`.
+  - The kicker's gold hairline sits 7 px below it, and the compact portal guardrail zeroes the kicker margin. That drew the line 7 px into every section heading on /oscars/, eight headings in all. Header kickers now get a 14 px bottom margin, which leaves 7 px of clearance.
+- **Theme, `style.css`, the homepage Oscar Picks controls:**
+  - At 820 px and below, the 15 slide marks were 44 px each and wrapped into up to four rows, a 246 px block at 360 px.
+  - They are now one row of segments that share the width, a 96 px strip that includes the Pause row.
+  - The 44 px arrows stay the full-size controls, the equivalent-control exception in WCAG 2.5.8.
+  - Desktop is unchanged.
+  - A JavaScript "3 / 15" counter was tried first and dropped: `lunara-scroll-carousel.js` is already over its 10 KB budget on `main` (10,516 bytes), and the counter would have grown it.
+- **Plugin 2.8.3 (`64d8244`):**
+  - The Research Mode callout on ceremony and category pages gets `clamp(18px, 2.4vw, 28px)` padding; it had none on desktop.
+  - The Winner Circle category and badge row wraps, and names and credits wrap inside the card.
+  - The Ceremonies, Categories and About hubs strip the plugin's database block, and its database and tracker shortcodes, from the hub page's own content. /oscars/ceremonies/ carried one, which rendered the whole ledger landing nested inside the hub header, so its cards ran off the right edge on phones.
+
 ## 2026-09-25 — Theme 3.2.91: positional link guards, verbatim year labels, dataset-ready Oscars caches
 
 Pushed straight to `main` at Dalton's direction; the theme connection auto-deploys. The code was built as unit U13 of the dropped plan-v5 ledger rebuild, then cherry-picked onto `main`. With Oscars Ledger 2.7.93 the stamp and the guard are inert, because the plugin has neither accessor. Everything else below takes effect now.
