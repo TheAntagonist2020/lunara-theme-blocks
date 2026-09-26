@@ -131,6 +131,117 @@ function lunara_oscars_reader() {
 	return Academy_Awards_Table::get_instance();
 }
 
+if ( ! function_exists( 'lunara_oscars_dataset_stamp' ) ) {
+	/**
+	 * The stamp of the Academy dataset that is live right now, or ''.
+	 *
+	 * The plugin (2.8.0+) versions its caches with one stamp that changes
+	 * whenever a new dataset goes live, so a swap retires every cache built
+	 * from the old data without a flush. Theme caches built from the same
+	 * data carry the same stamp (lunara_oscars_dataset_cache_key()).
+	 *
+	 * Returns '' when the plugin or its get_dataset_stamp() accessor is
+	 * absent, and while the plugin still serves its pre-ledger data. An empty
+	 * stamp leaves every theme cache key exactly as it was. Not memoized:
+	 * the accessor reads one option per request itself.
+	 *
+	 * @return string Lowercase alphanumeric stamp (at most 32 characters) or ''.
+	 */
+	function lunara_oscars_dataset_stamp() {
+		$reader = lunara_oscars_reader();
+
+		if ( ! $reader || ! method_exists( $reader, 'get_dataset_stamp' ) ) {
+			return '';
+		}
+
+		$stamp = $reader->get_dataset_stamp();
+		if ( ! is_scalar( $stamp ) ) {
+			return '';
+		}
+
+		// The plugin's stamp is 12 hex characters. Anything else is reduced to
+		// a short, key-safe token so a transient key never outgrows its column.
+		$stamp = preg_replace( '/[^a-z0-9]/', '', strtolower( trim( (string) $stamp ) ) );
+
+		return substr( (string) $stamp, 0, 32 );
+	}
+}
+
+if ( ! function_exists( 'lunara_oscars_explorer_url' ) ) {
+	/**
+	 * The Oscar Ledger Explorer's address (/oscars/explore/), or ''.
+	 *
+	 * The plugin (2.8.1+) serves the Explorer and owns its route. Returns ''
+	 * when the plugin or its AAT_Explorer::base_url() accessor is absent, so
+	 * each "Full Ledger" link keeps its own in-page table fallback.
+	 *
+	 * @return string Absolute Explorer URL or ''.
+	 */
+	function lunara_oscars_explorer_url() {
+		if ( ! class_exists( 'AAT_Explorer' ) || ! method_exists( 'AAT_Explorer', 'base_url' ) ) {
+			return '';
+		}
+
+		$url = AAT_Explorer::base_url();
+
+		return is_string( $url ) ? trim( $url ) : '';
+	}
+}
+
+if ( ! function_exists( 'lunara_oscars_dataset_cache_key' ) ) {
+	/**
+	 * Version a theme cache key on the live Academy dataset.
+	 *
+	 * Applied on the line after each key literal, so the literal itself is
+	 * unchanged: `$key . '__' . $stamp` while a stamp exists, else `$key`
+	 * unchanged (no plugin, an older plugin, or pre-ledger data). Delete
+	 * sites delete both forms, the plain key and this one.
+	 *
+	 * @param string $key Cache key literal.
+	 * @return string
+	 */
+	function lunara_oscars_dataset_cache_key( $key ) {
+		$key   = (string) $key;
+		$stamp = lunara_oscars_dataset_stamp();
+
+		return '' === $stamp ? $key : $key . '__' . $stamp;
+	}
+}
+
+if ( ! function_exists( 'lunara_oscars_pair_is_guarded' ) ) {
+	/**
+	 * Whether the plugin says an (IMDb ID, credited label) pair must not link.
+	 *
+	 * Until the corrected ledger is live, the plugin keeps a guard of pairs
+	 * whose legacy positional pairing is known to be wrong (the before-side of
+	 * an ID correction, an unresolved needs-review pair, a first-label-wins
+	 * label that is not a credited alias) and of IDs that must never link
+	 * anywhere. The reader answers true for a never-link ID whatever the
+	 * label, so theme consumers need no second helper.
+	 *
+	 * Returns false when the plugin or its credit_pair_is_guarded() accessor
+	 * is absent, which leaves every theme link exactly as it was.
+	 *
+	 * @param string $imdb_id IMDb-style ID (nm, co or tt).
+	 * @param string $label   The credited label paired with it.
+	 * @return bool
+	 */
+	function lunara_oscars_pair_is_guarded( $imdb_id, $label ) {
+		$imdb_id = is_scalar( $imdb_id ) ? strtolower( trim( (string) $imdb_id ) ) : '';
+		if ( '' === $imdb_id ) {
+			return false;
+		}
+
+		$reader = lunara_oscars_reader();
+
+		if ( ! $reader || ! method_exists( $reader, 'credit_pair_is_guarded' ) ) {
+			return false;
+		}
+
+		return (bool) $reader->credit_pair_is_guarded( $imdb_id, is_scalar( $label ) ? (string) $label : '' );
+	}
+}
+
 /**
  * Theme seam for the plugin's hub route section composer (plugin 2.7.82+).
  *

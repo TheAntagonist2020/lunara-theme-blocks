@@ -65,7 +65,7 @@ Assert-True ($journal -match "'has_archive'\s*=>\s*'journal'") 'Fallback Journal
 Assert-True ($journal -match "'slug'\s*=>\s*'journal-type'") 'Fallback journal_type terms must retain their public route.'
 Assert-True ($archive -match "lunara_get_journal_archive_filter_terms\(\s*'journal_type',\s*absint\(\s*\`$journal_config\['filter_caps'\]\['journal_type'\]\s*\),") 'Journal archive must retain a bounded, Studio-owned legacy taxonomy cap.'
 Assert-True ($single -match "lunara_get_journal_field_value\([\s\S]*'journal_image_credit'") 'Journal single must consume canonical Foundation image credit.'
-Assert-True ($single -match "'journal_image_alt'") 'Journal single must consume canonical Foundation image alt text.'
+Assert-True ($single -match 'lunara_get_journal_hero_alt\(' -and $journalFamily -match "(?s)function lunara_get_journal_hero_alt\(.*?'journal_image_alt'") 'Journal single must consume canonical Foundation image alt text (through lunara_get_journal_hero_alt since 3.2.90).'
 Assert-True ($controlDesk -match "lunara_get_journal_source_items") 'Control Desk must consume canonical Foundation source rows.'
 Assert-True ($controlDesk -match "lunara_get_journal_field_value\([^\r\n]*'journal_deck'") 'Control Desk must prefer the canonical Foundation deck.'
 Assert-True ($related -match "lunara_get_journal_kicker") 'Related Journal rendering must use the shared canonical-first kicker.'

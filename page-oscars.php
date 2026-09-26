@@ -11,7 +11,6 @@ $aat                = function_exists( 'lunara_oscars_reader' ) ? lunara_oscars_
 $snapshot           = function_exists( 'lunara_get_home_oscars_snapshot' ) ? lunara_get_home_oscars_snapshot() : array();
 $database_spotlight = function_exists( 'lunara_get_home_database_spotlight' ) ? lunara_get_home_database_spotlight() : array();
 $deep_cuts          = function_exists( 'lunara_get_home_deep_cuts' ) ? lunara_get_home_deep_cuts() : array();
-$linked_reviews     = function_exists( 'lunara_oscars_linked_reviews_query' ) ? lunara_oscars_linked_reviews_query( 4 ) : new WP_Query();
 
 /*
  * Oscars Portal Studio composer state. The existing owners stay canonical:
@@ -193,6 +192,10 @@ $database_landing_url = remove_query_arg( 'view', $database_url );
 $database_table_url   = add_query_arg( 'view', 'table', $database_url );
 $database_landing_url = $database_landing_url . $research_anchor;
 $database_table_url   = $database_table_url . $research_anchor;
+// "Full Ledger" opens the Oscar Ledger Explorer when the plugin serves it; the
+// in-page research table stays the fallback and keeps its own Data Explorer card.
+$ledger_url           = function_exists( 'lunara_oscars_explorer_url' ) ? lunara_oscars_explorer_url() : '';
+$ledger_url           = '' !== $ledger_url ? $ledger_url : $database_table_url;
 $table_view_requested = isset( $_GET['view'] ) && 'table' === sanitize_key( wp_unslash( $_GET['view'] ) );
 $about_url         = ( $aat && method_exists( $aat, 'get_about_url' ) ) ? $aat->get_about_url() : home_url( '/oscars/about/' );
 $ceremonies_url    = ( $aat && method_exists( $aat, 'get_ceremonies_index_url' ) ) ? $aat->get_ceremonies_index_url() : home_url( '/oscars/ceremonies/' );
@@ -244,12 +247,8 @@ $portal_stats = array(
 );
 
 // Backdrop images keyed by portal card to keep the top-level gateway visual.
-$portal_backdrop_map = array(
-    'Ceremonies' => 'tt7286456',
-    'Categories' => 'tt1375666',
-    'Ledger'     => 'tt0111161',
-    'About'      => 'tt0068646',
-);
+// One map: the daily visual warmer (inc/oscars-portal.php) warms these same films.
+$portal_backdrop_map = function_exists( 'lunara_oscars_portal_door_backdrop_map' ) ? lunara_oscars_portal_door_backdrop_map() : array();
 $portal_backdrops = array();
 
 if ( $aat && method_exists( $aat, 'get_title_visual_package' ) ) {
@@ -280,7 +279,7 @@ $portal_link_defaults = array(
         'kicker'   => 'Ledger',
         'title'    => 'Full Ledger',
         'copy'     => '',
-        'url'      => $database_table_url,
+        'url'      => $ledger_url,
         'backdrop' => $portal_backdrops['Ledger'] ?? '',
     ),
     4 => array(
@@ -306,11 +305,13 @@ foreach ( $portal_link_defaults as $slot => $defaults ) {
     }
 
     if ( 3 === $slot ) {
-        $normalized_card_url = untrailingslashit( remove_query_arg( 'view', $card_url ) );
-        $normalized_base_url = untrailingslashit( remove_query_arg( 'view', $database_url ) );
+        // A saved copy of the old ledger link (the base, the table view or its
+        // #oscars-research anchor) follows the Full Ledger default.
+        $normalized_card_url = untrailingslashit( remove_query_arg( 'view', explode( '#', $card_url, 2 )[0] ) );
+        $normalized_base_url = untrailingslashit( remove_query_arg( 'view', explode( '#', $database_url, 2 )[0] ) );
 
         if ( $normalized_card_url === $normalized_base_url ) {
-            $card_url = $database_table_url;
+            $card_url = $ledger_url;
         }
     }
 
@@ -384,7 +385,7 @@ $command_cards = array(
         'kicker' => 'Research Table',
         'title'  => 'Full Ledger',
         'meta'   => number_format_i18n( intval( $database_spotlight['records_total'] ?? 0 ) ) . ' rows',
-        'url'    => $database_table_url,
+        'url'    => $ledger_url,
     ),
 );
 ?>
@@ -414,7 +415,7 @@ $command_cards = array(
 
                     <div class="lunara-oscars-portal-actions">
                         <a class="lunara-button lunara-button-primary" href="<?php echo esc_url( $ceremony_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['ceremony'] ); ?></a>
-                        <a class="lunara-button lunara-button-secondary" href="<?php echo esc_url( $database_table_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['ledger'] ); ?></a>
+                        <a class="lunara-button lunara-button-secondary" href="<?php echo esc_url( $ledger_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['ledger'] ); ?></a>
                         <a class="lunara-button-ghost" href="<?php echo esc_url( $categories_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['categories'] ); ?></a>
                     </div>
 
@@ -674,11 +675,12 @@ $command_cards = array(
 <?php $oscars_slot_markup['research'] = ob_get_clean(); ob_start(); ?>
 
         <?php
-        /**
-         * "Reviews Inside the Ledger" section disabled 2026-04-20 per Dalton.
-         * To be replaced by a more distinctive Oscars-native section (stats /
-         * ceremony grid / deep-cuts visual). Re-enable by removing the `0 &&` guard.
+        /*
+         * "Reviews Inside the Ledger" is hidden by default (since 2026-04-20, per
+         * Dalton) and shown through its Studio / lunara_oscars_show_linked_reviews
+         * visibility. Its query runs only when the section will render.
          */
+        $linked_reviews = ( $show_linked_reviews && function_exists( 'lunara_oscars_linked_reviews_query' ) ) ? lunara_oscars_linked_reviews_query( 4 ) : null;
         ?>
         <?php if ( $show_linked_reviews && $linked_reviews instanceof WP_Query && $linked_reviews->have_posts() ) : ?>
             <section id="oscars-reviews" class="lunara-home-section lunara-oscars-portal-reviews lunara-oscars-portal-slot-linked-reviews" data-lunara-site-studio-section="linked-reviews">

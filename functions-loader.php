@@ -47,6 +47,7 @@ if ( is_admin() ) {
 require_once $lunara_inc . 'debrief-resolver.php';
 require_once $lunara_inc . 'debrief.php';
 require_once $lunara_inc . 'debrief-public.php';
+require_once $lunara_inc . 'debrief-method.php'; // The Debrief Method explainer page + live pairing index.
 require_once $lunara_inc . 'shot-reel.php';   // The Still Gallery — [lunara_shot_reel] screening-room shot essays
 
 // Layer 3 — Card rendering (depends on debrief).
@@ -55,7 +56,8 @@ require_once $lunara_inc . 'review-rendering.php';
 // Layer 4 — Query layer (depends on card builders + debrief).
 require_once $lunara_inc . 'queries.php';
 
-// Layer 5 — Home page sections (depends on all above).
+// Layer 5 — Oscars data layer, then the homepage sections (depend on all above).
+require_once $lunara_inc . 'oscars-data.php'; // Snapshot, winner cards, showcase, spotlight, deep cuts.
 require_once $lunara_inc . 'home-sections.php';
 
 // Layer 6 — Oscars portal (depends on home-sections + card builders).
@@ -146,6 +148,7 @@ require_once $lunara_inc . 'site-studio-adapters.php';
 require_once $lunara_inc . 'site-studio-footer-navigation.php';
 require_once $lunara_inc . 'site-studio-utility-recovery.php';
 require_once $lunara_inc . 'site-studio-journal-single.php';
+require_once $lunara_inc . 'site-studio-debrief-method.php'; // Debrief page words, sections and counts.
 require_once $lunara_inc . 'site-studio-oscars-ledger.php';
 require_once $lunara_inc . 'site-studio-carousels.php';
 require_once $lunara_inc . 'site-studio-home-oscars.php';

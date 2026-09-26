@@ -662,13 +662,58 @@ if ( ! function_exists( 'lunara_get_internal_title_reference_url' ) ) {
     }
 }
 
+if ( ! function_exists( 'lunara_poster_html_with_sizes' ) ) {
+    /**
+     * Give a responsive poster <img> an accurate `sizes` hint.
+     *
+     * WordPress defaults `sizes` to the attachment's full width, so a 76px
+     * card thumbnail can download a 1333px source. Markup without a srcset is
+     * returned unchanged; lazy images keep the leading `auto` so browsers that
+     * support it still size from layout.
+     *
+     * @param string $html    Poster markup.
+     * @param string $sizes   Sanitized sizes value, '' to leave unchanged.
+     * @param string $loading 'lazy' or 'eager'.
+     * @return string
+     */
+    function lunara_poster_html_with_sizes( $html, $sizes, $loading = 'lazy' ) {
+        $html  = (string) $html;
+        $sizes = trim( (string) $sizes );
+        if ( '' === $sizes || false === stripos( $html, ' srcset=' ) ) {
+            return $html;
+        }
+
+        $value = ( 'lazy' === $loading ? 'auto, ' : '' ) . $sizes;
+        if ( preg_match( '/\ssizes="[^"]*"/i', $html ) ) {
+            return (string) preg_replace( '/\ssizes="[^"]*"/i', ' sizes="' . esc_attr( $value ) . '"', $html, 1 );
+        }
+
+        return (string) preg_replace( '/<img\b/i', '<img sizes="' . esc_attr( $value ) . '"', $html, 1 );
+    }
+}
+
 if ( ! function_exists( 'lunara_get_title_poster_html' ) ) {
-    function lunara_get_title_poster_html( $tt, $size = 'medium', $class = 'lunara-debrief-thumb', $title = '', $loading = 'lazy' ) {
+    /**
+     * Poster <img> for an IMDb title, resolved through the Oscars Ledger.
+     *
+     * @param string $tt      IMDb title ID.
+     * @param string $size    Registered image size.
+     * @param string $class   Class for the <img>.
+     * @param string $title   Film title for the alt text.
+     * @param string $loading 'lazy' or 'eager'.
+     * @param string $sizes   Optional rendered-width hint. When the poster is a
+     *                        responsive attachment, it replaces WordPress's
+     *                        full-width default so small cards stop fetching
+     *                        the largest source.
+     * @return string
+     */
+    function lunara_get_title_poster_html( $tt, $size = 'medium', $class = 'lunara-debrief-thumb', $title = '', $loading = 'lazy', $sizes = '' ) {
         $tt      = strtolower( trim( (string) $tt ) );
         $size    = trim( (string) $size );
         $class   = trim( (string) $class );
         $title   = trim( (string) $title );
         $loading = 'eager' === trim( (string) $loading ) ? 'eager' : 'lazy';
+        $sizes   = trim( preg_replace( '/[^a-z0-9(),:.\s-]/i', '', (string) $sizes ) );
 
         if ( ! preg_match( '/^tt\d{7,8}$/', $tt ) ) {
             return '';
@@ -734,7 +779,7 @@ if ( ! function_exists( 'lunara_get_title_poster_html' ) ) {
                             );
                         }
 
-                        return $poster_html;
+                        return lunara_poster_html_with_sizes( $poster_html, $sizes, $loading );
                     }
                 }
             }
@@ -753,7 +798,7 @@ if ( ! function_exists( 'lunara_get_title_poster_html' ) ) {
                 );
 
                 if ( '' !== trim( $poster_html ) ) {
-                    return $poster_html;
+                    return lunara_poster_html_with_sizes( $poster_html, $sizes, $loading );
                 }
             }
         }
@@ -1240,7 +1285,7 @@ if ( ! function_exists( 'lunara_pair_relational_data' ) ) {
             );
         }
         if ( '' === trim( $poster_html ) && '' !== $tt && function_exists( 'lunara_get_title_poster_html' ) ) {
-            $poster_html = (string) lunara_get_title_poster_html( $tt, 'medium', 'lunara-pair-preview-thumb', $title_base );
+            $poster_html = (string) lunara_get_title_poster_html( $tt, 'medium', 'lunara-pair-preview-thumb', $title_base, 'lazy', '(max-width: 680px) 116px, (max-width: 879px) 45vw, 340px' );
         }
 
         $dossier_href = (string) get_permalink( $movie_id );
@@ -1412,6 +1457,9 @@ if ( ! function_exists( 'lunara_render_pair_it_with_cards' ) ) {
         $html .= '<h3 class="lunara-pair-cards-title">' . esc_html__( 'Pair It With', 'lunara-film' ) . '</h3>';
         if ( '' !== trim( $subtitle ) ) {
             $html .= '<p class="lunara-pair-cards-sub">' . esc_html( $subtitle ) . '</p>';
+        }
+        if ( function_exists( 'lunara_debrief_method_link_html' ) ) {
+            $html .= lunara_debrief_method_link_html();
         }
         $html .= '</div>';
         $html .= '<div class="lunara-pair-cards-grid" data-count="' . count( $cards ) . '">' . implode( '', $cards ) . '</div>';

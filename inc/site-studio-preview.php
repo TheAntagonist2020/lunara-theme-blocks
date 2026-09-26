@@ -23,6 +23,7 @@ if ( ! function_exists( 'lunara_site_studio_preview_pilots' ) ) {
 			'oscars-ledger' => array( 'owner' => 'theme:oscars-ledger-presentation', 'query' => 'lunara_oscars_ledger_preview', 'route' => '/oscars/ceremony/98/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'ceremony', 'category', 'title', 'person' ) ),
 			'journal-single' => array( 'owner' => 'theme:journal-single', 'query' => 'lunara_journal_single_preview', 'route' => '', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'article', 'gallery' ) ),
 			'review-single' => array( 'owner' => 'theme:review-single', 'query' => 'lunara_review_single_preview', 'route' => '/reviews/sinners-2025/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'criticism', 'debrief', 'pair-it-with' ) ),
+			'debrief-method' => array( 'owner' => 'theme:debrief-method', 'query' => 'lunara_debrief_method_preview', 'route' => '/debrief/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'hero', 'moves', 'why', 'specimen', 'desk', 'canon', 'recent', 'next' ) ),
 			'utility-search' => array( 'owner' => 'theme:utility-search', 'query' => 'lunara_utility_search_preview', 'route' => '/search/', 'params' => array( 'q' => 'Lunara' ), 'storage' => 'site-studio', 'markers' => array( 'search-command', 'direct-matches', 'result-run', 'recovery' ) ),
 			'utility-404' => array( 'owner' => 'theme:utility-404', 'query' => 'lunara_404_preview', 'route' => '/definitely-not-a-real-lunara-route/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'search-command', 'recovery' ) ),
 			'site-footer' => array( 'owner' => 'theme:site-footer', 'query' => 'lunara_footer_preview', 'route' => '/', 'params' => array(), 'storage' => 'site-studio', 'markers' => array( 'footer' ) ),
@@ -105,6 +106,7 @@ if ( ! function_exists( 'lunara_site_studio_preview_install_state' ) ) {
 			'oscars-ledger' => 'lunara_site_studio_oscars_ledger_validate_state',
 			'utility-search' => 'lunara_site_studio_utility_search_validate_state',
 			'utility-404' => 'lunara_site_studio_utility_404_validate_state',
+			'debrief-method' => 'lunara_site_studio_debrief_method_validate_state',
 			'site-footer' => 'lunara_site_studio_footer_validate_state',
 		);
 		if ( isset( $validators[ $surface_id ] ) && is_callable( $validators[ $surface_id ] ) ) {
@@ -134,6 +136,7 @@ if ( ! function_exists( 'lunara_site_studio_preview_install_state' ) ) {
 			'oscars-ledger' => 'lunara_site_studio_oscars_ledger_spec',
 			'utility-search' => 'lunara_site_studio_utility_search_spec',
 			'utility-404' => 'lunara_site_studio_utility_404_spec',
+			'debrief-method' => 'lunara_site_studio_debrief_method_spec',
 			'site-footer' => 'lunara_site_studio_footer_spec',
 		);
 		if ( isset( $spec_callbacks[ $surface_id ] ) && is_callable( $spec_callbacks[ $surface_id ] ) ) {

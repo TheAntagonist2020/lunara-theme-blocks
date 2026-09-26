@@ -527,9 +527,34 @@ function lunara_output_home_hero_geometry_css() {
         return;
     }
 
-    echo '<style id="lunara-home-hero-geometry-css">.lunara-cinematic-hero-carousel .splide__list>.lunara-cinematic-hero-slide{flex:0 0 100%;width:100%;min-width:0}</style>';
+    // Splide inserts the arrows and pagination at mount, beside the Play/Pause
+    // toggle. On desktop their positioning lives only in deferred CSS, so until it
+    // arrived they sat in normal flow and pushed the page down (measured CLS 0.98).
+    // Take them out of flow here; the later stylesheets set the same properties and
+    // refine the offsets. Phones (900px and below) deliberately place the controls
+    // in the grid's flow, so the seed leaves them alone there.
+    echo '<style id="lunara-home-hero-geometry-css">.lunara-cinematic-hero-carousel .splide__list>.lunara-cinematic-hero-slide{flex:0 0 100%;width:100%;min-width:0}@media (min-width:901px){.lunara-cinematic-hero-carousel{position:relative}.lunara-cinematic-hero-carousel .lunara-hero-arrows{position:absolute;inset:0;z-index:4;pointer-events:none}.lunara-cinematic-hero-carousel .lunara-hero-pagination{position:absolute;left:0;right:0;bottom:28px;z-index:4;margin:0;padding:0}.lunara-home-curated-hero .lunara-home-carousel-toggle{position:absolute;right:24px;bottom:16px;z-index:5}}</style>';
 }
 add_action( 'wp_head', 'lunara_output_home_hero_geometry_css', 2 );
+
+/**
+ * Film and person dossiers: the same first-paint seed for their layout.
+ *
+ * The dossier layout rules live in style.css, which Jetpack Boost defers, and
+ * the stored critical CSS carries none of them. Until the sheet applied, the
+ * hero poster rendered at full size and the filmography grid as one column,
+ * then snapped into place (measured CLS 0.26 to 0.50), and the award list gained
+ * its padding late. These declarations are copied from style.css verbatim, so
+ * nothing changes once it applies.
+ */
+function lunara_output_entity_geometry_css() {
+    if ( is_admin() || is_feed() || ! is_singular( array( 'movie', 'person' ) ) ) {
+        return;
+    }
+
+    echo '<style id="lunara-entity-geometry-css">.lunara-entity-hero{position:relative;overflow:hidden;margin:28px 0 34px}.lunara-entity-hero-backdrop{position:absolute;inset:-4%}.lunara-entity-hero-overlay{position:absolute;inset:0}.lunara-entity-hero-inner{position:relative;z-index:2;display:flex;gap:clamp(22px,3.4vw,44px);align-items:flex-end;padding:clamp(28px,4.4vw,56px)}.lunara-entity-hero-poster{flex:0 0 clamp(160px,18vw,250px);aspect-ratio:2/3;overflow:hidden}.lunara-entity-hero-poster img,.lunara-entity-card-poster img{display:block;width:100%;height:100%;object-fit:cover}.lunara-entity-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,158px),1fr));gap:clamp(14px,2vw,22px);margin-top:14px}.lunara-entity-card-poster{aspect-ratio:2/3;overflow:hidden}.lunara-entity-body>*+*{margin-top:clamp(28px,4vw,44px)}.lunara-entity-awards{padding:clamp(20px,3vw,32px);border:1px solid rgba(201,169,97,.24);border-radius:16px}.lunara-entity-awards-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px}.lunara-entity-awards-tally{margin:0}.lunara-entity-award-list{margin:0;padding:0;list-style:none}.lunara-entity-award{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;padding:10px 4px}.lunara-entity-award-year{min-width:52px}.lunara-entity-award-state{margin-left:auto;padding:3px 10px;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase}@media (max-width:760px){.lunara-entity-hero-inner{flex-direction:column;align-items:flex-start}.lunara-entity-hero-poster{flex-basis:auto;width:min(58vw,220px)}.lunara-entity-award-state{margin-left:0}}</style>';
+}
+add_action( 'wp_head', 'lunara_output_entity_geometry_css', 2 );
 
 /**
  * Keep the masthead's layout CSS out of WP Rocket's used-CSS pipeline.
@@ -544,6 +569,7 @@ add_action( 'wp_head', 'lunara_output_home_hero_geometry_css', 2 );
 function lunara_rocket_preserve_front_door_css( $exclusions ) {
     $exclusions[] = 'lunara-home-front-door-vars';
     $exclusions[] = 'lunara-home-hero-geometry-css';
+    $exclusions[] = 'lunara-entity-geometry-css';
     $exclusions[] = 'lunara-home-modules.css';
     return $exclusions;
 }
@@ -2186,6 +2212,12 @@ if ( ! function_exists( 'lunara_get_search_recovery_routes' ) ) {
                     $film_id = strtolower( trim( (string) ( $row['film_id'] ?? '' ) ) );
                     $score   = $score_label( $film );
 
+                    // A never-link or guarded title (the plugin's legacy link
+                    // guard) is not offered: this builds the title URL itself.
+                    if ( '' !== $film_id && function_exists( 'lunara_oscars_pair_is_guarded' ) && lunara_oscars_pair_is_guarded( $film_id, $film ) ) {
+                        continue;
+                    }
+
                     if ( '' !== $film && preg_match( '/^tt\d+$/', $film_id ) && $score >= 72 ) {
                         if ( intval( $row['winner'] ?? 0 ) > 0 ) {
                             $score += 2;
@@ -2551,14 +2583,27 @@ if ( ! function_exists( 'lunara_get_oscars_search_matches' ) ) {
                 return array();
             }
 
-            return array_combine( $id_parts, $value_parts );
+            // Drop each pair the plugin's legacy link guard rejects (a
+            // known-wrong legacy pairing or a never-link ID).
+            $pairs = array();
+            foreach ( $id_parts as $index => $id_part ) {
+                if ( function_exists( 'lunara_oscars_pair_is_guarded' ) && lunara_oscars_pair_is_guarded( $id_part, $value_parts[ $index ] ) ) {
+                    continue;
+                }
+                $pairs[ $id_part ] = $value_parts[ $index ];
+            }
+
+            return $pairs;
         };
 
         foreach ( $rows as $row ) {
             $film    = trim( (string) ( $row['film'] ?? '' ) );
             $film_id = strtolower( trim( (string) ( $row['film_id'] ?? '' ) ) );
 
-            if ( '' !== $film && preg_match( '/^tt\d+$/', $film_id ) ) {
+            // A never-link or guarded title (the plugin's legacy link guard)
+            // is not offered: this builds the title URL itself. The row's
+            // nominee pairs are still considered below.
+            if ( '' !== $film && preg_match( '/^tt\d+$/', $film_id ) && ! ( function_exists( 'lunara_oscars_pair_is_guarded' ) && lunara_oscars_pair_is_guarded( $film_id, $film ) ) ) {
                 $film_score = function_exists( 'lunara_search_text_match_score' )
                     ? lunara_search_text_match_score( $film, $query_text )
                     : 0;
@@ -5927,12 +5972,30 @@ if ( ! function_exists( 'lunara_separate_review_from_editorial_archives' ) ) {
             return;
         }
 
+        // Journal entries and Reviews both carry post_tag, and their pages link to
+        // /tag/…/. A tag archive gathers everything filed under the tag; limiting it
+        // to Posts (of which there are none) left every tag link on an empty page.
+        if ( $query->is_tag() ) {
+            $query->set( 'post_type', array( 'journal', 'review', 'post' ) );
+
+            if ( function_exists( 'lunara_apply_editorial_archive_sort_args' ) ) {
+                $query_vars = array(
+                    'orderby' => $query->get( 'orderby' ),
+                    'order'   => $query->get( 'order' ),
+                );
+                $query_vars = lunara_apply_editorial_archive_sort_args( $query_vars );
+                $query->set( 'orderby', $query_vars['orderby'] );
+                $query->set( 'order', $query_vars['order'] );
+            }
+            return;
+        }
+
         $requested_post_type = $query->get( 'post_type' );
         if ( 'review' === $requested_post_type || ( is_array( $requested_post_type ) && in_array( 'review', $requested_post_type, true ) ) ) {
             return;
         }
 
-        if ( $query->is_home() || $query->is_category() || $query->is_tag() || $query->is_author() || $query->is_date() ) {
+        if ( $query->is_home() || $query->is_category() || $query->is_author() || $query->is_date() ) {
             $query->set( 'post_type', 'post' );
 
             if ( function_exists( 'lunara_apply_editorial_archive_sort_args' ) ) {

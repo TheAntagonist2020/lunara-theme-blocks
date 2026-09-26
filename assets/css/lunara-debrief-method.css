@@ -1,0 +1,102 @@
+/* ============================================================
+   THE DEBRIEF METHOD (3.2.89; settings-driven since 3.2.90)
+   Explainer page for the signature that closes every review.
+   Loaded only on page-debrief.php (inc/debrief-method.php).
+   Token-driven and mobile-first, sharing the About page's vocabulary.
+   ============================================================ */
+.lunara-debrief-page,
+.lunara-debrief-page * { box-sizing: border-box; }
+.lunara-debrief-page { display: grid; gap: clamp(40px, 6vw, 76px); width: min(100%, 1120px); margin: 0 auto; padding: clamp(18px, 3vw, 34px) clamp(16px, 3vw, 28px) clamp(48px, 6vw, 80px); }
+.lunara-debrief-kicker { margin: 0 0 10px; color: var(--lunara-gold, #c9a961); font-family: var(--lunara-font-label, sans-serif); font-size: 0.7rem; letter-spacing: 0.28em; text-transform: uppercase; }
+.lunara-debrief-section-title { margin: 0 0 clamp(18px, 2.6vw, 28px); max-width: 30ch; color: var(--lunara-text, #fafbfc); font-family: var(--lunara-font-display, serif); font-size: clamp(1.4rem, 2.8vw, 2.1rem); line-height: 1.18; text-wrap: balance; }
+.lunara-debrief-section-title a { color: var(--lunara-gold-light, #e0c481); text-decoration: none; border-bottom: 1px solid rgba(201, 169, 97, 0.45); }
+
+/* Hero */
+.lunara-debrief-hero { position: relative; overflow: hidden; border: 1px solid var(--lunara-border, rgba(201, 169, 97, 0.28)); border-radius: 18px; background: radial-gradient(120% 90% at 85% 0%, rgba(201, 169, 97, 0.14), transparent 60%), linear-gradient(160deg, var(--lunara-bg-secondary, #0f1d2e), var(--lunara-bg-primary, #0a1520)); }
+.lunara-debrief-hero-backdrop { position: absolute; inset: -4%; background-position: center 30%; background-size: cover; filter: saturate(0.9); }
+.lunara-debrief-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(7, 15, 26, 0.94) 0%, rgba(7, 15, 26, 0.55) 55%, rgba(7, 15, 26, 0.3) 100%); }
+.lunara-debrief-hero-inner { position: relative; z-index: 2; padding: clamp(30px, 6vw, 64px) clamp(20px, 4vw, 48px); }
+.lunara-debrief-title { margin: 0 0 14px; color: var(--lunara-text, #fafbfc); font-family: var(--lunara-font-signature, serif); font-size: clamp(2.2rem, 5.4vw, 3.6rem); line-height: 1.06; }
+.lunara-debrief-thesis { margin: 0; max-width: 56ch; color: rgba(244, 239, 227, 0.86); font-family: var(--lunara-font-body, Georgia, serif); font-size: clamp(1.02rem, 1.4vw, 1.2rem); line-height: 1.6; text-wrap: pretty; }
+.lunara-debrief-stats { display: flex; flex-wrap: wrap; gap: 12px clamp(20px, 4vw, 44px); margin: clamp(22px, 3vw, 32px) 0 0; padding: clamp(16px, 2vw, 20px) 0 0; border-top: 1px solid rgba(201, 169, 97, 0.22); }
+.lunara-debrief-stats div { display: grid; gap: 2px; }
+.lunara-debrief-stats dt { color: rgba(244, 239, 227, 0.62); font-family: var(--lunara-font-label, sans-serif); font-size: 0.64rem; letter-spacing: 0.22em; text-transform: uppercase; }
+.lunara-debrief-stats dd { margin: 0; color: var(--lunara-gold-light, #e0c481); font-family: var(--lunara-font-display, serif); font-size: clamp(1.5rem, 3vw, 2.1rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: no-preference) {
+	.lunara-debrief-hero-backdrop { animation: lunara-hero-breath 18s ease-in-out infinite alternate; }
+}
+
+/* The three moves */
+.lunara-debrief-moves-list { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; counter-reset: lunara-debrief-move; }
+@media (min-width: 821px) { .lunara-debrief-moves-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.lunara-debrief-move { display: grid; align-content: start; gap: 10px; padding: clamp(18px, 2.4vw, 26px); border: 1px solid rgba(201, 169, 97, 0.24); border-top: 3px solid var(--lunara-gold, #c9a961); border-radius: 14px; background: rgba(15, 29, 46, 0.55); counter-increment: lunara-debrief-move; }
+.lunara-debrief-move--counter { border-top-color: #b8664f; }
+.lunara-debrief-move--career { border-top-color: #7f9bb8; }
+.lunara-debrief-move-name { margin: 0; color: var(--lunara-text, #fafbfc); font-family: var(--lunara-font-display, serif); font-size: clamp(1.24rem, 2vw, 1.5rem); line-height: 1.2; }
+.lunara-debrief-move-name::before { content: counter(lunara-debrief-move, decimal-leading-zero); display: block; margin-bottom: 6px; color: rgba(201, 169, 97, 0.75); font-family: var(--lunara-font-label, sans-serif); font-size: 0.72rem; letter-spacing: 0.24em; }
+.lunara-debrief-move-question { margin: 0; color: var(--lunara-gold-light, #e0c481); font-family: var(--lunara-font-body, Georgia, serif); font-size: 1rem; font-style: italic; line-height: 1.45; }
+.lunara-debrief-move-copy { margin: 0; color: rgba(244, 239, 227, 0.82); font-family: var(--lunara-font-body, Georgia, serif); font-size: 0.96rem; line-height: 1.6; }
+.lunara-debrief-move-not { margin: 4px 0 0; padding-top: 10px; border-top: 1px dashed rgba(201, 169, 97, 0.22); color: rgba(244, 239, 227, 0.6); font-family: var(--lunara-font-body, Georgia, serif); font-size: 0.86rem; line-height: 1.5; }
+
+/* Why three + editor seat */
+.lunara-debrief-why,
+.lunara-debrief-words,
+.lunara-debrief-specimen,
+.lunara-debrief-canon,
+.lunara-debrief-recent { border-top: 1px solid rgba(201, 169, 97, 0.2); padding-top: clamp(26px, 4vw, 44px); }
+.lunara-debrief-why-body,
+.lunara-debrief-words-body { display: grid; gap: 1em; max-width: 68ch; color: rgba(244, 239, 227, 0.88); font-family: var(--lunara-font-body, Georgia, serif); font-size: clamp(1rem, 1.3vw, 1.14rem); line-height: 1.7; }
+.lunara-debrief-why-body p,
+.lunara-debrief-words-body > * { margin: 0; }
+.lunara-debrief-words-body a { color: var(--lunara-gold-light, #e0c481); }
+
+/* Specimen reuses .lunara-pair-cards from lunara-review-components.css */
+.lunara-debrief-specimen .lunara-pair-cards { margin: 0; }
+
+/* The canon */
+.lunara-debrief-canon-list { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; counter-reset: lunara-debrief-canon; }
+@media (min-width: 621px) { .lunara-debrief-canon-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .lunara-debrief-canon-list { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.lunara-debrief-canon-item { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; align-items: start; padding: 14px; border: 1px solid rgba(201, 169, 97, 0.2); border-radius: 12px; background: rgba(15, 29, 46, 0.45); counter-increment: lunara-debrief-canon; }
+@media (min-width: 1000px) { .lunara-debrief-canon-item { grid-template-columns: 1fr; } }
+.lunara-debrief-canon-media { position: relative; overflow: hidden; aspect-ratio: 2 / 3; border-radius: 8px; background: rgba(7, 15, 26, 0.8); }
+.lunara-debrief-canon-media::after { content: counter(lunara-debrief-canon); position: absolute; top: 6px; left: 6px; display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 999px; background: rgba(7, 15, 26, 0.86); color: var(--lunara-gold-light, #e0c481); font-family: var(--lunara-font-label, sans-serif); font-size: 0.72rem; }
+.lunara-debrief-canon-media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.lunara-debrief-canon-plate { display: grid; place-items: center; height: 100%; padding: 8px; color: rgba(244, 239, 227, 0.8); font-family: var(--lunara-font-display, serif); font-size: 0.8rem; line-height: 1.25; text-align: center; }
+.lunara-debrief-canon-body { display: grid; gap: 5px; min-width: 0; }
+.lunara-debrief-canon-title { margin: 0; color: var(--lunara-text, #fafbfc); font-family: var(--lunara-font-display, serif); font-size: 1.06rem; line-height: 1.25; }
+.lunara-debrief-canon-title a { color: inherit; text-decoration: none; }
+.lunara-debrief-canon-title a:hover,
+.lunara-debrief-canon-title a:focus-visible { color: var(--lunara-gold-light, #e0c481); }
+.lunara-debrief-canon-year { color: rgba(244, 239, 227, 0.58); font-size: 0.86em; }
+.lunara-debrief-canon-count { margin: 0; color: var(--lunara-gold, #c9a961); font-family: var(--lunara-font-label, sans-serif); font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; }
+.lunara-debrief-canon-roles { margin: 0; color: rgba(244, 239, 227, 0.62); font-family: var(--lunara-font-body, Georgia, serif); font-size: 0.84rem; line-height: 1.45; }
+.lunara-debrief-canon-reviews { margin: 2px 0 0; color: rgba(244, 239, 227, 0.62); font-family: var(--lunara-font-body, Georgia, serif); font-size: 0.82rem; line-height: 1.45; overflow-wrap: anywhere; }
+.lunara-debrief-canon-reviews-label { display: block; margin-bottom: 2px; color: rgba(201, 169, 97, 0.85); font-family: var(--lunara-font-label, sans-serif); font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase; }
+.lunara-debrief-canon-reviews a { color: rgba(244, 239, 227, 0.86); text-decoration: underline; text-decoration-color: rgba(201, 169, 97, 0.45); text-underline-offset: 2px; }
+.lunara-debrief-canon-reviews a:hover,
+.lunara-debrief-canon-reviews a:focus-visible { color: var(--lunara-gold-light, #e0c481); }
+
+/* Recent debriefs */
+.lunara-debrief-recent-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.lunara-debrief-recent-item { display: grid; gap: 10px; padding: 16px 0; border-bottom: 1px solid rgba(201, 169, 97, 0.14); }
+@media (min-width: 821px) { .lunara-debrief-recent-item { grid-template-columns: minmax(0, 0.9fr) minmax(0, 2fr); gap: 24px; align-items: baseline; } }
+.lunara-debrief-recent-review { color: var(--lunara-text, #fafbfc); font-family: var(--lunara-font-display, serif); font-size: 1.06rem; line-height: 1.3; text-decoration: none; }
+.lunara-debrief-recent-review:hover,
+.lunara-debrief-recent-review:focus-visible { color: var(--lunara-gold-light, #e0c481); }
+.lunara-debrief-recent-pairs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.lunara-debrief-recent-pair { display: inline-flex; align-items: baseline; gap: 8px; max-width: 100%; padding: 6px 12px; border: 1px solid rgba(201, 169, 97, 0.22); border-radius: 999px; background: rgba(15, 29, 46, 0.5); color: rgba(244, 239, 227, 0.86); font-family: var(--lunara-font-body, Georgia, serif); font-size: 0.9rem; }
+.lunara-debrief-recent-pair a { color: inherit; text-decoration: none; }
+.lunara-debrief-recent-pair a:hover,
+.lunara-debrief-recent-pair a:focus-visible { color: var(--lunara-gold-light, #e0c481); }
+.lunara-debrief-recent-role { flex: none; color: var(--lunara-gold, #c9a961); font-family: var(--lunara-font-label, sans-serif); font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; }
+.lunara-debrief-recent-pair--counter .lunara-debrief-recent-role { color: #d08a73; }
+.lunara-debrief-recent-pair--career .lunara-debrief-recent-role { color: #9fb7cf; }
+
+/* Keep going */
+.lunara-debrief-next { display: flex; flex-wrap: wrap; gap: 14px 40px; border-top: 1px solid rgba(201, 169, 97, 0.2); padding-top: clamp(26px, 4vw, 44px); }
+.lunara-debrief-next-link { display: inline-flex; flex-direction: column; gap: 6px; text-decoration: none; }
+.lunara-debrief-next-link em { font-style: normal; color: var(--lunara-gold, #c9a961); font-family: var(--lunara-font-label, sans-serif); font-size: 0.68rem; letter-spacing: 0.24em; text-transform: uppercase; }
+.lunara-debrief-next-link span { color: var(--lunara-text, #fafbfc); font-family: var(--lunara-font-display, serif); font-size: 1.14rem; border-bottom: 1px solid rgba(201, 169, 97, 0.45); }
+.lunara-debrief-next-link:hover span,
+.lunara-debrief-next-link:focus-visible span { color: var(--lunara-gold-light, #e0c481); }
