@@ -25,6 +25,79 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-26 — Oscars Ledger 2.8.4 and 2.8.5 live: Explorer artwork everywhere, Lunara-only credit
+
+### Headline
+
+Every nomination row, Debrief, "By…" list row and search suggestion in the Oscar Ledger Explorer now carries a poster or a portrait. Anything with no artwork gets a monogram plate in the same 2:3 box, so no row gaps. The Explorer footer and the API's `/status` now credit Lunara Film alone; no third party is named anywhere on the site. Both are Dalton's requirements, in his words: *"we have to have images though … that's a non-negotiable"* and *"I'm not giving anyone else credit on a header or a footer … I did every single piece of data acquisition and fact checking"*. Pushed straight to `main`, and plugin-only, so there is no theme release.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Explorer footer, `/oscars/explore/` | "Every nomination compiled and fact-checked by Lunara Film against the Academy's official record." The old footer named an outside GitHub dataset. It was the only public mention on the site: every site header and footer, and `/oscars/about/`, were scanned |
+| `/wp-json/lunara-ledger/v1/status` | `plugin_version` 2.8.4 at the check, `source` is the Lunara line, no `license` key |
+| Media boxes, 25-row views (poster / portrait / plate) | Default 5/20/0. The 12th, 30th and 60th ceremonies the same. 1st ceremony 13/10/2. Meryl Streep 21 posters and her Debrief portrait. Best Picture winners 25/0/0. By film 25/0/0. By ceremony 25/0/0. By category 23/0/2. By person, winners 9/14/2. By company 24/0/1 |
+| Playwright, 393 and 1280 px | 0 broken images on every view. Suggestions for "godf" show posters for the three Godfathers and My Man Godfrey, a portrait for Bob Godfrey, and a "BG" plate for Bogumil Godfrejow |
+| 2.8.5 on a phone, live JavaScript, nothing injected | 5 suggestions on screen, 0 covered by the sticky filter bar. All six names read in full |
+
+### What shipped and why
+
+Plugin detail is in `readme.txt` 2.8.4 and 2.8.5.
+
+- **`includes/class-aat-ledger-media.php` (new).** It resolves a title's poster or a person's portrait only from artwork the site already holds: the poster table, review images, the media library, and TMDB art the importers cached. It never makes a live TMDB call, the same rule as every public page. It goes through the same plugin lookups as the profile pages, so a film or a person shows the same picture everywhere. Answers are cached per ID for 6 hours.
+- **Which image a row shows.** A one-person award shows the nominee's portrait. A film award or a team shows the film's poster. Each falls back to the other, then to a plate.
+
+  On an entity's own list its own ID goes last, so Meryl Streep's rows show her films rather than 21 copies of her portrait.
+- **API.**
+  - Groups carry `lead_film` for ceremonies, categories, people and companies: the headline winner with a film (Best Picture first, then the most recent), else the latest nominated film, under the list's own filters.
+  - Search results carry an `image` URL.
+- **2.8.5.** The hero isolates its stacking, so while suggestions are open the Explorer root carries `is-suggesting` and the hero rises above the sticky filter bar. At 600 px and below, suggestions stack kind, name and counts.
+- **Coverage measured before building.** 48 of 48 sampled films across the 5th to 98th ceremonies had a mapped poster. Portraits: 12 of 12 at the 98th and 60th ceremonies, 10 of 12 at the 30th, 8 of 12 at the 5th.
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-plugin-oscars-ledger | `8585886` | 2.8.4: artwork on every row, group, Debrief and suggestion; Lunara-only credit |
+| lunara-plugin-oscars-ledger | `df959b4` | 2.8.5: suggestions clear the filter bar and read in full on phones |
+| lunara-theme-blocks | this record | Session log |
+| lunara-theme-blocks | hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on this record, tree `c55bf394…` |
+
+Roll back by reverting `df959b4`, then `8585886`, on plugin `main`.
+
+### Gate ledger
+
+- `php -l` clean on every changed PHP file, and `node --check` clean on `assets/js/ledger-explorer.js`.
+- New `tests/ledger-explorer-media-runtime.php`: 21 checks passed, with WordPress and the plugin stubbed. It also passes with every warning shown.
+- CI-equivalent: **PASS** on both commits.
+- **Not run:** the `lead_film` query against a database. The live "By…" views above show it working. If it ever fails, the rows fall back to plates.
+
+### Corrections
+
+- None.
+
+### Logged, not fixed
+
+- **All-caps names.** 118 of the 8,477 live person and company labels are all caps, for example "FARCIOT EDOUART", "WINTON HOCH" and "UB IWERKS". The live label takes the Sci-Tech citation's capitals. They break down as:
+  - 98 have a properly cased name in the audited `data/ledger/entities.tsv`;
+  - 14 are all caps there too, such as "BILL BISHOP" and "RON GRANT";
+  - 4 are stylized on purpose and should stay: SZA, JR, PES and DIXSON;
+  - 2 are missing from the ledger: Colin Broad and Dave Anderson.
+
+  It is waiting on Dalton's go.
+- The Explorer's fragment responses send `Cache-Control: public, max-age=300`, so a changed view can take up to five minutes to show at the edge.
+
+### Punch-list carried forward
+
+- The all-caps label batch above.
+- **Unshipped:** plugin U01, on its feature branch. Ship it only if Dalton asks.
+- Everything carried in the entries below still stands.
+
+### Whose move is next
+
+Dalton's. Oscars Ledger 2.8.5 and Theme 3.2.93 are live, and no agent task is open.
+
 ## 2026-09-25 (night) — Theme 3.2.93 live: "Full Ledger" opens the Oscar Ledger Explorer
 
 ### Headline
