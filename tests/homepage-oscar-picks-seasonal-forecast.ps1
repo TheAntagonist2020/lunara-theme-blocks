@@ -2,9 +2,6 @@ $ErrorActionPreference = 'Stop'
 
 $themeRoot = Split-Path -Parent $PSScriptRoot
 
-& php (Join-Path $PSScriptRoot 'oscar-taxonomy-rewrites-runtime.php')
-if ($LASTEXITCODE -ne 0) { throw 'Oscar Pick and Fact category route contracts failed.' }
-
 function Assert-True {
     param(
         [bool] $Condition,
@@ -24,12 +21,11 @@ function Read-ThemeFile {
     return Get-Content -Raw $path
 }
 
-# Oscar Picks data moved to inc/oscar-picks.php in 3.2.90; the public rail stays in functions.php.
-$functions = (Read-ThemeFile 'functions.php') + "`n" + (Read-ThemeFile 'inc/oscar-picks.php')
+$functions = Read-ThemeFile 'functions.php'
 $controlDesk = Read-ThemeFile 'inc/control-desk.php'
 $style = Read-ThemeFile 'style.css'
 
-Assert-True ($style -match 'Version:\s*3\.2\.81') 'Seasonal Oscar forecast must remain intact in Theme 3.2.81.'
+Assert-True ($style -match 'Version:\s*3\.2\.43') 'Seasonal Oscar forecast must remain intact in Theme 3.2.43.'
 Assert-True ($functions -match "'best casting'\s*=>\s*'CASTING'") 'Oscar Picks must link the new Casting category into the Ledger.'
 Assert-True ($functions -match "'Best Makeup and Hairstyling'") 'Oscar Picks must expose the full craft forecast taxonomy.'
 Assert-True ($functions -match 'function\s+lunara_home_oscar_picks_default_ceremony_year') 'Oscar Picks must derive a season instead of hard-coding one ceremony.'

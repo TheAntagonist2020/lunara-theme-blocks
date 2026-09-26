@@ -18,25 +18,20 @@ $lunara_inc = get_stylesheet_directory() . '/inc/';
 
 // Layer 0 — Foundation (no dependencies).
 require_once $lunara_inc . 'setup.php';
-require_once $lunara_inc . 'surface-pass.php';
 require_once $lunara_inc . 'helpers.php';
 
 // Layer 1 — Independent modules.
 require_once $lunara_inc . 'customizer.php';
 require_once $lunara_inc . 'reviews-cpt.php';
-require_once $lunara_inc . 'oscar-taxonomy-rewrites.php';
 require_once $lunara_inc . 'journal-cpt.php';    // Journal CPT + journal_type taxonomy + per-post meta
 require_once $lunara_inc . 'journal-family.php'; // Canonical fields, taxonomy routes, and legacy presentation adapters
-require_once $lunara_inc . 'journal-archive-studio.php'; // Focused revisionable Journal archive curation + preview.
-require_once $lunara_inc . 'reviews-archive-studio.php'; // Focused revisionable Reviews archive curation + preview.
-require_once $lunara_inc . 'oscars-family.php';         // Oscars route-family detectors + the plugin read-path boundary.
-require_once $lunara_inc . 'oscars-portal-studio.php';  // Focused revisionable Oscars portal composition + preview.
 require_once $lunara_inc . 'editorial-meta.php';
 require_once $lunara_inc . 'trailers.php';
 require_once $lunara_inc . 'publish-guards.php';
 require_once $lunara_inc . 'carousel.php';
 require_once $lunara_inc . 'control-desk.php';
 if ( is_admin() ) {
+    require_once $lunara_inc . 'site-studio.php';
     require_once $lunara_inc . 'control-desk-automation.php';
 }
 // Legacy homepage shortcodes are intentionally not booted from inc/ anymore.
@@ -47,7 +42,6 @@ if ( is_admin() ) {
 require_once $lunara_inc . 'debrief-resolver.php';
 require_once $lunara_inc . 'debrief.php';
 require_once $lunara_inc . 'debrief-public.php';
-require_once $lunara_inc . 'debrief-method.php'; // The Debrief Method explainer page + live pairing index.
 require_once $lunara_inc . 'shot-reel.php';   // The Still Gallery — [lunara_shot_reel] screening-room shot essays
 
 // Layer 3 — Card rendering (depends on debrief).
@@ -56,8 +50,7 @@ require_once $lunara_inc . 'review-rendering.php';
 // Layer 4 — Query layer (depends on card builders + debrief).
 require_once $lunara_inc . 'queries.php';
 
-// Layer 5 — Oscars data layer, then the homepage sections (depend on all above).
-require_once $lunara_inc . 'oscars-data.php'; // Snapshot, winner cards, showcase, spotlight, deep cuts.
+// Layer 5 — Home page sections (depends on all above).
 require_once $lunara_inc . 'home-sections.php';
 
 // Layer 6 — Oscars portal (depends on home-sections + card builders).
@@ -67,9 +60,6 @@ require_once $lunara_inc . 'oscars-portal.php';
 require_once $lunara_inc . 'blocks.php';
 require_once $lunara_inc . 'block-migration.php';
 require_once $lunara_inc . 'review-archive-critical.php';
-require_once $lunara_inc . 'journal-archive-critical.php';
-require_once $lunara_inc . 'oscars-portal-critical.php';
-require_once $lunara_inc . 'oscars-ledger-critical.php'; // Ledger route seed + Dossier variable assembly + label-face marker.
 require_once $lunara_inc . 'frontend.php';
 require_once $lunara_inc . 'cinematic-home.php';
 
@@ -83,16 +73,9 @@ require_once $lunara_inc . 'entity-surfaces.php';
 // Layer 10 — Hero Command: curated hero deck + overlay intensity. Front-end
 // feed override plus the Control Desk studio and its save/search handlers.
 require_once $lunara_inc . 'hero-command.php';
-require_once $lunara_inc . 'home-carousel-settings.php';
-require_once $lunara_inc . 'home-carousels.php';
 // Layer 10b — responsive native hero image + preload parity. This module owns
 // only image delivery; Hero Command remains the editorial deck source.
 require_once $lunara_inc . 'hero-delivery.php';
-
-// Layer 10c — Journal archive cards use uncropped native candidates and a
-// bounded WordPress.com Image CDN fallback when attachment metadata has no
-// compatible responsive set.
-require_once $lunara_inc . 'journal-archive-media.php';
 
 // Layer 11 — Modular Essay Builder (Design Spec §12): renders the ACF
 // flexible-content modules registered by Lunara Core after essay content.
@@ -138,26 +121,6 @@ require_once $lunara_inc . 'header-command.php';
 // Layer 16 — Design Tokens: dial-level palette/voice overrides from the
 // Control Desk, printed as a :root layer over the shipped tokens.
 require_once $lunara_inc . 'design-tokens.php';
-
-// Layer 17 — Site Studio foundation. Registry, canonical adapters/services,
-// and REST routes must be available outside wp-admin so private front-end
-// previews and authenticated API requests do not depend on the admin router.
-require_once $lunara_inc . 'site-studio-registry.php';
-require_once $lunara_inc . 'site-studio-method.php';
-require_once $lunara_inc . 'site-studio-adapters.php';
-require_once $lunara_inc . 'site-studio-footer-navigation.php';
-require_once $lunara_inc . 'site-studio-utility-recovery.php';
-require_once $lunara_inc . 'site-studio-journal-single.php';
-require_once $lunara_inc . 'site-studio-debrief-method.php'; // Debrief page words, sections and counts.
-require_once $lunara_inc . 'site-studio-oscars-ledger.php';
-require_once $lunara_inc . 'site-studio-carousels.php';
-require_once $lunara_inc . 'site-studio-home-oscars.php';
-require_once $lunara_inc . 'site-studio-rest.php';
-require_once $lunara_inc . 'site-studio-archive-media.php';
-require_once $lunara_inc . 'site-studio-preview.php';
-if ( is_admin() ) {
-    require_once $lunara_inc . 'site-studio.php';
-}
 
 // Signal that every modular include completed. The monolithic fallback uses
 // this theme-owned sentinel; LUNARA_CORE_VERSION remains owned by Lunara Core.

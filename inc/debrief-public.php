@@ -625,9 +625,6 @@ if ( ! function_exists( 'lunara_debrief_render_pair_card_group' ) ) {
         if ( '' !== trim( $subtitle ) ) {
             $html .= '<p class="lunara-pair-cards-sub">' . esc_html( $subtitle ) . '</p>';
         }
-        if ( function_exists( 'lunara_debrief_method_link_html' ) ) {
-            $html .= lunara_debrief_method_link_html();
-        }
         $html .= '</div><div class="lunara-pair-cards-grid" data-count="' . count( $cards ) . '">' . implode( '', $cards ) . '</div></section>';
 
         return $html;

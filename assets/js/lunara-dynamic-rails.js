@@ -9,7 +9,8 @@
 
 	var SWIPE_THRESHOLD = 42;
 	var VERTICAL_LIMIT = 64;
-	var motionQuery = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+	var reduceMotion = window.matchMedia &&
+		window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 	function clamp(index, length) {
 		if (!length) return 0;
@@ -27,16 +28,12 @@
 
 		var previous = rail.querySelector('[data-lunara-dynamic-rail-prev]');
 		var next = rail.querySelector('[data-lunara-dynamic-rail-next]');
-		var toggle = rail.querySelector('[data-lunara-dynamic-rail-toggle]');
 		var dots = Array.prototype.slice.call(
 			rail.querySelectorAll('[data-lunara-dynamic-rail-dot]')
 		);
 		var autoplayMs = parseInt(rail.getAttribute('data-lunara-dynamic-rail-autoplay') || '0', 10);
 		var current = 0;
-		var reduceMotion = !!(motionQuery && motionQuery.matches);
-		var userPaused = false;
-		var pointerHover = false;
-		var focusWithin = false;
+		var paused = false;
 		var timer = null;
 		var touchStartX = 0;
 		var touchStartY = 0;
@@ -100,59 +97,20 @@
 			}
 		}
 
-		function startAutoplay(force) {
-			if (document.hidden || touchActive || reduceMotion || autoplayMs <= 0 || timer || userPaused || (!force && (pointerHover || focusWithin))) {
-				syncToggle();
-				return;
-			}
+		function startAutoplay() {
+			if (reduceMotion || autoplayMs <= 0 || timer) return;
 			timer = window.setInterval(function () {
-				if (!document.hidden && !touchActive && !reduceMotion && !userPaused) {
+				if (!paused) {
 					scrollToIndex(current + 1, 'smooth');
 				}
 			}, autoplayMs);
-			syncToggle();
-		}
-
-		function syncToggle() {
-			if (!toggle) return;
-
-			var isPaused = userPaused || reduceMotion || autoplayMs <= 0;
-			toggle.textContent = isPaused ? 'Play' : 'Pause';
-			toggle.setAttribute('aria-label', reduceMotion
-				? 'Autoplay disabled for reduced motion'
-				: (isPaused ? 'Play companion review rotation' : 'Pause companion review rotation'));
-			toggle.setAttribute('aria-pressed', userPaused ? 'true' : 'false');
-			toggle.classList.toggle('is-paused', isPaused);
-			if (autoplayMs <= 0 && !reduceMotion) {
-				toggle.setAttribute('aria-label', 'Automatic rotation is turned off');
-			}
-			if (reduceMotion || autoplayMs <= 0) {
-				toggle.disabled = true;
-				toggle.setAttribute('aria-disabled', 'true');
-			} else {
-				toggle.disabled = false;
-				toggle.removeAttribute('aria-disabled');
-			}
-		}
-
-		function resumeAutoplay(force) {
-			if (force) {
-				startAutoplay(true);
-				return;
-			}
-			if (document.hidden || touchActive || userPaused || pointerHover || focusWithin) {
-				stopAutoplay();
-				syncToggle();
-				return;
-			}
-			startAutoplay();
 		}
 
 		if (previous) {
 			previous.addEventListener('click', function () {
 				scrollToIndex(current - 1, 'smooth');
 				stopAutoplay();
-				resumeAutoplay();
+				startAutoplay();
 			});
 		}
 
@@ -160,7 +118,7 @@
 			next.addEventListener('click', function () {
 				scrollToIndex(current + 1, 'smooth');
 				stopAutoplay();
-				resumeAutoplay();
+				startAutoplay();
 			});
 		}
 
@@ -169,47 +127,25 @@
 				var index = parseInt(dot.getAttribute('data-lunara-dynamic-rail-index') || '0', 10);
 				scrollToIndex(index, 'smooth');
 				stopAutoplay();
-				resumeAutoplay();
+				startAutoplay();
 			});
 		});
 
-		if (toggle) {
-			toggle.addEventListener('click', function () {
-				userPaused = !userPaused;
-				if (userPaused) {
-					stopAutoplay();
-				} else {
-					resumeAutoplay(true);
-				}
-				syncToggle();
-			});
-		}
-
 		rail.addEventListener('pointerenter', function (event) {
 			if (event.pointerType === 'mouse') {
-				pointerHover = true;
-				stopAutoplay();
-				syncToggle();
+				paused = true;
 			}
 		});
 		rail.addEventListener('pointerleave', function (event) {
 			if (event.pointerType === 'mouse') {
-				pointerHover = false;
-				resumeAutoplay();
+				paused = false;
 			}
 		});
 		rail.addEventListener('focusin', function () {
-			focusWithin = true;
-			stopAutoplay();
-			syncToggle();
+			paused = true;
 		});
 		rail.addEventListener('focusout', function () {
-			window.setTimeout(function () {
-				if (!rail.contains(document.activeElement)) {
-					focusWithin = false;
-					resumeAutoplay();
-				}
-			}, 0);
+			paused = false;
 		});
 
 		track.addEventListener('keydown', function (event) {
@@ -227,40 +163,28 @@
 			touchStartX = event.touches[0].clientX;
 			touchStartY = event.touches[0].clientY;
 			touchActive = true;
-			stopAutoplay();
-			syncToggle();
+			paused = true;
 		}, { passive: true });
 
 		track.addEventListener('touchend', function (event) {
-			if (!touchActive) {
-				resumeAutoplay();
-				return;
-			}
+			if (!touchActive) return;
 			touchActive = false;
+			paused = false;
 
 			var touch = event.changedTouches && event.changedTouches[0];
-			if (!touch) {
-				resumeAutoplay();
-				return;
-			}
+			if (!touch) return;
 
 			var dx = touch.clientX - touchStartX;
 			var dy = touch.clientY - touchStartY;
 
 			if (Math.abs(dy) > VERTICAL_LIMIT || Math.abs(dx) < SWIPE_THRESHOLD) {
 				updateState(closestIndex());
-				resumeAutoplay();
 				return;
 			}
 
 			scrollToIndex(current + (dx < 0 ? 1 : -1), 'smooth');
 			stopAutoplay();
 			startAutoplay();
-		});
-
-		track.addEventListener('touchcancel', function () {
-			touchActive = false;
-			resumeAutoplay();
 		});
 
 		track.addEventListener('scroll', function () {
@@ -273,21 +197,11 @@
 			if (document.hidden) {
 				stopAutoplay();
 			} else {
-				resumeAutoplay();
+				startAutoplay();
 			}
 		});
 
-		if (motionQuery && motionQuery.addEventListener) {
-			motionQuery.addEventListener('change', function (event) {
-				reduceMotion = event.matches;
-				stopAutoplay();
-				syncToggle();
-				resumeAutoplay();
-			});
-		}
-
 		updateState(0);
-		syncToggle();
 		startAutoplay();
 	}
 

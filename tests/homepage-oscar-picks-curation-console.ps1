@@ -22,8 +22,7 @@ function Read-ThemeFile {
 }
 
 $controlDesk = Read-ThemeFile 'inc/control-desk.php'
-# Oscar Picks data moved to inc/oscar-picks.php in 3.2.90; the public rail stays in functions.php.
-$functions = (Read-ThemeFile 'functions.php') + "`n" + (Read-ThemeFile 'inc/oscar-picks.php')
+$functions = Read-ThemeFile 'functions.php'
 $adminCss = Read-ThemeFile 'assets/css/lunara-control-desk.css'
 
 Assert-True ($controlDesk -match 'lunara_home_oscar_picks_manual_order') 'Homepage Studio must store a manual Oscar Picks order theme mod.'

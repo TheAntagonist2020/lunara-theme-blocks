@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 get_header();
 ?>
 
-<div id="primary" class="site-main lunara-front-page">
+<main id="primary" class="site-main lunara-front-page">
 	<?php
 	$lunara_front_door = '';
 	if ( function_exists( 'lunara_render_home_front_door' ) ) {
@@ -86,7 +86,7 @@ get_header();
 		echo $lunara_block_composition; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		wp_reset_postdata();
 		?>
-</div>
+</main>
 
 <?php
 		get_footer();
@@ -146,7 +146,7 @@ get_header();
 
 	wp_reset_postdata();
 	?>
-</div>
+</main>
 
 <?php
 get_footer();
