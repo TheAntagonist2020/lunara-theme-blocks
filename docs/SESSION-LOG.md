@@ -25,6 +25,111 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-26 (evening) — Journal Foundation 1.4.0 and Dispatch 3.4.0 on `main`, waiting for Dalton's deploy: drafts learn his voice, and Claude writes them
+
+### Headline
+
+Dalton asked why every Journal draft "doesn't sound like me or us", which is why so many sat in drafts. After the diagnosis below he said *"Go with Claude, learn from Eggers and Street Fighter"*. His two published entries are now the voice target in the Dispatch prompt. Each run writes one story, 300 to 700 words, in his guide's shape, and every entry closes on a real question. A draft that uses a banned phrase goes back for one rewrite instead of being thrown away. Once his Anthropic key is saved in Dispatch, the writer switches itself to Claude Opus 5. Both plugins are pushed to `main`, Dispatch first, and CI is green. **Neither is live yet**: these two plugins do not deploy on push, so deploying them is Dalton's button. Either order is now safe. There is no theme release.
+
+### Why drafts did not sound like him
+
+- **Writer:** GPT-5.4 mini, with reasoning set to `none`.
+- **Room:** up to three entries in one 2,200-token response, so each came out near 200 words. His guide asks 300 to 700 for a single story.
+- **Prompt:** it described the voice almost entirely through prohibitions (banned lists, drift, "not this"), and never showed a finished Dalton entry.
+- **Closing question:** it was asked for "roughly one entry in three". His guide says it is always present and goes last.
+- **Banned phrases:** Foundation's validator only warned. Dispatch's post builder threw the whole entry away.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| WordPress.com plugin list, 21:40 UTC | **Lunara Dispatch Automation 3.3.0** (`lunara-dispatch/`) and **LUNARA Journal Foundation 1.3.3** (`lunara-plugin-journal-foundation/`) are active. Nothing from this session is live |
+| `…/lunara-plugin-journal-foundation/openapi/lunara-journal-bridge.openapi.json` | `"version": "1.3.3"`, `last-modified` Fri 25 Sep 20:54:12 GMT on a cache MISS, so the origin still serves 1.3.3. Once deployed it should read `1.4.0`. This is the public check |
+| GitHub Actions Lint, `main` | Dispatch `6472539`: success. Foundation `9719fbc` and `ecbde44`: success |
+| Deploy timing | Dispatch's public assets carry `last-modified` 17:20 on 25 Sep, about an hour after its 3.3.0 merge CI (16:22). Foundation's OpenAPI file carries 20:54, a minute after its 1.3.3 merge CI (20:53). Neither moved within 15 minutes of this session's pushes, which is consistent with a manual deploy for these two plugins |
+
+### What shipped and why
+
+The code-level detail is in each plugin's README (Foundation *Dalton's voice, one story at a time (1.4.0)*, Dispatch *3.4.0 Claude writes the Journal*). There is no theme `docs/CHANGELOG.md` entry, because the theme did not change.
+
+- **Foundation 1.4.0**
+  - `editorial.voice.exemplars` holds his Eggers (*Werwulf*) and Street Fighter entries in full, cleaned of the video embed, "Watch below", the POST DETAILS comment and `&nbsp;`.
+  - They compile under *DALTON'S VOICE ON THE PAGE*, framed as the target: never copy their sentences, facts or anecdotes, and never invent an experience he did not have.
+  - The structure follows his guide (Hook, Context, Specifics, Take, Close, then the Engagement Question) at 300 to 700 words, one entry per run, and the question closes every entry.
+  - `Lunara_Journal_Voice_Upgrade` moves the active Control Plane version once, as normal versions attributed to `system`, so they appear in version history and roll back like any other:
+    - the **voice** step lands immediately on whatever provider is set;
+    - the **Claude** step (provider `claude`, `claude-opus-5`, 16,000 output tokens) waits until Dispatch can see an Anthropic key.
+  - It runs only in wp-admin, WP-Cron or WP-CLI, under a lock, never on a visitor's page view, and never undoes a later edit.
+  - **Neither step runs until Dispatch 3.4.0 is active** (`ecbde44`). Dispatch 3.3.0 writes three approved pitches in one call, so a one-entry run would settle two of them as "written" with no post. It would also call Opus 5 with a 2,200-token ceiling and no stop-reason check. Until then, and later until the Anthropic key exists, a notice on Journal screens says what the move is waiting for.
+  - Output-token caps are per provider: Claude 16,000, because its thinking counts against the limit; OpenAI, Gemini and Grok stay at 2,200.
+  - The Dispatch runtime carries `house_tells`, and every activation flushes the request's cached config.
+  - Desk revisions on Opus 5 use adaptive thinking at low effort, server-side fallbacks, 8,000 tokens and a 90-second timeout.
+- **Dispatch 3.4.0**
+  - The Claude request uses the Opus 5 shape:
+    - adaptive thinking at `high` effort;
+    - `fallbacks: "default"` with the `server-side-fallback-2026-07-01` beta header, so a policy decline re-runs on Anthropic's recommended model;
+    - a cached system block, no sampling parameters, and a 300-second timeout.
+  - `stop_reason` is checked first, so a refusal or a draft cut off at the limit never becomes a draft. Only text blocks are kept.
+  - Approved pitches are written one per run and marked `EDITOR_APPROVED`.
+  - A draft carrying a house tell goes back once with the phrases named, and Claude sees its own draft as the previous turn. The run report records `voice_revision`, and its usage covers both calls.
+
+### Decisions made in-session
+
+- **The validator floor stays at 75 words.** `minimum_words` also gates Desk publishing of Dalton's own hand-written pieces. The 300–700 target lives in the writing instructions instead.
+- **Deploy order no longer matters.** The first plan was "Dispatch first". The plugin list then showed that neither plugin deploys on push, so the order is Dalton's and can't be relied on. `ecbde44` makes Foundation wait for Dispatch 3.4.0 itself.
+- **Existing drafts:** the ~50 drafts already in the queue were left alone. What to do with them is Dalton's call.
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-plugin-dispatch | `6472539` | 3.4.0: Claude writer, one pitch per run, house-tell revision |
+| lunara-plugin-journal-foundation | `9719fbc` | 1.4.0: exemplars, one-story structure, mandatory question, one-time voice/Claude move |
+| lunara-plugin-journal-foundation | `ecbde44` | 1.4.0: hold the move until Dispatch 3.4.0 is active |
+| lunara-theme-blocks | this record | Session log |
+| lunara-theme-blocks | hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on this record, tree `c55bf394…` |
+
+### Gate ledger
+
+- `php -l` clean. The CI-equivalent passed on both plugins, including three Dispatch tests CI does not run: ai-fallback, heartbeat and source-packet.
+- **New tests:**
+  - Foundation `tests/voice-upgrade-runtime.php`, which runs the real repository, schema and compiler;
+  - Dispatch `tests/dispatch-claude-voice-runtime.php`, with separate client, cap and revision parts.
+- **Updated tests, which pinned the old behaviour on purpose:**
+  - the question rule in `prompt-compiler-voice-runtime.php`;
+  - three pitches per run in `dispatch-pitches-runtime.php`.
+- **Bug caught by the new test before push:** stripping tags fused a headline into the next paragraph ("headlinethis"), which hid a tell at the start of a paragraph. Tags now become spaces first.
+- GitHub Actions Lint on `main`: Dispatch `6472539` success, Foundation `9719fbc` and `ecbde44` success.
+
+### Corrections
+
+- **No past entry is wrong.** The 2026-09-24 (later) entry said the plugin connections "should be treated as manual". That is now confirmed for Dispatch and Foundation: neither deployed on push this session. My working notes had assumed deploy-on-push for every plugin, because the Oscars Ledger does it. Acting on that assumption, I pushed Dispatch and then waited out a deploy window that never came, before `ecbde44` removed the ordering risk.
+
+### Logged, not fixed
+
+- **No public version signal for Dispatch.** Its public asset is unchanged and its README is deploy-ignored. The WordPress.com plugin list (connector `plugin.list`) is the reliable check.
+- **Worth watching on the first Claude run:** the run report's `ai_usage` and `voice_revision`. Estimated cost is roughly $0.15–$0.35 a draft at Opus 5 rates, more when a revision pass runs. Also watch whether a 300-second request survives the host's request limits.
+- **The Dispatch legacy fallback prompt** (`class-prompts.php`) still carries the one-in-three question rule. It runs only when Foundation is absent, which Dispatch refuses to run without.
+
+### Punch-list carried forward
+
+| Item | Status | Whose call |
+| --- | --- | --- |
+| Deploy Dispatch 3.4.0 and Foundation 1.4.0 | On `main`, CI green, not live | Dalton |
+| Anthropic key in Dispatch Provider Credentials | Unknown. The switch waits for it | Dalton |
+| The ~50 old Journal drafts written in the old voice | Untouched | Dalton |
+| Plugin U01 | Unshipped, on its feature branch | Dalton |
+| Everything carried in the entries below | Stands | As listed there |
+
+### Whose move is next
+
+Dalton's, in this order:
+
+1. Deploy Lunara Dispatch 3.4.0 (`main` `6472539`) and LUNARA Journal Foundation 1.4.0 (`main` `ecbde44`), in either order.
+2. Save the Anthropic API key under Settings → Lunara Dispatch → Provider Credentials, if it isn't there yet.
+3. Open any wp-admin page. The move to the new voice and Claude happens on that request, and shows as new versions in the Journal Control Plane history.
+4. Approve a pitch, or run Dispatch once, and read the draft.
+
 ## 2026-09-26 (later) — Oscars Ledger 2.8.6 and 2.8.7 live: names printed in capitals fixed site-wide
 
 ### Headline
