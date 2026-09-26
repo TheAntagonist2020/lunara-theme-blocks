@@ -25,6 +25,75 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-26 (later) — Oscars Ledger 2.8.6 and 2.8.7 live: names printed in capitals fixed site-wide
+
+### Headline
+
+Dalton said *"Go fix the all-caps names"*. All 118 people who read in capitals ("FARCIOT EDOUART", "WINTON HOCH", "UB IWERKS") now read correctly everywhere names appear: the Explorer, search, profile headings, browser titles and the `/talent/` pages. Every name keeps the Academy's own spelling, and no name was swapped for another source's. Pushed straight to `main`, plugin-only, so there is no theme release.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| API scan of all 8,477 person and company names | 1 multi-word name still in capitals, the company "the NATIONAL CARBON COMPANY", kept as printed on purpose. It was 118 people before |
+| Samples through the API | Farciot Edouart, Ub Iwerks, Bill Bishop, John R. Moore, Carlos De Mattos, Professor Henri Chretien, David DiFrancesco and Michael MacKenzie. SZA and EJAE are kept as styled |
+| `/oscars/name/nm0249643/`, `nm0412650`, `nm0083993`, `nm0226457` | The page title and heading read Farciot Edouart, Ub Iwerks, Bill Bishop and David DiFrancesco |
+| `/talent/farciot-edouart/`, `/talent/ub-iwerks/`, `/talent/bill-bishop/` | Headings are correct, slugs unchanged. `wp/v2/person?search=edouart` returns the title "Farciot Edouart" |
+| Explorer search | "edouart" gives Farciot Edouart. "iwerks" gives Ub Iwerks, Don Iwerks and Leslie Iwerks. The By person list shows Farciot Edouart at 4th |
+| Timing | 2.8.7 was pushed at 20:18:40 UTC, and the API returned "Farciot Edouart" at 20:19:26 |
+
+### What shipped and why
+
+- **The cause.** The Academy prints Scientific and Technical citations in capitals, and the rebuild kept each person's first credit. For Edouart that is his 10th-ceremony Sci-Tech citation, although later credits spell him "Farciot Edouart".
+- **The rules (2.8.6, in the rebuild):**
+  - a properly cased, unshared credit of the same person replaces one printed in capitals. "In capitals" means multi-word, with at least four capitals for every lowercase letter;
+  - otherwise a person is title-cased from the Academy's own spelling. Mc and O' names and generational numerals are handled, and a prefix the Academy set in proper case is kept, giving DiFrancesco, MacKenzie, DeRose, LeBlanc and LaSalle;
+  - single-word styling stays (SZA, EJAE, JR, PES, DIXSON), and companies keep theirs.
+- **Why not the audited ledger's names.** `data/ledger/entities.tsv` holds IMDb reference names, which sometimes differ from the Academy credit: "JOHN R. MOORE" is "Richard Moore" there, and "WAN-CHUN MA" is "Alex Ma". Using them would have changed whose name shows, so the site keeps the Academy's spelling.
+- **Simulation before shipping.** The rules were run over `data/oscars.csv`: 124 of 8,467 labels change, all of them names printed in capitals, and nothing else moves.
+- **2.8.7, the delivery.**
+  - 2.8.6 relied on the upgrade rebuild, but the live `aat_db_version` is already ahead of `AAT_VERSION`, so version bumps never rebuild. A full rebuild in the background would also empty the reporting tables while it runs.
+  - Instead, `relabel_shouted_entities()` runs once in the background, under a lock. It re-derives only the names printed in capitals, with the rebuild's pairing and rules, and updates just those rows. No table is emptied. The outcome is recorded in the `aat_label_rules_repair` option.
+  - The API and display-name cache keys include the rules the tables were built with, so answers cached before the repair do not outlive it.
+- **The `/talent/` pages.** The rebuild and the repair both fire `aat_reporting_tables_rebuilt`. The entity graph then renames, in the background, only the movie and person posts whose title differs byte for byte from the name. Slugs are kept.
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-plugin-oscars-ledger | `f266740` | 2.8.6: name rules in the rebuild, graph title sync, versioned display-name cache key |
+| lunara-plugin-oscars-ledger | `e66afcf` | 2.8.7: one background, in-place name repair, and rule-aware cache keys |
+| lunara-theme-blocks | this record | Session log |
+| lunara-theme-blocks | hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on this record, tree `c55bf394…` |
+
+Rolling back the code does not restore the old names. The repair wrote them to the live tables, and a new import or rebuild derives names with whichever rules the code then carries.
+
+### Gate ledger
+
+- `php -l` clean on every changed file.
+- New `tests/entity-label-casing-runtime.php`: 56 checks passed. It runs the real helper methods lifted from `academy-awards-table.php` against live names and edge cases. It also checks by string that the repair never empties a table, runs once under a lock and skips shared credits.
+- CI-equivalent: **PASS** on both commits.
+- The 118 live names were run through the real PHP rule before pushing, and the output was read line by line. That read caught "CARLOS DeMATTOS", and the per-word prefix rule followed from it.
+
+### Corrections
+
+- While building 2.8.6 I believed every version bump triggers the upgrade rebuild. It does not on this install, because the stored `aat_db_version` is ahead of the plugin's. 2.8.6 therefore went live without renaming anything, and 2.8.7 delivered the fix. The 2.8.4 and 2.8.5 entry below makes no rebuild claim, so it needs no correction.
+
+### Logged, not fixed
+
+- Theme caches keyed on the dataset stamp (live search, the portal blocks) were not re-keyed by this repair, and may show an old capitalised name until they expire. No cache was cleared.
+- The company "the NATIONAL CARBON COMPANY" stays as printed. Title-casing companies would break names like "IMAX".
+- `aat_db_version` being ahead of `AAT_VERSION` means schema upgrades gated on it never run on this install. Worth a look before any future schema change.
+
+### Punch-list carried forward
+
+- **Unshipped:** plugin U01, on its feature branch. Ship it only if Dalton asks.
+- Everything carried in the entries below still stands.
+
+### Whose move is next
+
+Dalton's. Oscars Ledger 2.8.7 and Theme 3.2.93 are live, and no agent task is open.
+
 ## 2026-09-26 — Oscars Ledger 2.8.4 and 2.8.5 live: Explorer artwork everywhere, Lunara-only credit
 
 ### Headline
