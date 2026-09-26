@@ -209,6 +209,34 @@ add_action( 'wp_body_open', 'lunara_inject_room_tone_markup', 1 );
 }
 
 /**
+ * Deploy-aware WP Rocket purge. Rocket's "Remove Unused CSS" strips every
+ * stylesheet link and inlines a cached used-CSS set — which trails theme
+ * deploys, so freshly shipped styles are invisible until someone clicks
+ * "Clear Used CSS" (the 3.1.39 entity surfaces rendered completely bare
+ * because of exactly this). Purge Rocket's page cache and Used CSS once
+ * per theme version so every deploy is self-cleaning.
+ */
+if ( ! function_exists( 'lunara_purge_rocket_on_deploy' ) ) {
+function lunara_purge_rocket_on_deploy() {
+    $version = (string) wp_get_theme()->get( 'Version' );
+    if ( '' === $version || get_option( 'lunara_rocket_purged_version' ) === $version ) {
+        return;
+    }
+    if ( function_exists( 'rocket_clean_domain' ) ) {
+        rocket_clean_domain();
+    }
+    if ( function_exists( 'rocket_clean_used_css' ) ) {
+        rocket_clean_used_css();
+    }
+    if ( function_exists( 'rocket_clean_minify' ) ) {
+        rocket_clean_minify();
+    }
+    update_option( 'lunara_rocket_purged_version', $version, false );
+}
+}
+add_action( 'init', 'lunara_purge_rocket_on_deploy', 20 );
+
+/**
  * One-time restoration (3.1.38): the homepage Latest Reviews section was
  * toggled off in a stored theme mod, and the Control Desk switch proved
  * hard to locate (it lives under the Theme Studio tab). Dalton needs the
@@ -8568,22 +8596,10 @@ function lunara_render_oscars_portal_direct() {
 
 /**
  * Add a body class so the portal can be styled without relying on generic page shells.
- *
- * Gate parity: the route seed and stylesheet enqueue on the whole portal
- * family (lunara_is_oscars_portal_route — the resolved /oscars/ page OR any
- * page assigned page-oscars.php), so the class-scoped styling owner must
- * stamp on the same family or a template-assigned page renders half-styled
- * (seed only, no body.lunara-oscars-portal-page rules). The narrow
- * is_page('oscars') detector remains the fallback when the family module
- * is not loaded.
  */
 if ( ! function_exists( 'lunara_oscars_portal_body_class' ) ) {
 function lunara_oscars_portal_body_class( $classes ) {
-    $is_portal_route = function_exists( 'lunara_is_oscars_portal_route' )
-        ? ( ! is_admin() && lunara_is_oscars_portal_route() )
-        : lunara_is_oscars_portal_page();
-
-    if ( $is_portal_route ) {
+    if ( lunara_is_oscars_portal_page() ) {
         $classes[] = 'lunara-oscars-portal-page';
     }
 
@@ -12497,11 +12513,388 @@ add_action( 'wp_head', 'lunara_output_review_layout_guardrail_css', 101 );
 }
 
 /* ============================================================================
- * LUNARA OSCAR PICKS — moved to inc/oscar-picks.php (Theme 3.2.90).
- * Required here, at its original position, so its `init` registrations keep
- * their historical order relative to the hooks above and below.
+ * LUNARA OSCAR PICKS â€” CPT, taxonomy, meta box, query helper.
+ * Added 2026-05-10 for the new homepage Oscar Picks carousel.
+ *
+ * Editorial-content concept: Lunara's predicted/actual Oscar winners for each
+ * ceremony, with UNIQUE behind-the-scenes / working images instead of generic
+ * IMDb posters. The differentiator. NOT raw plugin data.
  * ============================================================================ */
-require_once __DIR__ . '/inc/oscar-picks.php';
+
+if ( ! function_exists( 'lunara_register_oscar_pick_cpt' ) ) {
+	function lunara_register_oscar_pick_cpt() {
+		register_post_type( 'lunara_oscar_pick', array(
+			'labels' => array(
+				'name'          => __( 'Oscar Picks', 'lunara-film' ),
+				'singular_name' => __( 'Oscar Pick', 'lunara-film' ),
+				'add_new'       => __( 'Add New Pick', 'lunara-film' ),
+				'add_new_item'  => __( 'Add New Oscar Pick', 'lunara-film' ),
+				'edit_item'     => __( 'Edit Oscar Pick', 'lunara-film' ),
+				'view_item'     => __( 'View Oscar Pick', 'lunara-film' ),
+				'menu_name'     => __( 'Oscar Picks', 'lunara-film' ),
+				'all_items'     => __( 'All Picks', 'lunara-film' ),
+				'search_items'  => __( 'Search Picks', 'lunara-film' ),
+				'not_found'     => __( 'No picks yet.', 'lunara-film' ),
+			),
+			'public'              => true,
+			'has_archive'         => 'oscar-picks',
+			'rewrite'             => array( 'slug' => 'oscar-picks', 'with_front' => false ),
+			'menu_icon'           => 'dashicons-awards',
+			'menu_position'       => 22,
+			'supports'            => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
+			'taxonomies'          => array( 'oscar_pick_category' ),
+			'show_in_rest'        => true,
+			'capability_type'     => 'post',
+		) );
+
+		register_taxonomy( 'oscar_pick_category', 'lunara_oscar_pick', array(
+			'labels' => array(
+				'name'          => __( 'Pick Categories', 'lunara-film' ),
+				'singular_name' => __( 'Pick Category', 'lunara-film' ),
+				'menu_name'     => __( 'Categories', 'lunara-film' ),
+			),
+			'public'            => true,
+			'hierarchical'      => true,
+			'show_admin_column' => true,
+			'show_in_rest'      => true,
+			'rewrite'           => array( 'slug' => 'oscar-picks/category', 'with_front' => false ),
+		) );
+	}
+	add_action( 'init', 'lunara_register_oscar_pick_cpt' );
+}
+
+/**
+ * Seed default categories on first activation. Idempotent.
+ */
+if ( ! function_exists( 'lunara_seed_oscar_pick_categories' ) ) {
+	function lunara_seed_oscar_pick_categories() {
+		$schema_version = 2;
+		if ( (int) get_option( 'lunara_oscar_pick_categories_seeded' ) >= $schema_version ) {
+			return;
+		}
+		if ( ! taxonomy_exists( 'oscar_pick_category' ) ) {
+			return;
+		}
+		$defaults = array(
+			'Best Picture',
+			'Best Director',
+			'Best Actor',
+			'Best Actress',
+			'Best Supporting Actor',
+			'Best Supporting Actress',
+			'Best Original Screenplay',
+			'Best Adapted Screenplay',
+			'Best Cinematography',
+			'Best Editing',
+			'Best Original Score',
+			'Best Casting',
+			'Best Production Design',
+			'Best Costume Design',
+			'Best Makeup and Hairstyling',
+			'Best Visual Effects',
+			'Best Sound',
+			'Best Original Song',
+			'Best International Feature',
+			'Best Documentary Feature',
+			'Best Animated Feature',
+		);
+		foreach ( $defaults as $name ) {
+			if ( ! term_exists( $name, 'oscar_pick_category' ) ) {
+				wp_insert_term( $name, 'oscar_pick_category' );
+			}
+		}
+		update_option( 'lunara_oscar_pick_categories_seeded', $schema_version );
+	}
+	add_action( 'init', 'lunara_seed_oscar_pick_categories', 20 );
+}
+
+/**
+ * Resolve the active homepage awards season without freezing the theme to one
+ * ceremony. The next ceremony becomes current after March each year and can
+ * still be overridden from Homepage Studio.
+ */
+if ( ! function_exists( 'lunara_home_oscar_picks_default_ceremony_year' ) ) {
+	function lunara_home_oscar_picks_default_ceremony_year() {
+		$current_year  = (int) wp_date( 'Y' );
+		$current_month = (int) wp_date( 'n' );
+
+		return $current_month >= 4 ? $current_year + 1 : $current_year;
+	}
+}
+
+if ( ! function_exists( 'lunara_home_oscar_picks_ceremony_year' ) ) {
+	function lunara_home_oscar_picks_ceremony_year() {
+		$year = absint(
+			get_theme_mod(
+				'lunara_home_oscar_picks_ceremony_year',
+				lunara_home_oscar_picks_default_ceremony_year()
+			)
+		);
+
+		return max( 1929, min( 2100, $year ) );
+	}
+}
+
+if ( ! function_exists( 'lunara_oscar_ceremony_ordinal_from_year' ) ) {
+	function lunara_oscar_ceremony_ordinal_from_year( $year ) {
+		$number = max( 1, absint( $year ) - 1928 );
+		$last_two = $number % 100;
+		$suffix = 'th';
+
+		if ( $last_two < 11 || $last_two > 13 ) {
+			switch ( $number % 10 ) {
+				case 1:
+					$suffix = 'st';
+					break;
+				case 2:
+					$suffix = 'nd';
+					break;
+				case 3:
+					$suffix = 'rd';
+					break;
+			}
+		}
+
+		return $number . $suffix;
+	}
+}
+
+if ( ! function_exists( 'lunara_oscar_pick_status_labels' ) ) {
+	function lunara_oscar_pick_status_labels() {
+		return array(
+			'front_runner' => __( 'Front-runner', 'lunara-film' ),
+			'contender'    => __( 'Contender', 'lunara-film' ),
+			'watchlist'    => __( 'Watchlist', 'lunara-film' ),
+			'predicted'    => __( 'Predicted', 'lunara-film' ),
+			'won'          => __( 'Won', 'lunara-film' ),
+			'lost'         => __( 'Missed', 'lunara-film' ),
+		);
+	}
+}
+
+if ( ! function_exists( 'lunara_oscar_pick_status_label' ) ) {
+	function lunara_oscar_pick_status_label( $status ) {
+		$labels = lunara_oscar_pick_status_labels();
+		$status = sanitize_key( $status );
+
+		return isset( $labels[ $status ] ) ? $labels[ $status ] : $labels['predicted'];
+	}
+}
+
+/**
+ * Meta box: film, person, ceremony year, status, ledger URL.
+ */
+if ( ! function_exists( 'lunara_oscar_pick_add_meta_box' ) ) {
+	function lunara_oscar_pick_add_meta_box() {
+		add_meta_box(
+			'lunara_oscar_pick_details',
+			__( 'Pick Details', 'lunara-film' ),
+			'lunara_oscar_pick_meta_box_callback',
+			'lunara_oscar_pick',
+			'side',
+			'high'
+		);
+	}
+	add_action( 'add_meta_boxes', 'lunara_oscar_pick_add_meta_box' );
+}
+
+if ( ! function_exists( 'lunara_oscar_pick_meta_box_callback' ) ) {
+	function lunara_oscar_pick_meta_box_callback( $post ) {
+		wp_nonce_field( 'lunara_oscar_pick_save', 'lunara_oscar_pick_nonce' );
+		$film          = (string) get_post_meta( $post->ID, '_lunara_pick_film', true );
+		$person        = (string) get_post_meta( $post->ID, '_lunara_pick_person', true );
+		$ceremony_year = (string) get_post_meta( $post->ID, '_lunara_pick_ceremony_year', true );
+		$status        = (string) get_post_meta( $post->ID, '_lunara_pick_status', true );
+		$ledger_url    = (string) get_post_meta( $post->ID, '_lunara_pick_oscar_entity_url', true );
+		if ( '' === $status ) {
+			$status = 'predicted';
+		}
+		?>
+		<p>
+			<label for="lunara_pick_film"><strong><?php esc_html_e( 'Film', 'lunara-film' ); ?></strong></label><br>
+			<input type="text" id="lunara_pick_film" name="lunara_pick_film" value="<?php echo esc_attr( $film ); ?>" class="widefat" placeholder="One Battle After Another" />
+		</p>
+		<p>
+			<label for="lunara_pick_person"><strong><?php esc_html_e( 'Person (optional)', 'lunara-film' ); ?></strong></label><br>
+			<input type="text" id="lunara_pick_person" name="lunara_pick_person" value="<?php echo esc_attr( $person ); ?>" class="widefat" placeholder="Sean Penn" />
+			<span class="description"><?php esc_html_e( 'Leave blank for film-level picks (Best Picture, Best International Feature).', 'lunara-film' ); ?></span>
+		</p>
+		<p>
+			<label for="lunara_pick_ceremony_year"><strong><?php esc_html_e( 'Ceremony Year', 'lunara-film' ); ?></strong></label><br>
+			<input type="number" id="lunara_pick_ceremony_year" name="lunara_pick_ceremony_year" value="<?php echo esc_attr( $ceremony_year ); ?>" class="widefat" placeholder="2026" min="1929" max="2100" step="1" />
+			<span class="description"><?php esc_html_e( 'Year the ceremony airs (e.g. 2026 for the 98th Academy Awards).', 'lunara-film' ); ?></span>
+		</p>
+		<p>
+			<label for="lunara_pick_status"><strong><?php esc_html_e( 'Status', 'lunara-film' ); ?></strong></label><br>
+			<select id="lunara_pick_status" name="lunara_pick_status" class="widefat">
+				<?php foreach ( lunara_oscar_pick_status_labels() as $status_key => $status_label ) : ?>
+					<option value="<?php echo esc_attr( $status_key ); ?>" <?php selected( $status, $status_key ); ?>><?php echo esc_html( $status_label ); ?></option>
+				<?php endforeach; ?>
+			</select>
+		</p>
+		<p>
+			<label for="lunara_pick_oscar_entity_url"><strong><?php esc_html_e( 'Lunara Ledger URL (optional)', 'lunara-film' ); ?></strong></label><br>
+			<input type="url" id="lunara_pick_oscar_entity_url" name="lunara_pick_oscar_entity_url" value="<?php echo esc_attr( $ledger_url ); ?>" class="widefat" placeholder="/oscars/title/tt12345/" />
+			<span class="description"><?php esc_html_e( 'Link to the film/person page in the Lunara Oscar Ledger. The card image deep-links here.', 'lunara-film' ); ?></span>
+		</p>
+		<?php
+	}
+}
+
+if ( ! function_exists( 'lunara_oscar_pick_save_meta' ) ) {
+	function lunara_oscar_pick_save_meta( $post_id ) {
+		if ( ! isset( $_POST['lunara_oscar_pick_nonce'] ) || ! wp_verify_nonce( $_POST['lunara_oscar_pick_nonce'], 'lunara_oscar_pick_save' ) ) {
+			return;
+		}
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+
+		$fields = array(
+			'_lunara_pick_film'             => isset( $_POST['lunara_pick_film'] ) ? sanitize_text_field( wp_unslash( $_POST['lunara_pick_film'] ) ) : '',
+			'_lunara_pick_person'           => isset( $_POST['lunara_pick_person'] ) ? sanitize_text_field( wp_unslash( $_POST['lunara_pick_person'] ) ) : '',
+			'_lunara_pick_ceremony_year'    => isset( $_POST['lunara_pick_ceremony_year'] ) ? absint( $_POST['lunara_pick_ceremony_year'] ) : 0,
+			'_lunara_pick_oscar_entity_url' => isset( $_POST['lunara_pick_oscar_entity_url'] ) ? esc_url_raw( wp_unslash( $_POST['lunara_pick_oscar_entity_url'] ) ) : '',
+		);
+
+		$status = isset( $_POST['lunara_pick_status'] ) ? sanitize_key( $_POST['lunara_pick_status'] ) : 'predicted';
+		if ( ! array_key_exists( $status, lunara_oscar_pick_status_labels() ) ) {
+			$status = 'predicted';
+		}
+		$fields['_lunara_pick_status'] = $status;
+
+		foreach ( $fields as $key => $value ) {
+			if ( '' === $value || 0 === $value ) {
+				delete_post_meta( $post_id, $key );
+			} else {
+				update_post_meta( $post_id, $key, $value );
+			}
+		}
+	}
+	add_action( 'save_post_lunara_oscar_pick', 'lunara_oscar_pick_save_meta' );
+}
+
+/**
+ * Admin list: thumbnail, film, ceremony year, status as columns.
+ */
+if ( ! function_exists( 'lunara_oscar_pick_admin_columns' ) ) {
+	function lunara_oscar_pick_admin_columns( $cols ) {
+		$new = array();
+		foreach ( $cols as $key => $label ) {
+			if ( 'title' === $key ) {
+				$new['lunara_pick_thumb'] = __( 'Image', 'lunara-film' );
+			}
+			$new[ $key ] = $label;
+			if ( 'title' === $key ) {
+				$new['lunara_pick_film']     = __( 'Film', 'lunara-film' );
+				$new['lunara_pick_ceremony'] = __( 'Ceremony', 'lunara-film' );
+				$new['lunara_pick_status']   = __( 'Status', 'lunara-film' );
+			}
+		}
+		return $new;
+	}
+	add_filter( 'manage_lunara_oscar_pick_posts_columns', 'lunara_oscar_pick_admin_columns' );
+
+	function lunara_oscar_pick_admin_column_value( $column, $post_id ) {
+		switch ( $column ) {
+			case 'lunara_pick_thumb':
+				if ( has_post_thumbnail( $post_id ) ) {
+					echo get_the_post_thumbnail( $post_id, array( 80, 60 ), array( 'style' => 'border-radius:4px;object-fit:cover;' ) );
+				} else {
+					echo '<span style="color:#999;">&mdash;</span>';
+				}
+				break;
+			case 'lunara_pick_film':
+				echo esc_html( (string) get_post_meta( $post_id, '_lunara_pick_film', true ) ?: 'â€”' );
+				break;
+			case 'lunara_pick_ceremony':
+				$year = (int) get_post_meta( $post_id, '_lunara_pick_ceremony_year', true );
+				echo $year > 0 ? esc_html( (string) $year ) : 'â€”';
+				break;
+			case 'lunara_pick_status':
+				$status = (string) get_post_meta( $post_id, '_lunara_pick_status', true );
+				$colors = array( 'front_runner' => '#c9a961', 'contender' => '#6f91ad', 'watchlist' => '#7d7d8a', 'predicted' => '#f5a623', 'won' => '#27ae60', 'lost' => '#999' );
+				$color  = isset( $colors[ $status ] ) ? $colors[ $status ] : '#999';
+				echo '<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:' . esc_attr( $color ) . ';color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.06em;">' . esc_html( lunara_oscar_pick_status_label( $status ) ) . '</span>';
+				break;
+		}
+	}
+	add_action( 'manage_lunara_oscar_pick_posts_custom_column', 'lunara_oscar_pick_admin_column_value', 10, 2 );
+}
+
+/**
+ * Query helper. Returns a WP_Query of Oscar Picks.
+ */
+if ( ! function_exists( 'lunara_get_oscar_picks' ) ) {
+	function lunara_get_oscar_picks( $args = array() ) {
+		$defaults = array(
+			'posts_per_page' => 12,
+			'ceremony_year'  => 0,
+			'status'         => '',
+			'category'       => '',
+			'ordered_ids'    => array(),
+		);
+		$args = wp_parse_args( $args, $defaults );
+		$ordered_ids = array();
+
+		foreach ( (array) $args['ordered_ids'] as $ordered_id ) {
+			$ordered_id = absint( $ordered_id );
+
+			if ( $ordered_id > 0 && ! in_array( $ordered_id, $ordered_ids, true ) ) {
+				$ordered_ids[] = $ordered_id;
+			}
+		}
+
+		$query_args = array(
+			'post_type'           => 'lunara_oscar_pick',
+			'posts_per_page'      => (int) $args['posts_per_page'],
+			'post_status'         => 'publish',
+			'ignore_sticky_posts' => true,
+			'no_found_rows'       => true,
+			'meta_query'          => array(),
+			'tax_query'           => array(),
+		);
+
+		if ( ! empty( $ordered_ids ) ) {
+			$query_args['post__in'] = $ordered_ids;
+			$query_args['orderby']  = 'post__in';
+		}
+
+		if ( ! empty( $args['ceremony_year'] ) ) {
+			$query_args['meta_query'][] = array(
+				'key'   => '_lunara_pick_ceremony_year',
+				'value' => (int) $args['ceremony_year'],
+			);
+		}
+		if ( ! empty( $args['status'] ) ) {
+			$query_args['meta_query'][] = array(
+				'key'   => '_lunara_pick_status',
+				'value' => sanitize_key( $args['status'] ),
+			);
+		}
+		if ( ! empty( $args['category'] ) ) {
+			$query_args['tax_query'][] = array(
+				'taxonomy' => 'oscar_pick_category',
+				'field'    => is_numeric( $args['category'] ) ? 'term_id' : 'slug',
+				'terms'    => $args['category'],
+			);
+		}
+
+		if ( empty( $ordered_ids ) ) {
+			// Default sort: most recent ceremony first, then most recently published pick.
+			$query_args['meta_key'] = '_lunara_pick_ceremony_year';
+			$query_args['orderby']  = array(
+				'meta_value_num' => 'DESC',
+				'date'           => 'DESC',
+			);
+		}
+
+		return new WP_Query( $query_args );
+	}
+}
 
 if ( ! function_exists( 'lunara_oscar_ledger_instance' ) ) {
 	function lunara_oscar_ledger_instance() {
@@ -12703,62 +13096,25 @@ if ( ! function_exists( 'lunara_oscar_first_id_from_list' ) ) {
 }
 
 if ( ! function_exists( 'lunara_oscar_nominee_id_for_label' ) ) {
-	/**
-	 * The person ID credited to $label on one Oscars row, or ''.
-	 *
-	 * Only positional pairs are trusted: names[i] pairs with ids[i] only when
-	 * the row carries as many IDs as names. A misaligned row (a '?' slot the
-	 * importer dropped, a comma-joined slot) returns '' instead of the
-	 * neighbour's ID. The first-ID fallback applies only to a row with exactly
-	 * one ID and at most one name. A pair the plugin's legacy link guard
-	 * rejects (lunara_oscars_pair_is_guarded()) returns '' too.
-	 *
-	 * This is the only definition (no inc/ copy), so it is live code.
-	 *
-	 * @param string $label     The person label to resolve.
-	 * @param string $names_raw Pipe-separated credited names.
-	 * @param string $ids_raw   Pipe-separated IDs.
-	 * @return string
-	 */
 	function lunara_oscar_nominee_id_for_label( $label, $names_raw, $ids_raw ) {
 		$label = (string) $label;
 		if ( '' === trim( $label ) ) {
 			return '';
 		}
 
-		$names = array_values( array_filter( array_map( 'trim', preg_split( '/\|/', (string) $names_raw ) ), 'strlen' ) );
-		// A comma- or semicolon-joined slot counts as the IDs it holds, the way
-		// the plugin's normalizer splits it, so it never pairs with one name.
-		$ids   = array_values( array_filter( array_map( 'trim', preg_split( '/[|,;]/', (string) $ids_raw ) ), 'strlen' ) );
+		$names = array_map( 'trim', preg_split( '/\|/', (string) $names_raw ) );
+		$ids   = array_map( 'trim', preg_split( '/\|/', (string) $ids_raw ) );
 
-		$is_guarded = static function ( $id, $credited ) use ( $label ) {
-			if ( ! function_exists( 'lunara_oscars_pair_is_guarded' ) ) {
-				return false;
-			}
-
-			return lunara_oscars_pair_is_guarded( $id, $label )
-				|| ( '' !== $credited && lunara_oscars_pair_is_guarded( $id, $credited ) );
-		};
-
-		if ( ! empty( $names ) && count( $names ) === count( $ids ) ) {
-			foreach ( $names as $index => $name ) {
-				if ( lunara_oscar_text_matches( $label, $name ) ) {
-					$id = lunara_oscar_first_id_from_list( $ids[ $index ], 'name' );
-					if ( '' !== $id ) {
-						return $is_guarded( $id, $name ) ? '' : $id;
-					}
+		foreach ( $names as $index => $name ) {
+			if ( lunara_oscar_text_matches( $label, $name ) && ! empty( $ids[ $index ] ) ) {
+				$id = lunara_oscar_first_id_from_list( $ids[ $index ], 'name' );
+				if ( '' !== $id ) {
+					return $id;
 				}
 			}
 		}
 
-		if ( 1 === count( $ids ) && count( $names ) <= 1 ) {
-			$id = lunara_oscar_first_id_from_list( $ids[0], 'name' );
-			if ( '' !== $id ) {
-				return $is_guarded( $id, $names[0] ?? '' ) ? '' : $id;
-			}
-		}
-
-		return '';
+		return lunara_oscar_first_id_from_list( $ids_raw, 'name' );
 	}
 }
 
@@ -13017,7 +13373,7 @@ if ( ! function_exists( 'lunara_resolve_oscar_fact_ledger_url' ) ) {
  */
 if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 	function lunara_render_oscar_picks_carousel( $args = array() ) {
-		$default_count    = max( 1, min( 16, absint( get_theme_mod( 'lunara_home_oscar_picks_count', 12 ) ) ) );
+		$default_count    = max( 4, min( 16, absint( get_theme_mod( 'lunara_home_oscar_picks_count', 12 ) ) ) );
 		$default_autoplay = max( 0, min( 12000, absint( get_theme_mod( 'lunara_home_oscar_picks_autoplay_interval', 6500 ) ) ) );
 		$default_ceremony_year = lunara_home_oscar_picks_ceremony_year();
 		$default_ceremony_ordinal = lunara_oscar_ceremony_ordinal_from_year( $default_ceremony_year );
@@ -13059,7 +13415,7 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 			'ordered_ids' => $manual_order_ids,
 		);
 		$args  = lunara_repair_mojibake_args( wp_parse_args( $args, $defaults ), array( 'kicker', 'heading', 'summary', 'cta_text' ) );
-		$args['count']    = max( 1, min( 16, absint( $args['count'] ) ) );
+		$args['count']    = max( 4, min( 16, absint( $args['count'] ) ) );
 		$args['autoplay'] = max( 0, min( 12000, absint( $args['autoplay'] ) ) );
 		$args['ceremony_year'] = max( 1929, min( 2100, absint( $args['ceremony_year'] ) ) );
 		$oscar_picks_density = sanitize_key( (string) $args['density'] );
@@ -13068,9 +13424,6 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 			$oscar_picks_density = 'editorial';
 		}
 
-		$selection = lunara_home_oscars_selection( 'picks', (int) $args['ceremony_year'] );
-		if ( 'manual' === $selection['mode'] && empty( $selection['ids'] ) ) { return ''; }
-		if ( 'legacy' !== $selection['mode'] ) { $args['ordered_ids'] = $selection['ids']; }
 		$query = lunara_get_oscar_picks(
 			array(
 				'posts_per_page' => (int) $args['count'],
@@ -13086,7 +13439,7 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 		ob_start();
 		?>
 		<?php $pick_count = max( 0, (int) $query->post_count ); ?>
-		<section class="lunara-home-section lunara-home-slot-oscar-picks lunara-oscar-picks-section is-density-<?php echo esc_attr( $oscar_picks_density ); ?>" data-lunara-site-studio-section="oscar-picks" aria-label="<?php esc_attr_e( 'Lunara Oscar Forecast', 'lunara-film' ); ?>" data-lunara-carousel data-lunara-carousel-autoplay="<?php echo $pick_count > 1 ? (int) $args['autoplay'] : 0; ?>" data-lunara-oscar-ceremony-year="<?php echo esc_attr( (string) $args['ceremony_year'] ); ?>">
+		<section class="lunara-home-section lunara-home-slot-oscar-picks lunara-oscar-picks-section is-density-<?php echo esc_attr( $oscar_picks_density ); ?>" aria-label="<?php esc_attr_e( 'Lunara Oscar Forecast', 'lunara-film' ); ?>" data-lunara-carousel data-lunara-carousel-autoplay="<?php echo $pick_count > 1 ? (int) $args['autoplay'] : 0; ?>" data-lunara-oscar-ceremony-year="<?php echo esc_attr( (string) $args['ceremony_year'] ); ?>">
 			<div class="lunara-home-section-head is-with-summary">
 				<div>
 					<p class="lunara-home-section-kicker"><?php echo esc_html( $args['kicker'] ); ?></p>
@@ -13113,9 +13466,6 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 						<?php endfor; ?>
 					</div>
 					<button class="lunara-carousel-control" type="button" data-lunara-carousel-next aria-label="<?php esc_attr_e( 'Next Oscar Pick', 'lunara-film' ); ?>">&gt;</button>
-					<?php if ( $args['autoplay'] > 0 ) : ?>
-						<button class="lunara-carousel-control lunara-carousel-toggle lunara-oscar-picks-toggle" type="button" data-lunara-carousel-toggle aria-pressed="false" aria-label="<?php esc_attr_e( 'Pause Oscar Picks rotation', 'lunara-film' ); ?>"><?php esc_html_e( 'Pause', 'lunara-film' ); ?></button>
-					<?php endif; ?>
 				</div>
 			<?php endif; ?>
 
@@ -13135,13 +13485,7 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 					$rationale   = wp_trim_words( wp_strip_all_tags( get_the_excerpt( $pid ) ), 28, '…' );
 					$card_url    = lunara_resolve_oscar_pick_ledger_url( $pid, $film, $person, $year, $category );
 					$has_visual  = has_post_thumbnail( $pid );
-					$artwork = lunara_home_oscar_artwork( 'picks', $pid );
-					if ( $artwork['override'] ) { $has_visual = $artwork['has_image']; }
-					$artwork_style = $artwork['override'] ? lunara_home_oscar_artwork_style( $artwork ) : '';
-					$mobile_art = $has_visual ? wp_get_attachment_image_src( get_post_thumbnail_id( $pid ), 'full' ) : false;
-					$mobile_portrait = $mobile_art && $mobile_art[1] > 0 && $mobile_art[2] > $mobile_art[1];
-					$mobile_srcset = $mobile_art ? wp_get_attachment_image_srcset( get_post_thumbnail_id( $pid ), 'full' ) : '';
-					if ( $mobile_art && ! $mobile_srcset ) { $mobile_srcset = $mobile_art[0]; }
+					$thumb_url   = $has_visual ? get_the_post_thumbnail_url( $pid, 'newspack-article-block-landscape-intermediate' ) : '';
 					$thumb_attrs = array(
 						'class'         => 'lunara-oscar-pick-card-image',
 						'loading'       => 'lazy',
@@ -13150,20 +13494,11 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 						'sizes'         => '(max-width: 420px) 92vw, (max-width: 760px) 44vw, (max-width: 1180px) 42vw, 360px',
 					);
 					?>
-					<article class="lunara-oscar-pick-card is-status-<?php echo esc_attr( $status ); ?> <?php echo $has_visual ? 'has-visual' : 'has-no-visual'; ?><?php echo $artwork['override'] ? ' has-artwork-override' : ''; ?>" role="listitem" data-lunara-oscar-item-id="<?php echo (int) $pid; ?>" style="<?php echo esc_attr( $artwork_style ); ?>">
+					<article class="lunara-oscar-pick-card is-status-<?php echo esc_attr( $status ); ?> <?php echo $has_visual ? 'has-visual' : 'has-no-visual'; ?>" role="listitem">
 						<a class="lunara-oscar-pick-card-link" href="<?php echo esc_url( $card_url ); ?>">
 							<?php if ( $has_visual ) : ?>
-								<div class="lunara-oscar-pick-card-media<?php echo $mobile_portrait ? ' is-portrait' : ''; ?>">
-									<?php if ( $artwork['override'] ) : ?>
-										<?php echo wp_get_attachment_image( $artwork['image_id'], 'full', false, $thumb_attrs ); ?>
-									<?php elseif ( $mobile_art ) : ?>
-										<picture>
-											<source media="(max-width: 820px)" srcset="<?php echo esc_attr( $mobile_srcset ); ?>" sizes="calc(100vw - 64px)" width="<?php echo (int) $mobile_art[1]; ?>" height="<?php echo (int) $mobile_art[2]; ?>">
-											<?php echo get_the_post_thumbnail( $pid, 'newspack-article-block-landscape-intermediate', $thumb_attrs ); ?>
-										</picture>
-									<?php else : ?>
-										<?php echo get_the_post_thumbnail( $pid, 'newspack-article-block-landscape-intermediate', $thumb_attrs ); ?>
-									<?php endif; ?>
+								<div class="lunara-oscar-pick-card-media">
+									<?php echo get_the_post_thumbnail( $pid, 'newspack-article-block-landscape-intermediate', $thumb_attrs ); ?>
 									<span class="lunara-oscar-pick-card-status"><?php echo esc_html( strtoupper( $status_label ) ); ?></span>
 								</div>
 							<?php endif; ?>
@@ -13233,19 +13568,6 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 
 if ( ! function_exists( 'lunara_register_oscar_fact_cpt' ) ) {
 	function lunara_register_oscar_fact_cpt() {
-		register_taxonomy( 'oscar_fact_category', 'oscar_fact', array(
-			'labels' => array(
-				'name'          => __( 'Fact Categories', 'lunara-film' ),
-				'singular_name' => __( 'Fact Category', 'lunara-film' ),
-				'menu_name'     => __( 'Categories', 'lunara-film' ),
-			),
-			'public'            => true,
-			'hierarchical'      => true,
-			'show_admin_column' => true,
-			'show_in_rest'      => true,
-			'rewrite'           => array( 'slug' => 'oscar-facts/category', 'with_front' => false ),
-		) );
-
 		register_post_type( 'oscar_fact', array(
 			'labels' => array(
 				'name'          => __( 'Oscar Facts', 'lunara-film' ),
@@ -13268,6 +13590,19 @@ if ( ! function_exists( 'lunara_register_oscar_fact_cpt' ) ) {
 			'taxonomies'          => array( 'oscar_fact_category' ),
 			'show_in_rest'        => true,
 			'capability_type'     => 'post',
+		) );
+
+		register_taxonomy( 'oscar_fact_category', 'oscar_fact', array(
+			'labels' => array(
+				'name'          => __( 'Fact Categories', 'lunara-film' ),
+				'singular_name' => __( 'Fact Category', 'lunara-film' ),
+				'menu_name'     => __( 'Categories', 'lunara-film' ),
+			),
+			'public'            => true,
+			'hierarchical'      => true,
+			'show_admin_column' => true,
+			'show_in_rest'      => true,
+			'rewrite'           => array( 'slug' => 'oscar-facts/category', 'with_front' => false ),
 		) );
 	}
 	add_action( 'init', 'lunara_register_oscar_fact_cpt' );
@@ -13540,7 +13875,6 @@ if ( ! function_exists( 'lunara_get_oscar_facts' ) ) {
 			'post_type'           => 'oscar_fact',
 			'posts_per_page'      => (int) $args['posts_per_page'],
 			'post_status'         => 'publish',
-			'has_password'        => false,
 			'ignore_sticky_posts' => true,
 			'no_found_rows'       => true,
 			'orderby'             => 'rand' === $args['orderby'] ? 'rand' : 'date',
@@ -13557,12 +13891,6 @@ if ( ! function_exists( 'lunara_get_oscar_facts' ) ) {
 			);
 		}
 
-		if ( ! empty( $args['ordered_ids'] ) ) {
-			$query_args['post__in'] = array_map( 'absint', $args['ordered_ids'] );
-			$query_args['orderby'] = 'post__in';
-			$query_args['has_password'] = false;
-			return new WP_Query( $query_args );
-		}
 		if ( 'visual_priority' === $args['orderby'] ) {
 			$limit         = max( 1, (int) $args['posts_per_page'] );
 			$held_ids      = function_exists( 'lunara_oscar_fact_visual_hold_ids' ) ? lunara_oscar_fact_visual_hold_ids() : array();
@@ -13623,11 +13951,7 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 			'count'    => 8,
 		);
 		$args  = lunara_repair_mojibake_args( wp_parse_args( $args, $defaults ), array( 'kicker', 'heading', 'summary', 'cta_text' ) );
-		foreach ( array( 'kicker', 'heading', 'summary', 'cta_text', 'count' ) as $field ) { $args[$field] = get_theme_mod( 'lunara_home_oscar_facts_' . $field, $args[$field] ); }
-		$selection = lunara_home_oscars_selection( 'facts' );
-		if ( 'manual' === $selection['mode'] && empty( $selection['ids'] ) ) { return ''; }
-		$query = lunara_get_oscar_facts( array( 'posts_per_page' => max( 1, min( 16, (int) $args['count'] ) ), 'orderby' => 'legacy' === $selection['mode'] ? 'visual_priority' : 'date', 'ordered_ids' => $selection['ids'] ) );
-		$autoplay = $query->post_count > 1 ? max( 0, min( 12000, (int) get_theme_mod( 'lunara_home_oscar_facts_autoplay_interval', 6500 ) ) ) : 0;
+		$query = lunara_get_oscar_facts( array( 'posts_per_page' => (int) $args['count'], 'orderby' => 'visual_priority' ) );
 
 		if ( ! $query->have_posts() ) {
 			return '';
@@ -13651,7 +13975,7 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 
 		ob_start();
 		?>
-		<section class="lunara-home-section lunara-home-slot-oscar-facts lunara-oscar-facts-section" data-lunara-site-studio-section="oscar-facts" aria-label="Oscar Facts">
+		<section class="lunara-home-section lunara-home-slot-oscar-facts lunara-oscar-facts-section" aria-label="Oscar Facts">
 			<div class="lunara-home-section-head is-with-summary">
 				<div>
 					<p class="lunara-home-section-kicker"><?php echo esc_html( $args['kicker'] ); ?></p>
@@ -13663,7 +13987,7 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 				<a class="lunara-section-link" href="<?php echo esc_url( $args['cta_url'] ); ?>"><?php echo esc_html( $args['cta_text'] ); ?></a>
 			</div>
 
-			<div class="lunara-oscar-facts-carousel lunara-carousel" data-autoplay="<?php echo (int) $autoplay; ?>" data-lunara-splide-pilot data-lunara-splide-autoplay="<?php echo (int) $autoplay; ?>" data-lunara-facts-total="<?php echo esc_attr( (string) $fact_total ); ?>" style="--lunara-oscar-facts-progress:<?php echo esc_attr( $fact_total > 0 ? (string) ( 100 / $fact_total ) . '%' : '0%' ); ?>;" aria-label="<?php esc_attr_e( 'Rotating Oscar facts', 'lunara-film' ); ?>">
+			<div class="lunara-oscar-facts-carousel lunara-carousel" data-autoplay="6500" data-lunara-splide-pilot data-lunara-splide-autoplay="6500" data-lunara-facts-total="<?php echo esc_attr( (string) $fact_total ); ?>" style="--lunara-oscar-facts-progress:<?php echo esc_attr( $fact_total > 0 ? (string) ( 100 / $fact_total ) . '%' : '0%' ); ?>;" aria-label="<?php esc_attr_e( 'Rotating Oscar facts', 'lunara-film' ); ?>">
 				<?php if ( $fact_total > 1 ) : ?>
 					<div class="lunara-oscar-facts-console" aria-label="<?php esc_attr_e( 'Oscar Facts carousel status', 'lunara-film' ); ?>">
 						<span class="lunara-oscar-facts-console-label"><?php esc_html_e( 'Oscar Ledger File', 'lunara-film' ); ?></span>
@@ -13673,9 +13997,6 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 							<span class="lunara-oscar-facts-total"><?php echo esc_html( str_pad( (string) $fact_total, 2, '0', STR_PAD_LEFT ) ); ?></span>
 						</span>
 						<span class="lunara-oscar-facts-progress" aria-hidden="true"><span class="lunara-oscar-facts-progress-bar"></span></span>
-						<?php if ( $autoplay > 0 ) : ?>
-							<?php echo lunara_home_carousel_toggle(); /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ ?>
-						<?php endif; ?>
 					</div>
 				<?php endif; ?>
 				<div class="lunara-oscar-facts-track" role="list">
@@ -13693,22 +14014,14 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 					$held_ids    = function_exists( 'lunara_oscar_fact_visual_hold_ids' ) ? lunara_oscar_fact_visual_hold_ids() : array();
 					$visual_ok   = '1' === (string) get_post_meta( $pid, '_lunara_fact_visual_verified', true ) && ! in_array( $pid, array_map( 'absint', $held_ids ), true );
 					$has_image   = $visual_ok && has_post_thumbnail( $pid );
-					$artwork = lunara_home_oscar_artwork( 'facts', $pid );
-					if ( $artwork['override'] ) { $has_image = $artwork['has_image']; }
-					$mobile_art = $has_image ? wp_get_attachment_image_src( $artwork['image_id'], 'full' ) : false;
-					$mobile_portrait = $mobile_art && $mobile_art[1] > 0 && $mobile_art[2] > $mobile_art[1];
-					$mobile_srcset = $mobile_art ? wp_get_attachment_image_srcset( $artwork['image_id'], 'full' ) : '';
-					if ( $mobile_art && ! $mobile_srcset ) { $mobile_srcset = $mobile_art[0]; }
 					$visual_treatment = 'archival' === (string) get_post_meta( $pid, '_lunara_fact_visual_treatment', true ) ? 'archival' : 'wide';
 					$is_archival_visual = $has_image && 'archival' === $visual_treatment;
 					$visual_focus = lunara_sanitize_oscar_fact_visual_focus( get_post_meta( $pid, '_lunara_fact_visual_focus', true ) );
 					$visual_focus_css = lunara_oscar_fact_visual_focus_css( $visual_focus );
 					$thumb_size = $is_archival_visual ? 'full' : 'lunara-hero-spotlight';
 					$card_style_parts = array( '--lunara-fact-image-position:' . $visual_focus_css );
-					if ( $artwork['override'] ) { $card_style_parts[] = lunara_home_oscar_artwork_style( $artwork ); }
 					$card_style  = implode( ';', $card_style_parts ) . ';';
 					$card_class  = 'lunara-oscar-fact-card lunara-carousel-slide' . ( 0 === $fact_index ? ' active' : '' ) . ( $has_image ? ' has-poster' : '' ) . ( $is_archival_visual ? ' has-archival-visual' : '' );
-					if ( $artwork['override'] ) { $card_class .= ' has-artwork-override'; }
 					$card_url    = lunara_resolve_oscar_fact_ledger_url( $pid, $category, $year );
 					$thumb_attrs = array(
 						'class'         => 'lunara-oscar-fact-card-poster-image',
@@ -13718,20 +14031,11 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 						'sizes'         => '(max-width: 640px) 92vw, (max-width: 980px) 44vw, 480px',
 					);
 					?>
-					<article class="<?php echo esc_attr( $card_class ); ?>" role="listitem" data-lunara-oscar-item-id="<?php echo (int) $pid; ?>" data-fact-id="<?php echo esc_attr( (string) $pid ); ?>" data-slide-index="<?php echo esc_attr( (string) ( $fact_index + 1 ) ); ?>" data-visual-treatment="<?php echo esc_attr( $visual_treatment ); ?>" data-visual-focus="<?php echo esc_attr( $visual_focus ); ?>" style="<?php echo esc_attr( $card_style ); ?>"<?php echo 0 === $fact_index ? ' aria-current="true"' : ''; ?>>
+					<article class="<?php echo esc_attr( $card_class ); ?>" role="listitem" data-fact-id="<?php echo esc_attr( (string) $pid ); ?>" data-slide-index="<?php echo esc_attr( (string) ( $fact_index + 1 ) ); ?>" data-visual-treatment="<?php echo esc_attr( $visual_treatment ); ?>" data-visual-focus="<?php echo esc_attr( $visual_focus ); ?>" style="<?php echo esc_attr( $card_style ); ?>"<?php echo 0 === $fact_index ? ' aria-current="true"' : ''; ?>>
 						<a class="lunara-oscar-fact-card-link" href="<?php echo esc_url( $card_url ); ?>">
 							<?php if ( $has_image ) : ?>
-								<div class="lunara-oscar-fact-card-poster<?php echo $mobile_portrait ? ' is-portrait' : ''; ?>">
-									<?php if ( $artwork['override'] ) : ?>
-										<?php echo wp_get_attachment_image( $artwork['image_id'], 'full', false, $thumb_attrs ); ?>
-									<?php elseif ( $mobile_art ) : ?>
-										<picture>
-											<source media="(max-width: 820px)" srcset="<?php echo esc_attr( $mobile_srcset ); ?>" sizes="calc(100vw - 64px)" width="<?php echo (int) $mobile_art[1]; ?>" height="<?php echo (int) $mobile_art[2]; ?>">
-											<?php echo get_the_post_thumbnail( $pid, $thumb_size, $thumb_attrs ); ?>
-										</picture>
-									<?php else : ?>
-										<?php echo get_the_post_thumbnail( $pid, $thumb_size, $thumb_attrs ); ?>
-									<?php endif; ?>
+								<div class="lunara-oscar-fact-card-poster">
+									<?php echo get_the_post_thumbnail( $pid, $thumb_size, $thumb_attrs ); ?>
 								</div>
 							<?php endif; ?>
 							<div class="lunara-oscar-fact-card-text">
@@ -15023,9 +15327,6 @@ if ( ! function_exists( 'lunara_get_review_hero_image_url' ) ) {
  */
 if ( ! function_exists( 'lunara_get_cinematic_hero_slides' ) ) {
 	function lunara_get_cinematic_hero_slides( $max = 6 ) {
-		if ( function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'hero' ) ) {
-			return lunara_home_carousel_slides( 'hero' );
-		}
 		// Hero Command — when the command deck is enabled with at least one
 		// renderable slide, the curated list IS the hero: exact slides, exact
 		// order, no cap at $max. The automatic feed below stays the fallback.
@@ -15291,10 +15592,6 @@ if ( ! function_exists( 'lunara_add_hero_feature_meta_box' ) ) {
 	add_action( 'add_meta_boxes', 'lunara_add_hero_feature_meta_box' );
 
 	function lunara_hero_feature_meta_callback( $post ) {
-		if ( function_exists( 'lunara_home_carousel_settings' ) && lunara_home_carousel_settings( 'hero' )['adopted'] ) {
-			echo '<p>' . esc_html__( 'Homepage Hero selection is managed in Site Studio.', 'lunara-film' ) . '</p><p><a href="' . esc_url( admin_url( 'admin.php?page=lunara-site-studio&surface=hero-carousel' ) ) . '">' . esc_html__( 'Edit Hero Carousel', 'lunara-film' ) . '</a></p>';
-			return;
-		}
 		wp_nonce_field( 'lunara_hero_feature_nonce', 'lunara_hero_feature_nonce' );
 		$featured = (bool) get_post_meta( $post->ID, '_lunara_hero_featured', true );
 		?>
@@ -15309,8 +15606,6 @@ if ( ! function_exists( 'lunara_add_hero_feature_meta_box' ) ) {
 	}
 
 	function lunara_save_hero_feature_meta( $post_id ) {
-		// Stale post-editor submissions must preserve the retired feature timestamp.
-		if ( function_exists( 'lunara_home_carousel_settings' ) && lunara_home_carousel_settings( 'hero' )['adopted'] ) return;
 		if ( ! isset( $_POST['lunara_hero_feature_nonce'] ) ) return;
 		if ( ! wp_verify_nonce( $_POST['lunara_hero_feature_nonce'], 'lunara_hero_feature_nonce' ) ) return;
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
@@ -15344,15 +15639,51 @@ if ( ! function_exists( 'lunara_add_hero_feature_meta_box' ) ) {
  */
 if ( ! function_exists( 'lunara_get_pairing_desk_review_id' ) ) {
 	function lunara_get_pairing_desk_review_id() {
-		$mode = get_theme_mod( 'lunara_home_pairing_desk_review_mode', null );
+		// Curated showcase: a review hand-picked in the Homepage Studio wins
+		// outright — the Method band is a shareable stage, and its programming
+		// (a Nolan season, a festival run) belongs to the editor.
 		$curated = absint( get_theme_mod( 'lunara_home_pairing_desk_review_id', 0 ) );
-		if ( 'manual' === $mode ) { return lunara_method_review_available( $curated ) ? $curated : 0; }
-		// Until first Apply, preserve the historical invalid-selection fallback.
-		if ( null === $mode && $curated ) {
-			$post = get_post( $curated );
-			if ( $post && 'review' === $post->post_type && 'publish' === $post->post_status ) { return $curated; }
+		if ( $curated ) {
+			$curated_post = get_post( $curated );
+			if ( $curated_post && 'review' === $curated_post->post_type && 'publish' === $curated_post->post_status ) {
+				return $curated;
+			}
 		}
-		return lunara_method_automatic_review_id();
+
+		// Plain loop instead of a meta_query: scan the most recent reviews and
+		// take the first one with any pairing filled. Bounded (20 posts, meta
+		// primed in one round trip) and immune to meta-query edge cases.
+		$ids = get_posts(
+			array(
+				'post_type'              => 'review',
+				'post_status'            => 'publish',
+				'posts_per_page'         => 20,
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_term_cache' => false,
+			)
+		);
+
+		if ( empty( $ids ) ) {
+			return 0;
+		}
+
+		update_meta_cache( 'post', array_map( 'intval', $ids ) );
+
+		foreach ( $ids as $review_id ) {
+			$review_id = (int) $review_id;
+			$has_pairing =
+				'' !== trim( (string) get_post_meta( $review_id, '_lunara_theme_echo', true ) ) ||
+				'' !== trim( (string) get_post_meta( $review_id, '_lunara_counter_program', true ) ) ||
+				'' !== trim( (string) get_post_meta( $review_id, '_lunara_career_context', true ) ) ||
+				'' !== trim( (string) get_post_meta( $review_id, '_lunara_craft_mirror', true ) );
+
+			if ( $has_pairing ) {
+				return $review_id;
+			}
+		}
+
+		return 0;
 	}
 }
 
@@ -15394,14 +15725,30 @@ if ( ! function_exists( 'lunara_render_home_pairing_desk' ) ) {
 		$review_title = get_the_title( $review_id );
 		$review_url   = get_permalink( $review_id );
 
-		$framing = lunara_method_backdrop_settings();
-		$backdrop = lunara_method_backdrop_url( $review_id, absint( get_theme_mod( 'lunara_home_pairing_desk_backdrop_id', 0 ) ), $framing, null === get_theme_mod( 'lunara_home_pairing_desk_review_mode', null ) );
+		// Cinematic backdrop: the reviewed film's own qualified wide image,
+		// drifting slowly behind the pairings (reduced-motion turns it off).
+		$backdrop = function_exists( 'lunara_get_review_hero_image_url' )
+			? trim( (string) lunara_get_review_hero_image_url( $review_id ) )
+			: '';
+		if ( '' !== $backdrop && function_exists( 'lunara_rightsize_backdrop_url' ) ) {
+			$backdrop = lunara_rightsize_backdrop_url( $backdrop );
+		}
+
+		// Homepage Studio override: a hand-picked backdrop from the media
+		// library beats the automatic review-hero image when set.
+		$backdrop_override_id = absint( get_theme_mod( 'lunara_home_pairing_desk_backdrop_id', 0 ) );
+		if ( $backdrop_override_id ) {
+			$backdrop_override_url = (string) wp_get_attachment_image_url( $backdrop_override_id, 'full' );
+			if ( '' !== $backdrop_override_url ) {
+				$backdrop = $backdrop_override_url;
+			}
+		}
 
 		ob_start();
 		?>
-		<section id="pairing-desk" class="lunara-home-section lunara-home-slot-pairing-desk lunara-pairing-desk-section<?php echo '' !== $backdrop ? ' has-desk-backdrop' : ''; ?>" data-lunara-site-studio-section="pairing-desk" aria-label="<?php esc_attr_e( 'Pair It With showcase', 'lunara-film' ); ?>">
+		<section id="pairing-desk" class="lunara-home-section lunara-home-slot-pairing-desk lunara-pairing-desk-section<?php echo '' !== $backdrop ? ' has-desk-backdrop' : ''; ?>" aria-label="<?php esc_attr_e( 'Pair It With showcase', 'lunara-film' ); ?>">
 			<?php if ( '' !== $backdrop ) : ?>
-				<div class="lunara-pairing-desk-backdrop<?php echo 'full' === $framing['fit'] ? ' is-full-image' : ''; ?>" style="<?php echo esc_attr( lunara_method_backdrop_style( $framing ) ); ?>background-image:url('<?php echo esc_url( $backdrop ); ?>');" aria-hidden="true"></div>
+				<div class="lunara-pairing-desk-backdrop" style="background-image:url('<?php echo esc_url( $backdrop ); ?>');" aria-hidden="true"></div>
 				<div class="lunara-pairing-desk-overlay" aria-hidden="true"></div>
 			<?php endif; ?>
 			<div class="lunara-pairing-desk-inner">
@@ -15456,10 +15803,10 @@ if ( ! function_exists( 'lunara_get_hero_featured_slides' ) ) {
 }
 
 /**
- * Render one cinematic-hero slide from prepared data. The first retains its
- * real source and is eager/high only when its caller identifies it as the LCP.
- * Later slides defer their unchanged sources to Splide's nearby loader. The
- * first slide is also
+ * Render one cinematic-hero slide from prepared data. Every slide carries its
+ * REAL image src. The first is eager/high only when its caller identifies it
+ * as the LCP; every other image uses native lazy loading at low priority. No
+ * placeholder/swap machinery can leave a slide blank. The first slide is also
  * server-marked is-active so it stays visible in every pre-mount and
  * failed-mount state once the fade layout class exists.
  */
@@ -15469,11 +15816,8 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
 		$is_priority_image = $is_first && (bool) $first_image_is_lcp;
 		$frame_mode        = isset( $data['fit'] ) && 'full' === (string) $data['fit'] ? 'full' : 'cover';
 		$image_markup      = function_exists( 'lunara_render_cinematic_hero_image' )
-			? lunara_render_cinematic_hero_image( $data, $is_priority_image, ! $is_first )
+			? lunara_render_cinematic_hero_image( $data, $is_priority_image )
 			: '';
-		if ( '' === $image_markup && isset( $data['post_id'] ) && function_exists( 'lunara_home_carousel_placeholder' ) ) {
-			$image_markup = lunara_home_carousel_placeholder();
-		}
 
 		ob_start();
 		?>
@@ -15511,9 +15855,6 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_slide' ) ) {
  */
 if ( ! function_exists( 'lunara_get_home_cinematic_hero_slides' ) ) {
 	function lunara_get_home_cinematic_hero_slides() {
-		if ( function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'hero' ) ) {
-			return lunara_home_carousel_slides( 'hero' );
-		}
 		static $slides = null;
 
 		if ( null === $slides ) {
@@ -15532,9 +15873,6 @@ if ( ! function_exists( 'lunara_get_home_cinematic_hero_slides' ) ) {
 if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 	function lunara_render_cinematic_hero_carousel( $attrs = array() ) {
 		$attrs              = is_array( $attrs ) ? $attrs : array();
-		if ( function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'hero' ) ) {
-			return lunara_render_home_hero_carousel( $attrs );
-		}
 		$first_image_is_lcp = ! array_key_exists( 'first_image_is_lcp', $attrs ) || (bool) $attrs['first_image_is_lcp'];
 		$slides             = lunara_get_home_cinematic_hero_slides();
 
@@ -15545,27 +15883,33 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_carousel' ) ) {
 			&& count( lunara_hero_command_slides() ) > 0;
 
 		if ( count( $slides ) < 1 || ( count( $slides ) < 2 && ! $command_live ) ) {
-			$hero_html = function_exists( 'lunara_render_cinematic_hero' )
+			return function_exists( 'lunara_render_cinematic_hero' )
 				? lunara_render_cinematic_hero( $attrs )
 				: '';
-		} else {
-			$interval = (int) apply_filters( 'lunara_hero_autoplay_interval', 6500 );
-			$is_static = count( $slides ) < 2;
-			$hero_classes = 'lunara-home-hero lunara-home-slot-hero lunara-cinematic-hero lunara-cinematic-hero-carousel splide';
-			if ( $is_static ) { $hero_classes .= ' is-hero-static'; }
-			ob_start();
-			?>
-			<section class="<?php echo esc_attr( $hero_classes ); ?>" data-lunara-hero-autoplay="<?php echo esc_attr( (string) $interval ); ?>" aria-roledescription="carousel" aria-label="<?php esc_attr_e( 'Featured', 'lunara-film' ); ?>">
-				<div class="splide__track lunara-cinematic-hero-track"><ul class="splide__list">
-					<?php foreach ( $slides as $slide_index => $slide_data ) { echo lunara_render_cinematic_hero_slide( $slide_data, $slide_index, $first_image_is_lcp ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					} ?>
-				</ul></div>
-			</section>
-			<?php
-			$hero_html = (string) ob_get_clean();
 		}
-		$hero_html = preg_replace( '/<section\b/', '<section data-lunara-site-studio-section="hero"', $hero_html, 1 );
-		return is_string( $hero_html ) ? $hero_html : '';
+
+		$interval = (int) apply_filters( 'lunara_hero_autoplay_interval', 6500 );
+		$is_static = count( $slides ) < 2;
+		$hero_classes = 'lunara-home-hero lunara-home-slot-hero lunara-cinematic-hero lunara-cinematic-hero-carousel splide';
+		if ( $is_static ) {
+			$hero_classes .= ' is-hero-static';
+		}
+
+		ob_start();
+		?>
+		<section class="<?php echo esc_attr( $hero_classes ); ?>" data-lunara-hero-autoplay="<?php echo esc_attr( (string) $interval ); ?>" aria-roledescription="carousel" aria-label="<?php esc_attr_e( 'Featured', 'lunara-film' ); ?>">
+			<div class="splide__track lunara-cinematic-hero-track">
+				<ul class="splide__list">
+					<?php
+					foreach ( $slides as $slide_index => $slide_data ) {
+						echo lunara_render_cinematic_hero_slide( $slide_data, $slide_index, $first_image_is_lcp ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					}
+					?>
+				</ul>
+			</div>
+		</section>
+		<?php
+		return (string) ob_get_clean();
 	}
 }
 
@@ -15906,9 +16250,6 @@ if ( ! function_exists( 'lunara_render_journal_card_provenance' ) ) {
 
 if ( ! function_exists( 'lunara_render_homepage_journal_lane' ) ) {
 	function lunara_render_homepage_journal_lane() {
-		if ( function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'journal' ) ) {
-			return lunara_render_home_journal_carousel();
-		}
 		// Pull copy from theme mods (with defaults + legacy normalization).
 		$kicker = function_exists( 'lunara_theme_mod_text' )
 			? lunara_theme_mod_text( 'lunara_home_dispatch_kicker', 'Journal' )
@@ -15978,7 +16319,7 @@ if ( ! function_exists( 'lunara_render_homepage_journal_lane' ) ) {
 
 		ob_start();
 		?>
-		<section class="lunara-home-section lunara-home-slot-dispatch lunara-dispatches-section" data-lunara-site-studio-section="dispatch" aria-label="Journal">
+		<section class="lunara-home-section lunara-home-slot-dispatch lunara-dispatches-section" aria-label="Journal">
 			<div class="lunara-home-section-head is-with-summary">
 				<div>
 					<p class="lunara-home-section-kicker"><?php echo esc_html( $kicker ); ?></p>

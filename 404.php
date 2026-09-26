@@ -76,12 +76,12 @@ $reentry_actions = lunara_404_order_reentry_actions(
         array(
             'key'   => 'reviews',
             'label' => __( 'Open Reviews', 'lunara-film' ),
-            'url'   => get_post_type_archive_link( 'review' ) ?: home_url( '/reviews/' ),
+            'url'   => home_url( '/reviews/' ),
         ),
         array(
             'key'   => 'journal',
             'label' => __( 'Open Journal', 'lunara-film' ),
-            'url'   => get_post_type_archive_link( 'journal' ) ?: home_url( '/journal/' ),
+            'url'   => home_url( '/journal/' ),
         ),
         array(
             'key'   => 'oscars',
@@ -91,14 +91,14 @@ $reentry_actions = lunara_404_order_reentry_actions(
         array(
             'key'   => 'search',
             'label' => __( 'Search', 'lunara-film' ),
-            'url'   => function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/?s=' ),
+            'url'   => home_url( '/?s=' ),
         ),
     ),
     $reentry_primary
 );
 ?>
-<div id="primary" class="site-main lunara-archive-page lunara-404-page lunara-404-page--primary-<?php echo esc_attr( $reentry_primary ); ?>">
-    <section class="lunara-home-section lunara-archive-hero" data-lunara-site-studio-section="search-command">
+<main id="primary" class="site-main lunara-archive-page lunara-404-page lunara-404-page--primary-<?php echo esc_attr( $reentry_primary ); ?>">
+    <section class="lunara-home-section lunara-archive-hero">
         <div class="lunara-editorial-archive-hero-shell">
             <div class="lunara-editorial-archive-hero-copy-wrap">
                 <p class="lunara-archive-hero-kicker"><?php echo esc_html( get_theme_mod( 'lunara_404_kicker', __( 'Lost Signal', 'lunara-film' ) ) ); ?></p>
@@ -125,7 +125,7 @@ $reentry_actions = lunara_404_order_reentry_actions(
         </div>
     </section>
 
-    <section class="lunara-home-section lunara-404-shell" data-lunara-site-studio-section="recovery">
+    <section class="lunara-home-section lunara-404-shell">
         <div class="lunara-404-panel">
             <div class="lunara-home-section-head">
                 <div>
@@ -146,13 +146,13 @@ $reentry_actions = lunara_404_order_reentry_actions(
                 <?php endforeach; ?>
             </div>
 
-            <form role="search" method="get" class="lunara-search-form lunara-search-form-shell" action="<?php echo esc_url( function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/' ) ); ?>">
+            <form role="search" method="get" class="lunara-search-form lunara-search-form-shell" action="<?php echo esc_url( home_url( '/' ) ); ?>">
                 <label class="screen-reader-text" for="lunara-404-search-input"><?php esc_html_e( 'Search for:', 'lunara-film' ); ?></label>
-                <input id="lunara-404-search-input" type="search" class="lunara-search-input" placeholder="<?php esc_attr_e( 'Search Lunara Film', 'lunara-film' ); ?>" value="" name="<?php echo esc_attr( function_exists( 'lunara_search_command_url' ) ? 'q' : 's' ); ?>" />
+                <input id="lunara-404-search-input" type="search" class="lunara-search-input" placeholder="<?php esc_attr_e( 'Search Lunara Film', 'lunara-film' ); ?>" value="" name="s" />
                 <button type="submit" class="lunara-btn lunara-btn-primary"><?php esc_html_e( 'Search', 'lunara-film' ); ?></button>
             </form>
         </div>
     </section>
-</div>
+</main>
 <?php
 get_footer();

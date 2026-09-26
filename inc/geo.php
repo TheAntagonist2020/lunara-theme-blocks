@@ -15,47 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! function_exists( 'lunara_geo_sitemap_post_types' ) ) {
-	/**
-	 * List Reviews and Journal entries in Jetpack's sitemaps.
-	 *
-	 * Jetpack sitemaps default to Posts and Pages, and this site publishes its
-	 * criticism and news as the `review` and `journal` post types, so neither
-	 * appeared in any sitemap. Movie and person dossiers are deliberately left
-	 * out until their thin-page policy is decided.
-	 *
-	 * @param array<int,string> $post_types Post types Jetpack will list.
-	 * @return array<int,string>
-	 */
-	function lunara_geo_sitemap_post_types( $post_types ) {
-		$post_types = is_array( $post_types ) ? $post_types : array();
-		foreach ( array( 'review', 'journal' ) as $post_type ) {
-			if ( post_type_exists( $post_type ) && ! in_array( $post_type, $post_types, true ) ) {
-				$post_types[] = $post_type;
-			}
-		}
-		return $post_types;
-	}
-	add_filter( 'jetpack_sitemap_post_types', 'lunara_geo_sitemap_post_types' );
-}
-
-if ( ! function_exists( 'lunara_geo_news_sitemap_post_types' ) ) {
-	/**
-	 * Journal entries are the site's news; let Jetpack's news sitemap list them.
-	 *
-	 * @param array<int,string> $post_types Post types in the news sitemap.
-	 * @return array<int,string>
-	 */
-	function lunara_geo_news_sitemap_post_types( $post_types ) {
-		$post_types = is_array( $post_types ) ? $post_types : array();
-		if ( post_type_exists( 'journal' ) && ! in_array( 'journal', $post_types, true ) ) {
-			$post_types[] = 'journal';
-		}
-		return $post_types;
-	}
-	add_filter( 'jetpack_sitemap_news_sitemap_post_types', 'lunara_geo_news_sitemap_post_types' );
-}
-
 if ( ! function_exists( 'lunara_geo_llms_txt_body' ) ) {
 	/**
 	 * Compose the llms.txt document. Filterable so future surfaces can add

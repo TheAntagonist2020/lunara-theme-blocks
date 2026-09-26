@@ -5,8 +5,8 @@
  * through the latest reviews + journal entries. Independent of the Oscar-Facts
  * "splide pilot" (which is hardcoded to its own markup). The PHP outputs native
  * Splide DOM (.splide / .splide__track / .splide__list / .splide__slide) with
- * a real image source on slide 1. Splide activates the unchanged responsive
- * sources on adjacent slides as they approach, keeping distant art deferred.
+ * REAL image srcs on every slide (slide 1 eager, the rest native-lazy), so
+ * this just configures and mounts — no image swapping.
  *
  * Resilience contract: the pre-mount guard in style.css hides slides 2+ until
  * .is-hero-mounted exists. That class is added BEFORE mount() so a failure
@@ -55,29 +55,22 @@
 			if (!interval || interval < 1500) {
 				interval = 6500;
 			}
-			var optedIn = root.getAttribute('data-lunara-autoplay-enabled');
-			var autoplay = optedIn === null ? !reduceMotion : optedIn === '1' && !reduceMotion;
-			var toggle = root.querySelector('.splide__toggle');
-			if (toggle) { toggle.hidden = reduceMotion; }
 
 			var splide = new window.Splide(root, {
 				type: 'fade',
 				rewind: true,
 				perPage: 1,
 				perMove: 1,
-				lazyLoad: 'nearby',
-				preloadPages: 1,
 				arrows: true,
 				pagination: true,
 				drag: true,
 				keyboard: 'focused',
-				autoplay: autoplay ? true : 'pause',
+				autoplay: !reduceMotion,
 				interval: interval,
 				pauseOnHover: true,
 				pauseOnFocus: true,
 				speed: reduceMotion ? 0 : 850,
 				rewindSpeed: reduceMotion ? 0 : 850,
-				reducedMotion: { speed: 0, rewindSpeed: 0, autoplay: 'pause' },
 				classes: {
 					arrows: 'splide__arrows lunara-hero-arrows',
 					arrow: 'splide__arrow lunara-hero-arrow',
@@ -85,16 +78,6 @@
 					next: 'splide__arrow--next lunara-hero-arrow-next',
 					pagination: 'splide__pagination lunara-hero-pagination',
 					page: 'splide__pagination__page lunara-hero-page'
-				}
-			});
-
-			// Pagination can jump beyond the prepared neighbors. Start its image
-			// request at the beginning of the fade, instead of waiting for moved.
-			splide.on('move', function () {
-				try {
-					splide.Components.LazyLoad.check();
-				} catch (err) {
-					warn('prepare slide image', err);
 				}
 			});
 

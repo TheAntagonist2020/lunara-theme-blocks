@@ -173,13 +173,9 @@ if ( ! function_exists( 'lunara_live_search_rest_callback' ) ) {
 		// availability is part of the key so a cached Ledger group can
 		// never outlive a deactivated plugin, and q/more_url are
 		// re-normalized on hits so response casing matches the request.
-		// The Academy dataset stamp versions the Ledger group on the data
-		// itself, so a dataset swap retires every cached Ledger group; with
-		// no stamp (no plugin, pre-ledger data) the key is exactly as before.
-		$ledger_on     = function_exists( 'aat_search_entities' );
-		$dataset_stamp = function_exists( 'lunara_oscars_dataset_stamp' ) ? lunara_oscars_dataset_stamp() : '';
-		$cache_key     = 'lunara_ls_' . md5( mb_strtolower( $q ) . '|' . ( $ledger_on ? '1' : '0' ) . ( '' !== $dataset_stamp ? '|' . $dataset_stamp : '' ) );
-		$cached        = get_transient( $cache_key );
+		$ledger_on = function_exists( 'aat_search_entities' );
+		$cache_key = 'lunara_ls_' . md5( mb_strtolower( $q ) . '|' . ( $ledger_on ? '1' : '0' ) );
+		$cached    = get_transient( $cache_key );
 		if ( is_array( $cached ) && isset( $cached['groups'] ) ) {
 			$cached['q']        = $q;
 			$cached['more_url'] = lunara_search_command_url( $q );
