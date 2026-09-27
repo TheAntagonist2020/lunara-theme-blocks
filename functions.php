@@ -12409,6 +12409,37 @@ function lunara_output_review_layout_guardrail_css() {
         padding-right: clamp(22px, 3vw, 54px) !important;
     }
 
+    /* Centre the review page: the cap above leaves 48px spare, and the
+       full-bleed rules zero the margins, which parked all of it on the right.
+       Auto margins split it evenly. On phones the page takes the full width
+       and its own padding gives the equal gutters. (3.2.94) */
+    html body.single-review .lunara-review-single-page.lunara-review-single-page {
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    @media (max-width: 760px) {
+        html body.single-review .lunara-review-single-page.lunara-review-single-page {
+            max-width: 100% !important;
+        }
+    }
+
+    /* The article's one grid track grew to fit its widest section (1180px
+       in a 1155px article at 1280px), spilling the overflow to the right.
+       Hold the track to the article and the sections to the track. (3.2.94) */
+    html body.single-review .lunara-review-single-page article.lunara-review-single {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    html body.single-review .lunara-review-single-page .lunara-review-single-hero,
+    html body.single-review .lunara-review-single-page .lunara-review-single-body,
+    html body.single-review .lunara-review-single-page .lunara-review-single-debrief-section,
+    html body.single-review .lunara-review-single-page .lunara-review-related {
+        max-width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
     @media (min-width: 760px) {
         body.single-review .lunara-review-single-body-grid {
             display: grid !important;

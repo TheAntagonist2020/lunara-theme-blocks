@@ -38,6 +38,14 @@ $check( false !== strpos( $css, 'a.lunara-review-single-director-link' ), 'The d
 // 4. No empty rail: it renders only with a Ledger or Dossier card to show.
 $check( false !== strpos( $template, 'if ( $show_ledger_card || $dossier_movie_id > 0 ) :' ), 'The rail must not render as an empty box.' );
 
+// 5. The review page is centred: equal space left and right at every width.
+$functions = $read( 'functions.php' );
+$check( false !== strpos( $functions, "html body.single-review .lunara-review-single-page.lunara-review-single-page {\n        margin-left: auto !important;\n        margin-right: auto !important;" ), 'The review page wrapper must be centred.' );
+$check( false !== strpos( $functions, "@media (max-width: 760px) {\n        html body.single-review .lunara-review-single-page.lunara-review-single-page {\n            max-width: 100% !important;" ), 'On phones the review page must use the full width.' );
+
+$check( false !== strpos( $functions, "article.lunara-review-single {\n        grid-template-columns: minmax(0, 1fr) !important;" ), 'The article grid track must not outgrow the article.' );
+$check( false !== strpos( $functions, "html body.single-review .lunara-review-single-page .lunara-review-related {\n        max-width: 100% !important;\n        margin-left: auto !important;" ), 'Review sections must be held to the track and centred.' );
+
 if ( $failures ) {
 	fwrite( STDERR, "Review page trim contract failed:\n- " . implode( "\n- ", $failures ) . "\n" );
 	exit( 1 );
