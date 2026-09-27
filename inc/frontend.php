@@ -4280,70 +4280,7 @@ if ( ! function_exists( 'lunara_render_newsletter_signup' ) ) {
 
 // lunara-review-share-strip-css moved to assets/css/lunara-review-single.css.
 
-/**
- * Single Review owned share strip behavior.
- */
-function lunara_output_review_share_strip_script() {
-    if ( is_admin() || is_feed() || ! is_singular( 'review' ) ) {
-        return;
-    }
-    ?>
-    <script id="lunara-review-share-strip-js">
-    (function() {
-        var buttons = document.querySelectorAll('[data-lunara-copy-share]');
-        if (!buttons.length) {
-            return;
-        }
-
-        buttons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                var url = button.getAttribute('data-share-url') || window.location.href;
-                var strip = button.closest('.lunara-review-share-strip');
-                var status = strip ? strip.querySelector('.lunara-review-share-status') : null;
-                var setStatus = function(message) {
-                    if (status) {
-                        status.textContent = message;
-                    }
-                };
-                var markCopied = function() {
-                    button.classList.add('is-copied');
-                    button.textContent = 'Copied';
-                    setStatus('Link copied.');
-                    window.setTimeout(function() {
-                        button.classList.remove('is-copied');
-                        button.textContent = 'Copy Link';
-                        setStatus('');
-                    }, 1800);
-                };
-                var fallbackCopy = function() {
-                    var input = document.createElement('textarea');
-                    input.value = url;
-                    input.setAttribute('readonly', 'readonly');
-                    input.style.position = 'fixed';
-                    input.style.left = '-9999px';
-                    document.body.appendChild(input);
-                    input.select();
-                    try {
-                        document.execCommand('copy');
-                        markCopied();
-                    } catch (error) {
-                        setStatus('Copy failed.');
-                    }
-                    document.body.removeChild(input);
-                };
-
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(url).then(markCopied).catch(fallbackCopy);
-                } else {
-                    fallbackCopy();
-                }
-            });
-        });
-    }());
-    </script>
-    <?php
-}
-add_action( 'wp_footer', 'lunara_output_review_share_strip_script', 100 );
+// Review share strip script retired in 3.2.94 with the share card.
 
 // lunara-review-related-retention-css moved to assets/css/lunara-review-single.css.
 

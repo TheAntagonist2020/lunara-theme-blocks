@@ -152,7 +152,6 @@ if ( ! function_exists( 'lunara_add_post_editorial_meta_box' ) ) {
         $card_image      = get_post_meta( $post->ID, '_lunara_review_card_image', true );
         $hero_banner     = get_post_meta( $post->ID, '_lunara_review_hero_banner', true );
         $hide_standfirst = get_post_meta( $post->ID, '_lunara_review_hide_standfirst', true );
-        $archive_label   = get_post_meta( $post->ID, '_lunara_review_archive_cta_label', true );
         $archive_url     = get_post_meta( $post->ID, '_lunara_review_archive_url_override', true );
         $hide_where             = get_post_meta( $post->ID, '_lunara_review_hide_where_card', true );
         $hide_details           = get_post_meta( $post->ID, '_lunara_review_hide_details_card', true );
@@ -208,13 +207,9 @@ if ( ! function_exists( 'lunara_add_post_editorial_meta_box' ) ) {
         </p>
         <hr>
         <p>
-            <label for="lunara_review_archive_cta_label"><strong>Browse Reviews CTA Label</strong></label><br>
-            <input type="text" name="lunara_review_archive_cta_label" id="lunara_review_archive_cta_label" value="<?php echo esc_attr( $archive_label ); ?>" style="width:100%;">
-        </p>
-        <p>
-            <label for="lunara_review_archive_url_override"><strong>Browse Reviews CTA URL Override</strong></label><br>
+            <label for="lunara_review_archive_url_override"><strong>Reviews Archive URL Override</strong></label><br>
             <input type="url" name="lunara_review_archive_url_override" id="lunara_review_archive_url_override" value="<?php echo esc_attr( $archive_url ); ?>" style="width:100%;">
-            <small>Send the rail button somewhere more specific than the main reviews archive.</small>
+            <small>Where "Open Reviews" under More Lunara Criticism points, instead of the main reviews archive.</small>
         </p>
         <p>
             <label>

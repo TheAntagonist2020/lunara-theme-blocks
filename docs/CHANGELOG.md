@@ -11,6 +11,32 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-27 — Theme 3.2.94: single reviews lose the share card and the rail buttons
+
+Dalton circled the bottom of a review, the "Share File / Put this review in circulation" card and the Browse Reviews and Director Archive buttons, and asked to remove them or move them into the sidebar. Reviews have no sidebar any more: the site's Additional CSS (the 2026-09-21 "LUNARA review layout fix") puts them in one centred 760px column and drops the rail below the article. On most reviews the rail held nothing visible but those two buttons, because the theme hides Where to Watch and Review Details on reviews. So the three blocks were removed, not moved.
+
+- **`single-review.php`:**
+  - No share card.
+  - No rail buttons, so the `_lunara_review_archive_cta_label` read goes.
+  - The rail renders only when a Ledger or Dossier card exists, so it never leaves an empty box plus the column's 40px row gap.
+- **The director archive stays one click away.** The hero's "2026 / Zach Cregger" line now links the director's name to their archive, using the lookup the Director Archive button used. It was the page's only link there. Styled as a quiet underline that turns gold on hover (`a.lunara-review-single-director-link`).
+- **Dead code removed:**
+  - `lunara_render_review_share_strip()`;
+  - the copy-link footer script and its click listeners (`lunara_output_review_share_strip_script`);
+  - the share card CSS;
+  - the Customizer "Archive Button Label" and "Director Button Label" controls;
+  - the review editor's "Browse Reviews CTA Label" input.
+- **Kept on purpose:**
+  - the stored `_lunara_review_archive_cta_label` meta and its API field maps, so no data is lost;
+  - the URL override, now labelled "Reviews Archive URL Override", because it still steers "Open Reviews" under More Lunara Criticism;
+  - the rule hiding Jetpack's sharing row on reviews.
+- **The Additional CSS needs no change.** Its two `.lunara-review-single-rail-actions` lines now match nothing.
+- **Tests:**
+  - New `tests/review-page-trim-contract.php`: 11 checks, all failing on `main` before the change.
+  - The 79 contract tests that read the touched files have the same 36 failures on `main` and after the change. Every one of them was already failing, most because they pin Theme 3.2.81.
+
+---
+
 ## 2026-09-25 — Theme 3.2.93: "Full Ledger" opens the Oscar Ledger Explorer
 
 Batch 3 of the re-scoped Explorer plan, pushed straight to `main` on Dalton's go (*"Go go go"*). Before this, every "Full Ledger" link opened the in-page research table (`/oscars/?view=table#oscars-research`). They now open the Explorer that Oscars Ledger 2.8.1 serves at `/oscars/explore/`.
