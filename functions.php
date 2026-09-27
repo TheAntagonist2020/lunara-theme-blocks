@@ -12426,16 +12426,27 @@ function lunara_output_review_layout_guardrail_css() {
 
     /* The article's one grid track grew to fit its widest section (1180px
        in a 1155px article at 1280px), spilling the overflow to the right.
-       Hold the track to the article and the sections to the track. (3.2.94) */
+       Hold the track to the article, and each section to the smaller of the
+       track and its own design width, centred. (3.2.94) */
     html body.single-review .lunara-review-single-page article.lunara-review-single {
         grid-template-columns: minmax(0, 1fr) !important;
     }
 
     html body.single-review .lunara-review-single-page .lunara-review-single-hero,
-    html body.single-review .lunara-review-single-page .lunara-review-single-body,
-    html body.single-review .lunara-review-single-page .lunara-review-single-debrief-section,
+    html body.single-review .lunara-review-single-page .lunara-review-single-body {
+        max-width: min(100%, 1180px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    html body.single-review .lunara-review-single-page .lunara-review-single-debrief-section {
+        max-width: min(100%, 1060px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
     html body.single-review .lunara-review-single-page .lunara-review-related {
-        max-width: 100% !important;
+        max-width: min(100%, 1120px) !important;
         margin-left: auto !important;
         margin-right: auto !important;
     }

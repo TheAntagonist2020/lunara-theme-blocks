@@ -44,7 +44,9 @@ $check( false !== strpos( $functions, "html body.single-review .lunara-review-si
 $check( false !== strpos( $functions, "@media (max-width: 760px) {\n        html body.single-review .lunara-review-single-page.lunara-review-single-page {\n            max-width: 100% !important;" ), 'On phones the review page must use the full width.' );
 
 $check( false !== strpos( $functions, "article.lunara-review-single {\n        grid-template-columns: minmax(0, 1fr) !important;" ), 'The article grid track must not outgrow the article.' );
-$check( false !== strpos( $functions, "html body.single-review .lunara-review-single-page .lunara-review-related {\n        max-width: 100% !important;\n        margin-left: auto !important;" ), 'Review sections must be held to the track and centred.' );
+foreach ( array( '.lunara-review-single-body {' => '1180px', '.lunara-review-single-debrief-section {' => '1060px', '.lunara-review-related {' => '1120px' ) as $section => $cap ) {
+	$check( false !== strpos( $functions, "html body.single-review .lunara-review-single-page {$section}\n        max-width: min(100%, {$cap}) !important;\n        margin-left: auto !important;\n        margin-right: auto !important;" ), "Review section {$section} must keep its {$cap} design width, fit the track, and centre." );
+}
 
 if ( $failures ) {
 	fwrite( STDERR, "Review page trim contract failed:\n- " . implode( "\n- ", $failures ) . "\n" );
