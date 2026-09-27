@@ -31,8 +31,19 @@ Dalton circled the bottom of a review, the "Share File / Put this review in circ
   - the URL override, now labelled "Reviews Archive URL Override", because it still steers "Open Reviews" under More Lunara Criticism;
   - the rule hiding Jetpack's sharing row on reviews.
 - **The Additional CSS needs no change.** Its two `.lunara-review-single-rail-actions` lines now match nothing.
+- **Reviews are centred.** Dalton: *"equal amounts of negative space on the left side and the right side."* Measured, the whole review sat left of centre:
+  - 316px left against 364px right at 1440, and 22px against 70px on a phone.
+  - The cause is in the `lunara-review-layout-guardrail` style in `functions.php`. It caps the page at `min(1480px, 100vw - 48px)` but never centred it, and the full-bleed rules zero its margins, so all 48px sat on the right.
+  - Between 761 and 1439px the article's one grid track also grew to fit its 1180px sections, spilling the overflow right.
+- **The centring fix, in the same guardrail:**
+  - the page takes auto margins, and runs full width on phones inside its own 22px padding;
+  - the article track is held with `minmax(0, 1fr)`;
+  - each section takes the smaller of the track and its design width (hero and body 1180px, Debrief 1060px, related 1120px) and centres.
+  - A first cut used a bare `max-width: 100%`, which lifted the Debrief and related caps. That was caught in measurement and corrected before this entry.
+  - Verified on the live Resident Evil and Dog Stars reviews: all 80 section measurements centred at 1440, 1280, 1100, 1000, 900, 820, 600 and 390px.
+- **The title line keeps its space.** The hero's meta line dropped the plain space before the new director link ("2026 /Zach Cregger"); non-breaking spaces fix it.
 - **Tests:**
-  - New `tests/review-page-trim-contract.php`: 11 checks, all failing on `main` before the change.
+  - New `tests/review-page-trim-contract.php`: the trim, the director link, the no-empty-rail rule and the centring rules. Every check fails on `main` before the change.
   - The 79 contract tests that read the touched files have the same 36 failures on `main` and after the change. Every one of them was already failing, most because they pin Theme 3.2.81.
 
 ---
