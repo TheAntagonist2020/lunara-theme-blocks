@@ -219,7 +219,7 @@ if ( have_posts() ) :
                                 $review_meta_year = trim( (string) get_post_meta( $post_id, '_lunara_year', true ) );
                                 ?>
                                 <?php if ( '' !== $director_url && '' !== $director ) : ?>
-                                    <span><?php echo '' !== $review_meta_year ? esc_html( $review_meta_year ) . ' / ' : ''; ?><a class="lunara-review-single-director-link" href="<?php echo esc_url( $director_url ); ?>"><?php echo esc_html( $director ); ?></a></span>
+                                    <span><?php echo '' !== $review_meta_year ? esc_html( $review_meta_year ) . '&nbsp;/&nbsp;' : ''; // Non-breaking: the meta line lays its pieces out in a way that drops plain spaces before the link. ?><a class="lunara-review-single-director-link" href="<?php echo esc_url( $director_url ); ?>"><?php echo esc_html( $director ); ?></a></span>
                                 <?php else : ?>
                                     <span><?php echo esc_html( $review_meta_line ); ?></span>
                                 <?php endif; ?>
