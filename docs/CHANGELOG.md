@@ -11,6 +11,24 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-29 — Theme 3.2.96: the Pair It With thread, and readable cards on phones
+
+Dalton chose "the end of every review" as the next place for the Debrief's motion. It was also where the site's most-read Debrief section was broken on phones.
+
+- **Fixed: Pair It With cards on phones (≤560px), live on every review.**
+  - Measured on the live Hope review at 390px, the card text had about 100px of width: "Counter-Program" broke into four lines and titles were clipped ("Under the Ski…"). The section was 3,844px tall.
+  - Causes: the Customizer's Additional CSS pads the card body 28px a side at every width; `body.single-review article p` inflates the role label to 18px; and the theme's phone rule gives the poster a 116px column.
+  - The fix, in `lunara-review-components.css` at ≤560px: an 84px poster sits beside the role and title, and the note and chips span the full card. The role returns to 0.66rem.
+  - Selectors outrank the Customizer rule (0,3,3), so the Customizer is not edited. Desktop is unchanged.
+  - Measured result: 3,844 → 1,916px (Hope) and 4,076 → 1,949px (Resident Evil), with no horizontal scroll.
+- **The thread.** `assets/js/lunara-pair-thread.js` (new, deferred, single reviews only) draws a gold line from the "Pair It With" heading through the three films as the reader scrolls.
+  - Each film's node lights in its role colour (gold, rust, blue) as the line reaches it, and its card rises into place.
+  - The line never retracts.
+  - Stacked cards get a vertical thread in the left gutter; cards side by side get a horizontal one. There is no thread when there is no gutter.
+  - Without JavaScript the cards render as before. Under reduced motion everything is drawn and shown at once.
+  - A ResizeObserver re-lays the thread after spoiler reveals and late posters.
+  - Styles are in `lunara-review-components.css`, which single reviews already load.
+
 ## 2026-09-29 — Theme 3.2.95: the Debrief constellation, and the canon goes private
 
 Dalton, on the Debrief page's canon: *"I actually might want that to just stay behind the scenes because I feel like that shows me being repetitive."* And on the page itself: *"there's got to be a way to animate this in a new and exciting way."*

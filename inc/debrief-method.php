@@ -1205,3 +1205,29 @@ if ( ! function_exists( 'lunara_debrief_method_render_canon_widget' ) ) {
 		echo lunara_debrief_method_canon_html( lunara_debrief_method_index(), lunara_debrief_method_settings() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- every value escaped in the builder.
 	}
 }
+
+if ( ! function_exists( 'lunara_enqueue_pair_thread_script' ) ) {
+	/**
+	 * The Pair It With thread on single reviews (3.2.96): a gold line drawn
+	 * through the three films as the reader arrives. Styles live in
+	 * lunara-review-components.css, which single reviews already load.
+	 */
+	function lunara_enqueue_pair_thread_script() {
+		if ( is_admin() || ! is_singular( 'review' ) || ! function_exists( 'lunara_resolve_theme_asset' ) ) {
+			return;
+		}
+		$asset = lunara_resolve_theme_asset( 'assets/js/lunara-pair-thread.js' );
+		if ( empty( $asset['uri'] ) ) {
+			return;
+		}
+		wp_enqueue_script(
+			'lunara-pair-thread',
+			$asset['uri'],
+			array(),
+			lunara_theme_asset_version( $asset['path'] ),
+			true
+		);
+		wp_script_add_data( 'lunara-pair-thread', 'strategy', 'defer' );
+	}
+	add_action( 'wp_enqueue_scripts', 'lunara_enqueue_pair_thread_script', 110 );
+}

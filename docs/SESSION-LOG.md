@@ -25,6 +25,53 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-29 (evening) — Theme 3.2.96 candidate: the Pair It With thread; phone cards fixed
+
+### Headline
+
+Dalton loved the constellation (*"finally seeing dynamic content on my website"*). He chose two next steps:
+1. the end of every review;
+2. the Oscar Ledger.
+
+He rejected surfacing "recommended in N Debriefs" on film pages because it would look *"formulaic and overly reliant on certain titles"*. That idea is dropped; the canon stays private.
+
+Measuring the review ending live turned up a real defect first: on phones the Pair It With cards were unreadable on every review. Theme 3.2.96 fixes them and adds the thread, a gold line drawn through the three films as the reader scrolls. Nothing is merged or deployed.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Hope review at 390px, live | Card text 158px wide including 28px side padding (about 100px of text). Role label 18.4px with 0.26em tracking. Title clamped to "Under the Ski…". Section 3,844px tall |
+| Rule trace, live | The Customizer's Additional CSS sets `.lunara-pair-card-body` padding to 20px 28px at every width. `body.single-review article p` sets the role to 1.15rem. The theme's ≤680px rule sets `116px minmax(0,1fr)` |
+
+### What shipped and why
+
+Code detail: `docs/CHANGELOG.md` → 3.2.96.
+- **The fix is theme-side.** It uses more specific selectors instead of editing the Customizer, which is Dalton's.
+- **Phones only.** Desktop has the same inflated role label, but it reads as intended there, so it is left alone.
+- **The thread uses the cards themselves** as the constellation's satellites instead of adding a second poster set. The notes, IMDb links and Oscar pills stay the content.
+
+### Gate ledger
+
+| Gate | Result |
+| --- | --- |
+| Live-page injection harness | Real production HTML, CSS and posters fetched through curl, with the new CSS and JS injected: Hope and Resident Evil at 390 and 1280 |
+| Phone fix | Hope 3,844 → 1,916px; Resident Evil 4,076 → 1,949px. The role fits one line at 27px tall. No horizontal scroll |
+| Thread | Nodes light in order with scroll. A full scroll reaches progress 1.0 with 3/3 lit. Reduced motion: no animation class, 3/3 shown, progress 1.0 |
+| `article-layout-browser-runtime` / `footer-recovery-layout-browser-runtime` | 444 / 330 assertions pass (global Playwright via NODE_PATH) |
+| `debrief-method-runtime` / `reviews-opening-runtime` | 90 / 157 pass |
+| `php -l`, `node --check`, `git diff --check` | Pass |
+| Not runnable here | `reviews-archive-first-paint` and `reviews-archive-text-led-cards` need `puppeteer`; `reviews-opening-browser` needs Chrome at `/opt/google/chrome`. All three fail identically on an untouched `origin/main` worktree |
+
+### Logged, not fixed
+
+- The harness occasionally drops a poster fetch (curl connection reset). This is a test artefact; those posters serve on production.
+- Desktop role labels are inflated by the same `article p` rule. Left as is by design; revisit only if Dalton wants the smaller label.
+
+### Whose move is next
+
+Dalton's: merge the PR (auto-deploys). The agent then runs `bash tests/tools/lunara-canary-verify.sh 3.2.96` and rebuilds the hatch. After that, the next build is Oscar Ledger motion in the `lunara-plugin-oscars-ledger` repo.
+
 ## 2026-09-29 (later) — Theme 3.2.95 live: the Debrief constellation, canary GO
 
 ### Headline
