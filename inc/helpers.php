@@ -18,7 +18,7 @@ function lunara_home_pairing_desk_copy_defaults() {
     return array(
         'kicker' => __( 'The Lunara Method', 'lunara-film' ),
         'title'  => __( 'Every review ends with three more films.', 'lunara-film' ),
-        'copy'   => __( 'A Theme Echo, a Counter-Program, and a Career Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm. No other film desk builds this rail.', 'lunara-film' ),
+        'copy'   => __( 'An Echo, a Counter, and a Context close every Lunara review — the next three moves after the credits, argued by a critic, not served by an algorithm. No other film desk builds this rail.', 'lunara-film' ),
     );
 }
 

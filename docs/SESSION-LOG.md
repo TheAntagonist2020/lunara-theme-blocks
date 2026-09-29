@@ -25,6 +25,91 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-29 (evening) — Theme 3.2.96 candidate: the Pair It With thread; phone cards fixed
+
+### Headline
+
+Dalton loved the constellation (*"finally seeing dynamic content on my website"*). He chose two next steps:
+1. the end of every review;
+2. the Oscar Ledger.
+
+He rejected surfacing "recommended in N Debriefs" on film pages because it would look *"formulaic and overly reliant on certain titles"*. That idea is dropped; the canon stays private.
+
+Measuring the review ending live turned up a real defect first: on phones the Pair It With cards were unreadable on every review. Theme 3.2.96 fixes them and adds the thread, a gold line drawn through the three films as the reader scrolls. Nothing is merged or deployed.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Hope review at 390px, live | Card text 158px wide including 28px side padding (about 100px of text). Role label 18.4px with 0.26em tracking. Title clamped to "Under the Ski…". Section 3,844px tall |
+| Rule trace, live | The Customizer's Additional CSS sets `.lunara-pair-card-body` padding to 20px 28px at every width. `body.single-review article p` sets the role to 1.15rem. The theme's ≤680px rule sets `116px minmax(0,1fr)` |
+
+### What shipped and why
+
+Code detail: `docs/CHANGELOG.md` → 3.2.96.
+- **The fix is theme-side.** It uses more specific selectors instead of editing the Customizer, which is Dalton's.
+- **Phones only.** Desktop has the same inflated role label, but it reads as intended there, so it is left alone.
+- **The thread uses the cards themselves** as the constellation's satellites instead of adding a second poster set. The notes, IMDb links and Oscar pills stay the content.
+
+**Rename.** Dalton: *"we could just call it counter. Honestly all three of them could stand and just have one word names."* He chose **Echo · Counter · Context**, applied everywhere. The rename is in theme 3.2.96 and Core 0.8.13 ([lunara-plugin-core#36](https://github.com/TheAntagonist2020/lunara-plugin-core/pull/36)). Stored keys are unchanged, and every parser reads both vocabularies.
+
+### Gate ledger
+
+| Gate | Result |
+| --- | --- |
+| Live-page injection harness | Real production HTML, CSS and posters fetched through curl, with the new CSS and JS injected: Hope and Resident Evil at 390 and 1280 |
+| Phone fix | Hope 3,844 → 1,916px; Resident Evil 4,076 → 1,949px. The role fits one line at 27px tall. No horizontal scroll |
+| Thread | Nodes light in order with scroll. A full scroll reaches progress 1.0 with 3/3 lit. Reduced motion: no animation class, 3/3 shown, progress 1.0 |
+| `article-layout-browser-runtime` / `footer-recovery-layout-browser-runtime` | 444 / 330 assertions pass (global Playwright via NODE_PATH) |
+| `debrief-method-runtime` / `reviews-opening-runtime` | 90 / 157 pass |
+| Rename, theme | debrief-method 90, site-studio-debrief-method 364, reviews-opening 157, control-desk automation and handoffs (12), Site Studio foundation, editorial and private-preview, film-year-label, image-delivery 28, `debrief-public-renderer` harness 12/12: all pass. The autofill patterns were checked against old and new headings, bolded and plain |
+| Rename, Core 0.8.13 | All 24 regression suites pass. A new parser check proves one-word headings (bold and plain) parse identically to the old ones |
+| `php -l`, `node --check`, `git diff --check` | Pass |
+| Not runnable here | `reviews-archive-first-paint` and `reviews-archive-text-led-cards` need `puppeteer`; `reviews-opening-browser` needs Chrome at `/opt/google/chrome`. All three fail identically on an untouched `origin/main` worktree |
+
+### Logged, not fixed
+
+- The harness occasionally drops a poster fetch (curl connection reset). This is a test artefact; those posters serve on production.
+- Desktop role labels are inflated by the same `article p` rule. Left as is by design; revisit only if Dalton wants the smaller label.
+
+### Whose move is next
+
+Dalton's: merge the PR (auto-deploys). The agent then runs `bash tests/tools/lunara-canary-verify.sh 3.2.96` and rebuilds the hatch. After that, the next build is Oscar Ledger motion in the `lunara-plugin-oscars-ledger` repo.
+
+## 2026-09-29 (later) — Theme 3.2.95 live: the Debrief constellation, canary GO
+
+### Headline
+
+Dalton merged [PR #214](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/214) himself (merge `07b31de`, 11:34 UTC). Theme auto-deploy carried it live in under a minute. The Debrief constellation, the private canon and the title fix are all confirmed on production.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| `lunara-build` on `/debrief/` | `3.2.95+20260929-113452`, first seen 11:35:06 UTC |
+| Canary `lunara-canary-verify.sh 3.2.95` | **GO**. Three cache-separated reads agree; the Journal and Oscars sentinels report LIVE_COHERENT |
+| `/debrief/` markup | 6 constellation slides; `lunara-debrief-orbit.js` enqueued; no canon markup; no "Distinct titles" |
+| Constellation CSS | Present in the Jetpack concat bundle `_jb_static/??88063c4d5f`: 8 slide rules and the `lunara-orbit-signal` keyframes. The page HTML never names the sheet, because concatenation hides it |
+| Under the Skin, `/debrief/` | Title "Under the Skin" in the constellation and Recent Debriefs |
+| Under the Skin, Hope review card | Title "Under the Skin"; the note begins "The opposite argument about how to film something not from here…" |
+| Rollback hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on `07b31de`, tree `c55bf394…` verified, pushed with lease |
+
+Not verified: a live browser render with real posters, because the container's browser cannot reach production through the proxy. Rendering was verified pre-merge on a fixture of the same 8 live Debriefs; see the entry below.
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-theme-blocks | `07b31de` | Merge of PR #214: Theme 3.2.95 |
+| lunara-theme-blocks | hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on `07b31de` |
+| lunara-theme-blocks | this record | Live verification record. Rebuild the hatch again on its merge |
+
+### Whose move is next
+
+Dalton's. Suggested next steps:
+- rewrite the Debrief explainer copy in his voice (Site Studio → Reviews → Debrief page);
+- consider a compact constellation for each review's own Pair It With section.
+
 ## 2026-09-29 — Theme 3.2.95 candidate: the Debrief constellation; the canon goes private
 
 ### Headline

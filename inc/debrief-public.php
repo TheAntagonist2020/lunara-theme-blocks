@@ -384,9 +384,9 @@ if ( ! function_exists( 'lunara_debrief_render_canonical_pairing_cards' ) ) {
      */
     function lunara_debrief_render_canonical_pairing_cards( $review_id, $pairings ) {
         $roles = array(
-            'theme_echo' => array( 'slug' => 'theme', 'label' => __( 'Theme Echo', 'lunara-film' ) ),
-            'counter_program' => array( 'slug' => 'counter', 'label' => __( 'Counter-Program', 'lunara-film' ) ),
-            'career_context' => array( 'slug' => 'career', 'label' => __( 'Career Context', 'lunara-film' ) ),
+            'theme_echo' => array( 'slug' => 'theme', 'label' => __( 'Echo', 'lunara-film' ) ),
+            'counter_program' => array( 'slug' => 'counter', 'label' => __( 'Counter', 'lunara-film' ) ),
+            'career_context' => array( 'slug' => 'career', 'label' => __( 'Context', 'lunara-film' ) ),
         );
         $rows  = array();
 
@@ -496,9 +496,9 @@ if ( ! function_exists( 'lunara_debrief_render_legacy_pairing_cards' ) ) {
         }
 
         $legacy_rows = array(
-            array( 'slug' => 'theme', 'label' => __( 'Theme Echo', 'lunara-film' ), 'value' => get_post_meta( $review_id, '_lunara_theme_echo', true ) ),
-            array( 'slug' => 'counter', 'label' => __( 'Counter-Program', 'lunara-film' ), 'value' => get_post_meta( $review_id, '_lunara_counter_program', true ) ),
-            array( 'slug' => 'career', 'label' => __( 'Career Context', 'lunara-film' ), 'value' => $career ),
+            array( 'slug' => 'theme', 'label' => __( 'Echo', 'lunara-film' ), 'value' => get_post_meta( $review_id, '_lunara_theme_echo', true ) ),
+            array( 'slug' => 'counter', 'label' => __( 'Counter', 'lunara-film' ), 'value' => get_post_meta( $review_id, '_lunara_counter_program', true ) ),
+            array( 'slug' => 'career', 'label' => __( 'Context', 'lunara-film' ), 'value' => $career ),
         );
         $rows = array();
 
