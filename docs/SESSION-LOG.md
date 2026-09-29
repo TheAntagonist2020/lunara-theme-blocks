@@ -34,7 +34,7 @@ Dalton merged [PR #215](https://github.com/TheAntagonist2020/lunara-theme-blocks
 - the gold thread draws through them as the reader scrolls;
 - the cards are readable on phones.
 
-Core 0.8.13 ([lunara-plugin-core#36](https://github.com/TheAntagonist2020/lunara-plugin-core/pull/36)), which renames the editor labels, is green and still open. It needs Dalton's merge and a manual Deploy.
+Core 0.8.13 ([lunara-plugin-core#36](https://github.com/TheAntagonist2020/lunara-plugin-core/pull/36)), which renames the editor labels, was merged by Dalton at 12:00:40 UTC. **It went live with no Deploy click, so the Lunara Core connection auto-deploys too.** Earlier entries call Core's auto-deploy "unconfirmed"; this entry supersedes that.
 
 ### Verified live state
 
@@ -45,6 +45,7 @@ Core 0.8.13 ([lunara-plugin-core#36](https://github.com/TheAntagonist2020/lunara
 | Hope review in Chromium, live assets, 390px | Thread present and animated; 3/3 nodes lit after a full scroll; section 1,916px tall (was 3,844); each role one line (14px); no horizontal scroll |
 | Same at 1280px | Thread present, 3/3 lit, layout unchanged (1,563px), no horizontal scroll |
 | Rollback hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on `1b38f97`, tree `c55bf394…` verified, pushed with lease |
+| Live Core plugin file `wp-content/plugins/lunara-core/assets/js/lunara-review-draft-import-admin.js` | Two cache-busted reads carry `theme_echo: 'Echo'` and `career_context: 'Context'`: Core 0.8.13 is live about 2 minutes after its merge |
 
 ### Commit ledger
 
@@ -52,12 +53,11 @@ Core 0.8.13 ([lunara-plugin-core#36](https://github.com/TheAntagonist2020/lunara
 | --- | --- | --- |
 | lunara-theme-blocks | `1b38f97` | Merge of PR #215: Theme 3.2.96 |
 | lunara-theme-blocks | hatch `c7e62f4` | Rebuilt on `1b38f97` |
-| lunara-plugin-core | `ed7ea52` (PR #36, open) | Core 0.8.13 rename; CI lint green |
+| lunara-plugin-core | `ed7ea52` via PR #36 (merged) | Core 0.8.13 rename; CI lint green; auto-deployed |
 
 ### Whose move is next
 
 Dalton's:
-- merge and deploy Core 0.8.13;
 - optionally, check his saved Site Studio Debrief copy for the old names.
 
 Next build: motion for the Oscar Ledger (`lunara-plugin-oscars-ledger`). Rebuild the hatch after this record merges.
