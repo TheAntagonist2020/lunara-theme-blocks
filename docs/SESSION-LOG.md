@@ -25,6 +25,43 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-29 (night) — Theme 3.2.96 live: Echo · Counter · Context, the thread, readable phone cards
+
+### Headline
+
+Dalton merged [PR #215](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/215) (merge `1b38f97`, 11:59 UTC), and auto-deploy carried it live within a minute. On production:
+- every review's Pair It With cards read Echo, Counter and Context;
+- the gold thread draws through them as the reader scrolls;
+- the cards are readable on phones.
+
+Core 0.8.13 ([lunara-plugin-core#36](https://github.com/TheAntagonist2020/lunara-plugin-core/pull/36)), which renames the editor labels, is green and still open. It needs Dalton's merge and a manual Deploy.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Canary `lunara-canary-verify.sh 3.2.96` | **GO**. Three reads agree on `3.2.96+20260929-120012`; the Journal and Oscars sentinels report LIVE_COHERENT |
+| Hope review HTML | Role labels are `Echo`, `Counter`, `Context`; no old names remain; `lunara-pair-thread.js` is enqueued |
+| Hope review in Chromium, live assets, 390px | Thread present and animated; 3/3 nodes lit after a full scroll; section 1,916px tall (was 3,844); each role one line (14px); no horizontal scroll |
+| Same at 1280px | Thread present, 3/3 lit, layout unchanged (1,563px), no horizontal scroll |
+| Rollback hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on `1b38f97`, tree `c55bf394…` verified, pushed with lease |
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-theme-blocks | `1b38f97` | Merge of PR #215: Theme 3.2.96 |
+| lunara-theme-blocks | hatch `c7e62f4` | Rebuilt on `1b38f97` |
+| lunara-plugin-core | `ed7ea52` (PR #36, open) | Core 0.8.13 rename; CI lint green |
+
+### Whose move is next
+
+Dalton's:
+- merge and deploy Core 0.8.13;
+- optionally, check his saved Site Studio Debrief copy for the old names.
+
+Next build: motion for the Oscar Ledger (`lunara-plugin-oscars-ledger`). Rebuild the hatch after this record merges.
+
 ## 2026-09-29 (evening) — Theme 3.2.96 candidate: the Pair It With thread; phone cards fixed
 
 ### Headline
