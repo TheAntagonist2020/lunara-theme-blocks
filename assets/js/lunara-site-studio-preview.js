@@ -18,7 +18,7 @@
 		'journal-single': ['hero', 'article', 'gallery'],
 		'utility-search': ['search-command', 'direct-matches', 'result-run', 'recovery'],
 		'utility-404': ['search-command', 'recovery'],
-		'debrief-method': ['hero', 'moves', 'why', 'specimen', 'desk', 'canon', 'recent', 'next'],
+		'debrief-method': ['hero', 'moves', 'why', 'specimen', 'desk', 'recent', 'next'],
 		'site-footer': ['footer']
 	};
 	function ownDataObject(value, keys) {

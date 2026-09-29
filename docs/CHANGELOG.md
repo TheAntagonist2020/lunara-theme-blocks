@@ -11,6 +11,32 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-29 — Theme 3.2.95: the Debrief constellation, and the canon goes private
+
+Dalton, on the Debrief page's canon: *"I actually might want that to just stay behind the scenes because I feel like that shows me being repetitive."* And on the page itself: *"there's got to be a way to animate this in a new and exciting way."*
+
+- **The constellation replaces the static featured Debrief.** The reviewed film sits at the centre, with its three pairings in a triangle around it: Theme Echo upper left, Counter-Program upper right, Career Context below.
+  - The film arrives first. Gold lines draw out to each pairing in turn, and each pairing lands as its line reaches it. A dashed rim then closes the triangle.
+  - After the draw, a halo breathes around the film, a glint travels outward along each line, and the pairings drift slightly.
+  - After a 7.2-second hold the next Debrief takes over. Tabs double as progress bars.
+- **What it cycles through.** The featured review leads (the existing Site Studio "Featured Review ID" setting still pins it). The newest other reviews with all three pairings follow, up to six in all. A pinned review older than the recent window, or with fewer than three pairings, still leads.
+- **Markup is server-rendered** in `lunara_debrief_method_orbit_html()`. Without JavaScript the first Debrief shows complete, with no lines and no controls.
+- **`assets/js/lunara-debrief-orbit.js`** (new, deferred, Debrief page only) measures poster centres and positions the lines. Lines are plain rotated `<span>`s, not SVG, so no sanitizer can strip them. It also runs the sequence.
+- **Autoplay pauses** off-screen, in a hidden tab, and on hover or keyboard focus. The Pause button stays paused until pressed again. Arrow keys move between tabs.
+- **Reduced motion:** lines are drawn at once, there is no autoplay, and the Pause button is hidden. The tabs still work.
+- **Layout:** below 760px the film sits on top and the three pairings in a row beneath it. From 760px it is the triangle, scaled 0.8 up to 980px. Captions sit on a dark backing so lines pass behind the text.
+- **The canon is private.**
+  - `page-debrief.php` no longer renders it, and the "Distinct titles" count is gone from the hero totals.
+  - The canon now lives in a WordPress dashboard widget, "The Debrief Canon (private)", for users who can edit posts. It shows the totals, including distinct films.
+  - The Site Studio canon settings are unchanged in shape and now drive that widget. Its toggle reads "Show on your WordPress dashboard (never public)".
+  - The `canon` preview marker is removed from all five copies of the section list: provider, registry, preview pilot, workspace JS and bridge JS.
+  - The canon's public CSS is removed.
+- **Fixed: a note leaking into a pairing's title.** "Under the Skin (2013). The opposite argument about how to film something not from here. Glazer gives you almost nothing" was showing as a title on the live `/debrief/` Recent Debriefs list. The shared parser splits only on a dash, so a note that follows the year with a full stop stayed in the title.
+  - `lunara_debrief_method_split_title_year()` now cuts at a full stop, colon, semicolon, "!" or "?" that follows a "(YYYY)" or "(Director, YYYY)" parenthetical.
+  - Titles containing a full stop ("Mr. Smith Goes to Washington (1939)") are untouched.
+  - The same fix goes into the shared parser, `lunara_parse_pair_it_with_value()` in `inc/debrief.php`, and its copy in the legacy `[lunara_debrief]` shortcode. When a dash-split still leaves "(YYYY). more" in the title, the tail moves to the front of the note, joined by an em dash, so no words are lost. The live Hope review's Pair It With card showed the same leaked title.
+- **The index cache moves to v3.** The payload shape is unchanged, but the stored titles are wrong, so the bump replaces them on deploy instead of after the 12-hour TTL. v2 joins the retired keys cleared on every flush.
+
 ## 2026-09-27 — Theme 3.2.94: single reviews lose the share card and the rail buttons
 
 Dalton circled the bottom of a review, the "Share File / Put this review in circulation" card and the Browse Reviews and Director Archive buttons, and asked to remove them or move them into the sidebar. Reviews have no sidebar any more: the site's Additional CSS (the 2026-09-21 "LUNARA review layout fix") puts them in one centred 760px column and drops the rail below the article. On most reviews the rail held nothing visible but those two buttons, because the theme hides Where to Watch and Review Details on reviews. So the three blocks were removed, not moved.

@@ -932,6 +932,12 @@ if ( ! function_exists( 'lunara_parse_pair_it_with_value' ) ) {
             $title = trim( $m4[1] );
             $note  = trim( $m4[2] );
         }
+        // A note that follows the year with a full stop, before a later dash, stays out of the title:
+        // "Under the Skin (2013). The opposite argument … — more" (3.2.95).
+        elseif ( '' !== $note && preg_match( '/^(.*?\(\d{4}\))\s*[.:;!?]+\s+(\S.*)$/u', $title, $m5 ) ) {
+            $title = trim( $m5[1] );
+            $note  = trim( $m5[2] ) . ' — ' . $note;
+        }
 
         $title_base = $title;
         $year       = '';
@@ -1577,6 +1583,10 @@ function lunara_debrief_shortcode( $atts ) {
     if ( '' === $note && preg_match( '/^(.*?\(\d{4}\))\s*[.:;\-\x{2013}\x{2014}]+\s*(.+)$/u', $title, $m4 ) ) {
         $title = trim( $m4[1] );
         $note  = trim( $m4[2] );
+    }
+    elseif ( '' !== $note && preg_match( '/^(.*?\(\d{4}\))\s*[.:;!?]+\s+(\S.*)$/u', $title, $m5 ) ) {
+        $title = trim( $m5[1] );
+        $note  = trim( $m5[2] ) . ' — ' . $note;
     }
 
     // 4) Pull year out of "Title (YYYY)" for smarter lookups & cleaner IMDb search queries.

@@ -378,7 +378,7 @@ if ( ! function_exists( 'lunara_site_studio_default_surfaces' ) ) {
 				'dependency_callback'   => 'lunara_site_studio_debrief_method_dependency',
 				'status_callback'       => 'lunara_site_studio_status_ready',
 				'danger_level'          => 'none',
-				'sections'              => array( 'hero', 'moves', 'why', 'specimen', 'desk', 'canon', 'recent', 'next' ),
+				'sections'              => array( 'hero', 'moves', 'why', 'specimen', 'desk', 'recent', 'next' ),
 				'classic_url'           => 'edit.php?post_type=page',
 				'renderer'              => '',
 			),

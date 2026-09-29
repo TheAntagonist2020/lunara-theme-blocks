@@ -17,7 +17,7 @@ function lunara_site_studio_debrief_method_preview_route() { return '/debrief/';
 function lunara_site_studio_debrief_method_spec() { return lunara_debrief_method_settings_spec(); }
 
 /** Sections the preview can select, in page order. */
-function lunara_site_studio_debrief_method_sections() { return array( 'hero', 'moves', 'why', 'specimen', 'desk', 'canon', 'recent', 'next' ); }
+function lunara_site_studio_debrief_method_sections() { return array( 'hero', 'moves', 'why', 'specimen', 'desk', 'recent', 'next' ); }
 
 /**
  * Available only while a published page sits at the preview route, so the
@@ -62,7 +62,7 @@ function lunara_site_studio_debrief_method_groups() {
 		'why'      => array( __( 'Why three', 'lunara-film' ), false, array( 'why' ) ),
 		'specimen' => array( __( 'Featured Debrief', 'lunara-film' ), false, array( 'specimen' ) ),
 		'desk'     => array( __( 'From the Desk', 'lunara-film' ), false, array( 'desk' ) ),
-		'canon'    => array( __( 'The Debrief Canon', 'lunara-film' ), false, array( 'canon' ) ),
+		'canon'    => array( __( 'The Debrief Canon (private)', 'lunara-film' ), false, array() ),
 		'recent'   => array( __( 'Recent Debriefs', 'lunara-film' ), false, array( 'recent' ) ),
 		'next'     => array( __( 'Closing links', 'lunara-film' ), false, array( 'next' ) ),
 	);
@@ -70,7 +70,7 @@ function lunara_site_studio_debrief_method_groups() {
 
 function lunara_site_studio_render_debrief_method_inspector( $state, $revisions ) {
 	$spec = lunara_site_studio_debrief_method_spec();
-	echo '<p>' . esc_html__( 'Edit the words, sections and counts of the Debrief page. The featured Debrief, the canon and the recent Debriefs update themselves from the reviews.', 'lunara-film' ) . '</p>';
+	echo '<p>' . esc_html__( 'Edit the words, sections and counts of the Debrief page. The animated Debriefs and the recent Debriefs update themselves from the reviews. The Debrief Canon is private: it appears only on your WordPress dashboard, never on the public page.', 'lunara-film' ) . '</p>';
 	foreach ( lunara_site_studio_debrief_method_groups() as $group => $meta ) {
 		if ( ! isset( $spec[ $group ], $state[ $group ] ) ) { continue; }
 		lunara_site_studio_render_details_open( $group, $meta[0], $meta[1], $meta[2] );
