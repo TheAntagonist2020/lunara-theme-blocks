@@ -25,6 +25,78 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-29 — Theme 3.2.95 candidate: the Debrief constellation; the canon goes private
+
+### Headline
+
+Dalton asked for two things on `/debrief/`. First, the Debrief Canon should *"stay behind the scenes because I feel like that shows me being repetitive."* Second, the page should be animated *"in a new and exciting way."* Theme 3.2.95 on `claude/sharp-curie-wtaszy` does both.
+- The canon and the "Distinct titles" count leave the public page. The canon becomes a private WordPress dashboard widget.
+- The static featured Debrief becomes an animated constellation. The reviewed film sits at the centre, gold lines draw out to its three pairings, a triangle closes around them, and it cycles through up to six Debriefs.
+- A live title defect found along the way is fixed: a pairing's note leaked into its title on the live Recent Debriefs list.
+
+A draft PR is open. Nothing is merged. Theme auto-deploy is on, so merging this is deploying it; that stays Dalton's call.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Live build (`/debrief/` meta) | `3.2.94+20260927-213901` |
+| Live `/debrief/` Recent Debriefs, 8 entries | All 8 are full trios. One title is defective: "Under the Skin (2013). The opposite argument about how to film something not from here. Glazer gives you almost nothing" |
+| 8 live review pages, pair cards | 8/8 review posters and 24/24 pairing posters resolve (used as the browser fixture) |
+
+### What shipped and why
+
+Code-level detail: `docs/CHANGELOG.md` → 3.2.95.
+
+- **Private, not deleted.** The canon's Site Studio settings keep their shape and still drive the list, now on the dashboard. Dalton keeps the editorial signal, and readers never see it.
+- **Distinct titles also left the hero.** Next to "films prescribed", that count invites the same arithmetic the canon did.
+- **The animation.**
+  - Lines are rotated `<span>`s positioned from measured poster centres. SVG was avoided because the page sanitizer has stripped `<use>` before.
+  - The first Debrief is complete without JavaScript.
+  - Reduced motion gets the finished picture instantly and no autoplay.
+- **The title fix bumps the index to v3.** The shape is the same, but the stored values are wrong, so the bump shows the correction on deploy rather than up to 12 hours later.
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-theme-blocks | merge of `origin/main` into `claude/sharp-curie-wtaszy` | Branch brought level with live 3.2.94 (clean merge) |
+| lunara-theme-blocks | this entry's commit | 3.2.95: constellation, private canon, title fix, v3 index |
+
+### Gate ledger
+
+| Gate | Result |
+| --- | --- |
+| `debrief-method-runtime` | 88 checks pass (was 75). New checks cover the constellation markup, the private canon widget, canon and distinct-title absence from the public page, the title-leak cases, and the v3 key |
+| `site-studio-debrief-method-runtime` | 364 checks pass, with the canon marker removed from every layer |
+| Related runtimes | film-year-label, image-delivery (28), reviews-opening (157), site-studio foundation, private-preview and editorial all pass. `debrief-public-renderer` harness: 12/12 flags |
+| `php -l` (5 files), `node --check` (3 files), `git diff --check` | Pass |
+| Chromium, real renderer, CSS and JS, fixture of the 8 live Debriefs with their real posters, at 390 / 820 / 1280 | No page errors and no horizontal scroll at any width. Autoplay advances after the hold, and the heading follows. Pause holds past a full cycle. A tab jumps to its Debrief. Reduced motion: no animation class, lines laid out, Pause hidden |
+| Visual review of frames at each width | Two layout bugs found and fixed before commit: base rules overriding the desktop triangle, and long captions widening posters. Lines no longer cross caption text |
+| PowerShell contracts | Not run (no `pwsh` in the container) |
+| Post-deploy canary | Not run; nothing deployed |
+
+### Corrections
+
+None. Earlier entries were accurate for their time.
+
+### Logged, not fixed
+
+- The shared parser (`lunara_parse_pair_it_with_value()` in `inc/debrief.php`) still splits a note from a title only on a dash. The review page's own Pair It With cards may show the same "Under the Skin (2013). …" title. Only the Debrief index was corrected here. Check the Hope review's card; the fix belongs in the shared parser.
+- The constellation fetches up to 24 posters on the first uncached render of `/debrief/`. The edge cache absorbs repeats; re-measure after deploy.
+
+### Punch-list carried forward
+
+| Item | Status | Whose call |
+| --- | --- | --- |
+| Merge the 3.2.95 PR (auto-deploys), then `bash tests/tools/lunara-canary-verify.sh 3.2.95` and rebuild the rollback hatch | Waiting | Dalton to say merge; agent runs the rest |
+| Rewrite the Debrief explainer copy in his voice (Site Studio → Reviews → Debrief page) | Open | Dalton |
+| Everything carried in the entries below | Stands | As listed there |
+
+### Whose move is next
+
+Dalton's: watch the constellation on the PR's branch, or say merge. After the merge the agent verifies 3.2.95 live and checks the Under the Skin title on both surfaces.
+
 ## 2026-09-27 — Theme 3.2.94 live: reviews lose the share card and rail buttons, and are centred; plugin uploads crash server-side
 
 ### Headline

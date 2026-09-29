@@ -10,8 +10,9 @@
  * Every word, section and count is a setting (inc/debrief-method.php), edited
  * in Site Studio → Reviews → Debrief page with a private preview. The page's
  * own block content renders in the "From the Desk" seat. Everything else is
- * live: the totals, the specimen, the most-prescribed films, and the recent
- * Debriefs are drawn from the reviews themselves.
+ * live: the totals, the animated constellation of Debriefs, and the recent
+ * Debriefs are drawn from the reviews themselves. The Debrief Canon is private
+ * (a dashboard widget, inc/debrief-method.php) and never renders here.
  *
  * @package Lunara_Film
  */
@@ -36,30 +37,24 @@ $debrief_content = trim( (string) apply_filters( 'the_content', get_the_content(
 $debrief_hero    = has_post_thumbnail( $debrief_page_id ) ? (string) get_the_post_thumbnail_url( $debrief_page_id, 'full' ) : '';
 $debrief_thesis  = (string) apply_filters( 'lunara_debrief_method_thesis', $debrief_settings['hero']['thesis'] );
 
-$debrief_specimen_id    = 0;
-$debrief_specimen_cards = '';
+// The featured Debrief leads the constellation; the newest full trios follow.
+$debrief_specimen_id = 0;
+$debrief_orbit       = array();
+$debrief_orbit_html  = '';
 if ( $debrief_settings['specimen']['show'] ) {
 	$debrief_specimen_id = lunara_debrief_method_specimen_id( $debrief_index, $debrief_settings['specimen']['review_id'] );
-	if ( $debrief_specimen_id && function_exists( 'lunara_render_pair_it_with_cards' ) ) {
-		$debrief_specimen_cards = trim( (string) lunara_render_pair_it_with_cards( $debrief_specimen_id ) );
+	if ( $debrief_specimen_id ) {
+		$debrief_orbit      = lunara_debrief_method_orbit_entries( $debrief_index, $debrief_specimen_id );
+		$debrief_orbit_html = lunara_debrief_method_orbit_html( $debrief_orbit, $debrief_roles );
 	}
 }
-
-$debrief_canon = $debrief_settings['canon']['show']
-	? lunara_debrief_method_canon( $debrief_index, $debrief_settings['canon']['count'], $debrief_settings['canon']['min_count'] )
-	: array();
 
 $debrief_recent = $debrief_settings['recent']['show']
 	? array_slice( (array) $debrief_index['recent'], 0, $debrief_settings['recent']['count'] )
 	: array();
 
-// Warm the post cache for every review the canon and recent lists link to.
-$debrief_linked_reviews = wp_list_pluck( $debrief_recent, 'review_id' );
-if ( $debrief_settings['canon']['show_reviews'] ) {
-	foreach ( $debrief_canon as $debrief_film ) {
-		$debrief_linked_reviews = array_merge( $debrief_linked_reviews, (array) $debrief_film['reviews'] );
-	}
-}
+// Warm the post cache for every review the constellation and recent list link to.
+$debrief_linked_reviews = array_merge( wp_list_pluck( $debrief_recent, 'review_id' ), wp_list_pluck( $debrief_orbit, 'review_id' ) );
 if ( $debrief_linked_reviews && function_exists( '_prime_post_caches' ) ) {
 	_prime_post_caches( array_unique( array_map( 'intval', $debrief_linked_reviews ) ), false, false );
 }
@@ -90,10 +85,6 @@ if ( $debrief_linked_reviews && function_exists( '_prime_post_caches' ) ) {
 					<div>
 						<dt><?php esc_html_e( 'Films prescribed', 'lunara-film' ); ?></dt>
 						<dd><?php echo esc_html( number_format_i18n( $debrief_index['pairings_total'] ) ); ?></dd>
-					</div>
-					<div>
-						<dt><?php esc_html_e( 'Distinct titles', 'lunara-film' ); ?></dt>
-						<dd><?php echo esc_html( number_format_i18n( $debrief_index['unique_films'] ) ); ?></dd>
 					</div>
 				</dl>
 			<?php endif; ?>
@@ -138,7 +129,7 @@ if ( $debrief_linked_reviews && function_exists( '_prime_post_caches' ) ) {
 		</section>
 	<?php endif; ?>
 
-	<?php if ( '' !== $debrief_specimen_cards ) : ?>
+	<?php if ( '' !== $debrief_orbit_html ) : ?>
 		<section class="lunara-debrief-specimen" aria-labelledby="lunara-debrief-specimen-title" data-lunara-site-studio-section="specimen">
 			<?php if ( '' !== $debrief_settings['specimen']['kicker'] ) : ?>
 				<p class="lunara-debrief-kicker"><?php echo esc_html( $debrief_settings['specimen']['kicker'] ); ?></p>
@@ -147,9 +138,9 @@ if ( $debrief_linked_reviews && function_exists( '_prime_post_caches' ) ) {
 				<?php if ( '' !== $debrief_settings['specimen']['lead'] ) : ?>
 					<?php echo esc_html( $debrief_settings['specimen']['lead'] ); ?>
 				<?php endif; ?>
-				<a href="<?php echo esc_url( (string) get_permalink( $debrief_specimen_id ) ); ?>"><?php echo esc_html( wp_strip_all_tags( (string) get_the_title( $debrief_specimen_id ) ) ); ?></a>
+				<a data-orbit-caption href="<?php echo esc_url( (string) get_permalink( $debrief_orbit[0]['review_id'] ) ); ?>"><?php echo esc_html( wp_strip_all_tags( (string) get_the_title( $debrief_orbit[0]['review_id'] ) ) ); ?></a>
 			</h2>
-			<?php echo $debrief_specimen_cards; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- renderer escapes every value. ?>
+			<?php echo $debrief_orbit_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- renderer escapes every value. ?>
 		</section>
 	<?php endif; ?>
 
@@ -164,80 +155,6 @@ if ( $debrief_linked_reviews && function_exists( '_prime_post_caches' ) ) {
 		</section>
 	<?php endif; ?>
 
-	<?php if ( ! empty( $debrief_canon ) ) : ?>
-		<section class="lunara-debrief-canon" aria-labelledby="lunara-debrief-canon-title" data-lunara-site-studio-section="canon">
-			<?php if ( '' !== $debrief_settings['canon']['kicker'] ) : ?>
-				<p class="lunara-debrief-kicker"><?php echo esc_html( $debrief_settings['canon']['kicker'] ); ?></p>
-			<?php endif; ?>
-			<h2 id="lunara-debrief-canon-title" class="lunara-debrief-section-title"><?php echo esc_html( '' !== $debrief_settings['canon']['title'] ? $debrief_settings['canon']['title'] : __( 'The Debrief Canon', 'lunara-film' ) ); ?></h2>
-			<ol class="lunara-debrief-canon-list">
-				<?php foreach ( $debrief_canon as $debrief_film ) : ?>
-					<?php
-					$debrief_poster = ( '' !== $debrief_film['tt'] && function_exists( 'lunara_get_title_poster_html' ) )
-						? (string) lunara_get_title_poster_html( $debrief_film['tt'], 'medium', 'lunara-debrief-canon-poster', $debrief_film['title'], 'lazy', '(min-width: 1000px) 240px, 76px' )
-						: '';
-					$debrief_role_bits = array();
-					foreach ( $debrief_roles as $debrief_slug => $debrief_role ) {
-						$debrief_n = isset( $debrief_film['roles'][ $debrief_slug ] ) ? (int) $debrief_film['roles'][ $debrief_slug ] : 0;
-						if ( $debrief_n > 0 ) {
-							$debrief_role_bits[] = sprintf( '%s ×%d', $debrief_role['label'], $debrief_n );
-						}
-					}
-					?>
-					<li class="lunara-debrief-canon-item">
-						<div class="lunara-debrief-canon-media">
-							<?php if ( '' !== $debrief_poster ) : ?>
-								<?php echo $debrief_poster; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- poster helper escapes. ?>
-							<?php else : ?>
-								<span class="lunara-debrief-canon-plate"><?php echo esc_html( $debrief_film['title'] ); ?></span>
-							<?php endif; ?>
-						</div>
-						<div class="lunara-debrief-canon-body">
-							<h3 class="lunara-debrief-canon-title">
-								<?php if ( '' !== $debrief_film['href'] ) : ?>
-									<a href="<?php echo esc_url( $debrief_film['href'] ); ?>"><?php echo esc_html( $debrief_film['title'] ); ?></a>
-								<?php else : ?>
-									<?php echo esc_html( $debrief_film['title'] ); ?>
-								<?php endif; ?>
-								<?php if ( '' !== $debrief_film['year'] ) : ?>
-									<span class="lunara-debrief-canon-year">(<?php echo esc_html( $debrief_film['year'] ); ?>)</span>
-								<?php endif; ?>
-							</h3>
-							<p class="lunara-debrief-canon-count">
-								<?php echo esc_html( sprintf( /* translators: %d: number of reviews */ _n( 'Prescribed in %d review', 'Prescribed in %d reviews', (int) $debrief_film['count'], 'lunara-film' ), (int) $debrief_film['count'] ) ); ?>
-							</p>
-							<?php if ( $debrief_role_bits ) : ?>
-								<p class="lunara-debrief-canon-roles"><?php echo esc_html( implode( ' · ', $debrief_role_bits ) ); ?></p>
-							<?php endif; ?>
-							<?php if ( $debrief_settings['canon']['show_reviews'] && ! empty( $debrief_film['reviews'] ) ) : ?>
-								<?php
-								$debrief_review_links = array();
-								foreach ( array_slice( (array) $debrief_film['reviews'], 0, 3 ) as $debrief_review_id ) {
-									$debrief_review_url = (string) get_permalink( (int) $debrief_review_id );
-									if ( '' !== $debrief_review_url ) {
-										$debrief_review_links[] = '<a href="' . esc_url( $debrief_review_url ) . '">' . esc_html( lunara_debrief_method_review_label( (int) $debrief_review_id ) ) . '</a>';
-									}
-								}
-								$debrief_review_list = implode( ', ', $debrief_review_links );
-								$debrief_more        = (int) $debrief_film['count'] - count( $debrief_review_links );
-								if ( $debrief_review_list && $debrief_more > 0 ) {
-									/* translators: %d: number of further reviews */
-									$debrief_review_list .= ' ' . esc_html( sprintf( _n( 'and %d more', 'and %d more', $debrief_more, 'lunara-film' ), $debrief_more ) );
-								}
-								?>
-								<?php if ( $debrief_review_list ) : ?>
-									<p class="lunara-debrief-canon-reviews">
-										<span class="lunara-debrief-canon-reviews-label"><?php esc_html_e( 'In the Debriefs for', 'lunara-film' ); ?></span>
-										<?php echo $debrief_review_list; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- links and count escaped above. ?>
-									</p>
-								<?php endif; ?>
-							<?php endif; ?>
-						</div>
-					</li>
-				<?php endforeach; ?>
-			</ol>
-		</section>
-	<?php endif; ?>
 
 	<?php if ( ! empty( $debrief_recent ) ) : ?>
 		<section class="lunara-debrief-recent" aria-labelledby="lunara-debrief-recent-title" data-lunara-site-studio-section="recent">

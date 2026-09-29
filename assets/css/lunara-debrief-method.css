@@ -42,7 +42,6 @@
 .lunara-debrief-why,
 .lunara-debrief-words,
 .lunara-debrief-specimen,
-.lunara-debrief-canon,
 .lunara-debrief-recent { border-top: 1px solid rgba(201, 169, 97, 0.2); padding-top: clamp(26px, 4vw, 44px); }
 .lunara-debrief-why-body,
 .lunara-debrief-words-body { display: grid; gap: 1em; max-width: 68ch; color: rgba(244, 239, 227, 0.88); font-family: var(--lunara-font-body, Georgia, serif); font-size: clamp(1rem, 1.3vw, 1.14rem); line-height: 1.7; }
@@ -50,32 +49,120 @@
 .lunara-debrief-words-body > * { margin: 0; }
 .lunara-debrief-words-body a { color: var(--lunara-gold-light, #e0c481); }
 
-/* Specimen reuses .lunara-pair-cards from lunara-review-components.css */
-.lunara-debrief-specimen .lunara-pair-cards { margin: 0; }
+/* ------------------------------------------------------------
+   The constellation (3.2.95): the reviewed film at the centre, its three
+   pairings around it, gold lines drawn between them. Without the script
+   the first Debrief shows complete; lines appear once JS lays them out.
+   ------------------------------------------------------------ */
+.lunara-debrief-orbit { --orbit-gold: var(--lunara-gold, #c9a961); --orbit-theme: var(--lunara-gold, #c9a961); --orbit-counter: #c9785f; --orbit-career: #8faac6; position: relative; }
+.lunara-debrief-orbit-stage { display: grid; margin: 0; padding: 0; list-style: none; }
+.lunara-debrief-orbit-slide { position: relative; grid-area: 1 / 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: "center center center" "theme counter career"; align-items: start; justify-items: center; gap: clamp(26px, 6vw, 40px) clamp(8px, 3vw, 18px); padding: clamp(18px, 4vw, 34px) clamp(8px, 2vw, 20px) clamp(20px, 4vw, 30px); border-radius: 18px; background: radial-gradient(60% 55% at 50% 38%, rgba(201, 169, 97, 0.12), transparent 70%), radial-gradient(120% 90% at 50% 0%, rgba(15, 29, 46, 0.9), rgba(7, 15, 26, 0.6)); border: 1px solid rgba(201, 169, 97, 0.18); overflow: hidden; }
+.lunara-debrief-orbit:not(.is-ready) .lunara-debrief-orbit-slide:not(:first-child) { display: none; }
+.lunara-debrief-orbit.is-ready .lunara-debrief-orbit-slide { opacity: 0; visibility: hidden; transition: opacity 0.55s ease, visibility 0s linear 0.55s; }
+.lunara-debrief-orbit.is-ready .lunara-debrief-orbit-slide.is-active { opacity: 1; visibility: visible; transition: opacity 0.55s ease, visibility 0s; }
 
-/* The canon */
-.lunara-debrief-canon-list { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; counter-reset: lunara-debrief-canon; }
-@media (min-width: 621px) { .lunara-debrief-canon-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1000px) { .lunara-debrief-canon-list { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.lunara-debrief-canon-item { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; align-items: start; padding: 14px; border: 1px solid rgba(201, 169, 97, 0.2); border-radius: 12px; background: rgba(15, 29, 46, 0.45); counter-increment: lunara-debrief-canon; }
-@media (min-width: 1000px) { .lunara-debrief-canon-item { grid-template-columns: 1fr; } }
-.lunara-debrief-canon-media { position: relative; overflow: hidden; aspect-ratio: 2 / 3; border-radius: 8px; background: rgba(7, 15, 26, 0.8); }
-.lunara-debrief-canon-media::after { content: counter(lunara-debrief-canon); position: absolute; top: 6px; left: 6px; display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 999px; background: rgba(7, 15, 26, 0.86); color: var(--lunara-gold-light, #e0c481); font-family: var(--lunara-font-label, sans-serif); font-size: 0.72rem; }
-.lunara-debrief-canon-media img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.lunara-debrief-canon-plate { display: grid; place-items: center; height: 100%; padding: 8px; color: rgba(244, 239, 227, 0.8); font-family: var(--lunara-font-display, serif); font-size: 0.8rem; line-height: 1.25; text-align: center; }
-.lunara-debrief-canon-body { display: grid; gap: 5px; min-width: 0; }
-.lunara-debrief-canon-title { margin: 0; color: var(--lunara-text, #fafbfc); font-family: var(--lunara-font-display, serif); font-size: 1.06rem; line-height: 1.25; }
-.lunara-debrief-canon-title a { color: inherit; text-decoration: none; }
-.lunara-debrief-canon-title a:hover,
-.lunara-debrief-canon-title a:focus-visible { color: var(--lunara-gold-light, #e0c481); }
-.lunara-debrief-canon-year { color: rgba(244, 239, 227, 0.58); font-size: 0.86em; }
-.lunara-debrief-canon-count { margin: 0; color: var(--lunara-gold, #c9a961); font-family: var(--lunara-font-label, sans-serif); font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; }
-.lunara-debrief-canon-roles { margin: 0; color: rgba(244, 239, 227, 0.62); font-family: var(--lunara-font-body, Georgia, serif); font-size: 0.84rem; line-height: 1.45; }
-.lunara-debrief-canon-reviews { margin: 2px 0 0; color: rgba(244, 239, 227, 0.62); font-family: var(--lunara-font-body, Georgia, serif); font-size: 0.82rem; line-height: 1.45; overflow-wrap: anywhere; }
-.lunara-debrief-canon-reviews-label { display: block; margin-bottom: 2px; color: rgba(201, 169, 97, 0.85); font-family: var(--lunara-font-label, sans-serif); font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase; }
-.lunara-debrief-canon-reviews a { color: rgba(244, 239, 227, 0.86); text-decoration: underline; text-decoration-color: rgba(201, 169, 97, 0.45); text-underline-offset: 2px; }
-.lunara-debrief-canon-reviews a:hover,
-.lunara-debrief-canon-reviews a:focus-visible { color: var(--lunara-gold-light, #e0c481); }
+/* Nodes */
+.lunara-debrief-orbit-node { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 10px; width: 100%; max-width: 150px; color: inherit; text-align: center; text-decoration: none; }
+.lunara-debrief-orbit-node--center { grid-area: center; max-width: min(46vw, 210px); }
+.lunara-debrief-orbit-node--theme { grid-area: theme; --orbit-accent: var(--orbit-theme); }
+.lunara-debrief-orbit-node--counter { grid-area: counter; --orbit-accent: var(--orbit-counter); }
+.lunara-debrief-orbit-node--career { grid-area: career; --orbit-accent: var(--orbit-career); }
+.lunara-debrief-orbit-poster { position: relative; display: block; width: 100%; aspect-ratio: 2 / 3; border-radius: 10px; background: rgba(7, 15, 26, 0.9); box-shadow: 0 0 0 1px var(--orbit-accent, rgba(201, 169, 97, 0.5)), 0 18px 40px rgba(0, 0, 0, 0.45); }
+.lunara-debrief-orbit-poster img { display: block; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+.lunara-debrief-orbit-node--center .lunara-debrief-orbit-poster { box-shadow: 0 0 0 1px var(--orbit-gold), 0 0 70px rgba(201, 169, 97, 0.28), 0 26px 60px rgba(0, 0, 0, 0.55); }
+.lunara-debrief-orbit-halo { position: absolute; inset: -14px; z-index: -1; border: 1px solid rgba(201, 169, 97, 0.35); border-radius: 18px; opacity: 0; }
+.lunara-debrief-orbit-plate { display: grid; place-content: center; gap: 10px; height: 100%; padding: 12px; color: rgba(244, 239, 227, 0.86); font-family: var(--lunara-font-display, serif); font-size: 0.86rem; line-height: 1.25; text-align: center; }
+.lunara-debrief-orbit-plate-mark { justify-self: center; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset -6px 0 0 0 var(--orbit-accent, var(--orbit-gold)); }
+.lunara-debrief-orbit-caption { position: relative; display: grid; gap: 3px; padding: 4px 10px 5px; border-radius: 8px; background: rgba(8, 17, 28, 0.82); }
+.lunara-debrief-orbit-role { color: var(--orbit-accent, var(--orbit-gold)); font-family: var(--lunara-font-label, sans-serif); font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; }
+.lunara-debrief-orbit-title { color: var(--lunara-text, #fafbfc); font-family: var(--lunara-font-display, serif); font-size: clamp(0.86rem, 1.4vw, 1rem); line-height: 1.25; }
+.lunara-debrief-orbit-node--center .lunara-debrief-orbit-title { font-size: clamp(1.02rem, 2vw, 1.3rem); }
+.lunara-debrief-orbit-year { color: rgba(244, 239, 227, 0.56); font-size: 0.86em; }
+a.lunara-debrief-orbit-node:hover .lunara-debrief-orbit-title,
+a.lunara-debrief-orbit-node:focus-visible .lunara-debrief-orbit-title { color: var(--lunara-gold-light, #e0c481); }
+a.lunara-debrief-orbit-node:focus-visible { outline: 2px solid var(--orbit-gold); outline-offset: 6px; border-radius: 12px; }
+
+/* From 760px the Debrief is a true triangle: Theme Echo upper left, Counter-Program
+   upper right, Career Context below, the film at the centre. --s scales the geometry. */
+@media (min-width: 760px) {
+	.lunara-debrief-orbit-slide { --s: 0.8; display: block; height: calc(780px * var(--s)); padding: 0; }
+	.lunara-debrief-orbit-node { position: absolute; width: var(--w); max-width: none; margin-left: calc(var(--w) / -2); margin-top: calc(var(--w) * -0.75); }
+	.lunara-debrief-orbit-node--center { --w: calc(180px * var(--s)); left: 50%; top: calc(275px * var(--s)); max-width: none; }
+	.lunara-debrief-orbit-node--theme { --w: calc(130px * var(--s)); left: calc(50% - 290px * var(--s)); top: calc(145px * var(--s)); }
+	.lunara-debrief-orbit-node--counter { --w: calc(130px * var(--s)); left: calc(50% + 290px * var(--s)); top: calc(145px * var(--s)); }
+	.lunara-debrief-orbit-node--career { --w: calc(130px * var(--s)); left: 50%; top: calc(600px * var(--s)); }
+	.lunara-debrief-orbit-caption { width: max-content; max-width: calc(var(--w) + 90px); }
+	.lunara-debrief-orbit-role { white-space: nowrap; }
+}
+@media (min-width: 980px) {
+	.lunara-debrief-orbit-slide { --s: 1; }
+}
+
+/* Lines: positioned by the script, drawn by scaling the inner bar. */
+.lunara-debrief-orbit-lines { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.lunara-debrief-orbit-line { position: absolute; display: none; height: 2px; margin-top: -1px; transform-origin: 0 50%; }
+.lunara-debrief-orbit-slide.is-laid-out .lunara-debrief-orbit-line { display: block; }
+.lunara-debrief-orbit-line i { position: relative; display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, rgba(201, 169, 97, 0.95), var(--orbit-accent, rgba(201, 169, 97, 0.5))); transform-origin: 0 50%; }
+.lunara-debrief-orbit-line--theme { --orbit-accent: var(--orbit-theme); }
+.lunara-debrief-orbit-line--counter { --orbit-accent: var(--orbit-counter); }
+.lunara-debrief-orbit-line--career { --orbit-accent: var(--orbit-career); }
+.lunara-debrief-orbit-line--rim { height: 1px; margin-top: 0; opacity: 0.4; }
+.lunara-debrief-orbit-line--rim i { background: repeating-linear-gradient(90deg, rgba(201, 169, 97, 0.9) 0 6px, transparent 6px 12px); }
+
+/* The sequence (only when the script runs and motion is welcome). */
+.lunara-debrief-orbit.is-animated .lunara-debrief-orbit-node { opacity: 0; transform: translateY(14px) scale(0.92); transition: opacity 0.5s ease, transform 0.5s ease; }
+.lunara-debrief-orbit.is-animated .lunara-debrief-orbit-line i { transform: scaleX(0); transition: transform 0.3s ease; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-node { opacity: 1; transform: none; transition: opacity 0.7s ease, transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-line i { transform: scaleX(1); transition: transform 0.75s cubic-bezier(0.65, 0, 0.25, 1); }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-line--theme i { transition-delay: 0.45s; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-line--counter i { transition-delay: 0.75s; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-line--career i { transition-delay: 1.05s; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-node--theme { transition-delay: 1s; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-node--counter { transition-delay: 1.3s; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-node--career { transition-delay: 1.6s; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-line--rim i { transition-duration: 1.1s; transition-delay: 2.1s; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-line--rim + .lunara-debrief-orbit-line--rim i { transition-delay: 2.35s; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-line--rim + .lunara-debrief-orbit-line--rim + .lunara-debrief-orbit-line--rim i { transition-delay: 2.6s; }
+
+/* After the draw: a halo breathes around the film, signals travel outward, pairings drift. */
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-halo { animation: lunara-orbit-halo 3.6s ease-out 0.2s infinite; }
+.lunara-debrief-orbit-line--spoke i::after { content: ""; position: absolute; top: -2px; left: 0; width: 34px; height: 6px; border-radius: 6px; background: radial-gradient(closest-side, rgba(255, 236, 190, 0.95), rgba(201, 169, 97, 0)); opacity: 0; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-line--spoke i::after { animation: lunara-orbit-signal 2.8s ease-in-out 2.4s infinite; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-line--counter i::after { animation-delay: 3.1s; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-line--career i::after { animation-delay: 3.8s; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-node--theme .lunara-debrief-orbit-poster { animation: lunara-orbit-float 6s ease-in-out 2.4s infinite alternate; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-node--counter .lunara-debrief-orbit-poster { animation: lunara-orbit-float 6.8s ease-in-out 2.9s infinite alternate-reverse; }
+.lunara-debrief-orbit.is-animated .is-drawn .lunara-debrief-orbit-node--career .lunara-debrief-orbit-poster { animation: lunara-orbit-float 7.4s ease-in-out 3.3s infinite alternate; }
+.lunara-debrief-orbit.is-paused .lunara-debrief-orbit-poster,
+.lunara-debrief-orbit.is-paused .lunara-debrief-orbit-halo,
+.lunara-debrief-orbit.is-paused .lunara-debrief-orbit-line i::after { animation-play-state: paused; }
+@keyframes lunara-orbit-halo { 0% { opacity: 0.7; transform: scale(0.96); } 100% { opacity: 0; transform: scale(1.12); } }
+@keyframes lunara-orbit-signal { 0% { left: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { left: calc(100% - 34px); opacity: 0; } }
+@keyframes lunara-orbit-float { from { transform: translateY(-4px); } to { transform: translateY(4px); } }
+
+/* Controls */
+.lunara-debrief-orbit-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; margin-top: 16px; }
+.lunara-debrief-orbit-controls[hidden] { display: none; }
+.lunara-debrief-orbit-toggle { min-height: 36px; padding: 6px 14px; border: 1px solid rgba(201, 169, 97, 0.4); border-radius: 999px; background: transparent; color: var(--lunara-gold-light, #e0c481); font-family: var(--lunara-font-label, sans-serif); font-size: 0.64rem; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; }
+.lunara-debrief-orbit-toggle:hover,
+.lunara-debrief-orbit-toggle:focus-visible { border-color: var(--orbit-gold); background: rgba(201, 169, 97, 0.1); }
+.lunara-debrief-orbit-toggle-play,
+.lunara-debrief-orbit-toggle[aria-pressed="true"] .lunara-debrief-orbit-toggle-pause { display: none; }
+.lunara-debrief-orbit-toggle[aria-pressed="true"] .lunara-debrief-orbit-toggle-play { display: inline; }
+.lunara-debrief-orbit-tabs { display: flex; flex: 1 1 200px; gap: 8px; }
+.lunara-debrief-orbit-tab { position: relative; flex: 1 1 0; max-width: 72px; min-height: 24px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.lunara-debrief-orbit-tab::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 3px; background: rgba(244, 239, 227, 0.18); }
+.lunara-debrief-orbit-tab-fill { position: absolute; left: 0; right: 0; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 3px; background: var(--orbit-gold); transform: scaleX(0); transform-origin: 0 50%; }
+.lunara-debrief-orbit-tab[aria-current="true"] .lunara-debrief-orbit-tab-fill { transform: scaleX(var(--orbit-progress, 1)); }
+.lunara-debrief-orbit-tab:hover::before,
+.lunara-debrief-orbit-tab:focus-visible::before { background: rgba(244, 239, 227, 0.4); }
+.lunara-debrief-orbit-tab:focus-visible { outline: 2px solid var(--orbit-gold); outline-offset: 2px; border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+	.lunara-debrief-orbit.is-ready .lunara-debrief-orbit-slide { transition: none; }
+	.lunara-debrief-orbit-halo,
+	.lunara-debrief-orbit-line i::after { display: none; }
+}
 
 /* Recent debriefs */
 .lunara-debrief-recent-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }

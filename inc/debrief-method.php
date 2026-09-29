@@ -33,13 +33,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * v2 (3.2.90): films carry merged identity aliases and their reviews; recent
  * holds up to twelve Debriefs; payload records its own version.
+ * v3 (3.2.95): same shape; titles no longer carry a note that followed the year
+ * with a full stop ("Under the Skin (2013). The opposite argument…"). Bumped so
+ * the corrected titles replace stored ones on deploy instead of after the TTL.
  */
 if ( ! defined( 'LUNARA_DEBRIEF_INDEX_CACHE_KEY' ) ) {
-	define( 'LUNARA_DEBRIEF_INDEX_CACHE_KEY', 'lunara_debrief_index_v2' );
+	define( 'LUNARA_DEBRIEF_INDEX_CACHE_KEY', 'lunara_debrief_index_v3' );
 }
 
 if ( ! defined( 'LUNARA_DEBRIEF_INDEX_VERSION' ) ) {
-	define( 'LUNARA_DEBRIEF_INDEX_VERSION', 2 );
+	define( 'LUNARA_DEBRIEF_INDEX_VERSION', 3 );
 }
 
 /** Upper bounds the index stores; the page's counts are clamped to these. */
@@ -60,7 +63,7 @@ if ( ! function_exists( 'lunara_debrief_method_retired_cache_keys' ) ) {
 	 * @return array<int,string>
 	 */
 	function lunara_debrief_method_retired_cache_keys() {
-		return array( 'lunara_debrief_index_v1' );
+		return array( 'lunara_debrief_index_v1', 'lunara_debrief_index_v2' );
 	}
 }
 
@@ -182,7 +185,7 @@ if ( ! function_exists( 'lunara_debrief_method_settings_spec' ) ) {
 				'kicker' => $text( 'lunara_debrief_desk_kicker', __( 'From the Desk', 'lunara-film' ), 120, __( 'Kicker', 'lunara-film' ), 'text', __( 'The section shows the Debrief page\'s own editor content, and only when it has some.', 'lunara-film' ) ),
 			),
 			'canon'    => array(
-				'show'         => $toggle( 'lunara_debrief_show_canon', __( 'Show this section', 'lunara-film' ) ),
+				'show'         => $toggle( 'lunara_debrief_show_canon', __( 'Show on your WordPress dashboard (never public)', 'lunara-film' ) ),
 				'kicker'       => $text( 'lunara_debrief_canon_kicker', __( 'The Debrief Canon', 'lunara-film' ), 120, __( 'Kicker', 'lunara-film' ) ),
 				'title'        => $text( 'lunara_debrief_canon_title', __( 'The films the desk keeps returning to.', 'lunara-film' ), 220, __( 'Heading', 'lunara-film' ) ),
 				'count'        => $number( 'lunara_debrief_canon_count', 8, 2, LUNARA_DEBRIEF_INDEX_MAX_FILMS, __( 'Films shown', 'lunara-film' ), __( 'The most-prescribed films, most frequent first.', 'lunara-film' ) ),
@@ -363,6 +366,10 @@ if ( ! function_exists( 'lunara_debrief_method_split_title_year' ) ) {
 	 * recognises a bare "(1968)"; anything else would make the same film look
 	 * like two different titles in the index.
 	 *
+	 * A note that follows the year with a full stop, colon or semicolon rather
+	 * than a dash ("Under the Skin (2013). The opposite argument…") is cut
+	 * away first, so it never becomes part of the title.
+	 *
 	 * @param string $title Title as parsed.
 	 * @param string $year  Year as parsed (may be empty).
 	 * @return array{0:string,1:string}
@@ -370,6 +377,9 @@ if ( ! function_exists( 'lunara_debrief_method_split_title_year' ) ) {
 	function lunara_debrief_method_split_title_year( $title, $year ) {
 		$title = trim( (string) $title );
 		$year  = trim( (string) $year );
+		if ( preg_match( '/^(.+?\((?:[^()]*?\b)?(?:18|19|20)\d{2}\))\s*[.:;!?]+\s+\S/u', $title, $match ) ) {
+			$title = trim( $match[1] );
+		}
 		if ( '' === $year && preg_match( '/^(.+?)\s*\(([^()]*?)\b((?:18|19|20)\d{2})\)\s*$/u', $title, $match ) ) {
 			$title = trim( $match[1] );
 			$year  = $match[3];
@@ -796,7 +806,8 @@ if ( ! function_exists( 'lunara_is_debrief_method_page' ) ) {
 
 if ( ! function_exists( 'lunara_debrief_method_enqueue_styles' ) ) {
 	/**
-	 * Enqueue the page sheet plus the shared pair-card components.
+	 * Enqueue the page sheet, the shared pair-card components and the
+	 * constellation script.
 	 */
 	function lunara_debrief_method_enqueue_styles() {
 		if ( is_admin() || ! lunara_is_debrief_method_page() || ! function_exists( 'lunara_resolve_theme_asset' ) ) {
@@ -824,6 +835,373 @@ if ( ! function_exists( 'lunara_debrief_method_enqueue_styles' ) ) {
 				lunara_theme_asset_version( $asset['path'] )
 			);
 		}
+
+		$orbit = lunara_resolve_theme_asset( 'assets/js/lunara-debrief-orbit.js' );
+		if ( ! empty( $orbit['uri'] ) ) {
+			wp_enqueue_script(
+				'lunara-debrief-orbit',
+				$orbit['uri'],
+				array(),
+				lunara_theme_asset_version( $orbit['path'] ),
+				true
+			);
+			wp_script_add_data( 'lunara-debrief-orbit', 'strategy', 'defer' );
+		}
 	}
 	add_action( 'wp_enqueue_scripts', 'lunara_debrief_method_enqueue_styles', 110 );
+}
+
+/* ========================================
+   THE CONSTELLATION (3.2.95)
+   The featured Debrief, animated: the reviewed film at the centre, gold
+   lines drawing out to its three pairings, the triangle closing around it,
+   then the next Debrief. Server-rendered and complete without JavaScript
+   (the first Debrief shows statically); assets/js/lunara-debrief-orbit.js
+   draws the lines and runs the sequence, and honours reduced motion.
+   ======================================== */
+
+if ( ! defined( 'LUNARA_DEBRIEF_ORBIT_MAX_SLIDES' ) ) {
+	define( 'LUNARA_DEBRIEF_ORBIT_MAX_SLIDES', 6 );
+}
+
+if ( ! function_exists( 'lunara_debrief_method_orbit_entries' ) ) {
+	/**
+	 * The Debriefs the constellation cycles through: the featured review
+	 * first, then the newest other reviews carrying the full trio.
+	 *
+	 * @param array<string,mixed> $index       Debrief index.
+	 * @param int                 $specimen_id Featured review ID (0 for none).
+	 * @param int                 $limit       Maximum Debriefs.
+	 * @return array<int,array<string,mixed>>
+	 */
+	function lunara_debrief_method_orbit_entries( $index, $specimen_id, $limit = LUNARA_DEBRIEF_ORBIT_MAX_SLIDES ) {
+		$roles   = array_keys( lunara_debrief_method_roles() );
+		$entries = array();
+		$first   = null;
+
+		foreach ( (array) ( $index['recent'] ?? array() ) as $entry ) {
+			$pairs = array();
+			foreach ( (array) $entry['pairs'] as $pair ) {
+				$pairs[ $pair['role'] ] = $pair;
+			}
+			if ( count( array_intersect( $roles, array_keys( $pairs ) ) ) !== count( $roles ) ) {
+				continue;
+			}
+			$row = array(
+				'review_id' => (int) $entry['review_id'],
+				'pairs'     => $pairs,
+			);
+			if ( (int) $entry['review_id'] === (int) $specimen_id ) {
+				$first = $row;
+			} else {
+				$entries[] = $row;
+			}
+		}
+
+		// A pinned specimen older than the recent window still leads, with whatever pairings it has.
+		if ( null === $first && $specimen_id > 0 ) {
+			$pairs = array();
+			foreach ( lunara_debrief_method_roles() as $slug => $role ) {
+				$pair = lunara_debrief_method_read_pairing( (int) $specimen_id, $role );
+				if ( null !== $pair ) {
+					$pair['role']   = $slug;
+					$pairs[ $slug ] = $pair;
+				}
+			}
+			if ( $pairs ) {
+				$first = array(
+					'review_id' => (int) $specimen_id,
+					'pairs'     => $pairs,
+				);
+			}
+		}
+
+		if ( null !== $first ) {
+			array_unshift( $entries, $first );
+		}
+
+		return array_slice( $entries, 0, max( 1, (int) $limit ) );
+	}
+}
+
+if ( ! function_exists( 'lunara_debrief_method_poster_plate' ) ) {
+	/**
+	 * Title plate for a film with no artwork, in the same 2:3 box.
+	 *
+	 * @param string $title Film title.
+	 * @return string
+	 */
+	function lunara_debrief_method_poster_plate( $title ) {
+		return '<span class="lunara-debrief-orbit-plate"><span class="lunara-debrief-orbit-plate-mark" aria-hidden="true"></span>' . esc_html( $title ) . '</span>';
+	}
+}
+
+if ( ! function_exists( 'lunara_debrief_method_review_poster_html' ) ) {
+	/**
+	 * Poster for the reviewed film: its IMDb-keyed poster, else the review's
+	 * featured image, else a title plate.
+	 *
+	 * @param int    $review_id Review post ID.
+	 * @param string $label     Film label.
+	 * @param string $sizes     Rendered-width hint.
+	 * @return string
+	 */
+	function lunara_debrief_method_review_poster_html( $review_id, $label, $sizes ) {
+		$tt = strtolower( trim( (string) get_post_meta( $review_id, '_lunara_imdb_title_id', true ) ) );
+		if ( preg_match( '#(tt\d{7,8})#', $tt, $match ) ) {
+			$tt = $match[1];
+		}
+		if ( preg_match( '/^tt\d{7,8}$/', $tt ) && function_exists( 'lunara_get_title_poster_html' ) ) {
+			$html = (string) lunara_get_title_poster_html( $tt, 'medium', 'lunara-debrief-orbit-img', $label, 'lazy', $sizes );
+			if ( '' !== trim( $html ) ) {
+				return $html;
+			}
+		}
+		if ( function_exists( 'has_post_thumbnail' ) && has_post_thumbnail( $review_id ) && function_exists( 'get_the_post_thumbnail' ) ) {
+			$html = (string) get_the_post_thumbnail(
+				$review_id,
+				'medium',
+				array(
+					'class'    => 'lunara-debrief-orbit-img',
+					'loading'  => 'lazy',
+					'decoding' => 'async',
+					'sizes'    => $sizes,
+				)
+			);
+			if ( '' !== trim( $html ) ) {
+				return $html;
+			}
+		}
+		return lunara_debrief_method_poster_plate( $label );
+	}
+}
+
+if ( ! function_exists( 'lunara_debrief_method_orbit_html' ) ) {
+	/**
+	 * The animated constellation markup.
+	 *
+	 * @param array<int,array<string,mixed>>    $entries Orbit entries.
+	 * @param array<string,array<string,string>> $roles   Display roles.
+	 * @return string
+	 */
+	function lunara_debrief_method_orbit_html( $entries, $roles ) {
+		if ( empty( $entries ) ) {
+			return '';
+		}
+
+		$home  = function_exists( 'home_url' ) ? (string) home_url( '/' ) : '';
+		$total = count( $entries );
+		$html  = '<div class="lunara-debrief-orbit" data-debrief-orbit data-orbit-hold="7200" aria-roledescription="' . esc_attr__( 'carousel', 'lunara-film' ) . '">';
+		$html .= '<ol class="lunara-debrief-orbit-stage">';
+
+		foreach ( $entries as $i => $entry ) {
+			$review_id = (int) $entry['review_id'];
+			$label     = lunara_debrief_method_review_label( $review_id );
+			$url       = (string) get_permalink( $review_id );
+			$title     = wp_strip_all_tags( (string) get_the_title( $review_id ) );
+
+			$html .= '<li class="lunara-debrief-orbit-slide' . ( 0 === $i ? ' is-active is-drawn' : '' ) . '"'
+				. ' data-orbit-slide data-review="' . esc_attr( (string) $review_id ) . '"'
+				. ' data-review-url="' . esc_url( $url ) . '" data-review-title="' . esc_attr( $title ) . '"'
+				. ' aria-roledescription="' . esc_attr__( 'slide', 'lunara-film' ) . '"'
+				/* translators: 1: slide number, 2: slide count, 3: film title. */
+				. ' aria-label="' . esc_attr( sprintf( __( '%1$d of %2$d: %3$s', 'lunara-film' ), $i + 1, $total, $label ) ) . '">';
+
+			// Lines first so the posters sit above them. JS positions each one.
+			$html .= '<span class="lunara-debrief-orbit-lines" aria-hidden="true">';
+			foreach ( array_keys( $roles ) as $slug ) {
+				if ( isset( $entry['pairs'][ $slug ] ) ) {
+					$html .= '<span class="lunara-debrief-orbit-line lunara-debrief-orbit-line--spoke lunara-debrief-orbit-line--' . esc_attr( $slug ) . '" data-from="center" data-to="' . esc_attr( $slug ) . '"><i></i></span>';
+				}
+			}
+			$rim = array( array( 'theme', 'counter' ), array( 'counter', 'career' ), array( 'career', 'theme' ) );
+			foreach ( $rim as $edge ) {
+				if ( isset( $entry['pairs'][ $edge[0] ], $entry['pairs'][ $edge[1] ] ) ) {
+					$html .= '<span class="lunara-debrief-orbit-line lunara-debrief-orbit-line--rim" data-from="' . esc_attr( $edge[0] ) . '" data-to="' . esc_attr( $edge[1] ) . '"><i></i></span>';
+				}
+			}
+			$html .= '</span>';
+
+			// The reviewed film.
+			$html .= '<a class="lunara-debrief-orbit-node lunara-debrief-orbit-node--center" data-orbit-node="center" href="' . esc_url( $url ) . '">';
+			$html .= '<span class="lunara-debrief-orbit-poster"><span class="lunara-debrief-orbit-halo" aria-hidden="true"></span>' . lunara_debrief_method_review_poster_html( $review_id, $label, '(min-width: 760px) 220px, 46vw' ) . '</span>';
+			$html .= '<span class="lunara-debrief-orbit-caption"><span class="lunara-debrief-orbit-role">' . esc_html__( 'The Review', 'lunara-film' ) . '</span>';
+			$html .= '<span class="lunara-debrief-orbit-title">' . esc_html( $label ) . '</span></span></a>';
+
+			// The three pairings.
+			foreach ( $roles as $slug => $role ) {
+				if ( ! isset( $entry['pairs'][ $slug ] ) ) {
+					continue;
+				}
+				$pair   = $entry['pairs'][ $slug ];
+				$poster = ( '' !== (string) $pair['tt'] && function_exists( 'lunara_get_title_poster_html' ) )
+					? (string) lunara_get_title_poster_html( $pair['tt'], 'medium', 'lunara-debrief-orbit-img', $pair['title'], 'lazy', '(min-width: 760px) 150px, 26vw' )
+					: '';
+				if ( '' === trim( $poster ) ) {
+					$poster = lunara_debrief_method_poster_plate( $pair['title'] );
+				}
+
+				$inner  = '<span class="lunara-debrief-orbit-poster">' . $poster . '</span>';
+				$inner .= '<span class="lunara-debrief-orbit-caption"><span class="lunara-debrief-orbit-role">' . esc_html( $role['label'] ) . '</span>';
+				$inner .= '<span class="lunara-debrief-orbit-title">' . esc_html( $pair['title'] );
+				if ( '' !== (string) $pair['year'] ) {
+					$inner .= ' <span class="lunara-debrief-orbit-year">(' . esc_html( $pair['year'] ) . ')</span>';
+				}
+				$inner .= '</span></span>';
+
+				$class = 'lunara-debrief-orbit-node lunara-debrief-orbit-node--' . esc_attr( $slug );
+				$href  = (string) $pair['href'];
+				if ( '' === $href ) {
+					$html .= '<span class="' . $class . '" data-orbit-node="' . esc_attr( $slug ) . '">' . $inner . '</span>';
+				} else {
+					$external = '' !== $home && 0 !== strpos( $href, $home );
+					$html    .= '<a class="' . $class . '" data-orbit-node="' . esc_attr( $slug ) . '" href="' . esc_url( $href ) . '"'
+						. ( $external ? ' target="_blank" rel="noopener noreferrer nofollow"' : '' ) . '>' . $inner . '</a>';
+				}
+			}
+
+			$html .= '</li>';
+		}
+
+		$html .= '</ol>';
+
+		// Controls stay hidden until the script takes over.
+		if ( $total > 1 ) {
+			$html .= '<div class="lunara-debrief-orbit-controls" data-orbit-controls hidden>';
+			$html .= '<button type="button" class="lunara-debrief-orbit-toggle" data-orbit-toggle aria-pressed="false">'
+				. '<span class="lunara-debrief-orbit-toggle-pause">' . esc_html__( 'Pause', 'lunara-film' ) . '</span>'
+				. '<span class="lunara-debrief-orbit-toggle-play">' . esc_html__( 'Play', 'lunara-film' ) . '</span></button>';
+			$html .= '<div class="lunara-debrief-orbit-tabs" role="group" aria-label="' . esc_attr__( 'Choose a Debrief', 'lunara-film' ) . '">';
+			foreach ( $entries as $i => $entry ) {
+				$html .= '<button type="button" class="lunara-debrief-orbit-tab" data-orbit-go="' . esc_attr( (string) $i ) . '"'
+					. ( 0 === $i ? ' aria-current="true"' : '' )
+					/* translators: %s: film title. */
+					. ' aria-label="' . esc_attr( sprintf( __( 'Show the Debrief for %s', 'lunara-film' ), lunara_debrief_method_review_label( (int) $entry['review_id'] ) ) ) . '">'
+					. '<span class="lunara-debrief-orbit-tab-fill" aria-hidden="true"></span></button>';
+			}
+			$html .= '</div></div>';
+		}
+
+		$html .= '</div>';
+
+		return $html;
+	}
+}
+
+/* ========================================
+   THE DEBRIEF CANON — PRIVATE (3.2.95)
+   Dalton's call: the canon shows the desk returning to the same films, so it
+   is an editorial instrument, not a public section. It renders only in a
+   dashboard widget for editors; the Site Studio canon settings drive it.
+   ======================================== */
+
+if ( ! function_exists( 'lunara_debrief_method_canon_html' ) ) {
+	/**
+	 * The private canon list.
+	 *
+	 * @param array<string,mixed> $index    Debrief index.
+	 * @param array<string,mixed> $settings Page settings.
+	 * @return string
+	 */
+	function lunara_debrief_method_canon_html( $index, $settings ) {
+		$roles = lunara_debrief_method_display_roles( $settings );
+		$canon = lunara_debrief_method_canon( $index, $settings['canon']['count'], $settings['canon']['min_count'] );
+
+		$html  = '<div class="lunara-debrief-canon-private">';
+		$html .= '<p class="lunara-debrief-canon-totals">' . esc_html(
+			sprintf(
+				/* translators: 1: reviews with a Debrief, 2: pairings, 3: distinct films. */
+				__( '%1$s reviews debriefed · %2$s pairings · %3$s distinct films', 'lunara-film' ),
+				number_format_i18n( (int) $index['reviews_debrief'] ),
+				number_format_i18n( (int) $index['pairings_total'] ),
+				number_format_i18n( (int) $index['unique_films'] )
+			)
+		) . '</p>';
+
+		if ( empty( $canon ) ) {
+			$html .= '<p>' . esc_html__( 'No film has been paired often enough to join the canon yet.', 'lunara-film' ) . '</p></div>';
+			return $html;
+		}
+
+		$html .= '<ol class="lunara-debrief-canon-list">';
+		foreach ( $canon as $film ) {
+			$bits = array();
+			foreach ( $roles as $slug => $role ) {
+				$n = isset( $film['roles'][ $slug ] ) ? (int) $film['roles'][ $slug ] : 0;
+				if ( $n > 0 ) {
+					$bits[] = sprintf( '%s ×%d', $role['label'], $n );
+				}
+			}
+
+			$title = esc_html( $film['title'] );
+			if ( '' !== $film['href'] ) {
+				$title = '<a href="' . esc_url( $film['href'] ) . '">' . $title . '</a>';
+			}
+			if ( '' !== $film['year'] ) {
+				$title .= ' <span class="lunara-debrief-canon-year">(' . esc_html( $film['year'] ) . ')</span>';
+			}
+
+			$html .= '<li class="lunara-debrief-canon-item"><strong class="lunara-debrief-canon-title">' . $title . '</strong> ';
+			/* translators: %d: number of reviews. */
+			$html .= '<span class="lunara-debrief-canon-count">' . esc_html( sprintf( _n( 'in %d review', 'in %d reviews', (int) $film['count'], 'lunara-film' ), (int) $film['count'] ) ) . '</span>';
+			if ( $bits ) {
+				$html .= '<br><span class="lunara-debrief-canon-roles">' . esc_html( implode( ' · ', $bits ) ) . '</span>';
+			}
+
+			if ( $settings['canon']['show_reviews'] && ! empty( $film['reviews'] ) ) {
+				$links = array();
+				foreach ( array_slice( (array) $film['reviews'], 0, 3 ) as $review_id ) {
+					$url = (string) get_permalink( (int) $review_id );
+					if ( '' !== $url ) {
+						$links[] = '<a href="' . esc_url( $url ) . '">' . esc_html( lunara_debrief_method_review_label( (int) $review_id ) ) . '</a>';
+					}
+				}
+				$more = (int) $film['count'] - count( $links );
+				$list = implode( ', ', $links );
+				if ( $list && $more > 0 ) {
+					/* translators: %d: number of further reviews */
+					$list .= ' ' . esc_html( sprintf( _n( 'and %d more', 'and %d more', $more, 'lunara-film' ), $more ) );
+				}
+				if ( $list ) {
+					$html .= '<br><span class="lunara-debrief-canon-reviews">' . esc_html__( 'In the Debriefs for', 'lunara-film' ) . ' ' . $list . '</span>';
+				}
+			}
+			$html .= '</li>';
+		}
+		$html .= '</ol></div>';
+
+		return $html;
+	}
+}
+
+if ( ! function_exists( 'lunara_debrief_method_register_canon_widget' ) ) {
+	/**
+	 * Register the private canon on the WordPress dashboard for editors.
+	 */
+	function lunara_debrief_method_register_canon_widget() {
+		if ( ! function_exists( 'wp_add_dashboard_widget' ) || ! current_user_can( 'edit_posts' ) ) {
+			return;
+		}
+		$settings = lunara_debrief_method_settings();
+		if ( ! $settings['canon']['show'] ) {
+			return;
+		}
+		wp_add_dashboard_widget(
+			'lunara_debrief_canon',
+			__( 'The Debrief Canon (private)', 'lunara-film' ),
+			'lunara_debrief_method_render_canon_widget'
+		);
+	}
+	add_action( 'wp_dashboard_setup', 'lunara_debrief_method_register_canon_widget' );
+}
+
+if ( ! function_exists( 'lunara_debrief_method_render_canon_widget' ) ) {
+	/**
+	 * Dashboard widget body.
+	 */
+	function lunara_debrief_method_render_canon_widget() {
+		echo '<style>.lunara-debrief-canon-list{margin:8px 0 0 1.4em;list-style:decimal}.lunara-debrief-canon-item{margin:0 0 10px;line-height:1.45}.lunara-debrief-canon-count,.lunara-debrief-canon-roles,.lunara-debrief-canon-reviews,.lunara-debrief-canon-year{color:#646970}.lunara-debrief-canon-totals{margin-top:0;color:#646970}</style>';
+		echo '<p>' . esc_html__( 'The films the desk returns to most. Only editors see this; it never appears on the public Debrief page.', 'lunara-film' ) . '</p>';
+		echo lunara_debrief_method_canon_html( lunara_debrief_method_index(), lunara_debrief_method_settings() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- every value escaped in the builder.
+	}
 }

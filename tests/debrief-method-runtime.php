@@ -34,6 +34,7 @@ function esc_html( $text ) { return htmlspecialchars( (string) $text, ENT_QUOTES
 function esc_attr( $text ) { return esc_html( $text ); }
 function esc_url( $url ) { return esc_html( $url ); }
 function esc_html__( $text ) { return esc_html( $text ); }
+function esc_attr__( $text ) { return esc_attr( $text ); }
 function esc_html_e( $text ) { echo esc_html( $text ); }
 function esc_attr_e( $text ) { echo esc_attr( $text ); }
 function number_format_i18n( $n ) { return number_format( (float) $n ); }
@@ -108,12 +109,15 @@ dm_assert( array( '2001: A Space Odyssey', '1968' ) === lunara_debrief_method_sp
 dm_assert( array( 'Jaws', '1975' ) === lunara_debrief_method_split_title_year( 'Jaws (1975)', '' ), 'A bare year parenthetical becomes the year.' );
 dm_assert( array( 'Jaws (Spielberg)', '' ) === lunara_debrief_method_split_title_year( 'Jaws (Spielberg)', '' ), 'A parenthetical without a year is left alone.' );
 dm_assert( array( '1917', '' ) === lunara_debrief_method_split_title_year( '1917', '' ), 'A numeric title is never mistaken for a year.' );
+dm_assert( array( 'Under the Skin', '2013' ) === lunara_debrief_method_split_title_year( 'Under the Skin (2013). The opposite argument about how to film something not from here. Glazer gives you almost nothing', '' ), 'A note after the year and a full stop is cut from the title (live 3.2.94 defect).' );
+dm_assert( array( 'Heat', '1995' ) === lunara_debrief_method_split_title_year( 'Heat (Mann, 1995): Two professionals.', '' ), 'A colon after a director-and-year parenthetical also ends the title.' );
+dm_assert( array( 'Mr. Smith Goes to Washington', '1939' ) === lunara_debrief_method_split_title_year( 'Mr. Smith Goes to Washington (1939)', '' ), 'A full stop inside the title is left alone.' );
 dm_assert( array( 'Title (Kubrick, 1968)', '1970' ) === lunara_debrief_method_split_title_year( 'Title (Kubrick, 1968)', '1970' ), 'An explicit year wins; the title is untouched.' );
 
 // ---- Index ----------------------------------------------------------------------
 dm_catalogue();
 $index = lunara_debrief_method_build_index();
-dm_assert( 2 === $index['version'] && LUNARA_DEBRIEF_INDEX_VERSION === $index['version'], 'The payload records its version.' );
+dm_assert( 3 === $index['version'] && LUNARA_DEBRIEF_INDEX_VERSION === $index['version'], 'The payload records its version.' );
 dm_assert( 5 === $index['reviews_total'], 'Only published reviews are walked.' );
 dm_assert( 4 === $index['reviews_debrief'], 'Reviews without pairings are not counted as debriefed.' );
 dm_assert( 1 === $index['reviews_trio'], 'Only full-trio reviews count as trios.' );
@@ -137,23 +141,23 @@ dm_assert( LUNARA_DEBRIEF_INDEX_MAX_FILMS === count( $big['films'] ) && 30 === $
 
 // ---- Cache: version, retired keys, invalidation ---------------------------------
 dm_catalogue();
-$GLOBALS['dm']['transients']['lunara_debrief_index_v2'] = array( 'films' => array(), 'recent' => array() ); // v1-shaped payload under the new key.
+$GLOBALS['dm']['transients']['lunara_debrief_index_v3'] = array( 'films' => array(), 'recent' => array() ); // v1-shaped payload under the new key.
 $fresh = lunara_debrief_method_index();
-dm_assert( 2 === $fresh['version'] && 1 === $GLOBALS['dm']['transient_sets'] && 1 === $GLOBALS['dm']['queries'], 'A payload without the current shape is rebuilt, never served.' );
+dm_assert( 3 === $fresh['version'] && 1 === $GLOBALS['dm']['transient_sets'] && 1 === $GLOBALS['dm']['queries'], 'A payload without the current shape is rebuilt, never served.' );
 $again = lunara_debrief_method_index();
 dm_assert( $fresh === $again && 1 === $GLOBALS['dm']['queries'], 'A current payload is served from cache.' );
 $GLOBALS['dm']['transients']['lunara_debrief_index_v1'] = array( 'films' => array(), 'recent' => array() );
 lunara_debrief_method_flush_index( 110 );
-dm_assert( ! isset( $GLOBALS['dm']['transients']['lunara_debrief_index_v2'] ) && ! isset( $GLOBALS['dm']['transients']['lunara_debrief_index_v1'] ), 'A review change clears the current and retired keys.' );
+dm_assert( ! isset( $GLOBALS['dm']['transients']['lunara_debrief_index_v3'] ) && ! isset( $GLOBALS['dm']['transients']['lunara_debrief_index_v1'] ) && in_array( 'lunara_debrief_index_v2', $GLOBALS['dm']['deleted'], true ), 'A review change clears the current and retired keys.' );
 lunara_debrief_method_index(); $GLOBALS['dm']['deleted'] = array();
 $GLOBALS['dm']['posts'][900] = new WP_Post( 900, 'journal', 'publish', 'Journal' );
 lunara_debrief_method_flush_index( 900 );
 dm_assert( array() === $GLOBALS['dm']['deleted'], 'Unrelated post types never flush the index.' );
 lunara_debrief_method_flush_index( 501 );
-dm_assert( in_array( 'lunara_debrief_index_v2', $GLOBALS['dm']['deleted'], true ), 'A linked movie change flushes the index.' );
+dm_assert( in_array( 'lunara_debrief_index_v3', $GLOBALS['dm']['deleted'], true ), 'A linked movie change flushes the index.' );
 $GLOBALS['dm']['deleted'] = array();
 lunara_debrief_method_flush_index( 999999, new WP_Post( 999999, 'review', 'trash' ) );
-dm_assert( in_array( 'lunara_debrief_index_v2', $GLOBALS['dm']['deleted'], true ), 'A permanently deleted review flushes via the hook\'s post object.' );
+dm_assert( in_array( 'lunara_debrief_index_v3', $GLOBALS['dm']['deleted'], true ), 'A permanently deleted review flushes via the hook\'s post object.' );
 $GLOBALS['dm']['deleted'] = array();
 lunara_debrief_method_flush_on_meta( 1, 110, '_edit_lock' );
 lunara_debrief_method_flush_on_meta( 1, 900, '_lunara_theme_echo' );
@@ -161,7 +165,7 @@ dm_assert( array() === $GLOBALS['dm']['deleted'], 'Unrelated meta, and pairing-n
 foreach ( array( '_lunara_theme_echo', '_lunara_counter_program', '_lunara_career_context', '_lunara_craft_mirror', 'theme_echo_movie', 'counter_program_movie', 'career_context_movie' ) as $key ) {
 	$GLOBALS['dm']['deleted'] = array();
 	lunara_debrief_method_flush_on_meta( 1, 110, $key );
-	dm_assert( in_array( 'lunara_debrief_index_v2', $GLOBALS['dm']['deleted'], true ), 'Pairing meta flushes the index: ' . $key );
+	dm_assert( in_array( 'lunara_debrief_index_v3', $GLOBALS['dm']['deleted'], true ), 'Pairing meta flushes the index: ' . $key );
 }
 foreach ( array( 'save_post_review', 'save_post_movie', 'deleted_post', 'trashed_post', 'untrashed_post', 'added_post_meta', 'updated_post_meta', 'deleted_post_meta' ) as $hook ) { dm_assert( ! empty( $GLOBALS['dm']['actions'][ $hook ] ), 'Invalidation is wired to ' . $hook ); }
 
@@ -208,13 +212,25 @@ function dm_render() {
 dm_catalogue();
 $html = dm_render();
 preg_match_all( '/data-lunara-site-studio-section="([a-z-]+)"/', $html, $markers );
-dm_assert( array( 'hero', 'moves', 'why', 'specimen', 'canon', 'recent', 'next' ) === $markers[1], 'Default render shows every section with content; the desk seat waits for page content.' );
+dm_assert( array( 'hero', 'moves', 'why', 'specimen', 'recent', 'next' ) === $markers[1], 'Default render shows every public section with content; the desk seat waits for page content.' );
 dm_assert( false !== strpos( $html, '<h1 class="lunara-debrief-title">Lunara Debrief</h1>' ), 'An empty heading setting falls back to the page title.' );
-dm_assert( false !== strpos( $html, 'data-review="110"' ), 'The specimen is the newest full trio.' );
-dm_assert( 2 === substr_count( $html, '<li class="lunara-debrief-canon-item">' ), 'Canon lists both repeat films.' );
-dm_assert( false !== strpos( $html, 'sizes="(min-width: 1000px) 240px, 76px"' ), 'Canon posters carry their rendered-width hint.' );
-dm_assert( false !== strpos( $html, '<span class="lunara-debrief-canon-year">(1968)</span>' ) && false === strpos( $html, '(Kubrick, 1968)' ), 'The canon shows a clean title and year.' );
-dm_assert( 1 === preg_match( '/In the Debriefs for<\/span>\s*<a href="https:\/\/example.test\/review\/110\/">Resident Evil<\/a>, <a href="https:\/\/example.test\/review\/109\/">The Dog Stars<\/a>, <a href="https:\/\/example.test\/review\/105\/">The Invite<\/a>/', $html ), 'Each canon film links the reviews that prescribed it.' );
+dm_assert( 1 === preg_match( '/<li class="lunara-debrief-orbit-slide is-active is-drawn" data-orbit-slide data-review="110"/', $html ), 'The constellation opens on the newest full trio, complete without JavaScript.' );
+dm_assert( 1 === substr_count( $html, 'data-orbit-slide ' ), 'Only full trios join the constellation (one in the fixture).' );
+dm_assert( 3 === substr_count( $html, 'lunara-debrief-orbit-line--spoke' ) && 3 === substr_count( $html, 'lunara-debrief-orbit-line--rim' ), 'A full trio draws three spokes and closes a three-edge triangle.' );
+dm_assert( 1 === preg_match( '/data-orbit-node="theme" href="https:\/\/example.test\/movie\/501\/">/', $html ), 'An internal pairing links in place.' );
+dm_assert( false !== strpos( $html, '<span class="lunara-debrief-orbit-title">Resident Evil</span>' ) && false !== strpos( $html, '<span class="lunara-debrief-orbit-role">The Review</span>' ), 'The centre names the reviewed film.' );
+dm_assert( false !== strpos( $html, 'sizes="(min-width: 760px) 150px, 26vw"' ), 'Pairing posters carry their rendered-width hint.' );
+dm_assert( false === strpos( $html, 'data-orbit-controls' ), 'A single Debrief needs no controls.' );
+dm_assert( false === strpos( $html, 'lunara-debrief-canon' ) && false === strpos( $html, 'Distinct titles' ), 'The canon and the distinct-title count never reach the public page.' );
+dm_assert( false !== strpos( $html, '<a data-orbit-caption href="https://example.test/review/110/">' ), 'The heading names the Debrief on show.' );
+
+// ---- The private canon (dashboard only) -------------------------------------------------
+$canon_html = lunara_debrief_method_canon_html( $index, lunara_debrief_method_settings() );
+dm_assert( 2 === substr_count( $canon_html, '<li class="lunara-debrief-canon-item">' ), 'The private canon lists both repeat films.' );
+dm_assert( false !== strpos( $canon_html, '<span class="lunara-debrief-canon-year">(1968)</span>' ) && false === strpos( $canon_html, '(Kubrick, 1968)' ), 'The canon shows a clean title and year.' );
+dm_assert( 1 === preg_match( '/In the Debriefs for <a href="https:\/\/example.test\/review\/110\/">Resident Evil<\/a>, <a href="https:\/\/example.test\/review\/109\/">The Dog Stars<\/a>, <a href="https:\/\/example.test\/review\/105\/">The Invite<\/a>/', $canon_html ), 'Each canon film links the reviews that prescribed it.' );
+dm_assert( false !== strpos( $canon_html, '4 reviews debriefed · 7 pairings · 4 distinct films' ), 'The private totals include the distinct-film count.' );
+dm_assert( ! empty( $GLOBALS['dm']['actions']['wp_dashboard_setup'] ), 'The canon registers on the dashboard.' );
 dm_assert( 4 === substr_count( $html, '<li class="lunara-debrief-recent-item">' ), 'Recent Debriefs list every debriefed review up to the count.' );
 dm_assert( ! empty( $GLOBALS['dm']['primed'] ) && in_array( 105, $GLOBALS['dm']['primed'], true ), 'Linked reviews are primed in one query.' );
 dm_assert( 1 === preg_match( '/<div class="lunara-debrief-why-body">(.*?)<\/div>/s', $html, $why ) && 2 === substr_count( $why[1], '<p>' ), 'Why Three renders its two default paragraphs.' );
@@ -239,7 +255,8 @@ dm_assert( array( 'hero', 'moves', 'specimen', 'desk', 'recent' ) === $markers[1
 dm_assert( false !== strpos( $html, '>The Debrief, Explained</h1>' ) && false === strpos( $html, 'lunara-debrief-stats' ) && false === strpos( $html, 'A Lunara Film Signature' ), 'Heading, stats and an emptied kicker follow the settings.' );
 dm_assert( false === strpos( $html, '<script>' ) && false !== strpos( $html, 'What wound does it share? alert(1)' ), 'Saved text is sanitized and escaped.' );
 dm_assert( 2 === substr_count( $html, 'lunara-debrief-move-not' ), 'An emptied "what it is not" line is omitted for that move only.' );
-dm_assert( false !== strpos( $html, 'data-review="108"' ), 'A pinned specimen is honoured.' );
+dm_assert( 1 === preg_match( '/data-orbit-slide data-review="108".*data-orbit-slide data-review="110"/s', $html ), 'A pinned specimen leads the constellation, even without a full trio.' );
+dm_assert( 1 === substr_count( $html, 'data-orbit-controls hidden' ) && 2 === substr_count( $html, 'data-orbit-go=' ), 'Several Debriefs get one tab each, hidden until the script runs.' );
 dm_assert( false !== strpos( $html, '>Dalton Writes</p>' ) && false !== strpos( $html, '<p>The manifesto.</p>' ), 'The desk seat uses its kicker and the page content.' );
 dm_assert( 2 === substr_count( $html, '<li class="lunara-debrief-recent-item">' ), 'The recent count setting caps the list.' );
 
