@@ -34,6 +34,7 @@ Dalton, on the Debrief page's canon: *"I actually might want that to just stay b
 - **Fixed: a note leaking into a pairing's title.** "Under the Skin (2013). The opposite argument about how to film something not from here. Glazer gives you almost nothing" was showing as a title on the live `/debrief/` Recent Debriefs list. The shared parser splits only on a dash, so a note that follows the year with a full stop stayed in the title.
   - `lunara_debrief_method_split_title_year()` now cuts at a full stop, colon, semicolon, "!" or "?" that follows a "(YYYY)" or "(Director, YYYY)" parenthetical.
   - Titles containing a full stop ("Mr. Smith Goes to Washington (1939)") are untouched.
+  - The same fix goes into the shared parser, `lunara_parse_pair_it_with_value()` in `inc/debrief.php`, and its copy in the legacy `[lunara_debrief]` shortcode. When a dash-split still leaves "(YYYY). more" in the title, the tail moves to the front of the note, joined by an em dash, so no words are lost. The live Hope review's Pair It With card showed the same leaked title.
 - **The index cache moves to v3.** The payload shape is unchanged, but the stored titles are wrong, so the bump replaces them on deploy instead of after the 12-hour TTL. v2 joins the retired keys cleared on every flush.
 
 ## 2026-09-27 — Theme 3.2.94: single reviews lose the share card and the rail buttons

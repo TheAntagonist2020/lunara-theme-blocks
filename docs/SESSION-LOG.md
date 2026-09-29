@@ -32,7 +32,7 @@ there; `AGENTS.md` is the single canonical copy.)
 Dalton asked for two things on `/debrief/`. First, the Debrief Canon should *"stay behind the scenes because I feel like that shows me being repetitive."* Second, the page should be animated *"in a new and exciting way."* Theme 3.2.95 on `claude/sharp-curie-wtaszy` does both.
 - The canon and the "Distinct titles" count leave the public page. The canon becomes a private WordPress dashboard widget.
 - The static featured Debrief becomes an animated constellation. The reviewed film sits at the centre, gold lines draw out to its three pairings, a triangle closes around them, and it cycles through up to six Debriefs.
-- A live title defect found along the way is fixed: a pairing's note leaked into its title on the live Recent Debriefs list.
+- A live title defect found along the way is fixed at the source: a pairing's note leaked into its title on the live Recent Debriefs list and on the Hope review's own Pair It With card.
 
 A draft PR is open. Nothing is merged. Theme auto-deploy is on, so merging this is deploying it; that stays Dalton's call.
 
@@ -43,6 +43,7 @@ A draft PR is open. Nothing is merged. Theme auto-deploy is on, so merging this 
 | Live build (`/debrief/` meta) | `3.2.94+20260927-213901` |
 | Live `/debrief/` Recent Debriefs, 8 entries | All 8 are full trios. One title is defective: "Under the Skin (2013). The opposite argument about how to film something not from here. Glazer gives you almost nothing" |
 | 8 live review pages, pair cards | 8/8 review posters and 24/24 pairing posters resolve (used as the browser fixture) |
+| Hope review, Pair It With card titles | "The Host", "Under the Skin (2013). The opposite argument … almost nothing", "The Wailing". The same leak, from the shared parser |
 
 ### What shipped and why
 
@@ -67,7 +68,7 @@ Code-level detail: `docs/CHANGELOG.md` → 3.2.95.
 
 | Gate | Result |
 | --- | --- |
-| `debrief-method-runtime` | 88 checks pass (was 75). New checks cover the constellation markup, the private canon widget, canon and distinct-title absence from the public page, the title-leak cases, and the v3 key |
+| `debrief-method-runtime` | 90 checks pass (was 75). New checks cover the constellation markup, the private canon widget, canon and distinct-title absence from the public page, the title-leak cases in both the index and the real shared parser, and the v3 key |
 | `site-studio-debrief-method-runtime` | 364 checks pass, with the canon marker removed from every layer |
 | Related runtimes | film-year-label, image-delivery (28), reviews-opening (157), site-studio foundation, private-preview and editorial all pass. `debrief-public-renderer` harness: 12/12 flags |
 | `php -l` (5 files), `node --check` (3 files), `git diff --check` | Pass |
@@ -82,7 +83,6 @@ None. Earlier entries were accurate for their time.
 
 ### Logged, not fixed
 
-- The shared parser (`lunara_parse_pair_it_with_value()` in `inc/debrief.php`) still splits a note from a title only on a dash. The review page's own Pair It With cards may show the same "Under the Skin (2013). …" title. Only the Debrief index was corrected here. Check the Hope review's card; the fix belongs in the shared parser.
 - The constellation fetches up to 24 posters on the first uncached render of `/debrief/`. The edge cache absorbs repeats; re-measure after deploy.
 
 ### Punch-list carried forward
@@ -95,7 +95,7 @@ None. Earlier entries were accurate for their time.
 
 ### Whose move is next
 
-Dalton's: watch the constellation on the PR's branch, or say merge. After the merge the agent verifies 3.2.95 live and checks the Under the Skin title on both surfaces.
+Dalton's: watch the constellation on the PR's branch, or say merge. After the merge the agent verifies 3.2.95 live and checks the Under the Skin title on `/debrief/` and on the Hope review.
 
 ## 2026-09-27 — Theme 3.2.94 live: reviews lose the share card and rail buttons, and are centred; plugin uploads crash server-side
 

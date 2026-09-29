@@ -112,6 +112,10 @@ dm_assert( array( '1917', '' ) === lunara_debrief_method_split_title_year( '1917
 dm_assert( array( 'Under the Skin', '2013' ) === lunara_debrief_method_split_title_year( 'Under the Skin (2013). The opposite argument about how to film something not from here. Glazer gives you almost nothing', '' ), 'A note after the year and a full stop is cut from the title (live 3.2.94 defect).' );
 dm_assert( array( 'Heat', '1995' ) === lunara_debrief_method_split_title_year( 'Heat (Mann, 1995): Two professionals.', '' ), 'A colon after a director-and-year parenthetical also ends the title.' );
 dm_assert( array( 'Mr. Smith Goes to Washington', '1939' ) === lunara_debrief_method_split_title_year( 'Mr. Smith Goes to Washington (1939)', '' ), 'A full stop inside the title is left alone.' );
+$leak = lunara_parse_pair_it_with_value( 'Under the Skin (2013). The opposite argument about how to film something not from here. Glazer gives you almost nothing — and it works.', 0, false );
+dm_assert( 'Under the Skin' === $leak['title_base'] && '2013' === $leak['year'] && 'The opposite argument about how to film something not from here. Glazer gives you almost nothing — and it works.' === $leak['note'], 'The shared parser keeps a full-stop note out of the title and loses none of it (review cards).' );
+$plain = lunara_parse_pair_it_with_value( 'Heat (1995) — Two professionals.', 0, false );
+dm_assert( 'Heat' === $plain['title_base'] && 'Two professionals.' === $plain['note'], 'A dash-separated pairing parses as before.' );
 dm_assert( array( 'Title (Kubrick, 1968)', '1970' ) === lunara_debrief_method_split_title_year( 'Title (Kubrick, 1968)', '1970' ), 'An explicit year wins; the title is untouched.' );
 
 // ---- Index ----------------------------------------------------------------------
