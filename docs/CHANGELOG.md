@@ -28,6 +28,13 @@ Dalton chose "the end of every review" as the next place for the Debrief's motio
   - Without JavaScript the cards render as before. Under reduced motion everything is drawn and shown at once.
   - A ResizeObserver re-lays the thread after spoiler reveals and late posters.
   - Styles are in `lunara-review-components.css`, which single reviews already load.
+- **The moves have one-word names: Echo, Counter, Context.** This is Dalton's call, replacing Theme Echo, Counter-Program and Career Context.
+  - Renamed everywhere readers or editors see them: review cards, the legacy Debrief list, `/debrief/` and its Site Studio defaults, About, the Oscars-portal copy in `helpers.php`, Control Desk, the Review meta box and the Pairing Showcase block's suggestions.
+  - Stored field names and meta keys are unchanged.
+  - The content autofill parser in `inc/debrief.php` reads the new headings as well as the old ones.
+  - Site Studio search keeps the old names as aliases.
+  - The matching editor and importer change ships as Lunara Core 0.8.13 ([lunara-plugin-core#36](https://github.com/TheAntagonist2020/lunara-plugin-core/pull/36)).
+  - Explainer copy Dalton has already saved in Site Studio keeps whatever words he wrote; only the defaults change.
 
 ## 2026-09-29 — Theme 3.2.95: the Debrief constellation, and the canon goes private
 

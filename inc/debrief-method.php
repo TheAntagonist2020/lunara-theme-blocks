@@ -3,7 +3,7 @@
  * The Debrief Method — the public explainer page, its settings, and its live index.
  *
  * Every review closes with the Lunara Debrief: three films in conversation
- * with the one just reviewed — a Theme Echo, a Counter-Program, and a Career
+ * with the one just reviewed — an Echo, a Counter, and a
  * Context. This module backs the page that explains the method
  * (page-debrief.php, auto-applied to the page with slug "debrief") and
  * aggregates every review's pairings into a cached index: totals, the
@@ -80,7 +80,7 @@ if ( ! function_exists( 'lunara_debrief_method_roles' ) ) {
 			'theme'   => array(
 				'relation' => 'theme_echo',
 				'meta'     => '_lunara_theme_echo',
-				'label'    => __( 'Theme Echo', 'lunara-film' ),
+				'label'    => __( 'Echo', 'lunara-film' ),
 				'question' => __( 'What is this film really about — and who else has said it?', 'lunara-film' ),
 				'copy'     => __( 'A film that shares the same wound, obsession, or question, told in a different key. Genre and era do not matter. The echo deepens the idea you just read about.', 'lunara-film' ),
 				'not'      => __( 'Not a lookalike. "If you liked this, you\'ll like that" is how an algorithm talks.', 'lunara-film' ),
@@ -88,7 +88,7 @@ if ( ! function_exists( 'lunara_debrief_method_roles' ) ) {
 			'counter' => array(
 				'relation' => 'counter_program',
 				'meta'     => '_lunara_counter_program',
-				'label'    => __( 'Counter-Program', 'lunara-film' ),
+				'label'    => __( 'Counter', 'lunara-film' ),
 				'question' => __( 'What is the strongest argument against it?', 'lunara-film' ),
 				'copy'     => __( 'A film that answers the same question the opposite way — the rebuttal, the antidote, the other side of the coin. You leave with a debate instead of a bubble.', 'lunara-film' ),
 				'not'      => __( 'Not a "better movie." It is the film this one should be arguing with.', 'lunara-film' ),
@@ -96,7 +96,7 @@ if ( ! function_exists( 'lunara_debrief_method_roles' ) ) {
 			'career'  => array(
 				'relation' => 'career_context',
 				'meta'     => '_lunara_career_context',
-				'label'    => __( 'Career Context', 'lunara-film' ),
+				'label'    => __( 'Context', 'lunara-film' ),
 				'question' => __( 'Where does this sit in the artist\'s story?', 'lunara-film' ),
 				'copy'     => __( 'A film that explains the trajectory behind this one — the earlier work that makes it legible, the influence it inherits, or the road the artist did not take.', 'lunara-film' ),
 				'not'      => __( 'Not a filmography dump. One film, chosen because it changes how you see this one.', 'lunara-film' ),
@@ -144,7 +144,7 @@ if ( ! function_exists( 'lunara_debrief_method_settings_spec' ) ) {
 			'title'  => $text( 'lunara_debrief_moves_title', __( 'Every pairing answers a different question.', 'lunara-film' ), 220, __( 'Heading', 'lunara-film' ) ),
 		);
 		foreach ( $roles as $slug => $role ) {
-			/* translators: %s: Debrief move name, e.g. Theme Echo. */
+			/* translators: %s: Debrief move name, e.g. Echo. */
 			$moves[ $slug . '_question' ] = $text( 'lunara_debrief_' . $slug . '_question', $role['question'], 220, sprintf( __( '%s: the question it answers', 'lunara-film' ), $role['label'] ) );
 			/* translators: %s: Debrief move name. */
 			$moves[ $slug . '_copy' ] = $text( 'lunara_debrief_' . $slug . '_copy', $role['copy'], 600, sprintf( __( '%s: what it is', 'lunara-film' ), $role['label'] ), 'textarea' );
@@ -166,7 +166,7 @@ if ( ! function_exists( 'lunara_debrief_method_settings_spec' ) ) {
 				'title'  => $text( 'lunara_debrief_why_title', __( 'An algorithm recommends more of the same. A critic recommends a conversation.', 'lunara-film' ), 220, __( 'Heading', 'lunara-film' ) ),
 				'body'   => $text(
 					'lunara_debrief_why_body',
-					__( 'A single recommendation just agrees with you. Three chosen on purpose form a triangle around the film: the echo shows what it shares with cinema history, the counter-program tests its argument, and the career context shows how it was made. Read all three and you understand the film you just read about better.', 'lunara-film' )
+					__( 'A single recommendation just agrees with you. Three chosen on purpose form a triangle around the film: the Echo shows what it shares with cinema history, the Counter tests its argument, and the Context shows how it was made. Read all three and you understand the film you just read about better.', 'lunara-film' )
 						. "\n\n"
 						. __( 'Every pairing is chosen by hand, carries a one-line reason, and links into the Lunara Oscar Ledger, so each Debrief also leads into the site\'s Academy Awards history.', 'lunara-film' ),
 					2000,

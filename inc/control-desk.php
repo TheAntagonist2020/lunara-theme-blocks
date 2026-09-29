@@ -7614,15 +7614,15 @@ function lunara_control_desk_render_review_pipeline_tab( $rows ) {
 
 /**
  * Relational Trinity backfill — published reviews missing any of the three
- * relational picks (Theme Echo / Counter-Program / Career Context). These
+ * relational picks (Echo / Counter / Context). These
  * are the reviews still rendering the legacy text fallback instead of the
  * relational cards, listed oldest-first so the backlog drains from the top.
  */
 function lunara_control_desk_get_trinity_gaps() {
     $relations = array(
-        'theme_echo_movie'      => __( 'Theme Echo', 'lunara-film' ),
-        'counter_program_movie' => __( 'Counter-Program', 'lunara-film' ),
-        'career_context_movie'  => __( 'Career Context', 'lunara-film' ),
+        'theme_echo_movie'      => __( 'Echo', 'lunara-film' ),
+        'counter_program_movie' => __( 'Counter', 'lunara-film' ),
+        'career_context_movie'  => __( 'Context', 'lunara-film' ),
     );
 
     $ids = get_posts(
@@ -7793,7 +7793,7 @@ function lunara_control_desk_render_trinity_backfill_panel() {
         <div class="lunara-control-desk-panel-header">
             <p class="lunara-control-desk-kicker"><?php esc_html_e( 'Relational Trinity', 'lunara-film' ); ?></p>
             <h2><?php esc_html_e( 'Backfill the three picks on every published review', 'lunara-film' ); ?></h2>
-            <p class="lunara-control-desk-intro"><?php esc_html_e( 'Reviews without a Theme Echo, Counter-Program, or Career Context pick still render the legacy text fallback instead of the relational cards. Oldest first, so the backlog drains from the top.', 'lunara-film' ); ?></p>
+            <p class="lunara-control-desk-intro"><?php esc_html_e( 'Reviews without an Echo, Counter, or Context pick still render the legacy text fallback instead of the relational cards. Oldest first, so the backlog drains from the top.', 'lunara-film' ); ?></p>
         </div>
         <?php lunara_control_desk_render_status_cards( $cards ); ?>
         <?php if ( $data['gaps'] ) : ?>
@@ -10438,15 +10438,15 @@ function lunara_control_desk_review_pairing_source_rows( $limit = 80, $resolve_p
     foreach ( $posts as $post ) {
         $pairings = array(
             'theme_echo'      => array(
-                'label' => __( 'Theme Echo', 'lunara-film' ),
+                'label' => __( 'Echo', 'lunara-film' ),
                 'value' => get_post_meta( $post->ID, '_lunara_theme_echo', true ),
             ),
             'counter_program' => array(
-                'label' => __( 'Counter-Program', 'lunara-film' ),
+                'label' => __( 'Counter', 'lunara-film' ),
                 'value' => get_post_meta( $post->ID, '_lunara_counter_program', true ),
             ),
             'career_context'  => array(
-                'label' => __( 'Career Context', 'lunara-film' ),
+                'label' => __( 'Context', 'lunara-film' ),
                 'value' => function_exists( 'lunara_get_career_context_meta' ) ? lunara_get_career_context_meta( $post->ID ) : get_post_meta( $post->ID, '_lunara_career_context', true ),
             ),
         );
@@ -10647,7 +10647,7 @@ function lunara_control_desk_review_retention_pairing_signal( $post_id ) {
     return lunara_control_desk_review_retention_signal(
         'needs-work',
         __( 'Pair It With missing', 'lunara-film' ),
-        __( 'No Theme Echo, Counter-Program, or Career Context companion is set.', 'lunara-film' ),
+        __( 'No Echo, Counter, or Context companion is set.', 'lunara-film' ),
         array( 'count' => 0 )
     );
 }

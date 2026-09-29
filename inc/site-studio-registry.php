@@ -364,7 +364,7 @@ if ( ! function_exists( 'lunara_site_studio_default_surfaces' ) ) {
 				'group'                 => __( 'Editorial', 'lunara-film' ),
 				'label'                 => __( 'Debrief Page', 'lunara-film' ),
 				'description'           => __( 'Edit the Debrief Method page: its words, which sections appear, the featured Debrief and how many canon films and recent Debriefs it lists.', 'lunara-film' ),
-				'aliases'               => array( 'debrief', 'debrief method', 'pair it with', 'pairings', 'theme echo', 'counter-program', 'career context', 'canon' ),
+				'aliases'               => array( 'debrief', 'debrief method', 'pair it with', 'pairings', 'theme echo', 'counter-program', 'career context', 'echo', 'counter', 'context', 'canon' ),
 				'owner'                 => 'theme:debrief-method',
 				'kind'                  => 'presentation',
 				'capability'            => 'edit_theme_options',

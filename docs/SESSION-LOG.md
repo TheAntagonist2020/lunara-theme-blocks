@@ -51,6 +51,8 @@ Code detail: `docs/CHANGELOG.md` → 3.2.96.
 - **Phones only.** Desktop has the same inflated role label, but it reads as intended there, so it is left alone.
 - **The thread uses the cards themselves** as the constellation's satellites instead of adding a second poster set. The notes, IMDb links and Oscar pills stay the content.
 
+**Rename.** Dalton: *"we could just call it counter. Honestly all three of them could stand and just have one word names."* He chose **Echo · Counter · Context**, applied everywhere. The rename is in theme 3.2.96 and Core 0.8.13 ([lunara-plugin-core#36](https://github.com/TheAntagonist2020/lunara-plugin-core/pull/36)). Stored keys are unchanged, and every parser reads both vocabularies.
+
 ### Gate ledger
 
 | Gate | Result |
@@ -60,6 +62,8 @@ Code detail: `docs/CHANGELOG.md` → 3.2.96.
 | Thread | Nodes light in order with scroll. A full scroll reaches progress 1.0 with 3/3 lit. Reduced motion: no animation class, 3/3 shown, progress 1.0 |
 | `article-layout-browser-runtime` / `footer-recovery-layout-browser-runtime` | 444 / 330 assertions pass (global Playwright via NODE_PATH) |
 | `debrief-method-runtime` / `reviews-opening-runtime` | 90 / 157 pass |
+| Rename, theme | debrief-method 90, site-studio-debrief-method 364, reviews-opening 157, control-desk automation and handoffs (12), Site Studio foundation, editorial and private-preview, film-year-label, image-delivery 28, `debrief-public-renderer` harness 12/12: all pass. The autofill patterns were checked against old and new headings, bolded and plain |
+| Rename, Core 0.8.13 | All 24 regression suites pass. A new parser check proves one-word headings (bold and plain) parse identically to the old ones |
 | `php -l`, `node --check`, `git diff --check` | Pass |
 | Not runnable here | `reviews-archive-first-paint` and `reviews-archive-text-led-cards` need `puppeteer`; `reviews-opening-browser` needs Chrome at `/opt/google/chrome`. All three fail identically on an untouched `origin/main` worktree |
 
