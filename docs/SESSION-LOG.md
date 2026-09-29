@@ -25,6 +25,40 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-29 (later) — Theme 3.2.95 live: the Debrief constellation, canary GO
+
+### Headline
+
+Dalton merged [PR #214](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/214) himself (merge `07b31de`, 11:34 UTC). Theme auto-deploy carried it live in under a minute. The Debrief constellation, the private canon and the title fix are all confirmed on production.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| `lunara-build` on `/debrief/` | `3.2.95+20260929-113452`, first seen 11:35:06 UTC |
+| Canary `lunara-canary-verify.sh 3.2.95` | **GO**. Three cache-separated reads agree; the Journal and Oscars sentinels report LIVE_COHERENT |
+| `/debrief/` markup | 6 constellation slides; `lunara-debrief-orbit.js` enqueued; no canon markup; no "Distinct titles" |
+| Constellation CSS | Present in the Jetpack concat bundle `_jb_static/??88063c4d5f`: 8 slide rules and the `lunara-orbit-signal` keyframes. The page HTML never names the sheet, because concatenation hides it |
+| Under the Skin, `/debrief/` | Title "Under the Skin" in the constellation and Recent Debriefs |
+| Under the Skin, Hope review card | Title "Under the Skin"; the note begins "The opposite argument about how to film something not from here…" |
+| Rollback hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on `07b31de`, tree `c55bf394…` verified, pushed with lease |
+
+Not verified: a live browser render with real posters, because the container's browser cannot reach production through the proxy. Rendering was verified pre-merge on a fixture of the same 8 live Debriefs; see the entry below.
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-theme-blocks | `07b31de` | Merge of PR #214: Theme 3.2.95 |
+| lunara-theme-blocks | hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on `07b31de` |
+| lunara-theme-blocks | this record | Live verification record. Rebuild the hatch again on its merge |
+
+### Whose move is next
+
+Dalton's. Suggested next steps:
+- rewrite the Debrief explainer copy in his voice (Site Studio → Reviews → Debrief page);
+- consider a compact constellation for each review's own Pair It With section.
+
 ## 2026-09-29 — Theme 3.2.95 candidate: the Debrief constellation; the canon goes private
 
 ### Headline
