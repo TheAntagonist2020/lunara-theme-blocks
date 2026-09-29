@@ -60,7 +60,18 @@ Core 0.8.13 ([lunara-plugin-core#36](https://github.com/TheAntagonist2020/lunara
 Dalton's:
 - optionally, check his saved Site Studio Debrief copy for the old names.
 
-Next build: motion for the Oscar Ledger (`lunara-plugin-oscars-ledger`). Rebuild the hatch after this record merges.
+Rebuild the hatch after this record merges.
+
+**Later in the session — Oscars Ledger 2.8.8, candidate.** [lunara-plugin-oscars-ledger#40](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/40) adds Ledger Motion: the Nomination Ring on film profiles and the Career Arc on person profiles (see `docs/CHANGELOG.md`). The Ledger auto-deploys, so merging it deploys it.
+
+Gates:
+- the new `tests/ledger-motion-runtime.php`, 35 checks;
+- all plugin contracts as CI runs them, with the two CI-skipped provenance contracts failing identically on `main`;
+- CI's syntax and CSS checks, run locally;
+- Chromium with the real dataset (Titanic, All About Eve, Streep, Disney) at 390 and 1280;
+- the section injected into the live Titanic and Streep pages.
+
+**Logged, not fixed:** every Ledger entity page's footer reads "Data sourced from the Academy of Motion Picture Arts and Sciences." That conflicts with Dalton's stated rule that no third party is credited in a header or footer. It is his call whether to remove it.
 
 ## 2026-09-29 (evening) — Theme 3.2.96 candidate: the Pair It With thread; phone cards fixed
 
