@@ -25,6 +25,35 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-30 — Oscars Ledger 2.8.8 live: the Nomination Ring and the Career Arc
+
+### Headline
+
+Dalton merged [lunara-plugin-oscars-ledger#40](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/40) (merge `a387ef5`, 10:27 UTC). The Ledger auto-deploys, and Ledger Motion was on production by 10:28:21 UTC. Film profiles now open with the Nomination Ring, and person profiles with the Career Arc. The theme is unchanged at 3.2.96.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| `/oscars/title/tt0120338/` (Titanic), cache-busted | `#ledger-motion` renders as the ring; 11 `is-win` spokes; tally 14 nominations / 11 wins; `ledger-motion.js` enqueued |
+| `/oscars/name/nm0000658/` (Meryl Streep), cache-busted | `#ledger-motion` renders as the arc; 3 `is-win` nodes, each with a win title; tally 21 nominations / 3 wins; `ledger-motion.js` enqueued |
+| Canary `lunara-canary-verify.sh 3.2.96` | **GO**. Three reads agree on `3.2.96+20260929-120012`; the Journal and Oscars sentinels report LIVE_COHERENT |
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-plugin-oscars-ledger | `a387ef5` | Merge of PR #40: Ledger 2.8.8, Ledger Motion; auto-deployed |
+
+### Whose move is next
+
+Dalton's:
+- Merge this docs PR. Afterwards the rollback hatch gets rebuilt on the new main.
+- Decide whether to remove the Ledger footer line "Data sourced from the Academy of Motion Picture Arts and Sciences." It is still live.
+- Decide whether Ceremony pages get motion next.
+
+---
+
 ## 2026-09-29 (night) — Theme 3.2.96 live: Echo · Counter · Context, the thread, readable phone cards
 
 ### Headline
