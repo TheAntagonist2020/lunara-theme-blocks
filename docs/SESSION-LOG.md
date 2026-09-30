@@ -25,6 +25,54 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-30 (evening) — Oscars Ledger 2.8.9 live: every spoke opens its race; speed work begins
+
+### Headline
+
+Dalton merged [lunara-plugin-oscars-ledger#41](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/41) at 20:59 UTC, and the Ledger auto-deployed by 21:00:52 UTC. Each Nomination Ring spoke and each Career Arc node now links to its race on the ceremony's full ballot (`/oscars/ceremony/N/?ledger=full#ceremony-category-…`). Dalton also merged theme [PR #216](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/216) (docs only; merge `793ea98`).
+
+Dalton then asked for the Oscars database to be made "lightning fast". The measurements that started that work are below.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Titanic `/oscars/title/tt0120338/` | 14 `aat-motion-link` spokes; the hidden record list is gone (the links carry it); the "Select any nomination" hint is present |
+| Streep `/oscars/name/nm0000658/` | 21 links, e.g. `/oscars/ceremony/51/?ledger=full#ceremony-category-actress-in-a-supporting-role` |
+| Anchors | All 14 of Titanic's fragments exist as `id=` on `/oscars/ceremony/70/?ledger=full` |
+| Canary `lunara-canary-verify.sh 3.2.96` | **GO** |
+| Rollback hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on `793ea98` as `d3b89cc`; tree `c55bf394…` verified; pushed with lease |
+
+### Speed baseline (anonymous curl, 2026-09-30)
+
+These are time-to-first-byte (TTFB) figures.
+
+| Request | TTFB |
+| --- | --- |
+| Any uncached WordPress request (a 404) | ~1.2s: the bootstrap floor |
+| Batcache hit | ~0.4s |
+| Cold title/name page | ~1.4–1.5s |
+| Cold ceremony page (plain or `?ledger=full`) | ~2.7–3.3s (the full ballot is 540KB) |
+| Cold `/oscars/` hub | up to 4.4s |
+| `/oscars/category/best-picture/` | 767KB HTML, 64KB of it inline `<style>` |
+
+- Every URL, the homepage included, reports `x-ac: … _atomic_dca BYPASS`, so the WordPress.com edge cache serves nothing.
+- Batcache stores a page only on its second hit and keeps it for 300s, so almost every long-tail Oscars page is a cold render.
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-plugin-oscars-ledger | merge of PR #41 | Ledger 2.8.9, clickable spokes; auto-deployed |
+| lunara-theme-blocks | `793ea98` | Merge of PR #216 (docs) |
+| lunara-theme-blocks | hatch `d3b89cc` | Rebuilt on `793ea98` |
+
+### Whose move is next
+
+Claude's: a multi-agent investigation and design pass on Oscars speed is running. Its plan comes to Dalton next, including any hosting setting only he can switch on.
+
+---
+
 ## 2026-09-30 — Oscars Ledger 2.8.8 live: the Nomination Ring and the Career Arc
 
 ### Headline
