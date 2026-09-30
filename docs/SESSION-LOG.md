@@ -25,6 +25,83 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-09-30 — Oscars Ledger 2.8.8 live: the Nomination Ring and the Career Arc
+
+### Headline
+
+Dalton merged [lunara-plugin-oscars-ledger#40](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/40) (merge `a387ef5`, 10:27 UTC). The Ledger auto-deploys, and Ledger Motion was on production by 10:28:21 UTC. Film profiles now open with the Nomination Ring, and person profiles with the Career Arc. The theme is unchanged at 3.2.96.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| `/oscars/title/tt0120338/` (Titanic), cache-busted | `#ledger-motion` renders as the ring; 11 `is-win` spokes; tally 14 nominations / 11 wins; `ledger-motion.js` enqueued |
+| `/oscars/name/nm0000658/` (Meryl Streep), cache-busted | `#ledger-motion` renders as the arc; 3 `is-win` nodes, each with a win title; tally 21 nominations / 3 wins; `ledger-motion.js` enqueued |
+| Canary `lunara-canary-verify.sh 3.2.96` | **GO**. Three reads agree on `3.2.96+20260929-120012`; the Journal and Oscars sentinels report LIVE_COHERENT |
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-plugin-oscars-ledger | `a387ef5` | Merge of PR #40: Ledger 2.8.8, Ledger Motion; auto-deployed |
+
+### Whose move is next
+
+Dalton's:
+- Merge this docs PR. Afterwards the rollback hatch gets rebuilt on the new main.
+- Decide whether to remove the Ledger footer line "Data sourced from the Academy of Motion Picture Arts and Sciences." It is still live.
+- Decide whether Ceremony pages get motion next.
+
+---
+
+## 2026-09-29 (night) — Theme 3.2.96 live: Echo · Counter · Context, the thread, readable phone cards
+
+### Headline
+
+Dalton merged [PR #215](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/215) (merge `1b38f97`, 11:59 UTC), and auto-deploy carried it live within a minute. On production:
+- every review's Pair It With cards read Echo, Counter and Context;
+- the gold thread draws through them as the reader scrolls;
+- the cards are readable on phones.
+
+Core 0.8.13 ([lunara-plugin-core#36](https://github.com/TheAntagonist2020/lunara-plugin-core/pull/36)), which renames the editor labels, was merged by Dalton at 12:00:40 UTC. **It went live with no Deploy click, so the Lunara Core connection auto-deploys too.** Earlier entries call Core's auto-deploy "unconfirmed"; this entry supersedes that.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Canary `lunara-canary-verify.sh 3.2.96` | **GO**. Three reads agree on `3.2.96+20260929-120012`; the Journal and Oscars sentinels report LIVE_COHERENT |
+| Hope review HTML | Role labels are `Echo`, `Counter`, `Context`; no old names remain; `lunara-pair-thread.js` is enqueued |
+| Hope review in Chromium, live assets, 390px | Thread present and animated; 3/3 nodes lit after a full scroll; section 1,916px tall (was 3,844); each role one line (14px); no horizontal scroll |
+| Same at 1280px | Thread present, 3/3 lit, layout unchanged (1,563px), no horizontal scroll |
+| Rollback hatch | `claude/rollback-exact-theme-3.2.43` rebuilt on `1b38f97`, tree `c55bf394…` verified, pushed with lease |
+| Live Core plugin file `wp-content/plugins/lunara-core/assets/js/lunara-review-draft-import-admin.js` | Two cache-busted reads carry `theme_echo: 'Echo'` and `career_context: 'Context'`: Core 0.8.13 is live about 2 minutes after its merge |
+
+### Commit ledger
+
+| Repo | Commit | Meaning |
+| --- | --- | --- |
+| lunara-theme-blocks | `1b38f97` | Merge of PR #215: Theme 3.2.96 |
+| lunara-theme-blocks | hatch `c7e62f4` | Rebuilt on `1b38f97` |
+| lunara-plugin-core | `ed7ea52` via PR #36 (merged) | Core 0.8.13 rename; CI lint green; auto-deployed |
+
+### Whose move is next
+
+Dalton's:
+- optionally, check his saved Site Studio Debrief copy for the old names.
+
+Rebuild the hatch after this record merges.
+
+**Later in the session — Oscars Ledger 2.8.8, candidate.** [lunara-plugin-oscars-ledger#40](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/40) adds Ledger Motion: the Nomination Ring on film profiles and the Career Arc on person profiles (see `docs/CHANGELOG.md`). The Ledger auto-deploys, so merging it deploys it.
+
+Gates:
+- the new `tests/ledger-motion-runtime.php`, 35 checks;
+- all plugin contracts as CI runs them, with the two CI-skipped provenance contracts failing identically on `main`;
+- CI's syntax and CSS checks, run locally;
+- Chromium with the real dataset (Titanic, All About Eve, Streep, Disney) at 390 and 1280;
+- the section injected into the live Titanic and Streep pages.
+
+**Logged, not fixed:** every Ledger entity page's footer reads "Data sourced from the Academy of Motion Picture Arts and Sciences." That conflicts with Dalton's stated rule that no third party is credited in a header or footer. It is his call whether to remove it.
+
 ## 2026-09-29 (evening) — Theme 3.2.96 candidate: the Pair It With thread; phone cards fixed
 
 ### Headline

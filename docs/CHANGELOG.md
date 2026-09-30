@@ -11,6 +11,15 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-29 — Oscars Ledger 2.8.8: Ledger Motion (the Nomination Ring and the Career Arc)
+
+Plugin-only; see [lunara-plugin-oscars-ledger#40](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/40) and the plugin's `readme.txt`.
+
+- **Film profiles get the Nomination Ring.** One spoke per nomination radiates from the poster, with Best Picture at twelve o'clock. The spokes draw clockwise, the wins light gold one at a time, and a tally counts up.
+- **Person profiles get the Career Arc.** Nominations rise above their ceremony year and the wins light gold. A person with eight or fewer wins has each winning film named. On phones the arc pans through the career inside its own frame.
+- **Rendered finished on the server.** The picture is complete without JavaScript and under reduced motion, and screen readers get the full record as a list.
+- **New `ledger-motion` entity section** between the stats bar and Ledger Crossroads. The theme's `lunara_oscars_compose_entity_route_sections()` passes it through untouched.
+
 ## 2026-09-29 — Theme 3.2.96: the Pair It With thread, and readable cards on phones
 
 Dalton chose "the end of every review" as the next place for the Debrief's motion. It was also where the site's most-read Debrief section was broken on phones.
