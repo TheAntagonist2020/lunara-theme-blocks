@@ -8,7 +8,7 @@ function lunara_home_oscar_picks_ceremony_year() { return 2027; }
 function lunara_oscar_ceremony_ordinal_from_year( $year ) { return '99th'; }
 function lunara_repair_mojibake_args( $args, $keys ) { return $args; }
 class WP_Query { public $args; public $post_count = 0; public $posts = array(); public function __construct( $args ) { $this->args = $args; $GLOBALS['home_oscars_queries'][] = $args; $this->posts = isset( $GLOBALS['home_oscars_query_posts'] ) ? $GLOBALS['home_oscars_query_posts'] : array(); } public function have_posts() { return false; } }
-$source = file_get_contents( dirname( __DIR__ ) . '/functions.php' );
+$source = file_get_contents( dirname( __DIR__ ) . '/inc/oscar-picks.php' ) . "\n" . file_get_contents( dirname( __DIR__ ) . '/functions.php' );
 foreach ( array( 'lunara_get_oscar_picks', 'lunara_get_oscar_facts', 'lunara_render_oscar_picks_carousel', 'lunara_render_oscar_facts_carousel' ) as $function ) {
 	if ( ! preg_match( '/\tfunction ' . $function . '\(.*?^\t\}/ms', $source, $match ) ) { throw new RuntimeException( $function . ' not found' ); }
 	eval( $match[0] );

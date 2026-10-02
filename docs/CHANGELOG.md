@@ -11,6 +11,315 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+## 2026-09-29 — Oscars Ledger 2.8.8: Ledger Motion (the Nomination Ring and the Career Arc)
+
+Plugin-only; see [lunara-plugin-oscars-ledger#40](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/40) and the plugin's `readme.txt`.
+
+- **Film profiles get the Nomination Ring.** One spoke per nomination radiates from the poster, with Best Picture at twelve o'clock. The spokes draw clockwise, the wins light gold one at a time, and a tally counts up.
+- **Person profiles get the Career Arc.** Nominations rise above their ceremony year and the wins light gold. A person with eight or fewer wins has each winning film named. On phones the arc pans through the career inside its own frame.
+- **Rendered finished on the server.** The picture is complete without JavaScript and under reduced motion, and screen readers get the full record as a list.
+- **New `ledger-motion` entity section** between the stats bar and Ledger Crossroads. The theme's `lunara_oscars_compose_entity_route_sections()` passes it through untouched.
+
+## 2026-09-29 — Theme 3.2.96: the Pair It With thread, and readable cards on phones
+
+Dalton chose "the end of every review" as the next place for the Debrief's motion. It was also where the site's most-read Debrief section was broken on phones.
+
+- **Fixed: Pair It With cards on phones (≤560px), live on every review.**
+  - Measured on the live Hope review at 390px, the card text had about 100px of width: "Counter-Program" broke into four lines and titles were clipped ("Under the Ski…"). The section was 3,844px tall.
+  - Causes: the Customizer's Additional CSS pads the card body 28px a side at every width; `body.single-review article p` inflates the role label to 18px; and the theme's phone rule gives the poster a 116px column.
+  - The fix, in `lunara-review-components.css` at ≤560px: an 84px poster sits beside the role and title, and the note and chips span the full card. The role returns to 0.66rem.
+  - Selectors outrank the Customizer rule (0,3,3), so the Customizer is not edited. Desktop is unchanged.
+  - Measured result: 3,844 → 1,916px (Hope) and 4,076 → 1,949px (Resident Evil), with no horizontal scroll.
+- **The thread.** `assets/js/lunara-pair-thread.js` (new, deferred, single reviews only) draws a gold line from the "Pair It With" heading through the three films as the reader scrolls.
+  - Each film's node lights in its role colour (gold, rust, blue) as the line reaches it, and its card rises into place.
+  - The line never retracts.
+  - Stacked cards get a vertical thread in the left gutter; cards side by side get a horizontal one. There is no thread when there is no gutter.
+  - Without JavaScript the cards render as before. Under reduced motion everything is drawn and shown at once.
+  - A ResizeObserver re-lays the thread after spoiler reveals and late posters.
+  - Styles are in `lunara-review-components.css`, which single reviews already load.
+- **The moves have one-word names: Echo, Counter, Context.** This is Dalton's call, replacing Theme Echo, Counter-Program and Career Context.
+  - Renamed everywhere readers or editors see them: review cards, the legacy Debrief list, `/debrief/` and its Site Studio defaults, About, the Oscars-portal copy in `helpers.php`, Control Desk, the Review meta box and the Pairing Showcase block's suggestions.
+  - Stored field names and meta keys are unchanged.
+  - The content autofill parser in `inc/debrief.php` reads the new headings as well as the old ones.
+  - Site Studio search keeps the old names as aliases.
+  - The matching editor and importer change ships as Lunara Core 0.8.13 ([lunara-plugin-core#36](https://github.com/TheAntagonist2020/lunara-plugin-core/pull/36)).
+  - Explainer copy Dalton has already saved in Site Studio keeps whatever words he wrote; only the defaults change.
+
+## 2026-09-29 — Theme 3.2.95: the Debrief constellation, and the canon goes private
+
+Dalton, on the Debrief page's canon: *"I actually might want that to just stay behind the scenes because I feel like that shows me being repetitive."* And on the page itself: *"there's got to be a way to animate this in a new and exciting way."*
+
+- **The constellation replaces the static featured Debrief.** The reviewed film sits at the centre, with its three pairings in a triangle around it: Theme Echo upper left, Counter-Program upper right, Career Context below.
+  - The film arrives first. Gold lines draw out to each pairing in turn, and each pairing lands as its line reaches it. A dashed rim then closes the triangle.
+  - After the draw, a halo breathes around the film, a glint travels outward along each line, and the pairings drift slightly.
+  - After a 7.2-second hold the next Debrief takes over. Tabs double as progress bars.
+- **What it cycles through.** The featured review leads (the existing Site Studio "Featured Review ID" setting still pins it). The newest other reviews with all three pairings follow, up to six in all. A pinned review older than the recent window, or with fewer than three pairings, still leads.
+- **Markup is server-rendered** in `lunara_debrief_method_orbit_html()`. Without JavaScript the first Debrief shows complete, with no lines and no controls.
+- **`assets/js/lunara-debrief-orbit.js`** (new, deferred, Debrief page only) measures poster centres and positions the lines. Lines are plain rotated `<span>`s, not SVG, so no sanitizer can strip them. It also runs the sequence.
+- **Autoplay pauses** off-screen, in a hidden tab, and on hover or keyboard focus. The Pause button stays paused until pressed again. Arrow keys move between tabs.
+- **Reduced motion:** lines are drawn at once, there is no autoplay, and the Pause button is hidden. The tabs still work.
+- **Layout:** below 760px the film sits on top and the three pairings in a row beneath it. From 760px it is the triangle, scaled 0.8 up to 980px. Captions sit on a dark backing so lines pass behind the text.
+- **The canon is private.**
+  - `page-debrief.php` no longer renders it, and the "Distinct titles" count is gone from the hero totals.
+  - The canon now lives in a WordPress dashboard widget, "The Debrief Canon (private)", for users who can edit posts. It shows the totals, including distinct films.
+  - The Site Studio canon settings are unchanged in shape and now drive that widget. Its toggle reads "Show on your WordPress dashboard (never public)".
+  - The `canon` preview marker is removed from all five copies of the section list: provider, registry, preview pilot, workspace JS and bridge JS.
+  - The canon's public CSS is removed.
+- **Fixed: a note leaking into a pairing's title.** "Under the Skin (2013). The opposite argument about how to film something not from here. Glazer gives you almost nothing" was showing as a title on the live `/debrief/` Recent Debriefs list. The shared parser splits only on a dash, so a note that follows the year with a full stop stayed in the title.
+  - `lunara_debrief_method_split_title_year()` now cuts at a full stop, colon, semicolon, "!" or "?" that follows a "(YYYY)" or "(Director, YYYY)" parenthetical.
+  - Titles containing a full stop ("Mr. Smith Goes to Washington (1939)") are untouched.
+  - The same fix goes into the shared parser, `lunara_parse_pair_it_with_value()` in `inc/debrief.php`, and its copy in the legacy `[lunara_debrief]` shortcode. When a dash-split still leaves "(YYYY). more" in the title, the tail moves to the front of the note, joined by an em dash, so no words are lost. The live Hope review's Pair It With card showed the same leaked title.
+- **The index cache moves to v3.** The payload shape is unchanged, but the stored titles are wrong, so the bump replaces them on deploy instead of after the 12-hour TTL. v2 joins the retired keys cleared on every flush.
+
+## 2026-09-27 — Theme 3.2.94: single reviews lose the share card and the rail buttons
+
+Dalton circled the bottom of a review, the "Share File / Put this review in circulation" card and the Browse Reviews and Director Archive buttons, and asked to remove them or move them into the sidebar. Reviews have no sidebar any more: the site's Additional CSS (the 2026-09-21 "LUNARA review layout fix") puts them in one centred 760px column and drops the rail below the article. On most reviews the rail held nothing visible but those two buttons, because the theme hides Where to Watch and Review Details on reviews. So the three blocks were removed, not moved.
+
+- **`single-review.php`:**
+  - No share card.
+  - No rail buttons, so the `_lunara_review_archive_cta_label` read goes.
+  - The rail renders only when a Ledger or Dossier card exists, so it never leaves an empty box plus the column's 40px row gap.
+- **The director archive stays one click away.** The hero's "2026 / Zach Cregger" line now links the director's name to their archive, using the lookup the Director Archive button used. It was the page's only link there. Styled as a quiet underline that turns gold on hover (`a.lunara-review-single-director-link`).
+- **Dead code removed:**
+  - `lunara_render_review_share_strip()`;
+  - the copy-link footer script and its click listeners (`lunara_output_review_share_strip_script`);
+  - the share card CSS;
+  - the Customizer "Archive Button Label" and "Director Button Label" controls;
+  - the review editor's "Browse Reviews CTA Label" input.
+- **Kept on purpose:**
+  - the stored `_lunara_review_archive_cta_label` meta and its API field maps, so no data is lost;
+  - the URL override, now labelled "Reviews Archive URL Override", because it still steers "Open Reviews" under More Lunara Criticism;
+  - the rule hiding Jetpack's sharing row on reviews.
+- **The Additional CSS needs no change.** Its two `.lunara-review-single-rail-actions` lines now match nothing.
+- **Reviews are centred.** Dalton: *"equal amounts of negative space on the left side and the right side."* Measured, the whole review sat left of centre:
+  - 316px left against 364px right at 1440, and 22px against 70px on a phone.
+  - The cause is in the `lunara-review-layout-guardrail` style in `functions.php`. It caps the page at `min(1480px, 100vw - 48px)` but never centred it, and the full-bleed rules zero its margins, so all 48px sat on the right.
+  - Between 761 and 1439px the article's one grid track also grew to fit its 1180px sections, spilling the overflow right.
+- **The centring fix, in the same guardrail:**
+  - the page takes auto margins, and runs full width on phones inside its own 22px padding;
+  - the article track is held with `minmax(0, 1fr)`;
+  - each section takes the smaller of the track and its design width (hero and body 1180px, Debrief 1060px, related 1120px) and centres.
+  - A first cut used a bare `max-width: 100%`, which lifted the Debrief and related caps. That was caught in measurement and corrected before this entry.
+  - Verified on the live Resident Evil and Dog Stars reviews: all 80 section measurements centred at 1440, 1280, 1100, 1000, 900, 820, 600 and 390px.
+- **The title line keeps its space.** The hero's meta line dropped the plain space before the new director link ("2026 /Zach Cregger"); non-breaking spaces fix it.
+- **Tests:**
+  - New `tests/review-page-trim-contract.php`: the trim, the director link, the no-empty-rail rule and the centring rules. Every check fails on `main` before the change.
+  - The 79 contract tests that read the touched files have the same 36 failures on `main` and after the change. Every one of them was already failing, most because they pin Theme 3.2.81.
+
+---
+
+## 2026-09-25 — Theme 3.2.93: "Full Ledger" opens the Oscar Ledger Explorer
+
+Batch 3 of the re-scoped Explorer plan, pushed straight to `main` on Dalton's go (*"Go go go"*). Before this, every "Full Ledger" link opened the in-page research table (`/oscars/?view=table#oscars-research`). They now open the Explorer that Oscars Ledger 2.8.1 serves at `/oscars/explore/`.
+
+- **`inc/oscars-family.php`: `lunara_oscars_explorer_url()`.** It returns `AAT_Explorer::base_url()` when the plugin provides it, otherwise `''`. It is `function_exists`-guarded, like its neighbours.
+- **`page-oscars.php`:**
+  - One `$ledger_url` is resolved, falling back to the research table.
+  - Three links take it: the hero's "Open Full Ledger" button, the "Explore the Portal" Full Ledger card, and the "Research Table / Full Ledger" command card.
+  - The Full Ledger card's saved-URL normalisation now ignores a `#` fragment. A saved copy of the old default link (the base, its table view, or the `#oscars-research` anchor) therefore follows the new default. A custom address saved in Site Studio is still kept as saved.
+  - The research section's "Data Explorer" card still opens the in-page table, since that card is the table.
+- **`inc/site-studio-footer-navigation.php`.** The footer's built-in Full Ledger destination uses the helper, with the same fallback. Built-ins resolve at request time, so the live footer follows without a re-save.
+- **Tests:**
+  - New: `tests/oscars-explorer-link-runtime.php`, 9 checks. The plugin-absent half runs in a child process.
+  - `tests/site-studio-oscars-runtime.php` now supplies an Explorer address to the portal harness and asserts that the hero button and the Full Ledger card use it.
+- **Not changed.** `lunara_render_oscars_portal_markup()` in `inc/oscars-portal.php` and the `function_exists` footer copy in `functions.php` still carry the old link. Neither is hooked or reached at runtime.
+
+## 2026-09-25 — Theme 3.2.92 and Oscars Ledger 2.8.3: content kept inside rounded frames
+
+Pushed straight to `main` at Dalton's direction, plugin first. Dalton's report: *"There's actually countless instances like that on the Oscar pages, where things are kind of cut off at the rounded corners."* His desktop screenshot showed the /oscars/ "Explore the Portal" block with three faults: the kicker's first letter cut, a gold rule through the heading, and the last card's corner cut.
+
+The common cause: a box with `border-radius` and `overflow: hidden` and no inner padding trims anything that touches its corners. A clip scanner measured text line boxes and framed shapes against each rounded box's corner arcs. Before these fixes it ran across 11 Oscar routes at seven widths from 360 to 1920 px. Every finding outside the Ceremonies hub traced to three components, plus the hub nesting.
+
+- **Theme, `assets/css/lunara-oscars-portal.css`:**
+  - "Explore the Portal" is the one portal section with no frame (no background, border or inset). It kept the shared 26 px rounded clip, which only trimmed its content, so it now has `border-radius: 0` and `overflow: visible`.
+  - The kicker's gold hairline sits 7 px below it, and the compact portal guardrail zeroes the kicker margin. That drew the line 7 px into every section heading on /oscars/, eight headings in all. Header kickers now get a 14 px bottom margin, which leaves 7 px of clearance.
+- **Theme, `style.css`, the homepage Oscar Picks controls:**
+  - At 820 px and below, the 15 slide marks were 44 px each and wrapped into up to four rows, a 246 px block at 360 px.
+  - They are now one row of segments that share the width, a 96 px strip that includes the Pause row.
+  - The 44 px arrows stay the full-size controls, the equivalent-control exception in WCAG 2.5.8.
+  - Desktop is unchanged.
+  - A JavaScript "3 / 15" counter was tried first and dropped: `lunara-scroll-carousel.js` is already over its 10 KB budget on `main` (10,516 bytes), and the counter would have grown it.
+- **Plugin 2.8.3 (`64d8244`):**
+  - The Research Mode callout on ceremony and category pages gets `clamp(18px, 2.4vw, 28px)` padding; it had none on desktop.
+  - The Winner Circle category and badge row wraps, and names and credits wrap inside the card.
+  - The Ceremonies, Categories and About hubs strip the plugin's database block, and its database and tracker shortcodes, from the hub page's own content. /oscars/ceremonies/ carried one, which rendered the whole ledger landing nested inside the hub header, so its cards ran off the right edge on phones.
+
+## 2026-09-25 — Theme 3.2.91: positional link guards, verbatim year labels, dataset-ready Oscars caches
+
+Pushed straight to `main` at Dalton's direction; the theme connection auto-deploys. The code was built as unit U13 of the dropped plan-v5 ledger rebuild, then cherry-picked onto `main`. With Oscars Ledger 2.7.93 the stamp and the guard are inert, because the plugin has neither accessor. Everything else below takes effect now.
+
+- **Positional pairing.** `lunara_oscar_nominee_id_for_label()` in `functions.php` pairs `names[i]` with `ids[i]` only when a row carries as many IDs as names, and a comma-joined slot counts as its IDs. It no longer falls back to the row's first ID for a name it cannot match, which linked unmatched names to someone else. The lone-ID fallback now applies only to a row with one ID and at most one name. The same count rule is applied in:
+  - `lunara_resolve_oscars_winner_person_id()` (`inc/oscars-data.php`);
+  - `lunara_oscars_person_index_absorb()` (`inc/oscars-portal.php`);
+  - the search pair map and title matches (`inc/frontend.php`).
+
+  With the plugin's slot-keeping import (2.7.93), a `?` slot keeps every later name on its own ID, and a joint credit such as "Roderick Jaynes" stays unlinked instead of pointing at one Coen.
+- **Year labels.** Award history prints `YYYY` or `YYYY/YY` verbatim, otherwise an em dash (`inc/entity-surfaces.php`). Movie JSON-LD emits `datePublished` only for a plain `YYYY`, and the Debrief resolver keeps `1932/33` as written (`inc/debrief-resolver.php`).
+- **Dataset-ready caches.** `inc/oscars-family.php` gains three helpers, each `function_exists`-guarded and `method_exists`-gated on the plugin reader:
+  - `lunara_oscars_dataset_stamp()`;
+  - `lunara_oscars_dataset_cache_key()`, which appends the stamp;
+  - `lunara_oscars_pair_is_guarded()`.
+
+  The person index, rotating showcase, story cards, Oscar spotlight, deep cuts and live-search keys carry the stamp when the plugin provides one, and every delete site deletes both key forms. `lunara_oscars_on_ledger_swapped()` listens for `aat_ledger_swapped`, which today's plugin never fires. With no stamp, every key is exactly the 3.2.90 key.
+- **Tests.** Three new PHP runtime tests share a stub reader in `tests/fixtures/oscars-ledger-reader-stub.php`:
+  - `tests/oscars-positional-link-runtime.php`;
+  - `tests/film-year-label-runtime.php`;
+  - `tests/oscars-dataset-cache-runtime.php`.
+
+  `tests/oscars-winner-map-runtime.php` loads `inc/oscars-family.php` first, as the loader does.
+
+## 2026-09-25 — Academy 2.7.93: the audited Oscars dataset, slot-aligned names
+
+Repo `lunara-plugin-oscars-ledger`, `main` at `bf2651d`. At Dalton's direction these changes were pushed straight to `main`, and the Oscars Ledger connection auto-deploys.
+
+- **Dataset (`94b4f0d`).** `data/oscars.csv` is now the audited dataset from `docs/database` (PRs #38 and #39): 12,138 nominations and 3,516 winners, the Academy's own count. It carries 373 corrected cells in 339 rows plus one added award, the 97th ceremony's captioning Award of Merit. Fields that contain a quote are enclosed with doubled quotes, so `fgetcsv` reads each cell exactly as corrected. `docs/database/corrections.json` logs every change with its evidence. Dataset version `2026.09.25-2`.
+- **Slot pairing (`94b4f0d`).** `rebuild_reporting_tables()` and `get_name_entity_link_by_label()` paired nominee IDs with credit names by flattened position. So an unlinked `?` slot shifted every later name onto the wrong person: 239 rows have one, and Jean Hersholt's page read "The Motion Picture Relief Fund". The new `split_nominee_id_slots()` and `pair_nominee_ids_with_labels()` pair by slot. A jointly credited slot (`nm0001053,nm0001054`, "Roderick Jaynes") names an entity only when nothing else does. IDs, ordinals and primaries are unchanged.
+- **Imports keep slots (`d368de4`).** `apply_row_hotfixes()` ran `normalize_imdb_entity_ids()` on NomineeIds, which dropped `?` and split joint slots, so stored rows lost their alignment. The new `normalize_nominee_id_slots()` keeps one `|` slot per credit. Every stored-ID reader already validates IDs before linking: the plugin templates and the theme's `inc/oscars-data.php` and `inc/oscars-portal.php`. So a `?` or comma slot never becomes a link.
+- **Privacy (`79911eb`, U00).** Wikidata IDs, birth years and life spans are gone from `docs/database`. `tests/ledger-privacy-contract.php` keeps them out.
+- **Dubois (`2621669`).** Row 5672 (48th ceremony Sci-Tech, Akwaklame Company) is unlinked, because nothing proves IMDb's `nm0239470` is the honoree. `needs-review.json` is empty.
+- **Version (`bf2651d`).** 2.7.93 is in all four markers, and the tests that pin them moved with it.
+
+Not shipped: the plan-v5 ledger rebuild (R1 to R7), which Dalton stopped on 2026-09-25 in favour of direct edits. Its built units stay on feature branches: U01 (bundle and codec) in the plugin, and U13 (Theme 3.2.91) in the theme.
+
+---
+
+## 2026-09-24 — Theme 3.2.90: editable Debrief page, modular Oscars, image delivery, discovery
+
+**Debrief page, fully editable.** The Debrief Method page's words, sections and
+counts are now settings. They live in `lunara_debrief_method_settings_spec()`
+(`inc/debrief-method.php`) as 35 theme mods whose defaults reproduce the
+3.2.89 page exactly. Site Studio gains a **Debrief Page** surface under
+Reviews (`inc/site-studio-debrief-method.php`), with the shared Preview,
+Apply and History transaction. The editable settings:
+
+- hero kicker, heading and thesis, and whether the live totals show;
+- the question, copy and "what it is not" line for each of the three moves (move names stay canonical because review cards share them);
+- the Why Three copy (paragraphs separated by blank lines);
+- a pinned specimen review (0 means automatic);
+- the From the Desk kicker;
+- the canon's size, its minimum prescriptions, and whether each film lists the reviews that prescribed it;
+- the recent count;
+- the closing links;
+- a show toggle for each optional section.
+
+The template marks all eight sections for the preview bridge. The editor is
+available only while a published page sits at `/debrief/`.
+
+**Debrief index v2.** New key `lunara_debrief_index_v2`; the retired v1 key
+is cleared on every flush. A film is now one entry however it was entered:
+
+- An IMDb ID and a title|year both resolve to the same film, so a linked movie, a legacy text pairing and an ID-only pairing are counted together.
+- "2001: A Space Odyssey (Kubrick, 1968)" parses to the title plus 1968. It no longer counts as a separate film.
+- A stray `|` left by "Title | tt… — note" entries is trimmed.
+
+Recent Debriefs store up to 12 and the films list up to 24. Each film records
+the reviews that prescribed it, and the canon now links them.
+
+Invalidation now also fires on:
+
+- linked-movie saves;
+- untrash;
+- permanent deletes, identified by the hook's post object;
+- any add, update or delete of review pairing meta, so imports and REST writes that skip `save_post` still refresh the page.
+
+**Oscars portal, decoupled.** The board's data source and the Oscars data
+layer are now modules of their own. Both moves are byte-identical; details
+and the remaining coupling are in `docs/OSCARS-PORTAL-ARCHITECTURE.md`.
+
+- `inc/oscar-picks.php`: the Oscar Picks post type, taxonomy, meta box and
+  `lunara_get_oscar_picks()`, moved out of `functions.php`. `functions.php`
+  requires it at the original line so `init` registration order, and with it
+  the saved rewrite rules, is unchanged.
+- `inc/oscars-data.php`: the snapshot, winner cards, rotating showcase,
+  spotlight, story cards and deep cuts, moved out of `inc/home-sections.php`.
+  The loader requires it immediately before `home-sections.php`.
+- `page-oscars.php` runs the hidden-by-default linked-reviews query only when
+  that section renders. It also reads the door backdrops from the same map the
+  visual warmer uses.
+
+**Image delivery and clipping.**
+
+- **Review cards:** the Oscar Ledger footer was clipped on every Reviews archive card. The card and its link were both `height:100%` inside `overflow:hidden`. The card is now a column that keeps the footer inside it. The route CSS stays within its 45 KB budget.
+- **Oscars research landing (541–820px):** it was clipped because the shared guardrail sized Academy containers to the viewport. The portal sheet now scopes them to the research shell.
+- **Homepage Oscar Picks:** the bottom 17% of mobile-art images was cropped at desktop widths. Their `<picture>` wrapper now takes the frame's size. Canonical shell edited, non-portal shell regenerated with `node tests/tools/build-shell-css.cjs`.
+- **Locked review artwork** (debrief posters, card posters, heroes) now offers quarter-, half-, locked- and retina-width candidates at the same aspect ratio. Previously it offered only the locked and retina widths, so a 320px debrief poster downloaded 2000px. Width and height attributes are unchanged.
+- **External TMDB review heroes** loaded `/t/p/original/` (1.9 MB in the measured case). They now start from w1280 (146 KB) and offer w780, w1280 and the original through `lunara_tmdb_image_srcset()`.
+- **URL-only homepage carousel art** gains width candidates through `lunara_image_url_width_srcset()`.
+- **Sizes hints:**
+  - `lunara_get_title_poster_html()` takes an optional `$sizes` hint. Pair It With posters now pass their real widths: 116px on phones, 45vw on tablets, 340px on desktop.
+  - Debrief canon posters pass their widths too.
+- **First-paint seeds:**
+  - On desktop (901px and up), the homepage hero seed now takes Splide's inserted arrows, pagination and the Play/Pause toggle out of flow before the deferred CSS lands. Phones place those controls in the grid's flow by design, so the seed leaves them alone there.
+  - Film and person dossiers get a matching seed (`lunara-entity-geometry-css`), copied verbatim from `style.css`, for their hero, filmography grid and award list.
+  - Both seeds are excluded from WP Rocket used-CSS.
+  - With Boost's deferred CSS held back 4s against live pages, measured CLS fell:
+
+    | Page | Before | After |
+    | --- | --- | --- |
+    | Homepage, 1280/1920px | 0.83–0.98 | 0.32–0.49 |
+    | Person, 768px | 0.50 | 0.013 |
+    | Person, 1920px | 0.31 | 0.004 |
+    | Film, 1280px | 0.26 | 0.01 |
+    | Film, 390px (mean of 4) | 0.115 | 0.060 |
+
+  - The phone homepage (0.72) is unchanged: its remaining shift comes from Boost's stale critical CSS.
+
+**Reviews and Journal discovery.**
+
+- **Tag archives** were forced to the Posts lane, and the site has no published Posts, so every `/tag/…/` link from a Journal entry or Review opened an empty page. Tag archives now gather Journal entries, Reviews and Posts. A Review on a shared archive card is labelled "Review".
+- **Sitemaps:** Jetpack's sitemaps listed neither post type. `review` and `journal` now go through `jetpack_sitemap_post_types`, and `journal` through the news sitemap. Movie and person dossiers are left out pending a thin-page decision.
+- **Journal entries** now link their older and newer neighbours, with `rel="prev"`/`rel="next"`.
+- **Lead image alt:** a Journal lead image is never decorative. `lunara_get_journal_hero_alt()` falls back from the Foundation alt to the attachment alt, then the caption, then "Lead image for {title}".
+
+**Tests.**
+
+- New runtimes:
+  - `site-studio-debrief-method-runtime.php` (364 checks)
+  - `debrief-method-runtime.php` (75)
+  - `image-delivery-runtime.php` (28)
+  - `archive-discovery-runtime.php` (21)
+- Updated for the moves and the new surface:
+  - `oscar-taxonomy-rewrites-runtime`
+  - `site-studio-home-oscars-runtime`
+  - `homepage-oscar-picks-seasonal-forecast`
+  - `oscars-winner-map-runtime`
+  - `oscars-portal-studio-runtime`
+  - `site-studio-foundation-runtime`
+  - `site-studio-editorial-workspace-runtime`
+  - `journal-foundation-integration-contract`
+  - `article-layout-runtime` (whose Journal fixtures now carry older/newer neighbours)
+
+## 2026-09-23 — Theme 3.2.89: The Debrief Method page
+
+Give the signature that closes every review its own home. `page-debrief.php`
+("Lunara Debrief Method" template) auto-applies to a page with slug `debrief`
+and explains the three moves — Theme Echo, Counter-Program, Career Context —
+with the question each answers and what each is not. The rest of the page is
+live data: a specimen Debrief from the newest review carrying the full trio
+(reusing `lunara_render_pair_it_with_cards()`), hero totals (reviews
+debriefed, films prescribed, distinct titles), the "Debrief Canon" of films
+prescribed in more than one review, and the eight most recent Debriefs. The
+page's editor content renders in a "From the Desk" seat so the manifesto stays
+editable without code.
+
+`inc/debrief-method.php` aggregates every published review's pairings
+(Relational Trinity movie links first, legacy text fields second — the same
+precedence as the review renderer) without poster work, into the transient
+`lunara_debrief_index_v1` (12 h TTL, deleted on review save/trash/delete).
+New cached payload, new key; no existing cache shape changed.
+
+Both Pair It With renderers (`inc/debrief.php` legacy and
+`inc/debrief-public.php` canonical) append a "How the Debrief works" link to
+their heading via `lunara_debrief_method_link_html()`. It renders only when a
+published page with slug `debrief` exists and is suppressed on that page
+itself, so review markup is byte-identical until the page is published.
+
+Styles: new route-scoped `assets/css/lunara-debrief-method.css` (enqueued only
+on the template, with `lunara-review-components` for the specimen cards) and a
+small `.lunara-pair-cards-method` rule in `lunara-review-components.css`.
+`style.css` moves to 3.2.89; the merged 3.2.88 surface pass never bumped the
+header, so this also lets the canary distinguish the release from 3.2.87.
+
 ## 2026-09-17 — Theme 3.2.87: lighter assets and stable hero startup
 
 Keep the first hero image and its responsive preload intact while deferring

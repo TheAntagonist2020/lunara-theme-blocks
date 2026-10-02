@@ -126,6 +126,10 @@ class Academy_Awards_Table {
 	}
 }
 
+// The loader requires the Oscars family module before the data layer; the
+// data layer's cache keys and flush use its lunara_oscars_dataset_cache_key().
+require dirname( __DIR__ ) . '/inc/oscars-family.php';
+require dirname( __DIR__ ) . '/inc/oscars-data.php';
 require dirname( __DIR__ ) . '/inc/home-sections.php';
 
 // ---------------------------------------------------------------------------

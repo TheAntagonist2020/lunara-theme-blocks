@@ -32,7 +32,7 @@ function lunara_test_portal_navigation_markup( $source ) {
     eval( substr( $source, $start, $end - $start ) );
     $ceremony_url = 'https://example.test/oscars/ceremony/98/'; $ceremonies_url = 'https://example.test/oscars/ceremonies/';
     $categories_url = 'https://example.test/oscars/categories/'; $database_url = 'https://example.test/oscars/ledger/';
-    $database_table_url = $database_url . '?view=table'; $about_url = 'https://example.test/about/';
+    $database_table_url = $database_url . '?view=table'; $ledger_url = 'https://example.test/oscars/explore/'; $about_url = 'https://example.test/about/';
     $portal_backdrops = array( 'Ceremonies' => 'https://example.test/ceremony.jpg', 'Categories' => 'https://example.test/category.jpg', 'Ledger' => 'https://example.test/ledger.jpg', 'About' => 'https://example.test/method.jpg' );
     $start = strpos( $source, '$portal_link_defaults =' ); $end = strpos( $source, '$research_cards =', $start );
     lunara_test_assert( false !== $start && false !== $end, 'Actual Quick Start reader block must be available.' );
@@ -80,7 +80,8 @@ $navigation_draft = $draft; $navigation_draft['section_visibility']['doors'] = t
 $navigation_preview = $adapter->create_preview( $navigation_draft ); $_GET['lunara_oscars_preview'] = $navigation_preview['token'];
 $navigation_output = lunara_test_portal_navigation_markup( $source );
 lunara_test_assert( 3 === count( $navigation_output['portal_links'] ) && false !== strpos( $navigation_output['cards_html'], 'Private title method' ) && false !== strpos( $navigation_output['cards_html'], 'First line' ) && false === strpos( $navigation_output['cards_html'], 'Private title categories' ), 'Actual Quick Start markup must use private card titles/copy and skip only the disabled card.' );
-lunara_test_assert( array( 'https://example.test/oscars/ceremonies/', 'https://example.test/oscars/ledger/?view=table', '/private/method/' ) === array_column( $navigation_output['portal_links'], 'url' ), 'Actual Quick Start reader retains dynamic empty destinations, ledger table normalization and root-relative custom links.' );
+lunara_test_assert( false !== strpos( $navigation_output['buttons_html'], 'href="https://example.test/oscars/explore/"' ), 'The Hero ledger button opens the Oscar Ledger Explorer.' );
+lunara_test_assert( array( 'https://example.test/oscars/ceremonies/', 'https://example.test/oscars/explore/', '/private/method/' ) === array_column( $navigation_output['portal_links'], 'url' ), 'Actual Quick Start reader retains dynamic empty destinations, ledger table normalization and root-relative custom links.' );
 lunara_test_assert( array( 'https://example.test/ceremony.jpg', 'https://example.test/ledger.jpg', 'https://example.test/method.jpg' ) === array_column( $navigation_output['portal_links'], 'backdrop' ), 'Private card editing preserves canonical slot artwork and fixed order.' );
 foreach ( $navigation_draft['quick_start'] as &$card ) { $card['enabled'] = false; } unset( $card );
 $empty_preview = $adapter->create_preview( $navigation_draft ); $_GET['lunara_oscars_preview'] = $empty_preview['token'];

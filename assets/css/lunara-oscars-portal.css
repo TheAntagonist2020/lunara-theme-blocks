@@ -592,6 +592,13 @@ body.lunara-oscars-portal-page .lunara-oscars-board-note {
         overflow: hidden !important;
     }
 
+    /* The shared guardrail sizes Academy containers to the viewport below 821px;
+       inside this bordered shell that clipped the research landing's left edge. */
+    body.lunara-oscars-portal-page .lunara-oscars-research-shell :is(.aat-container, .aat-hub-page) {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
     body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-hub-header,
     body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-hub-section,
     body.lunara-oscars-portal-page .lunara-oscars-research-shell .aat-hub-metric-card,
@@ -1505,4 +1512,21 @@ body.lunara-oscars-portal-page .lunara-oscars-board-note {
     #primary#primary.lunara-oscars-portal .lunara-oscars-board-status {
         margin: 0 14px 14px !important;
     }
+}
+
+/* Rounded-corner fit. "Explore the Portal" is the one unframed section (no
+   background, border or inset), so the rounded clip every portal section
+   shares only trimmed its content: the kicker's first letter and the corner
+   of the last door card. It keeps its content whole instead. */
+body.lunara-oscars-portal-page .lunara-oscars-portal > .lunara-home-section.lunara-oscars-portal-links-section {
+    border-radius: 0 !important;
+    overflow: visible !important;
+}
+
+/* The gold hairline under each section kicker sits 7px below it. The compact
+   guardrail above zeroes the kicker margin, which drew the line through the
+   heading's first line; this gives it room. */
+body.lunara-oscars-portal-page .lunara-home-section-header .lunara-home-section-kicker,
+body.lunara-oscars-portal-page .lunara-home-section-head .lunara-home-section-kicker {
+    margin-bottom: 14px !important;
 }

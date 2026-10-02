@@ -827,6 +827,14 @@ body.home .lunara-oscar-fact-card-poster img {
     object-fit: cover !important;
 }
 
+/* Mobile-art picks wrap the image in <picture>; give it the frame's size so the
+   image's 100% height resolves instead of overflowing the 16:10 frame. */
+body.home .lunara-oscar-pick-card-media > picture {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
 body.home .lunara-oscar-pick-card-copy,
 body.home .lunara-oscar-fact-card-text {
     display: grid !important;

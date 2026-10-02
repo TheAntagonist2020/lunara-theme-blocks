@@ -392,8 +392,11 @@ function lunara_invalidate_review_query_caches( $post_id = 0 ) {
     delete_transient( 'lunara_home_database_spotlight_v1' );
     delete_transient( 'lunara_home_ledger_story_cards_v1' );
     delete_transient( 'lunara_home_ledger_story_cards_v2' );
+    delete_transient( lunara_oscars_dataset_cache_key( 'lunara_home_ledger_story_cards_v2' ) );
     delete_transient( 'lunara_home_oscar_spotlight_v1' );
+    delete_transient( lunara_oscars_dataset_cache_key( 'lunara_home_oscar_spotlight_v1' ) );
     delete_transient( 'lunara_home_deep_cuts_v1' );
+    delete_transient( lunara_oscars_dataset_cache_key( 'lunara_home_deep_cuts_v1' ) );
 
     $counts = array( 6, 8, 9 );
     $groups = array( 'featured_reviews', 'ledger_highlights', 'latest_reviews' );
@@ -426,8 +429,11 @@ function lunara_invalidate_oscars_data_caches( $type = '', $count = 0 ) {
     delete_transient( 'lunara_home_database_spotlight_v1' );
     delete_transient( 'lunara_home_ledger_story_cards_v1' );
     delete_transient( 'lunara_home_ledger_story_cards_v2' );
+    delete_transient( lunara_oscars_dataset_cache_key( 'lunara_home_ledger_story_cards_v2' ) );
     delete_transient( 'lunara_home_oscar_spotlight_v1' );
+    delete_transient( lunara_oscars_dataset_cache_key( 'lunara_home_oscar_spotlight_v1' ) );
     delete_transient( 'lunara_home_deep_cuts_v1' );
+    delete_transient( lunara_oscars_dataset_cache_key( 'lunara_home_deep_cuts_v1' ) );
     delete_transient( 'lunara_home_lore_cards_v2' );
 
     // Table name cache (in case table was recreated).

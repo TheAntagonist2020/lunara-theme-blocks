@@ -494,6 +494,79 @@ if ( ! function_exists( 'lunara_resize_tmdb_image_url' ) ) {
     }
 }
 
+if ( ! function_exists( 'lunara_tmdb_image_srcset' ) ) {
+    /**
+     * Responsive candidates for a TMDB image, or '' for any other URL.
+     *
+     * TMDB serves fixed widths: w780 exists for posters and backdrops alike,
+     * w1280 only for backdrops. The original stays available as the largest
+     * candidate, declared at a conservative width, so high-density screens
+     * keep full sharpness while phones and 1x screens stop downloading it.
+     *
+     * @param string $url      TMDB image URL at any size.
+     * @param bool   $backdrop True for landscape stills, false for posters.
+     * @return string srcset value, or '' when the URL is not a TMDB image.
+     */
+    function lunara_tmdb_image_srcset( $url, $backdrop = true ) {
+        if ( ! preg_match( '#^(https://image\.tmdb\.org/t/p/)(?:w\d+|original)(/[^\s?\#"\'<>]+)$#i', trim( (string) $url ), $parts ) ) {
+            return '';
+        }
+
+        $candidates = array( $parts[1] . 'w780' . $parts[2] . ' 780w' );
+        if ( $backdrop ) {
+            $candidates[] = $parts[1] . 'w1280' . $parts[2] . ' 1280w';
+        }
+        $candidates[] = $parts[1] . 'original' . $parts[2] . ( $backdrop ? ' 1920w' : ' 2000w' );
+
+        return implode( ', ', $candidates );
+    }
+}
+
+if ( ! function_exists( 'lunara_image_url_width_srcset' ) ) {
+    /**
+     * Width candidates for an image known only by URL, or '' when the host
+     * cannot resize it.
+     *
+     * TMDB images use TMDB's fixed widths. WordPress.com uploads (on this site
+     * or through the i0.wp.com CDN) resize from a `w` query argument, which
+     * keeps the aspect ratio and never upscales.
+     *
+     * @param string         $url      Image URL.
+     * @param bool           $backdrop For TMDB: landscape still rather than poster.
+     * @param array<int,int> $widths   Candidate widths for WordPress.com images.
+     * @return string
+     */
+    function lunara_image_url_width_srcset( $url, $backdrop = true, $widths = array( 480, 768, 1200 ) ) {
+        $url = html_entity_decode( trim( (string) $url ), ENT_QUOTES, 'UTF-8' );
+        if ( '' === $url ) {
+            return '';
+        }
+
+        $tmdb = lunara_tmdb_image_srcset( $url, $backdrop );
+        if ( '' !== $tmdb ) {
+            return $tmdb;
+        }
+
+        $host      = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+        $home_host = strtolower( (string) wp_parse_url( home_url( '/' ), PHP_URL_HOST ) );
+        $wpcom     = '' !== $host && ( $host === $home_host || 1 === preg_match( '/(^|\.)(wp|wordpress)\.com$/', $host ) );
+        if ( ! $wpcom || false === strpos( $url, '/wp-content/uploads/' ) ) {
+            return '';
+        }
+
+        $base       = remove_query_arg( array( 'w', 'h', 'fit', 'resize', 'crop', 'zoom' ), $url );
+        $candidates = array();
+        foreach ( $widths as $width ) {
+            $width = absint( $width );
+            if ( $width > 0 ) {
+                $candidates[] = add_query_arg( 'w', $width, $base ) . ' ' . $width . 'w';
+            }
+        }
+
+        return implode( ', ', $candidates );
+    }
+}
+
 if ( ! function_exists( 'lunara_resize_tmdb_image_markup' ) ) {
     function lunara_resize_tmdb_image_markup( $html, $size = 'w500' ) {
         if ( ! is_string( $html ) || '' === $html ) {

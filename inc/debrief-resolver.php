@@ -269,7 +269,14 @@ final class Lunara_Debrief_Film_Resolver {
      * @return string
      */
     private static function normalize_year( $year ) {
-        return preg_match( '/\b(18|19|20|21)\d{2}\b/', (string) $year, $matches ) ? $matches[0] : '';
+        // A split-season label (1932/33) is the Academy's own year and is
+        // kept verbatim; anything else keeps its first four-digit year.
+        $year = trim( (string) $year );
+        if ( preg_match( '/^\d{4}\/\d{2}$/', $year ) ) {
+            return $year;
+        }
+
+        return preg_match( '/\b(18|19|20|21)\d{2}\b/', $year, $matches ) ? $matches[0] : '';
     }
 
     /**

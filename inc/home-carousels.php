@@ -189,7 +189,11 @@ function lunara_render_home_story_carousel( $kind ) {
 				$image = '';
 				$image_attrs = array( 'alt' => '', 'loading' => 'lazy', 'decoding' => 'async', 'fetchpriority' => 'low', 'sizes' => '(max-width: 640px) 92vw, (max-width: 980px) 45vw, 30vw' );
 				if ( ! empty( $slide['attachment_id'] ) ) { $image = wp_get_attachment_image( $slide['attachment_id'], 'full', false, $image_attrs ); }
-				if ( ! $image && ! empty( $slide['image'] ) ) { $image = '<img src="' . esc_url( $slide['image'] ) . '" alt="" loading="lazy" decoding="async" fetchpriority="low" />'; }
+				if ( ! $image && ! empty( $slide['image'] ) ) {
+					// URL-only artwork still gets width candidates, so a ~350px card stops fetching a 2000px original.
+					$fallback_srcset = function_exists( 'lunara_image_url_width_srcset' ) ? lunara_image_url_width_srcset( $slide['image'], ! $reviews ) : '';
+					$image = '<img src="' . esc_url( $slide['image'] ) . '"' . ( '' !== $fallback_srcset ? ' srcset="' . esc_attr( $fallback_srcset ) . '" sizes="' . esc_attr( $image_attrs['sizes'] ) . '"' : '' ) . ' alt="" loading="lazy" decoding="async" fetchpriority="low" />';
+				}
 			?>
 				<li class="splide__slide"><article class="lunara-home-news-card<?php echo $reviews ? ' lunara-home-review-card' : ''; ?>"><a href="<?php echo esc_url( $slide['url'] ); ?>">
 					<div class="lunara-home-news-media<?php echo $reviews ? ' lunara-home-review-media' : ''; ?><?php echo 'full' === $slide['fit'] ? ' is-full-frame' : ''; ?>" style="<?php echo esc_attr( $style ); ?>"><?php echo $image ?: lunara_home_carousel_placeholder(); /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ ?></div>

@@ -2255,16 +2255,6 @@ function lunara_customize_register( $wp_customize ) {
             'default'  => 'More Lunara Criticism',
             'label'    => __( 'Related Section Title', 'lunara-film' ),
         ),
-        array(
-            'setting'  => 'lunara_review_archive_button',
-            'default'  => 'Browse Reviews',
-            'label'    => __( 'Archive Button Label', 'lunara-film' ),
-        ),
-        array(
-            'setting'  => 'lunara_review_director_button',
-            'default'  => 'Director Archive',
-            'label'    => __( 'Director Button Label', 'lunara-film' ),
-        ),
     );
 
     foreach ( $review_label_controls as $rlc ) {
