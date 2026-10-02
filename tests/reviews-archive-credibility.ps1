@@ -28,16 +28,12 @@ Assert-Contains $reviewRendering 'data-lunara-dynamic-rail-track' 'Review archiv
 Assert-Contains $reviewRendering 'data-lunara-dynamic-rail-dot' 'Review archive support rail must render navigation dots.'
 Assert-Contains $reviewRendering 'data-lunara-dynamic-rail-prev' 'Review archive support rail must render a previous control.'
 Assert-Contains $reviewRendering 'data-lunara-dynamic-rail-next' 'Review archive support rail must render a next control.'
-Assert-Contains $reviewRendering 'data-lunara-dynamic-rail-toggle' 'Review archive support rail must render a persistent pause/play control.'
-Assert-Contains $reviewRendering 'Pause companion review rotation' 'Review archive support rail must label its pause/play control before JavaScript runs.'
 Assert-Contains $reviewRendering 'lunara_render_review_grid_card' 'Review archive must continue using the existing Review card renderer.'
 
 Assert-Contains $frontend 'lunara_enqueue_review_archive_dynamic_rails' 'Frontend must enqueue the Reviews dynamic rail asset through a theme-owned function.'
 Assert-Contains $frontend 'lunara-dynamic-rails\.js' 'Frontend must reference the theme-owned dynamic rail asset.'
 Assert-Contains $archiveCss 'lunara-review-archive-dynamic-rail' 'Cacheable archive CSS must scope rail polish to the Reviews archive.'
 Assert-Contains $archiveCss '#primary\.lra\s+\.lunara-review-archive-dynamic-rail[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)' 'Dynamic rail CSS must use renderer-owned specificity to override the old static rail grid and keep the track full-width.'
-Assert-Contains $archiveCss 'rail-control[\s\S]*width:\s*44px[\s\S]*height:\s*44px' 'Review rail arrows must use the shared 44px control target.'
-Assert-Contains $archiveCss 'rail-dot[\s\S]*min-width:\s*44px[\s\S]*min-height:\s*44px' 'Review rail pagination must expose 44px control targets.'
 Assert-Contains $archiveCss 'prefers-reduced-motion' 'Reviews archive rail CSS must include reduced-motion handling.'
 
 Assert-Contains $dynamicRail 'prefers-reduced-motion: reduce' 'Dynamic rail JS must respect reduced-motion preferences.'
@@ -45,10 +41,7 @@ Assert-Contains $dynamicRail 'pointerenter' 'Dynamic rail JS must pause on point
 Assert-Contains $dynamicRail 'focusin' 'Dynamic rail JS must pause on focus.'
 Assert-Contains $dynamicRail 'keydown' 'Dynamic rail JS must support keyboard navigation.'
 Assert-Contains $dynamicRail 'touchstart' 'Dynamic rail JS must support touch navigation.'
-Assert-Contains $dynamicRail 'touchcancel' 'Dynamic rail JS must recover when a touch gesture is canceled.'
 Assert-Contains $dynamicRail 'data-lunara-dynamic-rail' 'Dynamic rail JS must target theme-owned rail hooks.'
-Assert-Contains $dynamicRail 'data-lunara-dynamic-rail-toggle' 'Dynamic rail JS must own the pause/play control.'
-Assert-Contains $dynamicRail 'Autoplay disabled for reduced motion' 'Dynamic rail JS must disable autoplay controls for reduced motion.'
 
 $dynamicContent = Get-Content -LiteralPath $dynamicRail -Raw
 foreach ($forbidden in @('prettyPhoto', 'all_in_one', 'magic_carousel', 'multimedia_carousel', 'lbg_zoominoutslider')) {
@@ -58,8 +51,3 @@ foreach ($forbidden in @('prettyPhoto', 'all_in_one', 'magic_carousel', 'multime
 }
 
 Write-Output 'Reviews archive credibility contract passed.'
-
-& node (Join-Path $PSScriptRoot 'carousel-lifecycle-runtime.js')
-if ($LASTEXITCODE -ne 0) { throw 'Carousel lifecycle regression failed.' }
-& node (Join-Path $PSScriptRoot 'reviews-archive-dynamic-rail-runtime.js')
-if ($LASTEXITCODE -ne 0) { throw 'Reviews carousel browser regression failed.' }

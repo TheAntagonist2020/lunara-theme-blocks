@@ -87,65 +87,6 @@ if ( ! function_exists( 'lunara_header_body_class' ) ) {
 	add_filter( 'body_class', 'lunara_header_body_class' );
 }
 
-if ( ! function_exists( 'lunara_header_is_search_link' ) ) {
-	/** The dedicated search action replaces only the canonical search destination. */
-	function lunara_header_is_search_link( $url ) {
-		return untrailingslashit( (string) $url ) === untrailingslashit( home_url( '/search/' ) );
-	}
-}
-
-if ( ! function_exists( 'lunara_header_filter_menu_items' ) ) {
-	function lunara_header_filter_menu_items( $items, $args ) {
-		if ( empty( $args->theme_location ) || 'lunara-header' !== $args->theme_location ) {
-			return $items;
-		}
-		return array_values( array_filter( $items, static function ( $item ) {
-			return ! lunara_header_is_search_link( isset( $item->url ) ? $item->url : '' );
-		} ) );
-	}
-	add_filter( 'wp_nav_menu_objects', 'lunara_header_filter_menu_items', 20, 2 );
-}
-
-if ( ! function_exists( 'lunara_header_link_current' ) ) {
-	/** Mark both exact pages and their section ancestors without matching sibling prefixes. */
-	function lunara_header_link_current( $url ) {
-		$home_host = wp_parse_url( home_url( '/' ), PHP_URL_HOST );
-		$link_host = wp_parse_url( (string) $url, PHP_URL_HOST );
-		if ( $link_host && strtolower( $link_host ) !== strtolower( (string) $home_host ) ) {
-			return '';
-		}
-		if ( wp_parse_url( (string) $url, PHP_URL_QUERY ) || wp_parse_url( (string) $url, PHP_URL_FRAGMENT ) ) {
-			return '';
-		}
-		$current = isset( $_SERVER['REQUEST_URI'] ) ? wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH ) : '';
-		$path = wp_parse_url( (string) $url, PHP_URL_PATH );
-		if ( ! is_string( $current ) || ! is_string( $path ) || '' === $current || '' === $path ) {
-			return '';
-		}
-		$current = untrailingslashit( $current );
-		$path = untrailingslashit( $path );
-		if ( $current === $path ) {
-			return 'page';
-		}
-		$home_path = untrailingslashit( (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH ) );
-		return $path !== $home_path && 0 === strpos( $current, $path . '/' ) ? 'location' : '';
-	}
-}
-
-if ( ! function_exists( 'lunara_header_menu_link_attributes' ) ) {
-	function lunara_header_menu_link_attributes( $attributes, $item, $args ) {
-		if ( empty( $args->theme_location ) || 'lunara-header' !== $args->theme_location ) {
-			return $attributes;
-		}
-		$current = lunara_header_link_current( isset( $item->url ) ? $item->url : '' );
-		if ( '' !== $current ) {
-			$attributes['aria-current'] = $current;
-		}
-		return $attributes;
-	}
-	add_filter( 'nav_menu_link_attributes', 'lunara_header_menu_link_attributes', 20, 3 );
-}
-
 if ( ! function_exists( 'lunara_header_nav_markup' ) ) {
 	function lunara_header_nav_markup( $context ) {
 		if ( has_nav_menu( 'lunara-header' ) ) {
@@ -163,14 +104,13 @@ if ( ! function_exists( 'lunara_header_nav_markup' ) ) {
 
 		$out = '';
 		foreach ( lunara_header_nav_links() as $link ) {
-			if ( empty( $link['label'] ) || empty( $link['url'] ) || lunara_header_is_search_link( $link['url'] ) ) {
+			if ( empty( $link['label'] ) || empty( $link['url'] ) ) {
 				continue;
 			}
 			$out .= sprintf(
-				'<a class="lunara-%s-link" href="%s"%s>%s</a>',
+				'<a class="lunara-%s-link" href="%s">%s</a>',
 				esc_attr( $context ),
 				esc_url( $link['url'] ),
-				lunara_header_link_current( $link['url'] ) ? ' aria-current="' . esc_attr( lunara_header_link_current( $link['url'] ) ) . '"' : '',
 				esc_html( $link['label'] )
 			);
 		}
@@ -240,25 +180,18 @@ if ( ! function_exists( 'lunara_render_header_command' ) ) {
 					<?php echo lunara_header_nav_markup( 'header-nav' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 				</nav>
 				<div class="lunara-header-actions">
-					<a class="lunara-header-search" href="<?php echo esc_url( function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/search/' ) ); ?>" data-lunara-search-open aria-label="<?php esc_attr_e( 'Search', 'lunara-film' ); ?>" title="<?php esc_attr_e( 'Search', 'lunara-film' ); ?>">
+					<button type="button" class="lunara-header-search" data-lunara-search-open aria-label="<?php esc_attr_e( 'Search', 'lunara-film' ); ?>" title="<?php esc_attr_e( 'Search', 'lunara-film' ); ?>">
 						<svg class="lunara-header-search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 							<circle cx="11" cy="11" r="8"></circle>
 							<path d="m21 21-4.3-4.3"></path>
 						</svg>
-					</a>
+					</button>
 					<button type="button" class="lunara-header-burger" data-lunara-nav-open aria-expanded="false" aria-controls="lunara-offcanvas" aria-label="<?php esc_attr_e( 'Open navigation', 'lunara-film' ); ?>">
 						<span aria-hidden="true"></span>
 					</button>
 				</div>
 			</div>
 		</header>
-		<noscript><style>
-			body.lunara-header-takeover { padding-top: 0 !important; }
-			.lunara-header { position: static !important; }
-			.lunara-header-inner { height: auto !important; min-height: 68px; flex-wrap: wrap; padding-top: 12px; padding-bottom: 12px; }
-			.lunara-header-nav { display: flex !important; flex-basis: 100%; flex-wrap: wrap; order: 3; gap: 8px 20px; margin-left: 0; }
-			.lunara-header-burger { display: none !important; }
-		</style></noscript>
 		<?php
 	}
 	add_action( 'wp_body_open', 'lunara_render_header_command', 5 );
@@ -367,19 +300,16 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 			color: rgba(244,239,227,.82); text-decoration: none;
 			font-family: var(--lunara-font-label, sans-serif);
 			font-size: .8rem; letter-spacing: .14em; text-transform: uppercase;
-			padding: 8px 2px; min-height: 44px; display: inline-flex; align-items: center; border-bottom: 1px solid transparent;
+			padding: 8px 2px; border-bottom: 1px solid transparent;
 			transition: color .18s ease, border-color .18s ease;
 		}
 		.lunara-header-nav a:hover, .lunara-header-nav a:focus-visible {
 			color: var(--lunara-gold-light, #e0c481); border-bottom-color: rgba(201,169,97,.55);
 		}
-		.lunara-header-nav a[aria-current], .lunara-offcanvas-nav a[aria-current] {
-			color: var(--lunara-gold-light, #e0c481); text-decoration: underline; text-underline-offset: .35em;
-		}
 		.lunara-header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 		.lunara-header-search {
-			display: inline-grid; place-items: center; flex: 0 0 44px;
-			width: 44px; height: 44px; padding: 0; cursor: pointer; text-decoration: none;
+			display: inline-grid; place-items: center; flex: 0 0 42px;
+			width: 42px; height: 42px; padding: 0; cursor: pointer;
 			border: 1px solid rgba(201,169,97,.32); border-radius: 999px;
 			background: rgba(7,15,24,.58); color: rgba(224,196,129,.92);
 			box-shadow: inset 0 0 0 1px rgba(255,255,255,.015);
@@ -402,7 +332,7 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 			stroke-linecap: round; stroke-linejoin: round;
 		}
 		.lunara-header-burger {
-			position: relative; width: 44px; height: 44px; cursor: pointer;
+			position: relative; width: 42px; height: 42px; cursor: pointer;
 			border: 1px solid rgba(201,169,97,.3); border-radius: 999px;
 			background: rgba(244,239,227,.05);
 		}
@@ -442,7 +372,7 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 		.lunara-offcanvas.is-open .lunara-offcanvas-veil { opacity: 1; }
 		.lunara-offcanvas.is-open .lunara-offcanvas-panel { transform: none; }
 		.lunara-offcanvas-close {
-			position: absolute; top: 22px; right: 26px; width: 44px; height: 44px;
+			position: absolute; top: 22px; right: 26px; width: 42px; height: 42px;
 			cursor: pointer; border: 1px solid rgba(201,169,97,.32); border-radius: 999px;
 			background: transparent; color: rgba(224,196,129,.92); font-size: 1.3rem; line-height: 1;
 		}
@@ -488,6 +418,9 @@ if ( ! function_exists( 'lunara_header_takeover_toggle_handler' ) ) {
 			wp_die( esc_html__( 'Header takeover toggle rejected.', 'lunara-film' ) );
 		}
 		update_option( 'lunara_header_takeover', empty( get_option( 'lunara_header_takeover' ) ) ? 1 : 0, true );
+		if ( function_exists( 'rocket_clean_domain' ) ) {
+			rocket_clean_domain();
+		}
 		$target = function_exists( 'lunara_control_desk_admin_url' )
 			? lunara_control_desk_admin_url( array( 'tab' => 'system-status' ) )
 			: admin_url( 'admin.php?page=lunara-control-desk' );

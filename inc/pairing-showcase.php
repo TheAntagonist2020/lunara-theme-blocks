@@ -4,7 +4,7 @@
  *
  * The signature Lunara module, freed from the review it usually hangs off.
  * The automatic Pair It With (inc/debrief.php) derives exactly three cards —
- * Echo, Counter, Context — from the CURRENT review's
+ * Theme Echo, Counter-Program, Career Context — from the CURRENT review's
  * meta. This block lets any page hand-build its own Pair It With: choose the
  * films, the role label above each, the note, the poster, and the order, and
  * change any of it on a whim.

@@ -51,7 +51,7 @@ $slideStart = $functions.IndexOf('function lunara_render_cinematic_hero_slide')
 $slideEnd   = $functions.IndexOf("if ( ! function_exists( 'lunara_get_home_cinematic_hero_slides'", $slideStart)
 Assert-True ($slideStart -ge 0 -and $slideEnd -gt $slideStart) 'Hero slide renderer boundaries are missing.'
 $slideRenderer = $functions.Substring($slideStart, $slideEnd - $slideStart)
-Assert-True ($slideRenderer -match 'lunara_render_cinematic_hero_image\s*\(\s*\$data\s*,\s*\$is_priority_image\s*,\s*!\s*\$is_first\s*\)') 'Carousel slides must preserve the first image and defer later canonical sources.'
+Assert-True ($slideRenderer -match 'lunara_render_cinematic_hero_image\s*\(\s*\$data\s*,\s*\$is_priority_image\s*\)') 'Carousel slides must render the canonical descriptor markup.'
 Assert-True ($slideRenderer -notmatch '<img\s+src=".*\$data\[''image''\]') 'Carousel renderer must not hand-build the old URL-only image.'
 
 Assert-True ($delivery -match 'function\s+lunara_resolve_home_cinematic_hero_lcp_data\s*\(') 'Preload resolution must mirror the exact renderer branch.'
@@ -78,6 +78,6 @@ if ($LASTEXITCODE -ne 0) {
 }
 Assert-True (($phpOutput -join "`n") -match 'all assertions passed') 'Homepage hero responsive runtime did not report success.'
 
-Assert-True ($style -match '(?m)^Version:\s*3\.2\.81\s*$') 'Theme version must preserve responsive hero delivery in 3.2.81.'
+Assert-True ($style -match '(?m)^Version:\s*3\.2\.43\s*$') 'Theme version must preserve responsive hero delivery in 3.2.43.'
 
 Write-Host 'homepage-hero-responsive-delivery: all assertions passed.'

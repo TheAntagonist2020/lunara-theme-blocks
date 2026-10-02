@@ -204,13 +204,117 @@
 </head>
 
 <?php
-// Each header owner renders its saved navigation unchanged across routes.
-// Search for the Lunara header is owned by Header Command.
+$show_lunara_header_search = is_front_page() || is_page_template( 'page-oscars.php' ) || is_page( 'oscars' );
+$header_search_placeholder = __( 'Search Lunara', 'lunara-film' );
+$header_search_id          = 'lunara-header-search-input';
+$lunara_strip_search_menu_item = null;
+$lunara_strip_search_menu_markup = null;
+
+if ( is_page_template( 'page-oscars.php' ) || is_page( 'oscars' ) ) {
+    $header_search_placeholder = __( 'Search the Oscar Ledger', 'lunara-film' );
+    $header_search_id          = 'lunara-header-oscars-search-input';
+}
+
+if ( $show_lunara_header_search ) {
+    ob_start(
+        static function ( $html ) {
+            return preg_replace(
+                array(
+                    '#<li\b[^>]*menu-item-27569[^>]*>\s*<a\b[^>]*href="[^"]*/search/?(?:\?[^"]*)?"[^>]*>Search(?:<span class="ct-menu-badge">New</span>)?</a>\s*</li>#i',
+                    '#<li\b[^>]*>\s*<a\b[^>]*href="[^"]*/search/?(?:\?[^"]*)?"[^>]*>Search(?:<span class="ct-menu-badge">New</span>)?</a>\s*</li>#i',
+                ),
+                '',
+                $html
+            );
+        }
+    );
+
+    $lunara_strip_search_menu_item = static function ( $items ) {
+        $search_url = untrailingslashit( home_url( '/search/' ) );
+
+        foreach ( $items as $index => $item ) {
+            $item_url   = isset( $item->url ) ? untrailingslashit( (string) $item->url ) : '';
+            $item_title = isset( $item->title ) ? trim( wp_strip_all_tags( (string) $item->title ) ) : '';
+
+            if ( $search_url === $item_url || 0 === strcasecmp( $item_title, 'Search' ) ) {
+                unset( $items[ $index ] );
+            }
+        }
+
+        return array_values( $items );
+    };
+
+    add_filter( 'wp_nav_menu_objects', $lunara_strip_search_menu_item, 20, 1 );
+
+    $lunara_strip_search_menu_markup = static function ( $items_html ) {
+        return preg_replace(
+            '#<li\b[^>]*>\s*<a\b[^>]*href="[^"]*/search/?(?:\?[^"]*)?"[^>]*>[\s\S]*?</a>\s*</li>#i',
+            '',
+            $items_html
+        );
+    };
+
+    add_filter( 'wp_nav_menu_items', $lunara_strip_search_menu_markup, 20, 1 );
+}
+
 ob_start();
 if ( function_exists( 'blocksy_output_header' ) ) {
     blocksy_output_header();
 }
 $global_header = ob_get_clean();
+
+if ( null !== $lunara_strip_search_menu_item ) {
+    remove_filter( 'wp_nav_menu_objects', $lunara_strip_search_menu_item, 20 );
+}
+
+if ( null !== $lunara_strip_search_menu_markup ) {
+    remove_filter( 'wp_nav_menu_items', $lunara_strip_search_menu_markup, 20 );
+}
+
+if ( $show_lunara_header_search ) {
+    $search_menu_url = home_url( '/search/' );
+
+    $global_header = str_replace(
+        array(
+            '<li id="menu-item-27569" class="menu-item menu-item-type-post_type menu-item-object_page menu-item-27569"><a href="' . esc_url( $search_menu_url ) . '" class="ct-menu-link">Search<span class="ct-menu-badge">New</span></a></li>',
+            '<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-27569"><a href="' . esc_url( $search_menu_url ) . '" class="ct-menu-link">Search<span class="ct-menu-badge">New</span></a></li>',
+            '<li id="menu-item-27569" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-27569"><a href="' . esc_url( $search_menu_url ) . '" class="ct-menu-link">Search<span class="ct-menu-badge">New</span></a></li>',
+        ),
+        '',
+        $global_header
+    );
+
+    $global_header = preg_replace(
+        '#<li\b[^>]*menu-item-27569[^>]*>[\s\S]*?</li>#i',
+        '',
+        $global_header
+    );
+
+    $global_header = preg_replace(
+        '#<li\b[^>]*>\s*<a\b[^>]*href="[^"]*/search/?(?:\?[^"]*)?"[^>]*>[\s\S]*?</a>\s*</li>#i',
+        '',
+        $global_header
+    );
+
+    ob_start();
+    ?>
+    <form role="search" method="get" class="lunara-search-form lunara-inline-header-search" action="<?php echo esc_url( function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/' ) ); ?>">
+        <label class="screen-reader-text" for="<?php echo esc_attr( $header_search_id ); ?>"><?php esc_html_e( 'Search for:', 'lunara-film' ); ?></label>
+        <input id="<?php echo esc_attr( $header_search_id ); ?>" type="search" class="lunara-search-input" placeholder="<?php echo esc_attr( $header_search_placeholder ); ?>" value="<?php echo esc_attr( isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : get_search_query() ); ?>" name="<?php echo esc_attr( function_exists( 'lunara_search_command_url' ) ? 'q' : 's' ); ?>" />
+        <button type="submit" class="lunara-btn lunara-btn-primary"><?php esc_html_e( 'Search', 'lunara-film' ); ?></button>
+    </form>
+    <?php
+    $inline_header_search = trim( ob_get_clean() );
+
+    if ( '' !== $inline_header_search ) {
+        $global_header = preg_replace(
+            '/(<nav\s+id="header-menu-1"[\s\S]*?<\/nav>)/',
+            '$1' . $inline_header_search,
+            $global_header,
+            1
+        );
+    }
+}
 
 if (
     function_exists( 'lunara_header_takeover_enabled' )
