@@ -25,6 +25,51 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-10-02 — Oscars speed: Ledger 2.8.10–2.8.14 live, the Oscars page store
+
+### Headline
+
+Dalton asked for the Oscars database to be "lightning fast".
+
+- **Investigation.** A 14-agent pass mapped the cost and designed the plan:
+  - The WordPress bootstrap costs about 1.2s on every uncached request.
+  - Batcache stores a page only on its second hit and kept it 300s.
+  - The edge cache reports BYPASS everywhere.
+  - Ceremony pages cost 3–12s.
+- **Releases.** Dalton merged Ledger 2.8.10 through 2.8.14; each auto-deployed:
+
+| PR | Version | Change |
+| --- | --- | --- |
+| [#42](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/42) | 2.8.10 | Nomination Ring centred and enlarged on phones |
+| [#43](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/43) | 2.8.11 | Phone captions name each dot |
+| [#44](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/44) | 2.8.12 | Speed pass one: `max-age=900`, a boot probe, wasted work removed |
+| [#45](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/45) | 2.8.13 + 2.8.14 | Cheaper misses and cache-safe links, plus the include-time Oscars page store |
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| Ceremony 70 origin after 2.8.12 | 1.54s, down from 3.0–3.6s. Ceremony 45: 1.41s, down from 6.7s |
+| `aat-boot` (ms until the Ledger loads) | 212–318ms. This passed the decision gate, so the page store went ahead |
+| Batcache with `max-age=900` | Still a HIT 7 minutes after storing; previously it expired at 300s |
+| Old `_jb_static` bundle hash after deploys | Still returns 200 with CSS, so stored HTML keeps its styles |
+| Page store, `/oscars/title/tt0099685/` | MISS at 1,076ms origin → HIT at 321ms (store lookup 1.4ms) → Batcache HIT at 21ms |
+| Page store, `/oscars/name/nm0000233/` | MISS at 1,292ms → HIT at 323ms |
+| Warmer | Started after the deploy; the categories index was stored within minutes. Ceremonies were still queued at 02:30 UTC |
+| Canary `lunara-canary-verify.sh 3.2.96` | **GO** (the `/oscars/` portal is not stored) |
+
+### Whose move is next
+
+- **Dalton:** turn on "Enable global edge caching" (Settings → Hosting Configuration → Cache). Optionally fix or remove the gtag numeric ID `380392203`; it loads 90KB of JS and likely collects nothing.
+- **Claude, the remaining plan steps:**
+  - take schema and rebuild work off anonymous requests;
+  - batched poster and portrait maps for cheaper misses;
+  - a rendered-section cache for ceremonies;
+  - speculation rules and click feedback;
+  - theme trims (portal payload, admin-only code, inline CSS).
+
+---
+
 ## 2026-09-30 (evening) — Oscars Ledger 2.8.9 live: every spoke opens its race; speed work begins
 
 ### Headline
