@@ -314,6 +314,8 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 			return;
 		}
 		?>
+		<?php // Tint the phone browser bar to the page navy (was unset, so Safari/Chrome guessed). ?>
+		<meta name="theme-color" content="#0a1520">
 		<style id="lunara-header-command-css">/*lunara-header-command*/
 		body.lunara-header-takeover header.ct-header,
 		body.lunara-header-takeover [data-header],
@@ -419,6 +421,38 @@ if ( ! function_exists( 'lunara_header_command_css' ) ) {
 			.lunara-header-inner { height: 68px; gap: 14px; }
 			.lunara-header-brand { min-width: 134px; }
 			.lunara-header-logo { width: 134px; height: 48px; }
+
+			/* --- Mobile fix (2026-10): plain header + no colour bleed ------
+			   1. HEADER. On phones the header was position:fixed with an
+			      82-94% see-through background and a blur, so page text
+			      ghosted through it and it looked like a floating pane
+			      detached from the page. On phones it is now a normal
+			      header: it sits at the top of the page, scrolls away with
+			      the content, and has a solid background. Page padding-top
+			      (68px, above) is unchanged, so nothing shifts.
+			      To bring a sticky bar back later, set position:fixed here
+			      and keep the background solid.
+			   2. HOME GAP. A leftover 13px margin above <main> (from the old
+			      Blocksy header) left a strip of page background between the
+			      header and the hero; removed so the header is flush.
+			   3. COLOUR BLEED. The page background is a gold + grey glow on
+			      background-attachment:fixed (iOS Safari ignores "fixed" and
+			      smears the glow down the whole page), and the Blocksy
+			      parent theme adds its own blue-to-purple mobile background
+			      underneath (max-width:999.98px). On phones, use one solid
+			      navy for the page and canvas so nothing else can show. */
+			.lunara-header {
+				position: absolute;
+				background: #0a1520;
+				-webkit-backdrop-filter: none; backdrop-filter: none;
+			}
+			html { background-color: #0a1520; color-scheme: dark; }
+			html body.lunara-header-takeover {
+				background-color: #0a1520 !important;
+				background-image: none !important;
+				background-attachment: scroll !important;
+			}
+			html body.home.lunara-header-takeover #main-container > main#main { margin-top: 0 !important; }
 		}
 		/* --- §9 off-canvas panel ------------------------------------ */
 		.lunara-offcanvas { position: fixed; inset: 0; z-index: 990; }
