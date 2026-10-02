@@ -274,35 +274,13 @@ if ( ! function_exists( 'lunara_render_cinematic_hero_image' ) ) {
 	/**
 	 * Return the cached final image markup for a hero surface.
 	 *
-	 * @param array<string,mixed> $data         Slide or static hero data.
-	 * @param bool                $is_priority  Whether this image is the LCP.
-	 * @param bool                $defer_source Whether Splide owns source activation.
+	 * @param array<string,mixed> $data        Slide or static hero data.
+	 * @param bool                $is_priority Whether this image is the LCP.
 	 * @return string
 	 */
-	function lunara_render_cinematic_hero_image( $data, $is_priority = true, $defer_source = false ) {
+	function lunara_render_cinematic_hero_image( $data, $is_priority = true ) {
 		$descriptor = lunara_build_cinematic_hero_image_descriptor( $data, $is_priority );
-		$html       = (string) $descriptor['html'];
-		if ( ! $defer_source || $is_priority ) {
-			return $html;
-		}
-
-		// Fade slides share viewport coordinates, so native lazy loading still
-		// downloads the whole deck. Let Splide activate only nearby sources.
-		// Keep the cached descriptor and every responsive candidate unchanged.
-		// Once selected, load eagerly: Splide hides pending images until load,
-		// which would otherwise deadlock the browser's native lazy loader.
-		return (string) preg_replace_callback(
-			'/<img\b[^>]*>/i',
-			static function ( $match ) {
-				return preg_replace(
-					array( '/\ssrc\s*=/i', '/\ssrcset\s*=/i', '/\sloading\s*=\s*(["\']).*?\1/i' ),
-					array( ' data-splide-lazy=', ' data-splide-lazy-srcset=', ' loading="eager"' ),
-					$match[0]
-				);
-			},
-			$html,
-			1
-		);
+		return (string) $descriptor['html'];
 	}
 }
 
@@ -315,9 +293,6 @@ if ( ! function_exists( 'lunara_resolve_home_cinematic_hero_lcp_data' ) ) {
 	function lunara_resolve_home_cinematic_hero_lcp_data() {
 		$slides       = function_exists( 'lunara_get_home_cinematic_hero_slides' ) ? lunara_get_home_cinematic_hero_slides() : array();
 		$slides       = is_array( $slides ) ? $slides : array();
-		if ( function_exists( 'lunara_home_carousel_is_adopted' ) && lunara_home_carousel_is_adopted( 'hero' ) ) {
-			return $slides[0] ?? array();
-		}
 		$command_live = function_exists( 'lunara_hero_command_slides' ) && count( (array) lunara_hero_command_slides() ) > 0;
 
 		if ( count( $slides ) < 1 || ( count( $slides ) < 2 && ! $command_live ) ) {

@@ -287,7 +287,7 @@ if ( ! function_exists( 'lunara_render_journal_image_carousel' ) ) {
 
 		ob_start();
 		?>
-		<section class="lunara-journal-image-carousel" data-lunara-journal-carousel data-lunara-site-studio-section="gallery">
+		<section class="lunara-journal-image-carousel" data-lunara-journal-carousel>
 			<div class="lunara-journal-image-carousel-head">
 				<div>
 					<p class="lunara-home-section-kicker"><?php esc_html_e( 'Visual File', 'lunara-film' ); ?></p>
@@ -408,17 +408,22 @@ if ( have_posts() ) :
 
 		$has_thumb   = has_post_thumbnail( $post_id );
 		$archive_url = get_post_type_archive_link( 'journal' );
-		$hero_alt    = $has_thumb && function_exists( 'lunara_get_journal_hero_alt' ) ? lunara_get_journal_hero_alt( $post_id ) : '';
+		$hero_alt    = function_exists( 'lunara_get_journal_field_value' )
+			? trim( (string) lunara_get_journal_field_value( $post_id, 'journal_image_alt' ) )
+			: '';
+		if ( '' === $hero_alt && $has_thumb ) {
+			$hero_alt = trim( (string) get_post_meta( get_post_thumbnail_id( $post_id ), '_wp_attachment_image_alt', true ) );
+		}
 		$classification_terms = function_exists( 'lunara_get_journal_primary_classification_terms' )
 			? lunara_get_journal_primary_classification_terms( $post_id )
 			: get_the_terms( $post_id, 'journal_type' );
 		$topic_terms = get_the_terms( $post_id, 'journal_topic' );
 		?>
 
-		<div class="lunara-editorial-single-page lunara-journal-single-page">
+		<main class="lunara-editorial-single-page lunara-journal-single-page">
 		<article <?php post_class( 'lunara-journal-single lunara-review-single' ); ?>>
 
-			<section class="lunara-journal-single-hero lunara-journal-cinematic-hero<?php echo $has_thumb ? ' has-hero-image' : ' has-no-hero-image'; ?>" data-lunara-site-studio-section="hero">
+			<section class="lunara-journal-single-hero lunara-journal-cinematic-hero<?php echo $has_thumb ? ' has-hero-image' : ' has-no-hero-image'; ?>">
 				<div class="lunara-journal-cinematic-hero-header">
 					<div class="lunara-journal-cinematic-hero-inner">
 						<p class="lunara-review-single-kicker"><?php echo esc_html( $kicker ); ?></p>
@@ -461,13 +466,13 @@ if ( have_posts() ) :
 							<?php
 							echo get_the_post_thumbnail(
 								$post_id,
-								'full',
+								'lunara-hero-spotlight',
 								array(
 									'class'         => 'lunara-journal-cinematic-hero-image',
 									'loading'       => 'eager',
 									'fetchpriority' => 'high',
 									'decoding'      => 'async',
-									'sizes'         => '(max-width: 640px) calc(100vw - 32px), (max-width: 1174px) 92vw, 1080px',
+									'sizes'         => '100vw',
 									'alt'           => $hero_alt,
 								)
 							);
@@ -501,7 +506,7 @@ if ( have_posts() ) :
 			}
 			?>
 
-			<section class="lunara-journal-single-body lunara-review-single-body" data-lunara-site-studio-section="article">
+			<section class="lunara-journal-single-body lunara-review-single-body">
 				<div class="lunara-review-single-body-grid">
 
 					<div class="lunara-review-single-content">
@@ -596,35 +601,6 @@ if ( have_posts() ) :
 			</section>
 
 			<?php
-			// Chronological neighbours, so every entry leads to the one before and after it.
-			$journal_adjacent = array(
-				'older' => get_adjacent_post( false, '', true ),
-				'newer' => get_adjacent_post( false, '', false ),
-			);
-			if ( $journal_adjacent['older'] instanceof WP_Post || $journal_adjacent['newer'] instanceof WP_Post ) :
-				?>
-				<nav class="lunara-journal-adjacent" aria-label="<?php esc_attr_e( 'Older and newer Journal entries', 'lunara-film' ); ?>">
-					<?php foreach ( $journal_adjacent as $journal_direction => $journal_neighbour ) : ?>
-						<?php if ( $journal_neighbour instanceof WP_Post ) : ?>
-							<a class="lunara-journal-adjacent-link is-<?php echo esc_attr( $journal_direction ); ?>" href="<?php echo esc_url( get_permalink( $journal_neighbour ) ); ?>" rel="<?php echo 'older' === $journal_direction ? 'prev' : 'next'; ?>">
-								<span class="lunara-journal-adjacent-label">
-									<?php if ( 'older' === $journal_direction ) : ?>
-										<span aria-hidden="true">&larr;</span> <?php esc_html_e( 'Older entry', 'lunara-film' ); ?>
-									<?php else : ?>
-										<?php esc_html_e( 'Newer entry', 'lunara-film' ); ?> <span aria-hidden="true">&rarr;</span>
-									<?php endif; ?>
-								</span>
-								<span class="lunara-journal-adjacent-title"><?php echo esc_html( wp_strip_all_tags( get_the_title( $journal_neighbour ) ) ); ?></span>
-								<span class="lunara-journal-adjacent-date"><?php echo esc_html( get_the_date( 'F j, Y', $journal_neighbour ) ); ?></span>
-							</a>
-						<?php else : ?>
-							<span class="lunara-journal-adjacent-spacer" aria-hidden="true"></span>
-						<?php endif; ?>
-					<?php endforeach; ?>
-				</nav>
-			<?php endif; ?>
-
-			<?php
 			// Related journal entries (most recent in same type, excluding current).
 			$related_args = array(
 				'post_type'           => 'journal',
@@ -682,7 +658,7 @@ if ( have_posts() ) :
 			echo lunara_render_newsletter_signup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 		?>
-		</div>
+		</main>
 
 	<?php endwhile; ?>
 <?php endif; ?>

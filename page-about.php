@@ -60,7 +60,7 @@ $journal_total = isset( $journal_total->publish ) ? (int) $journal_total->publis
 		<a class="lunara-about-pillar" href="<?php echo esc_url( home_url( '/reviews/' ) ); ?>">
 			<span class="lunara-about-pillar-label"><?php esc_html_e( 'Criticism', 'lunara-film' ); ?></span>
 			<strong><?php echo esc_html( sprintf( /* translators: %d: published review count */ _n( '%d review on file', '%d reviews on file', $review_total, 'lunara-film' ), $review_total ) ); ?></strong>
-			<span class="lunara-about-pillar-copy"><?php esc_html_e( 'Every review ends with three more films — an Echo, a Counter, a Context.', 'lunara-film' ); ?></span>
+			<span class="lunara-about-pillar-copy"><?php esc_html_e( 'Every review ends with three more films — a Theme Echo, a Counter-Program, a Career Context.', 'lunara-film' ); ?></span>
 		</a>
 		<a class="lunara-about-pillar" href="<?php echo esc_url( home_url( '/journal/' ) ); ?>">
 			<span class="lunara-about-pillar-label"><?php esc_html_e( 'The Journal', 'lunara-film' ); ?></span>

@@ -1,24 +1,63 @@
 $ErrorActionPreference = 'Stop'
-$themeRoot = Split-Path -Parent $PSScriptRoot
-function Assert-True([bool] $Condition, [string] $Message) { if (-not $Condition) { throw $Message } }
-$controlDesk = Get-Content -Raw -LiteralPath (Join-Path $themeRoot 'inc/control-desk.php')
-$provider = Get-Content -Raw -LiteralPath (Join-Path $themeRoot 'inc/site-studio-utility-recovery.php')
-$workspace = Get-Content -Raw -LiteralPath (Join-Path $themeRoot 'inc/site-studio.php')
-$panel = [regex]::Match($controlDesk, '(?ms)^function lunara_control_desk_render_utility_search_studio\b.*?(?=^function |\z)').Value
-Assert-True ($panel.Length -gt 0) 'The existing Utility panel anchor must remain available.'
-Assert-True ($panel.Contains('surface=utility-search') -and $panel.Contains('surface=utility-404')) 'The old comparison panel must hand off to the two current editors.'
-Assert-True ($panel -notmatch '<form|render_utility_search_preset_card\(|render_utility_search_preset_comparison_strip\(') 'The handoff must not expose competing preset Apply or comparison controls.'
 
-# The same choices remain editable as individual, previewable fields in Site Studio.
-foreach ($path in @('presentation.density', 'presentation.result_treatment', 'presentation.result_media', 'presentation.recovery_prominence', 'focus.lead', 'focus.spotlight', 'geometry.section_gap', 'geometry.result_min_height', 'geometry.card_grid_min')) {
-    Assert-True ($workspace.Contains("'$path'")) "Shared Search must retain the former comparison setting $path."
+$themeRoot = Split-Path -Parent $PSScriptRoot
+
+function Assert-True {
+    param(
+        [bool] $Condition,
+        [string] $Message
+    )
+
+    if (-not $Condition) {
+        throw $Message
+    }
 }
-foreach ($field in @('kicker', 'no_query_title', 'excerpt_words', 'use_empty_title')) {
-    Assert-True ($workspace.Contains("'content.$field'")) "Shared Search must also expose content.$field."
+
+function Read-ThemeFile {
+    param([string] $RelativePath)
+
+    $path = Join-Path $themeRoot $RelativePath
+    Assert-True (Test-Path $path) "Missing expected file: $RelativePath"
+    return Get-Content -Raw $path
 }
-Assert-True ($provider.Contains("'mod' => 'lunara_utility_reentry_primary'")) 'The former404 primary comparison choice must remain in the independent404 editor.'
-Assert-True ($workspace.Contains('data-search-preview-case="results"') -and $workspace.Contains('data-search-preview-case="start"')) 'A candidate must be inspectable in both real Search cases.'
-Assert-True ($workspace.Contains('lunara_site_studio_render_revisions( $revisions )')) 'Shared comparison edits must retain History.'
-Assert-True ($workspace.Contains('esc_html') -and $workspace.Contains('esc_attr')) 'Shared control labels and values must remain escaped.'
-Assert-True ($controlDesk -notmatch 'lunara-utility-compare') 'Retirement must not invent a public comparison query.'
-Write-Host 'Utility comparison migration retains all independent shared controls.'
+
+$controlDesk = Read-ThemeFile 'inc/control-desk.php'
+$adminCss = Read-ThemeFile 'assets/css/lunara-control-desk.css'
+
+Assert-True ($controlDesk -match 'function\s+lunara_control_desk_render_utility_search_preset_comparison_strip') 'Utility Search Studio must render a preset comparison strip.'
+Assert-True ($controlDesk -match 'function\s+lunara_control_desk_render_utility_search_preset_comparison_item') 'Utility Search comparison strip must render normalized preset items.'
+Assert-True ($controlDesk -match 'function\s+lunara_control_desk_render_utility_search_studio[\s\S]+lunara_control_desk_render_utility_search_preset_comparison_strip\(\s*\$presets,\s*\$active_preset_key\s*\)') 'Utility Search Studio must call the comparison strip renderer.'
+Assert-True ($controlDesk -match 'lunara-control-desk-utility-comparison-strip') 'Utility Search comparison strip must use a stable wrapper class.'
+Assert-True ($adminCss -match '\.lunara-control-desk-utility-comparison-strip') 'Control Desk CSS must style the comparison strip.'
+
+foreach ($preset in @(
+    'balanced-desk',
+    'ledger-signal',
+    'criticism-run',
+    'journal-desk',
+    'navigation-clean'
+)) {
+    Assert-True ($controlDesk -match [regex]::Escape("'$preset'")) "Comparison strip must be based on existing preset specs that include $preset."
+}
+
+foreach ($label in @(
+    'Density',
+    'Result treatment',
+    'Result media',
+    'Search lead focus',
+    'Spotlight type',
+    '404 primary path',
+    'Section gap',
+    'Result minimum height',
+    'Card grid minimum'
+)) {
+    Assert-True ($controlDesk -match [regex]::Escape($label)) "Comparison strip must expose $label."
+}
+
+Assert-True ($controlDesk -match 'lunara_control_desk_utility_search_preset_specs\(\)') 'Comparison strip must reuse the existing Utility Search preset specs.'
+Assert-True ($controlDesk -match "__\(\s*'Default'\s*,\s*'lunara-film'\s*\)") 'Comparison strip must have a Default fallback for missing preset values.'
+Assert-True ($controlDesk -match 'esc_html') 'Comparison strip output must escape labels and values.'
+Assert-True ($controlDesk -notmatch 'lunara-utility-compare') 'Comparison strip must not introduce a new public comparison query variable.'
+Assert-True ($controlDesk -notmatch '<textarea[^>]+lunara_utility') 'Comparison strip must not expose raw CSS textareas.'
+
+Write-Host 'Utility Search preset comparison contract passed.'

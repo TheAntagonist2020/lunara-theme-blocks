@@ -4,21 +4,13 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
-        const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         document.querySelectorAll('[data-lunara-carousel]').forEach(function(section) {
-            let reduceMotion = motionQuery.matches;
             const track = section.querySelector('[data-lunara-carousel-track]');
             const prev = section.querySelector('[data-lunara-carousel-prev]');
             const next = section.querySelector('[data-lunara-carousel-next]');
             const dots = Array.from(section.querySelectorAll('[data-lunara-carousel-dot]'));
-            const toggle = section.querySelector('[data-lunara-carousel-toggle]');
-            const carouselLabel = section.getAttribute('data-lunara-carousel-label') || 'Oscar Picks';
             if (!track) return;
-            if (toggle && reduceMotion) {
-                toggle.disabled = true;
-                toggle.setAttribute('aria-disabled', 'true');
-                toggle.setAttribute('aria-label', 'Autoplay disabled for reduced motion');
-            }
             function amount() {
                 const card = track.children[0];
                 const styles = window.getComputedStyle(track);
@@ -66,17 +58,15 @@ document.addEventListener('DOMContentLoaded', function () {
             function step(direction) {
                 const distance = amount() * direction;
                 const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
-                const behavior = reduceMotion ? 'auto' : 'smooth';
-                // Reach the final card before wrapping on the following advance.
-                if (direction > 0 && track.scrollLeft >= maxScroll - 6) {
-                    track.scrollTo({ left: 0, behavior: behavior });
+                if (direction > 0 && track.scrollLeft + distance >= maxScroll - 6) {
+                    track.scrollTo({ left: 0, behavior: 'smooth' });
                     return;
                 }
                 if (direction < 0 && track.scrollLeft <= 6) {
-                    track.scrollTo({ left: maxScroll, behavior: behavior });
+                    track.scrollTo({ left: maxScroll, behavior: 'smooth' });
                     return;
                 }
-                track.scrollBy({ left: distance, behavior: behavior });
+                track.scrollBy({ left: distance, behavior: 'smooth' });
             }
             if (prev) {
                 prev.addEventListener('click', function () {
@@ -121,125 +111,33 @@ document.addEventListener('DOMContentLoaded', function () {
             }, { passive: true });
 
             const autoplay = parseInt(section.getAttribute('data-lunara-carousel-autoplay') || '0', 10);
-            const allowMobileAutoplay = !!toggle;
-            let timer = null;
-            let userPaused = false;
-            let pointerHover = false;
-            let focusWithin = false;
-            let touchActive = false;
-
-            function syncToggle() {
-                if (!toggle) {
-                    return;
-                }
-                const paused = userPaused || reduceMotion || autoplay <= 0;
-                toggle.textContent = paused ? 'Play' : 'Pause';
-                toggle.setAttribute('aria-label', reduceMotion ? 'Autoplay disabled for reduced motion' : (paused ? 'Play ' + carouselLabel + ' rotation' : 'Pause ' + carouselLabel + ' rotation'));
-                toggle.setAttribute('aria-pressed', userPaused ? 'true' : 'false');
-                toggle.classList.toggle('is-paused', paused);
-                toggle.disabled = reduceMotion || autoplay <= 0 || track.children.length < 2;
-                if (toggle.disabled) {
-                    toggle.setAttribute('aria-disabled', 'true');
-                    if (!reduceMotion) toggle.setAttribute('aria-label', 'Automatic rotation is turned off');
-                } else {
-                    toggle.removeAttribute('aria-disabled');
-                }
-            }
-
-            function stop() {
-                if (timer) {
-                    window.clearInterval(timer);
-                    timer = null;
-                }
-            }
-
-            function start(force) {
-                stop();
-                if (document.hidden || touchActive || userPaused || reduceMotion || autoplay <= 0 || track.children.length < 2 || (!allowMobileAutoplay && window.innerWidth <= 900) || (!force && (pointerHover || focusWithin))) {
-                    syncToggle();
-                    return;
-                }
-                timer = window.setInterval(function () {
-                    step(1);
-                }, autoplay);
-                syncToggle();
-            }
-
-            function resumeWhenAvailable() {
-                if (document.hidden || touchActive || pointerHover || focusWithin || userPaused) {
+            if (!reduceMotion && autoplay > 0 && track.children.length > 1 && window.innerWidth > 900) {
+                let timer = null;
+                const stop = function () {
+                    if (timer) {
+                        window.clearInterval(timer);
+                        timer = null;
+                    }
+                };
+                const start = function () {
                     stop();
-                    syncToggle();
-                    return;
-                }
-                start();
-            }
-
-            if (toggle) {
-                toggle.addEventListener('click', function () {
-                    userPaused = !userPaused;
-                    if (userPaused) {
+                    timer = window.setInterval(function () {
+                        step(1);
+                    }, autoplay);
+                };
+                section.addEventListener('mouseenter', stop);
+                section.addEventListener('mouseleave', start);
+                section.addEventListener('focusin', stop);
+                section.addEventListener('focusout', start);
+                document.addEventListener('visibilitychange', function () {
+                    if (document.hidden) {
                         stop();
                     } else {
-                        start(true);
+                        start();
                     }
-                    syncToggle();
                 });
+                start();
             }
-
-            // Pause on real mouse hover and while keyboard focus is inside the
-            // section. Touch users can still swipe and autoplay resumes after
-            // the gesture ends. A user pause always wins over these temporary
-            // interaction pauses.
-            section.addEventListener('pointerenter', function (event) {
-                if (event.pointerType === 'mouse') {
-                    pointerHover = true;
-                    stop();
-                }
-            });
-            section.addEventListener('pointerleave', function (event) {
-                if (event.pointerType === 'mouse') {
-                    pointerHover = false;
-                    resumeWhenAvailable();
-                }
-            });
-            section.addEventListener('focusin', function () {
-                focusWithin = true;
-                stop();
-            });
-            section.addEventListener('focusout', function () {
-                window.setTimeout(function () {
-                    if (!section.contains(document.activeElement)) {
-                        focusWithin = false;
-                        resumeWhenAvailable();
-                    }
-                }, 0);
-            });
-            track.addEventListener('touchstart', function () {
-                touchActive = true;
-                stop();
-            }, { passive: true });
-            function finishTouch() {
-                touchActive = false;
-                resumeWhenAvailable();
-            }
-            track.addEventListener('touchend', finishTouch, { passive: true });
-            track.addEventListener('touchcancel', finishTouch, { passive: true });
-            document.addEventListener('visibilitychange', function () {
-                if (document.hidden) {
-                    stop();
-                } else {
-                    resumeWhenAvailable();
-                }
-            });
-            motionQuery.addEventListener('change', function (event) {
-                reduceMotion = event.matches;
-                stop();
-                syncToggle();
-                resumeWhenAvailable();
-            });
-            syncToggle();
-            start();
-
             // The first dot is already marked active in server-rendered HTML.
             // Defer geometry reads until the rail actually scrolls or a reader
             // uses a control; this keeps below-fold carousels out of first paint.

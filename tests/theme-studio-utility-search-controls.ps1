@@ -23,8 +23,6 @@ function Read-ThemeFile {
 
 $controlDesk = Read-ThemeFile 'inc/control-desk.php'
 $frontend = Read-ThemeFile 'inc/frontend.php'
-$provider = Read-ThemeFile 'inc/site-studio-utility-recovery.php'
-$workspace = Read-ThemeFile 'inc/site-studio.php'
 
 foreach ($key in @(
     'lunara_utility_search_density',
@@ -32,7 +30,7 @@ foreach ($key in @(
     'lunara_utility_result_media',
     'lunara_utility_recovery_prominence'
 )) {
-    Assert-True ($provider -match [regex]::Escape("'$key'")) "Shared Search must define the $key select control."
+    Assert-True ($controlDesk -match [regex]::Escape("'$key'")) "Utility Search Studio must define the $key select control."
     Assert-True ($frontend -match [regex]::Escape("'$key'")) "Utility Search public CSS must read the $key setting."
 }
 
@@ -41,7 +39,7 @@ foreach ($key in @(
     'lunara_utility_result_min_height',
     'lunara_utility_card_grid_min'
 )) {
-    Assert-True ($provider -match [regex]::Escape("'$key'")) "Shared Search must define the $key numeric control."
+    Assert-True ($controlDesk -match [regex]::Escape("'$key'")) "Utility Search Studio must define the $key numeric control."
     Assert-True ($frontend -match [regex]::Escape("'$key'")) "Utility Search public CSS must read the $key setting."
 }
 
@@ -59,7 +57,7 @@ foreach ($option in @(
     'standard',
     'strong'
 )) {
-    Assert-True ($provider -match [regex]::Escape("'$option'")) "Shared Search must retain the $option option."
+    Assert-True ($controlDesk -match [regex]::Escape("'$option'")) "Utility Search Studio must support the $option option."
 }
 
 Assert-True ($controlDesk -match 'function\s+lunara_control_desk_utility_search_select_specs') 'Utility Search Studio must define select specs.'
@@ -67,16 +65,18 @@ Assert-True ($controlDesk -match 'function\s+lunara_control_desk_utility_search_
 Assert-True ($controlDesk -match 'function\s+lunara_control_desk_render_utility_search_studio') 'Theme Studio must render a Utility Search Studio panel.'
 Assert-True ($controlDesk -match 'lunara_control_desk_render_utility_search_studio\(\)') 'Theme Studio tab must call the Utility Search Studio renderer.'
 Assert-True ($controlDesk -match 'id="lunara-theme-studio-utility-search-studio"') 'Utility Search Studio panel must have a stable anchor.'
-Assert-True ($controlDesk -match 'admin_post_lunara_save_utility_search_studio') 'Already-open legacy forms must retain a safe redirect handler.'
+Assert-True ($controlDesk -match 'admin_post_lunara_save_utility_search_studio') 'Utility Search Studio must save through admin-post.'
 Assert-True ($controlDesk -match 'check_admin_referer\(\s*''lunara_save_utility_search_studio''') 'Utility Search Studio save handler must verify a nonce.'
 Assert-True ($controlDesk -match 'current_user_can\(\s*''edit_theme_options''') 'Utility Search Studio must remain capability protected.'
 Assert-True ($controlDesk -notmatch '<textarea[^>]+lunara_utility') 'Utility Search Studio must not expose raw CSS textareas.'
 
-foreach ($field in @('content.kicker', 'content.no_query_title', 'content.excerpt_words', 'content.use_empty_title', 'presentation.density', 'presentation.result_treatment', 'presentation.result_media', 'presentation.recovery_prominence', 'geometry.section_gap', 'geometry.result_min_height', 'geometry.card_grid_min')) {
-    Assert-True ($workspace.Contains("'$field'")) "Shared Search inspector must render $field."
+foreach ($preview in @(
+    "home_url( '/?s=sinners' )",
+    "home_url( '/definitely-not-a-real-lunara-route/' )"
+)) {
+    Assert-True ($controlDesk.Contains($preview)) "Utility Search Studio must include preview URL $preview."
 }
-Assert-True ($workspace.Contains('390px mobile width')) 'Shared Search must use the real390px mobile preview.'
-Assert-True ($provider.Contains("'preserve_legacy_read' => true")) 'New copy controls must preserve older saved presentation until a candidate is applied.'
+Assert-True ($controlDesk -match "add_query_arg\(\s*'lunara-width'\s*,\s*'390'") 'Utility Search Studio must include 390px mobile preview links.'
 
 foreach ($variable in @(
     '--lunara-utility-section-gap',
@@ -105,7 +105,4 @@ Assert-True ($frontend -match 'function\s+lunara_output_utility_search_studio_cs
 Assert-True ($frontend -match 'add_action\(\s*''wp_head''\s*,\s*''lunara_output_utility_search_studio_css''') 'Utility Search public CSS must be hooked through wp_head.'
 Assert-True ($frontend -match 'line-clamp') 'Utility Search controls must tune text depth, not only spacing.'
 
-$runtime = Join-Path $PSScriptRoot 'site-studio-utility-recovery-runtime.php'
-& php $runtime
-Assert-True ($LASTEXITCODE -eq 0) 'Search/404 provider, template, rollback and retirement runtime must pass.'
-Write-Host 'Shared Search controls and legacy retirement contract passed.'
+Write-Host 'Utility Search Studio controls contract passed.'

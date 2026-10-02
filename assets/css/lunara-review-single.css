@@ -6,11 +6,6 @@
  * Request-specific image-focus and editorial variables remain inline.
  */
 
-/* Keep the existing slash separator without the old trailing dot. */
-body.single-review .lunara-review-single-meta > span::after {
-    content: none !important;
-}
-
 /* lunara-review-debrief-polish-css */
     body.single-review .lunara-review-single-debrief-section {
         margin: clamp(44px, 5.5vw, 72px) auto clamp(48px, 6vw, 78px) !important;
@@ -487,10 +482,7 @@ body.single-review .lunara-review-single-meta > span::after {
         }
 
         body.single-review .lunara-review-single-hero-inner {
-            width: 100% !important;
-            max-width: min(100%, 760px) !important;
-            min-width: 0 !important;
-            grid-template-columns: minmax(0, 1fr) !important;
+            max-width: 760px !important;
             gap: 14px !important;
         }
 
@@ -498,10 +490,6 @@ body.single-review .lunara-review-single-meta > span::after {
             color: rgba(250, 251, 252, 0.96) !important;
             font-size: clamp(2.35rem, 4.1vw, 4rem) !important;
             line-height: 0.98 !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            overflow-wrap: anywhere !important;
-            word-break: normal !important;
             text-wrap: balance !important;
         }
 
@@ -708,10 +696,6 @@ body.single-review .lunara-review-single-meta > span::after {
                 linear-gradient(180deg, rgba(17, 31, 46, 0.98), rgba(7, 19, 31, 0.98)) !important;
         }
 
-        body.single-review .lunara-review-single {
-            gap: 24px !important;
-        }
-
         body.single-review .lunara-review-single-hero-inner {
             gap: 12px !important;
             max-width: 100% !important;
@@ -719,12 +703,8 @@ body.single-review .lunara-review-single-meta > span::after {
 
         body.single-review .lunara-review-single-title {
             font-size: clamp(2.05rem, 10vw, 2.65rem) !important;
-            line-height: 1.08 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            overflow-wrap: anywhere !important;
-            word-break: normal !important;
+            line-height: 0.98 !important;
+            max-width: 11ch !important;
             text-wrap: balance !important;
         }
 
@@ -737,16 +717,12 @@ body.single-review .lunara-review-single-meta > span::after {
             width: 100% !important;
             max-width: 100% !important;
             margin: 0 auto !important;
-            padding: 0 !important;
+            padding: 20px 0 0 !important;
             border: 0 !important;
             border-radius: 0 !important;
             background: transparent !important;
             box-shadow: none !important;
             overflow: visible !important;
-        }
-
-        body.single-review .lunara-review-single-body::before {
-            display: none !important;
         }
 
         body.single-review .lunara-review-single-body-grid {
@@ -1449,23 +1425,128 @@ body.single-review .lunara-review-single-meta > span::after {
         }
     }
 
-/* lunara-review-share-strip-css: the share card is retired (3.2.94); Jetpack's sharing row stays hidden. */
+/* lunara-review-share-strip-css */
+    body.single-review .lunara-review-share-strip {
+        box-sizing: border-box !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: clamp(14px, 2vw, 22px) !important;
+        max-width: min(100%, 72ch) !important;
+        margin: clamp(28px, 4vw, 46px) auto clamp(8px, 2vw, 16px) !important;
+        padding: clamp(14px, 2vw, 20px) !important;
+        border: 1px solid rgba(224, 196, 129, 0.24) !important;
+        border-radius: 14px !important;
+        background:
+            linear-gradient(90deg, rgba(224, 196, 129, 0.1), transparent 38%),
+            rgba(9, 22, 36, 0.92) !important;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.04),
+            0 16px 34px rgba(0, 0, 0, 0.16) !important;
+    }
+
+    body.single-review .lunara-review-share-strip-copy {
+        display: grid !important;
+        gap: 6px !important;
+        min-width: 0 !important;
+    }
+
+    body.single-review .lunara-review-share-strip-kicker,
+    body.single-review .lunara-review-share-strip-title,
+    body.single-review .lunara-review-share-status {
+        margin: 0 !important;
+    }
+
+    body.single-review .lunara-review-share-strip-kicker {
+        color: rgba(224, 196, 129, 0.88) !important;
+        font-size: 0.68rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.16em !important;
+        line-height: 1 !important;
+        text-transform: uppercase !important;
+    }
+
+    body.single-review .lunara-review-share-strip-title {
+        color: rgba(248, 244, 234, 0.96) !important;
+        font-family: var(--lunara-heading-font, inherit) !important;
+        font-size: clamp(1.04rem, 1.35vw, 1.18rem) !important;
+        font-weight: 800 !important;
+        line-height: 1.15 !important;
+        text-wrap: pretty !important;
+    }
+
+    body.single-review .lunara-review-share-strip-actions {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+    }
+
+    body.single-review .lunara-review-share-link {
+        appearance: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 34px !important;
+        max-width: 100% !important;
+        padding: 8px 11px !important;
+        border: 1px solid rgba(224, 196, 129, 0.3) !important;
+        border-radius: 999px !important;
+        background: rgba(224, 196, 129, 0.075) !important;
+        color: rgba(244, 216, 143, 0.98) !important;
+        cursor: pointer !important;
+        font-family: var(--lunara-body-font, inherit) !important;
+        font-size: 0.68rem !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.09em !important;
+        line-height: 1 !important;
+        text-align: center !important;
+        text-decoration: none !important;
+        text-transform: uppercase !important;
+        white-space: normal !important;
+    }
+
+    body.single-review .lunara-review-share-link:hover,
+    body.single-review .lunara-review-share-link:focus-visible {
+        border-color: rgba(244, 216, 143, 0.85) !important;
+        background: rgba(224, 196, 129, 0.16) !important;
+        color: #fff6dc !important;
+    }
+
+    body.single-review .lunara-review-share-copy.is-copied {
+        border-color: rgba(160, 210, 172, 0.8) !important;
+        color: rgba(198, 238, 206, 0.98) !important;
+    }
+
+    body.single-review .lunara-review-share-status {
+        grid-column: 1 / -1 !important;
+        min-height: 1em !important;
+        color: rgba(244, 239, 227, 0.66) !important;
+        font-size: 0.72rem !important;
+        line-height: 1.2 !important;
+    }
+
     body.single-review .sharedaddy.sd-sharing-enabled {
         display: none !important;
     }
 
-/* lunara-review-director-link-css: the director's name in the hero meta opens the director archive. */
-    body.single-review .lunara-review-single-meta a.lunara-review-single-director-link {
-        color: inherit !important;
-        text-decoration: none !important;
-        border-bottom: 1px solid rgba(224, 196, 129, 0.34) !important;
-        transition: color 0.18s ease, border-color 0.18s ease !important;
-    }
+    @media (max-width: 760px) {
+        body.single-review .lunara-review-share-strip {
+            grid-template-columns: minmax(0, 1fr) !important;
+            align-items: stretch !important;
+            padding: 14px !important;
+            border-radius: 12px !important;
+        }
 
-    body.single-review .lunara-review-single-meta a.lunara-review-single-director-link:hover,
-    body.single-review .lunara-review-single-meta a.lunara-review-single-director-link:focus-visible {
-        color: #e0c481 !important;
-        border-bottom-color: rgba(224, 196, 129, 0.9) !important;
+        body.single-review .lunara-review-share-strip-actions {
+            justify-content: flex-start !important;
+        }
+
+        body.single-review .lunara-review-share-link {
+            flex: 1 1 calc(50% - 8px) !important;
+            min-width: 118px !important;
+        }
     }
 
 /* lunara-review-related-retention-css */

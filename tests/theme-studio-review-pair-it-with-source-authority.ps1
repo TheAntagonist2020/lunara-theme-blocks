@@ -37,9 +37,9 @@ Assert-True ($controlDesk -match 'lunara_parse_pair_it_with_value\s*\(\s*\$raw,\
 Assert-True ($controlDesk -match 'poster_deferred') 'Pairing source rows must expose whether poster preview resolution was deferred.'
 Assert-True ($controlDesk -match 'Poster preview deferred') 'Pairing source rows must explain deferred poster previews instead of showing a false missing-poster warning.'
 Assert-True ($controlDesk -match 'lunara_get_career_context_meta') 'Pairing source rows must include Career Context using the current meta helper.'
-Assert-True ($controlDesk -match "__\( 'Echo'") 'Pairing source rows must label Echo (formerly Theme Echo).'
-Assert-True ($controlDesk -match "__\( 'Counter'") 'Pairing source rows must label Counter (formerly Counter-Program).'
-Assert-True ($controlDesk -match "__\( 'Context'") 'Pairing source rows must label Context (formerly Career Context).'
+Assert-True ($controlDesk -match 'Theme Echo') 'Pairing source rows must label Theme Echo.'
+Assert-True ($controlDesk -match 'Counter-Program') 'Pairing source rows must label Counter-Program.'
+Assert-True ($controlDesk -match 'Career Context') 'Pairing source rows must label Career Context.'
 
 foreach ($field in @(
     'pairing_slot',

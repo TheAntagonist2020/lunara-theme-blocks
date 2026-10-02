@@ -232,9 +232,7 @@ function lunara_entity_render_award_history( $rows, $context = 'movie' ) {
         <ul class="lunara-entity-award-list">
             <?php foreach ( $rows as $row ) :
                 $won   = ! empty( $row['won'] );
-                // The Academy's own year label, verbatim: a split season such
-                // as 1932/33 is never flattened to its start year.
-                $year  = trim( (string) ( $row['year'] ?? '' ) );
+                $year  = ! empty( $row['year'] ) ? (int) $row['year'] : 0;
                 $other = 0;
                 if ( 'movie' === $context && ! empty( $row['person_id'] ) ) {
                     $other = (int) $row['person_id'];
@@ -243,7 +241,7 @@ function lunara_entity_render_award_history( $rows, $context = 'movie' ) {
                 }
                 ?>
                 <li class="lunara-entity-award<?php echo $won ? ' is-win' : ''; ?>">
-                    <span class="lunara-entity-award-year"><?php echo preg_match( '/^\d{4}(\/\d{2})?$/', $year ) ? esc_html( $year ) : '&mdash;'; ?></span>
+                    <span class="lunara-entity-award-year"><?php echo $year ? esc_html( $year ) : '&mdash;'; ?></span>
                     <span class="lunara-entity-award-cat"><?php echo esc_html( (string) $row['category'] ); ?></span>
                     <?php if ( $other && 'publish' === get_post_status( $other ) ) : ?>
                         <a class="lunara-entity-award-link" href="<?php echo esc_url( get_permalink( $other ) ); ?>"><?php echo esc_html( get_the_title( $other ) ); ?></a>
@@ -443,12 +441,9 @@ function lunara_entity_output_schema() {
             'name'  => get_the_title( $post_id ),
             'url'   => get_permalink( $post_id ),
         );
-        // datePublished only for a plain four-digit year, as that string. A
-        // split label such as 1932/33 is not an ISO date, and flattening it
-        // would publish a year the Academy never gave.
-        $year = trim( (string) get_post_meta( $post_id, 'release_year', true ) );
-        if ( preg_match( '/^\d{4}$/', $year ) ) {
-            $schema['datePublished'] = $year;
+        $year = get_post_meta( $post_id, 'release_year', true );
+        if ( $year ) {
+            $schema['datePublished'] = (string) (int) $year;
         }
         if ( has_post_thumbnail( $post_id ) ) {
             $schema['image'] = get_the_post_thumbnail_url( $post_id, 'large' );

@@ -17,7 +17,7 @@ $roles = array(
     'craft'    => __( 'Craft', 'lunara-film' ),
 );
 ?>
-<div id="primary" class="site-main lunara-entity-page lunara-entity-archive">
+<main id="primary" class="site-main lunara-entity-page lunara-entity-archive">
     <header class="lunara-entity-archive-head">
         <p class="lunara-home-section-kicker"><?php esc_html_e( 'The Talent Index', 'lunara-film' ); ?></p>
         <h1 class="lunara-entity-title"><?php esc_html_e( 'The People of the Record', 'lunara-film' ); ?></h1>
@@ -46,6 +46,6 @@ $roles = array(
     <?php else : ?>
         <p class="lunara-entity-archive-copy"><?php esc_html_e( 'The talent record is being built — check back shortly.', 'lunara-film' ); ?></p>
     <?php endif; ?>
-</div>
+</main>
 <?php
 get_footer();

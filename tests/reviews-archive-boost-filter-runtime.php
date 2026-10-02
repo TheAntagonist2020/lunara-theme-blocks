@@ -44,12 +44,6 @@ echo json_encode(
         'async_archive_false'  => lunara_keep_review_archive_css_synchronous( false, 'lunara-review-archive' ),
         'async_other_true'     => lunara_keep_review_archive_css_synchronous( true, 'lunara-shell' ),
         'async_other_false'    => lunara_keep_review_archive_css_synchronous( false, 'lunara-shell' ),
-        'concat_journal_true'  => lunara_keep_journal_archive_css_unaggregated( true, 'lunara-journal-archive' ),
-        'concat_journal_false' => lunara_keep_journal_archive_css_unaggregated( false, 'lunara-journal-archive' ),
-        'concat_journal_other' => lunara_keep_journal_archive_css_unaggregated( true, 'lunara-shell' ),
-        'async_journal_true'   => lunara_keep_journal_archive_css_synchronous( true, 'lunara-journal-archive' ),
-        'async_journal_false'  => lunara_keep_journal_archive_css_synchronous( false, 'lunara-journal-archive' ),
-        'async_journal_other'  => lunara_keep_journal_archive_css_synchronous( true, 'lunara-shell' ),
         'registrations'        => $registrations,
     )
 );
