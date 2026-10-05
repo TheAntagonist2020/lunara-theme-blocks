@@ -184,9 +184,11 @@ $posterless_card = array(
 	'film_url'           => 'https://example.test/oscars/title/tt28607951/',
 	'_visual'            => array(),
 );
+$posterless_link = lunara_render_oscars_winner_media_link( $posterless_card + array( 'year' => '2024' ), 'https://example.test/oscars/ceremony/97/' );
 lunara_test_assert(
-	'' === lunara_render_oscars_winner_media_link( $posterless_card, 'https://example.test/oscars/ceremony/97/' ),
-	'A posterless winner must emit no empty media anchor; its named text destination remains authoritative.'
+	false !== strpos( $posterless_link, 'lunara-winner-title-card' ) && false !== strpos( $posterless_link, '>Anora<' ) && false !== strpos( $posterless_link, '>2024<' )
+		&& false !== strpos( $posterless_link, 'aria-hidden="true"' ) && false !== strpos( $posterless_link, 'tabindex="-1"' ),
+	'A posterless winner gets a vintage title card in the same media box: film name and year, a mouse shortcut hidden from the tab order (the named links stay authoritative).'
 );
 
 $poster_card             = $posterless_card;

@@ -879,7 +879,7 @@ function lunara_render_oscars_winner_media_link( $winner_card, $fallback_url = '
     $poster_url  = isset( $visual['poster_url'] ) && is_scalar( $visual['poster_url'] ) ? trim( (string) $visual['poster_url'] ) : '';
 
     if ( '' === $poster_html && '' === $poster_url ) {
-        return '';
+        return lunara_render_oscars_winner_title_card( $winner_card, $fallback_url );
     }
 
     $label = '';
@@ -918,6 +918,57 @@ function lunara_render_oscars_winner_media_link( $winner_card, $fallback_url = '
     return '<a class="lunara-ceremony-winner-media-link" href="' . esc_url( $url ) . '" aria-label="'
         . esc_attr( sprintf( __( 'View %s Oscar winner details', 'lunara-film' ), $label ) ) . '"><div class="'
         . esc_attr( $poster_classes ) . '"' . $poster_style . '>' . $visual_markup . '</div></a>';
+}
+
+/**
+ * Vintage title card for a winner with no portrait and no poster (3.2.98).
+ *
+ * Fills the same media box a photo would, so the category, name and film
+ * line up with the cards beside it. It shows the film's name like an old
+ * studio opening title. It is a mouse shortcut to the film only: hidden from
+ * assistive tech and out of the tab order, because the named links in the
+ * card copy already lead to the same place.
+ */
+function lunara_render_oscars_winner_title_card( $winner_card, $fallback_url = '' ) {
+    $title = '';
+    foreach ( array( 'film', 'primary_label', 'name', 'category_label' ) as $key ) {
+        if ( isset( $winner_card[ $key ] ) && is_scalar( $winner_card[ $key ] ) ) {
+            $parts = explode( '|', (string) $winner_card[ $key ] );
+            $title = trim( $parts[0] );
+        }
+        if ( '' !== $title ) {
+            break;
+        }
+    }
+    if ( '' === $title ) {
+        return '';
+    }
+
+    $url = '';
+    foreach ( array( 'film_url', 'primary_url' ) as $key ) {
+        if ( '' === $url && isset( $winner_card[ $key ] ) && is_scalar( $winner_card[ $key ] ) ) {
+            $url = trim( (string) $winner_card[ $key ] );
+        }
+    }
+    if ( '' === $url ) {
+        $url = trim( (string) $fallback_url );
+    }
+
+    $year = isset( $winner_card['year'] ) && is_scalar( $winner_card['year'] ) ? trim( (string) $winner_card['year'] ) : '';
+    $size = function_exists( 'mb_strlen' ) ? mb_strlen( $title ) : strlen( $title );
+    $size = $size > 28 ? ' is-long' : ( $size > 14 ? ' is-medium' : '' );
+
+    $card = '<div class="lunara-ceremony-winner-poster is-title-card"><div class="lunara-winner-title-card' . $size . '">'
+        . '<span class="lunara-winner-title-card__kicker">' . esc_html( __( 'Academy Award Winner', 'lunara-film' ) ) . '</span>'
+        . '<span class="lunara-winner-title-card__title">' . esc_html( $title ) . '</span>'
+        . ( '' !== $year ? '<span class="lunara-winner-title-card__year">' . esc_html( $year ) . '</span>' : '' )
+        . '</div></div>';
+
+    if ( '' === $url ) {
+        return '<div class="lunara-ceremony-winner-media-link is-title-card" aria-hidden="true">' . $card . '</div>';
+    }
+
+    return '<a class="lunara-ceremony-winner-media-link is-title-card" href="' . esc_url( $url ) . '" tabindex="-1" aria-hidden="true">' . $card . '</a>';
 }
 
 /**
