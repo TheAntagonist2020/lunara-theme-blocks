@@ -988,8 +988,33 @@ function lunara_enqueue_oscars_portal_styles() {
         lunara_theme_asset_version( $asset['path'] ),
         'all'
     );
+
+    // 3.2.98: the hero newsreel loader. Tiny, deferred, and it only attaches
+    // the video after the page has finished loading.
+    $reel = lunara_resolve_theme_asset( 'assets/js/lunara-oscars-hero-reel.js' );
+    if ( ! empty( $reel['uri'] ) && lunara_oscars_hero_reel_url() !== '' ) {
+        wp_enqueue_script( 'lunara-oscars-hero-reel', $reel['uri'], array(), lunara_theme_asset_version( $reel['path'] ), array( 'in_footer' => true, 'strategy' => 'defer' ) );
+    }
 }
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_oscars_portal_styles', 111 );
+
+/**
+ * URL of the Oscars portal hero newsreel loop, or '' when it is turned off.
+ *
+ * The loop is cut from public-domain Universal Newsreel footage held by the
+ * U.S. National Archives (Academy Awards coverage, 1957, 1963 and 1965).
+ * Filter `lunara_oscars_hero_reel_enabled` to false to switch it off.
+ */
+function lunara_oscars_hero_reel_url() {
+    if ( ! apply_filters( 'lunara_oscars_hero_reel_enabled', true ) ) {
+        return '';
+    }
+    $video = lunara_resolve_theme_asset( 'assets/video/oscars-newsreel-loop.mp4' );
+    if ( empty( $video['uri'] ) ) {
+        return '';
+    }
+    return add_query_arg( 'ver', lunara_theme_asset_version( $video['path'] ), $video['uri'] );
+}
 
 /**
  * Keep Oscars portal geometry out of Boost's deferred aggregate.

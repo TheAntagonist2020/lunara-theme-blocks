@@ -1591,3 +1591,34 @@ body.lunara-oscars-portal-page .lunara-home-section-head .lunara-home-section-ki
 .lunara-winner-title-card.is-medium .lunara-winner-title-card__title { font-size: clamp(1.05rem, .8vw + .8rem, 1.5rem); }
 .lunara-winner-title-card.is-long .lunara-winner-title-card__title { font-size: clamp(.9rem, .5vw + .7rem, 1.2rem); }
 .lunara-ceremony-winner-media-link.is-title-card:hover .lunara-winner-title-card::before { border-color: var(--lunara-gold-light, #e6c987); }
+
+/* 3.2.98: newsreel loop behind the hero (public-domain Universal Newsreel
+   Oscar coverage). Hidden until it is actually playing, then faded in under a
+   navy wash that keeps the headline side dark and readable. */
+body.lunara-oscars-portal-page .lunara-oscars-portal-hero { position: relative !important; isolation: isolate; }
+.lunara-oscars-hero-reel {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 1.6s ease;
+    pointer-events: none;
+}
+.lunara-oscars-hero-reel.is-playing { opacity: 1; }
+.lunara-oscars-hero-reel video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: .42;
+    filter: grayscale(.35) sepia(.35) contrast(1.05);
+}
+.lunara-oscars-hero-reel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(100deg, rgba(7,16,27,.92) 0%, rgba(7,16,27,.72) 38%, rgba(7,16,27,.38) 70%, rgba(7,16,27,.7) 100%),
+        radial-gradient(ellipse at 70% 40%, rgba(201,169,97,.10), transparent 60%);
+}
+body.lunara-oscars-portal-page .lunara-oscars-portal-hero .lunara-oscars-portal-hero-grid { position: relative !important; z-index: 1 !important; }
+@media (prefers-reduced-motion: reduce) { .lunara-oscars-hero-reel { display: none; } }
