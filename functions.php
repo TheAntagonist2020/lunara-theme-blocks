@@ -507,8 +507,8 @@ function lunara_get_home_section_slugs() {
         'latest-reviews',
         'pairing-desk',    // Added 2026-07-02 — Pair It With showcase (signature debrief module)
         'dispatch',
-        'oscar-picks',     // Added 2026-05-10 â€” Lunara Oscar Picks carousel
-        'oscar-facts',     // Added 2026-05-10 â€” Lunara Oscar Facts carousel
+        'oscar-picks',     // Added 2026-05-10 — Lunara Oscar Picks carousel
+        'oscar-facts',     // Added 2026-05-10 — Lunara Oscar Facts carousel
         'featured',
         'oscar-spotlight',
         'database',
@@ -587,7 +587,7 @@ function lunara_get_home_section_order_map() {
     // BACKFILL 2026-05-10: append any recognized slug missing from the saved
     // customizer order. Without this, slugs added to lunara_get_home_section_slugs()
     // after the customizer was first saved (e.g. oscar-picks, oscar-facts) get NO
-    // order rule and default to order:0 â€” rendering BEFORE all numbered sections.
+    // order rule and default to order:0 — rendering BEFORE all numbered sections.
     foreach ( $defaults as $default_slug ) {
         if ( '' !== $default_slug && ! in_array( $default_slug, $ordered, true ) ) {
             // The Pair It With showcase belongs right under Latest Reviews by
@@ -2017,7 +2017,7 @@ function lunara_customize_register( $wp_customize ) {
         ) );
     }
 
-    // â”€â”€ Footer Design Controls â”€â”€
+    // ── Footer Design Controls ──
     $wp_customize->add_section( 'lunara_footer_options', array(
         'title'    => __( 'Lunara Footer', 'lunara-film' ),
         'priority' => 34,
@@ -2208,7 +2208,7 @@ function lunara_output_runtime_customizer_css() {
         $css .= '.lunara-home-hero-title,.lunara-home-section-title,.lunara-section-title,.lunara-home-pulse-title,.lunara-home-pulse-feature-heading,.lunara-poster-card-title,.lunara-dispatch-lead-title,.lunara-dispatch-rail-title,.lunara-home-winner-title,.lunara-home-pulse-note-title,.lunara-review-grid-title,.lunara-oscar-spotlight-text-panel h3{font-family:' . $heading_font . ';}';
     }
 
-    /* Lunara header (header.php) â€” color + spacing from customizer controls */
+    /* Lunara header (header.php) — color + spacing from customizer controls */
     $css .= '.lunara-header{background:' . $header_bg . ';border-bottom:1px solid ' . $header_border . ';}';
     $css .= '.lunara-header .lunara-container{max-width:var(--lunara-header-max);padding-left:var(--lunara-header-side-pad);padding-right:var(--lunara-header-side-pad);}';
     $css .= '.lunara-header .site-title,.lunara-header .site-title a{font-size:var(--lunara-header-title-size);color:' . $header_link . ';}';
@@ -2556,13 +2556,13 @@ if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
             <div class="lunara-meta-field">
                 <label for="lunara_score">Score (0-5, use .5 for half stars)</label>
                 <input type="text" id="lunara_score" name="lunara_score" value="<?php echo esc_attr( $score ); ?>" placeholder="4.5">
-                <p class="description">Examples: 4, 4.5, 5 â†’ â˜…â˜…â˜…â˜…, â˜…â˜…â˜…â˜…Â½, â˜…â˜…â˜…â˜…â˜…</p>
+                <p class="description">Examples: 4, 4.5, 5 → ★★★★, ★★★★½, ★★★★★</p>
             </div>
             
             <div class="lunara-meta-field">
                 <label for="lunara_year">Year Released</label>
                 <select id="lunara_year" name="lunara_year">
-                    <option value="">â€” Select Year â€”</option>
+                    <option value="">— Select Year —</option>
                     <?php 
                     $current_year = (int) date('Y') + 2; // Allow 2 years ahead for upcoming films
                     for ( $y = $current_year; $y >= 1920; $y-- ) : 
@@ -2577,7 +2577,7 @@ if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
         <div class="lunara-meta-field">
             <label for="lunara_imdb_title_id">IMDb Title ID (for this review)</label>
             <input type="text" id="lunara_imdb_title_id" name="lunara_imdb_title_id" value="<?php echo esc_attr( $imdb_review_id ); ?>" placeholder="tt1234567">
-            <p class="description">Connects this review to the Oscars database film page (shows a â€œLunara Reviewâ€ module on /oscars/title/tt…/).</p>
+            <p class="description">Connects this review to the Oscars database film page (shows a “Lunara Review” module on /oscars/title/tt…/).</p>
         </div>
 
         <div class="lunara-meta-section">
@@ -2587,9 +2587,9 @@ if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
                 <textarea id="lunara_where" name="lunara_where" rows="5" placeholder="One per line. Any of these formats works:&#10;Netflix&#10;Max | https://play.max.com/video/watch/123&#10;https://tv.apple.com/us/movie/some-film/umc.cmc.xyz"><?php echo esc_textarea( $where ); ?></textarea>
                 <p class="description">
                     Enter one destination per line. Three input formats supported:<br>
-                    <strong>1. Service name alone</strong> (e.g. <code>Netflix</code>) â€” renders a branded chip that searches that service for the film title.<br>
-                    <strong>2. Label | URL</strong> (e.g. <code>Max | https://play.max.com/video/watch/xyz</code>) â€” direct link with your chosen label.<br>
-                    <strong>3. URL alone</strong> (e.g. <code>https://tv.apple.com/us/movie/xyz</code>) â€” direct link, label auto-inferred from the hostname.
+                    <strong>1. Service name alone</strong> (e.g. <code>Netflix</code>) — renders a branded chip that searches that service for the film title.<br>
+                    <strong>2. Label | URL</strong> (e.g. <code>Max | https://play.max.com/video/watch/xyz</code>) — direct link with your chosen label.<br>
+                    <strong>3. URL alone</strong> (e.g. <code>https://tv.apple.com/us/movie/xyz</code>) — direct link, label auto-inferred from the hostname.
                 </p>
             </div>
         </div>
@@ -2702,7 +2702,7 @@ if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
         if ( ! current_user_can( 'edit_post', $post_id ) ) return;
         
         $text_fields = array( 'lunara_score', 'lunara_year', 'lunara_imdb_title_id', 'lunara_theme_echo', 'lunara_counter_program', 'lunara_craft_mirror' );
-        $textarea_fields = array( 'lunara_where' ); // Multi-line â€” preserves newlines for the new Where-to-Watch parser.
+        $textarea_fields = array( 'lunara_where' ); // Multi-line — preserves newlines for the new Where-to-Watch parser.
         $url_fields  = array( 'lunara_review_hero_banner', 'lunara_review_context_shot', 'lunara_review_visual_evidence', 'lunara_review_thematic_echo' );
         $caption_fields = array( 'lunara_review_hero_banner_caption', 'lunara_review_context_shot_caption', 'lunara_review_visual_evidence_caption', 'lunara_review_thematic_echo_caption' );
 
@@ -2740,15 +2740,15 @@ if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
  * This parser reads the content on save and auto-populates any EMPTY meta fields
  * from patterns already present in the HTML:
  *
- *   <!-- "Title" (2026) â€” tt12345678 -->          â†’ IMDb ID, Year
- *   Score: â­â­â­                                   â†’ Score
- *   Where to Watch: Theatrical / Digital           â†’ Where to Watch
- *   Theme Echo: <em>Title</em> (YYYY) tt... â€” ...  â†’ Theme Echo pairing
- *   Counter-Program: <em>Title</em> ...            â†’ Counter-Program pairing
- *   Career Context: <em>Title</em> ...             â†’ Career Context pairing
- *   <!-- Director: Name / Runtime: 135 min / Studio: Name -->  â†’ Detail fields
+ *   <!-- "Title" (2026) — tt12345678 -->          → IMDb ID, Year
+ *   Score: ⭐⭐⭐                                   → Score
+ *   Where to Watch: Theatrical / Digital           → Where to Watch
+ *   Theme Echo: <em>Title</em> (YYYY) tt... — ...  → Theme Echo pairing
+ *   Counter-Program: <em>Title</em> ...            → Counter-Program pairing
+ *   Career Context: <em>Title</em> ...             → Career Context pairing
+ *   <!-- Director: Name / Runtime: 135 min / Studio: Name -->  → Detail fields
  *
- * Only fills EMPTY fields â€” never overwrites manually entered data.
+ * Only fills EMPTY fields — never overwrites manually entered data.
  */
 if ( ! function_exists( 'lunara_parse_review_meta_comment_payload' ) ) {
 function lunara_parse_review_meta_comment_payload( $content ) {
@@ -2875,7 +2875,7 @@ function lunara_autofill_review_meta_from_content( $post_id ) {
     }
 
     // Helper: only set if the user didn't manually type something in the meta box.
-    // We check $_POST to see if the form field was submitted empty â€” if so, the user
+    // We check $_POST to see if the form field was submitted empty — if so, the user
     // didn't fill it, and we should auto-fill from the content.
     $fill = static function( $post_id, $meta_key, $value ) {
         $value = trim( (string) $value );
@@ -2901,7 +2901,7 @@ function lunara_autofill_review_meta_from_content( $post_id ) {
             '_lunara_review_archive_url_override' => 'lunara_review_archive_url_override',
         );
 
-        // If the form field was submitted with a value, the user typed something â€” don't overwrite.
+        // If the form field was submitted with a value, the user typed something — don't overwrite.
         $form_field = isset( $form_field_map[ $meta_key ] ) ? $form_field_map[ $meta_key ] : '';
         if ( '' !== $form_field && isset( $_POST[ $form_field ] ) && '' !== trim( (string) $_POST[ $form_field ] ) ) {
             return;
@@ -2927,7 +2927,7 @@ function lunara_autofill_review_meta_from_content( $post_id ) {
         }
     }
 
-    // 1) IMDb title ID from header comment: <!-- "Title" (2026) â€” tt12345678 -->
+    // 1) IMDb title ID from header comment: <!-- "Title" (2026) — tt12345678 -->
     if ( ! isset( $structured_meta['_lunara_imdb_title_id'] ) && preg_match( '/<!--.*?(tt\d{7,8}).*?-->/', $content, $m ) ) {
         $fill( $post_id, '_lunara_imdb_title_id', $m[1] );
     }
@@ -2937,9 +2937,9 @@ function lunara_autofill_review_meta_from_content( $post_id ) {
         $fill( $post_id, '_lunara_year', $m[1] );
     }
 
-    // 3) Score â€” supports multiple formats:
-    //    Score: â­â­â­        (star emojis)
-    //    Score: â­â­â­Â½       (star emojis + half)
+    // 3) Score — supports multiple formats:
+    //    Score: ⭐⭐⭐        (star emojis)
+    //    Score: ⭐⭐⭐½       (star emojis + half)
     //    Score: 3 out of 5    (text)
     //    Score: 3/5           (fraction)
     //    Score: 3.5           (decimal)
@@ -2984,17 +2984,17 @@ function lunara_autofill_review_meta_from_content( $post_id ) {
         $fill( $post_id, '_lunara_where', $value );
     }
 
-    // 5) Pair It With â€” Echo
+    // 5) Pair It With — Echo
     if ( ! isset( $structured_meta['_lunara_theme_echo'] ) && preg_match( '/Theme\s+Echo:\s*(.+)/i', $content, $m ) ) {
         $fill( $post_id, '_lunara_theme_echo', wp_strip_all_tags( html_entity_decode( $m[1] ) ) );
     }
 
-    // 6) Pair It With â€” Counter
+    // 6) Pair It With — Counter
     if ( ! isset( $structured_meta['_lunara_counter_program'] ) && preg_match( '/Counter[\-\s]Program:\s*(.+)/i', $content, $m ) ) {
         $fill( $post_id, '_lunara_counter_program', wp_strip_all_tags( html_entity_decode( $m[1] ) ) );
     }
 
-    // 7) Pair It With â€” Career Context (or Craft Mirror)
+    // 7) Pair It With — Career Context (or Craft Mirror)
     if ( ! isset( $structured_meta['_lunara_craft_mirror'] ) && preg_match( '/Career\s+Context:\s*(.+)/i', $content, $m ) ) {
         $fill( $post_id, '_lunara_craft_mirror', wp_strip_all_tags( html_entity_decode( $m[1] ) ) );
     }
@@ -3141,7 +3141,7 @@ function lunara_render_oscar_ledger_pill( $tt, $counts = null ) {
     }
 
     $href = home_url( '/oscars/title/' . $tt . '/' );
-    $label = sprintf( '%d nominations â€¢ %d wins', $noms, $wins );
+    $label = sprintf( '%d nominations • %d wins', $noms, $wins );
 
     return '<a class="lunara-oscar-ledger" href="' . esc_url( $href ) . '">'
         . '<span class="lunara-oscar-ledger-pill">Oscar Ledger</span>'
@@ -3216,8 +3216,8 @@ function lunara_debrief_shortcode( $atts ) {
     // Local helper: render a "Pair It With" line.
     // Supports optional IMDb title ID / URL embedded anywhere in the field.
     // Examples you can paste into the meta field:
-    //   "There Will Be Blood (2007) â€” ... | tt0469494"
-    //   "There Will Be Blood (2007) â€” ... https://www.imdb.com/title/tt0469494/"
+    //   "There Will Be Blood (2007) — ... | tt0469494"
+    //   "There Will Be Blood (2007) — ... https://www.imdb.com/title/tt0469494/"
     // If a tt-id is present, the title links to the internal Oscars film page (/oscars/title/tt.../)
     // and an "IMDb" reference chip is shown.
     $format_pairing = function( $value ) {
@@ -3267,7 +3267,7 @@ function lunara_debrief_shortcode( $atts ) {
     }
 
     // 3) Split into title + note (prefer em dash).
-    $parts = preg_split( '/\s+â€”\s+/u', $clean, 2 );
+    $parts = preg_split( '/\s+—\s+/u', $clean, 2 );
     if ( count( $parts ) < 2 ) {
         $parts = preg_split( '/\s+-\s+/', $clean, 2 );
     }
@@ -3497,7 +3497,7 @@ add_shortcode( 'lunara_debrief', 'lunara_debrief_shortcode' );
 
 /**
  * Register Slide Sets taxonomy for Media
- * In WP Admin: Media Library â†’ click an image â†’ edit â†’ assign to a Slide Set (e.g., "homepage")
+ * In WP Admin: Media Library → click an image → edit → assign to a Slide Set (e.g., "homepage")
  * Then use: [lunara_carousel set="homepage"]
  */
 if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
@@ -3649,7 +3649,7 @@ function lunara_render_carousel_manager_page() {
 
     echo '<div class="wrap">';
     echo '<h1>Lunara Carousel</h1>';
-    echo '<p><strong>How to update the carousel:</strong> Upload (or select) images in <em>Media â†’ Library</em>, then assign them to a <em>Slide Set</em>. Use this page to drag & drop reorder slides. To add a link per slide, edit the media item and fill in <em>Carousel Link URL</em>.</p>';
+    echo '<p><strong>How to update the carousel:</strong> Upload (or select) images in <em>Media → Library</em>, then assign them to a <em>Slide Set</em>. Use this page to drag & drop reorder slides. To add a link per slide, edit the media item and fill in <em>Carousel Link URL</em>.</p>';
 
     echo '<form method="get" action="">';
     echo '<input type="hidden" name="page" value="lunara-carousel-manager" />';
@@ -3804,7 +3804,7 @@ function lunara_carousel_shortcode( $atts ) {
     if ( empty( $images ) ) {
         return '<div class="lunara-carousel-empty" style="background:#0f1d2e;padding:100px 40px;text-align:center;color:#888;">
             <p>No images in slide set "' . esc_html( $atts['set'] ) . '"</p>
-            <p style="font-size:0.9em;">Go to Media Library â†’ Edit an image â†’ Assign to Slide Set</p>
+            <p style="font-size:0.9em;">Go to Media Library → Edit an image → Assign to Slide Set</p>
         </div>';
     }
     
@@ -3861,7 +3861,7 @@ function lunara_carousel_shortcode( $atts ) {
 add_shortcode( 'lunara_carousel', 'lunara_carousel_shortcode' );
 
 /**
- * [lunara_still] â€” Full editorial control over cinematic stills in reviews.
+ * [lunara_still] — Full editorial control over cinematic stills in reviews.
  *
  * Usage:
  *   [lunara_still url="https://..." caption="..." style="full"]
@@ -3923,7 +3923,7 @@ add_shortcode( 'lunara_still', 'lunara_still_shortcode' );
 
 
 /* ========================================
-   WHERE TO WATCH â€” TMDB Watch Providers
+   WHERE TO WATCH — TMDB Watch Providers
    Renders real streaming/rental/buy availability for a film.
    Auto-detects IMDb ID from the current review, or accepts imdb="ttXXXXXXX".
    ======================================== */
@@ -3941,7 +3941,7 @@ function lunara_where_to_watch_shortcode( $atts ) {
     if ( '' === $imdb_id ) {
         $post_id = get_the_ID();
         if ( $post_id ) {
-            // Check both possible meta keys â€” reviews store the ID in _lunara_imdb_title_id.
+            // Check both possible meta keys — reviews store the ID in _lunara_imdb_title_id.
             $imdb_id = trim( (string) get_post_meta( $post_id, '_lunara_imdb_title_id', true ) );
             if ( '' === $imdb_id ) {
                 $imdb_id = trim( (string) get_post_meta( $post_id, '_lunara_imdb_id', true ) );
@@ -3953,7 +3953,7 @@ function lunara_where_to_watch_shortcode( $atts ) {
         return '';
     }
 
-    // Cache key â€” providers change rarely.
+    // Cache key — providers change rarely.
     $cache_key = 'lunara_wtw_v2_' . $imdb_id . '_' . $region;
     $cached    = get_transient( $cache_key );
     if ( is_string( $cached ) ) {
@@ -4013,7 +4013,7 @@ function lunara_where_to_watch_shortcode( $atts ) {
 
     $tmdb_link = ! empty( $region_data['link'] ) ? $region_data['link'] : '';
 
-    // Build output â€” compact for sidebar context (max 4 logos per row).
+    // Build output — compact for sidebar context (max 4 logos per row).
     ob_start();
     ?>
     <div class="lunara-wtw-providers">
@@ -4133,7 +4133,7 @@ if ( ! function_exists( 'lunara_render_review_where_links' ) ) {
             $token_lc = strtolower( $token );
             $url = '';
 
-            // NEW: "Label | URL" format â€” use Dalton's label + exact URL
+            // NEW: "Label | URL" format — use Dalton's label + exact URL
             if ( preg_match( '~^(.+?)\s*\|\s*(https?://\S+)\s*$~i', $token, $m ) ) {
                 $label = trim( $m[1] );
                 $url   = trim( $m[2] );
@@ -4351,7 +4351,7 @@ if ( ! defined( 'LUNARA_SPLIT_LOADER_ACTIVE' ) ) {
 }
 
 /**
- * Visual Image Toolkit â€” helper panel in the review editor sidebar.
+ * Visual Image Toolkit — helper panel in the review editor sidebar.
  * Placed outside LUNARA_CORE_VERSION guard so it always registers.
  */
 if ( ! function_exists( 'lunara_add_image_toolkit_meta_box' ) ) {
@@ -4385,12 +4385,12 @@ if ( ! function_exists( 'lunara_add_image_toolkit_meta_box' ) ) {
         </style>
 
         <div class="lunara-toolkit-section">
-            <h4>Quick Method â€” Media Insert</h4>
+            <h4>Quick Method — Media Insert</h4>
             <p>Just drop an image into the review body using the <strong>+</strong> button or <code>/image</code>. It auto-gets the Lunara cinematic frame treatment. Use <strong>Full Width</strong> alignment for edge-to-edge stills.</p>
         </div>
 
         <div class="lunara-toolkit-section">
-            <h4>Power Method â€” Shortcode</h4>
+            <h4>Power Method — Shortcode</h4>
             <p>Paste this in the review body wherever you want it:</p>
             <code class="lunara-toolkit-code" onclick="navigator.clipboard.writeText(this.innerText.replace('click to copy','').trim())">[lunara_still url="" caption="" kicker="" style="default"]</code>
         </div>
@@ -4416,12 +4416,12 @@ if ( ! function_exists( 'lunara_add_image_toolkit_meta_box' ) ) {
 
         <div class="lunara-toolkit-section">
             <h4>Attributes</h4>
-            <p><strong>url</strong> â€” image URL (required)<br>
-            <strong>caption</strong> â€” italic text below<br>
-            <strong>kicker</strong> â€” gold uppercase label<br>
-            <strong>style</strong> â€” layout style<br>
-            <strong>alt</strong> â€” accessibility text<br>
-            <strong>loading</strong> â€” eager or lazy</p>
+            <p><strong>url</strong> — image URL (required)<br>
+            <strong>caption</strong> — italic text below<br>
+            <strong>kicker</strong> — gold uppercase label<br>
+            <strong>style</strong> — layout style<br>
+            <strong>alt</strong> — accessibility text<br>
+            <strong>loading</strong> — eager or lazy</p>
         </div>
 
         <script>
@@ -4779,7 +4779,7 @@ function lunara_home_dispatch_archive_url() {
         return $custom_url;
     }
 
-    // Priority 2: journal CPT archive â€” the canonical destination going forward.
+    // Priority 2: journal CPT archive — the canonical destination going forward.
     if ( post_type_exists( 'journal' ) ) {
         $journal_archive = get_post_type_archive_link( 'journal' );
         if ( $journal_archive ) {
@@ -5097,7 +5097,7 @@ if ( ! function_exists( 'lunara_enhance_review_debrief_html' ) ) {
         }
 
         return preg_replace_callback(
-            '~(<strong>[^<]+:</strong>\s*)([^<]+?)\s*\|\s*IMDB:\s*(tt\d{7,8})(?:\s*(?:â€”|-)\s*([^<]+)|\s*<em>\s*(?:â€”|-)\s*([^<]+)\s*</em>)?~iu',
+            '~(<strong>[^<]+:</strong>\s*)([^<]+?)\s*\|\s*IMDB:\s*(tt\d{7,8})(?:\s*(?:—|-)\s*([^<]+)|\s*<em>\s*(?:—|-)\s*([^<]+)\s*</em>)?~iu',
             static function( $matches ) {
                 $label = $matches[1];
                 $title = trim( wp_strip_all_tags( $matches[2] ) );
@@ -5107,7 +5107,7 @@ if ( ! function_exists( 'lunara_enhance_review_debrief_html' ) ) {
                     : ( isset( $matches[5] ) ? trim( wp_strip_all_tags( $matches[5] ) ) : '' );
 
                 if ( '' !== $note ) {
-                    $note = preg_replace( '/^\s*[â€”-]\s*/u', '', $note );
+                    $note = preg_replace( '/^\s*[—-]\s*/u', '', $note );
                 }
 
                 $letterbox_url = 'https://letterboxd.com/search/' . rawurlencode( $title ) . '/';
@@ -6746,9 +6746,9 @@ function lunara_home_hero_reviews_query( $count = 4 ) {
  * Homepage dispatches query.
  *
  * Priority order:
- *   1. Manual curation (customizer post IDs â€” accepts both `post` and `journal`)
- *   2. `journal` CPT â€” the new dedicated post type (this is now the primary source)
- *   3. Legacy fallback â€” standard `post` filtered by category slugs
+ *   1. Manual curation (customizer post IDs — accepts both `post` and `journal`)
+ *   2. `journal` CPT — the new dedicated post type (this is now the primary source)
+ *   3. Legacy fallback — standard `post` filtered by category slugs
  *      (news / reactions / think-pieces / podcast). Keeps existing
  *      category-tagged posts visible during migration.
  */
@@ -6756,7 +6756,7 @@ if ( ! function_exists( 'lunara_home_dispatches_query' ) ) {
 function lunara_home_dispatches_query( $count = 4 ) {
     $count = max( 1, intval( $count ) );
 
-    // 1. Manual curation â€” accept both post types so curated lists can mix.
+    // 1. Manual curation — accept both post types so curated lists can mix.
     $manual_ids = lunara_parse_manual_post_ids(
         lunara_theme_mod_text( 'lunara_home_dispatch_post_ids', '' ),
         ''
@@ -6765,7 +6765,7 @@ function lunara_home_dispatches_query( $count = 4 ) {
         return lunara_posts_query_from_ids( array_slice( $manual_ids, 0, $count ) );
     }
 
-    // 2. Journal CPT â€” primary source going forward.
+    // 2. Journal CPT — primary source going forward.
     // Exclude posts marked as legacy roundup archives (the originals after migration).
     $journal_query = new WP_Query( array(
         'post_type'              => 'journal',
@@ -6795,7 +6795,7 @@ function lunara_home_dispatches_query( $count = 4 ) {
         return $journal_query;
     }
 
-    // 3. Legacy fallback â€” standard posts filtered by category slugs.
+    // 3. Legacy fallback — standard posts filtered by category slugs.
     $slugs = lunara_get_dispatch_category_slugs();
 
     $query_args = array(
@@ -6910,7 +6910,7 @@ function lunara_home_winner_secondary_label( $entry ) {
         }
     }
 
-    return implode( ' Â· ', array_slice( $bits, 0, 2 ) );
+    return implode( ' · ', array_slice( $bits, 0, 2 ) );
 }
 }
 
@@ -6990,7 +6990,7 @@ function lunara_get_home_oscars_snapshot() {
             ? $title_entry['film_url']
             : ( ( $film_id !== '' && method_exists( $aat, 'build_entity_url_from_id' ) ) ? $aat->build_entity_url_from_id( $film_id ) : home_url( '/oscars/title/' . $film_id . '/' ) );
         $title_entry['winning_categories_line'] = ! empty( $title_entry['winning_categories'] ) && is_array( $title_entry['winning_categories'] )
-            ? implode( ' Â· ', array_slice( array_values( $title_entry['winning_categories'] ), 0, 2 ) )
+            ? implode( ' · ', array_slice( array_values( $title_entry['winning_categories'] ), 0, 2 ) )
             : '';
 
         $top_titles[] = $title_entry;
@@ -7493,7 +7493,7 @@ function lunara_get_home_oscar_spotlight() {
     $bp_categories = "'BEST PICTURE','BEST MOTION PICTURE','OUTSTANDING PICTURE','OUTSTANDING PRODUCTION','OUTSTANDING MOTION PICTURE','UNIQUE AND ARTISTIC PICTURE'";
 
     if ( $day <= 72 ) {
-        // --- "On This Day" â€” ceremonies/wins from the current month across all years ---
+        // --- "On This Day" — ceremonies/wins from the current month across all years ---
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $ceremony_row = $wpdb->get_row(
             $wpdb->prepare(
@@ -7554,7 +7554,7 @@ function lunara_get_home_oscar_spotlight() {
         );
 
     } elseif ( $day <= 145 ) {
-        // --- "Category Deep Dive" â€” spotlight a random category with its most decorated nominee ---
+        // --- "Category Deep Dive" — spotlight a random category with its most decorated nominee ---
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $category_row = $wpdb->get_row(
             $wpdb->prepare(
@@ -7615,7 +7615,7 @@ function lunara_get_home_oscar_spotlight() {
         );
 
     } elseif ( $day <= 218 ) {
-        // --- "The Record Holders" â€” most wins/nominations for a rotating category ---
+        // --- "The Record Holders" — most wins/nominations for a rotating category ---
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $record_row = $wpdb->get_row(
             "SELECT film, film_id, COUNT(*) AS noms, SUM(CASE WHEN winner = 1 THEN 1 ELSE 0 END) AS wins FROM {$table} WHERE film_id != '' AND film != '' GROUP BY film_id ORDER BY wins DESC, noms DESC LIMIT 1",
@@ -7660,7 +7660,7 @@ function lunara_get_home_oscar_spotlight() {
         );
 
     } elseif ( $day <= 291 ) {
-        // --- "Oscar Rivalries" â€” ceremonies where multiple films had 10+ nominations ---
+        // --- "Oscar Rivalries" — ceremonies where multiple films had 10+ nominations ---
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $rivalry_ceremony = $wpdb->get_row(
             $wpdb->prepare(
@@ -7745,7 +7745,7 @@ function lunara_get_home_oscar_spotlight() {
         );
 
     } else {
-        // --- "Ceremony Spotlight" â€” random historical ceremony + BP winner + stats ---
+        // --- "Ceremony Spotlight" — random historical ceremony + BP winner + stats ---
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $random_ceremony = $wpdb->get_row(
             $wpdb->prepare(
@@ -8258,7 +8258,7 @@ function lunara_render_oscars_portal_markup() {
         ),
     );
 
-    // Backdrop images keyed by portal card â€” iconic Oscar titles.
+    // Backdrop images keyed by portal card — iconic Oscar titles.
     $portal_backdrop_map = array(
         'Ceremonies' => 'tt7286456',  // Joker
         'Categories' => 'tt1375666',  // Inception
@@ -8609,7 +8609,7 @@ function lunara_footer_menu_fallback() {
 }
 
 /**
- * â”€â”€ Lunara Custom Footer System â”€â”€
+ * ── Lunara Custom Footer System ──
  * A three-zone branded footer that replaces Blocksy's native footer.
  */
 if ( ! function_exists( 'lunara_render_footer_link_list' ) ) {
@@ -8772,7 +8772,7 @@ function lunara_footer_editorial_fallback() {
 
 /**
  * Dedupe ANY menu items in the footer-editorial / footer / etc. that share
- * the same URL â€” defensive against user-configured menus with accidental dupes.
+ * the same URL — defensive against user-configured menus with accidental dupes.
  * Compares by trailing-slash-normalized URL.
  */
 if ( ! function_exists( 'lunara_dedupe_footer_menu_items' ) ) {
@@ -8804,7 +8804,7 @@ add_filter( 'wp_nav_menu_objects', 'lunara_dedupe_footer_menu_items', 20, 2 );
  * Inject "Journal" into the primary nav between Reviews and Oscars,
  * unless the user has already added it to their menu.
  *
- * Customizer/Menu admin can be flaky â€” this gives the user a code-side
+ * Customizer/Menu admin can be flaky — this gives the user a code-side
  * guarantee that Journal appears in the top nav.
  */
 if ( ! function_exists( 'lunara_inject_journal_into_primary_menu' ) ) {
@@ -10734,7 +10734,7 @@ function lunara_output_carousel_controls_js() {
                         step(1);
                     }, autoplay);
                 };
-                // Pause-on-hover ONLY for actual mouse pointers â€” never on touch,
+                // Pause-on-hover ONLY for actual mouse pointers — never on touch,
                 // because mobile taps fire synthetic pointerenter without a matching
                 // pointerleave, which would freeze autoplay forever after the first tap.
                 section.addEventListener('pointerenter', function (e) {
@@ -10875,7 +10875,7 @@ function lunara_output_sidebar_scroll_follow_js() {
                 return;
             }
 
-            /* 1. Sidebar top hasn't scrolled past the gap â€” stay put */
+            /* 1. Sidebar top hasn't scrolled past the gap — stay put */
             if (stickyNat.top >= topGap) {
                 sticky.classList.remove('is-following', 'is-bottomed');
                 return;
@@ -10982,7 +10982,7 @@ function lunara_output_stats_countup_js() {
 
 
 /**
- * Oscar Lore â€” inline expansion interaction.
+ * Oscar Lore — inline expansion interaction.
  *
  * Clicking a lore card on the homepage opens an expanded detail panel
  * in-place instead of navigating away. The panel injects dynamically
@@ -11264,7 +11264,7 @@ add_action( 'init', 'lunara_register_review_meta_for_rest' );
 
 /**
  * =========================================================================
- * JOURNAL H2 SPLITTER â€” turn one Journal post into N item-cards.
+ * JOURNAL H2 SPLITTER — turn one Journal post into N item-cards.
  *
  * The Lunara Dispatch plugin sends a roundup post to Claude, which returns
  * HTML with <h2> section headers + <p> body paragraphs. Each H2 is a
@@ -11323,7 +11323,7 @@ if ( ! function_exists( 'lunara_split_journal_into_cards' ) ) {
 		$permalink   = get_permalink( $post_id );
 		$featured_id = (int) get_post_thumbnail_id( $post_id );
 
-		// Editorial per-section image map (slug â†’ attachment ID) â€” set in the
+		// Editorial per-section image map (slug → attachment ID) — set in the
 		// "Section Images" meta box on the Journal edit screen.
 		$section_image_map = get_post_meta( $post_id, '_lunara_journal_section_images', true );
 		if ( ! is_array( $section_image_map ) ) {
@@ -11396,9 +11396,9 @@ if ( ! function_exists( 'lunara_split_journal_into_cards' ) ) {
 				$has_title ? $current_title : 'item-' . ( $section_index + 1 )
 			);
 
-			// Per-section image priority (highest â†’ lowest):
+			// Per-section image priority (highest → lowest):
 			//   1. Editorial override (Section Images meta box, slug-keyed)
-			//   2. Inline <img> in this section's body â€” "the image right under the H2"
+			//   2. Inline <img> in this section's body — "the image right under the H2"
 			//   3. Dispatch plugin's auto-sideload array (index-keyed)
 			//   4. Post featured image (always-available fallback)
 			$card_image_id  = $featured_id;
@@ -11418,7 +11418,7 @@ if ( ! function_exists( 'lunara_split_journal_into_cards' ) ) {
 				}
 			}
 
-			// 2. First <img> embedded INSIDE this section's body â€” picks up
+			// 2. First <img> embedded INSIDE this section's body — picks up
 			//    the image you placed right under the H2 in the editor.
 			if ( ! $image_resolved && '' !== trim( (string) $current_body_html ) ) {
 				if ( preg_match( '/<img\b[^>]*\bsrc=["\']([^"\']+)["\']/i', $current_body_html, $img_match ) ) {
@@ -11520,7 +11520,7 @@ if ( ! function_exists( 'lunara_inject_journal_h2_anchors' ) ) {
 				if ( '' === $slug ) {
 					return $m[0];
 				}
-				// Dedupe â€” if this slug already appeared, suffix -2, -3, etc.
+				// Dedupe — if this slug already appeared, suffix -2, -3, etc.
 				$base = $slug;
 				$i    = 2;
 				while ( isset( $seen[ $slug ] ) ) {
@@ -11691,11 +11691,11 @@ if ( ! function_exists( 'lunara_render_journal_split_cards' ) ) {
 
 /**
  * =========================================================================
- * JOURNAL SECTION IMAGES â€” per-H2 image picker meta box
+ * JOURNAL SECTION IMAGES — per-H2 image picker meta box
  *
  * On a Journal post edit screen, this meta box scans the post content for
  * <h2> sections and renders one media-picker row per section. Selected
- * attachment IDs are stored in post meta as a slugâ†’ID associative array:
+ * attachment IDs are stored in post meta as a slug→ID associative array:
  *
  *     _lunara_journal_section_images = [
  *         'michael'      => 28765,
@@ -11707,7 +11707,7 @@ if ( ! function_exists( 'lunara_render_journal_split_cards' ) ) {
  * before falling back to the dispatch plugin's auto-sideloaded array, then
  * to the post's featured image.
  *
- * Slugs derive from H2 text via sanitize_title â€” exactly matching the
+ * Slugs derive from H2 text via sanitize_title — exactly matching the
  * anchor logic in lunara_inject_journal_h2_anchors so deep-links and image
  * lookups stay aligned.
  *
@@ -11798,12 +11798,12 @@ if ( ! function_exists( 'lunara_journal_section_images_callback' ) ) {
 		<?php
 		// ALWAYS show a primary "Card Image" picker, regardless of H2 count.
 		// This is the override for THIS post's card image on the homepage Journal lane.
-		// Stored slug: '__card' (reserved â€” won't collide with any real H2 slug).
+		// Stored slug: '__card' (reserved — won't collide with any real H2 slug).
 		$card_override_id  = isset( $section_images['__card'] ) ? (int) $section_images['__card'] : 0;
 		$card_override_url = $card_override_id > 0 ? wp_get_attachment_image_url( $card_override_id, 'thumbnail' ) : '';
 		?>
 		<p class="lunara-sir-help">
-			<strong>Card Image Override</strong> â€” overrides the homepage card image for this entry. Falls back to Featured Image if blank.
+			<strong>Card Image Override</strong> — overrides the homepage card image for this entry. Falls back to Featured Image if blank.
 		</p>
 		<div class="lunara-section-image-list">
 			<div class="lunara-section-image-row" data-slug="__card">
@@ -11842,7 +11842,7 @@ if ( ! function_exists( 'lunara_journal_section_images_callback' ) ) {
 		<?php if ( ! empty( $sections ) ) : ?>
 			<hr style="margin: 18px 0; border: 0; border-top: 1px solid #e0e0e0;" />
 			<p class="lunara-sir-help">
-				<strong>Per-Section Images</strong> â€” only used when this post has multiple <code>&lt;h2&gt;</code> sections (legacy roundup format). Each picks an image for that specific subcard.
+				<strong>Per-Section Images</strong> — only used when this post has multiple <code>&lt;h2&gt;</code> sections (legacy roundup format). Each picks an image for that specific subcard.
 			</p>
 			<div class="lunara-section-image-list">
 				<?php foreach ( $sections as $slug => $title ) :
@@ -11888,7 +11888,7 @@ if ( ! function_exists( 'lunara_journal_section_images_callback' ) ) {
 		(function ($) {
 			'use strict';
 			if ( typeof $ === 'undefined' ) {
-				console.error('Lunara: jQuery missing â€” image picker disabled.');
+				console.error('Lunara: jQuery missing — image picker disabled.');
 				return;
 			}
 
@@ -11897,7 +11897,7 @@ if ( ! function_exists( 'lunara_journal_section_images_callback' ) ) {
 				if ( window.wp && wp.media ) { return true; }
 				$('.lunara-sir-url-fallback').show();
 				$('.lunara-sir-select').each(function(){
-					$(this).attr('disabled', true).attr('title', 'Media library failed to load â€” use the URL field below.');
+					$(this).attr('disabled', true).attr('title', 'Media library failed to load — use the URL field below.');
 				});
 				return false;
 			}
@@ -12140,7 +12140,7 @@ if ( ! function_exists( 'lunara_journal_card_image_html' ) ) {
 
 /**
  * =========================================================================
- * JOURNAL SINGLE PAGE â€” Customizer controls
+ * JOURNAL SINGLE PAGE — Customizer controls
  *
  * Appears in the Customizer under "Lunara Journal" section. Lets Dalton
  * toggle byline/date/reading-time visibility AND set the title color
@@ -12234,14 +12234,14 @@ if ( ! function_exists( 'lunara_journal_inline_title_color_css' ) ) {
 }
 /**
  * =========================================================================
- * HOMEPAGE JOURNAL RAIL CARDS â€” Customizer controls (vertical stack)
+ * HOMEPAGE JOURNAL RAIL CARDS — Customizer controls (vertical stack)
  *
  * Adds three controls so Dalton can fine-tune the new stacked rail cards
  * without touching code:
  *
- *   1. Layout      â€” "Stacked (image on top)" or "Side-by-side (legacy)"
- *   2. Image ratio â€” aspect ratio for the stacked image (4/3 â†’ 21/9)
- *   3. Title size  â€” title font-size in pixels
+ *   1. Layout      — "Stacked (image on top)" or "Side-by-side (legacy)"
+ *   2. Image ratio — aspect ratio for the stacked image (4/3 → 21/9)
+ *   3. Title size  — title font-size in pixels
  *
  * Lives in the existing "Lunara Homepage" panel (lunara_homepage_panel),
  * inside a new sub-section "Journal Rail Cards (Homepage)". Pairs with
@@ -12273,8 +12273,8 @@ if ( ! function_exists( 'lunara_register_rail_card_stack_customizer' ) ) {
 			'section'     => 'lunara_rail_card_section',
 			'type'        => 'radio',
 			'choices'     => array(
-				'stack' => __( 'Stacked (image on top â€” readable titles)', 'lunara-film' ),
-				'split' => __( 'Side-by-side (small thumbnail left of title â€” legacy)', 'lunara-film' ),
+				'stack' => __( 'Stacked (image on top — readable titles)', 'lunara-film' ),
+				'split' => __( 'Side-by-side (small thumbnail left of title — legacy)', 'lunara-film' ),
 			),
 		) );
 
@@ -12292,7 +12292,7 @@ if ( ! function_exists( 'lunara_register_rail_card_stack_customizer' ) ) {
 			'choices'     => array(
 				'4/3'   => __( '4 : 3 (taller, more poster-like)', 'lunara-film' ),
 				'3/2'   => __( '3 : 2 (classic photo)', 'lunara-film' ),
-				'16/10' => __( '16 : 10 (default â€” balanced)', 'lunara-film' ),
+				'16/10' => __( '16 : 10 (default — balanced)', 'lunara-film' ),
 				'16/9'  => __( '16 : 9 (widescreen)', 'lunara-film' ),
 				'2/1'   => __( '2 : 1 (panoramic)', 'lunara-film' ),
 				'21/9'  => __( '21 : 9 (cinematic banner)', 'lunara-film' ),
@@ -12307,7 +12307,7 @@ if ( ! function_exists( 'lunara_register_rail_card_stack_customizer' ) ) {
 		) );
 		$wp_customize->add_control( 'lunara_rail_card_title_size', array(
 			'label'       => __( 'Title size (px)', 'lunara-film' ),
-			'description' => __( 'Title font size in pixels. Default 22. Range 16â€“32.', 'lunara-film' ),
+			'description' => __( 'Title font size in pixels. Default 22. Range 16–32.', 'lunara-film' ),
 			'section'     => 'lunara_rail_card_section',
 			'type'        => 'number',
 			'input_attrs' => array(
@@ -12359,7 +12359,7 @@ if ( ! function_exists( 'lunara_rail_card_stack_inline_css' ) ) {
 
 		echo '<style id="lunara-rail-card-stack">' . $css . '</style>' . "\n";
 
-		// Tag <body> with the layout choice so CSS can flip stack â†” split.
+		// Tag <body> with the layout choice so CSS can flip stack ↔ split.
 		// We can't modify the body tag from wp_head, so emit a tiny inline
 		// script that sets it as soon as <body> exists.
 		echo '<script id="lunara-rail-card-layout-attr">document.documentElement.addEventListener("DOMContentLoaded",function(){document.body&&document.body.setAttribute("data-rail-card-layout","' . esc_js( $layout ) . '");});if(document.readyState!=="loading"&&document.body){document.body.setAttribute("data-rail-card-layout","' . esc_js( $layout ) . '");}</script>' . "\n";
@@ -12369,7 +12369,7 @@ if ( ! function_exists( 'lunara_rail_card_stack_inline_css' ) ) {
 
 
 /* ============================================================================
- * PRESERVED FROM REGRESSED LIVE 20260510 â€” review layout guardrail CSS.
+ * PRESERVED FROM REGRESSED LIVE 20260510 — review layout guardrail CSS.
  * Wrapped in function_exists() guard for safety.
  * ============================================================================ */
 if ( ! function_exists( 'lunara_output_review_layout_guardrail_css' ) ) {
@@ -12984,7 +12984,7 @@ if ( ! function_exists( 'lunara_resolve_oscar_fact_ledger_url' ) ) {
 				}
 			}
 
-			if ( preg_match( '/^(?:Composer|Director|Actor|Actress|Filmmaker|Producer|Writer)?\s*([A-Z][A-Za-z\'â€™.-]+(?:\s+[A-Z][A-Za-z\'â€™.-]+){1,3})\b/u', (string) $title, $person_match ) ) {
+			if ( preg_match( '/^(?:Composer|Director|Actor|Actress|Filmmaker|Producer|Writer)?\s*([A-Z][A-Za-z\'’.-]+(?:\s+[A-Z][A-Za-z\'’.-]+){1,3})\b/u', (string) $title, $person_match ) ) {
 				$person = trim( $person_match[1] );
 				$row    = $wpdb->get_row(
 					$wpdb->prepare(
@@ -13260,7 +13260,7 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
 
 
 /* ============================================================================
- * LUNARA OSCAR FACTS â€” CPT, taxonomy, meta box, importer, query, carousel.
+ * LUNARA OSCAR FACTS — CPT, taxonomy, meta box, importer, query, carousel.
  * Added 2026-05-10 (Sitting 2). Pairs with Oscar Picks but text-forward.
  *
  * Design contract:
@@ -13269,7 +13269,7 @@ if ( ! function_exists( 'lunara_render_oscar_picks_carousel' ) ) {
  *   - Together they create a two-tier Oscar storytelling rhythm on the homepage.
  *
  * Source content lives in OSCARS FACTS AND INTERESTING RESULTS.md and gets
- * imported via Tools â†’ Import Oscar Facts (or auto-seeded from a theme-shipped
+ * imported via Tools → Import Oscar Facts (or auto-seeded from a theme-shipped
  * copy at <theme>/_oscar-facts-source.md if present).
  * ============================================================================ */
 
@@ -13299,7 +13299,7 @@ if ( ! function_exists( 'lunara_register_oscar_fact_cpt' ) ) {
 				'menu_name'     => __( 'Oscar Facts', 'lunara-film' ),
 				'all_items'     => __( 'All Facts', 'lunara-film' ),
 				'search_items'  => __( 'Search Facts', 'lunara-film' ),
-				'not_found'     => __( 'No facts yet â€” try the importer.', 'lunara-film' ),
+				'not_found'     => __( 'No facts yet — try the importer.', 'lunara-film' ),
 			),
 			'public'              => true,
 			'has_archive'         => 'oscar-facts',
@@ -13532,11 +13532,11 @@ if ( ! function_exists( 'lunara_oscar_fact_admin_columns' ) ) {
 	function lunara_oscar_fact_admin_column_value( $column, $post_id ) {
 		switch ( $column ) {
 			case 'lunara_fact_attribution':
-				echo esc_html( (string) get_post_meta( $post_id, '_lunara_fact_attribution', true ) ?: 'â€”' );
+				echo esc_html( (string) get_post_meta( $post_id, '_lunara_fact_attribution', true ) ?: '—' );
 				break;
 			case 'lunara_fact_year':
 				$year = (int) get_post_meta( $post_id, '_lunara_fact_year', true );
-				echo $year > 0 ? esc_html( (string) $year ) : 'â€”';
+				echo $year > 0 ? esc_html( (string) $year ) : '—';
 				break;
 			case 'lunara_fact_visual':
 				$has_image = has_post_thumbnail( $post_id );
@@ -13651,7 +13651,7 @@ if ( ! function_exists( 'lunara_get_oscar_facts' ) ) {
 }
 
 /**
- * Render the Oscar Facts homepage carousel â€” text-forward.
+ * Render the Oscar Facts homepage carousel — text-forward.
  * Picks lead with image; Facts lead with language.
  */
 if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
@@ -13812,7 +13812,7 @@ if ( ! function_exists( 'lunara_render_oscar_facts_carousel' ) ) {
 }
 
 /* ----------------------------------------------------------------------------
- * IMPORTER â€” Tools â†’ Import Oscar Facts
+ * IMPORTER — Tools → Import Oscar Facts
  *
  * Parses the markdown source (theme-shipped at <theme>/_oscar-facts-source.md
  * OR pasted into the textarea) and creates one oscar_fact post per fact.
@@ -13880,7 +13880,7 @@ if ( ! function_exists( 'lunara_oscar_facts_render_importer_page' ) ) {
 				<?php endif; ?>
 			<?php endif; ?>
 
-			<p><?php esc_html_e( 'The importer parses your OSCARS FACTS AND INTERESTING RESULTS markdown into individual Oscar Fact posts. Each ## section becomes a category assignment; each bullet or paragraph becomes one fact. Idempotent â€” re-running skips facts that already exist.', 'lunara-film' ); ?></p>
+			<p><?php esc_html_e( 'The importer parses your OSCARS FACTS AND INTERESTING RESULTS markdown into individual Oscar Fact posts. Each ## section becomes a category assignment; each bullet or paragraph becomes one fact. Idempotent — re-running skips facts that already exist.', 'lunara-film' ); ?></p>
 
 			<form method="post" action="">
 				<?php wp_nonce_field( 'lunara_facts_import_run', 'lunara_facts_importer_nonce' ); ?>
@@ -13895,7 +13895,7 @@ if ( ! function_exists( 'lunara_oscar_facts_render_importer_page' ) ) {
 						<?php if ( $source_path_exists ) : ?>
 							<span style="color:#27ae60;"><?php esc_html_e( '(found)', 'lunara-film' ); ?></span>
 						<?php else : ?>
-							<span style="color:#dc3232;"><?php esc_html_e( '(not present â€” scp the markdown file there first)', 'lunara-film' ); ?></span>
+							<span style="color:#dc3232;"><?php esc_html_e( '(not present — scp the markdown file there first)', 'lunara-film' ); ?></span>
 						<?php endif; ?>
 					</label>
 				</p>
@@ -13972,7 +13972,7 @@ if ( ! function_exists( 'lunara_oscar_facts_run_import' ) ) {
 			}
 
 			// Skip junk.
-			if ( '' === $line || 0 === strpos( $line, 'Â©' ) || 0 === strpos( $line, '1.18' ) ) {
+			if ( '' === $line || 0 === strpos( $line, '©' ) || 0 === strpos( $line, '1.18' ) ) {
 				$pending_label = '';
 				continue;
 			}
@@ -13992,7 +13992,7 @@ if ( ! function_exists( 'lunara_oscar_facts_run_import' ) ) {
 
 			// If we have a pending label, combine with this line as one fact.
 			if ( '' !== $pending_label ) {
-				$title = ucwords( strtolower( $pending_label ) );
+				$title = mb_convert_case( $pending_label, MB_CASE_TITLE, 'UTF-8' );
 				$body  = $line;
 				$pending_label = '';
 				$result = lunara_oscar_facts_create_fact( $title, $body, $active_category, $active_cat_label );
@@ -14044,7 +14044,7 @@ if ( ! function_exists( 'lunara_oscar_facts_derive_title' ) ) {
 		$body = preg_replace( '/\s+/', ' ', $body );
 		$first_sentence = preg_split( '/(?<=[.!?])\s/', $body, 2 )[0];
 		if ( strlen( $first_sentence ) > 78 ) {
-			$first_sentence = rtrim( substr( $first_sentence, 0, 75 ), ' ,;:' ) . '…';
+			$first_sentence = rtrim( mb_substr( $first_sentence, 0, 75, 'UTF-8' ), ' ,;:' ) . '…';
 		}
 		return $first_sentence;
 	}
@@ -14087,7 +14087,7 @@ if ( ! function_exists( 'lunara_oscar_facts_create_fact' ) ) {
 
 
 /* ============================================================================
- * LUNARA OSCAR FACTS â€” markdown cleanup + image auto-fill (added 2026-05-10)
+ * LUNARA OSCAR FACTS — markdown cleanup + image auto-fill (added 2026-05-10)
  *
  * Two related concerns:
  *   1. The original importer left literal markdown markers (*Film Title*,
@@ -14095,9 +14095,9 @@ if ( ! function_exists( 'lunara_oscar_facts_create_fact' ) ) {
  *      strip + a one-click "Clean Existing Facts" admin action.
  *   2. Auto-fills featured images via Path 2 (TMDB film backdrops for
  *      film-related facts, Wikipedia article portraits for person-related
- *      facts). Idempotent â€” never overwrites a manually-set featured image.
+ *      facts). Idempotent — never overwrites a manually-set featured image.
  *
- * Both actions live on the existing Oscar Facts â†’ Import from Markdown
+ * Both actions live on the existing Oscar Facts → Import from Markdown
  * admin page as additional buttons.
  *
  * Reuses AAT_TMDB_API_KEY constant defined in the academy-awards plugin.
@@ -14105,18 +14105,18 @@ if ( ! function_exists( 'lunara_oscar_facts_create_fact' ) ) {
 
 /**
  * Strip markdown formatting from text. Returns clean plain text.
- * Preserves the inner text of italics/bold/links â€” drops only the markers.
+ * Preserves the inner text of italics/bold/links — drops only the markers.
  */
 if ( ! function_exists( 'lunara_strip_oscar_fact_markdown' ) ) {
 	function lunara_strip_oscar_fact_markdown( $text ) {
 		$text = (string) $text;
-		// Strip [text](url) links â†’ keep just the text.
+		// Strip [text](url) links → keep just the text.
 		$text = preg_replace( '/\[([^\]]+)\]\([^\)]+\)/', '$1', $text );
 		// Strip [reference] markers like [nytimes].
 		$text = preg_replace( '/\[[^\]]+\]/', '', $text );
-		// Strip bold markers (**text** or __text__) â†’ keep inner.
+		// Strip bold markers (**text** or __text__) → keep inner.
 		$text = preg_replace( '/(\*\*|__)(.+?)\1/s', '$2', $text );
-		// Strip italic markers (*text* or _text_) â†’ keep inner.
+		// Strip italic markers (*text* or _text_) → keep inner.
 		$text = preg_replace( '/(\*|_)([^*_\s][^*_]*?[^*_\s]|\S)\1/s', '$2', $text );
 		// Strip stray asterisks/underscores that survived above.
 		$text = str_replace( array( '**', '__' ), '', $text );
@@ -14199,7 +14199,7 @@ if ( ! function_exists( 'lunara_oscar_facts_clean_existing_markdown' ) ) {
 }
 
 /* ----------------------------------------------------------------------------
- * IMAGE AUTO-FILL â€” Path 2 (TMDB + Wikimedia)
+ * IMAGE AUTO-FILL — Path 2 (TMDB + Wikimedia)
  * ---------------------------------------------------------------------------- */
 
 /**
@@ -14381,7 +14381,7 @@ if ( ! function_exists( 'lunara_oscar_fact_autofill_image' ) ) {
 
 		// Lookup priority 2: attribution field, treated as a film title.
 		if ( '' !== $attribution ) {
-			// Strip year parentheticals: "Network (1976)" â†’ "Network".
+			// Strip year parentheticals: "Network (1976)" → "Network".
 			$film_guess = trim( preg_replace( '/\(\d{4}\)/', '', $attribution ) );
 			if ( '' !== $film_guess ) {
 				$image_url = lunara_tmdb_search_film_backdrop( $film_guess );
@@ -14458,7 +14458,7 @@ if ( ! function_exists( 'lunara_oscar_facts_run_autofill' ) ) {
 
 /* ----------------------------------------------------------------------------
  * Hook the new actions into the existing importer admin page.
- * The importer page already exists (Oscar Facts â†’ Import from Markdown).
+ * The importer page already exists (Oscar Facts → Import from Markdown).
  * We add a second + third form below the import form.
  * ---------------------------------------------------------------------------- */
 
@@ -14543,7 +14543,7 @@ if ( ! function_exists( 'lunara_oscar_facts_render_extra_admin_ui' ) ) {
 				</p>
 				<p class="description">
 					<strong><?php esc_html_e( 'Note:', 'lunara-film' ); ?></strong>
-					<?php esc_html_e( 'TMDB images are a starting point â€” your editorial differentiator is curated imagery. Replace any auto-filled image you don\'t love by editing the fact and uploading your own.', 'lunara-film' ); ?>
+					<?php esc_html_e( 'TMDB images are a starting point — your editorial differentiator is curated imagery. Replace any auto-filled image you don\'t love by editing the fact and uploading your own.', 'lunara-film' ); ?>
 				</p>
 
 				<?php if ( is_array( $autofill_result ) ) : ?>
@@ -14579,15 +14579,15 @@ if ( ! function_exists( 'lunara_oscar_facts_render_extra_admin_ui' ) ) {
  * Patch the original importer to clean markdown on creation going forward.
  * Wraps lunara_oscar_facts_create_fact via a small helper that the original
  * import flow doesn't call (we tell users to use the cleanup button after
- * import â€” simpler than rewiring the original create function).
+ * import — simpler than rewiring the original create function).
  * ---------------------------------------------------------------------------- */
 
 
 /* ============================================================================
- * AUTO-FLUSH REWRITE RULES â€” runs once after a new CPT is registered.
- * Added 2026-05-10 so Dalton never has to remember Settings â†’ Permalinks â†’ Save.
+ * AUTO-FLUSH REWRITE RULES — runs once after a new CPT is registered.
+ * Added 2026-05-10 so Dalton never has to remember Settings → Permalinks → Save.
  *
- * Bump the option key (v1 â†’ v2 â†’ v3) any time a CPT slug changes.
+ * Bump the option key (v1 → v2 → v3) any time a CPT slug changes.
  * ============================================================================ */
 if ( ! function_exists( 'lunara_oscar_cpts_maybe_flush_rewrites' ) ) {
 	function lunara_oscar_cpts_maybe_flush_rewrites() {
@@ -14602,7 +14602,7 @@ if ( ! function_exists( 'lunara_oscar_cpts_maybe_flush_rewrites' ) ) {
 
 
 /* ============================================================================
- * REVIEW CACHE INVALIDATION â€” added 2026-05-10
+ * REVIEW CACHE INVALIDATION — added 2026-05-10
  *
  * lunara_cached_review_ids() caches review ID lists in 15-min transients
  * keyed by group + count (e.g. lunara_latest_reviews_18_v1). When a review
@@ -14634,13 +14634,13 @@ if ( ! function_exists( 'lunara_clear_review_caches' ) ) {
 
 
 /* ============================================================================
- * CINEMATIC HERO â€” full-viewport image-first homepage opener (added 2026-05-10)
+ * CINEMATIC HERO — full-viewport image-first homepage opener (added 2026-05-10)
  *
  * Replaces the structured grid hero with a 100vh cinematic statement.
  * Image source priority:
- *   1. Customizer override (Lunara Cinematic Hero â†’ Hero Image upload)
+ *   1. Customizer override (Lunara Cinematic Hero → Hero Image upload)
  *   2. Featured image of the most recently published review
- *   3. (no fallback â€” section hides if neither exists)
+ *   3. (no fallback — section hides if neither exists)
  *
  * Pairs with .lunara-cinematic-hero markup in front-page.php and CSS.
  * ============================================================================ */
@@ -14649,7 +14649,7 @@ if ( ! function_exists( 'lunara_register_cinematic_hero_customizer' ) ) {
 	function lunara_register_cinematic_hero_customizer( $wp_customize ) {
 		$wp_customize->add_section( 'lunara_cinematic_hero_section', array(
 			'title'       => __( 'Lunara Cinematic Hero', 'lunara-film' ),
-			'description' => __( 'Controls the full-viewport homepage hero. Image priority: this override (if set) â†’ featured image of the most recent review.', 'lunara-film' ),
+			'description' => __( 'Controls the full-viewport homepage hero. Image priority: this override (if set) → featured image of the most recent review.', 'lunara-film' ),
 			'priority'    => 30,
 		) );
 
@@ -14734,7 +14734,7 @@ if ( ! function_exists( 'lunara_register_cinematic_hero_customizer' ) ) {
 }
 
 /**
- * Fetch the most recently published review (lightweight â€” single post object).
+ * Fetch the most recently published review (lightweight — single post object).
  */
 if ( ! function_exists( 'lunara_get_latest_review_post' ) ) {
 	function lunara_get_latest_review_post() {
@@ -14766,7 +14766,7 @@ if ( ! function_exists( 'lunara_get_latest_review_post' ) ) {
  */
 if ( ! function_exists( 'lunara_get_cinematic_hero_data' ) ) {
 	function lunara_get_cinematic_hero_data( $attrs = array() ) {
-		// Three-tier priority: per-instance block attribute â†’ Customizer override â†’ auto from latest review.
+		// Three-tier priority: per-instance block attribute → Customizer override → auto from latest review.
 		$attrs = is_array( $attrs ) ? $attrs : array();
 		$attr_image_id   = isset( $attrs['overrideImageId'] ) ? (int) $attrs['overrideImageId'] : 0;
 		$attr_kicker     = isset( $attrs['overrideKicker'] )  ? trim( (string) $attrs['overrideKicker'] )  : '';
@@ -14778,7 +14778,7 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_data' ) ) {
 		$override_image = trim( (string) get_theme_mod( 'lunara_hero_override_image', '' ) );
 		$latest_review  = lunara_get_latest_review_post();
 
-		// Image priority: block attribute â†’ Customizer URL â†’ latest review featured â†’ null.
+		// Image priority: block attribute → Customizer URL → latest review featured → null.
 		$image_url     = '';
 		$attachment_id = 0;
 		if ( $attr_image_id > 0 ) {
@@ -14818,7 +14818,7 @@ if ( ! function_exists( 'lunara_get_cinematic_hero_data' ) ) {
 		}
 
 		if ( '' === $image_url ) {
-			return null; // No image available â€” caller hides the section.
+			return null; // No image available — caller hides the section.
 		}
 
 		// Defaults from latest review, then override with Customizer if set.
@@ -15629,7 +15629,7 @@ if ( ! function_exists( 'lunara_cinematic_hero_bust_cache' ) ) {
 
 
 /* ============================================================================
- * PATH B â€” HOMEPAGE AS GUTENBERG BLOCKS (added 2026-05-10)
+ * PATH B — HOMEPAGE AS GUTENBERG BLOCKS (added 2026-05-10)
  *
  * Registers four custom dynamic blocks that wrap the existing render helpers.
  * Each block is just a comment marker in post content (<!-- wp:lunara/X /-->);
@@ -15638,10 +15638,10 @@ if ( ! function_exists( 'lunara_cinematic_hero_bust_cache' ) ) {
  * markup. Dalton (and the MCP) can drag/reorder/insert blocks freely.
  *
  * Blocks registered:
- *   - lunara/cinematic-hero  â†’ lunara_render_cinematic_hero()
- *   - lunara/journal-lane    â†’ lunara_render_homepage_journal_lane() (defined below)
- *   - lunara/oscar-picks     â†’ lunara_render_oscar_picks_carousel()
- *   - lunara/oscar-facts     â†’ lunara_render_oscar_facts_carousel()
+ *   - lunara/cinematic-hero  → lunara_render_cinematic_hero()
+ *   - lunara/journal-lane    → lunara_render_homepage_journal_lane() (defined below)
+ *   - lunara/oscar-picks     → lunara_render_oscar_picks_carousel()
+ *   - lunara/oscar-facts     → lunara_render_oscar_facts_carousel()
  *
  * front-page.php gets stripped to ~15 lines (just calls the_content() in a loop).
  * ============================================================================ */
@@ -15743,7 +15743,7 @@ if ( ! function_exists( 'lunara_register_homepage_blocks' ) ) {
  * Render the homepage Journal lane (extracted from front-page.php so it can be
  * called as a block render callback). 1 lead card + 3 supporting cards.
  *
- * Uses the same theme-mod text fields, query helper, and DOM as before â€” drop-in
+ * Uses the same theme-mod text fields, query helper, and DOM as before — drop-in
  * compatible with the existing CSS (.lunara-journal-home-grid, .lunara-journal-home-card, etc.).
  */
 if ( ! function_exists( 'lunara_get_journal_carousel_ids' ) ) {
@@ -16137,46 +16137,46 @@ if ( ! function_exists( 'lunara_register_hub_block_patterns' ) ) {
 			return;
 		}
 
-		// PATTERN 1 â€” Lunara Homepage (criticism-first, current default)
+		// PATTERN 1 — Lunara Homepage (criticism-first, current default)
 		register_block_pattern( 'lunara/hub-homepage', array(
-			'title'       => __( 'Lunara Homepage â€” Reviews-First', 'lunara-film' ),
-			'description' => __( 'Latest Reviews â†’ Oscar Picks â†’ Journal â†’ Oscar Facts. The default homepage layout, criticism-led.', 'lunara-film' ),
+			'title'       => __( 'Lunara Homepage — Reviews-First', 'lunara-film' ),
+			'description' => __( 'Latest Reviews → Oscar Picks → Journal → Oscar Facts. The default homepage layout, criticism-led.', 'lunara-film' ),
 			'categories'  => array( 'lunara' ),
 			'keywords'    => array( 'hub', 'homepage', 'lunara', 'reviews', 'critic' ),
 			'content'     => "<!-- wp:lunara/latest-reviews /-->\n\n<!-- wp:lunara/oscar-picks /-->\n\n<!-- wp:lunara/journal-lane /-->\n\n<!-- wp:lunara/oscar-facts /-->",
 		) );
 
-		// PATTERN 1b â€” Lunara Hub with Cinematic Hero (for feature pages, NOT the homepage)
+		// PATTERN 1b — Lunara Hub with Cinematic Hero (for feature pages, NOT the homepage)
 		register_block_pattern( 'lunara/hub-full', array(
-			'title'       => __( 'Lunara Hub â€” With Cinematic Hero', 'lunara-film' ),
-			'description' => __( 'Cinematic Hero â†’ Latest Reviews â†’ Journal Lane â†’ Oscar Picks â†’ Oscar Facts. For special feature pages, NOT the daily homepage.', 'lunara-film' ),
+			'title'       => __( 'Lunara Hub — With Cinematic Hero', 'lunara-film' ),
+			'description' => __( 'Cinematic Hero → Latest Reviews → Journal Lane → Oscar Picks → Oscar Facts. For special feature pages, NOT the daily homepage.', 'lunara-film' ),
 			'categories'  => array( 'lunara' ),
 			'keywords'    => array( 'hub', 'cinematic', 'feature', 'landing' ),
 			'content'     => "<!-- wp:lunara/cinematic-hero /-->\n\n<!-- wp:lunara/latest-reviews /-->\n\n<!-- wp:lunara/journal-lane /-->\n\n<!-- wp:lunara/oscar-picks /-->\n\n<!-- wp:lunara/oscar-facts /-->",
 		) );
 
-		// PATTERN 2 â€” Awards Focus (cinematic + picks + facts)
+		// PATTERN 2 — Awards Focus (cinematic + picks + facts)
 		register_block_pattern( 'lunara/hub-awards', array(
-			'title'       => __( 'Lunara Hub â€” Awards Focus', 'lunara-film' ),
-			'description' => __( 'Cinematic Hero â†’ Oscar Picks â†’ Oscar Facts. For Oscars-driven hub pages and awards-season campaigns.', 'lunara-film' ),
+			'title'       => __( 'Lunara Hub — Awards Focus', 'lunara-film' ),
+			'description' => __( 'Cinematic Hero → Oscar Picks → Oscar Facts. For Oscars-driven hub pages and awards-season campaigns.', 'lunara-film' ),
 			'categories'  => array( 'lunara' ),
 			'keywords'    => array( 'hub', 'oscars', 'awards', 'picks', 'facts' ),
 			'content'     => "<!-- wp:lunara/cinematic-hero /-->\n\n<!-- wp:lunara/oscar-picks /-->\n\n<!-- wp:lunara/oscar-facts /-->",
 		) );
 
-		// PATTERN 3 â€” Editorial Focus (cinematic + journal)
+		// PATTERN 3 — Editorial Focus (cinematic + journal)
 		register_block_pattern( 'lunara/hub-editorial', array(
-			'title'       => __( 'Lunara Hub â€” Editorial Focus', 'lunara-film' ),
-			'description' => __( 'Cinematic Hero â†’ Journal Lane. For criticism-forward hub pages and editorial spotlights.', 'lunara-film' ),
+			'title'       => __( 'Lunara Hub — Editorial Focus', 'lunara-film' ),
+			'description' => __( 'Cinematic Hero → Journal Lane. For criticism-forward hub pages and editorial spotlights.', 'lunara-film' ),
 			'categories'  => array( 'lunara' ),
 			'keywords'    => array( 'hub', 'editorial', 'journal', 'criticism' ),
 			'content'     => "<!-- wp:lunara/cinematic-hero /-->\n\n<!-- wp:lunara/journal-lane /-->",
 		) );
 
-		// PATTERN 4 â€” Picks Spotlight (cinematic with override + just picks below)
+		// PATTERN 4 — Picks Spotlight (cinematic with override + just picks below)
 		register_block_pattern( 'lunara/hub-picks-spotlight', array(
-			'title'       => __( 'Lunara Hub â€” Picks Spotlight', 'lunara-film' ),
-			'description' => __( 'Cinematic Hero with custom kicker â†’ Oscar Picks. For ceremony-week pages and pick reveal posts.', 'lunara-film' ),
+			'title'       => __( 'Lunara Hub — Picks Spotlight', 'lunara-film' ),
+			'description' => __( 'Cinematic Hero with custom kicker → Oscar Picks. For ceremony-week pages and pick reveal posts.', 'lunara-film' ),
 			'categories'  => array( 'lunara' ),
 			'keywords'    => array( 'hub', 'picks', 'spotlight', 'ceremony' ),
 			'content'     => "<!-- wp:lunara/cinematic-hero {\"overrideKicker\":\"Lunara Picks\",\"overrideTitle\":\"The 98th Academy Awards\",\"overrideCta\":\"Browse the picks\"} /-->\n\n<!-- wp:lunara/oscar-picks /-->",
@@ -16199,18 +16199,18 @@ if ( ! function_exists( 'lunara_register_hub_page_template' ) ) {
 
 
 /* ============================================================================
- * LATEST REVIEWS BLOCK â€” added 2026-05-10 (Reviews-first homepage)
+ * LATEST REVIEWS BLOCK — added 2026-05-10 (Reviews-first homepage)
  *
  * Extracts the Latest Reviews grid from the legacy front-page.php into a
  * standalone render function + Gutenberg block. Per-instance attributes:
  *   - count    (default 8)
  *   - heading  (default "Latest Reviews")
  *   - kicker   (default "Lunara Reviews")
- *   - ctaLabel (default "All Reviews â†’")
+ *   - ctaLabel (default "All Reviews →")
  *   - ctaUrl   (default /reviews/)
  *
  * Pairs with the existing .lunara-latest-reviews-section CSS so the visual
- * is consistent with what front-page.php produced â€” clean grid of poster-led
+ * is consistent with what front-page.php produced — clean grid of poster-led
  * cards driving traffic into individual reviews.
  * ============================================================================ */
 

@@ -11,6 +11,19 @@ directly from each repo's `git log`, not reconstructed from memory.
 
 ---
 
+
+## 3.2.97 — Google tag off, mojibake cleaned out of the theme source
+
+- `inc/analytics-off.php` (loaded from `functions-loader.php`) keeps the dormant Google Analytics outputs off:
+  - It blanks Blocksy's `analytics_v4_id`. Its value was `380392203`, a property number rather than a `G-` ID, and it loaded about 90KB gzip of gtag.js on every page that most likely recorded nothing.
+  - It unhooks Jetpack GA's "missing the tracking ID" comment.
+  - Clearing both settings stays the real fix; this file keeps them from coming back.
+- 161 lines of literal double-encoded UTF-8 were repaired in `functions.php`, `inc/oscar-picks.php` and `inc/debrief.php`. They showed in wp-admin, for example "â€” Select Year â€”" in the Debrief box, pattern titles, Customizer labels, and the Oscar Facts and Picks columns.
+- The Oscar Facts importer's copyright check looked for "Â©", so the Academy notice was published as a fact. It now matches "©".
+- The importer's title-casing and 75-character trim are now multibyte-safe (`mb_convert_case`, `mb_substr`).
+- The Debrief "Pair It With" split still accepts a stored mojibake dash, now written as escapes.
+- New `tests/source-mojibake-guard.php` fails if literal mojibake returns to theme PHP, or if the analytics guard is removed.
+
 ## 2026-09-29 — Oscars Ledger 2.8.8: Ledger Motion (the Nomination Ring and the Career Arc)
 
 Plugin-only; see [lunara-plugin-oscars-ledger#40](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/40) and the plugin's `readme.txt`.

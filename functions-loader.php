@@ -20,6 +20,7 @@ $lunara_inc = get_stylesheet_directory() . '/inc/';
 require_once $lunara_inc . 'setup.php';
 require_once $lunara_inc . 'surface-pass.php';
 require_once $lunara_inc . 'helpers.php';
+require_once $lunara_inc . 'analytics-off.php'; // 3.2.97: dormant Google Analytics outputs stay off.
 
 // Layer 1 — Independent modules.
 require_once $lunara_inc . 'customizer.php';

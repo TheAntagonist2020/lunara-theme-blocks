@@ -915,7 +915,7 @@ if ( ! function_exists( 'lunara_parse_pair_it_with_value' ) ) {
         $clean = preg_replace( '/\s+([,.;:!?])/', '$1', (string) $clean );
         $clean = trim( preg_replace( '/\s{2,}/', ' ', (string) $clean ) );
 
-        $parts = preg_split( '/\s+(?:-|\x{2013}|\x{2014}|â€”)\s+/u', $clean, 2 );
+        $parts = preg_split( '/\s+(?:-|\x{2013}|\x{2014}|\x{00E2}\x{20AC}\x{201D})\s+/u', $clean, 2 );
         $title = trim( $parts[0] ?? '' );
         $note  = trim( $parts[1] ?? '' );
 

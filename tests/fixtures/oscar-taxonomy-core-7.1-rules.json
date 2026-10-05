@@ -102,7 +102,7 @@
                         "menu_name": "Oscar Facts",
                         "all_items": "All Facts",
                         "search_items": "Search Facts",
-                        "not_found": "No facts yet \u00e2\u20ac\u201d try the importer."
+                        "not_found": "No facts yet \u2014 try the importer."
                     },
                     "public": true,
                     "has_archive": "oscar-facts",

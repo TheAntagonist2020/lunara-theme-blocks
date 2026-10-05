@@ -344,11 +344,11 @@ if ( ! function_exists( 'lunara_oscar_pick_admin_columns' ) ) {
 				}
 				break;
 			case 'lunara_pick_film':
-				echo esc_html( (string) get_post_meta( $post_id, '_lunara_pick_film', true ) ?: 'â€”' );
+				echo esc_html( (string) get_post_meta( $post_id, '_lunara_pick_film', true ) ?: '—' );
 				break;
 			case 'lunara_pick_ceremony':
 				$year = (int) get_post_meta( $post_id, '_lunara_pick_ceremony_year', true );
-				echo $year > 0 ? esc_html( (string) $year ) : 'â€”';
+				echo $year > 0 ? esc_html( (string) $year ) : '—';
 				break;
 			case 'lunara_pick_status':
 				$status = (string) get_post_meta( $post_id, '_lunara_pick_status', true );
