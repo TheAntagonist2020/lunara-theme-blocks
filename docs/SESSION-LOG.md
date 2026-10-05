@@ -25,6 +25,53 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-10-05 — Mojibake, Google tag, ceremony counts, posters, and a film-loop hero
+
+### Headline
+This session removed the Google tag, fixed mojibake at its source, fixed the ceremony "44/28" counter and the missing Sinners poster, added title cards for winners with no photo, and put a *Wings* + *Sunrise* film loop behind the `/oscars/` hero. Theme **3.2.99 is live (canary GO)**. The Ledger is deployed through **2.8.18**; 2.8.19 is merged.
+
+### Shipped
+- **Theme 3.2.97 (#218), live:**
+  - GA backstop: `inc/analytics-off.php`.
+  - 161 mojibake source lines fixed.
+  - Oscar Facts importer made multibyte-safe.
+  - `tests/source-mojibake-guard.php` added.
+- **Ledger 2.8.17 (#47):** `AAT_Text::repair()` repairs Windows-1252 bytes and double-UTF-8 on write-ups and the validator. The two skipped contracts now run in CI.
+- **Ledger 2.8.18 (#49), live and verified on ceremony 98:**
+  - "Winner Record 44/28" now reads "Categories Decided: All 28" plus "44 winners named across 28 categories".
+  - The rollup counts categories, not winner rows.
+  - Uploaded posters now fill `poster_url`, so Sinners and other cards get backdrops.
+- **Ledger 2.8.19 (#50), merged:** the Four Races intro no longer says "44/28". **Not yet verified live.**
+- **Theme 3.2.98 (#220), live:**
+  - Vintage title card for winners with no portrait or poster.
+  - Hero video loop: deferred, attached after `load`, skipped for reduced motion and Save-Data, paused off-screen. Off switch: the `lunara_oscars_hero_reel_enabled` filter.
+- **Theme 3.2.99 (#221), live and canary GO:**
+  - The hero loop is now `assets/video/oscars-hero-loop.mp4`, 16 s and 1.2 MB, cut from *Wings* and *Sunrise* (both 1927, public domain).
+  - It replaced the 3.2.98 ceremony-newsreel loop.
+- **Lunara Core #37 and Journal #25** carry the encoding fixes on the import and report paths. Check whether they have merged.
+
+### Verified live
+- Ceremony 98 has 3 of 3 metric-card backdrops, "All 28" on both cards, and no text-only Four Races cards.
+- Mojibake on that page: 0.
+- The hero loop file returns 200 (`video/mp4`, 1,189,090 bytes).
+- Canary GO on 3.2.99.
+
+### Decisions (Dalton)
+- Ledger deploys are **manual**. The theme still auto-deploys on merge.
+- The hero shows **the movies, not the ceremony**. Each January 1st another year of films enters the public domain (*Cimarron* in 2027), so the loop can grow.
+- Public-domain Universal Newsreel Oscar reels (1941, 1943, 1946, 1957, 1958, 1963, 1965) were saved to Dalton's `F:\04-Creative-Assets\Oscars-Newsreels`, with a README of sources.
+
+### Open / next
+- Deploy Ledger 2.8.19, then confirm the Four Races intro on ceremony 98 reads "44 winners across 28 categories".
+- Dalton: clear the Blocksy GA field and the Jetpack GA toggle. The theme backstop already suppresses both.
+- Dalton: turn on edge caching under Hosting Configuration → Cache.
+- Rebuild the rollback hatch on the new `main`.
+- Lower priority:
+  - Dispatch feed-title entity decode.
+  - Read-only DB charset inventory.
+
+---
+
 ## 2026-10-02 — Oscars speed: Ledger 2.8.10–2.8.14 live, the Oscars page store
 
 ### Headline
