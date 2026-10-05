@@ -1,5 +1,6 @@
 /**
- * Oscars portal hero newsreel (3.2.98).
+ * Oscars portal hero film loop (3.2.98): Wings and Sunrise, both 1927 Oscar
+ * winners in the public domain.
  *
  * The <video> ships with no src, so it costs nothing on first paint. After the
  * page has loaded, and only for visitors who have not asked for reduced motion

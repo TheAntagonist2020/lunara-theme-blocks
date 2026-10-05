@@ -406,7 +406,7 @@ $command_cards = array(
         <?php if ( $show_hero ) : ?>
         <section class="lunara-home-section lunara-oscars-portal-hero lunara-oscars-portal-slot-hero<?php echo '' !== $hero_style ? ' has-backdrop' : ''; ?>" data-lunara-site-studio-section="hero"<?php if ( '' !== $hero_style ) : ?> style="<?php echo esc_attr( $hero_style ); ?>"<?php endif; ?>>
             <?php $hero_reel_url = function_exists( 'lunara_oscars_hero_reel_url' ) ? lunara_oscars_hero_reel_url() : ''; ?>
-            <?php if ( '' !== $hero_reel_url ) : // 3.2.98: newsreel loop, attached after load by lunara-oscars-hero-reel.js. ?>
+            <?php if ( '' !== $hero_reel_url ) : // 3.2.98: Wings + Sunrise loop, attached after load by lunara-oscars-hero-reel.js. ?>
             <div class="lunara-oscars-hero-reel" aria-hidden="true"><video data-lunara-hero-reel data-src="<?php echo esc_url( $hero_reel_url ); ?>" muted loop playsinline disablepictureinpicture preload="none" tabindex="-1"></video></div>
             <?php endif; ?>
             <div class="lunara-oscars-portal-hero-grid">

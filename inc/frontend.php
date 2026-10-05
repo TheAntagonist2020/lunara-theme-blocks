@@ -989,7 +989,7 @@ function lunara_enqueue_oscars_portal_styles() {
         'all'
     );
 
-    // 3.2.98: the hero newsreel loader. Tiny, deferred, and it only attaches
+    // 3.2.98: the hero film-loop loader. Tiny, deferred, and it only attaches
     // the video after the page has finished loading.
     $reel = lunara_resolve_theme_asset( 'assets/js/lunara-oscars-hero-reel.js' );
     if ( ! empty( $reel['uri'] ) && lunara_oscars_hero_reel_url() !== '' ) {
@@ -999,17 +999,18 @@ function lunara_enqueue_oscars_portal_styles() {
 add_action( 'wp_enqueue_scripts', 'lunara_enqueue_oscars_portal_styles', 111 );
 
 /**
- * URL of the Oscars portal hero newsreel loop, or '' when it is turned off.
+ * URL of the Oscars portal hero film loop, or '' when it is turned off.
  *
- * The loop is cut from public-domain Universal Newsreel footage held by the
- * U.S. National Archives (Academy Awards coverage, 1957, 1963 and 1965).
+ * The loop is cut from two 1927 Academy Award winners now in the U.S. public
+ * domain: Wings (the first Best Picture) and Sunrise (Unique and Artistic
+ * Production). Every January 1st another year of films joins them.
  * Filter `lunara_oscars_hero_reel_enabled` to false to switch it off.
  */
 function lunara_oscars_hero_reel_url() {
     if ( ! apply_filters( 'lunara_oscars_hero_reel_enabled', true ) ) {
         return '';
     }
-    $video = lunara_resolve_theme_asset( 'assets/video/oscars-newsreel-loop.mp4' );
+    $video = lunara_resolve_theme_asset( 'assets/video/oscars-hero-loop.mp4' );
     if ( empty( $video['uri'] ) ) {
         return '';
     }
