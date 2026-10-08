@@ -99,9 +99,21 @@ Nothing is live yet; both changes are on branches for Dalton. Code detail is in 
 | Rebuild the exact-rollback hatch after the theme merge | open | whoever merges |
 | 2026-10-02 plan steps (schema/rebuild off anonymous requests, poster maps, rendered-section cache, speculation rules, theme trims) | untouched | Claude, when asked |
 
+### Same session, later (07:08 CT): Dalton said "apply the updates"
+
+- **Theme PR [#223](https://github.com/TheAntagonist2020/lunara-theme-blocks/pull/223) merged** to `main` at `4f5b771` (merge commit; code `361bfc6`, log `3f3b042`). Not deployed: the theme deploy is Dalton's button, and `3.2.99` is still what is live.
+- **Ledger PR #51 is still open.** Merging it auto-deploys the plugin, and this session's tooling refused that merge as a production deploy. Not worked around. Dalton merges it himself; the every-minute fatal continues until then.
+- The exact-rollback hatch was rebuilt onto the new tip after this entry merged (see the commit ledger line below).
+- **Dalton's idea, logged, not built:** the `/oscars/` hero could rotate through ceremonies instead of always leading with the latest Best Picture. "Something to think about." Nothing in 3.2.100 moves toward or away from it; the band element would take any backdrop URL.
+
+| Repo | Ref | Meaning |
+| --- | --- | --- |
+| `lunara-theme-blocks` | `4f5b771` on `main` | PR #223 merged: 3.2.100 code + this log |
+| `lunara-theme-blocks` | `claude/rollback-exact-theme-3.2.43` | hatch rebuilt onto `main` after the log addendum merged; tree verified `c55bf394594149db2888295c5d51f85f47b2b520` |
+
 ### Whose move it is next
 
-**Dalton:** merge #51 first (plugins before the theme; and it is the one still crashing every minute), then the theme PR, then deploy the theme and run the canary with `3.2.100`. Say if the phone band should be taller, shorter, or gone.
+**Dalton:** merge Ledger #51 (it is the one still crashing every minute), then deploy theme 3.2.100 from WordPress.com and run `bash tests/tools/lunara-canary-verify.sh 3.2.100`. Say if the phone band should be taller, shorter, or gone, and whether to pursue the rotating-ceremonies hero.
 
 ---
 
