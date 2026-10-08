@@ -1622,3 +1622,42 @@ body.lunara-oscars-portal-page .lunara-oscars-portal-hero { position: relative !
 }
 body.lunara-oscars-portal-page .lunara-oscars-portal-hero .lunara-oscars-portal-hero-grid { position: relative !important; z-index: 1 !important; }
 @media (prefers-reduced-motion: reduce) { .lunara-oscars-hero-reel { display: none; } }
+
+/* 3.2.100: phones. Below 820px the hero grid stacks into a tall portrait slab.
+   A 16:9 film loop and a 16:9 backdrop cover-cropped into it, under a wash
+   built for a landscape split, with the Best Picture poster card landing in the
+   middle of both, read as three images fighting. On phones the reel is off
+   (lunara-oscars-hero-reel.js also never attaches it, so the mp4 is not
+   downloaded) and the backdrop becomes one band behind the headline that
+   fades to navy before the poster card. The inline style on the section sets
+   --lunara-oscars-hero-backdrop and page-oscars.php emits the band element;
+   the section's own ::before/::after are the Key Light shafts (style.css),
+   so the band is its own element. */
+.lunara-oscars-hero-band { display: none; }
+@media (max-width: 820px) {
+    .lunara-oscars-hero-reel { display: none !important; }
+    body.lunara-oscars-portal-page .lunara-oscars-portal-hero.has-backdrop {
+        background-color: #07101b !important;
+        background-image: none !important;
+    }
+    /* The band: 16:9 of the width on phones (the whole still, no crop), capped
+       at 300px so on a tablet it still ends above the poster card. Its last
+       gradient stop is the hero's own navy, so the band has no visible edge. */
+    body.lunara-oscars-portal-page .lunara-oscars-portal-hero.has-backdrop .lunara-oscars-hero-band {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: min(58vw, 300px);
+        z-index: 0;
+        pointer-events: none;
+        border-radius: inherit;
+        background-image:
+            linear-gradient(180deg, rgba(7,16,27,.5) 0%, rgba(7,16,27,.66) 45%, rgba(7,16,27,.92) 80%, #07101b 100%),
+            var(--lunara-oscars-hero-backdrop, none);
+        background-size: cover;
+        background-position: center top;
+        background-repeat: no-repeat;
+    }
+}

@@ -17,7 +17,10 @@
 
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var saveData = navigator.connection && navigator.connection.saveData;
-    if (reduceMotion || saveData) {
+    // 3.2.100: phones. The stacked hero hides the reel below 820px (see the
+    // matching rule in lunara-oscars-portal.css); do not download it either.
+    var phone = window.matchMedia && window.matchMedia('(max-width: 820px)').matches;
+    if (reduceMotion || saveData || phone) {
         return;
     }
 

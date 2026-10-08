@@ -203,7 +203,10 @@ $hero_backdrop_url = trim( (string) ( $best_visual['backdrop_url'] ?? '' ) );
 $hero_style        = '';
 
 if ( '' !== $hero_backdrop_url ) {
-    $hero_style = "background-image: linear-gradient(112deg, rgba(7,16,27,.9) 0%, rgba(7,16,27,.66) 34%, rgba(7,16,27,.34) 58%, rgba(7,16,27,.9) 100%), url('" . esc_url( $hero_backdrop_url ) . "'); background-size: cover; background-position: center;";
+    // 3.2.100: the backdrop URL also rides on a custom property so the phone
+    // rules in lunara-oscars-portal.css can re-lay it as a band without
+    // repeating the URL (an inline style can only be overridden with !important).
+    $hero_style = "--lunara-oscars-hero-backdrop: url('" . esc_url( $hero_backdrop_url ) . "'); background-image: linear-gradient(112deg, rgba(7,16,27,.9) 0%, rgba(7,16,27,.66) 34%, rgba(7,16,27,.34) 58%, rgba(7,16,27,.9) 100%), var(--lunara-oscars-hero-backdrop); background-size: cover; background-position: center;";
 }
 
 $hero_title_card = array();
@@ -408,6 +411,9 @@ $command_cards = array(
             <?php $hero_reel_url = function_exists( 'lunara_oscars_hero_reel_url' ) ? lunara_oscars_hero_reel_url() : ''; ?>
             <?php if ( '' !== $hero_reel_url ) : // 3.2.98: Wings + Sunrise loop, attached after load by lunara-oscars-hero-reel.js. ?>
             <div class="lunara-oscars-hero-reel" aria-hidden="true"><video data-lunara-hero-reel data-src="<?php echo esc_url( $hero_reel_url ); ?>" muted loop playsinline disablepictureinpicture preload="none" tabindex="-1"></video></div>
+            <?php endif; ?>
+            <?php if ( '' !== $hero_style ) : // 3.2.100: on phones the backdrop is painted by this band (see lunara-oscars-portal.css), not by the section; hidden on desktop. ?>
+            <div class="lunara-oscars-hero-band" aria-hidden="true"></div>
             <?php endif; ?>
             <div class="lunara-oscars-portal-hero-grid">
                 <div class="lunara-oscars-portal-copy">
