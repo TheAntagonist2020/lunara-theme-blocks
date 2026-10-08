@@ -25,6 +25,86 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-10-08 — Oscars hero on phones (Theme 3.2.100), Deep Cuts queries, and the Ledger warmer crash (2.8.20)
+
+### Headline
+
+Dalton reported WordPress "technical issue" emails about the Oscars plugin, and that on a phone the hero video "plays with the One Battle After Another poster as an overlay." Both are real and both are now fixed on branches awaiting his merge.
+
+- **The emails.** The Ledger's Oscars page store warmer (2.8.14) has never run: `warm_paths()` calls `Academy_Awards_Table::get_table_name()`, which is private, so every run died with a fatal. 2.8.15 made each run schedule its successor *before* starting, which turned that into **a fatal every 60 seconds from WP-Cron**, with an email each time. The 2.8.15 diagnosis ("killed by the cron time limit") was wrong. Ledger 2.8.20 (PR #51) makes the method public, makes the warmer stop instead of loop on any failure, and adds a contract test that reads the real main class for the visibility of every cross-class call. The runtime tests could not see this because their stub of the main class declared the method public.
+- **The phone hero.** Below 820px the `/oscars/` hero stacks into a ~800px portrait slab; the 16:9 loop (3.2.98) and the 16:9 Best Picture backdrop were both cover-cropped into it under the 112° landscape wash, with the Best Picture poster card in the middle. Theme 3.2.100: no reel on phones (hidden and never downloaded), and the backdrop becomes a single `min(58vw, 300px)` band behind the headline that fades to navy before the poster card. Desktop unchanged.
+- **Deep Cuts.** Two of the ten `lunara_get_home_deep_cuts()` queries used aggregate aliases inside `ORDER BY (…)` expressions, which MySQL rejects; they failed on every uncached `/oscars/` render. Fixed by repeating the aggregates.
+
+### Verified live state
+
+| Probe | Result |
+| --- | --- |
+| PHP error log, `my.wordpress.com/sites/lunarafilm.com/logs/php`, 05:16–05:55 CT | One identical fatal per minute: `Call to private method Academy_Awards_Table::get_table_name() from scope AAT_Page_Store … class-aat-page-store.php:531`, stack `warm_paths() ← warm_batch() ← wp-cron.php do_action_ref_array('aat_page_store_…')` |
+| Same log, 05:47 CT, request `/oscars/` | Two `WordPress database error Reference 'total' not supported (reference to group function)` from `page-oscars.php → lunara_get_home_deep_cuts` |
+| Active plugin | Lunara Film – Academy Awards Database 2.8.19 (`academy-awards-table-optimized`) |
+| `/oscars/` anonymous, 1440px (headless Chromium) | `meta lunara-build 3.2.99+20261005-231041`; `X-nananana: Batcache-Set`, `x-ac: MISS`; hero section 1312×854 with the OBAA backdrop; `[data-lunara-hero-reel]` present, src attached, not playing (headless autoplay) |
+| `/oscars/` iPhone 13 emulation | reel element 356×803 covering the hero; OBAA poster card at y=399 inside it; the backdrop still cover-cropped to faces behind the headline (screenshot in the PR) |
+| Same page with the 3.2.100 CSS/JS swapped in at iPhone width | reel `display: none`, video `src` null (not downloaded), band 226px tall, poster card top 399 > band bottom 306 |
+| `git log -S` on the Ledger | `get_table_name()` private since e1d5db6 (2026-06-05); `warm_paths()` introduced in cb060cd (2.8.14, 2026-09-30) already calling it |
+
+### What shipped and why
+
+Nothing is live yet; both changes are on branches for Dalton. Code detail is in `docs/CHANGELOG.md` (2026-10-08 entry) and the Ledger's `readme.txt` (2.8.20).
+
+- The one-line visibility fix is the crash. The warmer guards (stop when the list throws; stop after three runs die at one page) exist because 2.8.15's schedule-first shape means any future deterministic failure would again become a once-a-minute storm. A stopped warmer costs nothing: the store fills on first visit.
+- The band is a separate element because the hero's own `::before`/`::after` are the Key Light shafts; the first attempt used `::before` and rendered as a 26%-wide skewed strip.
+- The band is capped at 300px because at 820px the copy block is shorter than a 16:9 band and the poster card landed on it; the browser test caught that.
+
+### Commit ledger
+
+| Repo | Ref | Meaning |
+| --- | --- | --- |
+| `lunara-plugin-oscars-ledger` | `9366ee5` on `claude/warmer-crash-2.8.20`, [PR #51](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/51) | 2.8.20: `get_table_name()` public, warmer stops instead of looping, visibility contract, runtime coverage |
+| `lunara-theme-blocks` | `361bfc6` on `claude/oscars-phone-hero-3.2.100` | 3.2.100: phone hero band + no reel on phones, Deep Cuts ORDER BY, two new tests, this log |
+
+### Gate ledger
+
+| Gate | Result |
+| --- | --- |
+| Ledger: every `tests/*.php` except the local provenance contract (CI's loop) | all pass, incl. new `main-class-visibility-contract.php` (35 cross-class calls, 404 methods) and `page-store-runtime.php` 52 checks; `page-store-warmer-runtime.php` 69; `page-store-editorial-runtime.php` 47 |
+| Ledger: `php -l` every file, `node --check` every JS, CSS brace balance | clean |
+| Theme: `tests/oscars-hero-phone-browser-runtime.js` (new) | 54 checks at 320/390/430/820/821/1440px |
+| Theme: `tests/oscars-sql-group-alias-contract.php` (new) | 17 grouped queries, 0 failures (failed on `main` with exactly the two live queries; no false positives, incl. `entity-surfaces.php` which repeats aggregates correctly) |
+| Theme: `php -l page-oscars.php inc/oscars-data.php`, `node --check assets/js/lunara-oscars-hero-reel.js` | clean |
+| Theme: PowerShell contract suite | **not run** (no `pwsh` in this container) |
+| Theme: `tests/oscars-portal-studio-runtime.php` and the other Oscars runtimes | **not run**; the change is CSS, one template attribute/element and two SQL ORDER BY clauses, proportional validation per AGENTS.md |
+| Canary `lunara-canary-verify.sh 3.2.100` | **not run**: nothing deployed |
+
+### Corrections
+
+- 2026-10-02 entry, "Warmer: Started after the deploy; the categories index was stored within minutes": wrong; corrected in place. The warmer had never run.
+- Ledger `readme.txt` 2.8.15 ("the 2.8.14 warmer never got past its first batch … killed by the cron time limit"): the cause was this fatal. Noted in the 2.8.20 changelog.
+
+### Logged, not fixed
+
+- `functions.php` still carries the dead, guarded duplicate of `lunara_get_home_deep_cuts()` with the broken `ORDER BY (total / wins)`; `inc/oscars-data.php` is the live copy (loaded first by `functions-loader.php`). Left alone deliberately; the new SQL contract only reads `inc/`.
+- `inc/oscars-portal.php` renders a second copy of the Oscars hero with neither the reel nor the band. The live template is `page-oscars.php` (the DB-error stack trace names it). Whether `inc/oscars-portal.php`'s renderer is reachable anywhere was not established.
+- The PHP log is also full of `[WARNING] Ability meta key "uri" is deprecated. Use "mcp.uri" instead` from the `isonwp/site-info` ability (IsOnWP MCP Abilities 0.8.0). Harmless, noisy.
+- A phone held in landscape (viewport > 820px) still attaches the reel; the two-column layout applies there, so it was left.
+- Theme 3.2.98 and 3.2.99 (PRs #220, #221: the Wings + Sunrise hero loop, the vintage winner title card) were never recorded in `docs/CHANGELOG.md` or this log.
+- The Deep Cuts transient (`lunara_home_deep_cuts_v1`, 24h) will show the two recovered stats only after its next natural rebuild. Not cleared, per the standing rule.
+
+### Punch-list carried forward
+
+| Item | Status | Whose call |
+| --- | --- | --- |
+| Merge Ledger PR #51 (auto-deploys 2.8.20); the every-minute fatal stops on its first run | open | Dalton |
+| After #51 deploys: watch `/wp-json/lunara-ledger/v1/status`. This is the warmer's first real run: ~260 pages, ~an hour. Healthy = `last_warm_run.error` empty, `warm_queue.offset` climbing | open | Dalton (Claude can probe on request) |
+| Merge theme PR for 3.2.100, deploy from WordPress.com, run `bash tests/tools/lunara-canary-verify.sh 3.2.100` | open | Dalton |
+| Rebuild the exact-rollback hatch after the theme merge | open | whoever merges |
+| 2026-10-02 plan steps (schema/rebuild off anonymous requests, poster maps, rendered-section cache, speculation rules, theme trims) | untouched | Claude, when asked |
+
+### Whose move it is next
+
+**Dalton:** merge #51 first (plugins before the theme; and it is the one still crashing every minute), then the theme PR, then deploy the theme and run the canary with `3.2.100`. Say if the phone band should be taller, shorter, or gone.
+
+---
+
 ## 2026-10-02 — Oscars speed: Ledger 2.8.10–2.8.14 live, the Oscars page store
 
 ### Headline
@@ -56,6 +136,7 @@ Dalton asked for the Oscars database to be "lightning fast".
 | Page store, `/oscars/title/tt0099685/` | MISS at 1,076ms origin → HIT at 321ms (store lookup 1.4ms) → Batcache HIT at 21ms |
 | Page store, `/oscars/name/nm0000233/` | MISS at 1,292ms → HIT at 323ms |
 | Warmer | Started after the deploy; the categories index was stored within minutes. Ceremonies were still queued at 02:30 UTC |
+| | **Correction (2026-10-08):** wrong. The warmer never ran: every run died at `warm_paths()` on a private-method call (`class-aat-page-store.php:531`). The stored categories index was a visitor's first-hit fill, not the warmer. See the 2026-10-08 entry; fixed in Ledger 2.8.20. |
 | Canary `lunara-canary-verify.sh 3.2.96` | **GO** (the `/oscars/` portal is not stored) |
 
 ### Whose move is next

@@ -12,6 +12,23 @@ directly from each repo's `git log`, not reconstructed from memory.
 ---
 
 
+## 2026-10-08 — Theme 3.2.100: the Oscars hero on phones, and the Deep Cuts queries
+
+### Theme
+
+- **Phone hero.** Below 820px the `/oscars/` hero grid stacks into a tall portrait slab, and 3.2.98's film loop and the Best Picture backdrop (both 16:9) were cover-cropped into it under a wash built for the landscape split, with the Best Picture poster card landing in the middle of both. Now on phones:
+  - the reel is hidden (`lunara-oscars-portal.css`) **and** never attached (`lunara-oscars-hero-reel.js` checks `(max-width: 820px)`), so the mp4 is not downloaded;
+  - the backdrop is painted by a new `<div class="lunara-oscars-hero-band">` (emitted by `page-oscars.php` when there is a backdrop, hidden on desktop): a `min(58vw, 300px)` band behind the kicker and headline, `cover` from `center top`, under a vertical wash whose last stop is the hero's navy. On a phone the whole still fits; on a tablet it is a mild top crop. The cap keeps the band above the poster card at 820px.
+  - The section's own `::before`/`::after` are the Key Light shafts (`style.css`), which is why the band is an element.
+  - `$hero_style` now also sets `--lunara-oscars-hero-backdrop`, so the band reads the URL from the section without repeating it.
+  - Desktop is unchanged (section keeps the 112° wash and `cover`; the reel attaches as before).
+- **Deep Cuts.** `lunara_get_home_deep_cuts()` in `inc/oscars-data.php` ordered two queries by `(total / wins)` and `(total / ceremonies)`, aggregate aliases inside an expression, which MySQL rejects ("Reference 'total' not supported (reference to group function)"). Both failed on every uncached `/oscars/` render, so "Most Competitive Ceremony" and "Most Nominees Per Year" never made the pool. The ORDER BY repeats the aggregates. The 24-hour `lunara_home_deep_cuts_v1` transient is left alone; the two stats appear on its next natural rebuild.
+- **Tests.** `tests/oscars-hero-phone-browser-runtime.js` (Playwright, 54 checks at 320/390/430/820/821/1440px) lifts `$hero_style` from the template and loads `style.css` plus the portal CSS; it asserts the reel is hidden and unattached on phones, the band's size, that the poster card starts below it, and that desktop is untouched. `tests/oscars-sql-group-alias-contract.php` reads every grouped-and-ordered SQL literal under `inc/` (17) and fails on an aggregate alias inside an ORDER BY expression.
+
+### Oscars Ledger 2.8.20 (plugin; [lunara-plugin-oscars-ledger#51](https://github.com/TheAntagonist2020/lunara-plugin-oscars-ledger/pull/51))
+
+- Every page store warm run since 2.8.14 died at once: `Call to private method Academy_Awards_Table::get_table_name() from scope AAT_Page_Store` (`class-aat-page-store.php:531`). 2.8.15 made each run schedule its successor before starting, so that became a fatal every 60 seconds from WP-Cron, with a "technical issue" email each time. The method is public; the warmer stops instead of looping when its list cannot be built or three runs die at one page; a new contract test checks the visibility of every cross-class call into the main class.
+
 ## 3.2.97 — Google tag off, mojibake cleaned out of the theme source
 
 - `inc/analytics-off.php` (loaded from `functions-loader.php`) keeps the dormant Google Analytics outputs off:

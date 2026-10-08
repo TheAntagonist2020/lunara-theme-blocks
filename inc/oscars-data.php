@@ -1944,7 +1944,7 @@ function lunara_get_home_deep_cuts() {
     // 8. Most competitive ceremony (highest ratio of nominees to winners).
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $competitive = $wpdb->get_row(
-        "SELECT ceremony, COUNT(*) AS total, SUM(CASE WHEN winner = 1 THEN 1 ELSE 0 END) AS wins FROM {$table} GROUP BY ceremony HAVING wins > 0 ORDER BY (total / wins) DESC LIMIT 1",
+        "SELECT ceremony, COUNT(*) AS total, SUM(CASE WHEN winner = 1 THEN 1 ELSE 0 END) AS wins FROM {$table} GROUP BY ceremony HAVING wins > 0 ORDER BY (COUNT(*) / SUM(CASE WHEN winner = 1 THEN 1 ELSE 0 END)) DESC LIMIT 1",
         ARRAY_A
     );
     if ( ! empty( $competitive ) ) {
@@ -1976,7 +1976,7 @@ function lunara_get_home_deep_cuts() {
     // 10. Category with most nominees per year (on average).
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     $busiest_cat = $wpdb->get_row(
-        "SELECT canonical_category, COUNT(*) AS total, COUNT(DISTINCT ceremony) AS ceremonies FROM {$table} WHERE canonical_category != '' GROUP BY canonical_category HAVING ceremonies >= 5 ORDER BY (total / ceremonies) DESC LIMIT 1",
+        "SELECT canonical_category, COUNT(*) AS total, COUNT(DISTINCT ceremony) AS ceremonies FROM {$table} WHERE canonical_category != '' GROUP BY canonical_category HAVING ceremonies >= 5 ORDER BY (COUNT(*) / COUNT(DISTINCT ceremony)) DESC LIMIT 1",
         ARRAY_A
     );
     if ( ! empty( $busiest_cat ) ) {
