@@ -80,44 +80,33 @@ function lunara_enqueue_styles() {
         }
     }
 
-    // The Oscars portal's route stylesheet is assets/css/lunara-oscars-portal.css
-    // (inc/frontend.php, wp_enqueue_scripts 111). assets/css/oscars.css remains
-    // shipped for the plugin-owned ledger routes, which enqueue it themselves.
-}
-add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
+    if ( is_page( 'oscars' ) || is_page_template( 'page-oscars.php' ) ) {
+        $oscars_css = lunara_resolve_theme_asset(
+            'assets/css/oscars.css',
+            array( 'oscars/oscars.css' )
+        );
 
-/** Whether the public request can omit rules anchored only to the portal body. */
-function lunara_shell_uses_non_portal_variant() {
-    // Match the body-class owner. Unknown routes/previews keep the complete shell.
-    if ( ! function_exists( 'lunara_is_oscars_portal_route' ) || is_admin() || is_feed() || is_preview() || is_customize_preview() || lunara_is_oscars_portal_route() || ! empty( $GLOBALS['lunara_site_studio_preview_context'] ) ) {
-        return false;
-    }
-
-    foreach ( array_keys( $_GET ) as $key ) {
-        if ( is_string( $key ) && ( 'lunara_site_studio_instance' === $key || ( 0 === strpos( $key, 'lunara_' ) && false !== strpos( $key, 'preview' ) ) ) ) {
-            return false;
+        if ( ! empty( $oscars_css['uri'] ) ) {
+            wp_enqueue_style(
+                'lunara-oscars-shell',
+                $oscars_css['uri'],
+                array( 'lunara-style' ),
+                lunara_theme_asset_version( $oscars_css['path'] )
+            );
         }
     }
-
-    return true;
 }
+add_action( 'wp_enqueue_scripts', 'lunara_enqueue_styles' );
 
 /**
  * Load the public shell repair layer after route-specific styles.
  *
- * This stylesheet used to live inline in header.php. Keeping its enqueue
- * position preserves the existing cascade and lets browsers reuse the file.
+ * This stylesheet used to live inline in header.php. Keeping it as the final
+ * queued theme stylesheet preserves the existing cascade while allowing the
+ * browser to cache and reuse it across page views.
  */
 function lunara_enqueue_shell_styles() {
     $shell_css = lunara_resolve_theme_asset( 'assets/css/lunara-shell.css' );
-
-    if ( lunara_shell_uses_non_portal_variant() ) {
-        // Built from the canonical shell without moving any retained rules.
-        $non_portal_css = lunara_resolve_theme_asset( 'assets/css/lunara-shell-non-portal.css' );
-        if ( ! empty( $non_portal_css['uri'] ) ) {
-            $shell_css = $non_portal_css;
-        }
-    }
 
     if ( empty( $shell_css['uri'] ) ) {
         return;
@@ -491,79 +480,6 @@ if ( ! function_exists( 'lunara_resize_tmdb_image_url' ) ) {
         }
 
         return preg_replace( '#https://image\.tmdb\.org/t/p/(?:w\d+|original)(?=/)#i', 'https://image.tmdb.org/t/p/' . $size, $url );
-    }
-}
-
-if ( ! function_exists( 'lunara_tmdb_image_srcset' ) ) {
-    /**
-     * Responsive candidates for a TMDB image, or '' for any other URL.
-     *
-     * TMDB serves fixed widths: w780 exists for posters and backdrops alike,
-     * w1280 only for backdrops. The original stays available as the largest
-     * candidate, declared at a conservative width, so high-density screens
-     * keep full sharpness while phones and 1x screens stop downloading it.
-     *
-     * @param string $url      TMDB image URL at any size.
-     * @param bool   $backdrop True for landscape stills, false for posters.
-     * @return string srcset value, or '' when the URL is not a TMDB image.
-     */
-    function lunara_tmdb_image_srcset( $url, $backdrop = true ) {
-        if ( ! preg_match( '#^(https://image\.tmdb\.org/t/p/)(?:w\d+|original)(/[^\s?\#"\'<>]+)$#i', trim( (string) $url ), $parts ) ) {
-            return '';
-        }
-
-        $candidates = array( $parts[1] . 'w780' . $parts[2] . ' 780w' );
-        if ( $backdrop ) {
-            $candidates[] = $parts[1] . 'w1280' . $parts[2] . ' 1280w';
-        }
-        $candidates[] = $parts[1] . 'original' . $parts[2] . ( $backdrop ? ' 1920w' : ' 2000w' );
-
-        return implode( ', ', $candidates );
-    }
-}
-
-if ( ! function_exists( 'lunara_image_url_width_srcset' ) ) {
-    /**
-     * Width candidates for an image known only by URL, or '' when the host
-     * cannot resize it.
-     *
-     * TMDB images use TMDB's fixed widths. WordPress.com uploads (on this site
-     * or through the i0.wp.com CDN) resize from a `w` query argument, which
-     * keeps the aspect ratio and never upscales.
-     *
-     * @param string         $url      Image URL.
-     * @param bool           $backdrop For TMDB: landscape still rather than poster.
-     * @param array<int,int> $widths   Candidate widths for WordPress.com images.
-     * @return string
-     */
-    function lunara_image_url_width_srcset( $url, $backdrop = true, $widths = array( 480, 768, 1200 ) ) {
-        $url = html_entity_decode( trim( (string) $url ), ENT_QUOTES, 'UTF-8' );
-        if ( '' === $url ) {
-            return '';
-        }
-
-        $tmdb = lunara_tmdb_image_srcset( $url, $backdrop );
-        if ( '' !== $tmdb ) {
-            return $tmdb;
-        }
-
-        $host      = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
-        $home_host = strtolower( (string) wp_parse_url( home_url( '/' ), PHP_URL_HOST ) );
-        $wpcom     = '' !== $host && ( $host === $home_host || 1 === preg_match( '/(^|\.)(wp|wordpress)\.com$/', $host ) );
-        if ( ! $wpcom || false === strpos( $url, '/wp-content/uploads/' ) ) {
-            return '';
-        }
-
-        $base       = remove_query_arg( array( 'w', 'h', 'fit', 'resize', 'crop', 'zoom' ), $url );
-        $candidates = array();
-        foreach ( $widths as $width ) {
-            $width = absint( $width );
-            if ( $width > 0 ) {
-                $candidates[] = add_query_arg( 'w', $width, $base ) . ' ' . $width . 'w';
-            }
-        }
-
-        return implode( ', ', $candidates );
     }
 }
 

@@ -42,6 +42,7 @@ if ( have_posts() ) :
         $review_label     = trim( (string) get_post_meta( $post_id, '_lunara_review_lane_label_override', true ) );
         $standfirst       = trim( (string) get_post_meta( $post_id, '_lunara_review_standfirst', true ) );
         $hide_standfirst  = '1' === get_post_meta( $post_id, '_lunara_review_hide_standfirst', true );
+        $archive_label    = trim( (string) get_post_meta( $post_id, '_lunara_review_archive_cta_label', true ) );
         $archive_url_meta = trim( (string) get_post_meta( $post_id, '_lunara_review_archive_url_override', true ) );
         $hide_where_card  = '1' === get_post_meta( $post_id, '_lunara_review_hide_where_card', true );
         $hide_detail_card = '1' === get_post_meta( $post_id, '_lunara_review_hide_details_card', true );
@@ -69,23 +70,6 @@ if ( have_posts() ) :
                 'media_html'     => '',
                 'pairings_html'  => '',
             );
-        $pairings_markup  = isset( $debrief_render['pairings_html'] ) ? (string) $debrief_render['pairings_html'] : '';
-        if ( '' !== trim( $pairings_markup ) ) {
-            if ( class_exists( 'WP_HTML_Tag_Processor' ) ) {
-                $pairings_processor = new WP_HTML_Tag_Processor( $pairings_markup );
-                if ( $pairings_processor->next_tag() ) {
-                    $pairings_processor->set_attribute( 'data-lunara-site-studio-section', 'pair-it-with' );
-                    $pairings_markup = $pairings_processor->get_updated_html();
-                }
-            } else {
-                $pairings_markup = preg_replace(
-                    '/\A(\s*<(?:div|section))(?=\s|>)/i',
-                    '$1 data-lunara-site-studio-section="pair-it-with"',
-                    $pairings_markup,
-                    1
-                );
-            }
-        }
         $hero_visual      = function_exists( 'lunara_render_review_visual_slot' )
             ? lunara_render_review_visual_slot(
                 $post_id,
@@ -201,9 +185,9 @@ if ( have_posts() ) :
             $display_label = __( 'Full Spoiler Review', 'lunara-film' );
         }
         ?>
-        <div id="primary" class="site-main lunara-archive-page lunara-review-single-page<?php echo $is_full_spoiler ? ' lunara-review-single-page--full-spoiler' : ''; ?>">
+        <main id="primary" class="site-main lunara-archive-page lunara-review-single-page<?php echo $is_full_spoiler ? ' lunara-review-single-page--full-spoiler' : ''; ?>">
             <article <?php post_class( 'lunara-journal-single lunara-review-single' . ( $is_full_spoiler ? ' lunara-review-single--full-spoiler' : '' ) ); ?>>
-                <section class="lunara-review-single-hero" data-lunara-site-studio-section="hero">
+                <section class="lunara-review-single-hero">
                     <div class="lunara-review-single-hero-inner">
                         <p class="lunara-archive-hero-kicker"><?php echo esc_html( $display_label ); ?></p>
                         <h1 class="lunara-review-single-title"><?php the_title(); ?></h1>
@@ -214,15 +198,7 @@ if ( have_posts() ) :
 
                         <div class="lunara-review-single-meta">
                             <?php if ( '' !== $review_meta_line ) : ?>
-                                <?php
-                                // The director's name is the review's one route to the director archive.
-                                $review_meta_year = trim( (string) get_post_meta( $post_id, '_lunara_year', true ) );
-                                ?>
-                                <?php if ( '' !== $director_url && '' !== $director ) : ?>
-                                    <span><?php echo '' !== $review_meta_year ? esc_html( $review_meta_year ) . '&nbsp;/&nbsp;' : ''; // Non-breaking: the meta line lays its pieces out in a way that drops plain spaces before the link. ?><a class="lunara-review-single-director-link" href="<?php echo esc_url( $director_url ); ?>"><?php echo esc_html( $director ); ?></a></span>
-                                <?php else : ?>
-                                    <span><?php echo esc_html( $review_meta_line ); ?></span>
-                                <?php endif; ?>
+                                <span><?php echo esc_html( $review_meta_line ); ?></span>
                             <?php endif; ?>
                             <span><?php echo esc_html( get_the_date( 'F j, Y', $post_id ) ); ?></span>
                             <?php if ( '' !== $score ) : ?>
@@ -232,7 +208,7 @@ if ( have_posts() ) :
                     </div>
                 </section>
 
-                <section class="lunara-review-single-body" data-lunara-site-studio-section="criticism">
+                <section class="lunara-review-single-body">
                     <div class="lunara-review-single-body-grid">
                         <div class="lunara-review-single-content">
                             <?php if ( '' !== trim( $hero_visual ) ) : ?>
@@ -275,6 +251,9 @@ if ( have_posts() ) :
                             if ( function_exists( 'lunara_render_spoiler_review_bridge' ) ) {
                                 echo lunara_render_spoiler_review_bridge( $post_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                             }
+                            if ( function_exists( 'lunara_render_review_share_strip' ) ) {
+                                echo lunara_render_review_share_strip( $post_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                            }
 
                             if ( $is_full_spoiler ) :
                                 ?>
@@ -284,12 +263,6 @@ if ( have_posts() ) :
                             ?>
                         </div>
 
-                        <?php
-                        // Where to Watch and Review Details are hidden on single reviews by
-                        // lunara-review-single.css, so only the Ledger and Dossier cards can
-                        // show. Without either, the rail would be an empty box in the grid.
-                        if ( $show_ledger_card || $dossier_movie_id > 0 ) :
-                        ?>
                         <aside class="lunara-review-single-rail" aria-label="<?php esc_attr_e( 'Review details', 'lunara-film' ); ?>">
                             <div class="lunara-review-single-rail-sticky">
                                 <?php if ( $show_ledger_card ) : ?>
@@ -360,14 +333,24 @@ if ( have_posts() ) :
                                         </ul>
                                     </div>
                                 <?php endif; ?>
+
+                                <div class="lunara-review-single-rail-actions">
+                                    <a class="lunara-btn lunara-btn-primary" href="<?php echo esc_url( $archive_url ); ?>">
+                                        <?php echo esc_html( '' !== $archive_label ? $archive_label : get_theme_mod( 'lunara_review_archive_button', __( 'Browse Reviews', 'lunara-film' ) ) ); ?>
+                                    </a>
+                                    <?php if ( '' !== $director_url ) : ?>
+                                        <a class="lunara-btn lunara-btn-secondary" href="<?php echo esc_url( $director_url ); ?>">
+                                            <?php echo esc_html( get_theme_mod( 'lunara_review_director_button', __( 'Director Archive', 'lunara-film' ) ) ); ?>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </aside>
-                        <?php endif; ?>
                     </div>
                 </section>
 
                 <?php if ( ! empty( $debrief_render['has_content'] ) ) : ?>
-                <section class="lunara-review-single-debrief-section lunara-review-single-debrief-shell<?php echo $is_full_spoiler ? ' lunara-spoiler-protected-content lunara-spoiler-protected-content--module' : ''; ?>" data-lunara-site-studio-section="debrief"<?php echo $is_full_spoiler ? ' data-lunara-spoiler-protected data-lunara-spoiler-post="' . esc_attr( $post_id ) . '"' : ''; ?>>
+                <section class="lunara-review-single-debrief-section lunara-review-single-debrief-shell<?php echo $is_full_spoiler ? ' lunara-spoiler-protected-content lunara-spoiler-protected-content--module' : ''; ?>"<?php echo $is_full_spoiler ? ' data-lunara-spoiler-protected data-lunara-spoiler-post="' . esc_attr( $post_id ) . '"' : ''; ?>>
                     <div class="lunara-review-single-debrief-wrap<?php echo ! empty( $debrief_render['media_html'] ) ? ' has-signature-media' : ''; ?>">
                         <?php if ( ! empty( $debrief_render['media_html'] ) ) : ?>
                             <?php echo $debrief_render['media_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -376,8 +359,8 @@ if ( have_posts() ) :
                             <?php echo $debrief_render['signature_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         </div>
                     </div>
-                    <?php if ( '' !== trim( $pairings_markup ) ) : ?>
-                        <?php echo $pairings_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php if ( ! empty( $debrief_render['pairings_html'] ) ) : ?>
+                        <?php echo $debrief_render['pairings_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     <?php endif; ?>
                 </section>
             <?php endif; ?>
@@ -417,7 +400,7 @@ if ( have_posts() ) :
                 echo lunara_render_newsletter_signup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             }
             ?>
-        </div>
+        </main>
         <?php
     endwhile;
 endif;

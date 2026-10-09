@@ -30,7 +30,7 @@
 
 	// Common role labels the signature feature uses — offered as suggestions,
 	// but the field is free text so any relation works.
-	var LABEL_SUGGESTIONS = [ 'Echo', 'Counter', 'Context', 'Double Feature', 'Origin Story', 'The Antidote' ];
+	var LABEL_SUGGESTIONS = [ 'Theme Echo', 'Counter-Program', 'Career Context', 'Double Feature', 'Origin Story', 'The Antidote' ];
 
 	// id → poster thumbnail cache for the override preview.
 	var posterCache = {};
@@ -301,7 +301,7 @@
 						label: __( 'Role label', 'lunara-film' ),
 						value: pair.label || '',
 						list: 'lunara-pair-labels',
-						placeholder: __( 'e.g. Echo', 'lunara-film' ),
+						placeholder: __( 'e.g. Theme Echo', 'lunara-film' ),
 						onChange: function ( v ) { update( index, 'label', v ); }
 					} ),
 					el( TextControl, {

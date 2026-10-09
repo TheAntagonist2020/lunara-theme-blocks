@@ -131,6 +131,3 @@ foreach ($class in @(
 }
 
 Write-Host 'Oscars Dossier Studio controls contract passed.'
-
-& node (Join-Path $PSScriptRoot 'academy-action-cascade-browser-runtime.js')
-if ($LASTEXITCODE -ne 0) { throw 'Academy action cascade browser contracts failed.' }

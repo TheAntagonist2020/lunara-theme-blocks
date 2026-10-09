@@ -9,7 +9,7 @@
 get_header();
 ?>
 
-<div id="primary" class="site-main lunara-archive-page">
+<main id="primary" class="site-main lunara-archive-page">
     <?php if ( have_posts() ) : ?>
         <section class="lunara-home-section lunara-archive-hero">
             <div class="lunara-container">
@@ -47,7 +47,7 @@ get_header();
             </div>
         </section>
     <?php endif; ?>
-</div>
+</main>
 
 <?php
 get_footer();
