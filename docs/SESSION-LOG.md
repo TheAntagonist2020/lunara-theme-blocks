@@ -111,9 +111,23 @@ Nothing is live yet; both changes are on branches for Dalton. Code detail is in 
 | `lunara-theme-blocks` | `4f5b771` on `main` | PR #223 merged: 3.2.100 code + this log |
 | `lunara-theme-blocks` | `claude/rollback-exact-theme-3.2.43` | hatch rebuilt onto `main` after the log addendum merged; tree verified `c55bf394594149db2888295c5d51f85f47b2b520` |
 
+### 2026-10-09 05:21 CT: Ledger #51 merged by Dalton; 2.8.20 live; the crash loop is over
+
+| Probe | Result |
+| --- | --- |
+| PHP error log | Last `get_table_name()` fatal at 05:22 CT, one minute after the merge. None since. The `isonwp/site-info` "uri is deprecated" warnings continue (logged, not fixed). |
+| `/wp-json/lunara-ledger/v1/status` at 05:23 CT | `plugin_version 2.8.20`, new generation `ae183a4aa360e41d`, warm queue `offset 4 of 264, attempts 0` — the Oscars warmer's first run ever |
+| Same, 05:29 CT | `offset 26 of 264`; last run `from 20 to 25` in 43 s, codes `200 ×4` + one `http_request_failed` (a 20 s timeout on a cold ceremony; the loop moved on, first visit fills that one) |
+| `/oscars/ceremony/97/` | `x-aat-store: HIT`, 2.3 ms store lookup, `aat-boot` 316 ms |
+| Theme 3.2.100 | Live since 2026-10-08 12:12 UTC (`lunara-build 3.2.100+20261008-121235` on a fresh render) |
+
+Runs fire with WP-Cron, so the queue advances in bursts (a five-minute gap was observed at 05:24–05:29 CT with no traffic). Full warm expected within a few hours.
+
+Also this session: Lighthouse on seven page types (desktop 94–99, phone 64–95) and the findings behind "What Done Looks Like" (Dalton's doc, 2026-10-08) — the five phone causes are CSS layout cost (3.7 s on a ceremony), 214–357 KB of fonts with TTF cuts, 8× oversized posters, cold origin 1.2–1.9 s, and an edge cache serving `STALE` pages three releases old. Not in the repo; the doc is the record.
+
 ### Whose move it is next
 
-**Dalton:** merge Ledger #51 (it is the one still crashing every minute), then deploy theme 3.2.100 from WordPress.com and run `bash tests/tools/lunara-canary-verify.sh 3.2.100`. Say if the phone band should be taller, shorter, or gone, and whether to pursue the rotating-ceremonies hero.
+**Dalton:** run `bash tests/tools/lunara-canary-verify.sh 3.2.100` if not yet run; answer the six calls in "What Done Looks Like" (font cuts, plugin removals, the cache-purge-on-deploy amendment, theme auto-deploy, order, the rotating-ceremonies hero). Then fonts and posters start.
 
 ---
 
