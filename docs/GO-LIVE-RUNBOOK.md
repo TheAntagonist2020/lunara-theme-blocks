@@ -1,3 +1,9 @@
+> **Superseded on 2026-10-10.** The working agreement is now the one page in
+> `AGENTS.md`: branch, PR, CI decides, merge = live, rollback = GitHub Revert,
+> a five-line session-log entry. This runbook is kept for history and for the
+> canary script's usage notes; where it disagrees with `AGENTS.md`, `AGENTS.md`
+> wins.
+
 # Go-Live Runbook
 
 How a theme or plugin change gets from `main` onto lunarafilm.com, how it is

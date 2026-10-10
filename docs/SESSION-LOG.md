@@ -25,6 +25,16 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-10-10 — The lean agreement, in every repo
+
+Entries from here on use the five-line shape in `AGENTS.md`. Older entries keep their old shape.
+
+- **Shipped:** theme — `AGENTS.md` rewritten to one page (same text in all seven repos), `CLAUDE.md` reduced to a pointer, `.github/workflows/ci.yml` added (php -l, node --check, CSS braces, every `tests/*.php` except helpers, every `tests/*.js` except `tests/ci-skip.txt`), the 95 PowerShell contract scripts deleted, `docs/PARKING.md` started, `docs/GO-LIVE-RUNBOOK.md` marked superseded. Plugins — `AGENTS.md` + `CLAUDE.md` added to the six plugin repos (deploy-ignored). Nothing deployed.
+- **Live:** unchanged — theme 3.2.100, Ledger 2.8.20.
+- **Holding:** nobody. Next session takes fonts (item 2 of the plan).
+- **Next:** Dalton turns theme auto-deploy on once `ci.yml` is green on `main`; then fonts, posters, caching, CSS, in that order; the watch (scheduled check) still to build.
+- **Found, not fixed:** 3 browser tests need `puppeteer`, which is not a dependency, and `reviews-opening-browser-runtime.js` fails on `main` at 390px — all four listed in `tests/ci-skip.txt`. The Ledger's tests pin the version number in 15 files (the new rule forbids this; fix on the next Ledger release). The exact-rollback branch (PR #159) is retired by this agreement; close #159.
+
 ## 2026-10-08 — Oscars hero on phones (Theme 3.2.100), Deep Cuts queries, and the Ledger warmer crash (2.8.20)
 
 ### Headline
