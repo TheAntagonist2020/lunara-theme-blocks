@@ -12,6 +12,39 @@ directly from each repo's `git log`, not reconstructed from memory.
 ---
 
 
+## 2026-10-10 — Theme 3.2.102 and Ledger 2.8.21: posters and the hero preload
+
+Item 3 of "What Done Looks Like".
+
+### Theme 3.2.102
+- **The `/oscars/` hero backdrop is preloaded.** Lighthouse (phone, 2026-10-08) named the hero band the LCP element: its image is a CSS background set through a custom property on the section's inline style, so the browser found it only after CSS and layout ("prioritize LCP image: 1,240 ms"). New `inc/oscars-hero-preload.php` resolves the backdrop the way the template does (`lunara_oscars_hero_backdrop_url()`: Best Picture visual, TMDB w780) and prints `<link rel="preload" as="image" fetchpriority="high">` at `wp_head` 4 on the portal route; `page-oscars.php` takes its URL from the same resolver.
+- **The portal's posters say how wide they render.** Measured 2026-10-10: the hero card is 96px on phones, 124px to 820px, ~300px on desktop; the spotlight, title and winner grids are 96px on phones, ~335px on tablets, 250–290px on desktop. `lunara_oscars_poster_sizes()` rewrites the Ledger's `sizes` on those four slots (keeping WordPress's `auto, ` for lazy images). The hero card also drops the inline `background-image` it painted behind a poster `<img>` that fully covers it — a second, never-visible download of the same poster.
+- New `tests/oscars-hero-preload-runtime.php`. `tests/site-studio-preview-viewport-runtime.js` now waits for the preview iframe's document before sampling it (it failed one run in three here on a navigation race).
+- Measured on the live `/oscars/` with both halves applied, same run, phone 390px at 3x: poster bytes 581 KB → 297 KB; every poster picks 320w. Lighthouse's LCP estimate is the preload's to win; the unthrottled Playwright LCP went 1,004 → 848 ms.
+
+### Ledger 2.8.21
+- `get_poster_img_html_for_title()` defaults `sizes` to `(max-width: 820px) 180px, 340px` (was WordPress's `(max-width: 768px) 100vw, 768px`); the ceremony dossier poster (the LCP image on ceremony pages) passes 150px/180px, the tracker 72px.
+- The srcset gains 320/400/480/600w image-CDN resizes between WordPress's 200w and 683w, added only around the poster call and only when the CDN is present.
+- Card backdrops at 400px: hub pages paint the poster behind each card's dark wash as an eager CSS background at 768px (41 on a ceremony page). `get_card_backdrop_image_url()` re-asks the CDN or TMDB for 400px; the hub and table-display closures use it.
+- Thirteen tests no longer pin the version string.
+- Measured on the live ceremony page, same run, phone 390px at 3x: image bytes 4,138 KB → 1,778 KB.
+
+### Found, not fixed
+- `/oscars/` prediction board: 27 review photos as cover-cropped art at `medium_large` with no srcset. The size is right for a 16:9 photo in a 2:3 box at 3x, so the bytes are the content's; one upload (`2026/07/The-Odyssey.jpg`, 988 KB at 768×433) is the outlier and wants re-uploading compressed.
+- TMDB poster fallbacks (`<img src=poster_url>` for titles without a local poster, and person photos) have no srcset; `lunara_tmdb_image_srcset()` exists for it.
+- The Oscars database shell is still Georgia by `!important` (see 3.2.101).
+
+## 2026-10-10 — Theme 3.2.101: the font diet
+
+- **WordPress's Font Library no longer prints fonts on the front end.** Its `<style class="wp-fonts-local">` block declared Tiempos Text, Tiempos Headline, GT Sectra and Canela a second time, as `.ttf` files under `/wp-content/uploads/fonts/`, on top of the woff2 faces `style.css` declares from `/wp-content/uploads/lunara-fonts/v1/`. Browsers downloaded both. New `inc/fonts.php` unhooks `wp_print_font_faces` (and the style-variation printer) from `wp_head` on the front end only; the editor keeps the Library.
+- **Tiempos is four woff2 files now** (Dalton's call, 2026-10-10): Text Regular, Text Italic, Text Semibold serving weights 600–900, Headline Semibold serving 400–900. Text Bold, Text Bold Italic, Headline Regular, Medium and Bold are gone. Every weight the CSS asks for resolves to a declared range, so nothing is synthesized. Visible change: headlines and kickers that were Headline Bold or Regular now render Semibold.
+- **Metric-matched fallbacks.** `Tiempos Text Fallback` and `Tiempos Headline Fallback` are Georgia with `size-adjust` (105.89% / 105.15%, from the legacy OS/2 average-width formula both fonts' metrics share) and Tiempos's ascent/descent overrides, named right after each family in `inc/design-tokens.php` and the `--lunara-font-display` default. The swap from Georgia to Tiempos moves no text.
+- The three label-face preloads (journal archive, reviews archive, Oscars portal) point at Text Semibold instead of the dropped Bold.
+- Measured on live pages with the change applied: review 619 KB → 174 KB of font bytes (7 → 4 files), phone home 498 KB → 142 KB, journal 639 KB → 195 KB.
+- New `tests/fonts-runtime.php` pins all of it.
+- **Reviews and journal entries now read in Tiempos Text** (Dalton's call, 2026-10-10). The "reader comfort" pass of 2026-05-16 had pinned the body, excerpt, meta line, in-copy h2/h3, reader TOC, rail buttons and pagination to `Georgia !important`, in `style.css` and again in both shell stylesheets, so the licensed reading face was downloaded on every review and used for none of the reading. Those rules now resolve to the theme's own tokens: `var(--lunara-font-body)` for copy and chrome, `var(--lunara-font-display)` for the in-copy headings. The `style.css` default of `--lunara-font-body` also names `Tiempos Text Fallback` now, so the swap moves no text. New `tests/review-reading-font-browser-runtime.js` renders the reading surface against the real cascade (style.css, each shell variant, lunara-review-single.css) and fails on any Georgia-first stack.
+- Found, not changed: the Oscars database shell is still Georgia by the same kind of rule (`body.aat-shell-page .aat-container` and a dozen `body.lunara-oscars-portal-page .aat-*` heading, label and metric rules in `lunara-shell.css`). Same fix if wanted; left alone because the portal's look was tuned around it.
+
 ## 2026-10-08 — Theme 3.2.100: the Oscars hero on phones, and the Deep Cuts queries
 
 ### Theme

@@ -21,6 +21,7 @@ require_once $lunara_inc . 'setup.php';
 require_once $lunara_inc . 'surface-pass.php';
 require_once $lunara_inc . 'helpers.php';
 require_once $lunara_inc . 'analytics-off.php'; // 3.2.97: dormant Google Analytics outputs stay off.
+require_once $lunara_inc . 'fonts.php';         // 3.2.101: the theme is the only front-end source of @font-face.
 
 // Layer 1 — Independent modules.
 require_once $lunara_inc . 'customizer.php';
@@ -63,6 +64,7 @@ require_once $lunara_inc . 'home-sections.php';
 
 // Layer 6 — Oscars portal (depends on home-sections + card builders).
 require_once $lunara_inc . 'oscars-portal.php';
+require_once $lunara_inc . 'oscars-hero-preload.php'; // 3.2.102: hero backdrop preload, portal poster sizes.
 
 // Layer 7 — Frontend output (footer, nav, search, content filters, animations).
 require_once $lunara_inc . 'blocks.php';

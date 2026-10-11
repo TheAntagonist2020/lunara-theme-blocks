@@ -913,6 +913,9 @@ function lunara_render_oscars_winner_media_link( $winner_card, $fallback_url = '
     $visual_markup  = $poster_html;
     if ( '' === $visual_markup ) {
         $visual_markup = '<img src="' . esc_url( $poster_url ) . '" alt="' . esc_attr( $label . ' poster' ) . '" loading="lazy" decoding="async" />';
+    } elseif ( function_exists( 'lunara_oscars_poster_sizes' ) ) {
+        // 3.2.102: the winner grids render posters 96px wide on phones; say so.
+        $visual_markup = lunara_oscars_poster_sizes( $visual_markup, lunara_oscars_poster_sizes_for( 'grid' ) );
     }
 
     return '<a class="lunara-ceremony-winner-media-link" href="' . esc_url( $url ) . '" aria-label="'

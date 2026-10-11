@@ -40,8 +40,8 @@ if ( ! function_exists( 'lunara_design_token_font_choices' ) ) {
 	 */
 	function lunara_design_token_font_choices() {
 		return array(
-			'tiempos-text'     => array( 'label' => 'Tiempos Text', 'stack' => '"Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif' ),
-			'tiempos-headline' => array( 'label' => 'Tiempos Headline', 'stack' => '"Tiempos Headline", "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", serif' ),
+			'tiempos-text'     => array( 'label' => 'Tiempos Text', 'stack' => '"Tiempos Text", "Tiempos Text Fallback", Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif' ),
+			'tiempos-headline' => array( 'label' => 'Tiempos Headline', 'stack' => '"Tiempos Headline", "Tiempos Headline Fallback", "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", serif' ),
 			'gt-sectra'        => array( 'label' => 'GT Sectra Display', 'stack' => '"GT Sectra Display", "Tiempos Headline", Georgia, "Times New Roman", serif' ),
 			'canela-deck'      => array( 'label' => 'Canela Deck', 'stack' => '"Canela Deck", "Tiempos Headline", Georgia, "Times New Roman", serif' ),
 			'bebas'            => array( 'label' => 'Bebas Neue', 'stack' => '"Bebas Neue", "Oswald", "Arial Narrow", sans-serif' ),
