@@ -580,7 +580,7 @@ body.single-review .lunara-review-single-content,
 body.single-journal .lunara-review-single-content {
     max-width: min(100%, 74ch) !important;
     color: #FAFBFC !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     line-height: 1.84 !important;
 }
 
@@ -591,7 +591,7 @@ body.single-review .lunara-review-single-hero-inner {
 body.single-review .lunara-review-single-excerpt {
     max-width: 74ch !important;
     color: rgba(250, 251, 252, 0.94) !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     line-height: 1.78 !important;
     letter-spacing: 0 !important;
 }

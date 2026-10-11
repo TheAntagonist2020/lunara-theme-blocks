@@ -27,11 +27,11 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ## 2026-10-10 (evening) — Theme 3.2.101: the font diet
 
-- **Shipped:** theme 3.2.101 on a PR — Font Library front-end output unhooked (`inc/fonts.php`), Tiempos cut to four woff2 files with weight ranges, metric-matched Georgia fallbacks, label-face preloads re-pointed, `tests/fonts-runtime.php`. Details in `docs/CHANGELOG.md`.
+- **Shipped:** theme 3.2.101 on a PR — Font Library front-end output unhooked (`inc/fonts.php`), Tiempos cut to four woff2 files with weight ranges, metric-matched Georgia fallbacks, label-face preloads re-pointed, `tests/fonts-runtime.php`; then, on Dalton's "Tiempos", review and journal reading surfaces switched from `Georgia !important` to the font tokens, with `tests/review-reading-font-browser-runtime.js` rendering the real cascade. Details in `docs/CHANGELOG.md`.
 - **Live:** unchanged until Dalton merges and deploys (theme auto-deploy still off). Ledger 2.8.20.
 - **Holding:** nobody.
-- **Next:** posters and the hero preload (item 3), then caching (item 6). Dalton to decide whether review body copy switches from Georgia to Tiempos Text.
-- **Found, not fixed:** review body copy is Georgia by a theme `!important` rule while Tiempos Text loads anyway; Stackable's global typography sets `html { font-family: "Canela Deck LC Web Regular" }` (a Font Library name, now undeclared on the front end; nothing visible inherits it, but it is dead weight for item 7).
+- **Next:** posters and the hero preload (item 3), then caching (item 6).
+- **Found, not fixed:** the Oscars database shell (`body.aat-shell-page .aat-container` and the portal `.aat-*` rules in `lunara-shell.css`) is still Georgia by the same kind of `!important` rule; Stackable's global typography sets `html { font-family: "Canela Deck LC Web Regular" }` (a Font Library name, now undeclared on the front end; nothing visible inherits it, but it is dead weight for item 7).
 
 ## 2026-10-10 — The lean agreement, in every repo
 

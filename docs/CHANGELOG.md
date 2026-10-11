@@ -20,7 +20,8 @@ directly from each repo's `git log`, not reconstructed from memory.
 - The three label-face preloads (journal archive, reviews archive, Oscars portal) point at Text Semibold instead of the dropped Bold.
 - Measured on live pages with the change applied: review 619 KB → 174 KB of font bytes (7 → 4 files), phone home 498 KB → 142 KB, journal 639 KB → 195 KB.
 - New `tests/fonts-runtime.php` pins all of it.
-- Found, not changed: review body copy is set in Georgia by the theme (`body.single-review .lunara-review-single-content { font-family: Georgia !important }`), so the licensed reading face is loaded on reviews but not used for the reading. Dalton's call.
+- **Reviews and journal entries now read in Tiempos Text** (Dalton's call, 2026-10-10). The "reader comfort" pass of 2026-05-16 had pinned the body, excerpt, meta line, in-copy h2/h3, reader TOC, rail buttons and pagination to `Georgia !important`, in `style.css` and again in both shell stylesheets, so the licensed reading face was downloaded on every review and used for none of the reading. Those rules now resolve to the theme's own tokens: `var(--lunara-font-body)` for copy and chrome, `var(--lunara-font-display)` for the in-copy headings. The `style.css` default of `--lunara-font-body` also names `Tiempos Text Fallback` now, so the swap moves no text. New `tests/review-reading-font-browser-runtime.js` renders the reading surface against the real cascade (style.css, each shell variant, lunara-review-single.css) and fails on any Georgia-first stack.
+- Found, not changed: the Oscars database shell is still Georgia by the same kind of rule (`body.aat-shell-page .aat-container` and a dozen `body.lunara-oscars-portal-page .aat-*` heading, label and metric rules in `lunara-shell.css`). Same fix if wanted; left alone because the portal's look was tuned around it.
 
 ## 2026-10-08 — Theme 3.2.100: the Oscars hero on phones, and the Deep Cuts queries
 

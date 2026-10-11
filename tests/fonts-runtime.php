@@ -108,6 +108,7 @@ $tokens = (string) file_get_contents( ABSPATH . 'inc/design-tokens.php' );
 lunara_test_assert( false !== strpos( $tokens, '"Tiempos Text", "Tiempos Text Fallback", Georgia' ), 'The tiempos-text stack names the fallback right after the family.' );
 lunara_test_assert( false !== strpos( $tokens, '"Tiempos Headline", "Tiempos Headline Fallback", "Tiempos Text"' ), 'The tiempos-headline stack names the fallback right after the family.' );
 lunara_test_assert( false !== strpos( $css, '--lunara-font-display: "Tiempos Headline", "Tiempos Headline Fallback"' ), 'The style.css default display stack names the fallback.' );
+lunara_test_assert( false !== strpos( $css, '--lunara-font-body: "Tiempos Text", "Tiempos Text Fallback", Georgia' ), 'The style.css default body stack names the fallback.' );
 
 // 5. No preload points at a file the CSS does not declare.
 $frontend = (string) file_get_contents( ABSPATH . 'inc/frontend.php' );

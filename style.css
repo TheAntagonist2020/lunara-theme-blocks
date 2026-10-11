@@ -168,7 +168,7 @@ Text Domain: lunara-film
        and Canela Deck is the rare editorial glamour face. The licensed files
        are served from WordPress uploads while these tokens retain clean
        system fallbacks. */
-    --lunara-font-body: "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif;
+    --lunara-font-body: "Tiempos Text", "Tiempos Text Fallback", Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif;
     --lunara-font-display: "Tiempos Headline", "Tiempos Headline Fallback", "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", serif;
     --lunara-font-signature: "GT Sectra Display", "Tiempos Headline", Georgia, "Times New Roman", serif;
     --lunara-font-glamour: "Canela Deck", "Tiempos Headline", Georgia, "Times New Roman", serif;
@@ -15989,7 +15989,7 @@ body.single-review .lunara-review-single-content,
 body.single-journal .lunara-review-single-content {
     max-width: min(100%, 74ch) !important;
     color: #FAFBFC !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     font-size: clamp(1.04rem, 0.96rem + 0.26vw, 1.18rem) !important;
     line-height: 1.84 !important;
     letter-spacing: 0 !important;
@@ -16002,7 +16002,7 @@ body.single-review .lunara-review-single-hero-inner {
 body.single-review .lunara-review-single-excerpt {
     max-width: 74ch !important;
     color: rgba(250, 251, 252, 0.94) !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     font-size: clamp(1.08rem, 0.98rem + 0.34vw, 1.24rem) !important;
     line-height: 1.78 !important;
     letter-spacing: 0 !important;
@@ -16014,7 +16014,7 @@ body.single-review .lunara-review-single-meta {
     gap: 8px 12px !important;
     align-items: center !important;
     color: #A8A8B8 !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
 }
 
 body.single-review .lunara-review-single-meta span {
@@ -16052,7 +16052,7 @@ body.single-review .lunara-review-single-content h3,
 body.single-journal .lunara-review-single-content h2,
 body.single-journal .lunara-review-single-content h3 {
     color: #e0c481 !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-display) !important;
     letter-spacing: 0 !important;
     line-height: 1.12 !important;
     scroll-margin-top: 132px !important;
@@ -16092,7 +16092,7 @@ body.single-journal .lunara-review-single-content a:not(.lunara-reader-toc-link)
 .lunara-reader-toc-kicker {
     margin: 0 !important;
     color: #c9a961 !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     font-size: 0.76rem !important;
     font-weight: 700 !important;
     letter-spacing: 0 !important;
@@ -16115,7 +16115,7 @@ body.single-journal .lunara-review-single-content a:not(.lunara-reader-toc-link)
     border-radius: 8px !important;
     background: rgba(250, 251, 252, 0.04) !important;
     color: #FAFBFC !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     font-size: 0.92rem !important;
     line-height: 1.25 !important;
     text-decoration: none !important;
@@ -16155,7 +16155,7 @@ body.single-journal .lunara-review-single-rail-actions .lunara-btn {
     border-radius: 8px !important;
     background: rgba(201, 169, 97, 0.1) !important;
     color: #e0c481 !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     font-size: 0.92rem !important;
     font-weight: 700 !important;
     letter-spacing: 0 !important;
@@ -16284,7 +16284,7 @@ body.post-type-archive-review .lunara-review-archive-uniform {
     border-radius: 8px !important;
     background: rgba(15, 29, 46, 0.84) !important;
     color: #FAFBFC !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     font-size: 0.9rem !important;
     text-decoration: none !important;
 }
