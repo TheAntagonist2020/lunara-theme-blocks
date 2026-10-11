@@ -1,191 +1,83 @@
 # Working agreement — Lunara Film
 
-**This file is the canonical operating agreement for any agent or engineer
-working on lunarafilm.com — Codex, Claude, or a human.** `CLAUDE.md` points
-here rather than restating it, so there is exactly one copy to keep true.
+One owner, Dalton. Several AI agents: Claude, Codex, Gemini, Grok. No other
+humans touch these repos. This page is the whole agreement and it is identical
+in every Lunara repo. Read it, then the top entry of `docs/SESSION-LOG.md` in
+`lunara-theme-blocks` (the shared log for all repos), then work.
 
----
+## The loop
 
-## Start here — the four-step cold start
+1. Branch from `main` as `<agent>/<topic>` (`claude/…`, `codex/…`, `gemini/…`,
+   `grok/…`). Never commit to `main`.
+2. Open a PR. Its description is the changelog: what changed, why, and what you
+   measured. CI runs the tests on the PR; red cannot merge.
+3. Dalton merges. **Merge = live.** Plugin repos auto-deploy from `main`. The
+   theme deploys from `main` through WordPress.com (see Status).
+4. Rollback is GitHub's **Revert** button on the merged PR, then merge. There
+   are no rollback branches to maintain.
+5. Close the session with one short entry at the top of `docs/SESSION-LOG.md`
+   (theme repo), newest first:
+   - **Shipped:** repo, version, one line each.
+   - **Live:** what is live now, if it changed.
+   - **Holding:** what you are mid-way through, so another agent does not take it.
+   - **Next:** the next item from the plan.
+   - **Found, not fixed:** anything wrong you saw and left.
+   Never rewrite a past entry; add a correction line inside it.
 
-1. **`docs/SESSION-LOG.md`** — where the project stands *right now* and whose
-   move it is. Newest entry first; read the top entry at minimum. This is the
-   handoff.
-2. **`docs/GO-LIVE-RUNBOOK.md`** — how anything reaches production and how it
-   is proven. Non-negotiable; §5 and §6 in particular.
-3. **`docs/CHANGELOG.md`** — what changed in the code and why, per release.
-   Covers all seven repos, not just the theme.
-4. **This file**, to the end.
+## What Dalton does
 
-### Do not trust these two files
+Reads the entry. Clicks merge. Nothing else: he runs no tests, no scripts,
+clears no caches, writes no logs. If a step needs him beyond a merge click, say
+so in one line at the top of the PR.
 
-`ARCHITECTURE.md` and `README.md` are **historical snapshots retained for
-recovery context.** They describe the retired
-`lunara-film-premium-20260503-living-pulse` theme and a deploy process that no
-longer exists.
+## Tests
 
-`ARCHITECTURE.md` says *"Always Clear Cache after a deploy"* and documents scp
-uploads from a Windows desktop. Both are **wrong now, and the first one is
-actively harmful** — see the no-cache-clearing rule below. Read them for
-archaeology, never for instructions.
+- `tests/*.php` and `tests/*.js` are behavior tests. CI runs every one of them
+  on every PR (`*-cases.php` and `*-fixture.php` are helpers, not tests).
+- Change behavior → add or change a test. Remove behavior → delete its test.
+- No string-pin tests (a test that only checks a file contains some text).
+  The PowerShell suite was retired on 2026-10-10 for that reason.
+- Tests never pin a version number. Bumping a version touches one file per repo.
+- `tests/ci-skip.txt` lists tests CI does not run, with the reason. Fix or
+  delete them; do not let the list grow.
 
-The current architecture is: `functions.php` requires `functions-loader.php`,
-which loads the live modules under `inc/`. See the duplicate-definitions
-warning below before editing anything in either file.
+## Rules that do not expire (each one is a scar)
 
----
+- Never clear a cache to make a release look right. If a release needs a flush
+  to be correct, the release is wrong (3.2.48). A purge as the last step of a
+  deploy is part of the deploy, not a fix.
+- Adding a key to a cached payload means bumping the cache version and clearing
+  the retired key in the flush routine (3.2.53, twice).
+- Licensed Klim Tiempos font files are never committed. They live only in
+  `/wp-content/uploads/lunara-fonts/v1/`.
+- When a plugin and the theme both change, the plugin ships first.
+- In the theme, `inc/` is live; `functions.php` carries dead
+  `function_exists()` duplicates. Confirm which definition runs before editing.
+- Two surfaces that render the same data get checked together.
+- Read-only probes against production. No staging writes.
 
-## Close every session by appending to the session log
+## Frozen
 
-**Mandatory for any session that changes code, ships a release, or changes what
-is live.** Append a new entry at the top of the newest-first list in
-`docs/SESSION-LOG.md`, commit it, and push it — *before* the session ends, not
-after someone asks. Agent containers are ephemeral and conversations get
-summarized or truncated; the repo is the only thing that survives all of it.
+The site's feature set is frozen as of 2026-10-10. Defect fixes ship any time.
+A new feature needs three lines in `docs/PARKING.md` (theme repo) — what a
+visitor gains, what it costs to build, what it costs to keep — and Dalton's
+yes; features batch into at most one release a quarter. The plan is Dalton's
+doc "What Done Looks Like".
 
-An entry carries these sections. Omit one only when it genuinely does not apply,
-and say so rather than leaving it silently blank:
+## Status (keep these lines true)
 
-- **Headline** — one paragraph. What is true now that was not true before.
-- **Verified live state** — a table of what was actually probed, with results.
-  Facts you measured, not facts you expect. If you did not verify it, do not
-  table it.
-- **What shipped and why** — the reasoning, not just the diff. Point at the
-  `docs/CHANGELOG.md` entry for code-level detail rather than duplicating it.
-- **Commit ledger** — repo, SHA, meaning.
-- **Gate ledger** — every gate run, with counts, and every gate *not* run.
-- **Corrections** — anything in the durable record that turned out wrong, fixed
-  in place at the original entry with a pointer forward.
-- **Logged, not fixed** — real problems found and deliberately not addressed, so
-  they are never rediscovered from scratch.
-- **Punch-list carried forward** — with status and whose call each item is.
-- **Whose move it is next** — end every entry knowing this.
+- Theme auto-deploy: **off**. Dalton turns it on in WordPress.com → Settings →
+  Repositories once theme CI has been green on `main`. Until then a theme
+  merge needs his deploy click.
+- CI: theme `.github/workflows/ci.yml`; every plugin `.github/workflows/lint.yml`.
+- The watch: a scheduled check of the PHP log, `/wp-json/lunara-ledger/v1/status`
+  and Lighthouse that messages Dalton only on a regression. Not built yet.
 
-**Never rewrite a past entry to agree with the present.** If a past entry was
-wrong, add a correction line *inside it* pointing at the entry that supersedes
-it. A log tidied into correctness is worth nothing.
+## Repos
 
----
-
-## Standing rules that do not expire
-
-- **Deployment is Dalton's button, always.** Use WordPress.com's native
-  **Lunara Film → Production → Deployments** screen, or the connected theme
-  under **Settings → Repositories**, deploying `lunara-theme-blocks` from
-  `main`. Dalton's September 10 deployment history confirms this mechanism.
-  **Control Desk → System Status → Deploy Truth** reports the live identity;
-  it does not deploy. Deployer for Git (Pro) is installed, but installation is
-  not evidence that it owns this deployment. No agent tooling should trigger
-  deployment. Do not infer automation settings from an installed plugin or a
-  successful manual run; inspect the repository connection when needed.
-- **Auto-deploy stays off** until canaries have been clean for several
-  consecutive releases. A deliberate decision, not an oversight.
-- **Verify after every deploy** with the version argument, which is required:
-  `bash tests/tools/lunara-canary-verify.sh <version>`. A bare invocation exits
-  2. Exit 0 is GO. Exit 1, 2, or 3 is not a pass — 3 (`REPLAY_COHERENT`) is
-  never proof.
-- **No cache clearing as a fix.** If a release needs a flush to look correct,
-  the release is wrong. That is the 3.2.48 failure, exactly. Ignore
-  `ARCHITECTURE.md` on this point.
-- **Adding a key to a cached payload requires bumping the cache version.**
-  Otherwise shape-old payloads are served to shape-new readers for the life of
-  the TTL. Clear the retired key in the flush routine too. This is the 3.2.48
-  failure class in miniature and it has already happened twice — most recently
-  as the 3.2.53 defect.
-- **Read-only probes against production only.** No staging writes.
-- **Rebuild the exact-rollback hatch after every merge to `main`** — docs-only
-  merges included — and verify tree-exactness before trusting it:
-
-  ```bash
-  git rev-parse origin/claude/rollback-exact-theme-3.2.43^{tree}
-  # must equal c55bf394594149db2888295c5d51f85f47b2b520   (the 3.2.43 tree)
-  ```
-
-  Refer to the hatch by **branch name or PR #159, never by SHA.** The head moves
-  at every merge, so a SHA written into a document goes stale immediately — and
-  a stale one is worse than none: merging a rollback commit parented on the
-  wrong tip does not restore the exact tree.
-- **Licensed Klim Tiempos font files are never committed.** They live only in
-  `/wp-content/uploads/lunara-fonts/v1/` and are not restored by a redeploy.
-- **Deploy plugins before the theme.** Plugin read-path APIs are additive and
-  inert alone; the theme consumes them.
-
----
-
-## Engineering discipline — lessons this project already paid for
-
-- **Keep validation proportional (Dalton, September 16).** Run the focused
-  regressions and syntax checks relevant to changed behavior. Reuse passing
-  evidence while the tested code is unchanged. Do not repeat full suites for
-  routine patches, documentation edits, or release bookkeeping. Broaden testing
-  only when a shared architectural change, failure, or unresolved concern
-  justifies it. Use mutation checks when regression strength is uncertain,
-  rather than as a mandatory ritual for every release. Report skipped or
-  interrupted checks honestly; never describe them as passed.
-- **Back up files before mutating them, with `cp`, not git.** `git checkout --`
-  reverts to HEAD and will destroy uncommitted work. This has already cost one
-  session a full set of edits.
-- **When a grep returns zero, suspect the grep first.** Three false alarms in
-  this project came from searching for IDs where the markup uses classes.
-  Confirm the selector exists before reporting an absence.
-- **When two surfaces render the same data, check both.** The 3.2.53 defect
-  survived indefinitely because one of the two consumers rebuilt the data itself
-  and therefore always looked healthy.
-- **Watch for dead duplicate definitions.** `functions.php` carries
-  `function_exists()`-guarded copies of functions that `inc/` defines first via
-  `functions-loader.php`. **The `inc/` copy is the live one.** Confirm which
-  definition actually executes before editing — editing the dead copy produces a
-  clean diff, a green test run, and no behavior change.
-
----
-
-## Repository map
-
-The theme is the hub. Six plugins sit behind it:
-
-| Repo | What it is |
-| --- | --- |
-| `lunara-theme-blocks` | the child theme (`Template: blocksy`). This repo. |
-| `lunara-plugin-oscars-ledger` | the Academy Awards database — 12,138 rows in `data/oscars.csv`, plus 11,291 TMDB mappings |
-| `lunara-plugin-core` | core services |
-| `lunara-plugin-journal-foundation` | the journal CPT and archive |
-| `lunara-plugin-dispatch` | dispatch pipeline |
-| `lunara-plugin-imdb-guard` | IMDb data guarding |
-| `lunara-plugin-ai-assistant-classic` | assistant surface |
-
-`docs/CHANGELOG.md` and `docs/SESSION-LOG.md` live in this repo and cover all
-seven. Only this repo carries an agent file; if you are working in a plugin
-repo, read this one first.
-
----
-
-## Branch and PR convention
-
-- Work on a topic branch: `codex/<topic>-<version>` or
-  `claude/<topic>-<slug>`. Never commit directly to `main`.
-- Open a PR into `main`. CI is a single `lint` workflow.
-- **Do not open a PR unless asked**, and **never deploy** — merging is safe,
-  deploying is Dalton's click.
-- After any merge to `main`, rebuild the rollback hatch (above).
-- If your branch's PR has already merged, restart the branch from the current
-  `main` rather than stacking onto merged history.
-
----
-
-## Gates available locally
-
-```bash
-# PowerShell contract suite — 89 top-level files in Theme 3.2.56
-pwsh tests/<name>.ps1
-
-# PHP runtime contracts
-php tests/<name>-runtime.php
-
-# Post-deploy verification — version argument REQUIRED
-bash tests/tools/lunara-canary-verify.sh <version>
-```
-
-Select the relevant contracts using the proportional validation rule above.
-`.deployignore` keeps `docs`,
-`tests`, `.github`, `AGENTS.md`, and `CLAUDE.md` out of the live theme, so
-tooling and instructions live in the repo without shipping to production.
+`lunara-theme-blocks` (the hub: shared SESSION-LOG, PARKING, CHANGELOG),
+`lunara-plugin-oscars-ledger`, `lunara-plugin-core`,
+`lunara-plugin-journal-foundation`, `lunara-plugin-dispatch`,
+`lunara-plugin-imdb-guard`, `lunara-plugin-ai-assistant-classic`.
+`ARCHITECTURE.md` and `README.md` in the theme are historical; do not take
+instructions from them.

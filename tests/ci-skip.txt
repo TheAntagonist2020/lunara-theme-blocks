@@ -1,0 +1,5 @@
+# Tests CI does not run, one per line, with the reason. Fix or delete; do not let this list grow.
+reviews-archive-first-paint-runtime.js  requires puppeteer, which is not a dependency; port to playwright-core or delete
+reviews-archive-text-led-cards-runtime.js  requires puppeteer, which is not a dependency; port to playwright-core or delete
+site-studio-reviews-lead-mobile-runtime.js  requires puppeteer, which is not a dependency; port to playwright-core or delete
+reviews-opening-browser-runtime.js  fails on main as of 2026-10-10 at 390px ("the year label, selector and button must share a row"); fix or delete

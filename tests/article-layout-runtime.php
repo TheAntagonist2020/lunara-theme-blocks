@@ -47,7 +47,7 @@ function get_the_ID() { return 7; }
 function get_post_field( $key, $id = 0 ) { return 'post_author' === $key ? 1 : get_the_content(); }
 function get_the_author_meta() { return 'Dalton Johnson'; }
 function get_the_date() { return 'September 13, 2026'; }
-function get_the_title( $id = 0 ) { return $id >= 100 ? 'Production still' : $GLOBALS['article_case']['title']; }
+function get_the_title( $id = 0 ) { if ( is_object( $id ) ) { return $id->post_title; } return $id >= 100 ? 'Production still' : $GLOBALS['article_case']['title']; }
 function the_title() { echo esc_html( get_the_title() ); }
 function get_post_meta( $id, $key, $single = true ) {
     if ( '_wp_attachment_image_alt' === $key ) { return 'A film scene with a bright window on the left'; }
@@ -74,6 +74,17 @@ function have_posts() { return ! $GLOBALS['article_loop_done']; }
 function the_post() { $GLOBALS['article_loop_done'] = true; }
 function post_class( $class ) { echo 'class="' . esc_attr( $class ) . '"'; }
 class WP_Query { public function __construct( $args = array() ) {} public function have_posts() { return false; } }
+// Conditional: template-main-landmarks-runtime.php includes this fixture with its own seams.
+if ( ! class_exists( 'WP_Post' ) ) { class WP_Post { public $ID; public $post_title; public function __construct( $id, $title ) { $this->ID = $id; $this->post_title = $title; } } }
+// Journal neighbours: both directions normally, only an older entry for the long-title case.
+if ( ! function_exists( 'get_adjacent_post' ) ) {
+    function get_adjacent_post( $in_same_term = false, $excluded = '', $previous = true ) {
+        if ( 'journal' !== $GLOBALS['article_case']['type'] || 'missing' === $GLOBALS['article_case']['scenario'] ) { return null; }
+        if ( $previous ) { return new WP_Post( 201, 'An older dispatch about the festival circuit and the films that travel furthest' ); }
+        return 'long-title' === $GLOBALS['article_case']['scenario'] ? null : new WP_Post( 202, 'Newer entry' );
+    }
+}
+if ( ! function_exists( 'get_permalink' ) ) { function get_permalink( $post = 0 ) { return 'https://example.test/journal/entry-' . ( is_object( $post ) ? $post->ID : (int) $post ) . '/'; } }
 function has_post_thumbnail( $id = 0 ) { return 'missing' !== $GLOBALS['article_case']['art']; }
 function get_post_thumbnail_id( $id = 0 ) { return has_post_thumbnail() ? 101 : 0; }
 function wp_get_attachment_caption( $id ) { return ''; }
@@ -115,6 +126,9 @@ $root = dirname( __DIR__ );
 article_fixture_function( $root . '/inc/setup.php', 'lunara_resolve_theme_asset' );
 article_fixture_function( $root . '/inc/setup.php', 'lunara_theme_asset_version' );
 article_fixture_function( $root . '/inc/review-rendering.php', 'lunara_render_review_visual_slot' );
+// The Journal lead-image alt resolves through the real Journal-family helpers.
+if ( ! function_exists( 'sanitize_key' ) ) { function sanitize_key( $value ) { return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $value ) ); } }
+foreach ( array( 'lunara_journal_field_has_value', 'lunara_get_journal_field_value', 'lunara_get_journal_hero_alt' ) as $journal_helper ) { article_fixture_function( $root . '/inc/journal-family.php', $journal_helper ); }
 article_fixture_function( $root . '/inc/frontend.php', 'lunara_output_journal_single_guardrail_css' );
 require_once $root . '/inc/site-studio-journal-single.php';
 article_fixture_function( $root . '/inc/site-studio-adapters.php', 'lunara_site_studio_mod_surface_read_state' );

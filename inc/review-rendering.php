@@ -863,6 +863,11 @@ function lunara_get_dispatch_type_label( $post_id ) {
         return __( 'Journal', 'lunara-film' );
     }
 
+    // Reviews reach dispatch cards through shared tag archives; name them plainly.
+    if ( 'review' === get_post_type( $post_id ) ) {
+        return __( 'Review', 'lunara-film' );
+    }
+
     $terms = get_the_terms( $post_id, 'category' );
     if ( ! is_array( $terms ) ) {
         return __( 'Dispatch', 'lunara-film' );
@@ -1578,13 +1583,25 @@ if ( ! function_exists( 'lunara_lock_review_image_markup' ) ) {
             $html = lunara_replace_img_attribute( $html, 'sizes', $profile['sizes'] );
         }
 
-        $retina_profile           = $profile;
-        $retina_profile['width']  = $width * 2;
-        $retina_profile['height'] = $height * 2;
-        $retina_src               = lunara_lock_review_image_url( $source_url, $retina_profile );
+        // Same aspect ratio at a quarter, half, the locked size and retina, so a
+        // 320px poster slot stops downloading the 2000px source. The width and
+        // height attributes stay locked, so layout does not change.
+        $candidates = array();
+        foreach ( array( (int) round( $width / 4 ), (int) round( $width / 2 ), $width, $width * 2 ) as $candidate_width ) {
+            if ( $candidate_width < 200 && $candidate_width !== $width ) {
+                continue;
+            }
+            $candidate_profile           = $profile;
+            $candidate_profile['width']  = $candidate_width;
+            $candidate_profile['height'] = (int) round( $candidate_width * $height / $width );
+            $candidate_src               = $candidate_width === $width ? $src : lunara_lock_review_image_url( $source_url, $candidate_profile );
+            if ( '' !== $candidate_src && ( $candidate_width === $width || $candidate_src !== $src ) && ! isset( $candidates[ $candidate_src ] ) ) {
+                $candidates[ $candidate_src ] = $candidate_src . ' ' . $candidate_width . 'w';
+            }
+        }
 
-        if ( '' !== $retina_src && $retina_src !== $src ) {
-            $srcset = $src . ' ' . $width . 'w, ' . $retina_src . ' ' . ( $width * 2 ) . 'w';
+        if ( count( $candidates ) > 1 ) {
+            $srcset = implode( ', ', $candidates );
             $html   = lunara_replace_img_attribute( $html, 'srcset', $srcset );
             $html   = lunara_replace_img_attribute( $html, 'data-srcset', $srcset );
         } else {
@@ -2147,15 +2164,24 @@ if ( ! function_exists( 'lunara_render_review_visual_slot' ) ) {
             }
         }
         if ( '' === $image_html ) {
+            // External TMDB stills carried `sizes` with no candidates, so every
+            // reader downloaded the multi-megabyte original. Offer TMDB's own widths.
+            $srcset = function_exists( 'lunara_tmdb_image_srcset' )
+                ? lunara_tmdb_image_srcset( html_entity_decode( (string) $src, ENT_QUOTES, 'UTF-8' ), ! $is_poster_hero )
+                : '';
+            if ( '' !== $srcset && function_exists( 'lunara_resize_tmdb_image_url' ) ) {
+                $src = lunara_resize_tmdb_image_url( html_entity_decode( (string) $src, ENT_QUOTES, 'UTF-8' ), $is_poster_hero ? 'w780' : 'w1280' );
+            }
             $image_html = sprintf(
-                '<img class="lunara-review-visual-image" src="%1$s" alt="%2$s" loading="%3$s" decoding="async" width="%4$d" height="%5$d" sizes="%6$s"%7$s>',
+                '<img class="lunara-review-visual-image" src="%1$s"%8$s alt="%2$s" loading="%3$s" decoding="async" width="%4$d" height="%5$d" sizes="%6$s"%7$s>',
                 esc_url( $src ),
                 esc_attr( $data['alt'] ),
                 esc_attr( $args['loading'] ),
                 $width,
                 $height,
                 esc_attr( isset( $profile['sizes'] ) ? (string) $profile['sizes'] : '(max-width: 900px) 100vw, 960px' ),
-                'hero' === $args['context'] ? ' fetchpriority="high" data-no-lazy="1" data-skip-lazy="1"' : ''
+                'hero' === $args['context'] ? ' fetchpriority="high" data-no-lazy="1" data-skip-lazy="1"' : '',
+                '' !== $srcset ? ' srcset="' . esc_attr( $srcset ) . '"' : ''
             );
         }
 
@@ -2791,67 +2817,7 @@ if ( ! function_exists( 'lunara_render_spoiler_review_bridge' ) ) {
 /**
  * Render Lunara-owned share controls for single Reviews.
  */
-if ( ! function_exists( 'lunara_render_review_share_strip' ) ) {
-    function lunara_render_review_share_strip( $post_id ) {
-        $post_id = intval( $post_id );
-        if ( $post_id <= 0 ) {
-            return '';
-        }
-
-        $url   = get_permalink( $post_id );
-        $title = trim( html_entity_decode( wp_strip_all_tags( get_the_title( $post_id ) ), ENT_QUOTES, get_bloginfo( 'charset' ) ) );
-        if ( empty( $url ) || '' === $title ) {
-            return '';
-        }
-
-        $share_text      = sprintf( __( '%s - Lunara Film', 'lunara-film' ), $title );
-        $share_text_url  = rawurlencode( $share_text );
-        $share_url       = rawurlencode( $url );
-        $share_body      = rawurlencode( $share_text . "\n\n" . $url );
-        $share_bluesky   = rawurlencode( $share_text . ' ' . $url );
-        $share_platforms = array(
-            array(
-                'label' => __( 'X', 'lunara-film' ),
-                'url'   => 'https://twitter.com/intent/tweet?text=' . $share_text_url . '&url=' . $share_url,
-            ),
-            array(
-                'label' => __( 'Bluesky', 'lunara-film' ),
-                'url'   => 'https://bsky.app/intent/compose?text=' . $share_bluesky,
-            ),
-            array(
-                'label' => __( 'Facebook', 'lunara-film' ),
-                'url'   => 'https://www.facebook.com/sharer/sharer.php?u=' . $share_url,
-            ),
-            array(
-                'label' => __( 'Email', 'lunara-film' ),
-                'url'   => 'mailto:?subject=' . $share_text_url . '&body=' . $share_body,
-            ),
-        );
-
-        ob_start();
-        ?>
-        <aside class="lunara-review-share-strip" aria-label="<?php esc_attr_e( 'Share this review', 'lunara-film' ); ?>">
-            <div class="lunara-review-share-strip-copy">
-                <p class="lunara-review-share-strip-kicker"><?php esc_html_e( 'Share File', 'lunara-film' ); ?></p>
-                <p class="lunara-review-share-strip-title"><?php esc_html_e( 'Put this review in circulation', 'lunara-film' ); ?></p>
-            </div>
-            <div class="lunara-review-share-strip-actions">
-                <button class="lunara-review-share-link lunara-review-share-copy" type="button" data-lunara-copy-share data-share-url="<?php echo esc_url( $url ); ?>">
-                    <?php esc_html_e( 'Copy Link', 'lunara-film' ); ?>
-                </button>
-                <?php foreach ( $share_platforms as $platform ) : ?>
-                    <a class="lunara-review-share-link" href="<?php echo esc_url( $platform['url'] ); ?>" target="_blank" rel="noopener noreferrer nofollow">
-                        <?php echo esc_html( $platform['label'] ); ?>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-            <p class="lunara-review-share-status" role="status" aria-live="polite"></p>
-        </aside>
-        <?php
-
-        return trim( ob_get_clean() );
-    }
-}
+// lunara_render_review_share_strip() retired in 3.2.94: reviews no longer carry a share card.
 
 /**
  * Query related reviews using director/year affinity first, then recent fallback.

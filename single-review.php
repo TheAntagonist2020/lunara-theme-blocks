@@ -42,7 +42,6 @@ if ( have_posts() ) :
         $review_label     = trim( (string) get_post_meta( $post_id, '_lunara_review_lane_label_override', true ) );
         $standfirst       = trim( (string) get_post_meta( $post_id, '_lunara_review_standfirst', true ) );
         $hide_standfirst  = '1' === get_post_meta( $post_id, '_lunara_review_hide_standfirst', true );
-        $archive_label    = trim( (string) get_post_meta( $post_id, '_lunara_review_archive_cta_label', true ) );
         $archive_url_meta = trim( (string) get_post_meta( $post_id, '_lunara_review_archive_url_override', true ) );
         $hide_where_card  = '1' === get_post_meta( $post_id, '_lunara_review_hide_where_card', true );
         $hide_detail_card = '1' === get_post_meta( $post_id, '_lunara_review_hide_details_card', true );
@@ -215,7 +214,15 @@ if ( have_posts() ) :
 
                         <div class="lunara-review-single-meta">
                             <?php if ( '' !== $review_meta_line ) : ?>
-                                <span><?php echo esc_html( $review_meta_line ); ?></span>
+                                <?php
+                                // The director's name is the review's one route to the director archive.
+                                $review_meta_year = trim( (string) get_post_meta( $post_id, '_lunara_year', true ) );
+                                ?>
+                                <?php if ( '' !== $director_url && '' !== $director ) : ?>
+                                    <span><?php echo '' !== $review_meta_year ? esc_html( $review_meta_year ) . '&nbsp;/&nbsp;' : ''; // Non-breaking: the meta line lays its pieces out in a way that drops plain spaces before the link. ?><a class="lunara-review-single-director-link" href="<?php echo esc_url( $director_url ); ?>"><?php echo esc_html( $director ); ?></a></span>
+                                <?php else : ?>
+                                    <span><?php echo esc_html( $review_meta_line ); ?></span>
+                                <?php endif; ?>
                             <?php endif; ?>
                             <span><?php echo esc_html( get_the_date( 'F j, Y', $post_id ) ); ?></span>
                             <?php if ( '' !== $score ) : ?>
@@ -268,9 +275,6 @@ if ( have_posts() ) :
                             if ( function_exists( 'lunara_render_spoiler_review_bridge' ) ) {
                                 echo lunara_render_spoiler_review_bridge( $post_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                             }
-                            if ( function_exists( 'lunara_render_review_share_strip' ) ) {
-                                echo lunara_render_review_share_strip( $post_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-                            }
 
                             if ( $is_full_spoiler ) :
                                 ?>
@@ -280,6 +284,12 @@ if ( have_posts() ) :
                             ?>
                         </div>
 
+                        <?php
+                        // Where to Watch and Review Details are hidden on single reviews by
+                        // lunara-review-single.css, so only the Ledger and Dossier cards can
+                        // show. Without either, the rail would be an empty box in the grid.
+                        if ( $show_ledger_card || $dossier_movie_id > 0 ) :
+                        ?>
                         <aside class="lunara-review-single-rail" aria-label="<?php esc_attr_e( 'Review details', 'lunara-film' ); ?>">
                             <div class="lunara-review-single-rail-sticky">
                                 <?php if ( $show_ledger_card ) : ?>
@@ -350,19 +360,9 @@ if ( have_posts() ) :
                                         </ul>
                                     </div>
                                 <?php endif; ?>
-
-                                <div class="lunara-review-single-rail-actions">
-                                    <a class="lunara-btn lunara-btn-primary" href="<?php echo esc_url( $archive_url ); ?>">
-                                        <?php echo esc_html( '' !== $archive_label ? $archive_label : get_theme_mod( 'lunara_review_archive_button', __( 'Browse Reviews', 'lunara-film' ) ) ); ?>
-                                    </a>
-                                    <?php if ( '' !== $director_url ) : ?>
-                                        <a class="lunara-btn lunara-btn-secondary" href="<?php echo esc_url( $director_url ); ?>">
-                                            <?php echo esc_html( get_theme_mod( 'lunara_review_director_button', __( 'Director Archive', 'lunara-film' ) ) ); ?>
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
                             </div>
                         </aside>
+                        <?php endif; ?>
                     </div>
                 </section>
 

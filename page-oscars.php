@@ -11,7 +11,6 @@ $aat                = function_exists( 'lunara_oscars_reader' ) ? lunara_oscars_
 $snapshot           = function_exists( 'lunara_get_home_oscars_snapshot' ) ? lunara_get_home_oscars_snapshot() : array();
 $database_spotlight = function_exists( 'lunara_get_home_database_spotlight' ) ? lunara_get_home_database_spotlight() : array();
 $deep_cuts          = function_exists( 'lunara_get_home_deep_cuts' ) ? lunara_get_home_deep_cuts() : array();
-$linked_reviews     = function_exists( 'lunara_oscars_linked_reviews_query' ) ? lunara_oscars_linked_reviews_query( 4 ) : new WP_Query();
 
 /*
  * Oscars Portal Studio composer state. The existing owners stay canonical:
@@ -193,14 +192,24 @@ $database_landing_url = remove_query_arg( 'view', $database_url );
 $database_table_url   = add_query_arg( 'view', 'table', $database_url );
 $database_landing_url = $database_landing_url . $research_anchor;
 $database_table_url   = $database_table_url . $research_anchor;
+// "Full Ledger" opens the Oscar Ledger Explorer when the plugin serves it; the
+// in-page research table stays the fallback and keeps its own Data Explorer card.
+$ledger_url           = function_exists( 'lunara_oscars_explorer_url' ) ? lunara_oscars_explorer_url() : '';
+$ledger_url           = '' !== $ledger_url ? $ledger_url : $database_table_url;
 $table_view_requested = isset( $_GET['view'] ) && 'table' === sanitize_key( wp_unslash( $_GET['view'] ) );
 $about_url         = ( $aat && method_exists( $aat, 'get_about_url' ) ) ? $aat->get_about_url() : home_url( '/oscars/about/' );
 $ceremonies_url    = ( $aat && method_exists( $aat, 'get_ceremonies_index_url' ) ) ? $aat->get_ceremonies_index_url() : home_url( '/oscars/ceremonies/' );
-$hero_backdrop_url = trim( (string) ( $best_visual['backdrop_url'] ?? '' ) );
+// 3.2.102: one resolver for the backdrop, shared with the <head> preload (inc/oscars-hero-preload.php).
+$hero_backdrop_url = function_exists( 'lunara_oscars_hero_backdrop_url' )
+    ? lunara_oscars_hero_backdrop_url()
+    : trim( (string) ( $best_visual['backdrop_url'] ?? '' ) );
 $hero_style        = '';
 
 if ( '' !== $hero_backdrop_url ) {
-    $hero_style = "background-image: linear-gradient(112deg, rgba(7,16,27,.9) 0%, rgba(7,16,27,.66) 34%, rgba(7,16,27,.34) 58%, rgba(7,16,27,.9) 100%), url('" . esc_url( $hero_backdrop_url ) . "'); background-size: cover; background-position: center;";
+    // 3.2.100: the backdrop URL also rides on a custom property so the phone
+    // rules in lunara-oscars-portal.css can re-lay it as a band without
+    // repeating the URL (an inline style can only be overridden with !important).
+    $hero_style = "--lunara-oscars-hero-backdrop: url('" . esc_url( $hero_backdrop_url ) . "'); background-image: linear-gradient(112deg, rgba(7,16,27,.9) 0%, rgba(7,16,27,.66) 34%, rgba(7,16,27,.34) 58%, rgba(7,16,27,.9) 100%), var(--lunara-oscars-hero-backdrop); background-size: cover; background-position: center;";
 }
 
 $hero_title_card = array();
@@ -244,12 +253,8 @@ $portal_stats = array(
 );
 
 // Backdrop images keyed by portal card to keep the top-level gateway visual.
-$portal_backdrop_map = array(
-    'Ceremonies' => 'tt7286456',
-    'Categories' => 'tt1375666',
-    'Ledger'     => 'tt0111161',
-    'About'      => 'tt0068646',
-);
+// One map: the daily visual warmer (inc/oscars-portal.php) warms these same films.
+$portal_backdrop_map = function_exists( 'lunara_oscars_portal_door_backdrop_map' ) ? lunara_oscars_portal_door_backdrop_map() : array();
 $portal_backdrops = array();
 
 if ( $aat && method_exists( $aat, 'get_title_visual_package' ) ) {
@@ -280,7 +285,7 @@ $portal_link_defaults = array(
         'kicker'   => 'Ledger',
         'title'    => 'Full Ledger',
         'copy'     => '',
-        'url'      => $database_table_url,
+        'url'      => $ledger_url,
         'backdrop' => $portal_backdrops['Ledger'] ?? '',
     ),
     4 => array(
@@ -306,11 +311,13 @@ foreach ( $portal_link_defaults as $slot => $defaults ) {
     }
 
     if ( 3 === $slot ) {
-        $normalized_card_url = untrailingslashit( remove_query_arg( 'view', $card_url ) );
-        $normalized_base_url = untrailingslashit( remove_query_arg( 'view', $database_url ) );
+        // A saved copy of the old ledger link (the base, the table view or its
+        // #oscars-research anchor) follows the Full Ledger default.
+        $normalized_card_url = untrailingslashit( remove_query_arg( 'view', explode( '#', $card_url, 2 )[0] ) );
+        $normalized_base_url = untrailingslashit( remove_query_arg( 'view', explode( '#', $database_url, 2 )[0] ) );
 
         if ( $normalized_card_url === $normalized_base_url ) {
-            $card_url = $database_table_url;
+            $card_url = $ledger_url;
         }
     }
 
@@ -384,7 +391,7 @@ $command_cards = array(
         'kicker' => 'Research Table',
         'title'  => 'Full Ledger',
         'meta'   => number_format_i18n( intval( $database_spotlight['records_total'] ?? 0 ) ) . ' rows',
-        'url'    => $database_table_url,
+        'url'    => $ledger_url,
     ),
 );
 ?>
@@ -404,6 +411,13 @@ $command_cards = array(
 <?php $oscars_slot_markup = array(); ob_start(); ?>
         <?php if ( $show_hero ) : ?>
         <section class="lunara-home-section lunara-oscars-portal-hero lunara-oscars-portal-slot-hero<?php echo '' !== $hero_style ? ' has-backdrop' : ''; ?>" data-lunara-site-studio-section="hero"<?php if ( '' !== $hero_style ) : ?> style="<?php echo esc_attr( $hero_style ); ?>"<?php endif; ?>>
+            <?php $hero_reel_url = function_exists( 'lunara_oscars_hero_reel_url' ) ? lunara_oscars_hero_reel_url() : ''; ?>
+            <?php if ( '' !== $hero_reel_url ) : // 3.2.98: Wings + Sunrise loop, attached after load by lunara-oscars-hero-reel.js. ?>
+            <div class="lunara-oscars-hero-reel" aria-hidden="true"><video data-lunara-hero-reel data-src="<?php echo esc_url( $hero_reel_url ); ?>" muted loop playsinline disablepictureinpicture preload="none" tabindex="-1"></video></div>
+            <?php endif; ?>
+            <?php if ( '' !== $hero_style ) : // 3.2.100: on phones the backdrop is painted by this band (see lunara-oscars-portal.css), not by the section; hidden on desktop. ?>
+            <div class="lunara-oscars-hero-band" aria-hidden="true"></div>
+            <?php endif; ?>
             <div class="lunara-oscars-portal-hero-grid">
                 <div class="lunara-oscars-portal-copy">
                     <p class="lunara-home-section-kicker"><?php echo esc_html( $hero_kicker ); ?></p>
@@ -414,7 +428,7 @@ $command_cards = array(
 
                     <div class="lunara-oscars-portal-actions">
                         <a class="lunara-button lunara-button-primary" href="<?php echo esc_url( $ceremony_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['ceremony'] ); ?></a>
-                        <a class="lunara-button lunara-button-secondary" href="<?php echo esc_url( $database_table_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['ledger'] ); ?></a>
+                        <a class="lunara-button lunara-button-secondary" href="<?php echo esc_url( $ledger_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['ledger'] ); ?></a>
                         <a class="lunara-button-ghost" href="<?php echo esc_url( $categories_url ); ?>"><?php echo esc_html( $oscars_portal_buttons['categories'] ); ?></a>
                     </div>
 
@@ -438,6 +452,11 @@ $command_cards = array(
 
                         if ( '' !== $hero_feature_poster_html ) {
                             $hero_feature_poster_html = str_replace( 'loading="lazy"', 'loading="eager" fetchpriority="high"', $hero_feature_poster_html );
+                            if ( function_exists( 'lunara_oscars_poster_sizes' ) ) {
+                                $hero_feature_poster_html = lunara_oscars_poster_sizes( $hero_feature_poster_html, lunara_oscars_poster_sizes_for( 'hero' ) );
+                            }
+                            // 3.2.102: the <img> covers the card; an inline background-image behind it is a second download of the same poster.
+                            $hero_feature_poster_url = '';
                         }
                         ?>
                         <div class="lunara-oscars-portal-feature-poster<?php echo '' !== $hero_feature_poster_url ? ' has-poster-bg' : ''; ?>"<?php if ( '' !== $hero_feature_poster_url ) : ?> style="background-image: url('<?php echo esc_url( $hero_feature_poster_url ); ?>');"<?php endif; ?>>
@@ -546,7 +565,7 @@ $command_cards = array(
                             <?php if ( ! empty( $sl_visual['poster_html'] ) ) : ?>
                                 <a class="lunara-oscars-spotlight-media-link" href="<?php echo esc_url( $spotlight_primary_url ); ?>">
                                     <div class="lunara-oscars-spotlight-poster<?php echo '' !== $sl_poster_url ? ' has-poster-bg' : ''; ?>"<?php if ( '' !== $sl_poster_url ) : ?> style="background-image: url('<?php echo esc_url( $sl_poster_url ); ?>');"<?php endif; ?>>
-                                        <?php echo $sl_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                        <?php echo function_exists( 'lunara_oscars_poster_sizes' ) ? lunara_oscars_poster_sizes( $sl_visual['poster_html'], lunara_oscars_poster_sizes_for( 'grid' ) ) : $sl_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                     </div>
                                 </a>
                             <?php elseif ( ! empty( $sl_visual['poster_url'] ) ) : ?>
@@ -613,7 +632,7 @@ $command_cards = array(
                         <a class="lunara-oscars-portal-title-card" href="<?php echo esc_url( $card['url'] ?? $database_url ); ?>">
                             <div class="lunara-oscars-portal-title-media<?php echo '' !== $card_poster_url ? ' has-poster-bg' : ''; ?>"<?php if ( '' !== $card_poster_url ) : ?> style="background-image: url('<?php echo esc_url( $card_poster_url ); ?>');"<?php endif; ?>>
                                 <?php if ( ! empty( $card_visual['poster_html'] ) ) : ?>
-                                    <?php echo $card_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                    <?php echo function_exists( 'lunara_oscars_poster_sizes' ) ? lunara_oscars_poster_sizes( $card_visual['poster_html'], lunara_oscars_poster_sizes_for( 'grid' ) ) : $card_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                 <?php elseif ( ! empty( $card_visual['poster_url'] ) ) : ?>
                                     <img src="<?php echo esc_url( $card_visual['poster_url'] ); ?>" alt="<?php echo esc_attr( $card['title'] ?? 'Oscar title' ); ?>" loading="lazy" decoding="async" />
                                 <?php elseif ( ! empty( $card_visual['card_fallback_html'] ) ) : ?>
@@ -674,11 +693,12 @@ $command_cards = array(
 <?php $oscars_slot_markup['research'] = ob_get_clean(); ob_start(); ?>
 
         <?php
-        /**
-         * "Reviews Inside the Ledger" section disabled 2026-04-20 per Dalton.
-         * To be replaced by a more distinctive Oscars-native section (stats /
-         * ceremony grid / deep-cuts visual). Re-enable by removing the `0 &&` guard.
+        /*
+         * "Reviews Inside the Ledger" is hidden by default (since 2026-04-20, per
+         * Dalton) and shown through its Studio / lunara_oscars_show_linked_reviews
+         * visibility. Its query runs only when the section will render.
          */
+        $linked_reviews = ( $show_linked_reviews && function_exists( 'lunara_oscars_linked_reviews_query' ) ) ? lunara_oscars_linked_reviews_query( 4 ) : null;
         ?>
         <?php if ( $show_linked_reviews && $linked_reviews instanceof WP_Query && $linked_reviews->have_posts() ) : ?>
             <section id="oscars-reviews" class="lunara-home-section lunara-oscars-portal-reviews lunara-oscars-portal-slot-linked-reviews" data-lunara-site-studio-section="linked-reviews">

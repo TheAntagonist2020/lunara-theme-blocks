@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.87
+Version: 3.2.102
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -20,6 +20,12 @@ Text Domain: lunara-film
  * in the theme repository under its OFL license. Licensed Lunara publication
  * fonts are intentionally served from WordPress uploads instead of being
  * committed to the public GitHub repo.
+ *
+ * 3.2.101 font diet: Tiempos is four woff2 files. Text Regular, Text Italic,
+ * Text Semibold (serving 600-900) and Headline Semibold (serving 400-900).
+ * Bold, bold italic, Headline Regular and Medium are gone; nothing is
+ * synthesized because every requested weight resolves to a declared range.
+ * inc/fonts.php keeps WordPress's Font Library from printing TTF duplicates.
  * ============================================================================ */
 @font-face {
     font-family: 'Bebas Neue';
@@ -55,51 +61,46 @@ Text Domain: lunara-film
 @font-face {
     font-family: 'Tiempos Text';
     font-style: normal;
-    font-weight: 600;
+    font-weight: 600 900;
     font-display: swap;
     src: url('/wp-content/uploads/lunara-fonts/v1/TiemposText-Semibold.woff2') format('woff2');
 }
 @font-face {
-    font-family: 'Tiempos Text';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Tiempos Text';
-    font-style: italic;
-    font-weight: 700;
-    font-display: swap;
-    src: url('/wp-content/uploads/lunara-fonts/v1/TiemposText-BoldItalic.woff2') format('woff2');
-}
-@font-face {
     font-family: 'Tiempos Headline';
     font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Regular.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Tiempos Headline';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url('/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Medium.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Tiempos Headline';
-    font-style: normal;
-    font-weight: 600;
+    font-weight: 400 900;
     font-display: swap;
     src: url('/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Semibold.woff2') format('woff2');
 }
+/* 3.2.101: metric-matched fallbacks. Georgia, scaled so its lowercase runs the
+   same width as Tiempos (legacy OS/2 xAvgCharWidth: Tiempos Text 0.4679em,
+   Headline 0.4646em, Georgia 0.4419em) with Tiempos's ascent and descent, so the
+   swap from Georgia to Tiempos moves no text. Named in the stacks right after
+   each family (inc/design-tokens.php, --lunara-font-* below). */
 @font-face {
-    font-family: 'Tiempos Headline';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Bold.woff2') format('woff2');
+    font-family: 'Tiempos Text Fallback';
+    src: local('Georgia');
+    size-adjust: 105.89%;
+    ascent-override: 99.54%;
+    descent-override: 23.23%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: 'Tiempos Text Fallback';
+    font-style: italic;
+    src: local('Georgia Italic'), local('Georgia-Italic');
+    size-adjust: 105.89%;
+    ascent-override: 99.54%;
+    descent-override: 23.23%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: 'Tiempos Headline Fallback';
+    src: local('Georgia');
+    size-adjust: 105.15%;
+    ascent-override: 74.47%;
+    descent-override: 20.64%;
+    line-gap-override: 19.02%;
 }
 @font-face {
     font-family: 'GT Sectra Display';
@@ -167,8 +168,8 @@ Text Domain: lunara-film
        and Canela Deck is the rare editorial glamour face. The licensed files
        are served from WordPress uploads while these tokens retain clean
        system fallbacks. */
-    --lunara-font-body: "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif;
-    --lunara-font-display: "Tiempos Headline", "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", serif;
+    --lunara-font-body: "Tiempos Text", "Tiempos Text Fallback", Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif;
+    --lunara-font-display: "Tiempos Headline", "Tiempos Headline Fallback", "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", serif;
     --lunara-font-signature: "GT Sectra Display", "Tiempos Headline", Georgia, "Times New Roman", serif;
     --lunara-font-glamour: "Canela Deck", "Tiempos Headline", Georgia, "Times New Roman", serif;
     --lunara-font-label: "Tiempos Text", "Segoe UI", Arial, sans-serif;
@@ -15988,7 +15989,7 @@ body.single-review .lunara-review-single-content,
 body.single-journal .lunara-review-single-content {
     max-width: min(100%, 74ch) !important;
     color: #FAFBFC !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     font-size: clamp(1.04rem, 0.96rem + 0.26vw, 1.18rem) !important;
     line-height: 1.84 !important;
     letter-spacing: 0 !important;
@@ -16001,7 +16002,7 @@ body.single-review .lunara-review-single-hero-inner {
 body.single-review .lunara-review-single-excerpt {
     max-width: 74ch !important;
     color: rgba(250, 251, 252, 0.94) !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     font-size: clamp(1.08rem, 0.98rem + 0.34vw, 1.24rem) !important;
     line-height: 1.78 !important;
     letter-spacing: 0 !important;
@@ -16013,7 +16014,7 @@ body.single-review .lunara-review-single-meta {
     gap: 8px 12px !important;
     align-items: center !important;
     color: #A8A8B8 !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
 }
 
 body.single-review .lunara-review-single-meta span {
@@ -16051,7 +16052,7 @@ body.single-review .lunara-review-single-content h3,
 body.single-journal .lunara-review-single-content h2,
 body.single-journal .lunara-review-single-content h3 {
     color: #e0c481 !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-display) !important;
     letter-spacing: 0 !important;
     line-height: 1.12 !important;
     scroll-margin-top: 132px !important;
@@ -16091,7 +16092,7 @@ body.single-journal .lunara-review-single-content a:not(.lunara-reader-toc-link)
 .lunara-reader-toc-kicker {
     margin: 0 !important;
     color: #c9a961 !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     font-size: 0.76rem !important;
     font-weight: 700 !important;
     letter-spacing: 0 !important;
@@ -16114,7 +16115,7 @@ body.single-journal .lunara-review-single-content a:not(.lunara-reader-toc-link)
     border-radius: 8px !important;
     background: rgba(250, 251, 252, 0.04) !important;
     color: #FAFBFC !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     font-size: 0.92rem !important;
     line-height: 1.25 !important;
     text-decoration: none !important;
@@ -16154,7 +16155,7 @@ body.single-journal .lunara-review-single-rail-actions .lunara-btn {
     border-radius: 8px !important;
     background: rgba(201, 169, 97, 0.1) !important;
     color: #e0c481 !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     font-size: 0.92rem !important;
     font-weight: 700 !important;
     letter-spacing: 0 !important;
@@ -16283,7 +16284,7 @@ body.post-type-archive-review .lunara-review-archive-uniform {
     border-radius: 8px !important;
     background: rgba(15, 29, 46, 0.84) !important;
     color: #FAFBFC !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--lunara-font-body) !important;
     font-size: 0.9rem !important;
     text-decoration: none !important;
 }
@@ -18387,6 +18388,15 @@ body.home .lunara-oscar-facts-section .lunara-oscar-facts-dots .lunara-carousel-
 body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-carousel-toggle{grid-column:1/-1;grid-row:2;justify-self:center;}
 body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel .lunara-oscar-facts-console{grid-template-columns:1fr auto;}
 body.home .lunara-oscar-facts-section .lunara-oscar-facts-carousel .lunara-oscar-facts-console .lunara-home-carousel-toggle{grid-column:1/-1;grid-row:3;justify-self:center;}
+}
+/* Oscar Picks slide marks on phones and tablets: one row of segments that
+   share the width, so fifteen picks read as one progress line instead of
+   wrapping into a four-row block. The 44px arrows beside them stay the
+   full-size way to step through the picks. */
+@media(max-width:820px){
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-oscar-picks-dots{flex-wrap:nowrap;gap:3px;align-self:center;}
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-oscar-picks-dots .lunara-carousel-dot,
+body.home .lunara-oscar-picks-section .lunara-oscar-picks-controls .lunara-oscar-picks-dots .lunara-carousel-dot.active{flex:1 1 0;width:auto;min-width:0;max-width:44px;padding-inline:0;}
 }
 
 /* Shared carousel controls: the portal uses the same comfortable hit areas

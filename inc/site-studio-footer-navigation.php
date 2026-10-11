@@ -15,6 +15,8 @@ function lunara_site_studio_footer_navigation_schema() {
 
 /** Resolve built-ins at request time; saved links never freeze these URLs. */
 function lunara_site_studio_footer_navigation_destinations() {
+	// Full Ledger opens the Oscar Ledger Explorer when the plugin serves it.
+	$ledger = function_exists( 'lunara_oscars_explorer_url' ) ? lunara_oscars_explorer_url() : '';
 	$items = array(
 		'home' => array( __( 'Home', 'lunara-film' ), home_url( '/' ) ),
 		'reviews' => array( __( 'Reviews', 'lunara-film' ), get_post_type_archive_link( 'review' ) ?: home_url( '/reviews/' ) ),
@@ -24,7 +26,7 @@ function lunara_site_studio_footer_navigation_destinations() {
 		'oscars' => array( __( 'Oscars', 'lunara-film' ), home_url( '/oscars/' ) ),
 		'categories' => array( __( 'Categories', 'lunara-film' ), home_url( '/oscars/categories/' ) ),
 		'ceremonies' => array( __( 'Ceremonies', 'lunara-film' ), home_url( '/oscars/ceremonies/' ) ),
-		'ledger' => array( __( 'Full Ledger', 'lunara-film' ), home_url( '/oscars/?view=table#oscars-research' ) ),
+		'ledger' => array( __( 'Full Ledger', 'lunara-film' ), '' !== $ledger ? $ledger : home_url( '/oscars/?view=table#oscars-research' ) ),
 		'search' => array( __( 'Search', 'lunara-film' ), function_exists( 'lunara_search_command_url' ) ? lunara_search_command_url() : home_url( '/?s=' ) ),
 		'contact' => array( __( 'Contact', 'lunara-film' ), home_url( '/contact/' ) ),
 		'rss' => array( __( 'RSS Feed', 'lunara-film' ), get_bloginfo( 'rss2_url' ) ),
