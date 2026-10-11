@@ -12,6 +12,11 @@ directly from each repo's `git log`, not reconstructed from memory.
 ---
 
 
+## 2026-10-10 — Theme 3.2.103: the hero film loop is gone
+
+- **The `/oscars/` hero no longer plays video** (Dalton's call, 2026-10-10 22:44 CT). The 3.2.98 loop (Wings and Sunrise, 1927, public domain) played on any screen wider than 820px, which included phones held sideways and tablets, and it was never the point of the page. Removed: the reel markup in `page-oscars.php`, the enqueue and `lunara_oscars_hero_reel_url()` in `inc/frontend.php`, `assets/js/lunara-oscars-hero-reel.js`, the 1.2 MB `assets/video/oscars-hero-loop.mp4`, and the reel rules in `lunara-oscars-portal.css`. The hero is the Best Picture backdrop and the poster card at every width; on phones the 3.2.100 band stays as it was. The loop lives in git history (3.2.98) if it is ever wanted back.
+- `tests/oscars-hero-phone-browser-runtime.js` now asserts no video element and no mp4 request at any width, and that none of the reel's files or references remain.
+
 ## 2026-10-10 — Theme 3.2.102 and Ledger 2.8.21: posters and the hero preload
 
 Item 3 of "What Done Looks Like".
