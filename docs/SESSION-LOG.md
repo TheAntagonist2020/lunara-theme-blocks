@@ -25,6 +25,14 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-10-10 (late) — The hero film loop removed (Theme 3.2.103)
+
+- **Shipped:** theme 3.2.103 on a PR: the `/oscars/` hero video, its script, its 1.2 MB mp4 and its CSS removed. Dalton asked why the video was playing; it played on any screen over 820px (desktop by design, but also phones held sideways and tablets); he said remove it.
+- **Live:** Ledger 2.8.21 and theme 3.2.102 went live 2026-10-11 ~02:00 UTC (both posters PRs merged; the hero backdrop preload is in the phone HTML, card backdrops at 400px). 3.2.103 live when merged and deployed.
+- **Holding:** nobody.
+- **Next:** caching coherence (item 6), then the plugin diet (item 7).
+- **Found, not fixed:** unchanged from the previous entry.
+
 ## 2026-10-10 (night) — Posters and the hero preload (Theme 3.2.102, Ledger 2.8.21)
 
 - **Shipped:** Ledger PR #53 (2.8.21: poster `sizes` default + 320–600w srcset widths, card backdrops at 400px, version pins out of 13 tests) and theme PR (3.2.102: `/oscars/` hero backdrop preload, portal poster `sizes`, hero card's duplicate background dropped). Details in `docs/CHANGELOG.md`.
