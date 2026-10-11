@@ -4,7 +4,7 @@ Theme URI: https://lunarafilm.com
 Author: Lunara Film
 Author URI: https://lunarafilm.com
 Description: A sophisticated film criticism theme with cinematic aesthetics. Living Pulse build dated 2026-05-03.
-Version: 3.2.100
+Version: 3.2.101
 Template: blocksy
 Requires at least: 6.0
 Tested up to: 6.4
@@ -20,6 +20,12 @@ Text Domain: lunara-film
  * in the theme repository under its OFL license. Licensed Lunara publication
  * fonts are intentionally served from WordPress uploads instead of being
  * committed to the public GitHub repo.
+ *
+ * 3.2.101 font diet: Tiempos is four woff2 files. Text Regular, Text Italic,
+ * Text Semibold (serving 600-900) and Headline Semibold (serving 400-900).
+ * Bold, bold italic, Headline Regular and Medium are gone; nothing is
+ * synthesized because every requested weight resolves to a declared range.
+ * inc/fonts.php keeps WordPress's Font Library from printing TTF duplicates.
  * ============================================================================ */
 @font-face {
     font-family: 'Bebas Neue';
@@ -55,51 +61,46 @@ Text Domain: lunara-film
 @font-face {
     font-family: 'Tiempos Text';
     font-style: normal;
-    font-weight: 600;
+    font-weight: 600 900;
     font-display: swap;
     src: url('/wp-content/uploads/lunara-fonts/v1/TiemposText-Semibold.woff2') format('woff2');
 }
 @font-face {
-    font-family: 'Tiempos Text';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Tiempos Text';
-    font-style: italic;
-    font-weight: 700;
-    font-display: swap;
-    src: url('/wp-content/uploads/lunara-fonts/v1/TiemposText-BoldItalic.woff2') format('woff2');
-}
-@font-face {
     font-family: 'Tiempos Headline';
     font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Regular.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Tiempos Headline';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url('/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Medium.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Tiempos Headline';
-    font-style: normal;
-    font-weight: 600;
+    font-weight: 400 900;
     font-display: swap;
     src: url('/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Semibold.woff2') format('woff2');
 }
+/* 3.2.101: metric-matched fallbacks. Georgia, scaled so its lowercase runs the
+   same width as Tiempos (legacy OS/2 xAvgCharWidth: Tiempos Text 0.4679em,
+   Headline 0.4646em, Georgia 0.4419em) with Tiempos's ascent and descent, so the
+   swap from Georgia to Tiempos moves no text. Named in the stacks right after
+   each family (inc/design-tokens.php, --lunara-font-* below). */
 @font-face {
-    font-family: 'Tiempos Headline';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('/wp-content/uploads/lunara-fonts/v1/hinted-TiemposHeadline-Bold.woff2') format('woff2');
+    font-family: 'Tiempos Text Fallback';
+    src: local('Georgia');
+    size-adjust: 105.89%;
+    ascent-override: 99.54%;
+    descent-override: 23.23%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: 'Tiempos Text Fallback';
+    font-style: italic;
+    src: local('Georgia Italic'), local('Georgia-Italic');
+    size-adjust: 105.89%;
+    ascent-override: 99.54%;
+    descent-override: 23.23%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: 'Tiempos Headline Fallback';
+    src: local('Georgia');
+    size-adjust: 105.15%;
+    ascent-override: 74.47%;
+    descent-override: 20.64%;
+    line-gap-override: 19.02%;
 }
 @font-face {
     font-family: 'GT Sectra Display';
@@ -168,7 +169,7 @@ Text Domain: lunara-film
        are served from WordPress uploads while these tokens retain clean
        system fallbacks. */
     --lunara-font-body: "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", "Palatino Linotype", serif;
-    --lunara-font-display: "Tiempos Headline", "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", serif;
+    --lunara-font-display: "Tiempos Headline", "Tiempos Headline Fallback", "Tiempos Text", Georgia, "Times New Roman", "Iowan Old Style", serif;
     --lunara-font-signature: "GT Sectra Display", "Tiempos Headline", Georgia, "Times New Roman", serif;
     --lunara-font-glamour: "Canela Deck", "Tiempos Headline", Georgia, "Times New Roman", serif;
     --lunara-font-label: "Tiempos Text", "Segoe UI", Arial, sans-serif;

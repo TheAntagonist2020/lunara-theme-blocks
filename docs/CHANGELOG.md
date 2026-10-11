@@ -12,6 +12,16 @@ directly from each repo's `git log`, not reconstructed from memory.
 ---
 
 
+## 2026-10-10 — Theme 3.2.101: the font diet
+
+- **WordPress's Font Library no longer prints fonts on the front end.** Its `<style class="wp-fonts-local">` block declared Tiempos Text, Tiempos Headline, GT Sectra and Canela a second time, as `.ttf` files under `/wp-content/uploads/fonts/`, on top of the woff2 faces `style.css` declares from `/wp-content/uploads/lunara-fonts/v1/`. Browsers downloaded both. New `inc/fonts.php` unhooks `wp_print_font_faces` (and the style-variation printer) from `wp_head` on the front end only; the editor keeps the Library.
+- **Tiempos is four woff2 files now** (Dalton's call, 2026-10-10): Text Regular, Text Italic, Text Semibold serving weights 600–900, Headline Semibold serving 400–900. Text Bold, Text Bold Italic, Headline Regular, Medium and Bold are gone. Every weight the CSS asks for resolves to a declared range, so nothing is synthesized. Visible change: headlines and kickers that were Headline Bold or Regular now render Semibold.
+- **Metric-matched fallbacks.** `Tiempos Text Fallback` and `Tiempos Headline Fallback` are Georgia with `size-adjust` (105.89% / 105.15%, from the legacy OS/2 average-width formula both fonts' metrics share) and Tiempos's ascent/descent overrides, named right after each family in `inc/design-tokens.php` and the `--lunara-font-display` default. The swap from Georgia to Tiempos moves no text.
+- The three label-face preloads (journal archive, reviews archive, Oscars portal) point at Text Semibold instead of the dropped Bold.
+- Measured on live pages with the change applied: review 619 KB → 174 KB of font bytes (7 → 4 files), phone home 498 KB → 142 KB, journal 639 KB → 195 KB.
+- New `tests/fonts-runtime.php` pins all of it.
+- Found, not changed: review body copy is set in Georgia by the theme (`body.single-review .lunara-review-single-content { font-family: Georgia !important }`), so the licensed reading face is loaded on reviews but not used for the reading. Dalton's call.
+
 ## 2026-10-08 — Theme 3.2.100: the Oscars hero on phones, and the Deep Cuts queries
 
 ### Theme

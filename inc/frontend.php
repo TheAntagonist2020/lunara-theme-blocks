@@ -464,7 +464,7 @@ function lunara_preload_journal_archive_label_font() {
 
     printf(
         '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin />' . "\n",
-        esc_url( home_url( '/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2' ) )
+        esc_url( home_url( '/wp-content/uploads/lunara-fonts/v1/TiemposText-Semibold.woff2' ) )
     );
 }
 add_action( 'wp_head', 'lunara_preload_journal_archive_label_font', 4 );
@@ -489,7 +489,7 @@ function lunara_preload_reviews_archive_label_font() {
 
     printf(
         '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin />' . "\n",
-        esc_url( home_url( '/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2' ) )
+        esc_url( home_url( '/wp-content/uploads/lunara-fonts/v1/TiemposText-Semibold.woff2' ) )
     );
 }
 add_action( 'wp_head', 'lunara_preload_reviews_archive_label_font', 4 );
@@ -509,7 +509,7 @@ function lunara_preload_oscars_portal_label_font() {
 
     printf(
         '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin />' . "\n",
-        esc_url( home_url( '/wp-content/uploads/lunara-fonts/v1/TiemposText-Bold.woff2' ) )
+        esc_url( home_url( '/wp-content/uploads/lunara-fonts/v1/TiemposText-Semibold.woff2' ) )
     );
 }
 add_action( 'wp_head', 'lunara_preload_oscars_portal_label_font', 4 );
