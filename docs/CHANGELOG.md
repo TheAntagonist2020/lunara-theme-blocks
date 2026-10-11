@@ -12,6 +12,28 @@ directly from each repo's `git log`, not reconstructed from memory.
 ---
 
 
+## 2026-10-10 — Theme 3.2.102 and Ledger 2.8.21: posters and the hero preload
+
+Item 3 of "What Done Looks Like".
+
+### Theme 3.2.102
+- **The `/oscars/` hero backdrop is preloaded.** Lighthouse (phone, 2026-10-08) named the hero band the LCP element: its image is a CSS background set through a custom property on the section's inline style, so the browser found it only after CSS and layout ("prioritize LCP image: 1,240 ms"). New `inc/oscars-hero-preload.php` resolves the backdrop the way the template does (`lunara_oscars_hero_backdrop_url()`: Best Picture visual, TMDB w780) and prints `<link rel="preload" as="image" fetchpriority="high">` at `wp_head` 4 on the portal route; `page-oscars.php` takes its URL from the same resolver.
+- **The portal's posters say how wide they render.** Measured 2026-10-10: the hero card is 96px on phones, 124px to 820px, ~300px on desktop; the spotlight, title and winner grids are 96px on phones, ~335px on tablets, 250–290px on desktop. `lunara_oscars_poster_sizes()` rewrites the Ledger's `sizes` on those four slots (keeping WordPress's `auto, ` for lazy images). The hero card also drops the inline `background-image` it painted behind a poster `<img>` that fully covers it — a second, never-visible download of the same poster.
+- New `tests/oscars-hero-preload-runtime.php`. `tests/site-studio-preview-viewport-runtime.js` now waits for the preview iframe's document before sampling it (it failed one run in three here on a navigation race).
+- Measured on the live `/oscars/` with both halves applied, same run, phone 390px at 3x: poster bytes 581 KB → 297 KB; every poster picks 320w. Lighthouse's LCP estimate is the preload's to win; the unthrottled Playwright LCP went 1,004 → 848 ms.
+
+### Ledger 2.8.21
+- `get_poster_img_html_for_title()` defaults `sizes` to `(max-width: 820px) 180px, 340px` (was WordPress's `(max-width: 768px) 100vw, 768px`); the ceremony dossier poster (the LCP image on ceremony pages) passes 150px/180px, the tracker 72px.
+- The srcset gains 320/400/480/600w image-CDN resizes between WordPress's 200w and 683w, added only around the poster call and only when the CDN is present.
+- Card backdrops at 400px: hub pages paint the poster behind each card's dark wash as an eager CSS background at 768px (41 on a ceremony page). `get_card_backdrop_image_url()` re-asks the CDN or TMDB for 400px; the hub and table-display closures use it.
+- Thirteen tests no longer pin the version string.
+- Measured on the live ceremony page, same run, phone 390px at 3x: image bytes 4,138 KB → 1,778 KB.
+
+### Found, not fixed
+- `/oscars/` prediction board: 27 review photos as cover-cropped art at `medium_large` with no srcset. The size is right for a 16:9 photo in a 2:3 box at 3x, so the bytes are the content's; one upload (`2026/07/The-Odyssey.jpg`, 988 KB at 768×433) is the outlier and wants re-uploading compressed.
+- TMDB poster fallbacks (`<img src=poster_url>` for titles without a local poster, and person photos) have no srcset; `lunara_tmdb_image_srcset()` exists for it.
+- The Oscars database shell is still Georgia by `!important` (see 3.2.101).
+
 ## 2026-10-10 — Theme 3.2.101: the font diet
 
 - **WordPress's Font Library no longer prints fonts on the front end.** Its `<style class="wp-fonts-local">` block declared Tiempos Text, Tiempos Headline, GT Sectra and Canela a second time, as `.ttf` files under `/wp-content/uploads/fonts/`, on top of the woff2 faces `style.css` declares from `/wp-content/uploads/lunara-fonts/v1/`. Browsers downloaded both. New `inc/fonts.php` unhooks `wp_print_font_faces` (and the style-variation printer) from `wp_head` on the front end only; the editor keeps the Library.

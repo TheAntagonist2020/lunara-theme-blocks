@@ -45,6 +45,8 @@ img{display:block;width:100%;height:100%;object-fit:cover}footer{height:100px}</
    baseline = await page.locator('#lunara-site-studio-state').evaluate(e => JSON.parse(e.textContent));
 
    async function measure(name, width, height) {
+    // The preview iframe may still be navigating when a viewport changes; sample only once its document has a header and an image to measure.
+    await page.waitForFunction(() => { const f = document.querySelector('iframe'); const d = f && f.contentDocument; return !!(d && d.querySelector('header') && d.querySelector('img')); }, null, { timeout: 15000 });
     const samples = await page.evaluate(async () => {
      const frame = document.querySelector('iframe'), samples = [];
      for (let i = 0; i < 8; i++) {

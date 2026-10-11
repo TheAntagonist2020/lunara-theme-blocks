@@ -64,6 +64,7 @@ require_once $lunara_inc . 'home-sections.php';
 
 // Layer 6 — Oscars portal (depends on home-sections + card builders).
 require_once $lunara_inc . 'oscars-portal.php';
+require_once $lunara_inc . 'oscars-hero-preload.php'; // 3.2.102: hero backdrop preload, portal poster sizes.
 
 // Layer 7 — Frontend output (footer, nav, search, content filters, animations).
 require_once $lunara_inc . 'blocks.php';

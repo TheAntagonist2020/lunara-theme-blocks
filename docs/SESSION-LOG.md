@@ -25,6 +25,14 @@ there; `AGENTS.md` is the single canonical copy.)
 
 ---
 
+## 2026-10-10 (night) — Posters and the hero preload (Theme 3.2.102, Ledger 2.8.21)
+
+- **Shipped:** Ledger PR #53 (2.8.21: poster `sizes` default + 320–600w srcset widths, card backdrops at 400px, version pins out of 13 tests) and theme PR (3.2.102: `/oscars/` hero backdrop preload, portal poster `sizes`, hero card's duplicate background dropped). Details in `docs/CHANGELOG.md`.
+- **Live:** unchanged until Dalton merges. Theme PR #227 (3.2.101) still open; the 3.2.102 PR includes it.
+- **Holding:** nobody.
+- **Next:** caching coherence (item 6: `/oscars/` into the page store, whole-site warmer, purge on deploy), then the plugin diet (item 7).
+- **Found, not fixed:** the prediction board's photo art is content weight, with one 988 KB upload (`2026/07/The-Odyssey.jpg`) to re-upload compressed; TMDB poster/person fallbacks carry no srcset; Oscars database shell still Georgia.
+
 ## 2026-10-10 (evening) — Theme 3.2.101: the font diet
 
 - **Shipped:** theme 3.2.101 on a PR — Font Library front-end output unhooked (`inc/fonts.php`), Tiempos cut to four woff2 files with weight ranges, metric-matched Georgia fallbacks, label-face preloads re-pointed, `tests/fonts-runtime.php`; then, on Dalton's "Tiempos", review and journal reading surfaces switched from `Georgia !important` to the font tokens, with `tests/review-reading-font-browser-runtime.js` rendering the real cascade. Details in `docs/CHANGELOG.md`.

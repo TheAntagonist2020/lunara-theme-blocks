@@ -199,7 +199,10 @@ $ledger_url           = '' !== $ledger_url ? $ledger_url : $database_table_url;
 $table_view_requested = isset( $_GET['view'] ) && 'table' === sanitize_key( wp_unslash( $_GET['view'] ) );
 $about_url         = ( $aat && method_exists( $aat, 'get_about_url' ) ) ? $aat->get_about_url() : home_url( '/oscars/about/' );
 $ceremonies_url    = ( $aat && method_exists( $aat, 'get_ceremonies_index_url' ) ) ? $aat->get_ceremonies_index_url() : home_url( '/oscars/ceremonies/' );
-$hero_backdrop_url = trim( (string) ( $best_visual['backdrop_url'] ?? '' ) );
+// 3.2.102: one resolver for the backdrop, shared with the <head> preload (inc/oscars-hero-preload.php).
+$hero_backdrop_url = function_exists( 'lunara_oscars_hero_backdrop_url' )
+    ? lunara_oscars_hero_backdrop_url()
+    : trim( (string) ( $best_visual['backdrop_url'] ?? '' ) );
 $hero_style        = '';
 
 if ( '' !== $hero_backdrop_url ) {
@@ -449,6 +452,11 @@ $command_cards = array(
 
                         if ( '' !== $hero_feature_poster_html ) {
                             $hero_feature_poster_html = str_replace( 'loading="lazy"', 'loading="eager" fetchpriority="high"', $hero_feature_poster_html );
+                            if ( function_exists( 'lunara_oscars_poster_sizes' ) ) {
+                                $hero_feature_poster_html = lunara_oscars_poster_sizes( $hero_feature_poster_html, lunara_oscars_poster_sizes_for( 'hero' ) );
+                            }
+                            // 3.2.102: the <img> covers the card; an inline background-image behind it is a second download of the same poster.
+                            $hero_feature_poster_url = '';
                         }
                         ?>
                         <div class="lunara-oscars-portal-feature-poster<?php echo '' !== $hero_feature_poster_url ? ' has-poster-bg' : ''; ?>"<?php if ( '' !== $hero_feature_poster_url ) : ?> style="background-image: url('<?php echo esc_url( $hero_feature_poster_url ); ?>');"<?php endif; ?>>
@@ -557,7 +565,7 @@ $command_cards = array(
                             <?php if ( ! empty( $sl_visual['poster_html'] ) ) : ?>
                                 <a class="lunara-oscars-spotlight-media-link" href="<?php echo esc_url( $spotlight_primary_url ); ?>">
                                     <div class="lunara-oscars-spotlight-poster<?php echo '' !== $sl_poster_url ? ' has-poster-bg' : ''; ?>"<?php if ( '' !== $sl_poster_url ) : ?> style="background-image: url('<?php echo esc_url( $sl_poster_url ); ?>');"<?php endif; ?>>
-                                        <?php echo $sl_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                        <?php echo function_exists( 'lunara_oscars_poster_sizes' ) ? lunara_oscars_poster_sizes( $sl_visual['poster_html'], lunara_oscars_poster_sizes_for( 'grid' ) ) : $sl_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                     </div>
                                 </a>
                             <?php elseif ( ! empty( $sl_visual['poster_url'] ) ) : ?>
@@ -624,7 +632,7 @@ $command_cards = array(
                         <a class="lunara-oscars-portal-title-card" href="<?php echo esc_url( $card['url'] ?? $database_url ); ?>">
                             <div class="lunara-oscars-portal-title-media<?php echo '' !== $card_poster_url ? ' has-poster-bg' : ''; ?>"<?php if ( '' !== $card_poster_url ) : ?> style="background-image: url('<?php echo esc_url( $card_poster_url ); ?>');"<?php endif; ?>>
                                 <?php if ( ! empty( $card_visual['poster_html'] ) ) : ?>
-                                    <?php echo $card_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                    <?php echo function_exists( 'lunara_oscars_poster_sizes' ) ? lunara_oscars_poster_sizes( $card_visual['poster_html'], lunara_oscars_poster_sizes_for( 'grid' ) ) : $card_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                 <?php elseif ( ! empty( $card_visual['poster_url'] ) ) : ?>
                                     <img src="<?php echo esc_url( $card_visual['poster_url'] ); ?>" alt="<?php echo esc_attr( $card['title'] ?? 'Oscar title' ); ?>" loading="lazy" decoding="async" />
                                 <?php elseif ( ! empty( $card_visual['card_fallback_html'] ) ) : ?>
